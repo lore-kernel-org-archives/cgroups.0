@@ -1,93 +1,152 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: [PATCH] cgroup_freezer: fix freezing groups with stopped tasks
-Date: Wed, 16 Nov 2011 22:50:34 +0100
-Message-ID: <1321480234-29241-1-git-send-email-mhocko@suse.cz>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
+Date: Thu, 17 Nov 2011 10:33:08 +0900
+Message-ID: <20111117103308.063f78df.kamezawa.hiroyu@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tomasz Buchert <tomasz.buchert-MZpvjPyXg2s@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, mhocko-AlSwsSmVLrQ@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-2d3cbf8b (cgroup_freezer: update_freezer_state() does incorrect state
-transitions) removed is_task_frozen_enough and replaced it with a simple
-frozen call. This, however, breaks freezing for a group with stopped tasks
-because those cannot be frozen and so the group remains in CGROUP_FREEZING
-state (update_if_frozen doesn't count stopped tasks) and never reaches
-CGROUP_FROZEN.
 
-Let's add is_task_frozen_enough back and use it at the original locations
-(update_if_frozen and try_to_freeze_cgroup). Semantically we consider
-stopped tasks as frozen enough so we should consider both cases when
-testing frozen tasks.
+I'll send this again when mm is shipped.
+I sometimes see mem_cgroup_split_huge_fixup() in perf report and noticed
+it's very slow. This fixes it. Any comments are welcome.
 
-Testcase:
-mkdir /dev/freezer
-mount -t cgroup -o freezer none /dev/freezer
-mkdir /dev/freezer/foo
-sleep 1h &
-pid=$!
-kill -STOP $pid
-echo $pid > /dev/freezer/foo/tasks
-echo FROZEN > /dev/freezer/foo/freezer.state
-while true
-do
-        cat /dev/freezer/foo/freezer.state
-        [ "`cat /dev/freezer/foo/freezer.state`" = "FROZEN" ] && break
-        sleep 1
-done
-echo OK
+==
+Subject: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
 
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tomasz Buchert <tomasz.buchert-MZpvjPyXg2s@public.gmane.org>
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+at split_huge_page(), mem_cgroup_split_huge_fixup() is called to
+handle page_cgroup modifcations. It takes move_lock_page_cgroup()
+and modify page_cgroup and LRU accounting jobs and called
+HPAGE_PMD_SIZE - 1 times.
+
+But thinking again,
+  - compound_lock() is held at move_accout...then, it's not necessary
+    to take move_lock_page_cgroup().
+  - LRU is locked and all tail pages will go into the same LRU as
+    head is now on.
+  - page_cgroup is contiguous in huge page range.
+
+This patch fixes mem_cgroup_split_huge_fixup() as to be called once per
+hugepage and reduce costs for spliting.
+
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- kernel/cgroup_freezer.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ include/linux/memcontrol.h |    5 ++---
+ mm/huge_memory.c           |    3 ++-
+ mm/memcontrol.c            |   32 ++++++++++++++++----------------
+ 3 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index 5e828a2..4d073dc 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -153,6 +153,13 @@ static void freezer_destroy(struct cgroup_subsys *ss,
- 	kfree(cgroup_freezer(cgroup));
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index b87068a..0a22a19 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -154,7 +154,7 @@ u64 mem_cgroup_get_limit(struct mem_cgroup *memcg);
+ 
+ void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-void mem_cgroup_split_huge_fixup(struct page *head, struct page *tail);
++void mem_cgroup_split_huge_fixup(struct page *head);
+ #endif
+ 
+ #ifdef CONFIG_DEBUG_VM
+@@ -357,8 +357,7 @@ u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
+ 	return 0;
  }
  
-+/* Task is frozen or will freeze immediately when next it gets woken */
-+static bool is_task_frozen_enough(struct task_struct *task)
-+{
-+	return frozen(task) ||
-+		(task_is_stopped_or_traced(task) && freezing(task));
-+}
-+
- /*
-  * The call to cgroup_lock() in the freezer.state write method prevents
-  * a write to that file racing against an attach, and hence the
-@@ -231,7 +238,7 @@ static void update_if_frozen(struct cgroup *cgroup,
- 	cgroup_iter_start(cgroup, &it);
- 	while ((task = cgroup_iter_next(cgroup, &it))) {
- 		ntotal++;
--		if (frozen(task))
-+		if (is_task_frozen_enough(task))
- 			nfrozen++;
- 	}
+-static inline void mem_cgroup_split_huge_fixup(struct page *head,
+-						struct page *tail)
++static inline void mem_cgroup_split_huge_fixup(struct page *head)
+ {
+ }
  
-@@ -284,7 +291,7 @@ static int try_to_freeze_cgroup(struct cgroup *cgroup, struct freezer *freezer)
- 	while ((task = cgroup_iter_next(cgroup, &it))) {
- 		if (!freeze_task(task, true))
- 			continue;
--		if (frozen(task))
-+		if (is_task_frozen_enough(task))
- 			continue;
- 		if (!freezing(task) && !freezer_should_skip(task))
- 			num_cant_freeze_now++;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 4298aba..aa6cdae 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -1207,6 +1207,8 @@ static void __split_huge_page_refcount(struct page *page)
+ 	/* prevent PageLRU to go away from under us, and freeze lru stats */
+ 	spin_lock_irq(&zone->lru_lock);
+ 	compound_lock(page);
++	/* complete memcg works before add pages to LRU */
++	mem_cgroup_split_huge_fixup(page);
+ 
+ 	for (i = 1; i < HPAGE_PMD_NR; i++) {
+ 		struct page *page_tail = page + i;
+@@ -1278,7 +1280,6 @@ static void __split_huge_page_refcount(struct page *page)
+ 		BUG_ON(!PageDirty(page_tail));
+ 		BUG_ON(!PageSwapBacked(page_tail));
+ 
+-		mem_cgroup_split_huge_fixup(page, page_tail);
+ 
+ 		lru_add_page_tail(zone, page, page_tail);
+ 	}
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6aff93c..99101f1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2523,38 +2523,38 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+ /*
+  * Because tail pages are not marked as "used", set it. We're under
+  * zone->lru_lock, 'splitting on pmd' and compund_lock.
++ * charge/uncharge will be never happen and move_account() is done under
++ * compound_lock(), so we don't have to take care of races.
+  */
+-void mem_cgroup_split_huge_fixup(struct page *head, struct page *tail)
++void mem_cgroup_split_huge_fixup(struct page *head)
+ {
+ 	struct page_cgroup *head_pc = lookup_page_cgroup(head);
+-	struct page_cgroup *tail_pc = lookup_page_cgroup(tail);
+-	unsigned long flags;
++	struct page_cgroup *pc;
++	int i;
+ 
+ 	if (mem_cgroup_disabled())
+ 		return;
+-	/*
+-	 * We have no races with charge/uncharge but will have races with
+-	 * page state accounting.
+-	 */
+-	move_lock_page_cgroup(head_pc, &flags);
++	for (i = 1; i < HPAGE_PMD_NR; i++) {
++		pc = head_pc + i;
++		pc->mem_cgroup = head_pc->mem_cgroup;
++		smp_wmb();/* see __commit_charge() */
++		/*
++		 * LRU flags cannot be copied because we need to add tail
++		 * page to LRU by generic call and our hooks will be called.
++		 */
++		pc->flags = head_pc->flags & ~PCGF_NOCOPY_AT_SPLIT;
++	}
+ 
+-	tail_pc->mem_cgroup = head_pc->mem_cgroup;
+-	smp_wmb(); /* see __commit_charge() */
+ 	if (PageCgroupAcctLRU(head_pc)) {
+ 		enum lru_list lru;
+ 		struct mem_cgroup_per_zone *mz;
+-
+ 		/*
+-		 * LRU flags cannot be copied because we need to add tail
+-		 *.page to LRU by generic call and our hook will be called.
+ 		 * We hold lru_lock, then, reduce counter directly.
+ 		 */
+ 		lru = page_lru(head);
+ 		mz = page_cgroup_zoneinfo(head_pc->mem_cgroup, head);
+-		MEM_CGROUP_ZSTAT(mz, lru) -= 1;
++		MEM_CGROUP_ZSTAT(mz, lru) -= HPAGE_PMD_NR - 1;
+ 	}
+-	tail_pc->flags = head_pc->flags & ~PCGF_NOCOPY_AT_SPLIT;
+-	move_unlock_page_cgroup(head_pc, &flags);
+ }
+ #endif
+ 
 -- 
-1.7.7.1
+1.7.4.1
+
 
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
