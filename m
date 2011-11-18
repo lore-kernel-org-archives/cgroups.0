@@ -1,43 +1,68 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: cgroup memory limit problems
-Date: Fri, 18 Nov 2011 10:13:08 +0100
-Message-ID: <20111118091308.GB5157@tiehlicka.suse.cz>
-References: <201111092157.06819.arekm@maven.pl>
- <CAKTCnzmHk1U6fP+jrw2Rq3dLwU30gyocRBp2QpQVHAbU=x5uSA@mail.gmail.com>
- <201111092358.58079.arekm@maven.pl>
- <20111110091012.0ce7d719.kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
+Date: Fri, 18 Nov 2011 17:35:21 +0100
+Message-ID: <20111118163521.GD23223@tiehlicka.suse.cz>
+References: <20111117103308.063f78df.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20111110091012.0ce7d719.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <20111117103308.063f78df.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm-evZBlRFTdvA@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Sorry to reply late
+On Thu 17-11-11 10:33:08, KAMEZAWA Hiroyuki wrote:
+> 
+> I'll send this again when mm is shipped.
+> I sometimes see mem_cgroup_split_huge_fixup() in perf report and noticed
+> it's very slow. This fixes it. Any comments are welcome.
+> 
+> ==
+> Subject: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
+> 
+> at split_huge_page(), mem_cgroup_split_huge_fixup() is called to
+> handle page_cgroup modifcations. It takes move_lock_page_cgroup()
+> and modify page_cgroup and LRU accounting jobs and called
+> HPAGE_PMD_SIZE - 1 times.
+> 
+> But thinking again,
+>   - compound_lock() is held at move_accout...then, it's not necessary
+>     to take move_lock_page_cgroup().
+>   - LRU is locked and all tail pages will go into the same LRU as
+>     head is now on.
+>   - page_cgroup is contiguous in huge page range.
+> 
+> This patch fixes mem_cgroup_split_huge_fixup() as to be called once per
+> hugepage and reduce costs for spliting.
+> 
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Thu 10-11-11 09:10:12, KAMEZAWA Hiroyuki wrote:
-> On Wed, 9 Nov 2011 23:58:57 +0100
+Yes, looks good. Andrew already took the patch, but just in case
+Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+Just one really minor comment bellow
 [...]
-> If you can, please try the latest kernels.
-> 
-> recent 2 commits
-> 
-> commit 79dfdaccd1d5b40ff7cf4a35a0e63696ebb78b4d
-> " memcg: make oom_lock 0 and 1 based rather than counter "
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6aff93c..99101f1 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2523,38 +2523,38 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+>  /*
+>   * Because tail pages are not marked as "used", set it. We're under
+>   * zone->lru_lock, 'splitting on pmd' and compund_lock.
 
-This one needs a follow up fix (23751be0094012eb6b4756fa80ca54b3eb83069f
-"memcg: fix hierarchical oom locking")
+typo that could be fixed to make grep happier
 
-> commit 1d65f86db14806cf7b1218c7b4ecb8b4db5af27d
-> "  mm: preallocate page before lock_page() at filemap COW"
-> 
-> are works well against fork-bomb under memcg. In my test, make -j under
-> swapless memcg hangs (or takes long time) to be oom-killed.
+> + * charge/uncharge will be never happen and move_account() is done under
+> + * compound_lock(), so we don't have to take care of races.
+>   */
+> -void mem_cgroup_split_huge_fixup(struct page *head, struct page *tail)
+> +void mem_cgroup_split_huge_fixup(struct page *head)
 
+Thanks!
 -- 
 Michal Hocko
 SUSE Labs
