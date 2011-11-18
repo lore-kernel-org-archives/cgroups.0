@@ -1,75 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
-Date: Fri, 18 Nov 2011 17:35:21 +0100
-Message-ID: <20111118163521.GD23223@tiehlicka.suse.cz>
-References: <20111117103308.063f78df.kamezawa.hiroyu@jp.fujitsu.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL cgroup] Update maintainership
+Date: Fri, 18 Nov 2011 14:46:06 -0800
+Message-ID: <20111118224606.GB27152@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=ZbDuwjymHb/1+zbmcskN+5l/4LRwpQSLTUI5xCQYxYA=;
+        b=QvwvaQnduNnK7D87RGOdvVDQJQFRqvYSbmt2PNX/pSRN0bCXegkCam4NO0xRcqKFDd
+         U6VfhQvIGdlZp1zIo2/eSRm9rSm7aw1/z5JUjXZlR+f1W35tLpEGjctgX+dw0KcKwPjs
+         B0/ViyCAeTJYTjbVnK3e+aFzZntSGh2Vw9Q2U=
 Content-Disposition: inline
-In-Reply-To: <20111117103308.063f78df.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu 17-11-11 10:33:08, KAMEZAWA Hiroyuki wrote:
-> 
-> I'll send this again when mm is shipped.
-> I sometimes see mem_cgroup_split_huge_fixup() in perf report and noticed
-> it's very slow. This fixes it. Any comments are welcome.
-> 
-> ==
-> Subject: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
-> 
-> at split_huge_page(), mem_cgroup_split_huge_fixup() is called to
-> handle page_cgroup modifcations. It takes move_lock_page_cgroup()
-> and modify page_cgroup and LRU accounting jobs and called
-> HPAGE_PMD_SIZE - 1 times.
-> 
-> But thinking again,
->   - compound_lock() is held at move_accout...then, it's not necessary
->     to take move_lock_page_cgroup().
->   - LRU is locked and all tail pages will go into the same LRU as
->     head is now on.
->   - page_cgroup is contiguous in huge page range.
-> 
-> This patch fixes mem_cgroup_split_huge_fixup() as to be called once per
-> hugepage and reduce costs for spliting.
-> 
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Hello, Linus.
 
-Yes, looks good. Andrew already took the patch, but just in case
-Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Paul doesn't have enough time to maintain cgroup and we agreed that I
+take over as one of the maintainers and maintain git tree.  I would be
+doing standard for-next/fixes branch management.  At least until
+things settle down, I wouldn't be committing any patch w/o Li Zefan's
+co-ack.
 
-Just one really minor comment bellow
-[...]
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6aff93c..99101f1 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2523,38 +2523,38 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
->  /*
->   * Because tail pages are not marked as "used", set it. We're under
->   * zone->lru_lock, 'splitting on pmd' and compund_lock.
+At the moment, there are a few conflicting patchsets floating around
+and sorting them out for the next merge window would be the first
+priority.
 
-typo that could be fixed to make grep happier
+Please pull from the following git branch to receive MAINTAINERS update.
 
-> + * charge/uncharge will be never happen and move_account() is done under
-> + * compound_lock(), so we don't have to take care of races.
->   */
-> -void mem_cgroup_split_huge_fixup(struct page *head, struct page *tail)
-> +void mem_cgroup_split_huge_fixup(struct page *head)
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.2-fixes
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Thank you.
+
+Paul Menage (1):
+      cgroup: Replace Paul Menage with Tejun Heo as cgroups maintainer
+
+ MAINTAINERS |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7f6bc29..78751bb 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1927,10 +1927,11 @@ S:	Maintained
+ F:	drivers/connector/
+ 
+ CONTROL GROUPS (CGROUPS)
+-M:	Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
++M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+ M:	Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+ L:	containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+ L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
+ S:	Maintained
+ F:	include/linux/cgroup*
+ F:	kernel/cgroup*
+
+--
+tejun
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
