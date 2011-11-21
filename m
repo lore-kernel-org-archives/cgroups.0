@@ -1,70 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL cgroup] Update maintainership
-Date: Fri, 18 Nov 2011 14:46:06 -0800
-Message-ID: <20111118224606.GB27152@google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
+Date: Mon, 21 Nov 2011 11:42:50 +0100
+Message-ID: <20111121104250.GI1770@cmpxchg.org>
+References: <20111117103308.063f78df.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=ZbDuwjymHb/1+zbmcskN+5l/4LRwpQSLTUI5xCQYxYA=;
-        b=QvwvaQnduNnK7D87RGOdvVDQJQFRqvYSbmt2PNX/pSRN0bCXegkCam4NO0xRcqKFDd
-         U6VfhQvIGdlZp1zIo2/eSRm9rSm7aw1/z5JUjXZlR+f1W35tLpEGjctgX+dw0KcKwPjs
-         B0/ViyCAeTJYTjbVnK3e+aFzZntSGh2Vw9Q2U=
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20111117103308.063f78df.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, mhocko@suse.cz, Andrea Arcangeli <aarcange@redhat.com>, Balbir Singh <bsingharora@gmail.com>
 
-Hello, Linus.
+On Thu, Nov 17, 2011 at 10:33:08AM +0900, KAMEZAWA Hiroyuki wrote:
+> 
+> I'll send this again when mm is shipped.
+> I sometimes see mem_cgroup_split_huge_fixup() in perf report and noticed
+> it's very slow. This fixes it. Any comments are welcome.
+> 
+> ==
+> Subject: [PATCH] fix mem_cgroup_split_huge_fixup to work efficiently.
+> 
+> at split_huge_page(), mem_cgroup_split_huge_fixup() is called to
+> handle page_cgroup modifcations. It takes move_lock_page_cgroup()
+> and modify page_cgroup and LRU accounting jobs and called
+> HPAGE_PMD_SIZE - 1 times.
+> 
+> But thinking again,
+>   - compound_lock() is held at move_accout...then, it's not necessary
+>     to take move_lock_page_cgroup().
+>   - LRU is locked and all tail pages will go into the same LRU as
+>     head is now on.
+>   - page_cgroup is contiguous in huge page range.
+> 
+> This patch fixes mem_cgroup_split_huge_fixup() as to be called once per
+> hugepage and reduce costs for spliting.
+> 
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Paul doesn't have enough time to maintain cgroup and we agreed that I
-take over as one of the maintainers and maintain git tree.  I would be
-doing standard for-next/fixes branch management.  At least until
-things settle down, I wouldn't be committing any patch w/o Li Zefan's
-co-ack.
+I agree with the changes, but since you are resending it anyway: I
+think removing the move_lock and switching the hook to take care of
+all tail pages in one go are two logical steps.  Would you mind
+breaking it up into separate patches?
 
-At the moment, there are a few conflicting patchsets floating around
-and sorting them out for the next merge window would be the first
-priority.
+In any case,
 
-Please pull from the following git branch to receive MAINTAINERS update.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.2-fixes
-
-Thank you.
-
-Paul Menage (1):
-      cgroup: Replace Paul Menage with Tejun Heo as cgroups maintainer
-
- MAINTAINERS |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7f6bc29..78751bb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1927,10 +1927,11 @@ S:	Maintained
- F:	drivers/connector/
- 
- CONTROL GROUPS (CGROUPS)
--M:	Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-+M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
- M:	Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
- L:	containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
- L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
- S:	Maintained
- F:	include/linux/cgroup*
- F:	kernel/cgroup*
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
 --
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
