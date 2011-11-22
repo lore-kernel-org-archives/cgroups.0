@@ -1,51 +1,156 @@
-From: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] memcg: fix the document of pgpgin/pgpgout
-Date: Mon, 21 Nov 2011 16:48:45 -0800
-Message-ID: <1321922925-14930-1-git-send-email-yinghan@google.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch] mm: memcg: shorten preempt-disabled section around
+ event checks
+Date: Tue, 22 Nov 2011 09:52:23 +0900
+Message-ID: <20111122095223.0baefec9.kamezawa.hiroyu@jp.fujitsu.com>
+References: <20111121110954.GE1771@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=beta;
-        h=from:to:cc:subject:date:message-id:x-mailer:x-system-of-record;
-        bh=0cqx1xTPWBdvgWxBpEBilOZVswzbyF/i+x8VnJescYk=;
-        b=e51vzk99Jy6bj2QAc2euzOcrcUGfJ+S+KWz64MyqSltCzjUP72/EGi5qOsdGhhcrvp
-         R5/k2cIBT//HBOsy/QXQ==
+In-Reply-To: <20111121110954.GE1771-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Wanlong Gao <gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Yong Zhang <yong.zhang0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Luis Henriques <henrix-CCGZq9okbVlg9hUCZPvPmw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The two memcg stats pgpgin/pgpgout have different meaning than the ones in
-vmstat, which indicates that we picked a bad naming for them. It might be late
-to change the stat name, but better documentation is always helpful.
+On Mon, 21 Nov 2011 12:09:54 +0100
+Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
 
-Signed-off-by: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- Documentation/cgroups/memory.txt |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+> -rt ran into a problem with the soft limit spinlock inside the
+> non-preemptible section, because that is sleeping inside an atomic
+> context.  But I think it makes sense for vanilla, too, to keep the
+> non-preemptible section as short as possible.  Also, -3 lines.
+> 
+> Yong, Luis, could you add your Tested-bys?
+> 
+> ---
+> Only the ratelimit checks themselves have to run with preemption
+> disabled, the resulting actions - checking for usage thresholds,
+> updating the soft limit tree - can and should run with preemption
+> enabled.
+> 
+> Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Reported-by: Yong Zhang <yong.zhang0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Reported-by: Luis Henriques <henrix-CCGZq9okbVlg9hUCZPvPmw@public.gmane.org>
+> Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index cc0ebc5..eb6a911 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -386,8 +386,11 @@ memory.stat file includes following statistics
- cache		- # of bytes of page cache memory.
- rss		- # of bytes of anonymous and swap cache memory.
- mapped_file	- # of bytes of mapped file (includes tmpfs/shmem)
--pgpgin		- # of pages paged in (equivalent to # of charging events).
--pgpgout		- # of pages paged out (equivalent to # of uncharging events).
-+pgpgin		- # of charging events to the memory cgroup. The charging
-+		event happens each time a page is accounted as either mapped
-+		anon page(RSS) or cache page(Page Cache) to the cgroup.
-+pgpgout		- # of uncharging events to the memory cgroup. The uncharging
-+		event happens each time a page is unaccounted from the cgroup.
- swap		- # of bytes of swap usage
- inactive_anon	- # of bytes of anonymous memory and swap cache memory on
- 		LRU list.
--- 
-1.7.3.1
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c |   73 ++++++++++++++++++++++++++----------------------------
+>  1 files changed, 35 insertions(+), 38 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6aff93c..8e62d3e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -683,37 +683,32 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
+>  	return total;
+>  }
+>  
+> -static bool __memcg_event_check(struct mem_cgroup *memcg, int target)
+> +static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+> +				       enum mem_cgroup_events_target target)
+>  {
+>  	unsigned long val, next;
+>  
+>  	val = __this_cpu_read(memcg->stat->events[MEM_CGROUP_EVENTS_COUNT]);
+>  	next = __this_cpu_read(memcg->stat->targets[target]);
+>  	/* from time_after() in jiffies.h */
+> -	return ((long)next - (long)val < 0);
+> -}
+> -
+> -static void __mem_cgroup_target_update(struct mem_cgroup *memcg, int target)
+> -{
+> -	unsigned long val, next;
+> -
+> -	val = __this_cpu_read(memcg->stat->events[MEM_CGROUP_EVENTS_COUNT]);
+> -
+> -	switch (target) {
+> -	case MEM_CGROUP_TARGET_THRESH:
+> -		next = val + THRESHOLDS_EVENTS_TARGET;
+> -		break;
+> -	case MEM_CGROUP_TARGET_SOFTLIMIT:
+> -		next = val + SOFTLIMIT_EVENTS_TARGET;
+> -		break;
+> -	case MEM_CGROUP_TARGET_NUMAINFO:
+> -		next = val + NUMAINFO_EVENTS_TARGET;
+> -		break;
+> -	default:
+> -		return;
+> +	if ((long)next - (long)val < 0) {
+> +		switch (target) {
+> +		case MEM_CGROUP_TARGET_THRESH:
+> +			next = val + THRESHOLDS_EVENTS_TARGET;
+> +			break;
+> +		case MEM_CGROUP_TARGET_SOFTLIMIT:
+> +			next = val + SOFTLIMIT_EVENTS_TARGET;
+> +			break;
+> +		case MEM_CGROUP_TARGET_NUMAINFO:
+> +			next = val + NUMAINFO_EVENTS_TARGET;
+> +			break;
+> +		default:
+> +			break;
+> +		}
+> +		__this_cpu_write(memcg->stat->targets[target], next);
+> +		return true;
+>  	}
+> -
+> -	__this_cpu_write(memcg->stat->targets[target], next);
+> +	return false;
+>  }
+>  
+>  /*
+> @@ -724,25 +719,27 @@ static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
+>  {
+>  	preempt_disable();
+>  	/* threshold event is triggered in finer grain than soft limit */
+> -	if (unlikely(__memcg_event_check(memcg, MEM_CGROUP_TARGET_THRESH))) {
+> +	if (unlikely(mem_cgroup_event_ratelimit(memcg,
+> +						MEM_CGROUP_TARGET_THRESH))) {
+> +		bool do_softlimit, do_numainfo;
+> +
+> +		do_softlimit = mem_cgroup_event_ratelimit(memcg,
+> +						MEM_CGROUP_TARGET_SOFTLIMIT);
+> +#if MAX_NUMNODES > 1
+> +		do_numainfo = mem_cgroup_event_ratelimit(memcg,
+> +						MEM_CGROUP_TARGET_NUMAINFO);
+> +#endif
+> +		preempt_enable();
+> +
+>  		mem_cgroup_threshold(memcg);
+> -		__mem_cgroup_target_update(memcg, MEM_CGROUP_TARGET_THRESH);
+> -		if (unlikely(__memcg_event_check(memcg,
+> -			     MEM_CGROUP_TARGET_SOFTLIMIT))) {
+> +		if (unlikely(do_softlimit))
+>  			mem_cgroup_update_tree(memcg, page);
+> -			__mem_cgroup_target_update(memcg,
+> -						   MEM_CGROUP_TARGET_SOFTLIMIT);
+> -		}
+>  #if MAX_NUMNODES > 1
+> -		if (unlikely(__memcg_event_check(memcg,
+> -			MEM_CGROUP_TARGET_NUMAINFO))) {
+> +		if (unlikely(do_numainfo))
+>  			atomic_inc(&memcg->numainfo_events);
+> -			__mem_cgroup_target_update(memcg,
+> -				MEM_CGROUP_TARGET_NUMAINFO);
+> -		}
+>  #endif
+> -	}
+> -	preempt_enable();
+> +	} else
+> +		preempt_enable();
+>  }
+>  
+>  static struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont)
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
