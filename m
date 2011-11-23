@@ -1,70 +1,175 @@
 From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: [RFC][PATCH 0/3] impelemnt cgroup_(subsys)_disabled in generic.
-Date: Wed, 23 Nov 2011 17:28:40 +0900
-Message-ID: <20111123172840.acd53c41.kamezawa.hiroyu@jp.fujitsu.com>
+Subject: [RFC][PATCH 1/3] add cgroup_xxxx_disabled functions
+Date: Wed, 23 Nov 2011 17:31:33 +0900
+Message-ID: <20111123173133.e7ba96df.kamezawa.hiroyu@jp.fujitsu.com>
+References: <20111123172840.acd53c41.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111123172840.acd53c41.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org" <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org" <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+From 1a9e228c2a28bb918ea8cb9aecc11fd80444acaa Mon Sep 17 00:00:00 2001
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Date: Wed, 23 Nov 2011 15:36:22 +0900
+Subject: [PATCH 1/3] add cgroup_xxxx_disabled() functions
 
-Now, memory cgroup has 'mem_cgroup_disabled()' in memcontrol.h
+Now, memory cgroup uses mem_cgroup_disabled() for checking
+cgroup is disabled or not. This patch adds cgroup_xxxx_disabled()
+functions for all subsys. After all works, mem_cgroup_disabled()
+can be disappeared.
 
-I made a brief trial to use static_branch() for that function. At doing that,
-I thought it will be better to implement generic cgroup functions rather
-than having memory cgroup's its own one.
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+ include/linux/cgroup.h        |   18 ++++++++++++++++++
+ include/linux/cgroup_subsys.h |   40 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 58 insertions(+), 0 deletions(-)
 
-This series consists of 3 patches
-1 .... implement cgroup_xxxx_disabled() in generic.
-2 .... use jump_label for cgroup_xxxx_disabled()
-3 .... remove mem_cgroup_disabled() in memcontrol.c
-
-And I post this series for getting review/comments.
-I'm not sure patches for using jump_label is worth to be merged.
-
-I did a test to run a loop
-	while(-) {
-		mmap(1M)
-		touch all pages
-		munmap()
-	}
-
-and measured performance score in ROOT cgroup. Here,
-
-(Before patch)
-   182,932,842,128 cycles                    #    0.000 GHz                     [33.33%]
-   192,711,643,877 instructions              #    1.05  insns per cycle         [49.99%]
-       761,483,416 cache-references                                             [49.98%]
-           159,908 cache-misses              #    0.021 % of all cache refs     [50.00%]
-    33,253,084,874 branches                                                     [33.34%]
-       109,796,792 branch-misses             #    0.33% of all branches         [33.34%]
-
-      58.289265709 seconds time elapsed
-
-(After patch)
- Performance counter stats for './malloc 1':
-
-   183,068,407,487 cycles                    #    0.000 GHz                     [33.33%]
-   191,834,248,678 instructions              #    1.05  insns per cycle         [50.00%]
-       798,635,028 cache-references                                             [49.98%]
-            95,562 cache-misses              #    0.012 % of all cache refs     [50.00%]
-    32,755,318,286 branches                                                     [33.34%]
-        77,774,624 branch-misses             #    0.24% of all branches         [33.34%]
-
-      58.332356996 seconds time elapsed
-
-There is no differece in 'time' ;) 
-But I got an impression that 'branch' score gets better in several tests.
-
-Thanks,
--Kame
-
-P.S. maybe I can replace 'do_swap_account' with jump_label, too.
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 1b7f9d5..9eaa6fe 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -526,6 +526,16 @@ struct cgroup_subsys {
+ #include <linux/cgroup_subsys.h>
+ #undef SUBSYS
+ 
++#define SUBSYS(_x)\
++	static inline bool cgroup_ ## _x ## _disabled(void){\
++		return _x ## _subsys.disabled;}
++#define SUBSYS_UNDEFINED(_x)\
++	static inline bool cgroup_ ## _x ## _disabled(void){\
++		return true;}
++#include <linux/cgroup_subsys.h>
++#undef SUBSYS
++#undef SUBSYS_UNDEFINED
++
+ static inline struct cgroup_subsys_state *cgroup_subsys_state(
+ 	struct cgroup *cgrp, int subsys_id)
+ {
+@@ -655,6 +665,14 @@ static inline int cgroup_attach_task_current_cg(struct task_struct *t)
+ 	return 0;
+ }
+ 
++#define SUBSYS(_x)
++#define SUBSYS_UNDEFINED(_x)\
++	static inline bool cgroup_ ## _x ## _disabled(void){\
++		return true;}
++#include <linux/cgroup_subsys.h>
++#undef SUBSYS
++#undef SUBSYS_UNDEFINED
++
+ #endif /* !CONFIG_CGROUPS */
+ 
+ #endif /* _LINUX_CGROUP_H */
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index ac663c1..f3eaee8 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -9,58 +9,98 @@
+ 
+ #ifdef CONFIG_CPUSETS
+ SUBSYS(cpuset)
++#else
++#ifdef SUBSYS_DEFINED
++SUBSYS_UNDEFINED(cpuset)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_CGROUP_DEBUG
+ SUBSYS(debug)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(debug)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_CGROUP_SCHED
+ SUBSYS(cpu_cgroup)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(cpu_cgroup)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_CGROUP_CPUACCT
+ SUBSYS(cpuacct)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(cpuacct)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR
+ SUBSYS(mem_cgroup)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(mem_cgroup)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_CGROUP_DEVICE
+ SUBSYS(devices)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(devices)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_CGROUP_FREEZER
+ SUBSYS(freezer)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(freezer)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_NET_CLS_CGROUP
+ SUBSYS(net_cls)
++#else
++#ifdef SUBSYS_DEFINED
++SUBSYS_UNDEFINED(net_cls)
++#endif
+ #endif
+ 
+ /* */
+ 
+ #ifdef CONFIG_BLK_CGROUP
+ SUBSYS(blkio)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(blkio)
++#endif
+ #endif
+ 
+ #ifdef CONFIG_CGROUP_PERF
+ SUBSYS(perf)
++#else
++#ifdef SUBSYS_UNDEFINED
++SUBSYS_UNDEFINED(perf)
++#endif
+ #endif
+ 
+ /* */
+-- 
+1.7.4.1
 
 
 --
