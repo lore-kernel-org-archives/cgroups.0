@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 3/8] mm: memcg: clean up fault accounting
-Date: Wed, 23 Nov 2011 16:42:26 +0100
-Message-ID: <1322062951-1756-4-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 6/8] mm: memcg: remove unneeded checks from uncharge_page()
+Date: Wed, 23 Nov 2011 16:42:29 +0100
+Message-ID: <1322062951-1756-7-git-send-email-hannes@cmpxchg.org>
 References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
@@ -15,50 +15,28 @@ Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@sus
 
 From: Johannes Weiner <jweiner@redhat.com>
 
-The fault accounting functions have a single, memcg-internal user, so
-they don't need to be global.  In fact, their one-line bodies can be
-directly folded into the caller.  And since faults happen one at a
-time, use this_cpu_inc() directly instead of this_cpu_add(foo, 1).
+mem_cgroup_uncharge_page() is only called on either freshly allocated
+pages without page->mapping or on rmapped PageAnon() pages.  There is
+no need to check for a page->mapping that is not an anon_vma.
 
 Signed-off-by: Johannes Weiner <jweiner@redhat.com>
 ---
- mm/memcontrol.c |   14 ++------------
- 1 files changed, 2 insertions(+), 12 deletions(-)
+ mm/memcontrol.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 473b99f..d825af9 100644
+index 0d10be4..b9a3b94 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -589,16 +589,6 @@ static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
- 	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAPOUT], val);
+@@ -2989,8 +2989,6 @@ void mem_cgroup_uncharge_page(struct page *page)
+ 	/* early check. */
+ 	if (page_mapped(page))
+ 		return;
+-	if (page->mapping && !PageAnon(page))
+-		return;
+ 	__mem_cgroup_uncharge_common(page, MEM_CGROUP_CHARGE_TYPE_MAPPED);
  }
  
--void mem_cgroup_pgfault(struct mem_cgroup *memcg, int val)
--{
--	this_cpu_add(memcg->stat->events[MEM_CGROUP_EVENTS_PGFAULT], val);
--}
--
--void mem_cgroup_pgmajfault(struct mem_cgroup *memcg, int val)
--{
--	this_cpu_add(memcg->stat->events[MEM_CGROUP_EVENTS_PGMAJFAULT], val);
--}
--
- static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
- 					    enum mem_cgroup_events_index idx)
- {
-@@ -913,10 +903,10 @@ void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
- 
- 	switch (idx) {
- 	case PGMAJFAULT:
--		mem_cgroup_pgmajfault(memcg, 1);
-+		this_cpu_inc(memcg->stat->events[MEM_CGROUP_EVENTS_PGFAULT]);
- 		break;
- 	case PGFAULT:
--		mem_cgroup_pgfault(memcg, 1);
-+		this_cpu_inc(memcg->stat->events[MEM_CGROUP_EVENTS_PGMAJFAULT]);
- 		break;
- 	default:
- 		BUG();
 -- 
 1.7.6.4
 
