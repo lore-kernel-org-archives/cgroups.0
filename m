@@ -1,72 +1,92 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/3] impelemnt cgroup_(subsys)_disabled in generic.
-Date: Wed, 23 Nov 2011 08:32:58 -0200
-Message-ID: <4ECCCBDA.5060604@parallels.com>
-References: <20111123172840.acd53c41.kamezawa.hiroyu@jp.fujitsu.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC][PATCH 3/3] replace mem_cgroup_disabled
+Date: Wed, 23 Nov 2011 08:43:15 -0200
+Message-ID: <4ECCCE43.9090904@parallels.com>
+References: <20111123172840.acd53c41.kamezawa.hiroyu@jp.fujitsu.com> <20111123173421.39c99643.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111123172840.acd53c41.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111123173421.39c99643.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org" <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, "lizf@cn.fujitsu.com" <lizf@cn.fujitsu.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, "bsingharora@gmail.com" <bsingharora@gmail.com>
 
-On 11/23/2011 06:28 AM, KAMEZAWA Hiroyuki wrote:
+On 11/23/2011 06:34 AM, KAMEZAWA Hiroyuki wrote:
+> I'll rebase this onto mmotm this is based on mainline git tree.
+> ==
+>  From 2da35fd8eab3a8c2ca80d7aa5dfd4276a23ebf57 Mon Sep 17 00:00:00 2001
+> From: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
+> Date: Wed, 23 Nov 2011 16:42:59 +0900
+> Subject: [PATCH 3/3] replace mem_cgroup_disabled().
 >
-> Now, memory cgroup has 'mem_cgroup_disabled()' in memcontrol.h
+> cgroup provires cgroup_xxxx_disabled() functions for checking
+> subsys is diabled by boot option or not. Make use of it instead
+> of using private function.
 >
-> I made a brief trial to use static_branch() for that function. At doing that,
-> I thought it will be better to implement generic cgroup functions rather
-> than having memory cgroup's its own one.
->
-> This series consists of 3 patches
-> 1 .... implement cgroup_xxxx_disabled() in generic.
-> 2 .... use jump_label for cgroup_xxxx_disabled()
-> 3 .... remove mem_cgroup_disabled() in memcontrol.c
->
-> And I post this series for getting review/comments.
-> I'm not sure patches for using jump_label is worth to be merged.
->
-> I did a test to run a loop
-> 	while(-) {
-> 		mmap(1M)
-> 		touch all pages
-> 		munmap()
-> 	}
->
-> and measured performance score in ROOT cgroup. Here,
->
-> (Before patch)
->     182,932,842,128 cycles                    #    0.000 GHz                     [33.33%]
->     192,711,643,877 instructions              #    1.05  insns per cycle         [49.99%]
->         761,483,416 cache-references                                             [49.98%]
->             159,908 cache-misses              #    0.021 % of all cache refs     [50.00%]
->      33,253,084,874 branches                                                     [33.34%]
->         109,796,792 branch-misses             #    0.33% of all branches         [33.34%]
->
->        58.289265709 seconds time elapsed
->
-> (After patch)
->   Performance counter stats for './malloc 1':
->
->     183,068,407,487 cycles                    #    0.000 GHz                     [33.33%]
->     191,834,248,678 instructions              #    1.05  insns per cycle         [50.00%]
->         798,635,028 cache-references                                             [49.98%]
->              95,562 cache-misses              #    0.012 % of all cache refs     [50.00%]
->      32,755,318,286 branches                                                     [33.34%]
->          77,774,624 branch-misses             #    0.24% of all branches         [33.34%]
->
->        58.332356996 seconds time elapsed
->
-> There is no differece in 'time' ;)
-> But I got an impression that 'branch' score gets better in several tests.
+> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+>   include/linux/memcontrol.h |   12 ------------
+>   kernel/cgroup.c            |    4 ++--
+>   mm/memcontrol.c            |   32 ++++++++++++++++----------------
+>   mm/page_cgroup.c           |    4 ++--
+>   4 files changed, 20 insertions(+), 32 deletions(-)
 >
 
-branch and cache misses are a lot smaller as well. I think this is a win.
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 28d4430..e5c33f5 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -4778,7 +4778,7 @@ static void cgroup_release_agent(struct work_struct *work)
+>   }
+>   #ifdef CONFIG_JUMP_LABEL
+>   #define SUBSYS(_x)\
+> -	struct jump_label_key cgroup_ ## _x ## _disable_key;
+> +	struct jump_label_key cgroup_ ## _x ## _disabled_key;
+>   #include<linux/cgroup_subsys.h>
+>   #undef SUBSYS
 
---
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have the impression this is just churn. Can you call it disabled_key
+from the beginning ?
+
+> @@ -4786,7 +4786,7 @@ static void cgroup_subsys_disable(void)
+>   {
+>   #define SUBSYS(_x)\
+>   	if ( _x ## _subsys.disabled)\
+> -		jump_label_inc(&cgroup_ ## _x ## _disable_key);
+> +		jump_label_inc(&cgroup_ ## _x ## _disabled_key);
+>   #include<linux/cgroup_subsys.h>
+>   #undef SUBSYS
+>   }
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6aff93c..594af98 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -916,7 +916,7 @@ void mem_cgroup_del_lru_list(struct page *page, enum lru_list lru)
+>   	struct page_cgroup *pc;
+>   	struct mem_cgroup_per_zone *mz;
+>
+> -	if (mem_cgroup_disabled())
+> +	if (cgroup_mem_cgroup_disabled())
+>   		return;
+>   	pc = lookup_page_cgroup(page);
+>   	/* can happen while we handle swapcache. */
+> @@ -952,7 +952,7 @@ void mem_cgroup_rotate_reclaimable_page(struct page *page)
+>   	struct page_cgroup *pc;
+>   	enum lru_list lru = page_lru(page);
+>
+> -	if (mem_cgroup_disabled())
+> +	if (cgroup_mem_cgroup_disabled())
+>   		return;
+>
+>   	pc = lookup_page_cgroup(page);
+
+In many cases, this will be just a useless function call. Wouldn't it be 
+better if in the disabled case we would not even call those functions? 
+It may help some fast paths.
+
+We could define inline versions in memcontrol.h in place of the function 
+signatures themselves, and have those to test for the static branch.
+
+Maybe a macro can be used to make it less laborious?
