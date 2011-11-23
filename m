@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 4/8] mm: memcg: lookup_page_cgroup (almost) never returns NULL
-Date: Wed, 23 Nov 2011 16:42:27 +0100
-Message-ID: <1322062951-1756-5-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 8/8] mm: memcg: modify PageCgroupCache non-atomically
+Date: Wed, 23 Nov 2011 16:42:31 +0100
+Message-ID: <1322062951-1756-9-git-send-email-hannes@cmpxchg.org>
 References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
@@ -15,62 +15,48 @@ Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@sus
 
 From: Johannes Weiner <jweiner@redhat.com>
 
-Pages have their corresponding page_cgroup descriptors set up before
-they are used in userspace, and thus managed by a memory cgroup.
-
-The only time where lookup_page_cgroup() can return NULL is in the
-page sanity checking code that executes while feeding pages into the
-page allocator for the first time.
-
-Remove the NULL checks against lookup_page_cgroup() results from all
-callsites where we know that corresponding page_cgroup descriptors
-must be allocated.
+This bit is protected by lock_page_cgroup(), there is no need for
+locked operations when setting and clearing it.
 
 Signed-off-by: Johannes Weiner <jweiner@redhat.com>
 ---
- mm/memcontrol.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+ include/linux/page_cgroup.h |    4 ++--
+ mm/memcontrol.c             |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/include/linux/page_cgroup.h b/include/linux/page_cgroup.h
+index a0bc9d0..14ddcaf 100644
+--- a/include/linux/page_cgroup.h
++++ b/include/linux/page_cgroup.h
+@@ -77,8 +77,8 @@ static inline int __TestClearPageCgroup##uname(struct page_cgroup *pc)	\
+ 
+ /* Cache flag is set only once (at allocation) */
+ TESTPCGFLAG(Cache, CACHE)
+-CLEARPCGFLAG(Cache, CACHE)
+-SETPCGFLAG(Cache, CACHE)
++__CLEARPCGFLAG(Cache, CACHE)
++__SETPCGFLAG(Cache, CACHE)
+ 
+ TESTPCGFLAG(Used, USED)
+ CLEARPCGFLAG(Used, USED)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d825af9..d4d139a 100644
+index 51aba19..8cd1d1c 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1894,9 +1894,6 @@ void mem_cgroup_update_page_stat(struct page *page,
- 	bool need_unlock = false;
- 	unsigned long uninitialized_var(flags);
- 
--	if (unlikely(!pc))
--		return;
--
- 	rcu_read_lock();
- 	memcg = pc->mem_cgroup;
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
-@@ -2669,8 +2666,6 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
- 	}
- 
- 	pc = lookup_page_cgroup(page);
--	BUG_ON(!pc); /* XXX: remove this and move pc lookup into commit */
--
- 	ret = __mem_cgroup_try_charge(mm, gfp_mask, nr_pages, &memcg, oom);
- 	if (ret || !memcg)
- 		return ret;
-@@ -2942,7 +2937,7 @@ __mem_cgroup_uncharge_common(struct page *page, enum charge_type ctype)
- 	 * Check if our page_cgroup is valid
- 	 */
- 	pc = lookup_page_cgroup(page);
--	if (unlikely(!pc || !PageCgroupUsed(pc)))
-+	if (unlikely(!PageCgroupUsed(pc)))
- 		return NULL;
- 
- 	lock_page_cgroup(pc);
-@@ -3326,6 +3321,7 @@ static struct page_cgroup *lookup_page_cgroup_used(struct page *page)
- 	struct page_cgroup *pc;
- 
- 	pc = lookup_page_cgroup(page);
-+	/* Can be NULL while bootstrapping the page allocator */
- 	if (likely(pc) && PageCgroupUsed(pc))
- 		return pc;
- 	return NULL;
+@@ -2444,11 +2444,11 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+ 	switch (ctype) {
+ 	case MEM_CGROUP_CHARGE_TYPE_CACHE:
+ 	case MEM_CGROUP_CHARGE_TYPE_SHMEM:
+-		SetPageCgroupCache(pc);
++		__SetPageCgroupCache(pc);
+ 		SetPageCgroupUsed(pc);
+ 		break;
+ 	case MEM_CGROUP_CHARGE_TYPE_MAPPED:
+-		ClearPageCgroupCache(pc);
++		__ClearPageCgroupCache(pc);
+ 		SetPageCgroupUsed(pc);
+ 		break;
+ 	default:
 -- 
 1.7.6.4
 
