@@ -1,43 +1,83 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 5/8] mm: memcg: remove unneeded checks from
- newpage_charge()
-Date: Thu, 24 Nov 2011 12:58:16 +0100
-Message-ID: <20111124115816.GA1225@cmpxchg.org>
-References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
- <1322062951-1756-6-git-send-email-hannes@cmpxchg.org>
- <20111124090443.d3f720c5.kamezawa.hiroyu@jp.fujitsu.com>
- <20111124090409.GC6843@cmpxchg.org>
- <20111124103049.GG26036@tiehlicka.suse.cz>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH -mm] cgroup: Fix task counter common ancestor logic
+Date: Thu, 24 Nov 2011 14:24:51 +0100
+Message-ID: <20111124132442.GA18579@somewhere.redhat.com>
+References: <1320765670-14181-1-git-send-email-fweisbec@gmail.com>
+ <20111108135111.6a74f1d2.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=gqBW3+MJh+ZYmhiE0eGNcTpXw+Qe+5J/LAzPwL6XRac=;
+        b=iaIaPjBEKuslvuDhZKpcZ00Lu/BUM2AG2q9josOvPCnv82HYlL2kKM2bCmSniGXTW2
+         o1mI+IDGuxJ561cH/bSQVraMLVo6qYAFDjlbvYMtfmEp4JhF1S46YmIzwHEZON8Xfb/e
+         KAr4f8HEy4yUL7fr50ma+UQgpaoS8K15OaIXk=
 Content-Disposition: inline
-In-Reply-To: <20111124103049.GG26036-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+In-Reply-To: <20111108135111.6a74f1d2.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ben Blum <bblum-OM76b2Iv3yLQjUSlxSEPGw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Thu, Nov 24, 2011 at 11:30:49AM +0100, Michal Hocko wrote:
-> On Thu 24-11-11 10:04:09, Johannes Weiner wrote:
-> > From: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > Subject: mm: memcg: remove unneeded checks from newpage_charge() fix
-> > 
-> > Document page state assumptions and catch if they are violated in
-> > newpage_charge().
-> > 
-> > Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Tue, Nov 08, 2011 at 01:51:11PM -0800, Andrew Morton wrote:
+> On Tue,  8 Nov 2011 16:21:10 +0100
+> Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 > 
-> I assume you are going to fold it into the previous one.
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > To solve this, keep the original cgroup of each thread in the thread
+> > group cached in the flex array and pass it to can_attach_task()/attach_task()
+> > and cancel_attach_task() so that the correct common ancestor between the old
+> > and new cgroup can be safely retrieved for each task.
+> 
+> OK, thanks.
+> 
+> We need to work out what to do with this patchset.  ie: should we merge
+> it.  I'm not sure that the case has been made?
+> 
+> Let's please drag this thing onto the table and poke at it for a while.
+> Probably everyone has forgotten everything so we'll need to start
+> again, sorry.  Perhaps you can (re)start proceedings by telling us why
+> it's useful to our users and why we should merge it?
+
+Right, so the main purpose is to have a suitable forkbomb protection
+in the lxc containers. It seems that these days, using NR_PROC rlimit is
+the prime choice to protect against forkbombs. But we can't use this for
+containers because if they run under the same user, they can starve each
+others by generating high number of processes. So we need the limit on
+number of processes to be per container.
+
+The basic requirement is to be able to run untrustee process inside a
+container while protecting against attacks from there without impacting
+the rest of the system.
+
+I'm adding in Cc some Lxc people who could perhaps provide more details
+and testify we really need this.
+
+> Some mental notes:
+> 
+> Tim says it would be useful for the things he's doing but doesn't
+> appear to have confirmed/tested that.
+
+Yeah, I'm waiting for more details from him. Tim?
+
+> Kay has said that it would not be useful for his plumber's wishlist
+> item, which is a shame.
+
+Indeed. I mean it would work but this cgroup subsystem is too much overhead
+to be used by an init process (and then all other processes).
+
+> I seem to recall complaining that it doesn't address the forkbomb issue
+> for non-cgroups setups, so the forkbomb issue remains unaddressed.
+
+Right. Now if we can find a generic solution to protect against all forkbombs,
+something deterministic that can react soon enough so that it doesn't impact
+the rest of system, in order to avoid running into some DDOS, then we will
+consider it.
 
 Thanks.
-
-I'm under the assumption that incremental patches are better for
-Andrew, but I forgot why.
-
-But yes, this should be folded before going upstream.
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
