@@ -1,102 +1,45 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/3] impelemnt cgroup_(subsys)_disabled in generic.
-Date: Thu, 24 Nov 2011 12:18:41 +0900
-Message-ID: <20111124121841.c4c43118.kamezawa.hiroyu@jp.fujitsu.com>
-References: <20111123172840.acd53c41.kamezawa.hiroyu@jp.fujitsu.com>
-	<4ECDAA55.1030102@cn.fujitsu.com>
+From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch 0/8] mm: memcg fixlets for 3.3
+Date: Thu, 24 Nov 2011 11:39:39 +0530
+Message-ID: <CAKTCnzk0Jzq+o1Qv9hOO5ssO7U_xe1ZqUaWDhWEeJAQQPjPudg@mail.gmail.com>
+References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4ECDAA55.1030102-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=9w9OueaOLDTvPHoeC8qtRC0dWz8hZ1cKVD3GrW67SjY=;
+        b=e4nuHMRuSbY44so4IT5ppbLBI49ckrJdVJpqibKX95u0ZV9GxHh9MPaz0D6wtjsG6B
+         hzB4FDBLkFFM5oZ6KdJPQWWXaIKR38tqB5+wX/KAVCL8QL1VIimAPIdTlx1QfH+3Aw58
+         fqSMSTAKBbi0ah7H2GfwTf3n8qHArg5MWYrw0=
+In-Reply-To: <1322062951-1756-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, 24 Nov 2011 10:22:13 +0800
-Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> wrote:
+On Wed, Nov 23, 2011 at 9:12 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> w=
+rote:
+>
+> Here are some minor memcg-related cleanups and optimizations, nothing
+> too exciting. =A0The bulk of the diffstat comes from renaming the
+> remaining variables to describe a (struct mem_cgroup *) to "memcg".
+> The rest cuts down on the (un)charge fastpaths, as people start to ge=
+t
+> annoyed by those functions showing up in the profiles of their their
+> non-memcg workloads. =A0More is to come, but I wanted to get the more
+> obvious bits out of the way.
 
-> KAMEZAWA Hiroyuki wrote:
-> > 
-> > Now, memory cgroup has 'mem_cgroup_disabled()' in memcontrol.h
-> > 
-> > I made a brief trial to use static_branch() for that function. At doing that,
-> > I thought it will be better to implement generic cgroup functions rather
-> > than having memory cgroup's its own one.
-> > 
-> > This series consists of 3 patches
-> > 1 .... implement cgroup_xxxx_disabled() in generic.
-> > 2 .... use jump_label for cgroup_xxxx_disabled()
-> > 3 .... remove mem_cgroup_disabled() in memcontrol.c
-> > 
-> > And I post this series for getting review/comments.
-> > I'm not sure patches for using jump_label is worth to be merged.
-> > 
-> > I did a test to run a loop
-> > 	while(-) {
-> > 		mmap(1M)
-> > 		touch all pages
-> > 		munmap()
-> > 	}
-> > 
-> > and measured performance score in ROOT cgroup. Here,
-> > 
-> > (Before patch)
-> >    182,932,842,128 cycles                    #    0.000 GHz                     [33.33%]
-> >    192,711,643,877 instructions              #    1.05  insns per cycle         [49.99%]
-> >        761,483,416 cache-references                                             [49.98%]
-> >            159,908 cache-misses              #    0.021 % of all cache refs     [50.00%]
-> >     33,253,084,874 branches                                                     [33.34%]
-> >        109,796,792 branch-misses             #    0.33% of all branches         [33.34%]
-> > 
-> >       58.289265709 seconds time elapsed
-> > 
-> > (After patch)
-> >  Performance counter stats for './malloc 1':
-> > 
-> >    183,068,407,487 cycles                    #    0.000 GHz                     [33.33%]
-> >    191,834,248,678 instructions              #    1.05  insns per cycle         [50.00%]
-> >        798,635,028 cache-references                                             [49.98%]
-> >             95,562 cache-misses              #    0.012 % of all cache refs     [50.00%]
-> >     32,755,318,286 branches                                                     [33.34%]
-> >         77,774,624 branch-misses             #    0.24% of all branches         [33.34%]
-> > 
-> >       58.332356996 seconds time elapsed
-> > 
-> > There is no differece in 'time' ;) 
-> > But I got an impression that 'branch' score gets better in several tests.
-> > 
-> > Thanks,
-> > -Kame
-> > 
-> > P.S. maybe I can replace 'do_swap_account' with jump_label, too.
-> > 
-> 
-> The numbers sugguest using jump label is a win.
-> 
-> However I'm not quite convinced that we make it generic. The subsys.disabled flag
-> was introduced long ago for memcg, but yet it has no other users.
-> 
+Hi, Johannes
 
-We have generic cgroup_disable=xxxx boot options. But yes, it seems only memory cgroup
-checks it in the hooks. (But I'm not sure it's not necessary to be checked..)
+The renaming was a separate patch sent from Raghavendra as well, not
+sure if you've seen it. What tests are you using to test these
+patches?
 
-> So maybe for now make use of jump label in memcg only? We probably still needs
-> a bit help from cgroup core, to provide a subsys->disable() callback.
-> 
-
-Hm, ok. if this is not welcomed, I'll keep this only in memory cgroup and don't
-touch cgroup.h. 
-
-Thank you for review.
-
-Regards,
--Kame
-
-
-
-
+Balbir
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
