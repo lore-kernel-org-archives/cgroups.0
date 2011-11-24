@@ -1,72 +1,74 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 6/8] mm: memcg: remove unneeded checks from
- uncharge_page()
-Date: Thu, 24 Nov 2011 10:06:39 +0100
-Message-ID: <20111124090639.GD6843@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/8] mm: oom_kill: remove memcg argument from
+ oom_kill_task()
+Date: Thu, 24 Nov 2011 10:07:54 +0100
+Message-ID: <20111124090754.GA26036@tiehlicka.suse.cz>
 References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
- <1322062951-1756-7-git-send-email-hannes@cmpxchg.org>
- <20111124090619.895988e7.kamezawa.hiroyu@jp.fujitsu.com>
+ <1322062951-1756-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20111124090619.895988e7.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1322062951-1756-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Nov 24, 2011 at 09:06:19AM +0900, KAMEZAWA Hiroyuki wrote:
-> On Wed, 23 Nov 2011 16:42:29 +0100
-> Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Wed 23-11-11 16:42:24, Johannes Weiner wrote:
+> From: Johannes Weiner <jweiner@redhat.com>
 > 
-> > From: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > 
-> > mem_cgroup_uncharge_page() is only called on either freshly allocated
-> > pages without page->mapping or on rmapped PageAnon() pages.  There is
-> > no need to check for a page->mapping that is not an anon_vma.
-> > 
-> > Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> The memcg argument of oom_kill_task() hasn't been used since 341aea2
+> 'oom-kill: remove boost_dying_task_prio()'.  Kill it.
 > 
-> For making our assumption clearer to readers of codes,
-> VM_BUG_ON(page->mapping && !PageAnon(page)) please.
+> Signed-off-by: Johannes Weiner <jweiner@redhat.com>
 
-Yep, delta patch below.
+Right you are.
 
-> Anyway,
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-Thanks!
+> ---
+>  mm/oom_kill.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 471dedb..fd9e303 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -423,7 +423,7 @@ static void dump_header(struct task_struct *p, gfp_t gfp_mask, int order,
+>  }
+>  
+>  #define K(x) ((x) << (PAGE_SHIFT-10))
+> -static int oom_kill_task(struct task_struct *p, struct mem_cgroup *mem)
+> +static int oom_kill_task(struct task_struct *p)
+>  {
+>  	struct task_struct *q;
+>  	struct mm_struct *mm;
+> @@ -522,7 +522,7 @@ static int oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
+>  		}
+>  	} while_each_thread(p, t);
+>  
+> -	return oom_kill_task(victim, mem);
+> +	return oom_kill_task(victim);
+>  }
+>  
+>  /*
+> -- 
+> 1.7.6.4
+> 
 
----
-From: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: mm: memcg: remove unneeded checks from uncharge_page() fix
-
-Document page state assumptions and catch if they are violated in
-uncharge_page().
-
-Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2f1fdc4..872dae1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2992,6 +2992,7 @@ void mem_cgroup_uncharge_page(struct page *page)
- 	/* early check. */
- 	if (page_mapped(page))
- 		return;
-+	VM_BUG_ON(page->mapping && !PageAnon(page));
- 	__mem_cgroup_uncharge_common(page, MEM_CGROUP_CHARGE_TYPE_MAPPED);
- }
- 
 -- 
-1.7.6.4
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
