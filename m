@@ -1,85 +1,61 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 0/8] mm: memcg fixlets for 3.3
-Date: Thu, 24 Nov 2011 10:45:32 +0100
-Message-ID: <20111124094532.GF6843@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 3/8] mm: memcg: clean up fault accounting
+Date: Thu, 24 Nov 2011 10:51:24 +0100
+Message-ID: <20111124095124.GG6843@cmpxchg.org>
 References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
- <CAKTCnzk0Jzq+o1Qv9hOO5ssO7U_xe1ZqUaWDhWEeJAQQPjPudg@mail.gmail.com>
+ <1322062951-1756-4-git-send-email-hannes@cmpxchg.org>
+ <20111124093349.GC26036@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <CAKTCnzk0Jzq+o1Qv9hOO5ssO7U_xe1ZqUaWDhWEeJAQQPjPudg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20111124093349.GC26036@tiehlicka.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Nov 24, 2011 at 11:39:39AM +0530, Balbir Singh wrote:
-> On Wed, Nov 23, 2011 at 9:12 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>=
- wrote:
-> >
-> > Here are some minor memcg-related cleanups and optimizations, nothi=
-ng
-> > too exciting. =A0The bulk of the diffstat comes from renaming the
-> > remaining variables to describe a (struct mem_cgroup *) to "memcg".
-> > The rest cuts down on the (un)charge fastpaths, as people start to =
-get
-> > annoyed by those functions showing up in the profiles of their thei=
-r
-> > non-memcg workloads. =A0More is to come, but I wanted to get the mo=
-re
-> > obvious bits out of the way.
->=20
-> Hi, Johannes
->=20
-> The renaming was a separate patch sent from Raghavendra as well, not
-> sure if you've seen it.
+On Thu, Nov 24, 2011 at 10:33:49AM +0100, Michal Hocko wrote:
+> On Wed 23-11-11 16:42:26, Johannes Weiner wrote:
+> > From: Johannes Weiner <jweiner@redhat.com>
+> > 
+> > The fault accounting functions have a single, memcg-internal user, so
+> > they don't need to be global.  In fact, their one-line bodies can be
+> > directly folded into the caller.  
+> 
+> At first I thought that this doesn't help much because the generated
+> code should be exactly same but thinking about it some more it makes
+> sense.
+> We should have a single place where we account for events. Maybe we
+> should include also accounting done in mem_cgroup_charge_statistics
+> (this would however mean that mem_cgroup_count_vm_event would have to be
+> split). What do you think?
 
-I did and they are already in -mm, but unless I miss something, those
-were only for memcontrol.[ch].  My patch is for the rest of mm.
+I'm all for unifying all the stats crap into a single place.
+Optimally, we should have been able to put memcg hooks below
+count_vm_event* but maybe that ship has sailed with PGPGIN/PGPGOUT
+having different meanings between memcg and the rest of the system :/
 
-> What tests are you using to test these patches?
+Anything in that direction is improvement, IMO.
 
-I usually run concurrent kernbench jobs in separate memcgs as a smoke
-test with these tools:
+> > And since faults happen one at a time, use this_cpu_inc() directly
+> > instead of this_cpu_add(foo, 1).
+> 
+> The generated code will be same but it is easier to read, so agreed.
 
-	http://git.cmpxchg.org/?p=3Dstatutils.git;a=3Dsummary
+And it fits within 80 columns :-)
 
-"runtest" takes a job-spec file that looks a bit like RPM spec to
-define works with preparation and cleanup phases, and data collectors.
-The memcg kernbench job I use is in the examples directory.  You just
-need to put separate kernel source directories into place (linux-`seq
--w 04`) and then launch it like this:
+> > Signed-off-by: Johannes Weiner <jweiner@redhat.com>
+> 
+> Anyway
+> Acked-by: Michal Hocko <mhocko@suse.cz>
 
-	runtest -s memcg-kernbench.load `uname -r`
+Thanks.
 
-which will run the test and collect memory.stat of the parent memcg
-every second, which you can then further evaluate with the other
-tools:
-
-	readdict < `uname -r`-memory.stat.data | columns 14 15 | plot
-
-for example, where readdict translates the "key value" lines of
-memory.stat into tables where each value is on its own row.  Columns
-14 and 15 are total_cache and total_rss (find out with cat -n -- yeah,
-still a bit rough).  You need python-matplotlib for plot to work.
-
-Multiple runs can be collected into the same logfiles and then fold
-ever-increasing counters with the "events" tool.  For example, to find
-the average fault count, you would do something like this (19 =3D
-total_pgfault, 20 =3D total_pgmajfault):
-
-	for x in `seq 10`; do runtest -s foo.load foo`; done
-	readdict < foo-memory.stat.data | columns 19 20 | events | mean -s
-
-Oh, and workload runtime is always recorded in NAME.time, so
-
-	events < `uname -r`.time
-
-gives you the timings of each run, which you can then further process
-with "mean" or "median" again.
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
