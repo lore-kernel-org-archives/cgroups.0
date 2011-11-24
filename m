@@ -1,50 +1,88 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] cgroup_freezer: fix freezing groups with stopped tasks
-Date: Thu, 24 Nov 2011 11:04:54 +0100
-Message-ID: <20111124100454.GE26036@tiehlicka.suse.cz>
-References: <1321480234-29241-1-git-send-email-mhocko@suse.cz>
- <20111121230709.GR25776@google.com>
- <4ECB06D2.6060106@cn.fujitsu.com>
- <20111122022118.GT25776@google.com>
- <20111122090522.GA26768@tiehlicka.suse.cz>
- <20111122153948.GE322@google.com>
- <20111122154748.GF322@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 4/8] mm: memcg: lookup_page_cgroup (almost) never returns
+ NULL
+Date: Thu, 24 Nov 2011 11:05:49 +0100
+Message-ID: <20111124100549.GH6843@cmpxchg.org>
+References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
+ <1322062951-1756-5-git-send-email-hannes@cmpxchg.org>
+ <20111124095251.GD26036@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20111122154748.GF322-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20111124095251.GD26036-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tomasz Buchert <tomasz.buchert-MZpvjPyXg2s@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 22-11-11 07:48:06, Tejun Heo wrote:
-> On Tue, Nov 22, 2011 at 07:39:48AM -0800, Tejun Heo wrote:
-> > > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> > > Cc: Tomasz Buchert <tomasz.buchert-MZpvjPyXg2s@public.gmane.org>
-> > > Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-> > > Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> > > Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> > > Cc: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On Thu, Nov 24, 2011 at 10:52:51AM +0100, Michal Hocko wrote:
+> On Wed 23-11-11 16:42:27, Johannes Weiner wrote:
+> > From: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > > 
-> > Applying to cgroup/for-3.2-fixes.
+> > Pages have their corresponding page_cgroup descriptors set up before
+> > they are used in userspace, and thus managed by a memory cgroup.
+> > 
+> > The only time where lookup_page_cgroup() can return NULL is in the
+> > page sanity checking code that executes while feeding pages into the
+> > page allocator for the first time.
+> > 
+> > Remove the NULL checks against lookup_page_cgroup() results from all
+> > callsites where we know that corresponding page_cgroup descriptors
+> > must be allocated.
 > 
-> I'll apply the original version in cgroup/for-3.2-fixes and deal with
-> conflict once pm-freezer branch is merged.  
+> OK, shouldn't we add
+> 
+> diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+> index 2d123f9..cb93f64 100644
+> --- a/mm/page_cgroup.c
+> +++ b/mm/page_cgroup.c
+> @@ -35,8 +35,7 @@ struct page_cgroup *lookup_page_cgroup(struct page *page)
+>  	struct page_cgroup *base;
+>  
+>  	base = NODE_DATA(page_to_nid(page))->node_page_cgroup;
+> -	if (unlikely(!base))
+> -		return NULL;
+> +	BUG_ON(!base);
+>  
+>  	offset = pfn - NODE_DATA(page_to_nid(page))->node_start_pfn;
+>  	return base + offset;
+> @@ -112,8 +111,7 @@ struct page_cgroup *lookup_page_cgroup(struct page *page)
+>  	unsigned long pfn = page_to_pfn(page);
+>  	struct mem_section *section = __pfn_to_section(pfn);
+>  
+> -	if (!section->page_cgroup)
+> -		return NULL;
+> +	BUG_ON(!section->page_cgroup);
+>  	return section->page_cgroup + pfn;
+>  }
+>  
+> just to make it explicit?
 
-Are you going to push this to the stable trees as well, or should I do
-it?
+No, see the last hunk in this patch.  It's actually possible for this
+to run, although only while feeding fresh pages into the allocator:
 
-Thanks
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+> > @@ -3326,6 +3321,7 @@ static struct page_cgroup *lookup_page_cgroup_used(struct page *page)
+> >  	struct page_cgroup *pc;
+> >  
+> >  	pc = lookup_page_cgroup(page);
+> > +	/* Can be NULL while bootstrapping the page allocator */
+> >  	if (likely(pc) && PageCgroupUsed(pc))
+> >  		return pc;
+> >  	return NULL;
+
+We could add a lookup_page_cgroup_safe() for this DEBUG_VM-only
+callsite as an optimization separately and remove the NULL check from
+lookup_page_cgroup() itself.  But this patch was purely about removing
+the actively misleading checks.
+
+> > Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> Other than that
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+Thanks.
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
