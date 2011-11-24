@@ -1,45 +1,72 @@
-From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [patch 0/8] mm: memcg fixlets for 3.3
-Date: Thu, 24 Nov 2011 11:39:39 +0530
-Message-ID: <CAKTCnzk0Jzq+o1Qv9hOO5ssO7U_xe1ZqUaWDhWEeJAQQPjPudg@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 7/8] mm: memcg: modify PageCgroupAcctLRU non-atomically
+Date: Thu, 24 Nov 2011 09:53:57 +0100
+Message-ID: <20111124085357.GA6843@cmpxchg.org>
 References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
+ <1322062951-1756-8-git-send-email-hannes@cmpxchg.org>
+ <alpine.LSU.2.00.1111231039390.2175@sister.anvils>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding;
-        bh=9w9OueaOLDTvPHoeC8qtRC0dWz8hZ1cKVD3GrW67SjY=;
-        b=e4nuHMRuSbY44so4IT5ppbLBI49ckrJdVJpqibKX95u0ZV9GxHh9MPaz0D6wtjsG6B
-         hzB4FDBLkFFM5oZ6KdJPQWWXaIKR38tqB5+wX/KAVCL8QL1VIimAPIdTlx1QfH+3Aw58
-         fqSMSTAKBbi0ah7H2GfwTf3n8qHArg5MWYrw0=
-In-Reply-To: <1322062951-1756-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.00.1111231039390.2175-T/S/X05ZC3jbmfIwyoSfiQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 23, 2011 at 9:12 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> w=
-rote:
->
-> Here are some minor memcg-related cleanups and optimizations, nothing
-> too exciting. =A0The bulk of the diffstat comes from renaming the
-> remaining variables to describe a (struct mem_cgroup *) to "memcg".
-> The rest cuts down on the (un)charge fastpaths, as people start to ge=
-t
-> annoyed by those functions showing up in the profiles of their their
-> non-memcg workloads. =A0More is to come, but I wanted to get the more
-> obvious bits out of the way.
+On Wed, Nov 23, 2011 at 10:52:39AM -0800, Hugh Dickins wrote:
+> On Wed, 23 Nov 2011, Johannes Weiner wrote:
+> 
+> > From: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > 
+> > This bit is protected by zone->lru_lock, there is no need for locked
+> > operations when setting and clearing it.
+> > 
+> > Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> Unless there are special considerations which you have not mentioned at
+> all in the description above, this 7/8 and the similar 8/8 are mistaken.
+> 
+> The atomic operation is not for guaranteeing the setting and clearing
+> of the bit in question: it's for guaranteeing that you don't accidentally
+> set or clear any of the other bits in the same word when you're doing so,
+> if another task is updating them at the same time as you're doing this.
+> 
+> There are circumstances when non-atomic shortcuts can be taken, when
+> you're sure the field cannot yet be visible to other tasks (we do that
+> when setting PageLocked on a freshly allocated page, for example - but
+> even then have to rely on others using get_page_unless_zero properly).
+> But I don't think that's the case here.
 
-Hi, Johannes
+I have no idea how I could oversee this.  You are, of course, right.
 
-The renaming was a separate patch sent from Raghavendra as well, not
-sure if you've seen it. What tests are you using to test these
-patches?
+That said, I *think* that it is safe for PageCgroupCache because
+nobody else should be modifying any pc->flags concurrently:
 
-Balbir
+PCG_LOCK: by definition exclusive and held during setting and clearing
+PCG_CACHE
+
+PCG_CACHE: serialized by PCG_LOCK
+
+PCG_USED: serialized by PCG_LOCK
+
+PCG_MIGRATION: serialized by PCG_LOCK
+
+PCG_MOVE_LOCK: 1. update_page_stat() is only called against file
+pages, and the page lock serializes charging against mapping.  the
+page is also charged before establishing a pte mapping, so an unmap
+can not race with a charge.  2. split_huge_fixup runs against already
+charged pages.  3. move_account is serialized both by LRU-isolation
+during charging and PCG_LOCK
+
+PCG_FILE_MAPPED: same as PCG_MOVE_LOCK's 1.
+
+PCG_ACCT_LRU: pages are isolated from the LRU during charging
+
+But all this is obviously anything but robust, and so I retract the
+broken 7/8 and the might-actually-work 8/8.
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
