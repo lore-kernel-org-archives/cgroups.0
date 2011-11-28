@@ -1,121 +1,184 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v6 01/10] Basic kernel memory functionality for the
- Memory Controller
-Date: Mon, 28 Nov 2011 11:24:41 +0900
-Message-ID: <20111128112441.44a6e166.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH v6 02/10] foundations of per-cgroup memory pressure
+ controlling.
+Date: Mon, 28 Nov 2011 11:55:41 +0900
+Message-ID: <20111128115541.bc8f2ffa.kamezawa.hiroyu@jp.fujitsu.com>
 References: <1322242696-27682-1-git-send-email-glommer@parallels.com>
-	<1322242696-27682-2-git-send-email-glommer@parallels.com>
+	<1322242696-27682-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1322242696-27682-2-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1322242696-27682-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, paul@paulmenage.org, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, 25 Nov 2011 15:38:07 -0200
-Glauber Costa <glommer@parallels.com> wrote:
+On Fri, 25 Nov 2011 15:38:08 -0200
+Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 
-> This patch lays down the foundation for the kernel memory component
-> of the Memory Controller.
+> This patch replaces all uses of struct sock fields' memory_pressure,
+> memory_allocated, sockets_allocated, and sysctl_mem to acessor
+> macros. Those macros can either receive a socket argument, or a mem_cgroup
+> argument, depending on the context they live in.
 > 
-> As of today, I am only laying down the following files:
+> Since we're only doing a macro wrapping here, no performance impact at all is
+> expected in the case where we don't have cgroups disabled.
 > 
->  * memory.independent_kmem_limit
->  * memory.kmem.limit_in_bytes (currently ignored)
->  * memory.kmem.usage_in_bytes (always zero)
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> Reviewed-by: Kirill A. Shutemov <kirill@shutemov.name>
-> CC: Paul Menage <paul@paulmenage.org>
-> CC: Greg Thelen <gthelen@google.com>
-> ---
->  Documentation/cgroups/memory.txt |   36 ++++++++++++-
->  init/Kconfig                     |   14 +++++
->  mm/memcontrol.c                  |  107 ++++++++++++++++++++++++++++++++++++--
->  3 files changed, 150 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-> index 06eb6d9..bf00cd2 100644
-> --- a/Documentation/cgroups/memory.txt
-> +++ b/Documentation/cgroups/memory.txt
-> @@ -44,8 +44,9 @@ Features:
->   - oom-killer disable knob and oom-notifier
->   - Root cgroup has no limit controls.
->  
-> - Kernel memory and Hugepages are not under control yet. We just manage
-> - pages on LRU. To add more controls, we have to take care of performance.
-> + Hugepages is not under control yet. We just manage pages on LRU. To add more
-> + controls, we have to take care of performance. Kernel memory support is work
-> + in progress, and the current version provides basically functionality.
->  
->  Brief summary of control files.
->  
-> @@ -56,8 +57,11 @@ Brief summary of control files.
->  				 (See 5.5 for details)
->   memory.memsw.usage_in_bytes	 # show current res_counter usage for memory+Swap
->  				 (See 5.5 for details)
-> + memory.kmem.usage_in_bytes	 # show current res_counter usage for kmem only.
-> +				 (See 2.7 for details)
->   memory.limit_in_bytes		 # set/show limit of memory usage
->   memory.memsw.limit_in_bytes	 # set/show limit of memory+Swap usage
-> + memory.kmem.limit_in_bytes	 # if allowed, set/show limit of kernel memory
->   memory.failcnt			 # show the number of memory usage hits limits
->   memory.memsw.failcnt		 # show the number of memory+Swap hits limits
->   memory.max_usage_in_bytes	 # show max memory usage recorded
-> @@ -72,6 +76,9 @@ Brief summary of control files.
->   memory.oom_control		 # set/show oom controls.
->   memory.numa_stat		 # show the number of memory usage per numa node
->  
-> + memory.independent_kmem_limit	 # select whether or not kernel memory limits are
-> +				   independent of user limits
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+> CC: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+I have some comments on the style. Maybe a nitpick but many patches were
+sent for fixing conding style in memcg recently.
+
++static inline int *sk_memory_pressure(const struct sock *sk)
++{
++	return sk->sk_prot->memory_pressure;
++}
++
++static inline long sk_prot_mem(const struct sock *sk, int index)
++{
++	long *prot = sk->sk_prot->sysctl_mem;
++	return prot[index];
++}
++
+
+I don't think sk_prot_mem() is an easy to undestand name.
+sk_prot_memory_limit() ?
+
+> +static inline int
+> +kcg_sockets_allocated_sum_positive(struct proto *prot, struct mem_cgroup *cg)
+> +{
+> +	return percpu_counter_sum_positive(prot->sockets_allocated);
+> +}
 > +
->  1. History
+> +static inline long
+> +kcg_memory_allocated(struct proto *prot, struct mem_cgroup *cg)
+> +{
+> +	return atomic_long_read(prot->memory_allocated);
+> +}
 >  
->  The memory controller has a long history. A request for comments for the memory
-> @@ -255,6 +262,31 @@ When oom event notifier is registered, event will be delivered.
->    per-zone-per-cgroup LRU (cgroup's private LRU) is just guarded by
->    zone->lru_lock, it has no lock of its own.
+
+I don't like 'kcg'. What it means ? 
+memory_cgrou_prot_socekts_allocated() ? and
+memory_cgroup_prot_memory_allocated() ?
+
+And the variable for memory cgroup should be 'memcg'.
+http://www.spinics.net/lists/linux-mm/msg26781.html
+So, please rename.
+
+
+
+>  #ifdef CONFIG_PROC_FS
+>  /* Called with local bh disabled */
+> diff --git a/include/net/tcp.h b/include/net/tcp.h
+> index e147f42..ccaa3b6 100644
+<snip>
+
+ 	seq_printf(seq, "RAW: inuse %d\n",
+> diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
+> index 34f5db1..89a2bfe 100644
+> --- a/net/ipv4/tcp.c
+> +++ b/net/ipv4/tcp.c
+> @@ -319,9 +319,11 @@ EXPORT_SYMBOL(tcp_memory_pressure);
 >  
-> +2.7 Kernel Memory Extension (CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
-> +
-> + With the Kernel memory extension, the Memory Controller is able to limit
-> +the amount of kernel memory used by the system. Kernel memory is fundamentally
-> +different than user memory, since it can't be swapped out, which makes it
-> +possible to DoS the system by consuming too much of this precious resource.
-> +Kernel memory limits are not imposed for the root cgroup.
-> +
-> +Memory limits as specified by the standard Memory Controller may or may not
-> +take kernel memory into consideration. This is achieved through the file
-> +memory.independent_kmem_limit. A Value different than 0 will allow for kernel
-> +memory to be controlled separately.
-> +
-> +When kernel memory limits are not independent, the limit values set in
-> +memory.kmem files are ignored.
-> +
-> +Currently no soft limit is implemented for kernel memory. It is future work
-> +to trigger slab reclaim when those limits are reached.
-> +
-> +CAUTION: As of this writing, the kmem extention may prevent tasks from moving
-> +among cgroups. If a task has kmem accounting in a cgroup, the task cannot be
-> +moved until the kmem resource is released. Also, until the resource is fully
-> +released, the cgroup cannot be destroyed. So, please consider your use cases
-> +and set kmem extention config option carefully.
+>  void tcp_enter_memory_pressure(struct sock *sk)
+>  {
+> -	if (!tcp_memory_pressure) {
+> +	int *memory_pressure = sk_memory_pressure(sk);
 > +
 
-This seems that memcg 'has' kernel memory limiting feature for all kinds of kmem..
-Could you add a list of "currently controled kmems" section ?
-And update the list in later patch ?
+Don't you need !memory_pressure check here ?
+
+Hmm, can this function be
+
++static inline int *sk_memory_pressure(const struct sock *sk)
++{
++	return sk->sk_prot->memory_pressure;
++}
+
+as
+
+static inline bool sk_under_prot_memory_pressure(const struct sock *sk)
+{
+	if (sk->sk_prot->memory_pressure &&
+	    *sk->sk_prot->memory_pressure)
+		return true;
+
+	return false;
+}
+
+and have sk_set/unset_prot_memory_pressure(),  ?
+
+
+
+> +	if (!*memory_pressure) {
+>  		NET_INC_STATS(sock_net(sk), LINUX_MIB_TCPMEMORYPRESSURES);
+> -		tcp_memory_pressure = 1;
+> +		*memory_pressure = 1;
+>  	}
+>  }
+>  EXPORT_SYMBOL(tcp_enter_memory_pressure);
+> diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
+> index 52b5c2d..3df862d 100644
+> --- a/net/ipv4/tcp_input.c
+> +++ b/net/ipv4/tcp_input.c
+> @@ -322,7 +322,7 @@ static void tcp_grow_window(struct sock *sk, const struct sk_buff *skb)
+>  	/* Check #1 */
+>  	if (tp->rcv_ssthresh < tp->window_clamp &&
+>  	    (int)tp->rcv_ssthresh < tcp_space(sk) &&
+> -	    !tcp_memory_pressure) {
+> +	    !sk_memory_pressure(sk)) {
+
+Don't you need to check !*sk_memory_pressure(sk) ?
+
+
+
+>  		int incr;
+>  
+>  		/* Check #2. Increase window, if skb with such overhead
+> @@ -411,8 +411,8 @@ static void tcp_clamp_window(struct sock *sk)
+>  
+>  	if (sk->sk_rcvbuf < sysctl_tcp_rmem[2] &&
+>  	    !(sk->sk_userlocks & SOCK_RCVBUF_LOCK) &&
+> -	    !tcp_memory_pressure &&
+> -	    atomic_long_read(&tcp_memory_allocated) < sysctl_tcp_mem[0]) {
+> +	    !sk_memory_pressure(sk) &&
+> +	    sk_memory_allocated(sk) < sk_prot_mem(sk, 0)) {
+>  		sk->sk_rcvbuf = min(atomic_read(&sk->sk_rmem_alloc),
+>  				    sysctl_tcp_rmem[2]);
+>  	}
+> @@ -4864,7 +4864,7 @@ static int tcp_prune_queue(struct sock *sk)
+>  
+>  	if (atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf)
+>  		tcp_clamp_window(sk);
+> -	else if (tcp_memory_pressure)
+> +	else if (sk_memory_pressure(sk))
+>  		tp->rcv_ssthresh = min(tp->rcv_ssthresh, 4U * tp->advmss);
+
+Ditto.
+
+
+>  
+>  	tcp_collapse_ofo_queue(sk);
+> @@ -4930,11 +4930,11 @@ static int tcp_should_expand_sndbuf(const struct sock *sk)
+>  		return 0;
+>  
+>  	/* If we are under global TCP memory pressure, do not expand.  */
+> -	if (tcp_memory_pressure)
+> +	if (sk_memory_pressure(sk))
+>  		return 0;
+
+again.
 
 Thanks,
 -Kame
 
-
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
