@@ -1,335 +1,144 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 3/3] cpuacct.stat: re-use scheduler statistics for the root cgroup
-Date: Mon, 28 Nov 2011 14:45:19 -0200
-Message-ID: <1322498719-2255-4-git-send-email-glommer@parallels.com>
-References: <1322498719-2255-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1322498719-2255-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v6 01/10] Basic kernel memory functionality for the
+ Memory Controller
+Date: Tue, 29 Nov 2011 08:55:18 +0900
+Message-ID: <20111129085518.65befeee.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1322242696-27682-1-git-send-email-glommer@parallels.com>
+	<1322242696-27682-2-git-send-email-glommer@parallels.com>
+	<20111128112441.44a6e166.kamezawa.hiroyu@jp.fujitsu.com>
+	<4ED36A6D.60900@parallels.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, daniel.lezcano-GANU6spQydw@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4ED36A6D.60900@parallels.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, paul@paulmenage.org, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-Right now, after we collect tick statistics for user and system and store them
-in a well known location, we keep the same statistics again for cpuacct.
-Since cpuacct is hierarchical, the numbers for the root cgroup should be
-absolutely equal to the system-wide numbers.
+On Mon, 28 Nov 2011 09:03:09 -0200
+Glauber Costa <glommer@parallels.com> wrote:
 
-So it would be better to just use it: this patch changes cpuacct accounting
-in a way that the cpustat statistics are kept in a struct kernel_cpustat percpu
-array. In the root cgroup case, we just point it to the main array. The rest of
-the hierarchy walk can be totally disabled later with a static branch - but I am
-not doing it here.
+> On 11/28/2011 12:24 AM, KAMEZAWA Hiroyuki wrote:
+> > On Fri, 25 Nov 2011 15:38:07 -0200
+> > Glauber Costa<glommer@parallels.com>  wrote:
+> >
+> >> This patch lays down the foundation for the kernel memory component
+> >> of the Memory Controller.
+> >>
+> >> As of today, I am only laying down the following files:
+> >>
+> >>   * memory.independent_kmem_limit
+> >>   * memory.kmem.limit_in_bytes (currently ignored)
+> >>   * memory.kmem.usage_in_bytes (always zero)
+> >>
+> >> Signed-off-by: Glauber Costa<glommer@parallels.com>
+> >> Reviewed-by: Kirill A. Shutemov<kirill@shutemov.name>
+> >> CC: Paul Menage<paul@paulmenage.org>
+> >> CC: Greg Thelen<gthelen@google.com>
+> >> ---
+> >>   Documentation/cgroups/memory.txt |   36 ++++++++++++-
+> >>   init/Kconfig                     |   14 +++++
+> >>   mm/memcontrol.c                  |  107 ++++++++++++++++++++++++++++++++++++--
+> >>   3 files changed, 150 insertions(+), 7 deletions(-)
+> >>
+> >> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+> >> index 06eb6d9..bf00cd2 100644
+> >> --- a/Documentation/cgroups/memory.txt
+> >> +++ b/Documentation/cgroups/memory.txt
+> >> @@ -44,8 +44,9 @@ Features:
+> >>    - oom-killer disable knob and oom-notifier
+> >>    - Root cgroup has no limit controls.
+> >>
+> >> - Kernel memory and Hugepages are not under control yet. We just manage
+> >> - pages on LRU. To add more controls, we have to take care of performance.
+> >> + Hugepages is not under control yet. We just manage pages on LRU. To add more
+> >> + controls, we have to take care of performance. Kernel memory support is work
+> >> + in progress, and the current version provides basically functionality.
+> >>
+> >>   Brief summary of control files.
+> >>
+> >> @@ -56,8 +57,11 @@ Brief summary of control files.
+> >>   				 (See 5.5 for details)
+> >>    memory.memsw.usage_in_bytes	 # show current res_counter usage for memory+Swap
+> >>   				 (See 5.5 for details)
+> >> + memory.kmem.usage_in_bytes	 # show current res_counter usage for kmem only.
+> >> +				 (See 2.7 for details)
+> >>    memory.limit_in_bytes		 # set/show limit of memory usage
+> >>    memory.memsw.limit_in_bytes	 # set/show limit of memory+Swap usage
+> >> + memory.kmem.limit_in_bytes	 # if allowed, set/show limit of kernel memory
+> >>    memory.failcnt			 # show the number of memory usage hits limits
+> >>    memory.memsw.failcnt		 # show the number of memory+Swap hits limits
+> >>    memory.max_usage_in_bytes	 # show max memory usage recorded
+> >> @@ -72,6 +76,9 @@ Brief summary of control files.
+> >>    memory.oom_control		 # set/show oom controls.
+> >>    memory.numa_stat		 # show the number of memory usage per numa node
+> >>
+> >> + memory.independent_kmem_limit	 # select whether or not kernel memory limits are
+> >> +				   independent of user limits
+> >> +
+> >>   1. History
+> >>
+> >>   The memory controller has a long history. A request for comments for the memory
+> >> @@ -255,6 +262,31 @@ When oom event notifier is registered, event will be delivered.
+> >>     per-zone-per-cgroup LRU (cgroup's private LRU) is just guarded by
+> >>     zone->lru_lock, it has no lock of its own.
+> >>
+> >> +2.7 Kernel Memory Extension (CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
+> >> +
+> >> + With the Kernel memory extension, the Memory Controller is able to limit
+> >> +the amount of kernel memory used by the system. Kernel memory is fundamentally
+> >> +different than user memory, since it can't be swapped out, which makes it
+> >> +possible to DoS the system by consuming too much of this precious resource.
+> >> +Kernel memory limits are not imposed for the root cgroup.
+> >> +
+> >> +Memory limits as specified by the standard Memory Controller may or may not
+> >> +take kernel memory into consideration. This is achieved through the file
+> >> +memory.independent_kmem_limit. A Value different than 0 will allow for kernel
+> >> +memory to be controlled separately.
+> >> +
+> >> +When kernel memory limits are not independent, the limit values set in
+> >> +memory.kmem files are ignored.
+> >> +
+> >> +Currently no soft limit is implemented for kernel memory. It is future work
+> >> +to trigger slab reclaim when those limits are reached.
+> >> +
+> >> +CAUTION: As of this writing, the kmem extention may prevent tasks from moving
+> >> +among cgroups. If a task has kmem accounting in a cgroup, the task cannot be
+> >> +moved until the kmem resource is released. Also, until the resource is fully
+> >> +released, the cgroup cannot be destroyed. So, please consider your use cases
+> >> +and set kmem extention config option carefully.
+> >> +
+> >
+> > This seems that memcg 'has' kernel memory limiting feature for all kinds of kmem..
+> > Could you add a list of "currently controled kmems" section ?
+> > And update the list in later patch ?
+> >
+> > Thanks,
+> > -Kame
+> >
+> >
+> Hi Kame,
+> 
+> Thanks for your review.
+> Since none of your comments are blockers, I'd prefer to send follow up 
+> patches if you don't mind - assuming Dave won't have any restrictions 
+> himself that would prevent him from picking this series. If I have to 
+> resend it anyway, I'll be more than happy to address them all in my next 
+> submission
+> 
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Paul Tuner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-CC: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
----
- kernel/sched/core.c  |  165 +++++++++++++++++++++++---------------------------
- kernel/sched/sched.h |   33 +++++++++-
- 2 files changed, 105 insertions(+), 93 deletions(-)
+As you like. But please clarify my comment which pointed out bugs in patch 02/10
+and 06/10 aren't correct.
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index c36f926..fd73bea 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -2555,6 +2555,42 @@ unsigned long long task_sched_runtime(struct task_struct *p)
- 	return ns;
- }
- 
-+#ifdef CONFIG_CGROUP_CPUACCT
-+struct cgroup_subsys cpuacct_subsys;
-+struct cpuacct root_cpuacct;
-+#endif
-+
-+static inline void task_group_account_field(struct task_struct *p,
-+					     u64 tmp, int index)
-+{
-+#ifdef CONFIG_CGROUP_CPUACCT
-+	struct kernel_cpustat *kcpustat;
-+	struct cpuacct *ca;
-+#endif
-+	/*
-+	 * Since all updates are sure to touch the root cgroup, we
-+	 * get ourselves ahead and touch it first. If the root cgroup
-+	 * is the only cgroup, then nothing else should be necessary.
-+	 *
-+	 */
-+	__get_cpu_var(kernel_cpustat).cpustat[index] += tmp;
-+
-+#ifdef CONFIG_CGROUP_CPUACCT
-+	if (unlikely(!cpuacct_subsys.active))
-+		return;
-+
-+	rcu_read_lock();
-+	ca = task_ca(p);
-+	while (ca && (ca != &root_cpuacct)) {
-+		kcpustat = this_cpu_ptr(ca->cpustat);
-+		kcpustat->cpustat[index] += tmp;
-+		ca = parent_ca(ca);
-+	}
-+	rcu_read_unlock();
-+#endif
-+}
-+
-+
- /*
-  * Account user cpu time to a process.
-  * @p: the process that the cpu time gets accounted to
-@@ -2579,7 +2615,7 @@ void account_user_time(struct task_struct *p, cputime_t cputime,
- 	index = (TASK_NICE(p) > 0) ? CPUTIME_NICE : CPUTIME_USER;
- 	cpustat[index] += tmp;
- 
--	cpuacct_update_stats(p, CPUACCT_STAT_USER, cputime);
-+	task_group_account_field(p, index, cputime);
- 	/* Account for user time used */
- 	acct_update_integrals(p);
- }
-@@ -2635,7 +2671,7 @@ void __account_system_time(struct task_struct *p, cputime_t cputime,
- 
- 	/* Add system time to cpustat. */
- 	cpustat[index] += tmp;
--	cpuacct_update_stats(p, CPUACCT_STAT_SYSTEM, cputime);
-+	task_group_account_field(p, index, cputime);
- 
- 	/* Account for system time used */
- 	acct_update_integrals(p);
-@@ -6772,8 +6808,15 @@ void __init sched_init(void)
- 	INIT_LIST_HEAD(&root_task_group.children);
- 	INIT_LIST_HEAD(&root_task_group.siblings);
- 	autogroup_init(&init_task);
-+
- #endif /* CONFIG_CGROUP_SCHED */
- 
-+#ifdef CONFIG_CGROUP_CPUACCT
-+	root_cpuacct.cpustat = &kernel_cpustat;
-+	root_cpuacct.cpuusage = alloc_percpu(u64);
-+	/* Too early, not expected to fail */
-+	BUG_ON(!root_cpuacct.cpuusage);
-+#endif
- 	for_each_possible_cpu(i) {
- 		struct rq *rq;
- 
-@@ -7834,44 +7877,16 @@ struct cgroup_subsys cpu_cgroup_subsys = {
-  * (balbir-xthvdsQ13ZrQT0dZR+AlfA@public.gmane.org).
-  */
- 
--/* track cpu usage of a group of tasks and its child groups */
--struct cpuacct {
--	struct cgroup_subsys_state css;
--	/* cpuusage holds pointer to a u64-type object on every cpu */
--	u64 __percpu *cpuusage;
--	struct percpu_counter cpustat[CPUACCT_STAT_NSTATS];
--};
--
--struct cgroup_subsys cpuacct_subsys;
--
--/* return cpu accounting group corresponding to this container */
--static inline struct cpuacct *cgroup_ca(struct cgroup *cgrp)
--{
--	return container_of(cgroup_subsys_state(cgrp, cpuacct_subsys_id),
--			    struct cpuacct, css);
--}
--
--/* return cpu accounting group to which this task belongs */
--static inline struct cpuacct *task_ca(struct task_struct *tsk)
--{
--	return container_of(task_subsys_state(tsk, cpuacct_subsys_id),
--			    struct cpuacct, css);
--}
--
--static inline struct cpuacct *parent_ca(struct cpuacct *ca)
--{
--	if (!ca || !ca->css.cgroup->parent)
--		return NULL;
--	return cgroup_ca(ca->css.cgroup->parent);
--}
--
- /* create a new cpu accounting group */
- static struct cgroup_subsys_state *cpuacct_create(
- 	struct cgroup_subsys *ss, struct cgroup *cgrp)
- {
--	struct cpuacct *ca = kzalloc(sizeof(*ca), GFP_KERNEL);
--	int i;
-+	struct cpuacct *ca;
- 
-+	if (!cgrp->parent)
-+		return &root_cpuacct.css;
-+
-+	ca = kzalloc(sizeof(*ca), GFP_KERNEL);
- 	if (!ca)
- 		goto out;
- 
-@@ -7879,15 +7894,13 @@ static struct cgroup_subsys_state *cpuacct_create(
- 	if (!ca->cpuusage)
- 		goto out_free_ca;
- 
--	for (i = 0; i < CPUACCT_STAT_NSTATS; i++)
--		if (percpu_counter_init(&ca->cpustat[i], 0))
--			goto out_free_counters;
-+	ca->cpustat = alloc_percpu(struct kernel_cpustat);
-+	if (!ca->cpustat)
-+		goto out_free_cpuusage;
- 
- 	return &ca->css;
- 
--out_free_counters:
--	while (--i >= 0)
--		percpu_counter_destroy(&ca->cpustat[i]);
-+out_free_cpuusage:
- 	free_percpu(ca->cpuusage);
- out_free_ca:
- 	kfree(ca);
-@@ -7900,10 +7913,8 @@ static void
- cpuacct_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
- {
- 	struct cpuacct *ca = cgroup_ca(cgrp);
--	int i;
- 
--	for (i = 0; i < CPUACCT_STAT_NSTATS; i++)
--		percpu_counter_destroy(&ca->cpustat[i]);
-+	free_percpu(ca->cpustat);
- 	free_percpu(ca->cpuusage);
- 	kfree(ca);
- }
-@@ -7996,16 +8007,31 @@ static const char *cpuacct_stat_desc[] = {
- };
- 
- static int cpuacct_stats_show(struct cgroup *cgrp, struct cftype *cft,
--		struct cgroup_map_cb *cb)
-+			      struct cgroup_map_cb *cb)
- {
- 	struct cpuacct *ca = cgroup_ca(cgrp);
--	int i;
-+	int cpu;
-+	s64 val = 0;
- 
--	for (i = 0; i < CPUACCT_STAT_NSTATS; i++) {
--		s64 val = percpu_counter_read(&ca->cpustat[i]);
--		val = cputime64_to_clock_t(val);
--		cb->fill(cb, cpuacct_stat_desc[i], val);
-+	for_each_online_cpu(cpu) {
-+		struct kernel_cpustat *kcpustat = per_cpu_ptr(ca->cpustat, cpu);
-+		val += kcpustat->cpustat[CPUTIME_USER];
-+		val += kcpustat->cpustat[CPUTIME_NICE];
- 	}
-+	val = cputime64_to_clock_t(val);
-+	cb->fill(cb, cpuacct_stat_desc[CPUACCT_STAT_USER], val);
-+
-+	val = 0;
-+	for_each_online_cpu(cpu) {
-+		struct kernel_cpustat *kcpustat = per_cpu_ptr(ca->cpustat, cpu);
-+		val += kcpustat->cpustat[CPUTIME_SYSTEM];
-+		val += kcpustat->cpustat[CPUTIME_IRQ];
-+		val += kcpustat->cpustat[CPUTIME_SOFTIRQ];
-+	}
-+
-+	val = cputime64_to_clock_t(val);
-+	cb->fill(cb, cpuacct_stat_desc[CPUACCT_STAT_SYSTEM], val);
-+
- 	return 0;
- }
- 
-@@ -8057,45 +8083,6 @@ void cpuacct_charge(struct task_struct *tsk, u64 cputime)
- 	rcu_read_unlock();
- }
- 
--/*
-- * When CONFIG_VIRT_CPU_ACCOUNTING is enabled one jiffy can be very large
-- * in cputime_t units. As a result, cpuacct_update_stats calls
-- * percpu_counter_add with values large enough to always overflow the
-- * per cpu batch limit causing bad SMP scalability.
-- *
-- * To fix this we scale percpu_counter_batch by cputime_one_jiffy so we
-- * batch the same amount of time with CONFIG_VIRT_CPU_ACCOUNTING disabled
-- * and enabled. We cap it at INT_MAX which is the largest allowed batch value.
-- */
--#ifdef CONFIG_SMP
--#define CPUACCT_BATCH	\
--	min_t(long, percpu_counter_batch * cputime_one_jiffy, INT_MAX)
--#else
--#define CPUACCT_BATCH	0
--#endif
--
--/*
-- * Charge the system/user time to the task's accounting group.
-- */
--void cpuacct_update_stats(struct task_struct *tsk,
--		enum cpuacct_stat_index idx, cputime_t val)
--{
--	struct cpuacct *ca;
--	int batch = CPUACCT_BATCH;
--
--	if (unlikely(!cpuacct_subsys.active))
--		return;
--
--	rcu_read_lock();
--	ca = task_ca(tsk);
--
--	do {
--		__percpu_counter_add(&ca->cpustat[idx], val, batch);
--		ca = parent_ca(ca);
--	} while (ca);
--	rcu_read_unlock();
--}
--
- struct cgroup_subsys cpuacct_subsys = {
- 	.name = "cpuacct",
- 	.create = cpuacct_create,
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index c2e7802..53f6f83 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -828,13 +828,38 @@ extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime
- extern void update_cpu_load(struct rq *this_rq);
- 
- #ifdef CONFIG_CGROUP_CPUACCT
-+/* track cpu usage of a group of tasks and its child groups */
-+struct cpuacct {
-+	struct cgroup_subsys_state css;
-+	/* cpuusage holds pointer to a u64-type object on every cpu */
-+	u64 __percpu *cpuusage;
-+	struct kernel_cpustat __percpu *cpustat;
-+};
-+
-+/* return cpu accounting group corresponding to this container */
-+static inline struct cpuacct *cgroup_ca(struct cgroup *cgrp)
-+{
-+	return container_of(cgroup_subsys_state(cgrp, cpuacct_subsys_id),
-+			    struct cpuacct, css);
-+}
-+
-+/* return cpu accounting group to which this task belongs */
-+static inline struct cpuacct *task_ca(struct task_struct *tsk)
-+{
-+	return container_of(task_subsys_state(tsk, cpuacct_subsys_id),
-+			    struct cpuacct, css);
-+}
-+
-+static inline struct cpuacct *parent_ca(struct cpuacct *ca)
-+{
-+	if (!ca || !ca->css.cgroup->parent)
-+		return NULL;
-+	return cgroup_ca(ca->css.cgroup->parent);
-+}
-+
- extern void cpuacct_charge(struct task_struct *tsk, u64 cputime);
--extern void cpuacct_update_stats(struct task_struct *tsk,
--		enum cpuacct_stat_index idx, cputime_t val);
- #else
- static inline void cpuacct_charge(struct task_struct *tsk, u64 cputime) {}
--static inline void cpuacct_update_stats(struct task_struct *tsk,
--		enum cpuacct_stat_index idx, cputime_t val) {}
- #endif
- 
- static inline void inc_nr_running(struct rq *rq)
--- 
-1.7.6.4
+Thanks,
+-Kame
+
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
