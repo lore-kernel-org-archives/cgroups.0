@@ -1,69 +1,44 @@
-From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [patch 1/8] mm: oom_kill: remove memcg argument from oom_kill_task()
-Date: Mon, 28 Nov 2011 06:07:17 +0530
-Message-ID: <CAKTCnzmfk5O24R2Lh08e-WgA75TtTaO11vZjJOnPXxHhThX-XA@mail.gmail.com>
+From: Balbir Singh <bsingharora@gmail.com>
+Subject: Re: [patch 2/8] mm: unify remaining mem_cont, mem, etc. variable
+ names to memcg
+Date: Mon, 28 Nov 2011 06:12:17 +0530
+Message-ID: <CAKTCnzmO6P1B_8kGG5tPOrWAb6PT0byOZ4WQdfWwbaHAX7shww@mail.gmail.com>
 References: <1322062951-1756-1-git-send-email-hannes@cmpxchg.org>
-	<1322062951-1756-2-git-send-email-hannes@cmpxchg.org>
+	<1322062951-1756-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding;
-        bh=XHI9IvJ+stkCSgELufvL0tFRey4NkRqr1ziNxxhArrc=;
-        b=ittzrxLlW05Y3GjvRHjzV10fJtPvt04EBLNJBTEX3ZMqcQyC+XYseypQmDTdtCsuxi
-         PZNQP73hMN/Bne6/3VJX6WGPiy2qV099PQg6igbdBf8PrZw4oelpqxXYvi1SmnuK5ipx
-         zRIjjfb/xSKP6/Pa/MLpKdSP15k3gP/rqXiYA=
-In-Reply-To: <1322062951-1756-2-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+         :cc:content-type;
+        bh=X28Abgfdpqq2xRx4nvuwg6f5i7TkdE+RKkHGtL2kEaU=;
+        b=m2thWjwBeWC/diaTWnxuWOgIhy+zjzit+Lblqv+o5jOz4TChtdeZvo1uyM5l3ZfkuG
+         h3d0UzhkOtNsom7jlLer1aPFRkG5CeDq1y+L8ZK7zUUuBbP1wU6oC5TkxZ32yXbTPcbL
+         fcksgmT81kaDA3xg3agZTLshp1XxVi1v9cRFQ=
+In-Reply-To: <1322062951-1756-3-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed, Nov 23, 2011 at 9:12 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> w=
-rote:
+On Wed, Nov 23, 2011 at 9:12 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> From: Johannes Weiner <jweiner@redhat.com>
 >
-> From: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->
-> The memcg argument of oom_kill_task() hasn't been used since 341aea2
-> 'oom-kill: remove boost_dying_task_prio()'. =A0Kill it.
->
-> Signed-off-by: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
-> =A0mm/oom_kill.c | =A0 =A04 ++--
-> =A01 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 471dedb..fd9e303 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -423,7 +423,7 @@ static void dump_header(struct task_struct *p, gf=
-p_t gfp_mask, int order,
-> =A0}
->
-> =A0#define K(x) ((x) << (PAGE_SHIFT-10))
-> -static int oom_kill_task(struct task_struct *p, struct mem_cgroup *m=
-em)
-> +static int oom_kill_task(struct task_struct *p)
-> =A0{
-> =A0 =A0 =A0 =A0struct task_struct *q;
-> =A0 =A0 =A0 =A0struct mm_struct *mm;
-> @@ -522,7 +522,7 @@ static int oom_kill_process(struct task_struct *p=
-, gfp_t gfp_mask, int order,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0} while_each_thread(p, t);
->
-> - =A0 =A0 =A0 return oom_kill_task(victim, mem);
-> + =A0 =A0 =A0 return oom_kill_task(victim);
-> =A0}
->
+> Signed-off-by: Johannes Weiner <jweiner@redhat.com>
 
-Looks good!
 
-Balbir Singh
+I am not very comfortable with memcgp, I'd prefer the name to
+represent something more useful especially when it is an output
+parameter. Having said that I don't think it is a stopper for the
+patch
+
+Balbir Singh.
+
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
