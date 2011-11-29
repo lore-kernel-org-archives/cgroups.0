@@ -1,40 +1,69 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch 5/7] mm: page_cgroup: check page_cgroup arrays in
- lookup_page_cgroup() only when necessary
-Date: Wed, 30 Nov 2011 08:42:11 +0900
-Message-ID: <20111130084211.15fdefbf.kamezawa.hiroyu@jp.fujitsu.com>
-References: <1322563925-1667-1-git-send-email-hannes@cmpxchg.org>
-	<1322563925-1667-6-git-send-email-hannes@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1322563925-1667-6-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v7 00/10] Request for Inclusion: per-cgroup tcp memory pressure
+Date: Tue, 29 Nov 2011 21:56:51 -0200
+Message-ID: <1322611021-1730-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org
+Cc: paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-On Tue, 29 Nov 2011 11:52:03 +0100
-Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+Hi,
 
-> lookup_page_cgroup() is usually used only against pages that are used
-> in userspace.
-> 
-> The exception is the CONFIG_DEBUG_VM-only memcg check from the page
-> allocator: it can run on pages without page_cgroup descriptors
-> allocated when the pages are fed into the page allocator for the first
-> time during boot or memory hotplug.
-> 
-> Include the array check only when CONFIG_DEBUG_VM is set and save the
-> unnecessary check in production kernels.
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+This patchset implements per-cgroup tcp memory pressure controls. It did not change
+significantly since last submission: rather, it just merges the comments Kame had.
+Most of them are style-related and/or Documentation, but there are two real bugs he
+managed to spot (thanks)
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Please let me know if there is anything else I should address.
 
+
+Glauber Costa (10):
+  Basic kernel memory functionality for the Memory Controller
+  foundations of per-cgroup memory pressure controlling.
+  socket: initial cgroup code.
+  tcp memory pressure controls
+  per-netns ipv4 sysctl_tcp_mem
+  tcp buffer limitation: per-cgroup limit
+  Display current tcp memory allocation in kmem cgroup
+  Display current tcp failcnt in kmem cgroup
+  Display maximum tcp memory allocation in kmem cgroup
+  Disable task moving when using kernel memory accounting
+
+ Documentation/cgroups/memory.txt |   52 +++++++-
+ include/linux/memcontrol.h       |   19 +++
+ include/net/netns/ipv4.h         |    1 +
+ include/net/sock.h               |  298 +++++++++++++++++++++++++++++++++++++-
+ include/net/tcp.h                |    4 +-
+ include/net/tcp_memcontrol.h     |   19 +++
+ init/Kconfig                     |   14 ++
+ mm/memcontrol.c                  |  202 ++++++++++++++++++++++++--
+ net/core/sock.c                  |  120 +++++++++++----
+ net/ipv4/Makefile                |    1 +
+ net/ipv4/af_inet.c               |    2 +
+ net/ipv4/proc.c                  |    7 +-
+ net/ipv4/sysctl_net_ipv4.c       |   65 ++++++++-
+ net/ipv4/tcp.c                   |   11 +-
+ net/ipv4/tcp_input.c             |   12 +-
+ net/ipv4/tcp_ipv4.c              |   13 +-
+ net/ipv4/tcp_memcontrol.c        |  268 ++++++++++++++++++++++++++++++++++
+ net/ipv4/tcp_output.c            |    2 +-
+ net/ipv4/tcp_timer.c             |    2 +-
+ net/ipv6/af_inet6.c              |    2 +
+ net/ipv6/tcp_ipv6.c              |    7 +-
+ 21 files changed, 1036 insertions(+), 85 deletions(-)
+ create mode 100644 include/net/tcp_memcontrol.h
+ create mode 100644 net/ipv4/tcp_memcontrol.c
+
+-- 
+1.7.6.4
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
