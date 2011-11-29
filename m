@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 1/7] mm: oom_kill: remove memcg argument from oom_kill_task()
-Date: Tue, 29 Nov 2011 11:51:59 +0100
-Message-ID: <1322563925-1667-2-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 5/7] mm: page_cgroup: check page_cgroup arrays in lookup_page_cgroup() only when necessary
+Date: Tue, 29 Nov 2011 11:52:03 +0100
+Message-ID: <1322563925-1667-6-git-send-email-hannes@cmpxchg.org>
 References: <1322563925-1667-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1322563925-1667-1-git-send-email-hannes@cmpxchg.org>
@@ -13,41 +13,62 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-From: Johannes Weiner <jweiner@redhat.com>
+lookup_page_cgroup() is usually used only against pages that are used
+in userspace.
 
-The memcg argument of oom_kill_task() hasn't been used since 341aea2
-'oom-kill: remove boost_dying_task_prio()'.  Kill it.
+The exception is the CONFIG_DEBUG_VM-only memcg check from the page
+allocator: it can run on pages without page_cgroup descriptors
+allocated when the pages are fed into the page allocator for the first
+time during boot or memory hotplug.
 
-Signed-off-by: Johannes Weiner <jweiner@redhat.com>
-Acked-by: David Rientjes <rientjes@google.com>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
+Include the array check only when CONFIG_DEBUG_VM is set and save the
+unnecessary check in production kernels.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/oom_kill.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ mm/page_cgroup.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 471dedb..fd9e303 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -423,7 +423,7 @@ static void dump_header(struct task_struct *p, gfp_t gfp_mask, int order,
- }
+diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+index a14655d..58405ca 100644
+--- a/mm/page_cgroup.c
++++ b/mm/page_cgroup.c
+@@ -28,9 +28,16 @@ struct page_cgroup *lookup_page_cgroup(struct page *page)
+ 	struct page_cgroup *base;
  
- #define K(x) ((x) << (PAGE_SHIFT-10))
--static int oom_kill_task(struct task_struct *p, struct mem_cgroup *mem)
-+static int oom_kill_task(struct task_struct *p)
+ 	base = NODE_DATA(page_to_nid(page))->node_page_cgroup;
++#ifdef CONFIG_DEBUG_VM
++	/*
++	 * The sanity checks the page allocator does upon freeing a
++	 * page can reach here before the page_cgroup arrays are
++	 * allocated when feeding a range of pages to the allocator
++	 * for the first time during bootup or memory hotplug.
++	 */
+ 	if (unlikely(!base))
+ 		return NULL;
+-
++#endif
+ 	offset = pfn - NODE_DATA(page_to_nid(page))->node_start_pfn;
+ 	return base + offset;
+ }
+@@ -87,9 +94,16 @@ struct page_cgroup *lookup_page_cgroup(struct page *page)
  {
- 	struct task_struct *q;
- 	struct mm_struct *mm;
-@@ -522,7 +522,7 @@ static int oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
- 		}
- 	} while_each_thread(p, t);
- 
--	return oom_kill_task(victim, mem);
-+	return oom_kill_task(victim);
+ 	unsigned long pfn = page_to_pfn(page);
+ 	struct mem_section *section = __pfn_to_section(pfn);
+-
++#ifdef CONFIG_DEBUG_VM
++	/*
++	 * The sanity checks the page allocator does upon freeing a
++	 * page can reach here before the page_cgroup arrays are
++	 * allocated when feeding a range of pages to the allocator
++	 * for the first time during bootup or memory hotplug.
++	 */
+ 	if (!section->page_cgroup)
+ 		return NULL;
++#endif
+ 	return section->page_cgroup + pfn;
  }
  
- /*
 -- 
 1.7.6.4
 
