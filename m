@@ -1,77 +1,83 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v7 10/10] Disable task moving when using kernel memory accounting
-Date: Tue, 29 Nov 2011 21:57:01 -0200
-Message-ID: <1322611021-1730-11-git-send-email-glommer@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v7 02/10] foundations of per-cgroup memory pressure
+ controlling.
+Date: Wed, 30 Nov 2011 09:43:05 +0900
+Message-ID: <20111130094305.9c69ecd8.kamezawa.hiroyu@jp.fujitsu.com>
 References: <1322611021-1730-1-git-send-email-glommer@parallels.com>
+	<1322611021-1730-3-git-send-email-glommer@parallels.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1322611021-1730-1-git-send-email-glommer@parallels.com>
+In-Reply-To: <1322611021-1730-3-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-Since this code is still experimental, we are leaving the exact
-details of how to move tasks between cgroups when kernel memory
-accounting is used as future work.
+On Tue, 29 Nov 2011 21:56:53 -0200
+Glauber Costa <glommer@parallels.com> wrote:
 
-For now, we simply disallow movement if there are any pending
-accounted memory.
+> This patch replaces all uses of struct sock fields' memory_pressure,
+> memory_allocated, sockets_allocated, and sysctl_mem to acessor
+> macros. Those macros can either receive a socket argument, or a mem_cgroup
+> argument, depending on the context they live in.
+> 
+> Since we're only doing a macro wrapping here, no performance impact at all is
+> expected in the case where we don't have cgroups disabled.
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: David S. Miller <davem@davemloft.net>
+> CC: Hiroyouki Kamezawa <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Eric W. Biederman <ebiederm@xmission.com>
+> CC: Eric Dumazet <eric.dumazet@gmail.com>
+<snip>
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Hiroyouki Kamezawa <kamezawa.hiroyu@jp.fujitsu.com>
----
- mm/memcontrol.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+> +static inline bool
+> +memcg_memory_pressure(struct proto *prot, struct mem_cgroup *memcg)
+> +{
+> +	if (!prot->memory_pressure)
+> +		return false;
+> +	return !!prot->memory_pressure;
+> +}
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a31a278..dd9a6d9 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5453,10 +5453,19 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
- {
- 	int ret = 0;
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
-+	struct mem_cgroup *from = mem_cgroup_from_task(p);
-+
-+#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM) && defined(CONFIG_INET)
-+	if (from != memcg && !mem_cgroup_is_root(from) &&
-+	    res_counter_read_u64(&from->tcp_mem.tcp_memory_allocated, RES_USAGE)) {
-+		printk(KERN_WARNING "Can't move tasks between cgroups: "
-+			"Kernel memory held.\n");
-+		return 1;
-+	}
-+#endif
- 
- 	if (memcg->move_charge_at_immigrate) {
- 		struct mm_struct *mm;
--		struct mem_cgroup *from = mem_cgroup_from_task(p);
- 
- 		VM_BUG_ON(from == memcg);
- 
-@@ -5624,6 +5633,18 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
- 				struct cgroup *cgroup,
- 				struct task_struct *p)
- {
-+	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
-+	struct mem_cgroup *from = mem_cgroup_from_task(p);
-+
-+#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM) && defined(CONFIG_INET)
-+	if (from != memcg && !mem_cgroup_is_root(from) &&
-+	    res_counter_read_u64(&from->tcp_mem.tcp_memory_allocated, RES_USAGE)) {
-+		printk(KERN_WARNING "Can't move tasks between cgroups: "
-+			"Kernel memory held.\n");
-+		return 1;
-+	}
-+#endif
-+
- 	return 0;
- }
- static void mem_cgroup_cancel_attach(struct cgroup_subsys *ss,
--- 
-1.7.6.4
+I think you should take a deep breath and write patech relaxedly, and do enough test.
+
+This should be
+
+	return !!*prot->memory_pressure;
+
+BTW, I don't like to receive tons of everyday-update even if you're in hurry.
+
+
+
+
+
+>  static void proto_seq_printf(struct seq_file *seq, struct proto *proto)
+>  {
+> +	struct mem_cgroup *memcg = mem_cgroup_from_task(current);
+> +
+>  	seq_printf(seq, "%-9s %4u %6d  %6ld   %-3s %6u   %-3s  %-10s "
+>  			"%2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c\n",
+>  		   proto->name,
+>  		   proto->obj_size,
+>  		   sock_prot_inuse_get(seq_file_net(seq), proto),
+> -		   proto->memory_allocated != NULL ? atomic_long_read(proto->memory_allocated) : -1L,
+> -		   proto->memory_pressure != NULL ? *proto->memory_pressure ? "yes" : "no" : "NI",
+> +		   sock_prot_memory_allocated(proto, memcg),
+> +		   sock_prot_memory_pressure(proto, memcg),
+
+I wonder I should say NO, here. (Networking guys are ok ??)
+
+IIUC, this means there is no way to see aggregated sockstat of all system.
+And the result depends on the cgroup which the caller is under control.
+
+I think you should show aggregated sockstat(global + per-memcg) here and 
+show per-memcg ones via /cgroup interface or add private_sockstat to show
+per cgroup summary.
+
+Thanks,
+-Kame
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
