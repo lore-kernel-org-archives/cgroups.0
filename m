@@ -1,61 +1,65 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [RFC][PATCH] memcg: remove PCG_ACCT_LRU.
-Date: Fri, 2 Dec 2011 13:08:49 +0100
-Message-ID: <20111202120849.GA1295@cmpxchg.org>
-References: <20111202190622.8e0488d6.kamezawa.hiroyu@jp.fujitsu.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v7 02/10] foundations of per-cgroup memory pressure controlling.
+Date: Fri, 2 Dec 2011 15:46:46 -0200
+Message-ID: <4ED90F06.102@parallels.com>
+References: <1322611021-1730-1-git-send-email-glommer@parallels.com> <1322611021-1730-3-git-send-email-glommer@parallels.com> <20111130094305.9c69ecd8.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20111202190622.8e0488d6.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20111130094305.9c69ecd8.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-On Fri, Dec 02, 2011 at 07:06:22PM +0900, KAMEZAWA Hiroyuki wrote:
-> I'm now testing this patch, removing PCG_ACCT_LRU, onto mmotm.
-> How do you think ?
 
-> @@ -1024,18 +1026,8 @@ void mem_cgroup_lru_del_list(struct page *page, enum lru_list lru)
->  		return;
->  
->  	pc = lookup_page_cgroup(page);
-> -	/*
-> -	 * root_mem_cgroup babysits uncharged LRU pages, but
-> -	 * PageCgroupUsed is cleared when the page is about to get
-> -	 * freed.  PageCgroupAcctLRU remembers whether the
-> -	 * LRU-accounting happened against pc->mem_cgroup or
-> -	 * root_mem_cgroup.
-> -	 */
-> -	if (TestClearPageCgroupAcctLRU(pc)) {
-> -		VM_BUG_ON(!pc->mem_cgroup);
-> -		memcg = pc->mem_cgroup;
-> -	} else
-> -		memcg = root_mem_cgroup;
-> +	memcg = pc->mem_cgroup ? pc->mem_cgroup : root_mem_cgroup;
-> +	VM_BUG_ON(memcg != pc->mem_cgroup_lru);
->  	mz = page_cgroup_zoneinfo(memcg, page);
->  	/* huge page split is done under lru_lock. so, we have no races. */
->  	MEM_CGROUP_ZSTAT(mz, lru) -= 1 << compound_order(page);
+>>   static void proto_seq_printf(struct seq_file *seq, struct proto *proto)
+>>   {
+>> +	struct mem_cgroup *memcg = mem_cgroup_from_task(current);
+>> +
+>>   	seq_printf(seq, "%-9s %4u %6d  %6ld   %-3s %6u   %-3s  %-10s "
+>>   			"%2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c\n",
+>>   		   proto->name,
+>>   		   proto->obj_size,
+>>   		   sock_prot_inuse_get(seq_file_net(seq), proto),
+>> -		   proto->memory_allocated != NULL ? atomic_long_read(proto->memory_allocated) : -1L,
+>> -		   proto->memory_pressure != NULL ? *proto->memory_pressure ? "yes" : "no" : "NI",
+>> +		   sock_prot_memory_allocated(proto, memcg),
+>> +		   sock_prot_memory_pressure(proto, memcg),
+>
+> I wonder I should say NO, here. (Networking guys are ok ??)
+>
+> IIUC, this means there is no way to see aggregated sockstat of all system.
+> And the result depends on the cgroup which the caller is under control.
+>
+> I think you should show aggregated sockstat(global + per-memcg) here and
+> show per-memcg ones via /cgroup interface or add private_sockstat to show
+> per cgroup summary.
+>
 
-Nobody clears pc->mem_cgroup upon uncharge, so this may end up
-mistakenly lru-unaccount a page that was never charged against the
-stale pc->mem_cgroup (e.g. a swap readahead page that has not been
-charged yet gets isolated by reclaim).
+Hi Kame,
 
-On the other hand, pages that were uncharged just before the lru_del
-MUST be lru-unaccounted against pc->mem_cgroup.
+Yes, the statistics displayed depends on which cgroup you live.
+Also, note that the parent cgroup here is always updated (even when 
+use_hierarchy is set to 0). So it is always possible to grab global 
+statistics, by being in the root cgroup.
 
-PageCgroupAcctLRU made it possible to tell those two scenarios apart.
+For the others, I believe it to be a question of naturalization. Any 
+tool that is fetching these values is likely interested in the amount of 
+resources available/used. When you are on a cgroup, the amount of 
+resources available/used changes, so that's what you should see.
 
-A possible solution could be to clear pc->mem_cgroup when the page is
-finally freed so that only pages that have been charged since their
-last allocation have pc->mem_cgroup set.  But this means that the page
-freeing hotpath will have to grow a lookup_page_cgroup(), amortizing
-the winnings at least to some extent.
+Also brings the point of resource isolation: if you shouldn't interfere 
+with other set of process' resources, there is no reason for you to see 
+them in the first place.
+
+So given all that, I believe that whenever we talk about resources in a 
+cgroup, we should talk about cgroup-local ones.
+
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
