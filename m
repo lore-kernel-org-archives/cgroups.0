@@ -1,131 +1,95 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v7 10/10] Disable task moving when using kernel memory
- accounting
-Date: Mon, 5 Dec 2011 11:18:35 +0900
-Message-ID: <20111205111835.b1432603.kamezawa.hiroyu@jp.fujitsu.com>
-References: <1322611021-1730-1-git-send-email-glommer@parallels.com>
-	<1322611021-1730-11-git-send-email-glommer@parallels.com>
-	<20111130112210.1d979512.kamezawa.hiroyu@jp.fujitsu.com>
-	<4ED914EC.6020500@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v7 02/10] foundations of per-cgroup memory pressure controlling.
+Date: Mon, 5 Dec 2011 07:06:20 -0200
+Message-ID: <4EDC898C.5080404@parallels.com>
+References: <1322611021-1730-1-git-send-email-glommer@parallels.com> <1322611021-1730-3-git-send-email-glommer@parallels.com> <20111130094305.9c69ecd8.kamezawa.hiroyu@jp.fujitsu.com> <4ED90F06.102@parallels.com> <20111205105916.eeb55989.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4ED914EC.6020500-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111205105916.eeb55989.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, vgoyal@redhat.com
 
-On Fri, 2 Dec 2011 16:11:56 -0200
-Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+On 12/04/2011 11:59 PM, KAMEZAWA Hiroyuki wrote:
+> On Fri, 2 Dec 2011 15:46:46 -0200
+> Glauber Costa<glommer@parallels.com>  wrote:
+>
+>>
+>>>>    static void proto_seq_printf(struct seq_file *seq, struct proto *proto)
+>>>>    {
+>>>> +	struct mem_cgroup *memcg = mem_cgroup_from_task(current);
+>>>> +
+>>>>    	seq_printf(seq, "%-9s %4u %6d  %6ld   %-3s %6u   %-3s  %-10s "
+>>>>    			"%2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c %2c\n",
+>>>>    		   proto->name,
+>>>>    		   proto->obj_size,
+>>>>    		   sock_prot_inuse_get(seq_file_net(seq), proto),
+>>>> -		   proto->memory_allocated != NULL ? atomic_long_read(proto->memory_allocated) : -1L,
+>>>> -		   proto->memory_pressure != NULL ? *proto->memory_pressure ? "yes" : "no" : "NI",
+>>>> +		   sock_prot_memory_allocated(proto, memcg),
+>>>> +		   sock_prot_memory_pressure(proto, memcg),
+>>>
+>>> I wonder I should say NO, here. (Networking guys are ok ??)
+>>>
+>>> IIUC, this means there is no way to see aggregated sockstat of all system.
+>>> And the result depends on the cgroup which the caller is under control.
+>>>
+>>> I think you should show aggregated sockstat(global + per-memcg) here and
+>>> show per-memcg ones via /cgroup interface or add private_sockstat to show
+>>> per cgroup summary.
+>>>
+>>
+>> Hi Kame,
+>>
+>> Yes, the statistics displayed depends on which cgroup you live.
+>> Also, note that the parent cgroup here is always updated (even when
+>> use_hierarchy is set to 0). So it is always possible to grab global
+>> statistics, by being in the root cgroup.
+>>
+>> For the others, I believe it to be a question of naturalization. Any
+>> tool that is fetching these values is likely interested in the amount of
+>> resources available/used. When you are on a cgroup, the amount of
+>> resources available/used changes, so that's what you should see.
+>>
+>> Also brings the point of resource isolation: if you shouldn't interfere
+>> with other set of process' resources, there is no reason for you to see
+>> them in the first place.
+>>
+>> So given all that, I believe that whenever we talk about resources in a
+>> cgroup, we should talk about cgroup-local ones.
+>
+> But you changes /proc/ information without any arguments with other guys.
+> If you go this way, you should move this patch as independent add-on patch
+> and discuss what this should be. For example, /proc/meminfo doesn't reflect
+> memcg's information (for now). And scheduler statiscits in /proc/stat doesn't
+> reflect cgroup's information.
 
-> On 11/30/2011 12:22 AM, KAMEZAWA Hiroyuki wrote:
-> > On Tue, 29 Nov 2011 21:57:01 -0200
-> > Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
-> >
-> >> Since this code is still experimental, we are leaving the exact
-> >> details of how to move tasks between cgroups when kernel memory
-> >> accounting is used as future work.
-> >>
-> >> For now, we simply disallow movement if there are any pending
-> >> accounted memory.
-> >>
-> >> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> >> CC: Hiroyouki Kamezawa<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> >> ---
-> >>   mm/memcontrol.c |   23 ++++++++++++++++++++++-
-> >>   1 files changed, 22 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> >> index a31a278..dd9a6d9 100644
-> >> --- a/mm/memcontrol.c
-> >> +++ b/mm/memcontrol.c
-> >> @@ -5453,10 +5453,19 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
-> >>   {
-> >>   	int ret = 0;
-> >>   	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
-> >> +	struct mem_cgroup *from = mem_cgroup_from_task(p);
-> >> +
-> >> +#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)&&  defined(CONFIG_INET)
-> >> +	if (from != memcg&&  !mem_cgroup_is_root(from)&&
-> >> +	    res_counter_read_u64(&from->tcp_mem.tcp_memory_allocated, RES_USAGE)) {
-> >> +		printk(KERN_WARNING "Can't move tasks between cgroups: "
-> >> +			"Kernel memory held.\n");
-> >> +		return 1;
-> >> +	}
-> >> +#endif
-> >
-> > I wonder....reading all codes again, this is incorrect check.
-> >
-> > Hm, let me cralify. IIUC, in old code, "prevent moving" is because you hold
-> > reference count of cgroup, which can cause trouble at rmdir() as leaking refcnt.
-> right.
-> 
-> > BTW, because socket is a shared resource between cgroup, changes in mm->owner
-> > may cause task cgroup moving implicitly. So, if you allow leak of resource
-> > here, I guess... you can take mem_cgroup_get() refcnt which is memcg-local and
-> > allow rmdir(). Then, this limitation may disappear.
-> 
-> Sorry, I didn't fully understand. Can you clarify further?
-> If the task is implicitly moved, it will end up calling can_attach as 
-> well, right?
-> 
-I'm sorry that my explanation is bad.
+No, I do not.
+I may not have discussed it with everybody, but I did send some mails 
+about it a while ago:
 
-You can take memory cgroup itself's reference count by mem_cgroup_put/get.
-By getting this, memory cgroup object will continue to exist even after
-its struct cgroup* is freed by rmdir().
+https://lkml.org/lkml/2011/10/3/60 (I sent it to containers as well 
+once, but I now realize it was during the time the ML was down).
 
-So, assume you do mem_cgroup_get()/put at socket attaching/detatching.
+At the time, *I* was probably the only one, arguing not to do it. I've 
+changed my mind since then.
 
-0) A task has a tcp socekts in memcg0.
+> So, please discuss the problem in open way. This issue is not only related to
+> this patch but also to other cgroups. Sneaking this kind of _big_ change in
+> a middle of complicated patch series isn't good.
 
-task(memcg0)
- +- socket0 --> memcg0,usage=4096
+Absolutely. I can even remove this entirely and queue it for a following 
+patchset if you prefer.
 
-1) move this task to memcg1
+> In short, could you divide this patch into a independent patch and discuss
+> again ? If we agree the general diection should go this way, other guys will
+> post patches for cpu, memory, blkio, etc.
 
-task(memcg1)
- +- socket0 --> memcg0,usage=4096
+Yes I can.
 
-2) The task create a new socket.
-
-task(memcg1)
- +- socekt0 --> memcg0,usage=4096 
- +- socket1 --> memcg1,usage=xxxx
-
-Here, the task will hold 4096bytes of usage in memcg0 implicitly.
-
-3) an admin removes memcg0
-task(memcg1)
- +- socket0 -->memcg0, usage=4096 <-----(*)
- +- socket1 -->memcg1, usage=xxxx
-
-(*) is invisible to users....but this will not be very big problem.
-
-Thanks,
--Kame
-
-
-
-
-
-
-
-
-
-
-
-Thanks,
--Kame
-
-
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I am expanding the CC list here so other people that cares for other 
+controllers can chime in. You are welcome to give your opinion as the 
+memcg maintainer as well.
