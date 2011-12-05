@@ -1,78 +1,91 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v7 10/10] Disable task moving when using kernel memory
- accounting
-Date: Fri, 2 Dec 2011 16:11:56 -0200
-Message-ID: <4ED914EC.6020500@parallels.com>
-References: <1322611021-1730-1-git-send-email-glommer@parallels.com> <1322611021-1730-11-git-send-email-glommer@parallels.com> <20111130112210.1d979512.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFC][PATCH] memcg: remove PCG_ACCT_LRU.
+Date: Mon, 5 Dec 2011 09:50:09 +0900
+Message-ID: <20111205095009.b82a9bdf.kamezawa.hiroyu@jp.fujitsu.com>
+References: <20111202190622.8e0488d6.kamezawa.hiroyu@jp.fujitsu.com>
+	<20111202120849.GA1295@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111130112210.1d979512.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <20111202120849.GA1295-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 11/30/2011 12:22 AM, KAMEZAWA Hiroyuki wrote:
-> On Tue, 29 Nov 2011 21:57:01 -0200
-> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->
->> Since this code is still experimental, we are leaving the exact
->> details of how to move tasks between cgroups when kernel memory
->> accounting is used as future work.
->>
->> For now, we simply disallow movement if there are any pending
->> accounted memory.
->>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> CC: Hiroyouki Kamezawa<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->> ---
->>   mm/memcontrol.c |   23 ++++++++++++++++++++++-
->>   1 files changed, 22 insertions(+), 1 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index a31a278..dd9a6d9 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -5453,10 +5453,19 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
->>   {
->>   	int ret = 0;
->>   	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
->> +	struct mem_cgroup *from = mem_cgroup_from_task(p);
->> +
->> +#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)&&  defined(CONFIG_INET)
->> +	if (from != memcg&&  !mem_cgroup_is_root(from)&&
->> +	    res_counter_read_u64(&from->tcp_mem.tcp_memory_allocated, RES_USAGE)) {
->> +		printk(KERN_WARNING "Can't move tasks between cgroups: "
->> +			"Kernel memory held.\n");
->> +		return 1;
->> +	}
->> +#endif
->
-> I wonder....reading all codes again, this is incorrect check.
->
-> Hm, let me cralify. IIUC, in old code, "prevent moving" is because you hold
-> reference count of cgroup, which can cause trouble at rmdir() as leaking refcnt.
-right.
+On Fri, 2 Dec 2011 13:08:49 +0100
+Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-> BTW, because socket is a shared resource between cgroup, changes in mm->owner
-> may cause task cgroup moving implicitly. So, if you allow leak of resource
-> here, I guess... you can take mem_cgroup_get() refcnt which is memcg-local and
-> allow rmdir(). Then, this limitation may disappear.
+> On Fri, Dec 02, 2011 at 07:06:22PM +0900, KAMEZAWA Hiroyuki wrote:
+> > I'm now testing this patch, removing PCG_ACCT_LRU, onto mmotm.
+> > How do you think ?
+> 
+> > @@ -1024,18 +1026,8 @@ void mem_cgroup_lru_del_list(struct page *page, enum lru_list lru)
+> >  		return;
+> >  
+> >  	pc = lookup_page_cgroup(page);
+> > -	/*
+> > -	 * root_mem_cgroup babysits uncharged LRU pages, but
+> > -	 * PageCgroupUsed is cleared when the page is about to get
+> > -	 * freed.  PageCgroupAcctLRU remembers whether the
+> > -	 * LRU-accounting happened against pc->mem_cgroup or
+> > -	 * root_mem_cgroup.
+> > -	 */
+> > -	if (TestClearPageCgroupAcctLRU(pc)) {
+> > -		VM_BUG_ON(!pc->mem_cgroup);
+> > -		memcg = pc->mem_cgroup;
+> > -	} else
+> > -		memcg = root_mem_cgroup;
+> > +	memcg = pc->mem_cgroup ? pc->mem_cgroup : root_mem_cgroup;
+> > +	VM_BUG_ON(memcg != pc->mem_cgroup_lru);
+> >  	mz = page_cgroup_zoneinfo(memcg, page);
+> >  	/* huge page split is done under lru_lock. so, we have no races. */
+> >  	MEM_CGROUP_ZSTAT(mz, lru) -= 1 << compound_order(page);
+> 
+> Nobody clears pc->mem_cgroup upon uncharge, so this may end up
+> mistakenly lru-unaccount a page that was never charged against the
+> stale pc->mem_cgroup (e.g. a swap readahead page that has not been
+> charged yet gets isolated by reclaim).
+> 
+> On the other hand, pages that were uncharged just before the lru_del
+> MUST be lru-unaccounted against pc->mem_cgroup.
+> 
+> PageCgroupAcctLRU made it possible to tell those two scenarios apart.
+> 
+> A possible solution could be to clear pc->mem_cgroup when the page is
+> finally freed so that only pages that have been charged since their
+> last allocation have pc->mem_cgroup set.  But this means that the page
+> freeing hotpath will have to grow a lookup_page_cgroup(), amortizing
+> the winnings at least to some extent.
+> 
 
-Sorry, I didn't fully understand. Can you clarify further?
-If the task is implicitly moved, it will end up calling can_attach as 
-well, right?
+Hmm. IMHO, we have 2 easy ways.
+
+ - Ignore PCG_USED bit at LRU handling.
+   2 problems.
+   1. memory.stat may show very wrong statistics if swapin is too often.
+   2. need careful use of mem_cgroup_charge_lrucare().
+
+ - Clear pc->mem_cgroup at swapin-readahead.
+   A problem.
+   1. we need a new hook.
+
+I'll try to clear pc->mem_cgroup at swapin. 
+
+Thank you for pointing out.
+
+Regards,
+-Kame
 
 
->
-> Then, users will be happy but admins will have unseen kernel resource usage in
-> not populated(by rmdir) memcg. Hm, big trouble ?
->
-> Thanks,
-> -Kame
->
+
+
+
+
+
+
+
 
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
