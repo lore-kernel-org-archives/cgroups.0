@@ -1,122 +1,52 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v7 10/10] Disable task moving when using kernel memory
- accounting
-Date: Mon, 5 Dec 2011 07:18:37 -0200
-Message-ID: <4EDC8C6D.2070001@parallels.com>
-References: <1322611021-1730-1-git-send-email-glommer@parallels.com> <1322611021-1730-11-git-send-email-glommer@parallels.com> <20111130112210.1d979512.kamezawa.hiroyu@jp.fujitsu.com> <4ED914EC.6020500@parallels.com> <20111205111835.b1432603.kamezawa.hiroyu@jp.fujitsu.com>
+Subject: How to draw values for /proc/stat
+Date: Mon, 5 Dec 2011 07:32:33 -0200
+Message-ID: <4EDC8FB1.60407@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20111205111835.b1432603.kamezawa.hiroyu@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
+To: Paul Turner <pjt@google.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, cgroups@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, devel@openvz.org, Linux Containers <containers@lists.osdl.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Serge Hallyn <serge.hallyn@canonical.com>, Frederic Weisbecker <fweisbec@gmail.com>
 
-On 12/05/2011 12:18 AM, KAMEZAWA Hiroyuki wrote:
-> On Fri, 2 Dec 2011 16:11:56 -0200
-> Glauber Costa<glommer@parallels.com>  wrote:
->
->> On 11/30/2011 12:22 AM, KAMEZAWA Hiroyuki wrote:
->>> On Tue, 29 Nov 2011 21:57:01 -0200
->>> Glauber Costa<glommer@parallels.com>   wrote:
->>>
->>>> Since this code is still experimental, we are leaving the exact
->>>> details of how to move tasks between cgroups when kernel memory
->>>> accounting is used as future work.
->>>>
->>>> For now, we simply disallow movement if there are any pending
->>>> accounted memory.
->>>>
->>>> Signed-off-by: Glauber Costa<glommer@parallels.com>
->>>> CC: Hiroyouki Kamezawa<kamezawa.hiroyu@jp.fujitsu.com>
->>>> ---
->>>>    mm/memcontrol.c |   23 ++++++++++++++++++++++-
->>>>    1 files changed, 22 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>>> index a31a278..dd9a6d9 100644
->>>> --- a/mm/memcontrol.c
->>>> +++ b/mm/memcontrol.c
->>>> @@ -5453,10 +5453,19 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
->>>>    {
->>>>    	int ret = 0;
->>>>    	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
->>>> +	struct mem_cgroup *from = mem_cgroup_from_task(p);
->>>> +
->>>> +#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)&&   defined(CONFIG_INET)
->>>> +	if (from != memcg&&   !mem_cgroup_is_root(from)&&
->>>> +	    res_counter_read_u64(&from->tcp_mem.tcp_memory_allocated, RES_USAGE)) {
->>>> +		printk(KERN_WARNING "Can't move tasks between cgroups: "
->>>> +			"Kernel memory held.\n");
->>>> +		return 1;
->>>> +	}
->>>> +#endif
->>>
->>> I wonder....reading all codes again, this is incorrect check.
->>>
->>> Hm, let me cralify. IIUC, in old code, "prevent moving" is because you hold
->>> reference count of cgroup, which can cause trouble at rmdir() as leaking refcnt.
->> right.
->>
->>> BTW, because socket is a shared resource between cgroup, changes in mm->owner
->>> may cause task cgroup moving implicitly. So, if you allow leak of resource
->>> here, I guess... you can take mem_cgroup_get() refcnt which is memcg-local and
->>> allow rmdir(). Then, this limitation may disappear.
->>
->> Sorry, I didn't fully understand. Can you clarify further?
->> If the task is implicitly moved, it will end up calling can_attach as
->> well, right?
->>
-> I'm sorry that my explanation is bad.
->
-> You can take memory cgroup itself's reference count by mem_cgroup_put/get.
-> By getting this, memory cgroup object will continue to exist even after
-> its struct cgroup* is freed by rmdir().
->
-> So, assume you do mem_cgroup_get()/put at socket attaching/detatching.
->
-> 0) A task has a tcp socekts in memcg0.
->
-> task(memcg0)
->   +- socket0 -->  memcg0,usage=4096
->
-> 1) move this task to memcg1
->
-> task(memcg1)
->   +- socket0 -->  memcg0,usage=4096
->
-> 2) The task create a new socket.
->
-> task(memcg1)
->   +- socekt0 -->  memcg0,usage=4096
->   +- socket1 -->  memcg1,usage=xxxx
->
-> Here, the task will hold 4096bytes of usage in memcg0 implicitly.
->
-> 3) an admin removes memcg0
-> task(memcg1)
->   +- socket0 -->memcg0, usage=4096<-----(*)
->   +- socket1 -->memcg1, usage=xxxx
->
-> (*) is invisible to users....but this will not be very big problem.
->
-Hi Kame,
+Hi,
 
-Thanks for the explanation.
+Specially Peter and Paul, but all the others:
 
-Hummm, Do you think that by doing it, we get rid of the need of moving 
-sockets to another memcg when the task is moved? So in my original 
-patchset, if you recall, I wanted to keep a socket forever in the same 
-cgroup. I didn't, because then rmdir would be blocked.
+As you can see in https://lkml.org/lkml/2011/12/4/178, and in my answer 
+to that, there is a question - one I've asked before but without that 
+much of an audience - of whether /proc files read from process living on 
+cgroups should display global or per-cgroup resources.
 
-By using this memcg reference trick, both can be achieved. What do you 
-think ?
+In the past, I was arguing for a knob to control that, but I recently 
+started to believe that a knob here will only overcomplicate matters:
+if you live in a cgroup, you should display only the resources you can 
+possibly use. Global is for whoever is in the main cgroup.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Now, it comes two questions:
+1) Do you agree with that, for files like /proc/stat ? I think the most 
+important part is to be consistent inside the system, regardless of what 
+is done
+
+2) Will cpuacct stay? I think if it does, that becomes almost mandatory 
+(at least the bind mount idea is pretty much over here), because drawing 
+value for /proc/stat becomes quite complex.
+The cpuacct cgroup can provide user, sys, etc values. But we also have:
+
+* nr_context_switches,
+* jiffies since boot,
+* total_forks,
+* nr_running,
+* nr_iowait,
+
+Now I doubt any of us want to see /proc/stat extended to accommodate 
+things like nr_context_switches, or even worse, nr_running. The way I 
+see it, there are two options here:
+
+  a) moving everything to cpu cgroup so we keep all values being drawn
+     from the same place
+  b) Collect that info from multiple places in a transparent way. ctx,
+     nr_running and nr_iowait will probably come from cpu. jiffies can
+     come from wherever, and maybe we can even draw total_forks
+     from Frederic's and avoid counting it twice.
