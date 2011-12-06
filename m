@@ -1,92 +1,156 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: [RFC][PATCH 1/4] memcg: simplify page cache charging
-Date: Tue, 6 Dec 2011 19:12:11 +0900
-Message-ID: <20111206191211.3be32ccb.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: [RFC][PATCH 2/4] memcg: simplify corner case handling of LRU and
+ charge races
+Date: Tue, 6 Dec 2011 19:13:57 +0900
+Message-ID: <20111206191357.37ae6ac3.kamezawa.hiroyu@jp.fujitsu.com>
 References: <20111206123923.1432ab52.kamezawa.hiroyu@jp.fujitsu.com>
+	<20111206191211.3be32ccb.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111206123923.1432ab52.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20111206191211.3be32ccb.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Miklos Szeredi <mszeredi-AlSwsSmVLrQ@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Miklos Szeredi <mszeredi@suse.cz>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups@vger.kernel.org, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>
 
-This is an add-on patches to mem_cgroup_replace_page_cache(), introducing
-new LRU rule under memcg, finally. After this, lru handling will be
-much simplified. (all pathces are based on 3.2.0-rc4-next-20111205+)
+From 2949dd497b4b87d9a5a6352053d247b5924516ea Mon Sep 17 00:00:00 2001
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Date: Tue, 6 Dec 2011 15:08:55 +0900
+Subject: [PATCH 2/4] memcg: simplify corner case handling of LRU and charge races.
 
-But this is experimental... I may forget some important corner cases.
-==
-From 028eddd3fea1634e23b18a96ba5653e8c54b437b Mon Sep 17 00:00:00 2001
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Date: Tue, 6 Dec 2011 14:57:01 +0900
-Subject: [PATCH 1/4] memcg: simplify page cache charging.
+This patch simplifies LRU handling of racy case (memcg+SwapCache).
+At charging, SwapCache tend to be on LRU already. So, before
+overwriting pc->mem_cgroup, the page must be removed from LRU and
+added to LRU later.
 
-Because of commit ef6a3c6311, FUSE uses replace_page_cache() instead
-of add_to_page_cache(). Then, mem_cgroup_cache_charge() is not
-called against FUSE's pages from splice.
+This patch does
+	spin_lock(zone->lru_lock);
+	if (PageLRU(page))
+		remove from LRU
+	overwrite pc->mem_cgroup
+	if (PageLRU(page))
+		add to new LRU.
+	spin_unlock(zone->lru_lock);
 
-So, Now, mem_cgroup_cache_charge() doesn't receive a page on LRU
-unless it's not SwapCache.
-For checking, WARN_ON_ONCE(PageLRU(page)) is added.
-
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/memcontrol.c |   31 +++++++++----------------------
- 1 files changed, 9 insertions(+), 22 deletions(-)
+ mm/memcontrol.c |   90 +++++--------------------------------------------------
+ 1 files changed, 8 insertions(+), 82 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a9e92a6..947c62c 100644
+index 947c62c..66a2a59 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2710,6 +2710,7 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
- 				gfp_t gfp_mask)
- {
- 	struct mem_cgroup *memcg = NULL;
-+	enum charge_type type = MEM_CGROUP_CHARGE_TYPE_CACHE;
- 	int ret;
+@@ -1071,86 +1071,6 @@ struct lruvec *mem_cgroup_lru_move_lists(struct zone *zone,
+ }
  
- 	if (mem_cgroup_disabled())
-@@ -2719,31 +2720,17 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
- 
- 	if (unlikely(!mm))
- 		mm = &init_mm;
-+	if (!page_is_file_cache(page))
-+		type = MEM_CGROUP_CHARGE_TYPE_SHMEM;
- 
--	if (page_is_file_cache(page)) {
--		ret = __mem_cgroup_try_charge(mm, gfp_mask, 1, &memcg, true);
--		if (ret || !memcg)
--			return ret;
+ /*
+- * At handling SwapCache and other FUSE stuff, pc->mem_cgroup may be changed
+- * while it's linked to lru because the page may be reused after it's fully
+- * uncharged. To handle that, unlink page_cgroup from LRU when charge it again.
+- * It's done under lock_page and expected that zone->lru_lock isnever held.
+- */
+-static void mem_cgroup_lru_del_before_commit(struct page *page)
+-{
+-	enum lru_list lru;
+-	unsigned long flags;
+-	struct zone *zone = page_zone(page);
+-	struct page_cgroup *pc = lookup_page_cgroup(page);
 -
--		/*
--		 * FUSE reuses pages without going through the final
--		 * put that would remove them from the LRU list, make
--		 * sure that they get relinked properly.
--		 */
--		__mem_cgroup_commit_charge_lrucare(page, memcg,
--					MEM_CGROUP_CHARGE_TYPE_CACHE);
--		return ret;
+-	/*
+-	 * Doing this check without taking ->lru_lock seems wrong but this
+-	 * is safe. Because if page_cgroup's USED bit is unset, the page
+-	 * will not be added to any memcg's LRU. If page_cgroup's USED bit is
+-	 * set, the commit after this will fail, anyway.
+-	 * This all charge/uncharge is done under some mutual execustion.
+-	 * So, we don't need to taking care of changes in USED bit.
+-	 */
+-	if (likely(!PageLRU(page)))
+-		return;
+-
+-	spin_lock_irqsave(&zone->lru_lock, flags);
+-	lru = page_lru(page);
+-	/*
+-	 * The uncharged page could still be registered to the LRU of
+-	 * the stale pc->mem_cgroup.
+-	 *
+-	 * As pc->mem_cgroup is about to get overwritten, the old LRU
+-	 * accounting needs to be taken care of.  Let root_mem_cgroup
+-	 * babysit the page until the new memcg is responsible for it.
+-	 *
+-	 * The PCG_USED bit is guarded by lock_page() as the page is
+-	 * swapcache/pagecache.
+-	 */
+-	if (PageLRU(page) && PageCgroupAcctLRU(pc) && !PageCgroupUsed(pc)) {
+-		del_page_from_lru_list(zone, page, lru);
+-		add_page_to_lru_list(zone, page, lru);
 -	}
--	/* shmem */
--	if (PageSwapCache(page)) {
-+	if (!PageSwapCache(page)) {
-+		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
-+		WARN_ON_ONCE(PageLRU(page));
-+	} else { /* page is swapcache/shmem */
- 		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
- 		if (!ret)
--			__mem_cgroup_commit_charge_swapin(page, memcg,
--					MEM_CGROUP_CHARGE_TYPE_SHMEM);
--	} else
--		ret = mem_cgroup_charge_common(page, mm, gfp_mask,
--					MEM_CGROUP_CHARGE_TYPE_SHMEM);
+-	spin_unlock_irqrestore(&zone->lru_lock, flags);
+-}
 -
-+			__mem_cgroup_commit_charge_swapin(page, memcg, type);
-+	}
- 	return ret;
+-static void mem_cgroup_lru_add_after_commit(struct page *page)
+-{
+-	enum lru_list lru;
+-	unsigned long flags;
+-	struct zone *zone = page_zone(page);
+-	struct page_cgroup *pc = lookup_page_cgroup(page);
+-	/*
+-	 * putback:				charge:
+-	 * SetPageLRU				SetPageCgroupUsed
+-	 * smp_mb				smp_mb
+-	 * PageCgroupUsed && add to memcg LRU	PageLRU && add to memcg LRU
+-	 *
+-	 * Ensure that one of the two sides adds the page to the memcg
+-	 * LRU during a race.
+-	 */
+-	smp_mb();
+-	/* taking care of that the page is added to LRU while we commit it */
+-	if (likely(!PageLRU(page)))
+-		return;
+-	spin_lock_irqsave(&zone->lru_lock, flags);
+-	lru = page_lru(page);
+-	/*
+-	 * If the page is not on the LRU, someone will soon put it
+-	 * there.  If it is, and also already accounted for on the
+-	 * memcg-side, it must be on the right lruvec as setting
+-	 * pc->mem_cgroup and PageCgroupUsed is properly ordered.
+-	 * Otherwise, root_mem_cgroup has been babysitting the page
+-	 * during the charge.  Move it to the new memcg now.
+-	 */
+-	if (PageLRU(page) && !PageCgroupAcctLRU(pc)) {
+-		del_page_from_lru_list(zone, page, lru);
+-		add_page_to_lru_list(zone, page, lru);
+-	}
+-	spin_unlock_irqrestore(&zone->lru_lock, flags);
+-}
+-
+-/*
+  * Checks whether given mem is same or in the root_mem_cgroup's
+  * hierarchy subtree
+  */
+@@ -2695,14 +2615,20 @@ __mem_cgroup_commit_charge_lrucare(struct page *page, struct mem_cgroup *memcg,
+ 					enum charge_type ctype)
+ {
+ 	struct page_cgroup *pc = lookup_page_cgroup(page);
++	struct zone *zone = page_zone(page);
++	unsigned long flags;
+ 	/*
+ 	 * In some case, SwapCache, FUSE(splice_buf->radixtree), the page
+ 	 * is already on LRU. It means the page may on some other page_cgroup's
+ 	 * LRU. Take care of it.
+ 	 */
+-	mem_cgroup_lru_del_before_commit(page);
++	spin_lock_irqsave(&zone->lru_lock, flags);
++	if (PageLRU(page))
++		del_page_from_lru_list(zone, page, page_lru(page));
+ 	__mem_cgroup_commit_charge(memcg, page, 1, pc, ctype);
+-	mem_cgroup_lru_add_after_commit(page);
++	if (PageLRU(page))
++		add_page_to_lru_list(zone, page, page_lru(page));
++	spin_unlock_irqrestore(&zone->lru_lock, flags);
+ 	return;
  }
  
 -- 
@@ -94,6 +158,8 @@ index a9e92a6..947c62c 100644
 
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
