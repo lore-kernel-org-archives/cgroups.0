@@ -1,69 +1,133 @@
 From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: How to draw values for /proc/stat
-Date: Tue, 6 Dec 2011 09:05:43 +0900
-Message-ID: <20111206090543.e72128b6.kamezawa.hiroyu@jp.fujitsu.com>
-References: <4EDC8FB1.60407@parallels.com>
+Subject: Re: [PATCH v7 10/10] Disable task moving when using kernel memory
+ accounting
+Date: Tue, 6 Dec 2011 09:07:26 +0900
+Message-ID: <20111206090726.21037cb9.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1322611021-1730-1-git-send-email-glommer@parallels.com>
+	<1322611021-1730-11-git-send-email-glommer@parallels.com>
+	<20111130112210.1d979512.kamezawa.hiroyu@jp.fujitsu.com>
+	<4ED914EC.6020500@parallels.com>
+	<20111205111835.b1432603.kamezawa.hiroyu@jp.fujitsu.com>
+	<4EDC8C6D.2070001@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4EDC8FB1.60407-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <4EDC8C6D.2070001-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, 5 Dec 2011 07:32:33 -0200
+On Mon, 5 Dec 2011 07:18:37 -0200
 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 
-> Hi,
+> On 12/05/2011 12:18 AM, KAMEZAWA Hiroyuki wrote:
+> > On Fri, 2 Dec 2011 16:11:56 -0200
+> > Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
+> >
+> >> On 11/30/2011 12:22 AM, KAMEZAWA Hiroyuki wrote:
+> >>> On Tue, 29 Nov 2011 21:57:01 -0200
+> >>> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>   wrote:
+> >>>
+> >>>> Since this code is still experimental, we are leaving the exact
+> >>>> details of how to move tasks between cgroups when kernel memory
+> >>>> accounting is used as future work.
+> >>>>
+> >>>> For now, we simply disallow movement if there are any pending
+> >>>> accounted memory.
+> >>>>
+> >>>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> >>>> CC: Hiroyouki Kamezawa<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> >>>> ---
+> >>>>    mm/memcontrol.c |   23 ++++++++++++++++++++++-
+> >>>>    1 files changed, 22 insertions(+), 1 deletions(-)
+> >>>>
+> >>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> >>>> index a31a278..dd9a6d9 100644
+> >>>> --- a/mm/memcontrol.c
+> >>>> +++ b/mm/memcontrol.c
+> >>>> @@ -5453,10 +5453,19 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
+> >>>>    {
+> >>>>    	int ret = 0;
+> >>>>    	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
+> >>>> +	struct mem_cgroup *from = mem_cgroup_from_task(p);
+> >>>> +
+> >>>> +#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)&&   defined(CONFIG_INET)
+> >>>> +	if (from != memcg&&   !mem_cgroup_is_root(from)&&
+> >>>> +	    res_counter_read_u64(&from->tcp_mem.tcp_memory_allocated, RES_USAGE)) {
+> >>>> +		printk(KERN_WARNING "Can't move tasks between cgroups: "
+> >>>> +			"Kernel memory held.\n");
+> >>>> +		return 1;
+> >>>> +	}
+> >>>> +#endif
+> >>>
+> >>> I wonder....reading all codes again, this is incorrect check.
+> >>>
+> >>> Hm, let me cralify. IIUC, in old code, "prevent moving" is because you hold
+> >>> reference count of cgroup, which can cause trouble at rmdir() as leaking refcnt.
+> >> right.
+> >>
+> >>> BTW, because socket is a shared resource between cgroup, changes in mm->owner
+> >>> may cause task cgroup moving implicitly. So, if you allow leak of resource
+> >>> here, I guess... you can take mem_cgroup_get() refcnt which is memcg-local and
+> >>> allow rmdir(). Then, this limitation may disappear.
+> >>
+> >> Sorry, I didn't fully understand. Can you clarify further?
+> >> If the task is implicitly moved, it will end up calling can_attach as
+> >> well, right?
+> >>
+> > I'm sorry that my explanation is bad.
+> >
+> > You can take memory cgroup itself's reference count by mem_cgroup_put/get.
+> > By getting this, memory cgroup object will continue to exist even after
+> > its struct cgroup* is freed by rmdir().
+> >
+> > So, assume you do mem_cgroup_get()/put at socket attaching/detatching.
+> >
+> > 0) A task has a tcp socekts in memcg0.
+> >
+> > task(memcg0)
+> >   +- socket0 -->  memcg0,usage=4096
+> >
+> > 1) move this task to memcg1
+> >
+> > task(memcg1)
+> >   +- socket0 -->  memcg0,usage=4096
+> >
+> > 2) The task create a new socket.
+> >
+> > task(memcg1)
+> >   +- socekt0 -->  memcg0,usage=4096
+> >   +- socket1 -->  memcg1,usage=xxxx
+> >
+> > Here, the task will hold 4096bytes of usage in memcg0 implicitly.
+> >
+> > 3) an admin removes memcg0
+> > task(memcg1)
+> >   +- socket0 -->memcg0, usage=4096<-----(*)
+> >   +- socket1 -->memcg1, usage=xxxx
+> >
+> > (*) is invisible to users....but this will not be very big problem.
+> >
+> Hi Kame,
 > 
-> Specially Peter and Paul, but all the others:
+> Thanks for the explanation.
 > 
-> As you can see in https://lkml.org/lkml/2011/12/4/178, and in my answer 
-> to that, there is a question - one I've asked before but without that 
-> much of an audience - of whether /proc files read from process living on 
-> cgroups should display global or per-cgroup resources.
+> Hummm, Do you think that by doing it, we get rid of the need of moving 
+> sockets to another memcg when the task is moved? So in my original 
+> patchset, if you recall, I wanted to keep a socket forever in the same 
+> cgroup. I didn't, because then rmdir would be blocked.
 > 
-> In the past, I was arguing for a knob to control that, but I recently 
-> started to believe that a knob here will only overcomplicate matters:
-> if you live in a cgroup, you should display only the resources you can 
-> possibly use. Global is for whoever is in the main cgroup.
-> 
+> By using this memcg reference trick, both can be achieved. What do you 
+> think ?
 
-Hm. I have a suggestion and a concern.
-
-(A suggestion)
-   How about having a mount option for procfs ?
-   For example,
-	mount -t proc .... -o cgroup_virtualized
-   Then, /proc/stat etc shows per-cgroup information.
-
-(A concern)
-   /proc/stat will be a mixture of virtualized values and not-virtualized values.
-   1. Don't users need to know whether each value is virtualized or not ?
-   2. Can we have a way to show "this value is virtualized!" annotation ?
-
-
-> Now, it comes two questions:
-> 1) Do you agree with that, for files like /proc/stat ? I think the most 
-> important part is to be consistent inside the system, regardless of what 
-> is done
-> 
-I think some kind of care for users are required as I wrote above.
-
-
-> 2) Will cpuacct stay? I think if it does, that becomes almost mandatory 
-> (at least the bind mount idea is pretty much over here), because drawing 
-> value for /proc/stat becomes quite complex.
-> The cpuacct cgroup can provide user, sys, etc values. But we also have:
-> 
-
-If virtualized /proc/stat works, I don't think 'account only' cgroup is
-necessary. It can be obsolete.
+I think so. Using mem_cgroup_put/get is a way. Could you try ?
 
 Thanks,
 -Kame
+
+
 
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
