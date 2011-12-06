@@ -1,131 +1,110 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [RFC][PATCH] memcg: remove PCG_ACCT_LRU.
-Date: Tue, 6 Dec 2011 19:21:01 +0900
-Message-ID: <20111206192101.8ea75558.kamezawa.hiroyu@jp.fujitsu.com>
-References: <20111202190622.8e0488d6.kamezawa.hiroyu@jp.fujitsu.com>
-	<20111202120849.GA1295@cmpxchg.org>
-	<20111205095009.b82a9bdf.kamezawa.hiroyu@jp.fujitsu.com>
-	<alpine.LSU.2.00.1112051552210.3938@sister.anvils>
-	<20111206095825.69426eb2.kamezawa.hiroyu@jp.fujitsu.com>
-	<alpine.LSU.2.00.1112052258510.28015@sister.anvils>
+Date: Tue, 6 Dec 2011 15:50:33 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1112061506360.2111@sister.anvils>
+References: <20111202190622.8e0488d6.kamezawa.hiroyu@jp.fujitsu.com> <20111202120849.GA1295@cmpxchg.org> <20111205095009.b82a9bdf.kamezawa.hiroyu@jp.fujitsu.com> <alpine.LSU.2.00.1112051552210.3938@sister.anvils> <20111206095825.69426eb2.kamezawa.hiroyu@jp.fujitsu.com>
+ <alpine.LSU.2.00.1112052258510.28015@sister.anvils> <20111206192101.8ea75558.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LSU.2.00.1112052258510.28015@sister.anvils>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=beta;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=4FGs722Dp5UZlGR3sQoqILU2a+tg1kHEBsiIcmydOmM=;
+        b=h7S16ay5khnOUt7ess930o3RYcb60JFKaqiteB0cU/4/Qgx6yl70/j8XaKzSThz3+D
+         RG8ZsPQVk5RAAB0saDmw==
+In-Reply-To: <20111206192101.8ea75558.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Hugh Dickins <hughd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, Ying Han <yinghan@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, 5 Dec 2011 23:36:34 -0800 (PST)
-Hugh Dickins <hughd@google.com> wrote:
+On Tue, 6 Dec 2011, KAMEZAWA Hiroyuki wrote:
+> On Mon, 5 Dec 2011 23:36:34 -0800 (PST)
+> Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> 
+> Hmm, at first glance at the patch, it seems far complicated than
+> I expected
 
-> On Tue, 6 Dec 2011, KAMEZAWA Hiroyuki wrote:
-> > On Mon, 5 Dec 2011 16:13:06 -0800 (PST)
-> > Hugh Dickins <hughd@google.com> wrote:
-> > > 
-> > > Ying and I found PageCgroupAcctLRU very hard to grasp, even despite
-> > > the comments Hannes added to explain it.  
+Right, this is just a rollup of assorted changes,
+yet to be presented properly as an understandable series.
+
+> and added much checks and hooks to lru path...
+
+Actually, I think it removes more than it adds; while trying not
+to increase the overhead of lookup_page_cgroup()s and locking.
+
+> > Okay, here it is: my usual mix of cleanup and functional changes.
+> > There's work by Ying and others in here - will apportion authorship
+> > more fairly when splitting.  If you're looking through it at all,
+> > the place to start would be memcontrol.c's lock_page_lru_irqsave().
 > > 
-> > Now, I don't think it's difficult. It seems no file system codes
-> > add pages to LRU before add_to_page_cache() (I checked.)
-> > So, what we need to care is only swap-cache. In swap-cache path,
-> > we can do slow work.
 > 
-> I've been reluctant to add more special code for SwapCache:
-> it may or may not be a good idea.  Hannes also noted a FUSE
-> case which requires the before-commit-after handling swap was
-> using (for memcg-zone lru locking we've merged them into commit).
+> Thank you. This seems inetersting patch. Hmm...what I think of now is..
+> In most case, pages are newly allocated and charged ,and then, added to LRU.
+> pc->mem_cgroup never changes while pages are on LRU.
 > 
-
-I think we need a fix for FUSE. In past, FUSE/splice used
-add_to_page_cache() but not it uses replace_page_cache().
-So, we need another care. (I posted a patch.)
-
-
-> > 
-> > > In moving the LRU locking
-> > > from zone to memcg, we needed to depend upon pc->mem_cgroup: that
-> > > was difficult while the interpretation of pc->mem_cgroup depended
-> > > upon two flags also; and very tricky when pages were liable to shift
-> > > underneath you from one LRU to another, as flags came and went.
-> > > So we already eliminated PageCgroupAcctLRU here.
-> > > 
-> > 
-> > Okay, Hm, do you see performance improvement by moving locks ?
+> I have a fix for corner cases as to do
 > 
-> I was expecting someone to ask that question!  I'm not up-to-date
-> on it, it's one of the things I have to get help to gather before
-> sending in the patch series.
+> 	1. lock lru
+> 	2. remove-page-from-lru
+> 	3. overwrite pc->mem_cgroup
+> 	4. add page to lru again
+> 	5. unlock lru
+
+That is indeed the sequence which __mem_cgroup_commit_charge() follows
+after the patch.
+
+But it optimizes out the majority of cases when no such lru operations
+are needed (optimizations best presented in a separate patch), while
+being careful about the tricky case when the page is on lru_add_pvecs,
+and may get on to an lru at any moment.
+
+And since it uses a separate lock for each memcg-zone's set of lrus,
+must take care that both lock and lru in 4 and 5 are different from
+those in 1 and 2.
+
 > 
-> I believe the answer is that we saw some improvement on some tests,
-> but not so much as to make a hugely compelling case for the change.
-> But by that time we'd invested a lot of testing in the memcg locking,
-> and little in the original zone locking, so went with the memcg
-> locking anyway.
+> And blindly believe pc->mem_cgroup regardless of PCG_USED bit at LRU handling.
+
+That's right.  The difficulty comes when Used is cleared while
+the page is off lru, or page removed from lru while Used is clear:
+once lock is dropped, we have no hold on the memcg, and must move
+to root lru lest the old memcg get deleted.
+
+The old Used + AcctLRU + pc->mem_cgroup puppetry used to achieve that
+quite cleverly; but in distributing zone lru_locks over memcgs, we went
+through a lot of crashes before we understood the subtlety of it; and
+in most places were just fighting the way it shifted underneath us.
+
+Now mem_cgroup_move_uncharged_to_root() makes the move explicit,
+in just a few places.
+
 > 
-> We'll get more results and hope to show a stronger case for it now.
-> But our results will probably have to be based on in-house kernels,
-> with a lot of the "infrastructure" mods already in place, to allow
-> an easy build-time switch between zone locking and memcg locking.
+> Hm, per-zone-per-memcg lru locking is much easier if
+>  - we igonore PCG_USED bit at lru handling
+
+I may or may not agree with you, depending on what you mean!
+
+>  - we never overwrite pc->mem_cgroup if the page is on LRU.
+
+That's not the way I was thinking of it, but I think that's what we're doing.
+
+>  - if page may be added to LRU by pagevec etc.. while we overwrite
+>    pc->mem_cgroup, we always take lru_lock. This is our corner case.
+
+Yes, the tricky case I mention above.
+
 > 
-> That won't be such a fair test if the "infrastructure" mods are
-> themselves detrimental (I believe not).  It would be better to
-> compare, say, 3.2.0-next against 3.2.0-next plus our patches -
-> but my own (quad) machines for testing upstream kernels won't
-> be big enough to show much of interest.  I'm rather hoping
-> someone will be interested enough to try on something beefier.
-> 
+> isn't it ? I posted a series of patch. I'm glad if you give me a
+> quick review.
 
-Hmm, at first glance at the patch, it seems far complicated than
-I expected and added much checks and hooks to lru path...
+I haven't glanced yet, will do so after an hour or two.
 
-> > > 
-> > > However, I've hardly begun splitting the changes up into a series:
-> > > had intended to do so last week, but day followed day...  If you'd
-> > > like to see the unpolished uncommented rollup, I can post that.
-> > > 
-> > 
-> > please.
-> > Anyway, I'll post my own again as output even if I stop my work there.
-> 
-> Okay, here it is: my usual mix of cleanup and functional changes.
-> There's work by Ying and others in here - will apportion authorship
-> more fairly when splitting.  If you're looking through it at all,
-> the place to start would be memcontrol.c's lock_page_lru_irqsave().
-> 
-
-Thank you. This seems inetersting patch. Hmm...what I think of now is..
-In most case, pages are newly allocated and charged ,and then, added to LRU.
-pc->mem_cgroup never changes while pages are on LRU.
-
-I have a fix for corner cases as to do
-
-	1. lock lru
-	2. remove-page-from-lru
-	3. overwrite pc->mem_cgroup
-	4. add page to lru again
-	5. unlock lru
-
-And blindly believe pc->mem_cgroup regardless of PCG_USED bit at LRU handling.
-
-Hm, per-zone-per-memcg lru locking is much easier if
- - we igonore PCG_USED bit at lru handling
- - we never overwrite pc->mem_cgroup if the page is on LRU.
- - if page may be added to LRU by pagevec etc.. while we overwrite
-   pc->mem_cgroup, we always take lru_lock. This is our corner case.
-
-isn't it ? I posted a series of patch. I'm glad if you give me a
-quick review.
-
-Thanks,
--Kame
-
-
+Hugh
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
