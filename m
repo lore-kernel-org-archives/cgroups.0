@@ -1,105 +1,96 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC][PATCH] memcg: remove PCG_ACCT_LRU.
-Date: Mon, 5 Dec 2011 16:13:06 -0800 (PST)
-Message-ID: <alpine.LSU.2.00.1112051552210.3938@sister.anvils>
-References: <20111202190622.8e0488d6.kamezawa.hiroyu@jp.fujitsu.com> <20111202120849.GA1295@cmpxchg.org> <20111205095009.b82a9bdf.kamezawa.hiroyu@jp.fujitsu.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: How to draw values for /proc/stat
+Date: Mon, 5 Dec 2011 22:17:06 -0200
+Message-ID: <4EDD5F02.1070001@parallels.com>
+References: <4EDC8FB1.60407@parallels.com> <20111206090543.e72128b6.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=beta;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=C/3346PGRm/i1TuGbuoYfFEPTA5UyxG1YdZsCrzte5E=;
-        b=STL9XhXA6YKhJUufijvtQOpu1oNNdBgHW2Fhz5s1/YHVCWuay7Ap1n6jwr/x9Obakw
-         R6WtZcYSWhuKcyTPFT+A==
-In-Reply-To: <20111205095009.b82a9bdf.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <20111206090543.e72128b6.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
 
-On Mon, 5 Dec 2011, KAMEZAWA Hiroyuki wrote:
-> On Fri, 2 Dec 2011 13:08:49 +0100
-> Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > On Fri, Dec 02, 2011 at 07:06:22PM +0900, KAMEZAWA Hiroyuki wrote:
-> > > I'm now testing this patch, removing PCG_ACCT_LRU, onto mmotm.
-> > > How do you think ?
-> > 
-> > > @@ -1024,18 +1026,8 @@ void mem_cgroup_lru_del_list(struct page *page, enum lru_list lru)
-> > >  		return;
-> > >  
-> > >  	pc = lookup_page_cgroup(page);
-> > > -	/*
-> > > -	 * root_mem_cgroup babysits uncharged LRU pages, but
-> > > -	 * PageCgroupUsed is cleared when the page is about to get
-> > > -	 * freed.  PageCgroupAcctLRU remembers whether the
-> > > -	 * LRU-accounting happened against pc->mem_cgroup or
-> > > -	 * root_mem_cgroup.
-> > > -	 */
-> > > -	if (TestClearPageCgroupAcctLRU(pc)) {
-> > > -		VM_BUG_ON(!pc->mem_cgroup);
-> > > -		memcg = pc->mem_cgroup;
-> > > -	} else
-> > > -		memcg = root_mem_cgroup;
-> > > +	memcg = pc->mem_cgroup ? pc->mem_cgroup : root_mem_cgroup;
-> > > +	VM_BUG_ON(memcg != pc->mem_cgroup_lru);
-> > >  	mz = page_cgroup_zoneinfo(memcg, page);
-> > >  	/* huge page split is done under lru_lock. so, we have no races. */
-> > >  	MEM_CGROUP_ZSTAT(mz, lru) -= 1 << compound_order(page);
-> > 
-> > Nobody clears pc->mem_cgroup upon uncharge, so this may end up
-> > mistakenly lru-unaccount a page that was never charged against the
-> > stale pc->mem_cgroup (e.g. a swap readahead page that has not been
-> > charged yet gets isolated by reclaim).
-> > 
-> > On the other hand, pages that were uncharged just before the lru_del
-> > MUST be lru-unaccounted against pc->mem_cgroup.
-> > 
-> > PageCgroupAcctLRU made it possible to tell those two scenarios apart.
-> > 
-> > A possible solution could be to clear pc->mem_cgroup when the page is
-> > finally freed so that only pages that have been charged since their
-> > last allocation have pc->mem_cgroup set.  But this means that the page
-> > freeing hotpath will have to grow a lookup_page_cgroup(), amortizing
-> > the winnings at least to some extent.
-> > 
-> 
-> Hmm. IMHO, we have 2 easy ways.
-> 
->  - Ignore PCG_USED bit at LRU handling.
->    2 problems.
->    1. memory.stat may show very wrong statistics if swapin is too often.
->    2. need careful use of mem_cgroup_charge_lrucare().
-> 
->  - Clear pc->mem_cgroup at swapin-readahead.
->    A problem.
->    1. we need a new hook.
-> 
-> I'll try to clear pc->mem_cgroup at swapin. 
-> 
-> Thank you for pointing out.
+On 12/05/2011 10:05 PM, KAMEZAWA Hiroyuki wrote:
+> On Mon, 5 Dec 2011 07:32:33 -0200
+> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
+>
+>> Hi,
+>>
+>> Specially Peter and Paul, but all the others:
+>>
+>> As you can see in https://lkml.org/lkml/2011/12/4/178, and in my answer
+>> to that, there is a question - one I've asked before but without that
+>> much of an audience - of whether /proc files read from process living on
+>> cgroups should display global or per-cgroup resources.
+>>
+>> In the past, I was arguing for a knob to control that, but I recently
+>> started to believe that a knob here will only overcomplicate matters:
+>> if you live in a cgroup, you should display only the resources you can
+>> possibly use. Global is for whoever is in the main cgroup.
+>>
+>
+> Hm. I have a suggestion and a concern.
+>
+> (A suggestion)
+>     How about having a mount option for procfs ?
+>     For example,
+> 	mount -t proc .... -o cgroup_virtualized
+>     Then, /proc/stat etc shows per-cgroup information.
+>
+> (A concern)
+>     /proc/stat will be a mixture of virtualized values and not-virtualized values.
+>     1. Don't users need to know whether each value is virtualized or not ?
+>     2. Can we have a way to show "this value is virtualized!" annotation ?
 
-Ying and I found PageCgroupAcctLRU very hard to grasp, even despite
-the comments Hannes added to explain it.  In moving the LRU locking
-from zone to memcg, we needed to depend upon pc->mem_cgroup: that
-was difficult while the interpretation of pc->mem_cgroup depended
-upon two flags also; and very tricky when pages were liable to shift
-underneath you from one LRU to another, as flags came and went.
-So we already eliminated PageCgroupAcctLRU here.
+A mount options works for me.
+However, "work" doesn't mean it is really necessary, and that's the real 
+question: is there a real use case for someone resource-constrained to 
+see system-wide values ?
 
-I'm fairly happy with what we have now, and have ported it forward
-to 3.2.0-rc3-next-20111202: with a few improvements on top of what
-we've got internally - Hannes's remark above about "amortizing the
-winnings" in the page freeing hotpath has prompted me to improve
-on what we had there, needs more testing but seems good so far.
+What is exactly the expectation here? If you want to see whichever 
+resources you're entitled to, just showing the cgroups version on /proc 
+would be simpler, with less confusion, and do the right thing.
 
-However, I've hardly begun splitting the changes up into a series:
-had intended to do so last week, but day followed day...  If you'd
-like to see the unpolished uncommented rollup, I can post that.
+As for your concerns:
+1) As said above, my point of view is that no, they do not. You only see 
+what you can touch.
+2) I think this defeats the goal of transparency. Users of fully 
+virtualized VMs for instances, have no annotations like that (of course 
+it is possible to hint they are virtualized from many other sources).
+But in the end of the day, a resource is a resource, virtualized or not.
 
-Hugh
+>
+>> Now, it comes two questions:
+>> 1) Do you agree with that, for files like /proc/stat ? I think the most
+>> important part is to be consistent inside the system, regardless of what
+>> is done
+>>
+> I think some kind of care for users are required as I wrote above.
+>
+Please note again that I don't necessarily dislike the idea of a mount 
+option, if we must do something. I just don't see the point.
+
+>> 2) Will cpuacct stay? I think if it does, that becomes almost mandatory
+>> (at least the bind mount idea is pretty much over here), because drawing
+>> value for /proc/stat becomes quite complex.
+>> The cpuacct cgroup can provide user, sys, etc values. But we also have:
+>>
+>
+> If virtualized /proc/stat works, I don't think 'account only' cgroup is
+> necessary. It can be obsolete.
+>
+Let's keep in mind that there are more to the story, and I want to be 
+sure to address everyones PoVs here. The impression I've got is that the 
+reasons to keep cpuacct around came mainly from 2 sources:
+
+1) Balbir wants statistics that don't interfere with scheduling decisions
+2) Paul thinks we should avoid cluttering cpu cgroup.
+
+Obsoleting cpuacct clearly makes somethings simpler, but can probably 
+defeat some of those goals. So still need to hear about this...
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
