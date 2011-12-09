@@ -1,53 +1,60 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v8 1/9] Basic kernel memory functionality for the Memory
- Controller
-Date: Fri, 9 Dec 2011 12:37:23 -0200
-Message-ID: <4EE21D23.4000309@parallels.com>
-References: <1323120903-2831-1-git-send-email-glommer@parallels.com> <1323120903-2831-2-git-send-email-glommer@parallels.com> <20111209102113.cdb85da8.kamezawa.hiroyu@jp.fujitsu.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH v8 1/9] Basic kernel memory functionality for the Memory Controller
+Date: Fri, 9 Dec 2011 14:44:45 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6D8AF0D@saturn3.aculab.com>
+References: <4EE21D23.4000309@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111209102113.cdb85da8.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <4EE21D23.4000309@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-kernel@vger.kernel.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, Paul Menage <paul@paulmenage.org>
 
-On 12/08/2011 11:21 PM, KAMEZAWA Hiroyuki wrote:
-> Hm, why you check val != parent->kmem_independent_accounting ?
->
-> 	if (parent&&  parent->use_hierarchy)
-> 		return -EINVAL;
-> ?
->
-> BTW, you didn't check this cgroup has children or not.
-> I think
->
-> 	if (this_cgroup->use_hierarchy&&
->               !list_empty(this_cgroup->childlen))
-> 		return -EINVAL;
+=20
+> How about this?
+>=20
+>          val =3D !!val;
+>=20
+>          /*
+>           * This follows the same hierarchy restrictions than
+>           * mem_cgroup_hierarchy_write()
+>           */
+>          if (!parent || !parent->use_hierarchy) {
+>                  if (list_empty(&cgroup->children))
+>                          memcg->kmem_independent_accounting =3D val;
+>                  else
+>                          return -EBUSY;
+>          }
+>          else
+>                  return -EINVAL;
+>=20
+>          return 0;
 
-How about this?
+Inverting the tests gives easier to read code:
 
-         val = !!val;
+	if (parent && parent->user_hierarchy)
+		return -EINVAL;
+	if (!list_empty(&cgroup->children))
+		return -EBUSY;
+	memcg->kmem_independent_accounting =3D val !=3D 0;
+	return 0;
 
-         /*
-          * This follows the same hierarchy restrictions than
-          * mem_cgroup_hierarchy_write()
-          */
-         if (!parent || !parent->use_hierarchy) {
-                 if (list_empty(&cgroup->children))
-                         memcg->kmem_independent_accounting = val;
-                 else
-                         return -EBUSY;
-         }
-         else
-                 return -EINVAL;
+NFI about the logic...
+On the face of it the tests don't seem related to each other
+or to the assignment!
 
-         return 0;
+	David
+
+=09
+
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
