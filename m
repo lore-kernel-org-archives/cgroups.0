@@ -1,83 +1,138 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v8 1/9] Basic kernel memory functionality for the Memory
- Controller
-Date: Fri, 9 Dec 2011 12:48:16 -0200
-Message-ID: <4EE21FB0.5090006@parallels.com>
-References: <AE90C24D6B3A694183C094C60CF0A2F6D8AF0D@saturn3.aculab.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: How to draw values for /proc/stat
+Date: Fri, 9 Dec 2011 12:55:53 -0200
+Message-ID: <4EE22179.5090106@parallels.com>
+References: <4EDC8FB1.60407@parallels.com> <1323439411.17673.65.camel@twins>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6D8AF0D@saturn3.aculab.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1323439411.17673.65.camel@twins>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, davem@davemloft.net, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, Paul Menage <paul@paulmenage.org>
+To: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 12/09/2011 12:44 PM, David Laight wrote:
->
->> How about this?
+On 12/09/2011 12:03 PM, Peter Zijlstra wrote:
+> On Mon, 2011-12-05 at 07:32 -0200, Glauber Costa wrote:
+>> Hi,
 >>
->>           val = !!val;
+>> Specially Peter and Paul, but all the others:
 >>
->>           /*
->>            * This follows the same hierarchy restrictions than
->>            * mem_cgroup_hierarchy_write()
->>            */
->>           if (!parent || !parent->use_hierarchy) {
->>                   if (list_empty(&cgroup->children))
->>                           memcg->kmem_independent_accounting = val;
->>                   else
->>                           return -EBUSY;
->>           }
->>           else
->>                   return -EINVAL;
+>> As you can see in https://lkml.org/lkml/2011/12/4/178, and in my answer
+>> to that, there is a question - one I've asked before but without that
+>> much of an audience - of whether /proc files read from process living on
+>> cgroups should display global or per-cgroup resources.
 >>
->>           return 0;
+>> In the past, I was arguing for a knob to control that, but I recently
+>> started to believe that a knob here will only overcomplicate matters:
+>> if you live in a cgroup, you should display only the resources you can
+>> possibly use. Global is for whoever is in the main cgroup.
+>>
+>> Now, it comes two questions:
+>> 1) Do you agree with that, for files like /proc/stat ? I think the most
+>> important part is to be consistent inside the system, regardless of what
+>> is done
 >
-> Inverting the tests gives easier to read code:
+> Personally I don't give a rats arse about (/proc vs) cgroups :-)
+> Currently /proc is unaffected by whatever cgroup you happen to be in and
+> that seems to make some sort of sense.
 >
-> 	if (parent&&  parent->user_hierarchy)
-> 		return -EINVAL;
-> 	if (!list_empty(&cgroup->children))
-> 		return -EBUSY;
-> 	memcg->kmem_independent_accounting = val != 0;
-> 	return 0;
-
-On the other hand, inconsistent with mem_cgroup_hierarchy_write(), which 
-applies the logic in the same way I did here.
-
-> NFI about the logic...
-> On the face of it the tests don't seem related to each other
-> or to the assignment!
-
-How so?
-
-If parent's use_hierarchy is set, we can't set this value (we need to 
-have a parent for that to even matter).
-
-We also can't set it if we already have any children - otherwise all the 
-on-the-fly adjustments become hell-on-earth.
-
-As for = val != 0, sorry, but I completely disagree this is easier than 
-!!val. Not to mention the !!val notation is already pretty widespread in 
-the kernel.
-
-> 	David
+> Namespaces seem to be about limiting visibility, cgroups about
+> controlling resources.
 >
-> 	
+> The two things are hopelessly disjoint atm, but I believe someone was
+> looking at this mess.
+
+I did take a look at this (if anyone else was, I'd like to know so we 
+can share some ideas), but I am not convinced we should do anything to 
+join them anymore. We virtualization people are to the best of my 
+knowledge the only ones doing namespaces. Cgroups, OTOH, got a lot bigger.
+
+What I am mostly concerned about now, is how consistent they will be.
+/proc always being always global indeed does make sense, but my question 
+still stands: if you live in a resource-controlled world, why should you 
+even see resources you will never own ?
+
+
+> IOW a /proc namespace coupled to cgroup scope would do what you want.
+> Now my head hurts..
+
+Mine too. The idea is good, but too broad. Boils down to: How do you 
+couple them? And none of the methods I thought about seemed to make any 
+sense.
+
+If we really want to have the values in /proc being opted-in, I think 
+Kamezawa's idea of a mount option is the winner so far.
+
+>> 2) Will cpuacct stay?
 >
+> I really want to kill it. Balbir seems to want to retain a control-less
+> accounting capability, but I really don't see the point in that. Nor is
+> anybody selling it convincingly.
 >
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-> Don't email:<a href=ilto:"dont@kvack.org">  email@kvack.org</a>
+> So I think I'll simply deprecate it and schedule it for removal and
+> anybody wanting something like this is free to send patches to implement
+> what they want in the cpu controller and convince me its worth the pain.
+>
+>> I think if it does, that becomes almost mandatory
+>
+> You're referring to #1 here, right?
+
+Yes. But that was before Kame suggested a mount option. That would do 
+just fine in this use case as well/
+
+>> (at least the bind mount idea is pretty much over here), because drawing
+>> value for /proc/stat becomes quite complex.
+>> The cpuacct cgroup can provide user, sys, etc values. But we also have:
+>>
+>> * nr_context_switches,
+>> * jiffies since boot,
+>> * total_forks,
+>> * nr_running,
+>> * nr_iowait,
+>>
+>> Now I doubt any of us want to see /proc/stat extended to accommodate
+>> things like nr_context_switches, or even worse, nr_running. The way I
+>> see it, there are two options here:
+>
+> Why would we want to display all those anyway?
+
+Because we care about isolation. Our users (and more importantly, their 
+tools), need to feel they own the box. That's the whole point of it.
+
+Whatever is displayed to the users, need to be (with a switch/mount opt, 
+if my initial point is really defeated) related to the resources he is 
+entitled to, not to some global entity he'll never own.
+>
+>>    a) moving everything to cpu cgroup so we keep all values being drawn
+>>       from the same place
+>
+> This is /cgroup/$controller.stat, right?
+
+Sorry?
+
+(I just noticed I wasn't that clear myself) I referred more to the act 
+of collecting values, and where from, than how to.
+
+>
+>>    b) Collect that info from multiple places in a transparent way. ctx,
+>>       nr_running and nr_iowait will probably come from cpu. jiffies can
+>>       come from wherever, and maybe we can even draw total_forks
+>>       from Frederic's and avoid counting it twice.
+>
+> trouble with that is 'drawing from someplace' is a total nightmare, what
+> happens if that fork muck from Frederic isn't co-mounted with the cpu
+> controller?
+
+If it is not co-mounted, we draw the global value. If you don't mount 
+it, I someone does not mount it, I can assure you he doesn't care about 
+it. We for sure will.
+
+
+
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
