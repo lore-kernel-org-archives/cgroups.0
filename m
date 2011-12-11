@@ -1,61 +1,67 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [BUGFIX][PATCH v2] add mem_cgroup_replace_page_cache.
-Date: Fri, 9 Dec 2011 12:37:01 -0800
-Message-ID: <20111209123701.7e43dadf.akpm@linux-foundation.org>
-References: <20111206123923.1432ab52.kamezawa.hiroyu@jp.fujitsu.com>
-	<20111207111455.GA18249@tiehlicka.suse.cz>
-	<20111208161829.b6101de6.kamezawa.hiroyu@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH] make clone_children a flag
+Date: Sun, 11 Dec 2011 15:45:35 +0100
+Message-ID: <1323614738-7405-2-git-send-email-glommer@parallels.com>
+References: <1323614738-7405-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111208161829.b6101de6.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <1323614738-7405-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Miklos Szeredi <mszeredi-AlSwsSmVLrQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Thu, 8 Dec 2011 16:18:29 +0900
-KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
+There is no reason to have a flags field, and then a separate
+bool field just to indicate if the clone_children flag is set.
+Make it a flag
 
-> commit ef6a3c6311 adds a function replace_page_cache_page(). This
-> function replaces a page in radix-tree with a new page.
-> At doing this, memory cgroup need to fix up the accounting information.
-> memcg need to check PCG_USED bit etc.
-> 
-> In some(many?) case, 'newpage' is on LRU before calling replace_page_cache().
-> So, memcg's LRU accounting information should be fixed, too.
-> 
-> This patch adds mem_cgroup_replace_page_cache() and removing old hooks.
-> In that function, old pages will be unaccounted without touching res_counter
-> and new page will be accounted to the memcg (of old page). At overwriting
-> pc->mem_cgroup of newpage, take zone->lru_lock and avoid race with
-> LRU handling.
-> 
-> Background:
->   replace_page_cache_page() is called by FUSE code in its splice() handling.
->   Here, 'newpage' is replacing oldpage but this newpage is not a newly allocated
->   page and may be on LRU. LRU mis-accounting will be critical for memory cgroup
->   because rmdir() checks the whole LRU is empty and there is no account leak.
->   If a page is on the other LRU than it should be, rmdir() will fail.
-> 
-> Changelog: v1 -> v2
->   - fixed mem_cgroup_disabled() check missing.
->   - added comments.
-> 
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> ---
->  include/linux/memcontrol.h |    6 ++++++
->  mm/filemap.c               |   18 ++----------------
->  mm/memcontrol.c            |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 52 insertions(+), 16 deletions(-)
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+---
+ kernel/cgroup.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-It's a relatively intrusive patch and I'm a bit concerned about
-feeding it into 3.2.
-
-How serious is the bug, and which kernel version(s) do you think we
-should fix it in?
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e4b9d3c..fa405ee 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -231,6 +231,7 @@ inline int cgroup_is_removed(const struct cgroup *cgrp)
+ /* bits in struct cgroupfs_root flags field */
+ enum {
+ 	ROOT_NOPREFIX, /* mounted subsystems have no named prefix */
++	ROOT_CLONE_CHILDREN, /* mounted subsystems starts with clone_children */
+ };
+ 
+ static int cgroup_is_releasable(const struct cgroup *cgrp)
+@@ -1062,7 +1063,6 @@ struct cgroup_sb_opts {
+ 	unsigned long subsys_bits;
+ 	unsigned long flags;
+ 	char *release_agent;
+-	bool clone_children;
+ 	char *name;
+ 	/* User explicitly requested empty subsystem */
+ 	bool none;
+@@ -1113,7 +1113,7 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 			continue;
+ 		}
+ 		if (!strcmp(token, "clone_children")) {
+-			opts->clone_children = true;
++			set_bit(ROOT_CLONE_CHILDREN, &opts->flags);
+ 			continue;
+ 		}
+ 		if (!strncmp(token, "release_agent=", 14)) {
+@@ -1400,7 +1400,7 @@ static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
+ 		strcpy(root->release_agent_path, opts->release_agent);
+ 	if (opts->name)
+ 		strcpy(root->name, opts->name);
+-	if (opts->clone_children)
++	if (test_bit(ROOT_CLONE_CHILDREN, &opts->flags))
+ 		set_bit(CGRP_CLONE_CHILDREN, &root->top_cgroup.flags);
+ 	return root;
+ }
+-- 
+1.7.6.4
 
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
