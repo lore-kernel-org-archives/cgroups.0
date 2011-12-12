@@ -1,91 +1,110 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [BUGFIX][PATCH v2] add mem_cgroup_replace_page_cache.
-Date: Mon, 12 Dec 2011 09:48:05 +0900
-Message-ID: <20111212094805.bd258c01.kamezawa.hiroyu@jp.fujitsu.com>
-References: <20111206123923.1432ab52.kamezawa.hiroyu@jp.fujitsu.com>
-	<20111207111455.GA18249@tiehlicka.suse.cz>
-	<20111208161829.b6101de6.kamezawa.hiroyu@jp.fujitsu.com>
-	<20111209123701.7e43dadf.akpm@linux-foundation.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: How to draw values for /proc/stat
+Date: Mon, 12 Dec 2011 11:06:34 +0400
+Message-ID: <4EE5A7FA.8050707@parallels.com>
+References: <4EDC8FB1.60407@parallels.com> <1323439411.17673.65.camel@twins> <4EE22179.5090106@parallels.com> <4EE4C350.90509@parallels.com> <20111212093116.96537551.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20111209123701.7e43dadf.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111212093116.96537551.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Miklos Szeredi <mszeredi@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups@vger.kernel.org, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri, 9 Dec 2011 12:37:01 -0800
-Andrew Morton <akpm@linux-foundation.org> wrote:
+On 12/12/2011 04:31 AM, KAMEZAWA Hiroyuki wrote:
+> On Sun, 11 Dec 2011 15:50:56 +0100
+> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
+>
+>> On 12/09/2011 03:55 PM, Glauber Costa wrote:
+>>> On 12/09/2011 12:03 PM, Peter Zijlstra wrote:
+>>>> On Mon, 2011-12-05 at 07:32 -0200, Glauber Costa wrote:
+>>>>> Hi,
+>>>>>
+>>>>> Specially Peter and Paul, but all the others:
+>>>>>
+>>>>> As you can see in https://lkml.org/lkml/2011/12/4/178, and in my answer
+>>>>> to that, there is a question - one I've asked before but without that
+>>>>> much of an audience - of whether /proc files read from process living on
+>>>>> cgroups should display global or per-cgroup resources.
+>>>>>
+>>>>> In the past, I was arguing for a knob to control that, but I recently
+>>>>> started to believe that a knob here will only overcomplicate matters:
+>>>>> if you live in a cgroup, you should display only the resources you can
+>>>>> possibly use. Global is for whoever is in the main cgroup.
+>>>>>
+>>>>> Now, it comes two questions:
+>>>>> 1) Do you agree with that, for files like /proc/stat ? I think the most
+>>>>> important part is to be consistent inside the system, regardless of what
+>>>>> is done
+>>>>
+>>>> Personally I don't give a rats arse about (/proc vs) cgroups :-)
+>>>> Currently /proc is unaffected by whatever cgroup you happen to be in and
+>>>> that seems to make some sort of sense.
+>>>>
+>>>> Namespaces seem to be about limiting visibility, cgroups about
+>>>> controlling resources.
+>>>>
+>>>> The two things are hopelessly disjoint atm, but I believe someone was
+>>>> looking at this mess.
+>>>
+>>> I did take a look at this (if anyone else was, I'd like to know so we
+>>> can share some ideas), but I am not convinced we should do anything to
+>>> join them anymore. We virtualization people are to the best of my
+>>> knowledge the only ones doing namespaces. Cgroups, OTOH, got a lot bigger.
+>>>
+>>> What I am mostly concerned about now, is how consistent they will be.
+>>> /proc always being always global indeed does make sense, but my question
+>>> still stands: if you live in a resource-controlled world, why should you
+>>> even see resources you will never own ?
+>>>
+>>>
+>>>> IOW a /proc namespace coupled to cgroup scope would do what you want.
+>>>> Now my head hurts..
+>>>
+>>> Mine too. The idea is good, but too broad. Boils down to: How do you
+>>> couple them? And none of the methods I thought about seemed to make any
+>>> sense.
+>>>
+>>> If we really want to have the values in /proc being opted-in, I think
+>>> Kamezawa's idea of a mount option is the winner so far.
+>>>
+>>
+>> Ok:
+>>
+>> How about the following patch to achieve this ?
+>
+> Hmm, What I thought was mount option for procfs. Containers will mount its own
+> /proc file systems. Do you have any pros. / cons. ?
+> IIUC, cgroup can be mounted per subsystems. Then, options can be passed per
+> subsystems. It's a mess but we don't need to bring this to procfs.
+>
+> How about
+>
+>    # mount -t procfs proc /container_root/proc -o cgroup_aware
+>
+> to show cgroup aware procfs ? I think this will be easy to be used with
+> namespace/chroot, etc.
+>
 
-> On Thu, 8 Dec 2011 16:18:29 +0900
-> KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> 
-> > commit ef6a3c6311 adds a function replace_page_cache_page(). This
-> > function replaces a page in radix-tree with a new page.
-> > At doing this, memory cgroup need to fix up the accounting information.
-> > memcg need to check PCG_USED bit etc.
-> > 
-> > In some(many?) case, 'newpage' is on LRU before calling replace_page_cache().
-> > So, memcg's LRU accounting information should be fixed, too.
-> > 
-> > This patch adds mem_cgroup_replace_page_cache() and removing old hooks.
-> > In that function, old pages will be unaccounted without touching res_counter
-> > and new page will be accounted to the memcg (of old page). At overwriting
-> > pc->mem_cgroup of newpage, take zone->lru_lock and avoid race with
-> > LRU handling.
-> > 
-> > Background:
-> >   replace_page_cache_page() is called by FUSE code in its splice() handling.
-> >   Here, 'newpage' is replacing oldpage but this newpage is not a newly allocated
-> >   page and may be on LRU. LRU mis-accounting will be critical for memory cgroup
-> >   because rmdir() checks the whole LRU is empty and there is no account leak.
-> >   If a page is on the other LRU than it should be, rmdir() will fail.
-> > 
-> > Changelog: v1 -> v2
-> >   - fixed mem_cgroup_disabled() check missing.
-> >   - added comments.
-> > 
-> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> > Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> > ---
-> >  include/linux/memcontrol.h |    6 ++++++
-> >  mm/filemap.c               |   18 ++----------------
-> >  mm/memcontrol.c            |   44 ++++++++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 52 insertions(+), 16 deletions(-)
-> 
-> It's a relatively intrusive patch and I'm a bit concerned about
-> feeding it into 3.2.
-> 
-> How serious is the bug, and which kernel version(s) do you think we
-> should fix it in?
+Don't think it works.
 
-This bug was added by commit ef6a3c63112e (2011 Mar), but no bug report yet.
-I guess there are not many people who use memcg and FUSE at the same time
-with upstream kernels.
+Because whoever mounts the proc filesystem, may not want to be isolated. 
+But we want him to be.
 
-The result of this bug is that admin cannot destroy a memcg because of
-account leak. So, no panic, no deadlock. And, even if an active cgroup exist,
-umount can succseed. So no problem at shutdown.
+As an example from our usecase, procfs is mounted inside a container. We 
+can't assume the container is willing to cooperate. So we need to 
+establish this from the outside. We can of course force options to be 
+always added to a procfs mount if it comes from the container, but it is 
+way more messier than this.
 
-I want this fix should be merged when/after unify-lru works goes to upstream.
-
-Thanks,
--Kame
-
-
-
-
-
-
-
-
- 
+per-cgroup knobs works fine for this because the container cannot 
+possibly see it or change it in any circumstance.
+per-namespace would work as well, but then I don't see how to specify a 
+want/don't want flag in a sane way.
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
