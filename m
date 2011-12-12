@@ -1,110 +1,70 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: How to draw values for /proc/stat
-Date: Mon, 12 Dec 2011 11:06:34 +0400
-Message-ID: <4EE5A7FA.8050707@parallels.com>
-References: <4EDC8FB1.60407@parallels.com> <1323439411.17673.65.camel@twins> <4EE22179.5090106@parallels.com> <4EE4C350.90509@parallels.com> <20111212093116.96537551.kamezawa.hiroyu@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111212093116.96537551.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v9 0/9] Request for inclusion: per-cgroup tcp memory pressure controls
+Date: Mon, 12 Dec 2011 11:47:00 +0400
+Message-ID: <1323676029-5890-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: davem@davemloft.net
+Cc: linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-On 12/12/2011 04:31 AM, KAMEZAWA Hiroyuki wrote:
-> On Sun, 11 Dec 2011 15:50:56 +0100
-> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->
->> On 12/09/2011 03:55 PM, Glauber Costa wrote:
->>> On 12/09/2011 12:03 PM, Peter Zijlstra wrote:
->>>> On Mon, 2011-12-05 at 07:32 -0200, Glauber Costa wrote:
->>>>> Hi,
->>>>>
->>>>> Specially Peter and Paul, but all the others:
->>>>>
->>>>> As you can see in https://lkml.org/lkml/2011/12/4/178, and in my answer
->>>>> to that, there is a question - one I've asked before but without that
->>>>> much of an audience - of whether /proc files read from process living on
->>>>> cgroups should display global or per-cgroup resources.
->>>>>
->>>>> In the past, I was arguing for a knob to control that, but I recently
->>>>> started to believe that a knob here will only overcomplicate matters:
->>>>> if you live in a cgroup, you should display only the resources you can
->>>>> possibly use. Global is for whoever is in the main cgroup.
->>>>>
->>>>> Now, it comes two questions:
->>>>> 1) Do you agree with that, for files like /proc/stat ? I think the most
->>>>> important part is to be consistent inside the system, regardless of what
->>>>> is done
->>>>
->>>> Personally I don't give a rats arse about (/proc vs) cgroups :-)
->>>> Currently /proc is unaffected by whatever cgroup you happen to be in and
->>>> that seems to make some sort of sense.
->>>>
->>>> Namespaces seem to be about limiting visibility, cgroups about
->>>> controlling resources.
->>>>
->>>> The two things are hopelessly disjoint atm, but I believe someone was
->>>> looking at this mess.
->>>
->>> I did take a look at this (if anyone else was, I'd like to know so we
->>> can share some ideas), but I am not convinced we should do anything to
->>> join them anymore. We virtualization people are to the best of my
->>> knowledge the only ones doing namespaces. Cgroups, OTOH, got a lot bigger.
->>>
->>> What I am mostly concerned about now, is how consistent they will be.
->>> /proc always being always global indeed does make sense, but my question
->>> still stands: if you live in a resource-controlled world, why should you
->>> even see resources you will never own ?
->>>
->>>
->>>> IOW a /proc namespace coupled to cgroup scope would do what you want.
->>>> Now my head hurts..
->>>
->>> Mine too. The idea is good, but too broad. Boils down to: How do you
->>> couple them? And none of the methods I thought about seemed to make any
->>> sense.
->>>
->>> If we really want to have the values in /proc being opted-in, I think
->>> Kamezawa's idea of a mount option is the winner so far.
->>>
->>
->> Ok:
->>
->> How about the following patch to achieve this ?
->
-> Hmm, What I thought was mount option for procfs. Containers will mount its own
-> /proc file systems. Do you have any pros. / cons. ?
-> IIUC, cgroup can be mounted per subsystems. Then, options can be passed per
-> subsystems. It's a mess but we don't need to bring this to procfs.
->
-> How about
->
->    # mount -t procfs proc /container_root/proc -o cgroup_aware
->
-> to show cgroup aware procfs ? I think this will be easy to be used with
-> namespace/chroot, etc.
->
+Hi,
 
-Don't think it works.
+This series fixes all the few comments raised in the last round,
+and seem to have acquired consensus from the memcg side.
 
-Because whoever mounts the proc filesystem, may not want to be isolated. 
-But we want him to be.
+Dave, do you think it is acceptable now from the networking PoV?
+In case positive, would you prefer merging this trough your tree,
+or acking this so a cgroup maintainer can do it?
 
-As an example from our usecase, procfs is mounted inside a container. We 
-can't assume the container is willing to cooperate. So we need to 
-establish this from the outside. We can of course force options to be 
-always added to a procfs mount if it comes from the container, but it is 
-way more messier than this.
 
-per-cgroup knobs works fine for this because the container cannot 
-possibly see it or change it in any circumstance.
-per-namespace would work as well, but then I don't see how to specify a 
-want/don't want flag in a sane way.
+Thanks
+
+Glauber Costa (9):
+  Basic kernel memory functionality for the Memory Controller
+  foundations of per-cgroup memory pressure controlling.
+  socket: initial cgroup code.
+  tcp memory pressure controls
+  per-netns ipv4 sysctl_tcp_mem
+  tcp buffer limitation: per-cgroup limit
+  Display current tcp memory allocation in kmem cgroup
+  Display current tcp failcnt in kmem cgroup
+  Display maximum tcp memory allocation in kmem cgroup
+
+ Documentation/cgroups/memory.txt |   46 ++++++-
+ include/linux/memcontrol.h       |   23 ++++
+ include/net/netns/ipv4.h         |    1 +
+ include/net/sock.h               |  244 +++++++++++++++++++++++++++++++++-
+ include/net/tcp.h                |    4 +-
+ include/net/tcp_memcontrol.h     |   19 +++
+ init/Kconfig                     |   11 ++
+ mm/memcontrol.c                  |  191 +++++++++++++++++++++++++-
+ net/core/sock.c                  |  112 ++++++++++++----
+ net/ipv4/Makefile                |    1 +
+ net/ipv4/af_inet.c               |    2 +
+ net/ipv4/proc.c                  |    6 +-
+ net/ipv4/sysctl_net_ipv4.c       |   65 ++++++++-
+ net/ipv4/tcp.c                   |   11 +--
+ net/ipv4/tcp_input.c             |   12 +-
+ net/ipv4/tcp_ipv4.c              |   14 ++-
+ net/ipv4/tcp_memcontrol.c        |  272 ++++++++++++++++++++++++++++++++++++++
+ net/ipv4/tcp_output.c            |    2 +-
+ net/ipv4/tcp_timer.c             |    2 +-
+ net/ipv6/af_inet6.c              |    2 +
+ net/ipv6/tcp_ipv6.c              |    8 +-
+ 21 files changed, 973 insertions(+), 75 deletions(-)
+ create mode 100644 include/net/tcp_memcontrol.h
+ create mode 100644 net/ipv4/tcp_memcontrol.c
+
+-- 
+1.7.6.4
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
