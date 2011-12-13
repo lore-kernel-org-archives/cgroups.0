@@ -1,100 +1,111 @@
 From: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/3] sched: fix cgroup movement of newly created process
-Date: Tue, 13 Dec 2011 04:01:21 -0800
-Message-ID: <CAPM31RJzALSAcxEYELUbM0ZXwT=WoOHj7w-rDVC73VujnQVH1A@mail.gmail.com>
-References: <20111213155710.5b453415.nishimura@mxp.nes.nec.co.jp> <20111213155758.30d2787e.nishimura@mxp.nes.nec.co.jp>
+Subject: Re: [PATCH 2/3] sched: fix cgroup movement of forking process
+Date: Tue, 13 Dec 2011 04:22:24 -0800
+Message-ID: <CAPM31R+fpQYJQo54RQ27HT6_OiYTeka86aX-37QyKxryidWLYA@mail.gmail.com>
+References: <20111213155710.5b453415.nishimura@mxp.nes.nec.co.jp> <20111213155856.aebd6cd0.nishimura@mxp.nes.nec.co.jp>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=beta;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type:x-system-of-record;
-        bh=B81OrzUK8EB+sfGQ1lGsfw4cDOcXJUdq1Z9KOWfNduo=;
-        b=DcJygAw310Fj6Fq73h3DF8bi272C6IJxOh8OeD7fGi1tB9kfxhRfDseBT7WXeNdqvL
-         eF3aTA+J/wKsgzcai4nQ==
-In-Reply-To: <20111213155758.30d2787e.nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=viwtHcOweRLNKdYp85SayZ1QLd3xOrXdZcvMtoQuZnE=;
+        b=enQutNSwwjKWdG5s+0d2aRmveFQtggbQVnI7KgE4xEWLBt4ZT5UOTlQBwpVyuDMnVo
+         t0JptVwOBSOte4nmHXuA==
+In-Reply-To: <20111213155856.aebd6cd0.nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 To: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
 Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 
-On 12/12/2011 10:57 PM, Daisuke Nishimura wrote:
-
-> There is a small race between do_fork() and sched_move_task(), which is trying
-> to move the child.
+On Mon, Dec 12, 2011 at 10:58 PM, Daisuke Nishimura
+<nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
+> There is a small race between task_fork_fair() and sched_move_task(),
+> which is trying to move the parent.
 >
->             do_fork()                 sched_move_task()
+> =A0 =A0 =A0 =A0task_fork_fair() =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sched=
+_move_task()
 > --------------------------------+---------------------------------
->   copy_process()
->     sched_fork()
->       task_fork_fair()
->         -> vruntime of the child is initialized
->            based on that of the parent.
-
-
-Hmm, so here vruntime of child is actually initialized to vruntime - min_V
-
->   -> we can see the child in "tasks" file now.
->                                     task_rq_lock()
->                                     task_move_group_fair()
-
-
-So since on a regular fork we just copy and don't actually go through
-the attach muck I'm assuming this is an external actor who's seen the
-child in the tasks file and is moving it?
-
->                                       ->child.se.vruntime -= (old)cfs_rq->min_vruntime
->                                       ->child.se.vruntime += (new)cfs_rq->min_vruntime
-
-
-This would then add delta min_V between the two cfs_rqs
-
->                                     task_rq_unlock()
->   wake_up_new_task()
->     ...
->     enqueue_entity()
->       child.se->vruntime += cfs_rq->min_vruntime
-
+> =A0cfs_rq =3D task_cfs_rq(current)
+> =A0 =A0-> cfs_rq is the "old" one.
+> =A0curr =3D cfs_rq->curr
+> =A0 =A0-> curr is set to the parent.
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+task_rq_lock()
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+dequeue_task()
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0->parent.se.vruntime -=3D (old)cfs_rq->min_vruntime
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+enqueue_task()
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0->parent.se.vruntime +=3D (new)cfs_rq->min_vruntime
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+task_rq_unlock()
+> =A0raw_spin_lock_irqsave(rq->lock)
+> =A0se->vruntime =3D curr->vruntime
+> =A0 =A0-> vruntime of the child is set to that of the parent
+> =A0 =A0 =A0 which has already been updated by sched_move_task().
+> =A0se->vruntime -=3D (old)cfs_rq->min_vruntime.
+> =A0raw_spin_unlock_irqrestore(rq->lock)
 >
-> As a result, vruntime of the child becomes far bigger than min_vruntime,
+> As a result, vruntime of the child becomes far bigger than expected,
 > if (new)cfs_rq->min_vruntime >> (old)cfs_rq->min_vruntime.
 >
-> This patch fixes this problem by just ignoring such process in task_move_group_fair(),
-> because the vruntime has already been normalized in task_fork_fair().
+> This patch fixes this problem by setting "cfs_rq" and "curr" after ho=
+lding
+> the rq->lock.
 >
-> Signed-off-by: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil-XMD5yJDbdMReXY1tMh2IBg@public.gmane.org>
-> ---This would need an explanatory
->  kernel/sched_fair.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> Signed-off-by: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+> ---
+> =A0kernel/sched_fair.c | =A0 =A07 +++++--
+> =A01 files changed, 5 insertions(+), 2 deletions(-)
 >
 > diff --git a/kernel/sched_fair.c b/kernel/sched_fair.c
-> index 5c9e679..df145a9 100644
-> --- a/kernel/sched_fair.c
+> index df145a9..bdaa4ab 100644
+> --- a/kernel/sched_fair.cthis
 > +++ b/kernel/sched_fair.c
-> @@ -4922,10 +4922,10 @@ static void task_move_group_fair(struct task_struct *p, int on_rq)
->  	 * to another cgroup's rq. This does somewhat interfere with the
->  	 * fair sleeper stuff for the first placement, but who cares.
->  	 */
-> -	if (!on_rq)
-> +	if (!on_rq && p->state != TASK_RUNNING)
->  		p->se.vruntime -= cfs_rq_of(&p->se)->min_vruntime;
+> @@ -4787,14 +4787,17 @@ static void task_tick_fair(struct rq *rq, str=
+uct task_struct *curr, int queued)
+> =A0*/this
+> =A0static void task_fork_fair(struct task_struct *p)
+> =A0{
+> - =A0 =A0 =A0 struct cfs_rq *cfs_rq =3D task_cfs_rq(current);
+> - =A0 =A0 =A0 struct sched_entity *se =3D &p->se, *curr =3D cfs_rq->c=
+urr;
 
+Strictly speaking we're calling
+current->sched_class-(*)->task_fork_fair() so we know current is in
+sched_fair, which means it has to be cfs_rq->curr.
 
-We also have the choice of keying off something like
-!se.sum_exec_runtime here which is reset in sched_fork() which might
-be less fragile/make the problem interaction more obvious to.  Either
-way this is really a corner case deserving of an explanatory comment.
-This is a little icky but I don't have any wildly better ideas.
+Because of that this could become be *curr =3D &current->se and then
+cfs_rq_of(curr) below.
 
->  	set_task_rq(p, task_cpu(p));
-> -	if (!on_rq)
-> +	if (!on_rq && p->state != TASK_RUNNING)
->  		p->se.vruntime += cfs_rq_of(&p->se)->min_vruntime;
->  }
->  #endif
+But the current healthy paranoia is ok too.
 
+> + =A0 =A0 =A0 struct cfs_rq *cfs_rq;
+> + =A0 =A0 =A0 struct sched_entity *se =3D &p->se, *curr;
+> =A0 =A0 =A0 =A0int this_cpu =3D smp_processor_id();
+> =A0 =A0 =A0 =A0struct rq *rq =3D this_rq();
+> =A0 =A0 =A0 =A0unsigned long flags;
+>
+> =A0 =A0 =A0 =A0raw_spin_lock_irqsave(&rq->lock, flags);
+>
+> + =A0 =A0 =A0 cfs_rq =3D task_cfs_rq(current);
+> + =A0 =A0 =A0 curr =3D cfs_rq->curr;
+> +
+> =A0 =A0 =A0 =A0update_rq_clock(rq);
+>
+> =A0 =A0 =A0 =A0if (unlikely(task_cpu(p) !=3D this_cpu)) {
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 
 Acked-by: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 --
