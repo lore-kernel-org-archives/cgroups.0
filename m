@@ -1,57 +1,84 @@
-From: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Subject: Re: [PATCH 1/3] sched: fix cgroup movement of newly created process
-Date: Tue, 13 Dec 2011 13:41:09 +0100
-Message-ID: <1323780069.9082.15.camel@twins>
-References: <20111213155710.5b453415.nishimura@mxp.nes.nec.co.jp>
-	 <20111213155758.30d2787e.nishimura@mxp.nes.nec.co.jp>
+From: Christoph Paasch <christoph.paasch@uclouvain.be>
+Subject: Re: [PATCH v9 0/9] Request for inclusion: per-cgroup tcp memory pressure
+ controls
+Date: Tue, 13 Dec 2011 14:49:11 +0100
+Message-ID: <4EE757D7.6060006@uclouvain.be>
+References: <1323676029-5890-1-git-send-email-glommer@parallels.com> <20111212.190734.1967808916779299221.davem@davemloft.net>
+Reply-To: christoph.paasch@uclouvain.be
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111213155758.30d2787e.nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=uclouvain.be;
+	s=selucl; t=1323784151;
+	bh=snm+tjYNINBcCgz99yhxqlYDp2RiC7MRm1mNRTgfHEk=;
+	h=Message-ID:Date:From:Reply-To:MIME-Version:To:CC:Subject:
+	 References:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	b=Ja1A2ULkcRVBky7V1qlkP7Zzh+vUEQXCaEY101EXayhetYVJHYd5WvXFFZArA+POF
+	 gwHVVmiobmN3Zih8S++UUCH5mJ/QTw0lE2oZeOMOxexeNti9wVqAG5Z8DfcIuWxeic
+	 85EizZi0Yp8bJpuHV0ByUoj9vq126K5YlC3chZ/k=
+In-Reply-To: <20111212.190734.1967808916779299221.davem@davemloft.net>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: David Miller <davem@davemloft.net>
+Cc: glommer@parallels.com, linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-On Tue, 2011-12-13 at 15:57 +0900, Daisuke Nishimura wrote:
+Hi,
 
->  kernel/sched_fair.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+On 12/13/2011 01:07 AM, David Miller wrote:
+> From: Glauber Costa <glommer@parallels.com>
+> Date: Mon, 12 Dec 2011 11:47:00 +0400
+>=20
+>> This series fixes all the few comments raised in the last round,
+>> and seem to have acquired consensus from the memcg side.
+>>
+>> Dave, do you think it is acceptable now from the networking PoV?
+>> In case positive, would you prefer merging this trough your tree,
+>> or acking this so a cgroup maintainer can do it?
+>=20
+> All applied to net-next, thanks.
 
-you blink you loose, that file doesn't exist anymore.
+now there are plenty of compiler-warnings when CONFIG_CGROUPS is not set:
+
+In file included from include/linux/tcp.h:211:0,
+                 from include/linux/ipv6.h:221,
+                 from include/net/ip_vs.h:23,
+                 from kernel/sysctl_binary.c:6:
+include/net/sock.h:67:57: warning: =E2=80=98struct cgroup_subsys=E2=80=99=
+ declared
+inside parameter list [enabled by default]
+include/net/sock.h:67:57: warning: its scope is only this definition or
+declaration, which is probably not what you want [enabled by default]
+include/net/sock.h:67:57: warning: =E2=80=98struct cgroup=E2=80=99 declar=
+ed inside
+parameter list [enabled by default]
+include/net/sock.h:68:61: warning: =E2=80=98struct cgroup_subsys=E2=80=99=
+ declared
+inside parameter list [enabled by default]
+include/net/sock.h:68:61: warning: =E2=80=98struct cgroup=E2=80=99 declar=
+ed inside
+parameter list [enabled by default]
 
 
-> diff --git a/kernel/sched_fair.c b/kernel/sched_fair.c
-> index 5c9e679..df145a9 100644
-> --- a/kernel/sched_fair.c
-> +++ b/kernel/sched_fair.c
-> @@ -4922,10 +4922,10 @@ static void task_move_group_fair(struct task_struct *p, int on_rq)
->  	 * to another cgroup's rq. This does somewhat interfere with the
->  	 * fair sleeper stuff for the first placement, but who cares.
->  	 */
-> -	if (!on_rq)
-> +	if (!on_rq && p->state != TASK_RUNNING)
->  		p->se.vruntime -= cfs_rq_of(&p->se)->min_vruntime;
->  	set_task_rq(p, task_cpu(p));
-> -	if (!on_rq)
-> +	if (!on_rq && p->state != TASK_RUNNING)
->  		p->se.vruntime += cfs_rq_of(&p->se)->min_vruntime;
->  }
->  #endif
+Because struct cgroup is only declared if CONFIG_CGROUPS is enabled.
+(cfr. linux/cgroup.h)
 
-The much saner way of writing that is something like:
 
- /*
-  * Comment explaining stuff..
-  */
- if (!on_rq && p->state == TASK_RUNNING)
-	on_rq = 1;
+Christoph
 
- ...
+--=20
+Christoph Paasch
+PhD Student
 
+IP Networking Lab --- http://inl.info.ucl.ac.be
+MultiPath TCP in the Linux Kernel --- http://mptcp.info.ucl.ac.be
+Universit=C3=A9 Catholique de Louvain
+--=20
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
+.ca/
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
