@@ -1,92 +1,42 @@
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [PATCH v9 0/9] Request for inclusion: per-cgroup tcp memory
- pressure controls
-Date: Tue, 13 Dec 2011 14:59:08 +0100
-Message-ID: <1323784748.2950.4.camel@edumazet-laptop>
-References: <1323676029-5890-1-git-send-email-glommer@parallels.com>
-	 <20111212.190734.1967808916779299221.davem@davemloft.net>
-	 <4EE757D7.6060006@uclouvain.be>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/3] make clone_children a flag
+Date: Tue, 13 Dec 2011 07:39:21 -0800
+Message-ID: <20111213153921.GE25802@google.com>
+References: <1323614738-7405-1-git-send-email-glommer@parallels.com>
+ <1323614738-7405-4-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-type:x-mailer:content-transfer-encoding:mime-version;
-        bh=N5dhp4/LC1L8wHDwnWlHK3md5sgaVuqSiocEN/y1Z9s=;
-        b=M/RnDXTAyp2+sUgjO2ZFagcmjRod59e9e7vE55IL6cwET+92SCQqEoeC8Otf2GgrnN
-         jvhmEbDcLLOl4wwsSlUAJu9ODmW+ywrMOfMvX9iiWxPH7ghhJ/3WKY5wBSKgCgViYgDn
-         J5jwB1FD/mhaIyfT5EZxOo4gE4IABoFxgQZlc=
-In-Reply-To: <4EE757D7.6060006@uclouvain.be>
-Sender: owner-linux-mm@kvack.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=U4Gs+Zj3E4Cpm4zov9uGjNExoXV6c5NIglIjEx2On8g=;
+        b=OwkSVJPdwQsJxnX3bLat0Jcn572pYP/DP2Z4JvBgPdM/OTwb81Uh2il3ycmO9WUJDH
+         haRg+Mkm/cEXmDXFKcwLRhmVdg3PcIR+6FXpoW5An57CUSg1g9pF8qXqWoxV43U/KFC6
+         7Cv2MgBaDG4DcJwyT2Roh98an87f2Hq5emvZA=
+Content-Disposition: inline
+In-Reply-To: <1323614738-7405-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: christoph.paasch@uclouvain.be
-Cc: David Miller <davem@davemloft.net>, glommer@parallels.com, linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 
-Le mardi 13 d=C3=A9cembre 2011 =C3=A0 14:49 +0100, Christoph Paasch a =C3=
-=A9crit :
+On Sun, Dec 11, 2011 at 03:45:37PM +0100, Glauber Costa wrote:
+> There is no reason to have a flags field, and then a separate
+> bool field just to indicate if the clone_children flag is set.
+> Make it a flag
+> 
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-> now there are plenty of compiler-warnings when CONFIG_CGROUPS is not se=
-t:
->=20
-> In file included from include/linux/tcp.h:211:0,
->                  from include/linux/ipv6.h:221,
->                  from include/net/ip_vs.h:23,
->                  from kernel/sysctl_binary.c:6:
-> include/net/sock.h:67:57: warning: =E2=80=98struct cgroup_subsys=E2=80=99=
- declared
-> inside parameter list [enabled by default]
-> include/net/sock.h:67:57: warning: its scope is only this definition or
-> declaration, which is probably not what you want [enabled by default]
-> include/net/sock.h:67:57: warning: =E2=80=98struct cgroup=E2=80=99 decl=
-ared inside
-> parameter list [enabled by default]
-> include/net/sock.h:68:61: warning: =E2=80=98struct cgroup_subsys=E2=80=99=
- declared
-> inside parameter list [enabled by default]
-> include/net/sock.h:68:61: warning: =E2=80=98struct cgroup=E2=80=99 decl=
-ared inside
-> parameter list [enabled by default]
->=20
->=20
-> Because struct cgroup is only declared if CONFIG_CGROUPS is enabled.
-> (cfr. linux/cgroup.h)
->=20
+Doesn't this change how remount conditions are checked?
 
-Yes, we probably need forward reference like this :
+Thanks.
 
-Thanks !
-
-[PATCH net-next] net: fix build error if CONFIG_CGROUPS=3Dn
-
-Reported-by: Christoph Paasch <christoph.paasch@uclouvain.be>
-Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
----
- include/net/sock.h |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 18ecc99..6fe0dae 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -64,6 +64,8 @@
- #include <net/dst.h>
- #include <net/checksum.h>
-=20
-+struct cgroup;
-+struct cgroup_subsys;
- int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *s=
-s);
- void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsy=
-s *ss);
- /*
-
-
+-- 
+tejun
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
