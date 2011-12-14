@@ -1,65 +1,54 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch] oom, memcg: fix exclusion of memcg threads after they
- have detached their mm
-Date: Wed, 14 Dec 2011 10:06:00 +0900
-Message-ID: <20111214100600.6f5975ba.kamezawa.hiroyu@jp.fujitsu.com>
-References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 1/3] nitpick: make simple functions inline
+Date: Wed, 14 Dec 2011 09:09:25 +0800
+Message-ID: <4EE7F745.3040508@cn.fujitsu.com>
+References: <1323614738-7405-1-git-send-email-glommer@parallels.com> <1323614738-7405-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1112131659100.32369-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <1323614738-7405-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue, 13 Dec 2011 16:59:32 -0800 (PST)
-David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+22:45, Glauber Costa wrote:
+> Those are quite simple bit-testing functions that are
+> only used within this file. Not reason for them not to
+> be inline.
+> 
 
-> The oom killer relies on logic that identifies threads that have already
-> been oom killed when scanning the tasklist and, if found, deferring until
-> such threads have exited.  This is done by checking for any candidate
-> threads that have the TIF_MEMDIE bit set.
-> 
-> For memcg ooms, candidate threads are first found by calling
-> task_in_mem_cgroup() since the oom killer should not defer if there's an
-> oom killed thread in another memcg.
-> 
-> Unfortunately, task_in_mem_cgroup() excludes threads if they have
-> detached their mm in the process of exiting so TIF_MEMDIE is never
-> detected for such conditions.  This is different for global, mempolicy,
-> and cpuset oom conditions where a detached mm is only excluded after
-> checking for TIF_MEMDIE and deferring, if necessary, in
-> select_bad_process().
-> 
-> The fix is to return true if a task has a detached mm but is still in the
-> memcg that is currently oom.  This will allow the oom killer to
-> appropriately defer rather than kill unnecessarily or, in the worst case,
-> panic the machine if nothing else is available to kill.
-> 
-> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+It's better to leave the optimization decision to gcc.
+
+And I've confirmed they are inlined by gcc in my box.
+
+(btw, please add "cgroup" prefix to the patch subject line)
+
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 > ---
->  mm/memcontrol.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  kernel/cgroup.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1110,7 +1110,7 @@ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg)
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index d9d5648..e4b9d3c 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -241,12 +241,12 @@ static int cgroup_is_releasable(const struct cgroup *cgrp)
+>  	return (cgrp->flags & bits) == bits;
+>  }
 >  
->  	p = find_lock_task_mm(task);
->  	if (!p)
-> -		return 0;
-> +		return mem_cgroup_from_task(task) == memcg;
->  	curr = try_get_mem_cgroup_from_mm(p->mm);
->  	task_unlock(p);
->  	if (!curr)
-
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-
-
-
+> -static int notify_on_release(const struct cgroup *cgrp)
+> +static inline int notify_on_release(const struct cgroup *cgrp)
+>  {
+>  	return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+>  }
+>  
+> -static int clone_children(const struct cgroup *cgrp)
+> +static inline int clone_children(const struct cgroup *cgrp)
+>  {
+>  	return test_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
+>  }
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
