@@ -1,66 +1,38 @@
-From: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
-Subject: Re: [PATCH 1/3] sched: fix cgroup movement of newly created process
-Date: Wed, 14 Dec 2011 10:05:24 +0900
-Message-ID: <20111214100524.3f42de16.nishimura@mxp.nes.nec.co.jp>
-References: <20111213155710.5b453415.nishimura@mxp.nes.nec.co.jp>
-	<20111213155758.30d2787e.nishimura@mxp.nes.nec.co.jp>
-	<1323780069.9082.15.camel@twins>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 3/3] make 'none' field a flag
+Date: Wed, 14 Dec 2011 10:09:40 +0800
+Message-ID: <4EE80564.7030608@cn.fujitsu.com>
+References: <1323614738-7405-1-git-send-email-glommer@parallels.com> <1323614738-7405-5-git-send-email-glommer@parallels.com> <20111213154108.GF25802@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1323780069.9082.15.camel@twins>
+In-Reply-To: <20111213154108.GF25802-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 
-On Tue, 13 Dec 2011 13:41:09 +0100
-Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org> wrote:
+=E4=BA=8E 2011=E5=B9=B412=E6=9C=8813=E6=97=A5 23:41, Tejun Heo =E5=86=99=
+=E9=81=93:
+> On Sun, Dec 11, 2011 at 03:45:38PM +0100, Glauber Costa wrote:
+>> There is no reason to have a flags field, and then a separate
+>> bool field just to indicate if 'none' subsystem were explicitly
+>> requested.
+>>
+>> Make it a flag
+>>
+>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>=20
+> Same as the previous patch.  Doesn't this change how remount
+> conditions are checked?
+>=20
 
-> On Tue, 2011-12-13 at 15:57 +0900, Daisuke Nishimura wrote:
-> 
-> >  kernel/sched_fair.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> you blink you loose, that file doesn't exist anymore.
-> 
-hmm, indeed.
-I'll rebase these patches onto the tip.
+Right. The patch prevents us from doing:
 
-> 
-> > diff --git a/kernel/sched_fair.c b/kernel/sched_fair.c
-> > index 5c9e679..df145a9 100644
-> > --- a/kernel/sched_fair.c
-> > +++ b/kernel/sched_fair.c
-> > @@ -4922,10 +4922,10 @@ static void task_move_group_fair(struct task_struct *p, int on_rq)
-> >  	 * to another cgroup's rq. This does somewhat interfere with the
-> >  	 * fair sleeper stuff for the first placement, but who cares.
-> >  	 */
-> > -	if (!on_rq)
-> > +	if (!on_rq && p->state != TASK_RUNNING)
-> >  		p->se.vruntime -= cfs_rq_of(&p->se)->min_vruntime;
-> >  	set_task_rq(p, task_cpu(p));
-> > -	if (!on_rq)
-> > +	if (!on_rq && p->state != TASK_RUNNING)
-> >  		p->se.vruntime += cfs_rq_of(&p->se)->min_vruntime;
-> >  }
-> >  #endif
-> 
-> The much saner way of writing that is something like:
-> 
->  /*
->   * Comment explaining stuff..
->   */
->  if (!on_rq && p->state == TASK_RUNNING)
-> 	on_rq = 1;
-> 
->  ...
-> 
-will do in the next post.
-
-Thanks,
-Daisuke Nishimura.
+	# mount -t cgroup -o none,name=3Dtmp xxx /mnt
+	# mount -o remount,cpuset xxx /mnt
+	(failed)
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
