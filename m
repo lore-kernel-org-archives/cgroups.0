@@ -1,66 +1,51 @@
-From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: [PATCH] cgroups: remove redundant get/put of css_set from
-	css_set_check_fetched()
-Date: Thu, 15 Dec 2011 14:21:26 -0800
-Message-ID: <1323987686-17968-1-git-send-email-msb@chromium.org>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH 2/2] Explicitly call tcp creation and init from
+ memcontrol.c
+Date: Fri, 16 Dec 2011 07:20:50 +0900
+Message-ID: <20111216072050.4f49ac66.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1323941672-14324-1-git-send-email-glommer@parallels.com>
+	<1323941672-14324-3-git-send-email-glommer@parallels.com>
+	<20111216011316.8d58bc8f.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111216011316.8d58bc8f.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Glauber Costa <glommer@parallels.com>, davem@davemloft.net, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Rothwell <sfr@canb.auug.org.au>
 
-We already have a reference to all elements in newcg_list.
+On Fri, 16 Dec 2011 01:13:16 +0900
+KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
 
-Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
----
- kernel/cgroup.c |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
+> On Thu, 15 Dec 2011 13:34:32 +0400
+> Glauber Costa <glommer@parallels.com> wrote:
+> 
+> > Walking the proto_list holds a read_lock, which prevents us from doing
+> > allocations. Splitting the tcp create function into create + init is
+> > good, but it is not enough since create_files will do allocations as well
+> > (dentry ones, mostly).
+> > 
+> > Since this does not involve any protocol state, I propose we call the tcp
+> > functions explicitly from memcontrol.c
+> > 
+> > With this, we lose by now the ability of doing cgroup memcontrol for
+> > protocols that are loaded as modules. But at least the ones I have in mind
+> > won't really need it (tcp_ipv6 being the only one, but it uses the same data
+> > structures as tcp_ipv4). So I believe this to be the simpler solution to this
+> > problem.
+> > 
+> > Signed-off-by: Glauber Costa <glommer@parallels.com>
+> > CC: Hiroyouki Kamezawa <kamezawa.hiroyu@jp.fujitsu.com>
+> > CC: David S. Miller <davem@davemloft.net>
+> > CC: Eric Dumazet <eric.dumazet@gmail.com>
+> > CC: Stephen Rothwell <sfr@canb.auug.org.au>
+> 
+> Could you remake the patch onto the 'latest' linux-next ?
+> As Dave mentioned, some bandaids are already applied and this patch hunks.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d9d5648..a7e00b9 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1935,23 +1935,17 @@ static bool css_set_check_fetched(struct cgroup *cgrp,
- 
- 	read_lock(&css_set_lock);
- 	newcg = find_existing_css_set(cg, cgrp, template);
--	if (newcg)
--		get_css_set(newcg);
- 	read_unlock(&css_set_lock);
- 
- 	/* doesn't exist at all? */
- 	if (!newcg)
- 		return false;
- 	/* see if it's already in the list */
--	list_for_each_entry(cg_entry, newcg_list, links) {
--		if (cg_entry->cg == newcg) {
--			put_css_set(newcg);
-+	list_for_each_entry(cg_entry, newcg_list, links)
-+		if (cg_entry->cg == newcg)
- 			return true;
--		}
--	}
- 
- 	/* not found */
--	put_css_set(newcg);
- 	return false;
- }
- 
--- 
-1.7.3.1
+Applied patches by hand and did small test for hours.
+seems good.
+
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
