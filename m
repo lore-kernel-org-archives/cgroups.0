@@ -1,48 +1,81 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/3] make clone_children a flag
-Date: Wed, 14 Dec 2011 10:18:52 -0800
-Message-ID: <20111214181852.GB20380@google.com>
-References: <1323614738-7405-1-git-send-email-glommer@parallels.com>
- <1323614738-7405-4-git-send-email-glommer@parallels.com>
- <20111213153921.GE25802@google.com>
- <4EE80A0D.7090808@cn.fujitsu.com>
- <4EE84B9A.90901@parallels.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch v2] oom, memcg: fix exclusion of memcg threads after they
+ have detached their mm
+Date: Wed, 14 Dec 2011 18:39:40 -0800 (PST)
+Message-ID: <alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com> <20111214102942.GA11786@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5CS8sJQm4aSU9zzQeyCI96Sz2iTjPDiPGLcKvn3q5qo=;
-        b=UC5j9V/CjynpQcjH+yRF9BFUSWvDYePei7L1MhOqytlNQI7gN9kZ7GNi7JxzCjZlIg
-         VyNnoMiEBdxjJwkyDrTRg8k1mUIDW2iNs6o7CG3n5kViXNFawdA5wwlbxkdTUJC1Tfst
-         h81DR3nXadRN1fXxIjqcA4O25eIXjgUhzBjFQ=
-Content-Disposition: inline
-In-Reply-To: <4EE84B9A.90901-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+        d=google.com; s=beta;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=qvimUCqCvw3iuV5cMQaghGLLFqwdAbHX3ZuzB6FDiEs=;
+        b=ObBIvmkhVK74bKPVmQfmdDsTdM2BEU/oDbKd994gTo3aZZ6hEzDpUmEJHuwJ+s8b4C
+         /EQAzwqI0SYElzODEJeQ==
+In-Reply-To: <20111214102942.GA11786-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hello,
+oom, memcg: fix exclusion of memcg threads after they have detached their mm
 
-On Wed, Dec 14, 2011 at 11:09:14AM +0400, Glauber Costa wrote:
-> That's indeed confusing, and it comes from the fact that we always
-> inherit clone_children from the parent - which is sane, IMHO. So
-> this flag only has any value in establishing the initial behaviour
-> of the top root cgroup. I wonder then if it wouldn't better to just
-> be explicit and fail in this case ?
+The oom killer relies on logic that identifies threads that have already
+been oom killed when scanning the tasklist and, if found, deferring until
+such threads have exited.  This is done by checking for any candidate
+threads that have the TIF_MEMDIE bit set.
 
-I don't think all current behaviors are sane and if not let's change
-them, but those things have to be explicit with proper description and
-rationale.
+For memcg ooms, candidate threads are first found by calling
+task_in_mem_cgroup() since the oom killer should not defer if there's an
+oom killed thread in another memcg.
 
-Thanks.
+Unfortunately, task_in_mem_cgroup() excludes threads if they have
+detached their mm in the process of exiting so TIF_MEMDIE is never
+detected for such conditions.  This is different for global, mempolicy,
+and cpuset oom conditions where a detached mm is only excluded after
+checking for TIF_MEMDIE and deferring, if necessary, in
+select_bad_process().
 
--- 
-tejun
+The fix is to return true if a task has a detached mm but is still in the
+memcg or its hierarchy that is currently oom.  This will allow the oom
+killer to appropriately defer rather than kill unnecessarily or, in the
+worst case, panic the machine if nothing else is available to kill.
+
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1109,10 +1109,19 @@ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg)
+ 	struct task_struct *p;
+ 
+ 	p = find_lock_task_mm(task);
+-	if (!p)
+-		return 0;
+-	curr = try_get_mem_cgroup_from_mm(p->mm);
+-	task_unlock(p);
++	if (p) {
++		curr = try_get_mem_cgroup_from_mm(p->mm);
++		task_unlock(p);
++	} else {
++		/*
++		 * All threads may have already detached their mm's, but the oom
++		 * killer still needs to detect if they have already been oom
++		 * killed to prevent needlessly killing additional tasks.
++		 */
++		curr = mem_cgroup_from_task(task);
++		if (curr)
++			css_get(&curr->css);
++	}
+ 	if (!curr)
+ 		return 0;
+ 	/*
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
