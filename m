@@ -1,275 +1,63 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] Explicitly call tcp creation and init from memcontrol.c
-Date: Fri, 16 Dec 2011 01:11:36 +0400
-Message-ID: <4EEA6288.1080405@parallels.com>
-References: <1323941672-14324-1-git-send-email-glommer@parallels.com> <1323941672-14324-3-git-send-email-glommer@parallels.com> <20111215.120028.532844419499092747.davem@davemloft.net>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroups: fix a css_set not found bug in
+ cgroup_attach_proc
+Date: Thu, 15 Dec 2011 13:23:29 -0800
+Message-ID: <20111215212329.GH32002@google.com>
+References: <1323977803-5385-1-git-send-email-msb@chromium.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="------------090403050008060201020709"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111215.120028.532844419499092747.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=hwazH1c5phDOrgAy1gijWMRqe2H6CYz2845Y5FOYUu0=;
+        b=U5fS3u0czor0NT94GAdhI46wMbiLcSKU89sstvEoJFsowErfTaAGSfW+OuelkBsPZ1
+         DZtAkxe3ENiv0mdiYUODkthYUTMolNlnUBf5seNxtl4C7otzTJav55vsyDJ6gDtRGXQ3
+         GprucTYJCcaY5gjQWAiSDIDzncGFkdq6U1IsE=
+Content-Disposition: inline
+In-Reply-To: <1323977803-5385-1-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org
-
---------------090403050008060201020709
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Olof Johansson <olofj-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-On 12/15/2011 09:00 PM, David Miller wrote:
-> From: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Date: Thu, 15 Dec 2011 13:34:32 +0400
->
->> Walking the proto_list holds a read_lock, which prevents us from doing
->> allocations. Splitting the tcp create function into create + init is
->> good, but it is not enough since create_files will do allocations as well
->> (dentry ones, mostly).
->>
->> Since this does not involve any protocol state, I propose we call the tcp
->> functions explicitly from memcontrol.c
->>
->> With this, we lose by now the ability of doing cgroup memcontrol for
->> protocols that are loaded as modules. But at least the ones I have in mind
->> won't really need it (tcp_ipv6 being the only one, but it uses the same data
->> structures as tcp_ipv4). So I believe this to be the simpler solution to this
->> problem.
->>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->
-> This is an unnecessary limitation, please fix this properly otherwise
-> DCCP, SCTP, etc. won't be supportable with this stuff.
+On Thu, Dec 15, 2011 at 11:36:43AM -0800, Mandeep Singh Baines wrote:
+> There is a BUG when migrating a PF_EXITING proc. Since css_set_prefetch()
+> is not called for the PF_EXITING case, find_existing_css_set() will return
+> NULL inside cgroup_task_migrate() causing a BUG.
+> 
+> This bug is easy to reproduce. Create a zombie and echo its pid to
+> cgroup.procs.
+> 
+> $ cat zombie.c
+> \#include <unistd.h>
+> 
+> int main()
+> {
+>   if (fork())
+>       pause();
+>   return 0;
+> }
+> $
+> 
+> We are hitting this bug pretty regularly on ChromeOS.
+> 
+> This bug is already fixed by Tejun Heo's cgroup patchset which is
+> targetted for the next merge window:
+> 
+> https://lkml.org/lkml/2011/11/1/356
+> 
+> I've create a smaller patch here which just fixes this bug so that a
+> fix can be merged into the current release and stable.
 
-How about the following patch then ? I am keeping protocols that has the 
-cgroup stuff on in a separate list, that can be protected by a mutex. 
-Therefore we can allocate without going into troubles.
+Looks safe to me.  Li?
 
-Let me know if you still have objections, I'll be happy to address them.
+Thanks.
 
---------------090403050008060201020709
-Content-Type: text/plain;
-	name="0001-fix-sleeping-while-atomic-problem-in-sock-mem_cgroup.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename*0="0001-fix-sleeping-while-atomic-problem-in-sock-mem_cgroup.pa";
-	filename*1="tch"
-
-From c8fe669a9cbc7c7cbd87ce48d7eb91ed6c96cbde Mon Sep 17 00:00:00 2001
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Date: Thu, 15 Dec 2011 23:47:06 +0300
-Subject: [PATCH] fix sleeping while atomic problem in sock mem_cgroup.
-
-Since we can't scan the proto_list to initialize sock cgroups, as it
-holds a rwlock, and we also want to keep the code generic enough to
-avoid calling the initialization functions of protocols directly,
-I propose we keep the interested parties in a separate list. This list
-is protected by a mutex so we can sleep and do the necessary allocations.
-
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-CC: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-CC: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
----
- include/linux/memcontrol.h   |    4 +++
- include/net/sock.h           |    5 +---
- include/net/tcp_memcontrol.h |    2 +
- mm/memcontrol.c              |   52 ++++++++++++++++++++++++++++++++++++++++++
- net/core/sock.c              |   48 +++++++++-----------------------------
- 5 files changed, 70 insertions(+), 41 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 9b296ea..1edd0e3 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -390,6 +390,10 @@ enum {
- 	OVER_LIMIT,
- };
- 
-+struct proto;
-+void register_sock_cgroup(struct proto *prot);
-+void unregister_sock_cgroup(struct proto *prot);
-+
- #ifdef CONFIG_INET
- struct sock;
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 6fe0dae..f8237a3 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -64,10 +64,6 @@
- #include <net/dst.h>
- #include <net/checksum.h>
- 
--struct cgroup;
--struct cgroup_subsys;
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss);
- /*
-  * This structure really needs to be cleaned up.
-  * Most of it is for TCP, and not used by any of
-@@ -858,6 +854,7 @@ struct proto {
- 	void			(*destroy_cgroup)(struct cgroup *cgrp,
- 						  struct cgroup_subsys *ss);
- 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
-+	struct list_head	cgroup_node;
- #endif
- };
- 
-diff --git a/include/net/tcp_memcontrol.h b/include/net/tcp_memcontrol.h
-index 3512082..5aa7c4b 100644
---- a/include/net/tcp_memcontrol.h
-+++ b/include/net/tcp_memcontrol.h
-@@ -11,6 +11,8 @@ struct tcp_memcontrol {
- 	int tcp_memory_pressure;
- };
- 
-+struct cgroup;
-+struct cgroup_subsys;
- struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg);
- int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
- void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7266202..6ee250d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4742,6 +4742,58 @@ static struct cftype kmem_cgroup_files[] = {
- 	},
- };
- 
-+static DEFINE_MUTEX(cgroup_proto_list_lock);
-+static LIST_HEAD(cgroup_proto_list);
-+
-+static int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+{
-+	struct proto *proto;
-+	int ret = 0;
-+
-+	mutex_lock(&cgroup_proto_list_lock);
-+	list_for_each_entry(proto, &cgroup_proto_list, cgroup_node) {
-+		if (proto->init_cgroup) {
-+			ret = proto->init_cgroup(cgrp, ss);
-+			if (ret)
-+				goto out;
-+		}
-+	}
-+
-+	mutex_unlock(&cgroup_proto_list_lock);
-+	return ret;
-+out:
-+	list_for_each_entry_continue_reverse(proto, &cgroup_proto_list, cgroup_node)
-+		if (proto->destroy_cgroup)
-+			proto->destroy_cgroup(cgrp, ss);
-+	mutex_unlock(&cgroup_proto_list_lock);
-+	return ret;
-+}
-+
-+static void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+{
-+	struct proto *proto;
-+
-+	mutex_lock(&cgroup_proto_list_lock);
-+	list_for_each_entry_reverse(proto, &cgroup_proto_list, cgroup_node)
-+		if (proto->destroy_cgroup)
-+			proto->destroy_cgroup(cgrp, ss);
-+	mutex_unlock(&cgroup_proto_list_lock);
-+}
-+
-+void register_sock_cgroup(struct proto *prot)
-+{
-+	mutex_lock(&cgroup_proto_list_lock);
-+	list_add(&prot->cgroup_node, &cgroup_proto_list);
-+	mutex_unlock(&cgroup_proto_list_lock);
-+}
-+
-+void unregister_sock_cgroup(struct proto *prot)
-+{
-+	mutex_lock(&cgroup_proto_list_lock);
-+	list_del(&prot->cgroup_node);
-+	mutex_unlock(&cgroup_proto_list_lock);
-+}
-+
- static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
- {
- 	int ret = 0;
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 5a6a906..3728b50 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -139,43 +139,6 @@
- static DEFINE_RWLOCK(proto_list_lock);
- static LIST_HEAD(proto_list);
- 
--#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
--{
--	struct proto *proto;
--	int ret = 0;
--
--	read_lock(&proto_list_lock);
--	list_for_each_entry(proto, &proto_list, node) {
--		if (proto->init_cgroup) {
--			ret = proto->init_cgroup(cgrp, ss);
--			if (ret)
--				goto out;
--		}
--	}
--
--	read_unlock(&proto_list_lock);
--	return ret;
--out:
--	list_for_each_entry_continue_reverse(proto, &proto_list, node)
--		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp, ss);
--	read_unlock(&proto_list_lock);
--	return ret;
--}
--
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
--{
--	struct proto *proto;
--
--	read_lock(&proto_list_lock);
--	list_for_each_entry_reverse(proto, &proto_list, node)
--		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp, ss);
--	read_unlock(&proto_list_lock);
--}
--#endif
--
- /*
-  * Each address family might have different locking rules, so we have
-  * one slock key per address family:
-@@ -2483,6 +2446,12 @@ int proto_register(struct proto *prot, int alloc_slab)
- 	list_add(&prot->node, &proto_list);
- 	assign_proto_idx(prot);
- 	write_unlock(&proto_list_lock);
-+
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	if (prot->proto_cgroup)
-+		register_sock_cgroup(prot);
-+#endif
-+
- 	return 0;
- 
- out_free_timewait_sock_slab_name:
-@@ -2510,6 +2479,11 @@ void proto_unregister(struct proto *prot)
- 	list_del(&prot->node);
- 	write_unlock(&proto_list_lock);
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	if (prot->proto_cgroup != NULL)
-+		unregister_sock_cgroup(prot);
-+#endif
-+
- 	if (prot->slab != NULL) {
- 		kmem_cache_destroy(prot->slab);
- 		prot->slab = NULL;
 -- 
-1.7.6.4
-
-
---------------090403050008060201020709--
+tejun
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
