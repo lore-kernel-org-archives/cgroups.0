@@ -1,63 +1,82 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroups: fix a css_set not found bug in
- cgroup_attach_proc
-Date: Thu, 15 Dec 2011 13:23:29 -0800
-Message-ID: <20111215212329.GH32002@google.com>
-References: <1323977803-5385-1-git-send-email-msb@chromium.org>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch v3] oom, memcg: fix exclusion of memcg threads after they
+ have detached their mm
+Date: Thu, 15 Dec 2011 13:36:11 -0800 (PST)
+Message-ID: <alpine.DEB.2.00.1112151335370.17878@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com> <20111214102942.GA11786@tiehlicka.suse.cz> <alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com> <20111215155926.GA22819@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=hwazH1c5phDOrgAy1gijWMRqe2H6CYz2845Y5FOYUu0=;
-        b=U5fS3u0czor0NT94GAdhI46wMbiLcSKU89sstvEoJFsowErfTaAGSfW+OuelkBsPZ1
-         DZtAkxe3ENiv0mdiYUODkthYUTMolNlnUBf5seNxtl4C7otzTJav55vsyDJ6gDtRGXQ3
-         GprucTYJCcaY5gjQWAiSDIDzncGFkdq6U1IsE=
-Content-Disposition: inline
-In-Reply-To: <1323977803-5385-1-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+        d=google.com; s=beta;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=9UfI/6PqMEDsPWmNqlOMn/UXGUju2sdc1zC5WOITuck=;
+        b=w/jA6gsZB0/yF+JhCzrptA/lHZMGsUQQWk/SdJxZS3Gd4N4har4treD1TaT6uid9tU
+         4T9SQHxOBDo4hfPs2Dag==
+In-Reply-To: <20111215155926.GA22819-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Olof Johansson <olofj-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu, Dec 15, 2011 at 11:36:43AM -0800, Mandeep Singh Baines wrote:
-> There is a BUG when migrating a PF_EXITING proc. Since css_set_prefetch()
-> is not called for the PF_EXITING case, find_existing_css_set() will return
-> NULL inside cgroup_task_migrate() causing a BUG.
-> 
-> This bug is easy to reproduce. Create a zombie and echo its pid to
-> cgroup.procs.
-> 
-> $ cat zombie.c
-> \#include <unistd.h>
-> 
-> int main()
-> {
->   if (fork())
->       pause();
->   return 0;
-> }
-> $
-> 
-> We are hitting this bug pretty regularly on ChromeOS.
-> 
-> This bug is already fixed by Tejun Heo's cgroup patchset which is
-> targetted for the next merge window:
-> 
-> https://lkml.org/lkml/2011/11/1/356
-> 
-> I've create a smaller patch here which just fixes this bug so that a
-> fix can be merged into the current release and stable.
+The oom killer relies on logic that identifies threads that have already
+been oom killed when scanning the tasklist and, if found, deferring until
+such threads have exited.  This is done by checking for any candidate
+threads that have the TIF_MEMDIE bit set.
 
-Looks safe to me.  Li?
+For memcg ooms, candidate threads are first found by calling
+task_in_mem_cgroup() since the oom killer should not defer if there's an
+oom killed thread in another memcg.
 
-Thanks.
+Unfortunately, task_in_mem_cgroup() excludes threads if they have
+detached their mm in the process of exiting so TIF_MEMDIE is never
+detected for such conditions.  This is different for global, mempolicy,
+and cpuset oom conditions where a detached mm is only excluded after
+checking for TIF_MEMDIE and deferring, if necessary, in
+select_bad_process().
 
--- 
-tejun
+The fix is to return true if a task has a detached mm but is still in the
+memcg or its hierarchy that is currently oom.  This will allow the oom
+killer to appropriately defer rather than kill unnecessarily or, in the
+worst case, panic the machine if nothing else is available to kill.
+
+Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1109,10 +1109,21 @@ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg)
+ 	struct task_struct *p;
+ 
+ 	p = find_lock_task_mm(task);
+-	if (!p)
+-		return 0;
+-	curr = try_get_mem_cgroup_from_mm(p->mm);
+-	task_unlock(p);
++	if (p) {
++		curr = try_get_mem_cgroup_from_mm(p->mm);
++		task_unlock(p);
++	} else {
++		/*
++		 * All threads may have already detached their mm's, but the oom
++		 * killer still needs to detect if they have already been oom
++		 * killed to prevent needlessly killing additional tasks.
++		 */
++		task_lock(task);
++		curr = mem_cgroup_from_task(task);
++		if (curr)
++			css_get(&curr->css);
++		task_unlock(task);
++	}
+ 	if (!curr)
+ 		return 0;
+ 	/*
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
