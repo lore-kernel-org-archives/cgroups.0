@@ -1,63 +1,35 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v9 0/9] Request for inclusion: per-cgroup tcp memory pressure
- controls
-Date: Thu, 15 Dec 2011 10:48:26 +0400
-Message-ID: <4EE9983A.3060101@parallels.com>
-References: <1323676029-5890-1-git-send-email-glommer@parallels.com> <20111215144019.03706ff7.kamezawa.hiroyu@jp.fujitsu.com> <20111215.004836.402973956281143052.davem@davemloft.net>
+Subject: Re: [PATCH 2/3] make clone_children a flag
+Date: Thu, 15 Dec 2011 11:03:38 +0400
+Message-ID: <4EE99BCA.1010505@parallels.com>
+References: <1323614738-7405-1-git-send-email-glommer@parallels.com> <1323614738-7405-4-git-send-email-glommer@parallels.com> <20111213153921.GE25802@google.com> <4EE80A0D.7090808@cn.fujitsu.com> <4EE84B9A.90901@parallels.com> <20111214181852.GB20380@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20111215.004836.402973956281143052.davem@davemloft.net>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111214181852.GB20380@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Miller <davem@davemloft.net>
-Cc: kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizf@cn.fujitsu.com>, linux-kernel@vger.kernel.org, jbottomley@parallels.com, cgroups@vger.kernel.org, bsingharora@gmail.com, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com
 
-On 12/15/2011 09:48 AM, David Miller wrote:
-> From: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
-> Date: Thu, 15 Dec 2011 14:40:19 +0900
+On 12/14/2011 10:18 PM, Tejun Heo wrote:
+> Hello,
 >
->> I met this bug at _1st_ run. Please enable _all_ debug options!.
+> On Wed, Dec 14, 2011 at 11:09:14AM +0400, Glauber Costa wrote:
+>> That's indeed confusing, and it comes from the fact that we always
+>> inherit clone_children from the parent - which is sane, IMHO. So
+>> this flag only has any value in establishing the initial behaviour
+>> of the top root cgroup. I wonder then if it wouldn't better to just
+>> be explicit and fail in this case ?
 >
-> Plus the CONFIG_NET=n and other build failures.
+> I don't think all current behaviors are sane and if not let's change
+> them, but those things have to be explicit with proper description and
+> rationale.
 >
-> This patch series was seriously rushed, and very poorly handled.
->
-> Yet I kept getting so much pressure to review, comment upon, and
-> ultimately apply these patches.  Never, ever, do this to me ever
-> again.
->
-> If I don't feel your patches are high priority enough or ready enough
-> for me to review, then TOO BAD.  Don't ask people to pressure me or
-> get my attention.  Instead, ask others for help and do testing before
-> wasting MY time and crapping up MY tree.
->
-> I should have noticed a red flag when I have James Bottomly asking me
-> to look at these patches, I should have pushed back.  Instead, I
-> relented, and now I'm very seriously regretting it.
->
-> All the regressions in the net-next tree over the past several days
-> have been due to this patch set, and this patch set alone.
->
-> This code wasn't ready and needed, at a minimum, several more weeks of
-> work before being put in.
->
-> Instead, we're going to bandaid patch it up after the fact, rather
-> than just letting these changes mature naturally during the review
-> process.
-Hi Dave,
 
-You are right about all points. I will admit to it, face it, and 
-apologize it.
-I guess the best I can do right now is fix whatever you guys point me to 
-and not repeat it in the future.
+140 % agree to that. As I said, I wrongly believed it to be functionally 
+equivalent when I sent it, but missed the flags remount check.
 
-Thanks
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+If you believe the behavior we now get is saner, I can rewrite the 
+Changelog and resend it.
