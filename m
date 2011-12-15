@@ -1,38 +1,81 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 2/2] Explicitly call tcp creation and init from
- memcontrol.c
-Date: Thu, 15 Dec 2011 12:00:28 -0500 (EST)
-Message-ID: <20111215.120028.532844419499092747.davem@davemloft.net>
-References: <1323941672-14324-1-git-send-email-glommer@parallels.com>
-	<1323941672-14324-3-git-send-email-glommer@parallels.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1323941672-14324-3-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: [PATCH] cgroups: fix a css_set not found bug in cgroup_attach_proc
+Date: Thu, 15 Dec 2011 11:36:43 -0800
+Message-ID: <1323977803-5385-1-git-send-email-msb@chromium.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: glommer@parallels.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, eric.dumazet@gmail.com, sfr@canb.auug.org.au
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Olof Johansson <olofj-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-From: Glauber Costa <glommer@parallels.com>
-Date: Thu, 15 Dec 2011 13:34:32 +0400
+There is a BUG when migrating a PF_EXITING proc. Since css_set_prefetch()
+is not called for the PF_EXITING case, find_existing_css_set() will return
+NULL inside cgroup_task_migrate() causing a BUG.
 
-> Walking the proto_list holds a read_lock, which prevents us from doing
-> allocations. Splitting the tcp create function into create + init is
-> good, but it is not enough since create_files will do allocations as well
-> (dentry ones, mostly).
-> 
-> Since this does not involve any protocol state, I propose we call the tcp
-> functions explicitly from memcontrol.c
-> 
-> With this, we lose by now the ability of doing cgroup memcontrol for
-> protocols that are loaded as modules. But at least the ones I have in mind
-> won't really need it (tcp_ipv6 being the only one, but it uses the same data
-> structures as tcp_ipv4). So I believe this to be the simpler solution to this
-> problem.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
+This bug is easy to reproduce. Create a zombie and echo its pid to
+cgroup.procs.
 
-This is an unnecessary limitation, please fix this properly otherwise
-DCCP, SCTP, etc. won't be supportable with this stuff.
+$ cat zombie.c
+\#include <unistd.h>
+
+int main()
+{
+  if (fork())
+      pause();
+  return 0;
+}
+$
+
+We are hitting this bug pretty regularly on ChromeOS.
+
+This bug is already fixed by Tejun Heo's cgroup patchset which is
+targetted for the next merge window:
+
+https://lkml.org/lkml/2011/11/1/356
+
+I've create a smaller patch here which just fixes this bug so that a
+fix can be merged into the current release and stable.
+
+Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Downstream-Bug-Report: http://crosbug.com/23953
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Cc: Olof Johansson <olofj-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+---
+ kernel/cgroup.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index d9d5648..a184470 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2098,11 +2098,6 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
+ 			continue;
+ 		/* get old css_set pointer */
+ 		task_lock(tsk);
+-		if (tsk->flags & PF_EXITING) {
+-			/* ignore this task if it's going away */
+-			task_unlock(tsk);
+-			continue;
+-		}
+ 		oldcg = tsk->cgroups;
+ 		get_css_set(oldcg);
+ 		task_unlock(tsk);
+-- 
+1.7.3.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
