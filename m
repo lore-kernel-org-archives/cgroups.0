@@ -1,20 +1,23 @@
-From: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [patch v2] oom, memcg: fix exclusion of memcg threads after they
  have detached their mm
-Date: Thu, 15 Dec 2011 09:19:33 -0500
-Message-ID: <4EEA01F5.6080301@jp.fujitsu.com>
-References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com> <20111214102942.GA11786@tiehlicka.suse.cz> <alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com>
+Date: Thu, 15 Dec 2011 16:59:26 +0100
+Message-ID: <20111215155926.GA22819@tiehlicka.suse.cz>
+References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com>
+ <20111214102942.GA11786@tiehlicka.suse.cz>
+ <alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
 In-Reply-To: <alpine.DEB.2.00.1112141838470.27595-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 12/14/2011 9:39 PM, David Rientjes wrote:
+On Wed 14-12-11 18:39:40, David Rientjes wrote:
 > oom, memcg: fix exclusion of memcg threads after they have detached their mm
 > 
 > The oom killer relies on logic that identifies threads that have already
@@ -66,11 +69,17 @@ On 12/14/2011 9:39 PM, David Rientjes wrote:
 > +		curr = mem_cgroup_from_task(task);
 > +		if (curr)
 > +			css_get(&curr->css);
-> +	}
 
-Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sorry, but I forgot to mention that we need task_lock(task) around
+css_get.
 
-
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
