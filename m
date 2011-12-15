@@ -1,54 +1,66 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch v3] oom, memcg: fix exclusion of memcg threads after
- they have detached their mm
-Date: Fri, 16 Dec 2011 07:18:55 +0900
-Message-ID: <20111216071855.25abd0ad.kamezawa.hiroyu@jp.fujitsu.com>
-References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com>
-	<20111214102942.GA11786@tiehlicka.suse.cz>
-	<alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com>
-	<20111215155926.GA22819@tiehlicka.suse.cz>
-	<alpine.DEB.2.00.1112151335370.17878@chino.kir.corp.google.com>
+From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: [PATCH] cgroups: remove redundant get/put of css_set from
+	css_set_check_fetched()
+Date: Thu, 15 Dec 2011 14:21:26 -0800
+Message-ID: <1323987686-17968-1-git-send-email-msb@chromium.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1112151335370.17878-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Thu, 15 Dec 2011 13:36:11 -0800 (PST)
-David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+We already have a reference to all elements in newcg_list.
 
-> The oom killer relies on logic that identifies threads that have already
-> been oom killed when scanning the tasklist and, if found, deferring until
-> such threads have exited.  This is done by checking for any candidate
-> threads that have the TIF_MEMDIE bit set.
-> 
-> For memcg ooms, candidate threads are first found by calling
-> task_in_mem_cgroup() since the oom killer should not defer if there's an
-> oom killed thread in another memcg.
-> 
-> Unfortunately, task_in_mem_cgroup() excludes threads if they have
-> detached their mm in the process of exiting so TIF_MEMDIE is never
-> detected for such conditions.  This is different for global, mempolicy,
-> and cpuset oom conditions where a detached mm is only excluded after
-> checking for TIF_MEMDIE and deferring, if necessary, in
-> select_bad_process().
-> 
-> The fix is to return true if a task has a detached mm but is still in the
-> memcg or its hierarchy that is currently oom.  This will allow the oom
-> killer to appropriately defer rather than kill unnecessarily or, in the
-> worst case, panic the machine if nothing else is available to kill.
-> 
-> Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+---
+ kernel/cgroup.c |   10 ++--------
+ 1 files changed, 2 insertions(+), 8 deletions(-)
 
-Thank you.
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-
---
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index d9d5648..a7e00b9 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1935,23 +1935,17 @@ static bool css_set_check_fetched(struct cgroup *cgrp,
+ 
+ 	read_lock(&css_set_lock);
+ 	newcg = find_existing_css_set(cg, cgrp, template);
+-	if (newcg)
+-		get_css_set(newcg);
+ 	read_unlock(&css_set_lock);
+ 
+ 	/* doesn't exist at all? */
+ 	if (!newcg)
+ 		return false;
+ 	/* see if it's already in the list */
+-	list_for_each_entry(cg_entry, newcg_list, links) {
+-		if (cg_entry->cg == newcg) {
+-			put_css_set(newcg);
++	list_for_each_entry(cg_entry, newcg_list, links)
++		if (cg_entry->cg == newcg)
+ 			return true;
+-		}
+-	}
+ 
+ 	/* not found */
+-	put_css_set(newcg);
+ 	return false;
+ }
+ 
+-- 
+1.7.3.1
