@@ -1,66 +1,99 @@
-From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v9 1/9] Basic kernel memory functionality for the Memory Controller
-Date: Thu, 15 Dec 2011 22:20:52 -0800
-Message-ID: <CAHH2K0YUK9CVk4Ds3cPA=6SNjX0y79nSo+Vy8r1H5PiVXA1RWQ@mail.gmail.com>
-References: <1323676029-5890-1-git-send-email-glommer@parallels.com> <1323676029-5890-2-git-send-email-glommer@parallels.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch v3] oom, memcg: fix exclusion of memcg threads after they
+ have detached their mm
+Date: Fri, 16 Dec 2011 09:31:26 +0100
+Message-ID: <20111216083126.GA3122@tiehlicka.suse.cz>
+References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com>
+ <20111214102942.GA11786@tiehlicka.suse.cz>
+ <alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com>
+ <20111215155926.GA22819@tiehlicka.suse.cz>
+ <alpine.DEB.2.00.1112151335370.17878@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=beta;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:x-system-of-record:content-type:content-transfer-encoding;
-        bh=oLa/4FTzWNTtn+tUjkl4Dw9gKmEEs/+0Abz4nBE57uI=;
-        b=qZEkMKD2SyEbucnWnHCnEAterKYR33eZPDxer53Eppuzd5zimkEhqAGbtBxrX4+s3u
-         TzA953xIJzVclT7u7KFg==
-In-Reply-To: <1323676029-5890-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1112151335370.17878-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Sun, Dec 11, 2011 at 11:47 PM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>=
- wrote:
-> +Memory limits as specified by the standard Memory Controller may or =
-may not
-> +take kernel memory into consideration. This is achieved through the =
-file
-> +memory.independent_kmem_limit. A Value different than 0 will allow f=
-or kernel
+On Thu 15-12-11 13:36:11, David Rientjes wrote:
+> The oom killer relies on logic that identifies threads that have already
+> been oom killed when scanning the tasklist and, if found, deferring until
+> such threads have exited.  This is done by checking for any candidate
+> threads that have the TIF_MEMDIE bit set.
+> 
+> For memcg ooms, candidate threads are first found by calling
+> task_in_mem_cgroup() since the oom killer should not defer if there's an
+> oom killed thread in another memcg.
+> 
+> Unfortunately, task_in_mem_cgroup() excludes threads if they have
+> detached their mm in the process of exiting so TIF_MEMDIE is never
+> detected for such conditions.  This is different for global, mempolicy,
+> and cpuset oom conditions where a detached mm is only excluded after
+> checking for TIF_MEMDIE and deferring, if necessary, in
+> select_bad_process().
+> 
+> The fix is to return true if a task has a detached mm but is still in the
+> memcg or its hierarchy that is currently oom.  This will allow the oom
+> killer to appropriately defer rather than kill unnecessarily or, in the
+> worst case, panic the machine if nothing else is available to kill.
+> 
+> Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-s/Value/value/
+Yes, looks good.
+Thanks
 
-It is probably worth documenting the default value for
-memory.independent_kmem_limit?  I figure it would be zero at root and
-and inherited from parents.  But I think the implementation differs.
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-> @@ -277,6 +281,11 @@ struct mem_cgroup {
-> =A0 =A0 =A0 =A0 */
-> =A0 =A0 =A0 =A0unsigned long =A0 move_charge_at_immigrate;
-> =A0 =A0 =A0 =A0/*
-> + =A0 =A0 =A0 =A0* Should kernel memory limits be stabilished indepen=
-dently
-> + =A0 =A0 =A0 =A0* from user memory ?
-> + =A0 =A0 =A0 =A0*/
-> + =A0 =A0 =A0 int =A0 =A0 =A0 =A0 =A0 =A0 kmem_independent_accounting=
-;
+> ---
+>  mm/memcontrol.c |   19 +++++++++++++++----
+>  1 files changed, 15 insertions(+), 4 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1109,10 +1109,21 @@ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg)
+>  	struct task_struct *p;
+>  
+>  	p = find_lock_task_mm(task);
+> -	if (!p)
+> -		return 0;
+> -	curr = try_get_mem_cgroup_from_mm(p->mm);
+> -	task_unlock(p);
+> +	if (p) {
+> +		curr = try_get_mem_cgroup_from_mm(p->mm);
+> +		task_unlock(p);
+> +	} else {
+> +		/*
+> +		 * All threads may have already detached their mm's, but the oom
+> +		 * killer still needs to detect if they have already been oom
+> +		 * killed to prevent needlessly killing additional tasks.
+> +		 */
+> +		task_lock(task);
+> +		curr = mem_cgroup_from_task(task);
+> +		if (curr)
+> +			css_get(&curr->css);
+> +		task_unlock(task);
+> +	}
+>  	if (!curr)
+>  		return 0;
+>  	/*
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I have no serious objection, but a full int seems like overkill for a
-boolean value.
-
-> +static int register_kmem_files(struct cgroup *cont, struct cgroup_su=
-bsys *ss)
-> +{
-> + =A0 =A0 =A0 int ret =3D 0;
-> +
-> + =A0 =A0 =A0 ret =3D cgroup_add_files(cont, ss, kmem_cgroup_files,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ARRAY_SI=
-ZE(kmem_cgroup_files));
-> + =A0 =A0 =A0 return ret;
-
-If you want to this function could be condensed down to:
-  return cgroup_add_files(...);
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
