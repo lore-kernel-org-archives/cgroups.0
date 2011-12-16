@@ -1,72 +1,228 @@
-From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH] cgroups: remove redundant get/put of css_set from
-	css_set_check_fetched()
-Date: Fri, 16 Dec 2011 10:30:29 +0800
-Message-ID: <4EEAAD45.5030407@cn.fujitsu.com>
-References: <1323987686-17968-1-git-send-email-msb@chromium.org>
-Mime-Version: 1.0
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH] fix sleeping while atomic problem in sock mem_cgroup.
+Date: Fri, 16 Dec 2011 06:37:50 +0400
+Message-ID: <1324003070-6573-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1323987686-17968-1-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
 
-Mandeep Singh Baines wrote:
-> We already have a reference to all elements in newcg_list.
-> 
+Since we can't scan the proto_list to initialize sock cgroups, as it
+holds a rwlock, and we also want to keep the code generic enough to
+avoid calling the initialization functions of protocols directly,
+I propose we keep the interested parties in a separate list. This list
+is protected by a mutex so we can sleep and do the necessary allocations.
 
-Indeed. The patch looks good to me.
+Also fixes a reference problem found by Randy Dunlap's randconfig.
 
-Reviewed-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+CC: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+CC: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
+---
+ include/linux/memcontrol.h   |    4 +++
+ include/net/sock.h           |    5 +---
+ include/net/tcp_memcontrol.h |    2 +
+ mm/memcontrol.c              |   52 ++++++++++++++++++++++++++++++++++++++++++
+ net/core/sock.c              |   48 +++++++++-----------------------------
+ 5 files changed, 70 insertions(+), 41 deletions(-)
 
-> Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-> ---
->  kernel/cgroup.c |   10 ++--------
->  1 files changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index d9d5648..a7e00b9 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -1935,23 +1935,17 @@ static bool css_set_check_fetched(struct cgroup *cgrp,
->  
->  	read_lock(&css_set_lock);
->  	newcg = find_existing_css_set(cg, cgrp, template);
-> -	if (newcg)
-> -		get_css_set(newcg);
->  	read_unlock(&css_set_lock);
->  
->  	/* doesn't exist at all? */
->  	if (!newcg)
->  		return false;
->  	/* see if it's already in the list */
-> -	list_for_each_entry(cg_entry, newcg_list, links) {
-> -		if (cg_entry->cg == newcg) {
-> -			put_css_set(newcg);
-> +	list_for_each_entry(cg_entry, newcg_list, links)
-> +		if (cg_entry->cg == newcg)
->  			return true;
-> -		}
-> -	}
->  
->  	/* not found */
-> -	put_css_set(newcg);
->  	return false;
->  }
->  
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 9b296ea..1edd0e3 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -390,6 +390,10 @@ enum {
+ 	OVER_LIMIT,
+ };
+ 
++struct proto;
++void register_sock_cgroup(struct proto *prot);
++void unregister_sock_cgroup(struct proto *prot);
++
+ #ifdef CONFIG_INET
+ struct sock;
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+diff --git a/include/net/sock.h b/include/net/sock.h
+index 6fe0dae..f8237a3 100644
+--- a/include/net/sock.h
++++ b/include/net/sock.h
+@@ -64,10 +64,6 @@
+ #include <net/dst.h>
+ #include <net/checksum.h>
+ 
+-struct cgroup;
+-struct cgroup_subsys;
+-int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
+-void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss);
+ /*
+  * This structure really needs to be cleaned up.
+  * Most of it is for TCP, and not used by any of
+@@ -858,6 +854,7 @@ struct proto {
+ 	void			(*destroy_cgroup)(struct cgroup *cgrp,
+ 						  struct cgroup_subsys *ss);
+ 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
++	struct list_head	cgroup_node;
+ #endif
+ };
+ 
+diff --git a/include/net/tcp_memcontrol.h b/include/net/tcp_memcontrol.h
+index 3512082..5aa7c4b 100644
+--- a/include/net/tcp_memcontrol.h
++++ b/include/net/tcp_memcontrol.h
+@@ -11,6 +11,8 @@ struct tcp_memcontrol {
+ 	int tcp_memory_pressure;
+ };
+ 
++struct cgroup;
++struct cgroup_subsys;
+ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg);
+ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
+ void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7266202..6ee250d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4742,6 +4742,58 @@ static struct cftype kmem_cgroup_files[] = {
+ 	},
+ };
+ 
++static DEFINE_MUTEX(cgroup_proto_list_lock);
++static LIST_HEAD(cgroup_proto_list);
++
++static int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
++{
++	struct proto *proto;
++	int ret = 0;
++
++	mutex_lock(&cgroup_proto_list_lock);
++	list_for_each_entry(proto, &cgroup_proto_list, cgroup_node) {
++		if (proto->init_cgroup) {
++			ret = proto->init_cgroup(cgrp, ss);
++			if (ret)
++				goto out;
++		}
++	}
++
++	mutex_unlock(&cgroup_proto_list_lock);
++	return ret;
++out:
++	list_for_each_entry_continue_reverse(proto, &cgroup_proto_list, cgroup_node)
++		if (proto->destroy_cgroup)
++			proto->destroy_cgroup(cgrp, ss);
++	mutex_unlock(&cgroup_proto_list_lock);
++	return ret;
++}
++
++static void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
++{
++	struct proto *proto;
++
++	mutex_lock(&cgroup_proto_list_lock);
++	list_for_each_entry_reverse(proto, &cgroup_proto_list, cgroup_node)
++		if (proto->destroy_cgroup)
++			proto->destroy_cgroup(cgrp, ss);
++	mutex_unlock(&cgroup_proto_list_lock);
++}
++
++void register_sock_cgroup(struct proto *prot)
++{
++	mutex_lock(&cgroup_proto_list_lock);
++	list_add(&prot->cgroup_node, &cgroup_proto_list);
++	mutex_unlock(&cgroup_proto_list_lock);
++}
++
++void unregister_sock_cgroup(struct proto *prot)
++{
++	mutex_lock(&cgroup_proto_list_lock);
++	list_del(&prot->cgroup_node);
++	mutex_unlock(&cgroup_proto_list_lock);
++}
++
+ static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
+ {
+ 	int ret = 0;
+diff --git a/net/core/sock.c b/net/core/sock.c
+index 5a6a906..3728b50 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -139,43 +139,6 @@
+ static DEFINE_RWLOCK(proto_list_lock);
+ static LIST_HEAD(proto_list);
+ 
+-#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+-int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
+-{
+-	struct proto *proto;
+-	int ret = 0;
+-
+-	read_lock(&proto_list_lock);
+-	list_for_each_entry(proto, &proto_list, node) {
+-		if (proto->init_cgroup) {
+-			ret = proto->init_cgroup(cgrp, ss);
+-			if (ret)
+-				goto out;
+-		}
+-	}
+-
+-	read_unlock(&proto_list_lock);
+-	return ret;
+-out:
+-	list_for_each_entry_continue_reverse(proto, &proto_list, node)
+-		if (proto->destroy_cgroup)
+-			proto->destroy_cgroup(cgrp, ss);
+-	read_unlock(&proto_list_lock);
+-	return ret;
+-}
+-
+-void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
+-{
+-	struct proto *proto;
+-
+-	read_lock(&proto_list_lock);
+-	list_for_each_entry_reverse(proto, &proto_list, node)
+-		if (proto->destroy_cgroup)
+-			proto->destroy_cgroup(cgrp, ss);
+-	read_unlock(&proto_list_lock);
+-}
+-#endif
+-
+ /*
+  * Each address family might have different locking rules, so we have
+  * one slock key per address family:
+@@ -2483,6 +2446,12 @@ int proto_register(struct proto *prot, int alloc_slab)
+ 	list_add(&prot->node, &proto_list);
+ 	assign_proto_idx(prot);
+ 	write_unlock(&proto_list_lock);
++
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	if (prot->proto_cgroup)
++		register_sock_cgroup(prot);
++#endif
++
+ 	return 0;
+ 
+ out_free_timewait_sock_slab_name:
+@@ -2510,6 +2479,11 @@ void proto_unregister(struct proto *prot)
+ 	list_del(&prot->node);
+ 	write_unlock(&proto_list_lock);
+ 
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	if (prot->proto_cgroup != NULL)
++		unregister_sock_cgroup(prot);
++#endif
++
+ 	if (prot->slab != NULL) {
+ 		kmem_cache_destroy(prot->slab);
+ 		prot->slab = NULL;
+-- 
+1.7.6.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
