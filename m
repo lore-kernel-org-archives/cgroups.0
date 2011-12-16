@@ -1,54 +1,55 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 2/2] Explicitly call tcp creation and init from memcontrol.c
-Date: Fri, 16 Dec 2011 06:06:34 +0400
-Message-ID: <4EEAA7AA.3030209@parallels.com>
-References: <1323941672-14324-1-git-send-email-glommer@parallels.com> <1323941672-14324-3-git-send-email-glommer@parallels.com> <20111216011316.8d58bc8f.kamezawa.hiroyu@jp.fujitsu.com> <20111216072050.4f49ac66.kamezawa.hiroyu@jp.fujitsu.com>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] cgroups: fix a css_set not found bug in cgroup_attach_proc
+Date: Fri, 16 Dec 2011 10:12:51 +0800
+Message-ID: <4EEAA923.5060104@cn.fujitsu.com>
+References: <1323977803-5385-1-git-send-email-msb@chromium.org> <20111215212329.GH32002@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111216072050.4f49ac66.kamezawa.hiroyu@jp.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111215212329.GH32002-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Rothwell <sfr@canb.auug.org.au>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Olof Johansson <olofj-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-On 12/16/2011 02:20 AM, KAMEZAWA Hiroyuki wrote:
-> On Fri, 16 Dec 2011 01:13:16 +0900
-> KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  wrote:
->
->> On Thu, 15 Dec 2011 13:34:32 +0400
->> Glauber Costa<glommer@parallels.com>  wrote:
+Tejun Heo wrote:
+> On Thu, Dec 15, 2011 at 11:36:43AM -0800, Mandeep Singh Baines wrote:
+>> There is a BUG when migrating a PF_EXITING proc. Since css_set_prefetch()
+>> is not called for the PF_EXITING case, find_existing_css_set() will return
+>> NULL inside cgroup_task_migrate() causing a BUG.
 >>
->>> Walking the proto_list holds a read_lock, which prevents us from doing
->>> allocations. Splitting the tcp create function into create + init is
->>> good, but it is not enough since create_files will do allocations as well
->>> (dentry ones, mostly).
->>>
->>> Since this does not involve any protocol state, I propose we call the tcp
->>> functions explicitly from memcontrol.c
->>>
->>> With this, we lose by now the ability of doing cgroup memcontrol for
->>> protocols that are loaded as modules. But at least the ones I have in mind
->>> won't really need it (tcp_ipv6 being the only one, but it uses the same data
->>> structures as tcp_ipv4). So I believe this to be the simpler solution to this
->>> problem.
->>>
->>> Signed-off-by: Glauber Costa<glommer@parallels.com>
->>> CC: Hiroyouki Kamezawa<kamezawa.hiroyu@jp.fujitsu.com>
->>> CC: David S. Miller<davem@davemloft.net>
->>> CC: Eric Dumazet<eric.dumazet@gmail.com>
->>> CC: Stephen Rothwell<sfr@canb.auug.org.au>
+>> This bug is easy to reproduce. Create a zombie and echo its pid to
+>> cgroup.procs.
 >>
->> Could you remake the patch onto the 'latest' linux-next ?
->> As Dave mentioned, some bandaids are already applied and this patch hunks.
->
-> Applied patches by hand and did small test for hours.
-> seems good.
->
-> Reviewed-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->
-Kame,
+>> $ cat zombie.c
+>> \#include <unistd.h>
+>>
+>> int main()
+>> {
+>>   if (fork())
+>>       pause();
+>>   return 0;
+>> }
+>> $
+>>
+>> We are hitting this bug pretty regularly on ChromeOS.
+>>
+>> This bug is already fixed by Tejun Heo's cgroup patchset which is
+>> targetted for the next merge window:
+>>
+>> https://lkml.org/lkml/2011/11/1/356
+>>
+>> I've create a smaller patch here which just fixes this bug so that a
+>> fix can be merged into the current release and stable.
+> 
+> Looks safe to me.  Li?
+> 
 
-Thanks. But see Dave's answer to this: He'd like me to follow a slightly 
-different approach (I've attached a patch earlier)
+It should be fine.
+
+Reviewed-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe cgroups" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
