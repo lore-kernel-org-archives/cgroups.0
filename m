@@ -1,99 +1,246 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch v3] oom, memcg: fix exclusion of memcg threads after they
- have detached their mm
-Date: Fri, 16 Dec 2011 09:31:26 +0100
-Message-ID: <20111216083126.GA3122@tiehlicka.suse.cz>
-References: <alpine.DEB.2.00.1112131659100.32369@chino.kir.corp.google.com>
- <20111214102942.GA11786@tiehlicka.suse.cz>
- <alpine.DEB.2.00.1112141838470.27595@chino.kir.corp.google.com>
- <20111215155926.GA22819@tiehlicka.suse.cz>
- <alpine.DEB.2.00.1112151335370.17878@chino.kir.corp.google.com>
-Mime-Version: 1.0
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v2] net: fix sleeping while atomic problem in sock mem_cgroup.
+Date: Fri, 16 Dec 2011 13:09:42 +0400
+Message-ID: <1324026582-5214-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1112151335370.17878-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
 
-On Thu 15-12-11 13:36:11, David Rientjes wrote:
-> The oom killer relies on logic that identifies threads that have already
-> been oom killed when scanning the tasklist and, if found, deferring until
-> such threads have exited.  This is done by checking for any candidate
-> threads that have the TIF_MEMDIE bit set.
-> 
-> For memcg ooms, candidate threads are first found by calling
-> task_in_mem_cgroup() since the oom killer should not defer if there's an
-> oom killed thread in another memcg.
-> 
-> Unfortunately, task_in_mem_cgroup() excludes threads if they have
-> detached their mm in the process of exiting so TIF_MEMDIE is never
-> detected for such conditions.  This is different for global, mempolicy,
-> and cpuset oom conditions where a detached mm is only excluded after
-> checking for TIF_MEMDIE and deferring, if necessary, in
-> select_bad_process().
-> 
-> The fix is to return true if a task has a detached mm but is still in the
-> memcg or its hierarchy that is currently oom.  This will allow the oom
-> killer to appropriately defer rather than kill unnecessarily or, in the
-> worst case, panic the machine if nothing else is available to kill.
-> 
-> Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Since we can't scan the proto_list to initialize sock cgroups, as it
+holds a rwlock, and we also want to keep the code generic enough to
+avoid calling the initialization functions of protocols directly,
+I propose we keep the interested parties in a separate list. This list
+is protected by a mutex so we can sleep and do the necessary allocations.
 
-Yes, looks good.
-Thanks
+Also fixes a reference problem found by Randy Dunlap's randconfig.
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+CC: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+CC: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
+CC: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+---
+ include/linux/memcontrol.h   |   11 ++++++-
+ include/net/sock.h           |    5 +---
+ include/net/tcp_memcontrol.h |    2 +
+ mm/memcontrol.c              |   58 ++++++++++++++++++++++++++++++++++++++++++
+ net/core/sock.c              |   42 +++--------------------------
+ 5 files changed, 75 insertions(+), 43 deletions(-)
 
-> ---
->  mm/memcontrol.c |   19 +++++++++++++++----
->  1 files changed, 15 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1109,10 +1109,21 @@ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg)
->  	struct task_struct *p;
->  
->  	p = find_lock_task_mm(task);
-> -	if (!p)
-> -		return 0;
-> -	curr = try_get_mem_cgroup_from_mm(p->mm);
-> -	task_unlock(p);
-> +	if (p) {
-> +		curr = try_get_mem_cgroup_from_mm(p->mm);
-> +		task_unlock(p);
-> +	} else {
-> +		/*
-> +		 * All threads may have already detached their mm's, but the oom
-> +		 * killer still needs to detect if they have already been oom
-> +		 * killed to prevent needlessly killing additional tasks.
-> +		 */
-> +		task_lock(task);
-> +		curr = mem_cgroup_from_task(task);
-> +		if (curr)
-> +			css_get(&curr->css);
-> +		task_unlock(task);
-> +	}
->  	if (!curr)
->  		return 0;
->  	/*
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 9b296ea..e61fabb 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -390,11 +390,13 @@ enum {
+ 	OVER_LIMIT,
+ };
+ 
+-#ifdef CONFIG_INET
++struct proto;
+ struct sock;
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+ void sock_update_memcg(struct sock *sk);
+ void sock_release_memcg(struct sock *sk);
++void register_sock_cgroup(struct proto *prot);
++void unregister_sock_cgroup(struct proto *prot);
+ #else
+ static inline void sock_update_memcg(struct sock *sk)
+ {
+@@ -402,7 +404,12 @@ static inline void sock_update_memcg(struct sock *sk)
+ static inline void sock_release_memcg(struct sock *sk)
+ {
+ }
++static inline void register_sock_cgroup(struct proto *prot)
++{
++}
++static inline void unregister_sock_cgroup(struct proto *prot)
++{
++}
+ #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+-#endif /* CONFIG_INET */
+ #endif /* _LINUX_MEMCONTROL_H */
+ 
+diff --git a/include/net/sock.h b/include/net/sock.h
+index 6fe0dae..f8237a3 100644
+--- a/include/net/sock.h
++++ b/include/net/sock.h
+@@ -64,10 +64,6 @@
+ #include <net/dst.h>
+ #include <net/checksum.h>
+ 
+-struct cgroup;
+-struct cgroup_subsys;
+-int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
+-void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss);
+ /*
+  * This structure really needs to be cleaned up.
+  * Most of it is for TCP, and not used by any of
+@@ -858,6 +854,7 @@ struct proto {
+ 	void			(*destroy_cgroup)(struct cgroup *cgrp,
+ 						  struct cgroup_subsys *ss);
+ 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
++	struct list_head	cgroup_node;
+ #endif
+ };
+ 
+diff --git a/include/net/tcp_memcontrol.h b/include/net/tcp_memcontrol.h
+index 3512082..5aa7c4b 100644
+--- a/include/net/tcp_memcontrol.h
++++ b/include/net/tcp_memcontrol.h
+@@ -11,6 +11,8 @@ struct tcp_memcontrol {
+ 	int tcp_memory_pressure;
+ };
+ 
++struct cgroup;
++struct cgroup_subsys;
+ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg);
+ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
+ void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7266202..1098afe 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4742,6 +4742,64 @@ static struct cftype kmem_cgroup_files[] = {
+ 	},
+ };
+ 
++static DEFINE_MUTEX(cgroup_proto_list_lock);
++static LIST_HEAD(cgroup_proto_list);
++
++static int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
++{
++	struct proto *proto;
++	int ret = 0;
++
++	mutex_lock(&cgroup_proto_list_lock);
++	list_for_each_entry(proto, &cgroup_proto_list, cgroup_node) {
++		if (proto->init_cgroup) {
++			ret = proto->init_cgroup(cgrp, ss);
++			if (ret)
++				goto out;
++		}
++	}
++
++	mutex_unlock(&cgroup_proto_list_lock);
++	return ret;
++out:
++	list_for_each_entry_continue_reverse(proto, &cgroup_proto_list, cgroup_node)
++		if (proto->destroy_cgroup)
++			proto->destroy_cgroup(cgrp, ss);
++	mutex_unlock(&cgroup_proto_list_lock);
++	return ret;
++}
++
++static void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
++{
++	struct proto *proto;
++
++	mutex_lock(&cgroup_proto_list_lock);
++	list_for_each_entry_reverse(proto, &cgroup_proto_list, cgroup_node)
++		if (proto->destroy_cgroup)
++			proto->destroy_cgroup(cgrp, ss);
++	mutex_unlock(&cgroup_proto_list_lock);
++}
++
++void register_sock_cgroup(struct proto *prot)
++{
++	if (!prot->proto_cgroup)
++		return;
++
++	mutex_lock(&cgroup_proto_list_lock);
++	list_add(&prot->cgroup_node, &cgroup_proto_list);
++	mutex_unlock(&cgroup_proto_list_lock);
++}
++
++void unregister_sock_cgroup(struct proto *prot)
++{
++	if (!prot->proto_cgroup)
++		return;
++
++	mutex_lock(&cgroup_proto_list_lock);
++	list_del(&prot->cgroup_node);
++	mutex_unlock(&cgroup_proto_list_lock);
++}
++
+ static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
+ {
+ 	int ret = 0;
+diff --git a/net/core/sock.c b/net/core/sock.c
+index 5a6a906..5a56a55 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -139,43 +139,6 @@
+ static DEFINE_RWLOCK(proto_list_lock);
+ static LIST_HEAD(proto_list);
+ 
+-#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+-int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
+-{
+-	struct proto *proto;
+-	int ret = 0;
+-
+-	read_lock(&proto_list_lock);
+-	list_for_each_entry(proto, &proto_list, node) {
+-		if (proto->init_cgroup) {
+-			ret = proto->init_cgroup(cgrp, ss);
+-			if (ret)
+-				goto out;
+-		}
+-	}
+-
+-	read_unlock(&proto_list_lock);
+-	return ret;
+-out:
+-	list_for_each_entry_continue_reverse(proto, &proto_list, node)
+-		if (proto->destroy_cgroup)
+-			proto->destroy_cgroup(cgrp, ss);
+-	read_unlock(&proto_list_lock);
+-	return ret;
+-}
+-
+-void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
+-{
+-	struct proto *proto;
+-
+-	read_lock(&proto_list_lock);
+-	list_for_each_entry_reverse(proto, &proto_list, node)
+-		if (proto->destroy_cgroup)
+-			proto->destroy_cgroup(cgrp, ss);
+-	read_unlock(&proto_list_lock);
+-}
+-#endif
+-
+ /*
+  * Each address family might have different locking rules, so we have
+  * one slock key per address family:
+@@ -2483,6 +2446,9 @@ int proto_register(struct proto *prot, int alloc_slab)
+ 	list_add(&prot->node, &proto_list);
+ 	assign_proto_idx(prot);
+ 	write_unlock(&proto_list_lock);
++
++	register_sock_cgroup(prot);
++
+ 	return 0;
+ 
+ out_free_timewait_sock_slab_name:
+@@ -2510,6 +2476,8 @@ void proto_unregister(struct proto *prot)
+ 	list_del(&prot->node);
+ 	write_unlock(&proto_list_lock);
+ 
++	unregister_sock_cgroup(prot);
++
+ 	if (prot->slab != NULL) {
+ 		kmem_cache_destroy(prot->slab);
+ 		prot->slab = NULL;
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+1.7.6.4
+
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
