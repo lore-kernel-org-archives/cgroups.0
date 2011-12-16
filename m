@@ -1,75 +1,93 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [RFC] cgroup basic comounting
-Date: Fri, 16 Dec 2011 16:29:09 +0400
-Message-ID: <1324038549-21605-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v9 1/9] Basic kernel memory functionality for the Memory
+ Controller
+Date: Fri, 16 Dec 2011 13:32:33 +0100
+Message-ID: <20111216123233.GF3122@tiehlicka.suse.cz>
+References: <1323676029-5890-1-git-send-email-glommer@parallels.com>
+ <1323676029-5890-2-git-send-email-glommer@parallels.com>
+ <20111214170447.GB4856@tiehlicka.suse.cz>
+ <4EE9E81E.2090700@parallels.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <4EE9E81E.2090700@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, daniel.lezcano-GANU6spQydw@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org, Johannes Weiner <jweiner@redhat.com>
 
-Turns out that most of the infrastructure we need to put two controllers in the
-same hierarchy is by far already into place. All we need to do is not failing
-when we specify two of them.
+On Thu 15-12-11 16:29:18, Glauber Costa wrote:
+> On 12/14/2011 09:04 PM, Michal Hocko wrote:
+> >[Now with the current patch version, I hope]
+> >On Mon 12-12-11 11:47:01, Glauber Costa wrote:
+[...]
+> >>@@ -3848,10 +3862,17 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+> >>  	u64 val;
+> >>
+> >>  	if (!mem_cgroup_is_root(memcg)) {
+> >>+		val = 0;
+> >>+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> >>+		if (!memcg->kmem_independent_accounting)
+> >>+			val = res_counter_read_u64(&memcg->kmem, RES_USAGE);
+> >>+#endif
+> >>  		if (!swap)
+> >>-			return res_counter_read_u64(&memcg->res, RES_USAGE);
+> >>+			val += res_counter_read_u64(&memcg->res, RES_USAGE);
+> >>  		else
+> >>-			return res_counter_read_u64(&memcg->memsw, RES_USAGE);
+> >>+			val += res_counter_read_u64(&memcg->memsw, RES_USAGE);
+> >>+
+> >>+		return val;
+> >>  	}
+> >
+> >So you report kmem+user but we do not consider kmem during charge so one
+> >can easily end up with usage_in_bytes over limit but no reclaim is going
+> >on. Not good, I would say.
 
-With this, we can effectively guarantee that by comounting cpu and cpuacct,
-we'll have the same set of tasks, therefore allowing us to use cpu cgroup data
-to fill in the usage fields in cpuacct.
+I find this a problem and one of the reason I do not like !independent
+accounting.
 
-I decided not to stabilish any dependency between cgroups as Li previously did:
-cgroups may or may not be comounted, and any of them can be combined (I don't
-see a reason to prevent any combination).
+> >
+> >OK, so to sum it up. The biggest problem I see is the (non)independent
+> >accounting. We simply cannot mix user+kernel limits otherwise we would
+> >see issues (like kernel resource hog would force memcg-oom and innocent
+> >members would die because their rss is much bigger).
+> >It is also not clear to me what should happen when we hit the kmem
+> >limit. I guess it will be kmem cache dependent.
+> 
+> So right now, tcp is completely independent, since it is not
+> accounted to kmem. 
 
-After testing and some trials, I could verify that the current mount behavior
-plays well under the plans, so I didn't change it. That is:
+So why do we need kmem accounting when tcp (the only user at the moment)
+doesn't use it? 
 
- * If subsystems A and B aren't mounted, we can comount them.
- * If subsystem A is mounted, but B is not:
-   * we can comount them if A has no children,
-   * we fail otherwise
- * If subsystems A and B are comounted at a location, we can't
-   mount any of them separately at another point. We do can mount
-   them together.
- * If subsystems A and B are comounted at a location,
-   * we can comount a third subsystem C, if they have no children
-   * we fail otherwise
+> In summary, we still never do non-independent accounting. When we
+> start doing it for the other caches, We will have to add a test at
+> charge time as well.
 
-Paul,
+So we shouldn't do it as a part of this patchset because the further
+usage is not clear and I think there will be some real issues with
+user+kmem accounting (e.g. a proper memcg-oom implementation).
+Can you just drop this patch?
 
-Please let me know if this is tuned with the idea you had in mind.
-If this is okay, I patch that extracts usage from cpu cgroup data
-in case of comount would follow.
+> We still need to keep it separate though, in case the independent
+> flag is turned on/off
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-CC: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
----
- kernel/cgroup.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I don't mind to have kmem.tcp.* knobs.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1fd7867..e894a4f 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1211,9 +1211,9 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 			set_bit(i, &opts->subsys_bits);
- 			one_ss = true;
- 
--			break;
-+			continue;
- 		}
--		if (i == CGROUP_SUBSYS_COUNT)
-+		if (opts->subsys_bits == 0)
- 			return -ENOENT;
- 	}
- 
 -- 
-1.7.6.4
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 
 --
-To unsubscribe from this list: send the line "unsubscribe cgroups" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
