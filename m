@@ -1,70 +1,54 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v9 1/9] Basic kernel memory functionality for the Memory
- Controller
-Date: Fri, 16 Dec 2011 14:30:49 +0100
-Message-ID: <20111216133049.GI3122@tiehlicka.suse.cz>
-References: <1323676029-5890-1-git-send-email-glommer@parallels.com>
- <1323676029-5890-2-git-send-email-glommer@parallels.com>
- <20111214170447.GB4856@tiehlicka.suse.cz>
- <4EE9E81E.2090700@parallels.com>
- <20111216123233.GF3122@tiehlicka.suse.cz>
- <4EEB417B.8000508@parallels.com>
+From: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Subject: Re: [RFC] cgroup basic comounting
+Date: Fri, 16 Dec 2011 08:35:34 -0800
+Message-ID: <CALdu-PCXb4W=LNHe14V3-EnqoPVVWkPRRGyeD+VAPrQuhXkFjw@mail.gmail.com>
+References: <1324038549-21605-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4EEB417B.8000508-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=mime-version:sender:in-reply-to:references:from:date
+         :x-google-sender-auth:message-id:subject:to:cc:content-type
+         :content-transfer-encoding;
+        bh=N5AxPuN/gLAl9wJgcCZaGscWKWB4XBQ9VqwxoK/TwUs=;
+        b=uKnQT8jsy6wlLlJHp49v3X19dKr6WB6PsT7komLrvCCMPY1mWIU2W+mquueHVRAfuW
+         LJ4Iqv1TPuR+lqURjUgl9daHIqkOQKkzfFoTLzU8Uy3x/XOWGC4e46HoqO2OwJ2W3kWn
+         7fhtuu4MA2sONULk5l3mphZu5+ddRAiOELTgE=
+In-Reply-To: <1324038549-21605-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, avagin-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, daniel.lezcano-GANU6spQydw@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 
-On Fri 16-12-11 17:02:51, Glauber Costa wrote:
-> On 12/16/2011 04:32 PM, Michal Hocko wrote:
-[...]
-> >So why do we need kmem accounting when tcp (the only user at the moment)
-> >doesn't use it?
-> 
-> Well, a bit historical. I needed a basic placeholder for it, since
-> it tcp is officially kmem. As the time passed, I took most of the
-> stuff out of this patch to leave just the basics I would need for
-> tcp.
-> Turns out I ended up focusing on the rest, and some of the stuff was
-> left here.
-> 
-> At one point I merged tcp data into kmem, but then reverted this
-> behavior. the kmem counter stayed.
-> 
-> I agree deferring the whole behavior would be better.
-> 
-> >>In summary, we still never do non-independent accounting. When we
-> >>start doing it for the other caches, We will have to add a test at
-> >>charge time as well.
-> >
-> >So we shouldn't do it as a part of this patchset because the further
-> >usage is not clear and I think there will be some real issues with
-> >user+kmem accounting (e.g. a proper memcg-oom implementation).
-> >Can you just drop this patch?
-> 
-> Yes, but the whole set is in the net tree already. 
+On Fri, Dec 16, 2011 at 4:29 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> =
+wrote
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 1fd7867..e894a4f 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -1211,9 +1211,9 @@ static int parse_cgroupfs_options(char *data, s=
+truct cgroup_sb_opts *opts)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0set_bit(i, &opts->subs=
+ys_bits);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0one_ss =3D true;
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 continue;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (i =3D=3D CGROUP_SUBSYS_COUNT)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (opts->subsys_bits =3D=3D 0)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -ENOENT;
 
-Isn't it only in some for-next branch? Can that one be updated?
+This is broken - it will silently ignore unknown/misspelled subsystems
+that are specified after a valid subsystem. Replacing the break with a
+continue is harmless but doesn't make sense - if the token already
+matched a subsystem name then it won't match any other subsystem.
 
-> (All other patches are tcp-related but this) Would you mind if I'd
-> send a follow up patch removing the kmem files, and leaving just the
-> registration functions and basic documentation? (And sorry for that as
-> well in advance)
+What change are you actually trying to effect with this patch?
 
-Yes a followup patch would work as well.
-
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Paul
 --
 To unsubscribe from this list: send the line "unsubscribe cgroups" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
