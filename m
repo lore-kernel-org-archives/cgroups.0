@@ -1,115 +1,113 @@
-From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: [PATCH v2] cgroup: remove redundate get/put of old css_set from migrate
-Date: Mon, 19 Dec 2011 10:44:34 -0800
-Message-ID: <1324320274-18485-1-git-send-email-msb@chromium.org>
-References: <20111219172027.GJ24519@google.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111219172027.GJ24519-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH] memcg: reset to root_mem_cgroup at bypassing
+Date: Mon, 19 Dec 2011 12:49:02 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1112191218350.3639@eggly.anvils>
+References: <20111219165146.4d72f1bb.kamezawa.hiroyu@jp.fujitsu.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=beta;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=AA7tbPUjlVI1V9QmchpRVsiTnzo0T3qu5yU57NYwJo0=;
+        b=H2Gm2HeFl67aVjQqRErgaTx13Z1lXofZ8U7qO6Ot3E1JSjeYdH+t8rQZWgrZa4aBAN
+         A5UGgXS4nBOcgLqDjhZg==
+In-Reply-To: <20111219165146.4d72f1bb.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
 
-Changes in V2:
-* Updated commit message as per Tejun's feedback:
-  * https://lkml.org/lkml/2011/12/19/289
+On Mon, 19 Dec 2011, KAMEZAWA Hiroyuki wrote:
+> From d620ff605a3a592c2b1de3a046498ce5cd3d3c50 Mon Sep 17 00:00:00 2001
+> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Date: Mon, 19 Dec 2011 16:55:10 +0900
+> Subject: [PATCH 2/2] memcg: reset lru to root_mem_cgroup in special cases.
+> 
+> This patch is a fix for memcg-simplify-lru-handling-by-new-rule.patch
+> 
+> After the patch, all pages which will be onto LRU must have sane
+> pc->mem_cgroup. But, in special case, it's not set.
+> 
+> If task->mm is NULL or task is TIF_MEMDIE or fatal_signal_pending(),
+> try_charge() is bypassed and the new charge will not be charged. And
+> pc->mem_cgroup is unset even if the page will be used/mapped and added
+> to LRU. To avoid this,  this patch charges such pages to root_mem_cgroup,
+> then, pc->mem_cgroup will be handled correctly.
+> 
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+>  mm/memcontrol.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 0d6d21c..9268e8e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2324,7 +2324,7 @@ nomem:
+>  	*ptr = NULL;
+>  	return -ENOMEM;
+>  bypass:
+> -	*ptr = NULL;
+> +	*ptr = root_mem_cgroup;
+>  	return 0;
+>  }
+>  
+> -- 
 
--- >8 -- (snip)
+I'm dubious about this patch: certainly you have not fully justified it.
 
-We can now assume that the css_set reference held by the task
-will not go away for an exiting task. PF_EXITING state can be
-trusted throughout migration by checking it after locking
-threadgroup.
+I speak from experience: I did *exactly* the same at "bypass" when
+I introduced our mem_cgroup_reset_page(), which corresponds to your
+mem_cgroup_reset_owner(); it seemed right to me that a successful
+(return 0) call to try_charge() should provide a good *ptr.
 
-While at it, renamed css_set_check_fetched to css_set_fetched.
-!css_set_fetched() seems to read better than
-!css_set_check_fetched().
+But others (Ying and Greg) pointed out that it changes the semantics
+of __mem_cgroup_try_charge() in this case, so you need to justify the
+change to all those places which do something like "if (ret || !memcg)"
+after calling it.  Perhaps it is a good change everywhere, but that's
+not obvious, so we chose caution.
 
-This patch depends on:
+Doesn't it lead to bypass pages being marked as charged to root, so
+they don't get charged to the right owner next time they're touched?
 
-commit cd3d095275374220921fcf0d4e0c16584b26ddbc
-Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date:   Mon Dec 12 18:12:21 2011 -0800
+In our internal kernel, I restored "bypass" to set *ptr = NULL as
+before, but routed those callers that need it to continue on to
+__mem_cgroup_commit_charge() when it's NULL, and let that do a
+quick little mem_cgroup_reset_page() to root_mem_cgroup for this.
 
-    cgroup: always lock threadgroup during migration
+But I was growing tired of mem_cgroup_reset_page() when I prepared
+the rollup I posted two weeks ago, it adds overhead where we don't
+want it, so I found a way to avoid it completely.
 
-Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
----
- kernel/cgroup.c |   25 ++++++-------------------
- 1 files changed, 6 insertions(+), 19 deletions(-)
+What you're doing with mem_cgroup_reset_owner() seems reasonable to
+me as a phase to go through (though there's probably more callsites
+to be found - sorry to be unhelpfully mysterious about that, but
+just because per-memcg-lru-locking needed them doesn't imply that
+your patchset needs them), but I expect to (offer a patch to) remove
+it later.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1b3b841..eb95e32 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1856,7 +1856,6 @@ static int cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
- 	 */
- 	task_lock(tsk);
- 	oldcg = tsk->cgroups;
--	get_css_set(oldcg);
- 	task_unlock(tsk);
- 
- 	/* locate or allocate a new css_set for this task. */
-@@ -1872,12 +1871,9 @@ static int cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
- 		might_sleep();
- 		/* find_css_set will give us newcg already referenced. */
- 		newcg = find_css_set(oldcg, cgrp);
--		if (!newcg) {
--			put_css_set(oldcg);
-+		if (!newcg)
- 			return -ENOMEM;
--		}
- 	}
--	put_css_set(oldcg);
- 
- 	/* @tsk can't exit as its threadgroup is locked */
- 	task_lock(tsk);
-@@ -2015,9 +2011,8 @@ struct cg_list_entry {
- 	struct list_head links;
- };
- 
--static bool css_set_check_fetched(struct cgroup *cgrp,
--				  struct task_struct *tsk, struct css_set *cg,
--				  struct list_head *newcg_list)
-+static bool css_set_fetched(struct cgroup *cgrp, struct task_struct *tsk,
-+			    struct css_set *cg, struct list_head *newcg_list)
- {
- 	struct css_set *newcg;
- 	struct cg_list_entry *cg_entry;
-@@ -2191,19 +2186,11 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 		/* get old css_set pointer */
- 		task_lock(tc->task);
- 		oldcg = tc->task->cgroups;
--		get_css_set(oldcg);
- 		task_unlock(tc->task);
--		/* see if the new one for us is already in the list? */
--		if (css_set_check_fetched(cgrp, tc->task, oldcg, &newcg_list)) {
--			/* was already there, nothing to do. */
--			put_css_set(oldcg);
--		} else {
--			/* we don't already have it. get new one. */
--			retval = css_set_prefetch(cgrp, oldcg, &newcg_list);
--			put_css_set(oldcg);
--			if (retval)
-+		/* if we don't already have it in the list get a new one */
-+		if (!css_set_fetched(cgrp, tc->task, oldcg, &newcg_list))
-+			if (css_set_prefetch(cgrp, oldcg, &newcg_list))
- 				goto out_list_teardown;
--		}
- 	}
- 
- 	/*
--- 
-1.7.3.1
+I am intending to rebase upon your patches, or at least the ones
+which akpm has already taken in (I've not studied the pcg flag ones,
+more noise than I want at the moment).  I'm waiting for those to
+appear in a linux-next, disappointed that they weren't in today's.
+
+(But I'm afraid my patches will then clash with Mel's new lru work.)
+
+I have been running successfully on several machines with an
+approximation to what I expect linux-next to be when it has your
+patches in.  Ran very stably on two, but one hangs in reclaim after
+a few hours, that's high on my list to investigate (you made no
+change to vmscan.c, maybe the problem comes from Hannes's earlier
+patches, but I hadn't noticed it with those alone).
+
+Hugh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
