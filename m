@@ -1,92 +1,72 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [RFC] cgroup basic comounting
-Date: Mon, 19 Dec 2011 12:00:19 +0400
-Message-ID: <4EEEEF13.9090701@parallels.com>
-References: <1324038549-21605-1-git-send-email-glommer@parallels.com> <4EEEEE9D.1010003@cn.fujitsu.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroups: fix a css_set not found bug in
+ cgroup_attach_proc
+Date: Mon, 19 Dec 2011 09:13:07 -0800
+Message-ID: <20111219171307.GG24519@google.com>
+References: <1323977803-5385-1-git-send-email-msb@chromium.org>
+ <20111215212329.GH32002@google.com>
+ <4EEAA923.5060104@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4EEEEE9D.1010003-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=wbU0Na25WUrSawwkBz2F4NbhtqBUrAWgJCBaqe/eh/4=;
+        b=CeZ38eTMqmfye5GZH1FnSjk/dzEPBIde803xKjyy/bAra7RJT3Wn4qNBa+HT7uOopu
+         bBYpokxjBytI+a2MFqYOn5xLuPOAtmLMs/EPWjvhL5RmTIKRC6A+6aDmMm8ndcpvxGLM
+         vnTrB2wmedJgTAYODwHcfUnJm6J9AJ6PgSIr4=
+Content-Disposition: inline
+In-Reply-To: <4EEAA923.5060104-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, daniel.lezcano-GANU6spQydw@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Olof Johansson <olofj-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-On 12/19/2011 11:58 AM, Li Zefan wrote:
-> Glauber Costa wrote:
->> Turns out that most of the infrastructure we need to put two controllers in the
->> same hierarchy is by far already into place. All we need to do is not failing
->> when we specify two of them.
->>
->
-> You don't need to change anything to mount with 2 cgroup subsystems:
->
-> 	# mount -t cgroup -o cpu,cpuacct xxx /mnt
->
-> But you may want to revise and make use of the subsys->bind() callback, which
-> is called at mount/remount/umount when we attach/remove a controller to/from
-> a hierarchy. It's the place you can check if two controllers are going to
-> be comounted/seperated.
->
->> With this, we can effectively guarantee that by comounting cpu and cpuacct,
->> we'll have the same set of tasks, therefore allowing us to use cpu cgroup data
->> to fill in the usage fields in cpuacct.
+On Fri, Dec 16, 2011 at 10:12:51AM +0800, Li Zefan wrote:
+> Tejun Heo wrote:
+> > On Thu, Dec 15, 2011 at 11:36:43AM -0800, Mandeep Singh Baines wrote:
+> >> There is a BUG when migrating a PF_EXITING proc. Since css_set_prefetch()
+> >> is not called for the PF_EXITING case, find_existing_css_set() will return
+> >> NULL inside cgroup_task_migrate() causing a BUG.
+> >>
+> >> This bug is easy to reproduce. Create a zombie and echo its pid to
+> >> cgroup.procs.
+> >>
+> >> $ cat zombie.c
+> >> \#include <unistd.h>
+> >>
+> >> int main()
+> >> {
+> >>   if (fork())
+> >>       pause();
+> >>   return 0;
+> >> }
+> >> $
+> >>
+> >> We are hitting this bug pretty regularly on ChromeOS.
+> >>
+> >> This bug is already fixed by Tejun Heo's cgroup patchset which is
+> >> targetted for the next merge window:
+> >>
+> >> https://lkml.org/lkml/2011/11/1/356
+> >>
+> >> I've create a smaller patch here which just fixes this bug so that a
+> >> fix can be merged into the current release and stable.
+> > 
+> > Looks safe to me.  Li?
+> > 
+> 
+> It should be fine.
+> 
+> Reviewed-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-Yeah, that patch was bogus, sorry for the noise.
+Applied to cgroup/for-fixes-3.2.  Will push to Linus in a couple of
+days.  It's already rc6 and a bit late tho.
 
-What I should really have posted is the test code, but I guess I'll go 
-over that one as well one more time, and then post it.
+Thank you.
 
-Thanks
->> I decided not to stabilish any dependency between cgroups as Li previously did:
->> cgroups may or may not be comounted, and any of them can be combined (I don't
->> see a reason to prevent any combination).
->>
->> After testing and some trials, I could verify that the current mount behavior
->> plays well under the plans, so I didn't change it. That is:
->>
->>   * If subsystems A and B aren't mounted, we can comount them.
->>   * If subsystem A is mounted, but B is not:
->>     * we can comount them if A has no children,
->>     * we fail otherwise
->>   * If subsystems A and B are comounted at a location, we can't
->>     mount any of them separately at another point. We do can mount
->>     them together.
->>   * If subsystems A and B are comounted at a location,
->>     * we can comount a third subsystem C, if they have no children
->>     * we fail otherwise
->>
->> Paul,
->>
->> Please let me know if this is tuned with the idea you had in mind.
->> If this is okay, I patch that extracts usage from cpu cgroup data
->> in case of comount would follow.
->>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> CC: Paul Turner<pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->> CC: Li Zefan<lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
->> ---
->>   kernel/cgroup.c |    4 ++--
->>   1 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index 1fd7867..e894a4f 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -1211,9 +1211,9 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
->>   			set_bit(i,&opts->subsys_bits);
->>   			one_ss = true;
->>
->> -			break;
->> +			continue;
->>   		}
->> -		if (i == CGROUP_SUBSYS_COUNT)
->> +		if (opts->subsys_bits == 0)
->>   			return -ENOENT;
->>   	}
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
