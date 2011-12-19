@@ -1,9 +1,9 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroups: remove redundant get/put of css_set from
-	css_set_check_fetched()
-Date: Mon, 19 Dec 2011 09:15:33 -0800
-Message-ID: <20111219171533.GH24519@google.com>
-References: <1323987686-17968-1-git-send-email-msb@chromium.org>
+Subject: Re: [PATCH] cgroup: remove redundate get/put of old css_set from
+	migrate
+Date: Mon, 19 Dec 2011 09:16:33 -0800
+Message-ID: <20111219171633.GI24519@google.com>
+References: <1324053511-24591-1-git-send-email-msb@chromium.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -11,12 +11,12 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=78FzXK63lM6zovt2ToiLm4gOn1HLHaIlOFqnLniWvXI=;
-	b=KmD8dfkzue7Q/9PzxX58Wz7i3LSb5hp1DrWelkUrBEH83XnHWTJmSLrvhQ407osUeg
-	GsbCD7GtgJ4qmvvNij+phLqt5SkV5PEvazgYpQI/vsLtFBX9WzaV7N7VLf3zMcOZKPJg
-	7Pzq5iM2ENq4h2eW/iqILpAjUMLCoshM2u4GY=
+	bh=TfrjqTYeZiph6Q9V3anuxiVntS/GkIjn2p8AWBYhbu0=;
+	b=pmlqP9vFH4r/k5MjT+O7sRXWDi9dnDJfg/g5+D+YuSu1BRdN/soYYzO0Ox0EoE0NVy
+	60F07m7Jm41IgPP0cDGwtcfjhvCPE/CosHPiMsWiP8cRryUTjy6Sf0EA3uXJ4FbIfD4v
+	pgfEywa59uDT/rYyJUWDkUdI/Wk3Eb03yam70=
 Content-Disposition: inline
-In-Reply-To: <1323987686-17968-1-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1324053511-24591-1-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -28,19 +28,36 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On Thu, Dec 15, 2011 at 02:21:26PM -0800, Mandeep Singh Baines wrote:
-> We already have a reference to all elements in newcg_list.
+On Fri, Dec 16, 2011 at 08:38:31AM -0800, Mandeep Singh Baines wrote:
+> We can now assume that the css_set reference held by the task
+> will not go away for an exiting task. PF_EXITING state can be
+> trusted throughout migration by checking it after locking
+> threadgroup.
+> 
+> This patch depends on:
+> 
+> commit cd3d095275374220921fcf0d4e0c16584b26ddbc
+> Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Date:   Mon Dec 12 18:12:21 2011 -0800
+> 
+>     cgroup: always lock threadgroup during migration
 > 
 > Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 > Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 > Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-Applied to for-3.3.  Thanks.
+Li, can you please ack this?
+
+Thanks.
 
 -- 
 tejun
