@@ -1,65 +1,46 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove redundate get/put of old css_set from
- migrate
-Date: Mon, 19 Dec 2011 03:01:49 +0100
-Message-ID: <20111219020147.GA13171@somewhere>
-References: <1324053511-24591-1-git-send-email-msb@chromium.org>
+From: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+Subject: Re: [PATCH -tip 0/3] sched: some fixes for vruntime calculation
+ related to cgroup movement(v2)
+Date: Mon, 19 Dec 2011 11:55:08 +0900
+Message-ID: <20111219115508.0d5bc98d.nishimura@mxp.nes.nec.co.jp>
+References: <20111213155710.5b453415.nishimura@mxp.nes.nec.co.jp>
+	<20111215143506.335e443e.nishimura@mxp.nes.nec.co.jp>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=CoyzYy12xjdQNfo3CU3h9/Rd01auDeN+IqSvkLi0/U0=;
-        b=pJmNmhHWTjV85jiBd/axBucH3iEeitBabA9sFvaVGGMxLKaV4O/+2ttXjHhS7EzWQD
-         ghqL1X/OEmbQtSTfjf82QhhnmZQr4dP0X8Mtqt/qIljjFJ9qETU7Nr6YvXm2stCa+JBf
-         /Qu83x/fzIfojg4R9z29Cw7BWzbRL/RBdZ3ZI=
-Content-Disposition: inline
-In-Reply-To: <1324053511-24591-1-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20111215143506.335e443e.nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
 
-On Fri, Dec 16, 2011 at 08:38:31AM -0800, Mandeep Singh Baines wrote:
-> We can now assume that the css_set reference held by the task
-> will not go away for an exiting task. PF_EXITING state can be
-> trusted throughout migration by checking it after locking
-> threadgroup.
-> 
-> This patch depends on:
-> 
-> commit cd3d095275374220921fcf0d4e0c16584b26ddbc
-> Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date:   Mon Dec 12 18:12:21 2011 -0800
-> 
->     cgroup: always lock threadgroup during migration
-> 
-> Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-> ---
->  kernel/cgroup.c |   25 ++++++-------------------
->  1 files changed, 6 insertions(+), 19 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 1b3b841..eb95e32 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -1856,7 +1856,6 @@ static int cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
->  	 */
->  	task_lock(tsk);
->  	oldcg = tsk->cgroups;
-> -	get_css_set(oldcg);
->  	task_unlock(tsk);
+Someone who have comments ?
+If there are some problems that prevent these patches from being accepted,
+I'll fix them.
 
-Seems we don't need these task_lock() anymore. I'm cooking a patch to clean that up.
+Thanks,
+Daisuke Nishimura
+
+On Thu, 15 Dec 2011 14:35:06 +0900
+Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
+
+> Hi, all.
+> 
+> This is an updated version based on comments and rebased onto the -tip tree.
+> 
+> These patches fix problems I could see in 3.2-rc2 when testing frequent cgroup movement
+> under very high load. Without these patches, some processes were not scheduled
+> (although they were queued into rq)for a very long time(minutes or hours!),
+> because vruntime of these processes were far bigger than min_vruntime.
+> 
+> Daisuke Nishimura (3):
+>   sched: fix cgroup movement of newly created process
+>   sched: fix cgroup movement of forking process
+>   sched: fix cgroup movement of waking process
+> 
+>  kernel/sched/fair.c |   22 ++++++++++++++++++++--
+>  1 files changed, 20 insertions(+), 2 deletions(-)
+> 
+> Thanks,
+> Daisuke Nishimura.
