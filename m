@@ -1,21 +1,22 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/5] cgroup: remove extra calls to find_existing_css_set
-Date: Tue, 20 Dec 2011 15:30:50 -0800
-Message-ID: <20111220233050.GM10752@google.com>
+Subject: Re: [PATCH 5/5] cgroup: separate out cgroup_attach_proc error
+ handling code
+Date: Tue, 20 Dec 2011 15:35:02 -0800
+Message-ID: <20111220233502.GN10752@google.com>
 References: <1324422873-31001-1-git-send-email-msb@chromium.org>
- <1324422873-31001-5-git-send-email-msb@chromium.org>
+ <1324422873-31001-6-git-send-email-msb@chromium.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=+l2LzymgKKIwgyPAhXd8ro45ng9Hd/N/JKu3AQ7cwzA=;
-        b=YlWbxnhVUTRuMA8jexPjGdTiFIL/6YGiI+tcAnuuSTSK3lmLB/TYlU2+spw/bbK69W
-         UCxgOb4wCuW0v8RgR7naqq+zPGOlqltRXsVlpm/p3EibKuEvYLxkYSwuZvxve909oxyT
-         zkYa528bQD/Y6gU4+Di5DG3+3/+vlemkn0gTA=
+        bh=JaE8DCHbG077fK150hKRTlO2wam7eKcD0GIw5038ZeQ=;
+        b=KE+iS9DyZes4mH5ba6GdU+65MUz95B1gFV8EcMs0m7+FijH402dp6LGuG7iVrZaoTV
+         CH/l4+X3uU66zWNFKN6LxC0nfWr9m3qeomy30gVZruTfBM6GhzlQvr/krDWoSSfin346
+         y8WnnDwlmBTwUR/1ZW7Yt5kpxDNmWVrBuqFxs=
 Content-Disposition: inline
-In-Reply-To: <1324422873-31001-5-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1324422873-31001-6-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -25,44 +26,32 @@ Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-
 
 Hello,
 
-On Tue, Dec 20, 2011 at 03:14:32PM -0800, Mandeep Singh Baines wrote:
-> @@ -1942,9 +1917,17 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
->  		}
->  	}
+On Tue, Dec 20, 2011 at 03:14:33PM -0800, Mandeep Singh Baines wrote:
+> @@ -2067,9 +2067,10 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
+>  	read_unlock(&tasklist_lock);
 >  
-> -	retval = cgroup_task_migrate(cgrp, oldcgrp, tsk, false);
-> -	if (retval)
-> +	task_lock(tsk);
-> +	oldcg = tsk->cgroups;
-> +	task_unlock(tsk);
+>  	/* methods shouldn't be called if no task is actually migrating */
+> -	retval = 0;
+> -	if (!group_size)
+> +	if (!group_size) {
+> +		retval = 0;
+>  		goto out_free_group_list;
+> +	}
 
-Probably this is patch order issue w/ Frederic's patch but we don't
-need task_lock here, right?
+Eh... I don't think this is an improvement.  It's just different.
 
-> @@ -2171,17 +2088,18 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
->  	 * step 2: make sure css_sets exist for all threads to be migrated.
->  	 * we use find_css_set, which allocates a new one if necessary.
+> @@ -2126,20 +2127,20 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
 >  	 */
-> -	INIT_LIST_HEAD(&newcg_list);
->  	for (i = 0; i < group_size; i++) {
->  		tc = flex_array_get(group, i);
->  		/* get old css_set pointer */
->  		task_lock(tc->task);
->  		oldcg = tc->task->cgroups;
->  		task_unlock(tc->task);
-> -		/* if we don't already have it in the list get a new one */
-> -		if (!css_set_fetched(cgrp, tc->task, oldcg, &newcg_list))
-> -			if (retval = css_set_prefetch(cgrp, oldcg, &newcg_list))
-> -				goto out_list_teardown;
-> +		tc->cg = find_css_set(oldcg, cgrp);
-> +		if (!tc->cg) {
-> +			retval = -ENOMEM;
-> +			css_set_refs = i + 1;
-> +			goto out_list_teardown;
-> +		}
+>  	synchronize_rcu();
+>  	cgroup_wakeup_rmdir_waiter(cgrp);
+> -	retval = 0;
+> +	flex_array_free(group);
+> +	return 0;
 
-Nice cleanup, but can't the above be merged into the loop which builds
-the flex array?
+Hmm... maybe goto out_free_group_list?  Duplicating cleanup on success
+and failure paths can lead future updaters forget one of them.  The
+exit path in this function isn't pretty but I don't think the proposed
+patch improves it either.
 
 Thanks.
 
