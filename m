@@ -1,81 +1,71 @@
-From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2 v2] cgroup: Drop task_lock(parent) on cgroup_fork()
-Date: Wed, 21 Dec 2011 11:16:11 +0800
-Message-ID: <4EF14F7B.2040507@cn.fujitsu.com>
-References: <1324432958-20414-1-git-send-email-fweisbec@gmail.com>
-	<1324432958-20414-3-git-send-email-fweisbec@gmail.com>
-	<4EF14176.9040206@cn.fujitsu.com>
-	<20111221024849.GC17668@somewhere>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: reset to root_mem_cgroup at bypassing
+Date: Tue, 20 Dec 2011 19:25:04 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1112201847500.1310@eggly.anvils>
+References: <20111219165146.4d72f1bb.kamezawa.hiroyu@jp.fujitsu.com> <alpine.LSU.2.00.1112191218350.3639@eggly.anvils> <CABEgKgrk4X13V2Ra_g+V5J0echpj2YZfK20zaFRKP-PhWRWiYQ@mail.gmail.com> <20111221091347.4f1a10d8.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20111221024849.GC17668@somewhere>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323584-472047041-1324437918=:1310"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=beta;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=lH8jbjsopzIch62GM3vOw5SeEjvv7nb0cnBBXt6idNI=;
+        b=oGpR1wPLqCnyLg/jH2DiUJPc0Utgmr7LW+R3kZ5PMVm17NuFa5o+l/7rJzF/bDQtvG
+         48g2o0JTyAWUPbvtuZxQ==
+In-Reply-To: <20111221091347.4f1a10d8.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
->>> @@ -4556,7 +4556,7 @@ static const struct file_operations proc_cgroupstats_operations = {
->>>   *
->>>   * A pointer to the shared css_set was automatically copied in
->>>   * fork.c by dup_task_struct().  However, we ignore that copy, since
->>> - * it was not made under the protection of RCU or cgroup_mutex, so
->>> + * it was not made under the protection of threadgroup_change_begin(), so
->>
->> I think the original comment still stands, but now threadgroup_change_begin()
->> can also protect the cgroup pointer from becoming invalid.
-> 
-> Right but I'm not sure it's worth quoting RCU and cgroup_mutex. The reason
-> why we use threadgroup_change_begin() is not only to ensure the pointer
-> validity but also to synchronize the whole cgroup proc logic. This way
-> when we attach a whole proc with cgroup_attach_proc(), we are sure that
-> no thread forked too soon or too late such that it wouldn't be migrated with
-> the rest.
-> 
-> RCU or cgroup_mutex on dup_task_struct() (+ a get_css_set()) would have
-> protected the pointer validity but not the whole above described machinery.
-> So I don't think it's even worth quoting those solutions. But if you prefer
-> I can keep the old comment.
-> 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-No, I don't have strong opinion here.
+--8323584-472047041-1324437918=:1310
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-So I'll ack this patch.
+On Wed, 21 Dec 2011, KAMEZAWA Hiroyuki wrote:
+> On Tue, 20 Dec 2011 09:24:47 +0900
+> Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> > 2011/12/20 Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>:
+> >=20
+> > > I speak from experience: I did *exactly* the same at "bypass" when
+> > > I introduced our mem_cgroup_reset_page(), which corresponds to your
+> > > mem_cgroup_reset_owner(); it seemed right to me that a successful
+> > > (return 0) call to try_charge() should provide a good *ptr.
+> > >
+> > ok.
+> >=20
+> > > But others (Ying and Greg) pointed out that it changes the semantics
+> > > of __mem_cgroup_try_charge() in this case, so you need to justify the
+> > > change to all those places which do something like "if (ret || !memcg=
+)"
+> > > after calling it. =C2=A0Perhaps it is a good change everywhere, but t=
+hat's
+> > > not obvious, so we chose caution.
+> > >
+> > > Doesn't it lead to bypass pages being marked as charged to root, so
+> > > they don't get charged to the right owner next time they're touched?
+> > >
+> > Yes. You're right.
+> > Hm. So, it seems I should add reset_owner() to the !memcg path
+> > rather than here.
+> >=20
+> Considering this again..
+>=20
+> Now, we catch 'charge' event only once in lifetime of anon/file page.
+> So, it doesn't depend on that it's marked as PCG_USED or not.
 
-> OTOH what I think is missing in the comment is that explanation on the synchronization
-> against entire proc migration. I can edit that.
-> 
+That's an interesting argument, I hadn't been looking at it that way.
+It's not true of swapcache, but I guess we don't need to preserve its
+peculiarities in this case.
 
-I would appreciate this. :)
+I've not checked the (ret || !memcg) cases yet to see if any change
+needed there.
 
->>
->>>   * might no longer be a valid cgroup pointer.  cgroup_attach_task() might
->>>   * have already changed current->cgroups, allowing the previously
->>>   * referenced cgroup group to be removed and freed.
->>> @@ -4566,10 +4566,14 @@ static const struct file_operations proc_cgroupstats_operations = {
->>>   */
->>>  void cgroup_fork(struct task_struct *child)
->>>  {
->>> -	task_lock(current);
->>> +	/*
->>> +	 * We don't need to task_lock() current because current->cgroups
->>> +	 * can't be changed concurrently here. The parent obviously hasn't
->>> +	 * exited and called cgroup_exit(), and we are synchronized against
->>> +	 * cgroup migration through threadgroup_change_begin().
->>> +	 */
->>>  	child->cgroups = current->cgroups;
->>>  	get_css_set(child->cgroups);
->>> -	task_unlock(current);
->>>  	INIT_LIST_HEAD(&child->cg_list);
->>>  }
->>>  
-> 
+I certainly like that the success return guarantees that memcg is set.
+
+Hugh
+--8323584-472047041-1324437918=:1310--
