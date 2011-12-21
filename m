@@ -1,82 +1,199 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH] memcg: reset to root_mem_cgroup at bypassing
-Date: Wed, 21 Dec 2011 13:00:56 +0900
-Message-ID: <20111221130056.2f4a39b2.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH v2] memcg: return -EINTR at bypassing try_charge().
+Date: Wed, 21 Dec 2011 17:24:23 +0900
+Message-ID: <20111221172423.5d036cdd.kamezawa.hiroyu@jp.fujitsu.com>
 References: <20111219165146.4d72f1bb.kamezawa.hiroyu@jp.fujitsu.com>
-	<alpine.LSU.2.00.1112191218350.3639@eggly.anvils>
-	<CABEgKgrk4X13V2Ra_g+V5J0echpj2YZfK20zaFRKP-PhWRWiYQ@mail.gmail.com>
-	<20111221091347.4f1a10d8.kamezawa.hiroyu@jp.fujitsu.com>
-	<alpine.LSU.2.00.1112201847500.1310@eggly.anvils>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LSU.2.00.1112201847500.1310@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111219165146.4d72f1bb.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Hugh Dickins <hughd@google.com>
-Cc: Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Content-Type: text/plain; charset="us-ascii"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, 20 Dec 2011 19:25:04 -0800 (PST)
-Hugh Dickins <hughd@google.com> wrote:
-
-> On Wed, 21 Dec 2011, KAMEZAWA Hiroyuki wrote:
-> > On Tue, 20 Dec 2011 09:24:47 +0900
-> > Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com> wrote:
-> > > 2011/12/20 Hugh Dickins <hughd@google.com>:
-> > >=20
-> > > > I speak from experience: I did *exactly* the same at "bypass" whe=
-n
-> > > > I introduced our mem_cgroup_reset_page(), which corresponds to yo=
-ur
-> > > > mem_cgroup_reset_owner(); it seemed right to me that a successful
-> > > > (return 0) call to try_charge() should provide a good *ptr.
-> > > >
-> > > ok.
-> > >=20
-> > > > But others (Ying and Greg) pointed out that it changes the semant=
-ics
-> > > > of __mem_cgroup_try_charge() in this case, so you need to justify=
- the
-> > > > change to all those places which do something like "if (ret || !m=
-emcg)"
-> > > > after calling it. =C2=A0Perhaps it is a good change everywhere, b=
-ut that's
-> > > > not obvious, so we chose caution.
-> > > >
-> > > > Doesn't it lead to bypass pages being marked as charged to root, =
-so
-> > > > they don't get charged to the right owner next time they're touch=
-ed?
-> > > >
-> > > Yes. You're right.
-> > > Hm. So, it seems I should add reset_owner() to the !memcg path
-> > > rather than here.
-> > >=20
-> > Considering this again..
-> >=20
-> > Now, we catch 'charge' event only once in lifetime of anon/file page.
-> > So, it doesn't depend on that it's marked as PCG_USED or not.
->=20
-> That's an interesting argument, I hadn't been looking at it that way.
-> It's not true of swapcache, but I guess we don't need to preserve its
-> peculiarities in this case.
->=20
-> I've not checked the (ret || !memcg) cases yet to see if any change
-> needed there.
->=20
-> I certainly like that the success return guarantees that memcg is set.
->=20
-Hmm. Ok, then....I'll update patch description to be precise.
-And check I can remove !memcg case in the same patch. Then, repost v2.
-
-Thanks,
--Kame
-
+How about this ?
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+From 6076425613f594d442c58a5d463c09f8309236aa Mon Sep 17 00:00:00 2001
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Date: Wed, 21 Dec 2011 16:27:25 +0900
+Subject: [PATCH] memcg: return -EINTR at bypassing try_charge().
+
+This patch is a fix for memcg-simplify-lru-handling-by-new-rule.patch
+When running testprogram and stop it by Ctrl-C, add_lru/del_lru
+will find pc->mem_cgroup is NULL and get panic. The reason
+is bypass code in try_charge().
+
+At try_charge(), it checks the thread is fatal or not as..
+fatal_signal_pending() or TIF_MEMDIE. In this case, __try_charge()
+returns 0(success) with setting *ptr as NULL.
+
+Now, lruvec are deteremined by pc->mem_cgroup. So, it's better
+to reset pc->mem_cgroup as root_mem_cgroup. This patch does
+following change in try_charge()
+  1. return -EINTR at bypassing.
+  2. set *ptr = root_mem_cgroup at bypassing.
+
+By this change, in page fault / radix-tree-insert path,
+the page will be charged against root_mem_cgroup and the thread's
+operations will go ahead without trouble. In other path,
+migration or move_account etc..., -EINTR will stop the operation.
+(may need some cleanup later..)
+
+After this change, pc->mem_cgroup will have valid pointer if
+the page is used.
+
+Changelog: v1 -> v2
+ - returns -EINTR at bypassing.
+ - change error code handling at callers.
+ - changed the name of patch.
+
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+ mm/memcontrol.c |   53 +++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 41 insertions(+), 12 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9175097..3c6eb7e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2185,6 +2185,23 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ }
+ 
+ /*
++ * __mem_cgroup_try_charge() does
++ * 1. detect memcg to be charged against from passed *mm and *ptr,
++ * 2. update res_counter
++ * 3. call memory reclaim if necessary.
++ *
++ * In some special case, if the task is fatal, fatal_signal_pending() or
++ * TIF_MEMDIE or ->mm is NULL, this functoion returns -EINTR with filling
++ * *ptr as root_mem_cgroup. There are 2 reasons for this. 1st is that
++ * fatal threads should quit as soon as possible without any hazards.
++ * 2nd is that all page should have valid pc->mem_cgroup if it will be
++ * used.
++ *
++ * So, try_charge will return
++ *  0       ...  at success. filling *ptr with a valid memcg pointer.
++ *  -ENOMEM ...  charge failure because of resource limits.
++ *  -EINTR  ...  if thread is fatal. *ptr is filled with root_mem_cgroup.
++ *
+  * Unlike exported interface, "oom" parameter is added. if oom==true,
+  * oom-killer can be invoked.
+  */
+@@ -2316,8 +2333,8 @@ nomem:
+ 	*ptr = NULL;
+ 	return -ENOMEM;
+ bypass:
+-	*ptr = NULL;
+-	return 0;
++	*ptr = root_mem_cgroup;
++	return -EINTR;
+ }
+ 
+ /*
+@@ -2564,7 +2581,7 @@ static int mem_cgroup_move_parent(struct page *page,
+ {
+ 	struct cgroup *cg = child->css.cgroup;
+ 	struct cgroup *pcg = cg->parent;
+-	struct mem_cgroup *parent;
++	struct mem_cgroup *parent, *ptr;
+ 	unsigned int nr_pages;
+ 	unsigned long uninitialized_var(flags);
+ 	int ret;
+@@ -2582,8 +2599,8 @@ static int mem_cgroup_move_parent(struct page *page,
+ 	nr_pages = hpage_nr_pages(page);
+ 
+ 	parent = mem_cgroup_from_cont(pcg);
+-	ret = __mem_cgroup_try_charge(NULL, gfp_mask, nr_pages, &parent, false);
+-	if (ret || !parent)
++	ret = __mem_cgroup_try_charge(NULL, gfp_mask, nr_pages, &ptr, false);
++	if (ret)
+ 		goto put_back;
+ 
+ 	if (nr_pages > 1)
+@@ -2630,9 +2647,9 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
+ 
+ 	pc = lookup_page_cgroup(page);
+ 	ret = __mem_cgroup_try_charge(mm, gfp_mask, nr_pages, &memcg, oom);
+-	if (ret || !memcg)
++	if (ret == -ENOMEM)
+ 		return ret;
+-
++	/* we'll bypass -EINTR case and charge this page to root memcg */
+ 	__mem_cgroup_commit_charge(memcg, page, nr_pages, pc, ctype);
+ 	return 0;
+ }
+@@ -2703,6 +2720,7 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
+ 		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
+ 	else { /* page is swapcache/shmem */
+ 		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
++		/* see try_charge_swapi() for -EINTR case */
+ 		if (!ret)
+ 			__mem_cgroup_commit_charge_swapin(page, memcg, type);
+ 	}
+@@ -2743,11 +2761,21 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+ 	*memcgp = memcg;
+ 	ret = __mem_cgroup_try_charge(NULL, mask, 1, memcgp, true);
+ 	css_put(&memcg->css);
++	/*
++	 * If this thread is fatal, charge against root cgroup and allow
++	 * this thread to exit in quick manner. EINTR is not handled
++	 * in page fault path. So, just bypass this.
++	 */
++	if (ret == -EINTR)
++		ret = 0;
+ 	return ret;
+ charge_cur_mm:
+ 	if (unlikely(!mm))
+ 		mm = &init_mm;
+-	return __mem_cgroup_try_charge(mm, mask, 1, memcgp, true);
++	ret = __mem_cgroup_try_charge(mm, mask, 1, memcgp, true);
++	if (ret == -EINTR)
++		ret = 0;
++	return ret;
+ }
+ 
+ static void
+@@ -3205,7 +3233,7 @@ int mem_cgroup_prepare_migration(struct page *page,
+ 	*memcgp = memcg;
+ 	ret = __mem_cgroup_try_charge(NULL, gfp_mask, 1, memcgp, false);
+ 	css_put(&memcg->css);/* drop extra refcnt */
+-	if (ret || *memcgp == NULL) {
++	if (ret) {
+ 		if (PageAnon(page)) {
+ 			lock_page_cgroup(pc);
+ 			ClearPageCgroupMigration(pc);
+@@ -3215,6 +3243,7 @@ int mem_cgroup_prepare_migration(struct page *page,
+ 			 */
+ 			mem_cgroup_uncharge_page(page);
+ 		}
++		/* we'll need to revisit this error code (we have -EINTR) */
+ 		return -ENOMEM;
+ 	}
+ 	/*
+@@ -3633,7 +3662,7 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+ 		pc = lookup_page_cgroup(page);
+ 
+ 		ret = mem_cgroup_move_parent(page, pc, memcg, GFP_KERNEL);
+-		if (ret == -ENOMEM)
++		if (ret == -ENOMEM || ret == -EINTR)
+ 			break;
+ 
+ 		if (ret == -EBUSY || ret == -EINVAL) {
+@@ -5091,9 +5120,9 @@ one_by_one:
+ 		}
+ 		ret = __mem_cgroup_try_charge(NULL,
+ 					GFP_KERNEL, 1, &memcg, false);
+-		if (ret || !memcg)
++		if (ret)
+ 			/* mem_cgroup_clear_mc() will do uncharge later */
+-			return -ENOMEM;
++			return ret;
+ 		mc.precharge++;
+ 	}
+ 	return ret;
+-- 
+1.7.4.1
+
