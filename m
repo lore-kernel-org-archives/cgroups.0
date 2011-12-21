@@ -1,66 +1,47 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
-Date: Wed, 21 Dec 2011 14:08:48 +0100
-Message-ID: <20111221130848.GA19679@redhat.com>
-References: <20111221034334.GD17668@somewhere>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2 v2] cgroup: Drop task_lock(parent) on cgroup_fork()
+Date: Wed, 21 Dec 2011 09:50:24 -0800
+Message-ID: <20111221175024.GG9213@google.com>
+References: <1324432958-20414-1-git-send-email-fweisbec@gmail.com>
+	<1324432958-20414-3-git-send-email-fweisbec@gmail.com>
+	<4EF14176.9040206@cn.fujitsu.com>
+	<20111221024849.GC17668@somewhere>
+	<4EF14F7B.2040507@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20111221034334.GD17668@somewhere>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=aP2jQNz+OyKuer/Mb0XCHZ24cQ7Klp2iHbn8ECIviXQ=;
+	b=YqNblVsucyQpQTPBW4ZypZfzp0Bt4FcjgiQ9TrIhzH2/rBIj0b+rsrua1j3NPl2GY+
+	041ANjXrQewdxJ8carcI45act6GZlqeqqCprdV7wUZKnQbUDgGRNbtBrezrmZxVLl72X
+	umgWoOcDfnwJhob1fkYfpx5w5Yfqmw35d/tU4=
+Content-Disposition: inline
+In-Reply-To: <4EF14F7B.2040507-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On 12/21, Frederic Weisbecker wrote:
-> Hi,
->
-> Starring at some parts of cgroups, I have a few questions:
->
-> - Is cgroup_enable_task_cg_list()'s while_each_thread() safe
-> against concurrent exec()? The leader may change in de_thread()
-> and invalidate the test done in while_each_thread().
+Hello,
 
-Yes. Oh, we need to do something with while_each_thread.
+On Wed, Dec 21, 2011 at 11:16:11AM +0800, Li Zefan wrote:
+> So I'll ack this patch.
 
-> - do_each_thread() also needs RCU and cgroup_enable_task_cg_list()
-> seems to remind it. But it seems there is at least one caller that
-> doesn't call rcu_read_lock(): update_cpu_mask() -> update_tasks_cpumask() -> cgroup_scan_tasks()
+Do I have your ack on the first one too?  If so, I'll go ahead and
+apply these two.
 
-I don't see any caller which takes rcu_read_lock...
+Thanks.
 
-> - By the time we call cgroup_post_fork(), it is ready to be woken up
-> and usable by the scheduler.
-
-No, the new child can't run until do_fork()->wake_up_new_task().
-
-> - Is the check for use_task_css_set_links in cgroup_post_fork() safe? given
-> it is checked outside css_set_lock?
->
-> Imagine this:
->
-> CPU 0                                                        CPU 1
-> ----                                                         -----
->
-> cgroup_enable_task_cg() {
-> 	uset_tasks_css_set_links = 1
-> 	for_each_thread() {
-> 		add tasks in the list
-> 	}
-> }
->                                                            do_fork() {
->                                                                cgroup_post_fork() {
->                                                                      use_tasks_css_set_links appears
->                                                                      to be equal to 0 due to write/read
->                                                                       not flushed. New task won't
->                                                                       appear to the list.
-
-Yes, I was thinking about this too.
-
-Or (I think) they can race "contrariwise". CPU_1 creates the new child,
-then CPU_0 sets uset_tasks_css_set_links = 1. But afaics there is no any
-guarantee that CPU_0 sees the result of list_add_tail_rcu().
-
-Oleg.
+-- 
+tejun
