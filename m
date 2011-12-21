@@ -1,11 +1,10 @@
 From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: Re: [PATCH 5/5] cgroup: separate out cgroup_attach_proc error
- handling code
-Date: Tue, 20 Dec 2011 16:02:31 -0800
-Message-ID: <20111221000231.GX13529@google.com>
+Subject: Re: [PATCH 2/5] cgroup: remove redundant get/put of task struct
+Date: Tue, 20 Dec 2011 16:04:18 -0800
+Message-ID: <20111221000418.GY13529@google.com>
 References: <1324422873-31001-1-git-send-email-msb@chromium.org>
- <1324422873-31001-6-git-send-email-msb@chromium.org>
- <20111220233502.GN10752@google.com>
+ <1324422873-31001-3-git-send-email-msb@chromium.org>
+ <20111220232326.GL10752@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -13,11 +12,11 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:x-operating-system
          :user-agent;
-        bh=tt2sWBhlcJ7w7fMiq/EhFeZxtReQsLl8pdFRt2zZLBA=;
-        b=X3phZN0pxoFo+wY3OoPkGDGEFenrcClazHKrHO5eObGM1Z/2xVct8GYQ/b+HvqmckI
-         eGqbo/aQ1nRFSynzqc7Q==
+        bh=LOgGkFTAyGjghM1rzCYynl4paFn+I5fmEH4YRYsSel0=;
+        b=wXLGSEHG55ceu16OvoBHC2Ac1p5bPVH0CfRrWKpZXf4K0omkbKmNWtCWftLpu/L0hy
+         XD/4y4QBjEEjOIdw3/xg==
 Content-Disposition: inline
-In-Reply-To: <20111220233502.GN10752-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20111220232326.GL10752-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,40 +27,20 @@ Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Li Zefan
 Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
 > Hello,
 > 
-> On Tue, Dec 20, 2011 at 03:14:33PM -0800, Mandeep Singh Baines wrote:
-> > @@ -2067,9 +2067,10 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
-> >  	read_unlock(&tasklist_lock);
-> >  
-> >  	/* methods shouldn't be called if no task is actually migrating */
-> > -	retval = 0;
-> > -	if (!group_size)
-> > +	if (!group_size) {
-> > +		retval = 0;
-> >  		goto out_free_group_list;
-> > +	}
+> On Tue, Dec 20, 2011 at 03:14:30PM -0800, Mandeep Singh Baines wrote:
+> > @@ -2287,14 +2280,12 @@ static int attach_task_by_pid(struct cgroup *cgrp, u64 pid, bool threadgroup)
+> >  			cgroup_unlock();
+> >  			return -EACCES;
+> >  		}
+> > -		get_task_struct(tsk);
+> >  		rcu_read_unlock();
 > 
-> Eh... I don't think this is an improvement.  It's just different.
+> This is before threadgroup is locked.  What guarantees @tsk doesn't go
+> away once rcu is unlocked?
 > 
 
-The main benefit is that the comment is directly above the code its
-describing but I can drop this part of the change.
-
-> > @@ -2126,20 +2127,20 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
-> >  	 */
-> >  	synchronize_rcu();
-> >  	cgroup_wakeup_rmdir_waiter(cgrp);
-> > -	retval = 0;
-> > +	flex_array_free(group);
-> > +	return 0;
-> 
-> Hmm... maybe goto out_free_group_list?  Duplicating cleanup on success
-> and failure paths can lead future updaters forget one of them.  The
-> exit path in this function isn't pretty but I don't think the proposed
-> patch improves it either.
-> 
-
-Should I drop the patch or add the goto? Its 5/5 so easy enough to drop
-since nothing else depends on it.
+Nothing. D'oh. I'll remove the changes to attach_task_by_id and leave
+the others.
 
 > Thanks.
 > 
