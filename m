@@ -1,53 +1,79 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/4] cgroup: remove extra calls to find_existing_css_set
-Date: Thu, 22 Dec 2011 07:40:37 -0800
-Message-ID: <20111222154037.GC17084@google.com>
-References: <1324527518-24461-1-git-send-email-msb@chromium.org>
- <1324527518-24461-4-git-send-email-msb@chromium.org>
- <4EF2C536.7070408@cn.fujitsu.com>
- <20111222094437.GO17668@somewhere>
+From: Jason Baron <jbaron@redhat.com>
+Subject: Re: [PATCH v9 3/9] socket: initial cgroup code.
+Date: Thu, 22 Dec 2011 16:10:29 -0500
+Message-ID: <20111222211028.GB3916@redhat.com>
+References: <1323676029-5890-1-git-send-email-glommer@parallels.com>
+ <1323676029-5890-4-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=J8IGhNun2szUSqRV3qkU+e4lgqD4h2pHhOHdv79slfY=;
-        b=BmK0UEoOHfu2dqqgfXEj8ew2kTdq7XBZP245USFZTxK4k4VJNU3OxykilhquIVrBcV
-         Fx8+n0v7rs3lQAHo6KL+Lo8Do8CUyZ40puH5jisLZk7M4zB888jRQDhd9fuffuoKcPTo
-         Ay6BOtx8/ckjDE25M50fM7PKzHSGAZBjKCsxA=
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20111222094437.GO17668@somewhere>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1323676029-5890-4-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
 
-On Thu, Dec 22, 2011 at 10:44:39AM +0100, Frederic Weisbecker wrote:
-> > >  		if (ent.cgrp == cgrp)
-> > >  			continue;
-> > > +		ent.cg = find_css_set(tsk->cgroups, cgrp);
-> > 
-> > unfortunately This won't work, because we are holding tasklist_lock.
-> 
-> I believe we can remove tasklist_lock now (in a seperate patch).
-> 
-> It was there in order to protect while_each_thread() against exec but
-> now we have threadgroup_lock().
-> 
-> I think we only need to use rcu_read_lock() to protect against concurrent
-> removal in exit.
+On Mon, Dec 12, 2011 at 11:47:03AM +0400, Glauber Costa wrote:
+> +
+> +static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
+> +void sock_update_memcg(struct sock *sk)
+> +{
+> +	/* A socket spends its whole life in the same cgroup */
+> +	if (sk->sk_cgrp) {
+> +		WARN_ON(1);
+> +		return;
+> +	}
+> +	if (static_branch(&memcg_socket_limit_enabled)) {
+> +		struct mem_cgroup *memcg;
+> +
+> +		BUG_ON(!sk->sk_prot->proto_cgroup);
+> +
+> +		rcu_read_lock();
+> +		memcg = mem_cgroup_from_task(current);
+> +		if (!mem_cgroup_is_root(memcg)) {
+> +			mem_cgroup_get(memcg);
+> +			sk->sk_cgrp = sk->sk_prot->proto_cgroup(memcg);
+> +		}
+> +		rcu_read_unlock();
+> +	}
+> +}
+> +EXPORT_SYMBOL(sock_update_memcg);
+> +
+> +void sock_release_memcg(struct sock *sk)
+> +{
+> +	if (static_branch(&memcg_socket_limit_enabled) && sk->sk_cgrp) {
+> +		struct mem_cgroup *memcg;
+> +		WARN_ON(!sk->sk_cgrp->memcg);
+> +		memcg = sk->sk_cgrp->memcg;
+> +		mem_cgroup_put(memcg);
+> +	}
+> +}
 
-Yeah, that should work and I really like this patch.
+Hi Glauber,
 
- kernel/cgroup.c |  152 ++++++++++++-------------------------------------------
- 1 files changed, 32 insertions(+), 120 deletions(-)
+I think for 'sock_release_memcg()', you want:
 
-Let's get it working. :)
+static inline sock_release_memcg(sk)
+{
+	if (static_branch())
+		__sock_release_memcg();
+}
 
-Thanks.
+And then re-define the current sock_release_memcg -> __sock_release_memcg().
+In that way the straight line path is a single no-op. As currently
+written, there is function call and then an immediate return.
 
--- 
-tejun
+Thanks,
+
+-Jason
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
