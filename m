@@ -1,71 +1,82 @@
 From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH] cgroup: move a check to parse_cgroupfs_options()
-Date: Thu, 22 Dec 2011 16:43:19 +0800
-Message-ID: <4EF2EDA7.4010004@cn.fujitsu.com>
+Subject: Re: [RFC PATCH] cgroup: Remove task_lock() from cgroup_post_fork()
+Date: Thu, 22 Dec 2011 16:55:49 +0800
+Message-ID: <4EF2F095.90207@cn.fujitsu.com>
+References: <1324516711-26913-1-git-send-email-fweisbec@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1324516711-26913-1-git-send-email-fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-Always check the validity of mount options in parse_cgroupfs_options().
+Frederic Weisbecker wrote:
+> cgroup_post_fork() is protected between threadgroup_change_begin()
+> and threadgroup_change_end() against concurrent changes of the
+> child's css_set in cgroup_task_migrate(). Also the child can't
+> exit and call cgroup_exit() at this stage, this means it's css_set
+> can't be changed with init_css_set concurrently.
+> 
+> For these reasons, we don't need to hold task_lock() on the child
+> because it's css_set can only remain stable in this place.
+> 
+> Let's remove the lock there.
+> 
+> NOTE: We could do something else: move threadgroup_change_end()
+> before cgroup_post_fork() and keep the task_lock() which, combined
+> with the css_set_lock, would be enough to synchronize against
+> cgroup_task_migrate()'s change on child->cgroup and its cglist.
+> Because outside that, the threadgroup lock doesn't appear to be
+> needed on cgroup_post_fork().
+> 
 
-No functional change.
+To narrow the scope of the threadgroup lock? I think it's preferable to keep
+cgroup_post_fork() inside the lock, to make things simpler and we have
+the same lock rule for both cgroup_fork() and cgroup_post_fork().
 
-Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
----
- kernel/cgroup.c |   15 +++++++--------
- 1 files changed, 7 insertions(+), 8 deletions(-)
+> Let's debate!
+> 
+> Signed-off-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+> Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+> Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> ---
+>  kernel/cgroup.c |   11 ++++++++---
+>  1 files changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 4936d88..d0dbf72 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -4622,10 +4622,15 @@ void cgroup_post_fork(struct task_struct *child)
+>  {
+>  	if (use_task_css_set_links) {
+>  		write_lock(&css_set_lock);
+> -		task_lock(child);
+> -		if (list_empty(&child->cg_list))
+> +		if (list_empty(&child->cg_list)) {
+> +			/*
+> +			 * It's safe to use child->cgroups without task_lock()
+> +			 * here because we are protected through
+> +			 * threadgroup_change_begin() against concurrent
+> +			 * css_set change in cgroup_task_migrate()
+> +			 */
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 4936d88..bdb7994 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1218,7 +1218,6 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 	    (opts->subsys_bits & mask))
- 		return -EINVAL;
- 
--
- 	/* Can't specify "none" and some subsystems */
- 	if (opts->subsys_bits && opts->none)
- 		return -EINVAL;
-@@ -1231,6 +1230,13 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 		return -EINVAL;
- 
- 	/*
-+	 * This can happen only when none of the subsystems is enabled
-+	 * in the system.
-+	 */
-+	if (!opts->subsys_bits && !opts->none)
-+		return -EINVAL;
-+
-+	/*
- 	 * Grab references on all the modules we'll need, so the subsystems
- 	 * don't dance around before rebind_subsystems attaches them. This may
- 	 * take duplicate reference counts on a subsystem that's already used,
-@@ -1401,9 +1407,6 @@ static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
- {
- 	struct cgroupfs_root *root;
- 
--	if (!opts->subsys_bits && !opts->none)
--		return NULL;
--
- 	root = kzalloc(sizeof(*root), GFP_KERNEL);
- 	if (!root)
- 		return ERR_PTR(-ENOMEM);
-@@ -1442,10 +1445,6 @@ static int cgroup_set_super(struct super_block *sb, void *data)
- 	int ret;
- 	struct cgroup_sb_opts *opts = data;
- 
--	/* If we don't have a new root, we can't set up a new sb */
--	if (!opts->new_root)
--		return -EINVAL;
--
- 	BUG_ON(!opts->subsys_bits && !opts->none);
- 
- 	ret = set_anon_super(sb, NULL);
--- 
-1.7.3.1
+Also explain why it won't race with cgroup_exit()? You were not quite confident
+about that before Oleg's explanation. ;)
+
+>  			list_add(&child->cg_list, &child->cgroups->tasks);
+> -		task_unlock(child);
+> +		}
+>  		write_unlock(&css_set_lock);
+>  	}
+>  }
