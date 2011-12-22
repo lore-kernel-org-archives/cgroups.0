@@ -1,42 +1,71 @@
 From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 4/4] cgroup: remove extra calls to find_existing_css_set
-Date: Thu, 22 Dec 2011 13:50:46 +0800
-Message-ID: <4EF2C536.7070408@cn.fujitsu.com>
-References: <1324527518-24461-1-git-send-email-msb@chromium.org> <1324527518-24461-4-git-send-email-msb@chromium.org>
+Subject: [PATCH] cgroup: move a check to parse_cgroupfs_options()
+Date: Thu, 22 Dec 2011 16:43:19 +0800
+Message-ID: <4EF2EDA7.4010004@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1324527518-24461-4-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-> @@ -2091,6 +2010,10 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
->  	 * rcu or tasklist locked. instead, build an array of all threads in the
->  	 * group - group_rwsem prevents new threads from appearing, and if
->  	 * threads exit, this will just be an over-estimate.
-> +	 *
-> +	 * While creating the list, also make sure css_sets exist for all
-> +	 * threads to be migrated. we use find_css_set, which allocates a new
-> +	 * one if necessary.
->  	 */
->  	group_size = get_nr_threads(leader);
->  	/* flex_array supports very large thread-groups better than kmalloc. */
-> @@ -2137,6 +2060,12 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
->  		/* nothing to do if this task is already in the cgroup */
->  		if (ent.cgrp == cgrp)
->  			continue;
-> +		ent.cg = find_css_set(tsk->cgroups, cgrp);
+Always check the validity of mount options in parse_cgroupfs_options().
 
-unfortunately This won't work, because we are holding tasklist_lock.
+No functional change.
 
-> +		if (!ent.cg) {
-> +			retval = -ENOMEM;
-> +			group_size = i;
-> +			goto out_list_teardown;
-> +		}
->  		retval = flex_array_put(group, i, &ent, GFP_ATOMIC);
->  		BUG_ON(retval != 0);
->  		i++;
+Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/cgroup.c |   15 +++++++--------
+ 1 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 4936d88..bdb7994 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1218,7 +1218,6 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	    (opts->subsys_bits & mask))
+ 		return -EINVAL;
+ 
+-
+ 	/* Can't specify "none" and some subsystems */
+ 	if (opts->subsys_bits && opts->none)
+ 		return -EINVAL;
+@@ -1231,6 +1230,13 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 		return -EINVAL;
+ 
+ 	/*
++	 * This can happen only when none of the subsystems is enabled
++	 * in the system.
++	 */
++	if (!opts->subsys_bits && !opts->none)
++		return -EINVAL;
++
++	/*
+ 	 * Grab references on all the modules we'll need, so the subsystems
+ 	 * don't dance around before rebind_subsystems attaches them. This may
+ 	 * take duplicate reference counts on a subsystem that's already used,
+@@ -1401,9 +1407,6 @@ static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
+ {
+ 	struct cgroupfs_root *root;
+ 
+-	if (!opts->subsys_bits && !opts->none)
+-		return NULL;
+-
+ 	root = kzalloc(sizeof(*root), GFP_KERNEL);
+ 	if (!root)
+ 		return ERR_PTR(-ENOMEM);
+@@ -1442,10 +1445,6 @@ static int cgroup_set_super(struct super_block *sb, void *data)
+ 	int ret;
+ 	struct cgroup_sb_opts *opts = data;
+ 
+-	/* If we don't have a new root, we can't set up a new sb */
+-	if (!opts->new_root)
+-		return -EINVAL;
+-
+ 	BUG_ON(!opts->subsys_bits && !opts->none);
+ 
+ 	ret = set_anon_super(sb, NULL);
+-- 
+1.7.3.1
