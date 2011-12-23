@@ -1,80 +1,183 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v9 3/9] socket: initial cgroup code.
-Date: Fri, 23 Dec 2011 12:57:49 +0400
-Message-ID: <4EF4428D.6010103@parallels.com>
-References: <1323676029-5890-1-git-send-email-glommer@parallels.com> <1323676029-5890-4-git-send-email-glommer@parallels.com> <20111222211028.GB3916@redhat.com>
+From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: replace tasklist_lock with rcu_read_lock
+Date: Fri, 23 Dec 2011 09:28:44 -0800
+Message-ID: <1324661325-31968-1-git-send-email-msb@chromium.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20111222211028.GB3916@redhat.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Jason Baron <jbaron@redhat.com>
-Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, paul@paulmenage.org, lizf@cn.fujitsu.com, kamezawa.hiroyu@jp.fujitsu.com, ebiederm@xmission.com, gthelen@google.com, netdev@vger.kernel.org, linux-mm@kvack.org, kirill@shutemov.name, avagin@parallels.com, devel@openvz.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On 12/23/2011 01:10 AM, Jason Baron wrote:
-> On Mon, Dec 12, 2011 at 11:47:03AM +0400, Glauber Costa wrote:
->> +
->> +static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
->> +void sock_update_memcg(struct sock *sk)
->> +{
->> +	/* A socket spends its whole life in the same cgroup */
->> +	if (sk->sk_cgrp) {
->> +		WARN_ON(1);
->> +		return;
->> +	}
->> +	if (static_branch(&memcg_socket_limit_enabled)) {
->> +		struct mem_cgroup *memcg;
->> +
->> +		BUG_ON(!sk->sk_prot->proto_cgroup);
->> +
->> +		rcu_read_lock();
->> +		memcg = mem_cgroup_from_task(current);
->> +		if (!mem_cgroup_is_root(memcg)) {
->> +			mem_cgroup_get(memcg);
->> +			sk->sk_cgrp = sk->sk_prot->proto_cgroup(memcg);
->> +		}
->> +		rcu_read_unlock();
->> +	}
->> +}
->> +EXPORT_SYMBOL(sock_update_memcg);
->> +
->> +void sock_release_memcg(struct sock *sk)
->> +{
->> +	if (static_branch(&memcg_socket_limit_enabled)&&  sk->sk_cgrp) {
->> +		struct mem_cgroup *memcg;
->> +		WARN_ON(!sk->sk_cgrp->memcg);
->> +		memcg = sk->sk_cgrp->memcg;
->> +		mem_cgroup_put(memcg);
->> +	}
->> +}
->
-> Hi Glauber,
->
-> I think for 'sock_release_memcg()', you want:
->
-> static inline sock_release_memcg(sk)
-> {
-> 	if (static_branch())
-> 		__sock_release_memcg();
-> }
->
-> And then re-define the current sock_release_memcg ->  __sock_release_memcg().
-> In that way the straight line path is a single no-op. As currently
-> written, there is function call and then an immediate return.
->
+Since cgroup_attach_proc is protected by a threadgroup_lock, we
+can replace the tasklist_lock in cgroup_attach_proc with an
+rcu_read_lock. To keep the complexity of the double-check locking
+in one place, I also moved the thread_group_leader check up into
+attach_task_by_pid. This allows us to use a goto instead of
+returning -EAGAIN.
 
-Hello Jason,
+While at it, also converted a couple of returns to gotos.
 
-Thanks for the tip. I may be wrong here, but I don't think that the 
-release performance matters to that level. But your suggestion seems 
-good nevertheless. Since this is already sitting on a tree, would you 
-like to send a patch for that?
+Changes in V3:
+* https://lkml.org/lkml/2011/12/22/419 (Frederic Weisbecker)
+  * Add an rcu_read_lock to protect against exit
+Changes in V2:
+* https://lkml.org/lkml/2011/12/22/86 (Tejun Heo)
+  * Use a goto instead of returning -EAGAIN
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Suggested-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+---
+ kernel/cgroup.c |   74 +++++++++++++++++++-----------------------------------
+ 1 files changed, 26 insertions(+), 48 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 1042b3c..6ee1438 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2102,21 +2102,7 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
+ 	if (retval)
+ 		goto out_free_group_list;
+ 
+-	/* prevent changes to the threadgroup list while we take a snapshot. */
+-	read_lock(&tasklist_lock);
+-	if (!thread_group_leader(leader)) {
+-		/*
+-		 * a race with de_thread from another thread's exec() may strip
+-		 * us of our leadership, making while_each_thread unsafe to use
+-		 * on this task. if this happens, there is no choice but to
+-		 * throw this task away and try again (from cgroup_procs_write);
+-		 * this is "double-double-toil-and-trouble-check locking".
+-		 */
+-		read_unlock(&tasklist_lock);
+-		retval = -EAGAIN;
+-		goto out_free_group_list;
+-	}
+-
++	rcu_read_lock();
+ 	tsk = leader;
+ 	i = 0;
+ 	do {
+@@ -2145,7 +2131,7 @@ int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
+ 	group_size = i;
+ 	tset.tc_array = group;
+ 	tset.tc_array_len = group_size;
+-	read_unlock(&tasklist_lock);
++	rcu_read_unlock();
+ 
+ 	/* methods shouldn't be called if no task is actually migrating */
+ 	retval = 0;
+@@ -2242,22 +2228,14 @@ static int attach_task_by_pid(struct cgroup *cgrp, u64 pid, bool threadgroup)
+ 	if (!cgroup_lock_live_group(cgrp))
+ 		return -ENODEV;
+ 
++retry_find_task:
+ 	if (pid) {
+ 		rcu_read_lock();
+ 		tsk = find_task_by_vpid(pid);
+ 		if (!tsk) {
+ 			rcu_read_unlock();
+-			cgroup_unlock();
+-			return -ESRCH;
+-		}
+-		if (threadgroup) {
+-			/*
+-			 * RCU protects this access, since tsk was found in the
+-			 * tid map. a race with de_thread may cause group_leader
+-			 * to stop being the leader, but cgroup_attach_proc will
+-			 * detect it later.
+-			 */
+-			tsk = tsk->group_leader;
++			ret= -ESRCH;
++			goto out_unlock_cgroup;
+ 		}
+ 		/*
+ 		 * even if we're attaching all tasks in the thread group, we
+@@ -2268,29 +2246,38 @@ static int attach_task_by_pid(struct cgroup *cgrp, u64 pid, bool threadgroup)
+ 		    cred->euid != tcred->uid &&
+ 		    cred->euid != tcred->suid) {
+ 			rcu_read_unlock();
+-			cgroup_unlock();
+-			return -EACCES;
++			ret = -EACCES;
++			goto out_unlock_cgroup;
+ 		}
+ 		get_task_struct(tsk);
+ 		rcu_read_unlock();
+ 	} else {
+-		if (threadgroup)
+-			tsk = current->group_leader;
+-		else
+-			tsk = current;
++		tsk = current;
+ 		get_task_struct(tsk);
+ 	}
+ 
+ 	threadgroup_lock(tsk);
+-
+-	if (threadgroup)
+-		ret = cgroup_attach_proc(cgrp, tsk);
+-	else
++	if (threadgroup) {
++		struct task_struct *leader = tsk->group_leader;
++		if (!thread_group_leader(leader)) {
++			/*
++			 * a race with de_thread from another thread's exec()
++			 * may strip us of our leadership, if this happens,
++			 * there is no choice but to throw this task away and
++			 * try again; this is
++			 * "double-double-toil-and-trouble-check locking".
++			 */
++			threadgroup_unlock(tsk);
++			put_task_struct(tsk);
++			goto retry_find_task;
++		}
++		ret = cgroup_attach_proc(cgrp, leader);
++	} else
+ 		ret = cgroup_attach_task(cgrp, tsk);
+-
+ 	threadgroup_unlock(tsk);
+ 
+ 	put_task_struct(tsk);
++out_unlock_cgroup:
+ 	cgroup_unlock();
+ 	return ret;
+ }
+@@ -2302,16 +2289,7 @@ static int cgroup_tasks_write(struct cgroup *cgrp, struct cftype *cft, u64 pid)
+ 
+ static int cgroup_procs_write(struct cgroup *cgrp, struct cftype *cft, u64 tgid)
+ {
+-	int ret;
+-	do {
+-		/*
+-		 * attach_proc fails with -EAGAIN if threadgroup leadership
+-		 * changes in the middle of the operation, in which case we need
+-		 * to find the task_struct for the new leader and start over.
+-		 */
+-		ret = attach_task_by_pid(cgrp, tgid, true);
+-	} while (ret == -EAGAIN);
+-	return ret;
++	return attach_task_by_pid(cgrp, tgid, true);
+ }
+ 
+ /**
+-- 
+1.7.3.1
