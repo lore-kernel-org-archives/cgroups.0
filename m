@@ -1,58 +1,46 @@
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: [PATCH 3/6] memcg: remove unused variable
-Date: Sat, 24 Dec 2011 05:00:16 +0200
-Message-ID: <1324695619-5537-3-git-send-email-kirill@shutemov.name>
+Subject: [PATCH 5/6] memcg: fix broken boolen expression
+Date: Sat, 24 Dec 2011 05:00:18 +0200
+Message-ID: <1324695619-5537-5-git-send-email-kirill@shutemov.name>
 References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org, cgroups@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, "Kirill A. Shutemov" <kirill@shutemov.name>
 
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
 
-mm/memcontrol.c: In function =E2=80=98mc_handle_file_pte=E2=80=99:
-mm/memcontrol.c:5206:16: warning: variable =E2=80=98inode=E2=80=99 set bu=
-t not used [-Wunused-but-set-variable]
+action != CPU_DEAD || action != CPU_DEAD_FROZEN is always true.
 
 Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
 ---
- mm/memcontrol.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ mm/memcontrol.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4bac3a2..627c19e 100644
+index b27ce0f..3833a7b 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5203,7 +5203,6 @@ static struct page *mc_handle_file_pte(struct vm_ar=
-ea_struct *vma,
- 			unsigned long addr, pte_t ptent, swp_entry_t *entry)
- {
- 	struct page *page =3D NULL;
--	struct inode *inode;
- 	struct address_space *mapping;
- 	pgoff_t pgoff;
-=20
-@@ -5212,7 +5211,6 @@ static struct page *mc_handle_file_pte(struct vm_ar=
-ea_struct *vma,
- 	if (!move_file())
- 		return NULL;
-=20
--	inode =3D vma->vm_file->f_path.dentry->d_inode;
- 	mapping =3D vma->vm_file->f_mapping;
- 	if (pte_none(ptent))
- 		pgoff =3D linear_page_index(vma, addr);
---=20
+@@ -2100,7 +2100,7 @@ static int __cpuinit memcg_cpu_hotplug_callback(struct notifier_block *nb,
+ 		return NOTIFY_OK;
+ 	}
+ 
+-	if ((action != CPU_DEAD) || action != CPU_DEAD_FROZEN)
++	if (action != CPU_DEAD && action != CPU_DEAD_FROZEN)
+ 		return NOTIFY_OK;
+ 
+ 	for_each_mem_cgroup(iter)
+-- 
 1.7.7.3
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
