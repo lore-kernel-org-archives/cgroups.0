@@ -1,72 +1,50 @@
-From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Subject: Re: [PATCH 5/6] memcg: fix broken boolen expression
-Date: Mon, 26 Dec 2011 08:57:24 +0200
-Message-ID: <20111226065724.GA13459@shutemov.name>
-References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
-	<1324695619-5537-5-git-send-email-kirill@shutemov.name>
-	<20111226153138.0376bd66.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] Partial revert
+ "Basic kernel memory functionality for the Memory Controller"
+Date: Mon, 26 Dec 2011 18:32:07 +0900
+Message-ID: <20111226183207.1c40b8f4.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1324543990-27784-1-git-send-email-glommer@parallels.com>
+	<20111222104339.GA8833@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20111226153138.0376bd66.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111222104339.GA8833-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Dec 26, 2011 at 03:31:38PM +0900, KAMEZAWA Hiroyuki wrote:
-> On Sat, 24 Dec 2011 05:00:18 +0200
-> "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org> wrote:
-> 
-> > From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-> > 
-> > action != CPU_DEAD || action != CPU_DEAD_FROZEN is always true.
-> > 
-> > Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-> 
-> maybe this should go stable..
+On Thu, 22 Dec 2011 11:43:39 +0100
+Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
 
-CC stable@
-
-> 
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> 
-> 
-> > ---
-> >  mm/memcontrol.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> On Thu 22-12-11 12:53:10, Glauber Costa wrote:
+> > This reverts commit e5671dfae59b165e2adfd4dfbdeab11ac8db5bda.
 > > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index b27ce0f..3833a7b 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -2100,7 +2100,7 @@ static int __cpuinit memcg_cpu_hotplug_callback(struct notifier_block *nb,
-> >  		return NOTIFY_OK;
-> >  	}
-> >  
-> > -	if ((action != CPU_DEAD) || action != CPU_DEAD_FROZEN)
-> > +	if (action != CPU_DEAD && action != CPU_DEAD_FROZEN)
-> >  		return NOTIFY_OK;
-> >  
-> >  	for_each_mem_cgroup(iter)
-> > -- 
-> > 1.7.7.3
+> > After a follow up discussion with Michal, it was agreed it would
+> > be better to leave the kmem controller with just the tcp files,
+> > deferring the behavior of the other general memory.kmem.* files
+> > for a later time, when more caches are controlled.
+> 
+> "Because generic kmem files are not used by tcp accounting and it is
+> not clear how other slab caches would fit into the scheme."
+> 
 > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> > the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > We are reverting the original commit so we can track the reference.
+> > Part of the patch is kept, because it was used by the later tcp
+> > code. Conflicts are shown in the bottom. init/Kconfig is removed from
+> > the revert entirely.
+> > 
+> > Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> > CC: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> > CC: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+> > CC: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > CC: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> 
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 > 
 
--- 
- Kirill A. Shutemov
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+
