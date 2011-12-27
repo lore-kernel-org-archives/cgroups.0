@@ -1,101 +1,67 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/6] memcg: mark more functions/variables as static
-Date: Tue, 27 Dec 2011 15:05:15 +0100
-Message-ID: <20111227140515.GL5344@tiehlicka.suse.cz>
+Subject: Re: [PATCH 3/6] memcg: remove unused variable
+Date: Tue, 27 Dec 2011 15:08:09 +0100
+Message-ID: <20111227140809.GM5344@tiehlicka.suse.cz>
 References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
- <1324695619-5537-2-git-send-email-kirill@shutemov.name>
+ <1324695619-5537-3-git-send-email-kirill@shutemov.name>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1324695619-5537-2-git-send-email-kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+In-Reply-To: <1324695619-5537-3-git-send-email-kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
 To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Sat 24-12-11 05:00:15, Kirill A. Shutemov wrote:
+On Sat 24-12-11 05:00:16, Kirill A. Shutemov wrote:
 > From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-> 
-> Based on sparse output.
-> 
+>=20
+> mm/memcontrol.c: In function =E2=80=98mc_handle_file_pte=E2=80=99:
+> mm/memcontrol.c:5206:16: warning: variable =E2=80=98inode=E2=80=99 se=
+t but not used [-Wunused-but-set-variable]
+>=20
 > Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 
 Looks good.
 Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Thanks
+Thanks!
 > ---
->  mm/memcontrol.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
+>  mm/memcontrol.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+>=20
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a5e92bd..4bac3a2 100644
+> index 4bac3a2..627c19e 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -59,7 +59,7 @@
->  
->  struct cgroup_subsys mem_cgroup_subsys __read_mostly;
->  #define MEM_CGROUP_RECLAIM_RETRIES	5
-> -struct mem_cgroup *root_mem_cgroup __read_mostly;
-> +static struct mem_cgroup *root_mem_cgroup __read_mostly;
->  
->  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
->  /* Turned on only when memory cgroup is enabled && really_do_swap_account = 1 */
-> @@ -1573,7 +1573,7 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
->   * unused nodes. But scan_nodes is lazily updated and may not cotain
->   * enough new information. We need to do double check.
->   */
-> -bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
-> +static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+> @@ -5203,7 +5203,6 @@ static struct page *mc_handle_file_pte(struct v=
+m_area_struct *vma,
+>  			unsigned long addr, pte_t ptent, swp_entry_t *entry)
 >  {
->  	int nid;
->  
-> @@ -1608,7 +1608,7 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
->  	return 0;
->  }
->  
-> -bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
-> +static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
->  {
->  	return test_mem_cgroup_node_reclaimable(memcg, 0, noswap);
->  }
-> @@ -1782,7 +1782,7 @@ static void memcg_oom_recover(struct mem_cgroup *memcg)
->  /*
->   * try to call OOM killer. returns false if we should exit memory-reclaim loop.
->   */
-> -bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask)
-> +static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask)
->  {
->  	struct oom_wait_info owait;
->  	bool locked, need_to_kill;
-> @@ -3765,7 +3765,7 @@ try_to_free:
->  	goto move_account;
->  }
->  
-> -int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
-> +static int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
->  {
->  	return mem_cgroup_force_empty(mem_cgroup_from_cont(cont), true);
->  }
-> @@ -4044,7 +4044,7 @@ struct mcs_total_stat {
->  	s64 stat[NR_MCS_STAT];
->  };
->  
-> -struct {
-> +static struct {
->  	char *local_name;
->  	char *total_name;
->  } memcg_stat_strings[NR_MCS_STAT] = {
-> -- 
+>  	struct page *page =3D NULL;
+> -	struct inode *inode;
+>  	struct address_space *mapping;
+>  	pgoff_t pgoff;
+> =20
+> @@ -5212,7 +5211,6 @@ static struct page *mc_handle_file_pte(struct v=
+m_area_struct *vma,
+>  	if (!move_file())
+>  		return NULL;
+> =20
+> -	inode =3D vma->vm_file->f_path.dentry->d_inode;
+>  	mapping =3D vma->vm_file->f_mapping;
+>  	if (pte_none(ptent))
+>  		pgoff =3D linear_page_index(vma, addr);
+> --=20
 > 1.7.7.3
-> 
+>=20
 
--- 
+--=20
 Michal Hocko
 SUSE Labs
 SUSE LINUX s.r.o.
 Lihovarska 1060/12
-190 00 Praha 9    
+190 00 Praha 9   =20
 Czech Republic
