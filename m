@@ -1,100 +1,105 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Announcement - memcg-devel git tree
-Date: Tue, 27 Dec 2011 10:17:17 +0100
-Message-ID: <20111227091717.GA8537@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: [PATCH] Makefiles: Disable unused-variable warning (was: Re: [PATCH
+ 1/6] memcg: fix unused variable warning)
+Date: Tue, 27 Dec 2011 14:57:52 +0100
+Message-ID: <20111227135752.GK5344@tiehlicka.suse.cz>
+References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kbuild-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
+Sender: linux-kbuild-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Marek <mmarek@suse.cz>, linux-kbuild@vger.kernel.org
 
-Hi,
-let me announce memcg-devel git tree which is currently hosted at
-github (https://github.com/mstsxfx/memcg-devel). The tree is based on
-Linus' tree and it contains most of the memcg patches (apart from the last
-that went into mmotm - which will get there shortly).
-For a short summary we currently have:
-Andrew Morton (2):
-      mm-vmscan-distinguish-between-memcg-triggering-reclaim-and-memcg-being-scanned-checkpatch-fixes
-      memcg-make-mem_cgroup_split_huge_fixup-more-efficient-fix
+On Sat 24-12-11 05:00:14, Kirill A. Shutemov wrote:
+> From: "Kirill A. Shutemov" <kirill@shutemov.name>
+>=20
+> mm/memcontrol.c: In function =E2=80=98memcg_check_events=E2=80=99:
+> mm/memcontrol.c:784:22: warning: unused variable =E2=80=98do_numainfo=
+=E2=80=99 [-Wunused-variable]
+>=20
+> Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
+> ---
+>  mm/memcontrol.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d643bd6..a5e92bd 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -781,14 +781,15 @@ static void memcg_check_events(struct mem_cgrou=
+p *memcg, struct page *page)
+>  	/* threshold event is triggered in finer grain than soft limit */
+>  	if (unlikely(mem_cgroup_event_ratelimit(memcg,
+>  						MEM_CGROUP_TARGET_THRESH))) {
+> -		bool do_softlimit, do_numainfo;
+> +		bool do_softlimit;
+> =20
+> -		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
+> -						MEM_CGROUP_TARGET_SOFTLIMIT);
+>  #if MAX_NUMNODES > 1
+> +		bool do_numainfo;
+>  		do_numainfo =3D mem_cgroup_event_ratelimit(memcg,
+>  						MEM_CGROUP_TARGET_NUMAINFO);
+>  #endif
+> +		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
+> +						MEM_CGROUP_TARGET_SOFTLIMIT);
 
-Hugh Dickins (1):
-      mm: memcg: remove unused node/section info from pc->flags fix
+I don't like this very much. Maybe we should get rid of both do_* and
+do it with flags? But maybe it is not worth the additional code at
+all...
 
-Johannes Weiner (18):
-      mm: memcg: consolidate hierarchy iteration primitives
-      mm: vmscan: distinguish global reclaim from global LRU scanning
-      mm: vmscan: distinguish between memcg triggering reclaim and memcg being scanned
-      mm: memcg: per-priority per-zone hierarchy scan generations
-      mm: move memcg hierarchy reclaim to generic reclaim code
-      mm: memcg: remove optimization of keeping the root_mem_cgroup LRU lists empty
-      mm: vmscan: convert global reclaim to per-memcg LRU lists
-      mm: collect LRU list heads into struct lruvec
-      mm: make per-memcg LRU lists exclusive
-      mm: memcg: remove unused node/section info from pc->flags
-      mm: memcg: shorten preempt-disabled section around event checks
-      mm: oom_kill: remove memcg argument from oom_kill_task()
-      mm: unify remaining mem_cont, mem, etc. variable names to memcg
-      mm: memcg: clean up fault accounting
-      mm: memcg: lookup_page_cgroup (almost) never returns NULL
-      mm: page_cgroup: check page_cgroup arrays in lookup_page_cgroup() only when necessary
-      mm: memcg: remove unneeded checks from newpage_charge()
-      mm: memcg: remove unneeded checks from uncharge_page()
+Anyway, I am wondering why unused-but-set-variable is disabled while
+unused-variable is enabled. Shouldn't we just disable it as well rather
+than workaround this in the code? The warning is just pure noise in thi=
+s
+case.
+What about something like:
+---
+=46rom e1136891fe86eacf9212b2144f80ff6b75b10194 Mon Sep 17 00:00:00 200=
+1
+=46rom: Michal Hocko <mhocko@suse.cz>
+Date: Tue, 27 Dec 2011 14:53:06 +0100
+Subject: [PATCH] Makefiles: Disable unused-variable warning
 
-KAMEZAWA Hiroyuki (2):
-      memcg: make mem_cgroup_split_huge_fixup() more efficient
-      memcg: add mem_cgroup_replace_page_cache() to fix LRU issue
+We are already disabling unused-but-set-variable and Wunused-variable
+produces some noise as well.
 
-* What is the tree good for?
-Well, after Andrew discontinued his mmotm tree it became much harder to
-develop memcg patches. linux-next is a moving target so it is not the
-right choice if somebody wants to develop patches and keep them in shape
-for a longer time.
-We have discussed that with Johannes and he came with an idea that we
-could maintain memcg specific git tree. So here it is ;)
-The tree is not aimed for Linus or Andrew to pull from. It is only for
-memcg developers to have a common ground.
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+---
+ Makefile |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-* How is the tree organized?
-We have a master branch which tracks linus and we will have `since-XYZ'
-branches which will contain all acked patches on top of the XYZ linus
-release. Johannes found the name since-XYZ little bit confusing becaue
-tags usually refer to future release but my argument was that it should
-be clear on what we are based rather than a target where the patches go
-as we do not know that release.
-But I am open to changes, of course.
+diff --git a/Makefile b/Makefile
+index ea51081..25c76f3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -578,6 +578,7 @@ endif
+ # This warning generated too much noise in a regular build.
+ # Use make W=3D1 to enable this warning (see scripts/Makefile.build)
+ KBUILD_CFLAGS +=3D $(call cc-disable-warning, unused-but-set-variable)
++KBUILD_CFLAGS +=3D $(call cc-disable-warning, unused-variable)
+=20
+ ifdef CONFIG_FRAME_POINTER
+ KBUILD_CFLAGS	+=3D -fno-omit-frame-pointer -fno-optimize-sibling-calls
+--=20
+1.7.7.3
 
-* What is the workflow?
-Master branch will be updated whenever Linus releases a new version or
-when some of the memcg patch depends on generic mm code.
-since-XYZ will be updated when the patch either gets accepted by Andrew
-or it gets ack from all (most) of maintainers.
-If a patch depends on a generic mm code we will just merge the
-respective commit into the branch and apply the memcg patch on top of
-it.
-When Linus releases a new kernel version we will create a new since-XYZ
-branch and rebase the previous (size-XYZ-1) on top of it. If some of the
-patches were accepted git rebase will recognize that and drop them.
-This means that git log master..since-XYZ will always lists patches that
-are not merged yet.
 
-* Who will maintain the tree?
-Currently it is me and Johannes.
 
-# For read only access - aka developer
-$ git remote add github-memcg git://github.com/mstsxfx/memcg-devel.git
-$ git fetch github-memcg
-$ git branch mydevel github-memcg/since-XYZ
-
-I hope this help you.
--- 
+--=20
 Michal Hocko
 SUSE Labs
 SUSE LINUX s.r.o.
 Lihovarska 1060/12
-190 00 Praha 9    
+190 00 Praha 9   =20
 Czech Republic
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kbuild"=
+ in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
