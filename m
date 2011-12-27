@@ -1,22 +1,100 @@
-From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: add sparse annotation to cgroup_iter_start()
- and cgroup_iter_end()
-Date: Tue, 27 Dec 2011 14:56:51 +0800
-Message-ID: <4EF96C33.3050203@cn.fujitsu.com>
-References: <1324964786-19052-1-git-send-email-kirill@shutemov.name> <1324964786-19052-2-git-send-email-kirill@shutemov.name>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Announcement - memcg-devel git tree
+Date: Tue, 27 Dec 2011 10:17:17 +0100
+Message-ID: <20111227091717.GA8537@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1324964786-19052-2-git-send-email-kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
 
-Kirill A. Shutemov wrote:
-> From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Hi,
+let me announce memcg-devel git tree which is currently hosted at
+github (https://github.com/mstsxfx/memcg-devel). The tree is based on
+Linus' tree and it contains most of the memcg patches (apart from the last
+that went into mmotm - which will get there shortly).
+For a short summary we currently have:
+Andrew Morton (2):
+      mm-vmscan-distinguish-between-memcg-triggering-reclaim-and-memcg-being-scanned-checkpatch-fixes
+      memcg-make-mem_cgroup_split_huge_fixup-more-efficient-fix
 
-Acked-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Hugh Dickins (1):
+      mm: memcg: remove unused node/section info from pc->flags fix
+
+Johannes Weiner (18):
+      mm: memcg: consolidate hierarchy iteration primitives
+      mm: vmscan: distinguish global reclaim from global LRU scanning
+      mm: vmscan: distinguish between memcg triggering reclaim and memcg being scanned
+      mm: memcg: per-priority per-zone hierarchy scan generations
+      mm: move memcg hierarchy reclaim to generic reclaim code
+      mm: memcg: remove optimization of keeping the root_mem_cgroup LRU lists empty
+      mm: vmscan: convert global reclaim to per-memcg LRU lists
+      mm: collect LRU list heads into struct lruvec
+      mm: make per-memcg LRU lists exclusive
+      mm: memcg: remove unused node/section info from pc->flags
+      mm: memcg: shorten preempt-disabled section around event checks
+      mm: oom_kill: remove memcg argument from oom_kill_task()
+      mm: unify remaining mem_cont, mem, etc. variable names to memcg
+      mm: memcg: clean up fault accounting
+      mm: memcg: lookup_page_cgroup (almost) never returns NULL
+      mm: page_cgroup: check page_cgroup arrays in lookup_page_cgroup() only when necessary
+      mm: memcg: remove unneeded checks from newpage_charge()
+      mm: memcg: remove unneeded checks from uncharge_page()
+
+KAMEZAWA Hiroyuki (2):
+      memcg: make mem_cgroup_split_huge_fixup() more efficient
+      memcg: add mem_cgroup_replace_page_cache() to fix LRU issue
+
+* What is the tree good for?
+Well, after Andrew discontinued his mmotm tree it became much harder to
+develop memcg patches. linux-next is a moving target so it is not the
+right choice if somebody wants to develop patches and keep them in shape
+for a longer time.
+We have discussed that with Johannes and he came with an idea that we
+could maintain memcg specific git tree. So here it is ;)
+The tree is not aimed for Linus or Andrew to pull from. It is only for
+memcg developers to have a common ground.
+
+* How is the tree organized?
+We have a master branch which tracks linus and we will have `since-XYZ'
+branches which will contain all acked patches on top of the XYZ linus
+release. Johannes found the name since-XYZ little bit confusing becaue
+tags usually refer to future release but my argument was that it should
+be clear on what we are based rather than a target where the patches go
+as we do not know that release.
+But I am open to changes, of course.
+
+* What is the workflow?
+Master branch will be updated whenever Linus releases a new version or
+when some of the memcg patch depends on generic mm code.
+since-XYZ will be updated when the patch either gets accepted by Andrew
+or it gets ack from all (most) of maintainers.
+If a patch depends on a generic mm code we will just merge the
+respective commit into the branch and apply the memcg patch on top of
+it.
+When Linus releases a new kernel version we will create a new since-XYZ
+branch and rebase the previous (size-XYZ-1) on top of it. If some of the
+patches were accepted git rebase will recognize that and drop them.
+This means that git log master..since-XYZ will always lists patches that
+are not merged yet.
+
+* Who will maintain the tree?
+Currently it is me and Johannes.
+
+# For read only access - aka developer
+$ git remote add github-memcg git://github.com/mstsxfx/memcg-devel.git
+$ git fetch github-memcg
+$ git branch mydevel github-memcg/since-XYZ
+
+I hope this help you.
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
