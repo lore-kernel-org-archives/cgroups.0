@@ -1,53 +1,35 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix to allow mounting a hierarchy by name
-Date: Tue, 27 Dec 2011 08:35:35 -0800
-Message-ID: <20111227163535.GA17712@google.com>
-References: <4EF9291D.7030208@cn.fujitsu.com>
+Subject: Re: [PATCH 2/2] cgroup: add sparse annotation to
+ cgroup_iter_start() and cgroup_iter_end()
+Date: Tue, 27 Dec 2011 08:52:48 -0800
+Message-ID: <20111227165248.GB17712@google.com>
+References: <1324964786-19052-1-git-send-email-kirill@shutemov.name>
+ <1324964786-19052-2-git-send-email-kirill@shutemov.name>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=T/XfaeTGAy34McVIG2lLHQzulksCmRLk9JvyUzXGZD8=;
-        b=hHO3edatOMps0HAGq8AafzJYJHqqTMe5Y9sIyyX8DMr3VJkQuOodarBwNroSCSWeqp
-         ZE0q+dgalZfFcniX5lWqzUa3O8nMeMFMhltsr67Sj/gn/IV5Efay1Wpe1a883riRHgEK
-         N/dZNtnxrbA3qYSHsCFvCG/veQPnNfqBUmcsM=
+        bh=visKLWkv2DtCu+bQLw2kG0b2ul1CTu3Cu0kLHRBFzcc=;
+        b=GzetC/2EJGWviCWjlb6YTUxnP2bTYNN5eTsyQvaQc2kJVeLlDMQzGDuoKUN3HWxpyJ
+         SPSynFxo4/jgZcWxLUOzEU4wHnqmqXt6DV7KDUm1BBZM6D7KFgdef4d+7X7n4acKOfyC
+         C6J5J9+BWCg2ytPfOoiHA19dL1xZp2vpWu7nU=
 Content-Disposition: inline
-In-Reply-To: <4EF9291D.7030208-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <1324964786-19052-2-git-send-email-kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-Hello, Li.
+On Tue, Dec 27, 2011 at 07:46:26AM +0200, Kirill A. Shutemov wrote:
+> From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 
-On Tue, Dec 27, 2011 at 10:10:37AM +0800, Li Zefan wrote:
-> If we mount a hierarchy with a name specified, the name is unique,
-> and we can use it to mount the hierarchy without specifying its
-> set of subsystem names. This feature is documented is
-> Documentation/cgroups/cgroups.txt section 2.3
-> 
-> Here's an example:
-> 
-> 	# mount -t cgroup -o cpuset,name=myhier xxx /cgroup1
-> 	# mount -t cgroup -o name=myhier xxx /cgroup2
-> 
-> But it was broken by commit 32a8cf235e2f192eb002755076994525cdbaa35a
-> (cgroup: make the mount options parsing more accurate)
-> 
-> This fixes the regression.
-
-Hmmm... so that has been broken over a year and nobody complained?  Is
-there any valid use case where specifying mount path as all other
-filesystems wouldn't work?  Is this 'name' thing necessary at all?
-Maybe we should rip it out instead of fixing it?  We can just leave it
-as non-functional name which does nothing but being visible in mount
-listing.
-
-Thanks.
+Applied 1-2 to cgroup/for-3.3.  Thank you.
 
 -- 
 tejun
