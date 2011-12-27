@@ -1,35 +1,61 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: add sparse annotation to
- cgroup_iter_start() and cgroup_iter_end()
-Date: Tue, 27 Dec 2011 08:52:48 -0800
-Message-ID: <20111227165248.GB17712@google.com>
-References: <1324964786-19052-1-git-send-email-kirill@shutemov.name>
- <1324964786-19052-2-git-send-email-kirill@shutemov.name>
+Subject: Re: [PATCH v2] cgroup: Remove task_lock() from cgroup_post_fork()
+Date: Tue, 27 Dec 2011 09:06:16 -0800
+Message-ID: <20111227170616.GC17712@google.com>
+References: <1324610723-30080-1-git-send-email-fweisbec@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=visKLWkv2DtCu+bQLw2kG0b2ul1CTu3Cu0kLHRBFzcc=;
-        b=GzetC/2EJGWviCWjlb6YTUxnP2bTYNN5eTsyQvaQc2kJVeLlDMQzGDuoKUN3HWxpyJ
-         SPSynFxo4/jgZcWxLUOzEU4wHnqmqXt6DV7KDUm1BBZM6D7KFgdef4d+7X7n4acKOfyC
-         C6J5J9+BWCg2ytPfOoiHA19dL1xZp2vpWu7nU=
-Content-Disposition: inline
-In-Reply-To: <1324964786-19052-2-git-send-email-kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=lXVOAyV+xydpjkBsloIRS0Irs2gDnkLR+So496DmmD8=;
+	b=OeP78tDE6hTNpt87z41pEJEXA3PWSpniXHFA3nxDTyLnqBoDTTRFclfHBYsQoTCcuh
+	cMD8iL64uov4h19wKYkZebfdpnkWjwRwfk6OekDqvsesxeODj/UmKij4HP6SDnHn383F
+	kYOsYgjXjfxQnPjoCIXw0e2EPh2EsFL0QT9J8=
+Content-Disposition: inline
+In-Reply-To: <1324610723-30080-1-git-send-email-fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On Tue, Dec 27, 2011 at 07:46:26AM +0200, Kirill A. Shutemov wrote:
-> From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+On Fri, Dec 23, 2011 at 04:25:23AM +0100, Frederic Weisbecker wrote:
+> cgroup_post_fork() is protected between threadgroup_change_begin()
+> and threadgroup_change_end() against concurrent changes of the
+> child's css_set in cgroup_task_migrate(). Also the child can't
+> exit and call cgroup_exit() at this stage, this means it's css_set
+> can't be changed with init_css_set concurrently.
 > 
-> Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> For these reasons, we don't need to hold task_lock() on the child
+> because it's css_set can only remain stable in this place.
+> 
+> Let's remove the lock there.
+> 
+> v2: Update comment to explain that we are safe against
+> cgroup_exit()
+> 
+> Signed-off-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+> Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+> Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-Applied 1-2 to cgroup/for-3.3.  Thank you.
+Applied to cgroup/for-3.3.  Thank you.
 
 -- 
 tejun
