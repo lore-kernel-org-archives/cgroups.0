@@ -1,105 +1,101 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH] Makefiles: Disable unused-variable warning (was: Re: [PATCH
- 1/6] memcg: fix unused variable warning)
-Date: Tue, 27 Dec 2011 14:57:52 +0100
-Message-ID: <20111227135752.GK5344@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 2/6] memcg: mark more functions/variables as static
+Date: Tue, 27 Dec 2011 15:05:15 +0100
+Message-ID: <20111227140515.GL5344@tiehlicka.suse.cz>
 References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
+ <1324695619-5537-2-git-send-email-kirill@shutemov.name>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kbuild-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
-Sender: linux-kbuild-owner@vger.kernel.org
+In-Reply-To: <1324695619-5537-2-git-send-email-kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Marek <mmarek@suse.cz>, linux-kbuild@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Sat 24-12-11 05:00:14, Kirill A. Shutemov wrote:
-> From: "Kirill A. Shutemov" <kirill@shutemov.name>
->=20
-> mm/memcontrol.c: In function =E2=80=98memcg_check_events=E2=80=99:
-> mm/memcontrol.c:784:22: warning: unused variable =E2=80=98do_numainfo=
-=E2=80=99 [-Wunused-variable]
->=20
-> Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
+On Sat 24-12-11 05:00:15, Kirill A. Shutemov wrote:
+> From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> 
+> Based on sparse output.
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+
+Looks good.
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+Thanks
 > ---
->  mm/memcontrol.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
->=20
+>  mm/memcontrol.c |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
+> 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index d643bd6..a5e92bd 100644
+> index a5e92bd..4bac3a2 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -781,14 +781,15 @@ static void memcg_check_events(struct mem_cgrou=
-p *memcg, struct page *page)
->  	/* threshold event is triggered in finer grain than soft limit */
->  	if (unlikely(mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_THRESH))) {
-> -		bool do_softlimit, do_numainfo;
-> +		bool do_softlimit;
-> =20
-> -		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
-> -						MEM_CGROUP_TARGET_SOFTLIMIT);
->  #if MAX_NUMNODES > 1
-> +		bool do_numainfo;
->  		do_numainfo =3D mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_NUMAINFO);
->  #endif
-> +		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
-> +						MEM_CGROUP_TARGET_SOFTLIMIT);
+> @@ -59,7 +59,7 @@
+>  
+>  struct cgroup_subsys mem_cgroup_subsys __read_mostly;
+>  #define MEM_CGROUP_RECLAIM_RETRIES	5
+> -struct mem_cgroup *root_mem_cgroup __read_mostly;
+> +static struct mem_cgroup *root_mem_cgroup __read_mostly;
+>  
+>  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
+>  /* Turned on only when memory cgroup is enabled && really_do_swap_account = 1 */
+> @@ -1573,7 +1573,7 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
+>   * unused nodes. But scan_nodes is lazily updated and may not cotain
+>   * enough new information. We need to do double check.
+>   */
+> -bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+> +static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+>  {
+>  	int nid;
+>  
+> @@ -1608,7 +1608,7 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
+>  	return 0;
+>  }
+>  
+> -bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+> +static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+>  {
+>  	return test_mem_cgroup_node_reclaimable(memcg, 0, noswap);
+>  }
+> @@ -1782,7 +1782,7 @@ static void memcg_oom_recover(struct mem_cgroup *memcg)
+>  /*
+>   * try to call OOM killer. returns false if we should exit memory-reclaim loop.
+>   */
+> -bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask)
+> +static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask)
+>  {
+>  	struct oom_wait_info owait;
+>  	bool locked, need_to_kill;
+> @@ -3765,7 +3765,7 @@ try_to_free:
+>  	goto move_account;
+>  }
+>  
+> -int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
+> +static int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
+>  {
+>  	return mem_cgroup_force_empty(mem_cgroup_from_cont(cont), true);
+>  }
+> @@ -4044,7 +4044,7 @@ struct mcs_total_stat {
+>  	s64 stat[NR_MCS_STAT];
+>  };
+>  
+> -struct {
+> +static struct {
+>  	char *local_name;
+>  	char *total_name;
+>  } memcg_stat_strings[NR_MCS_STAT] = {
+> -- 
+> 1.7.7.3
+> 
 
-I don't like this very much. Maybe we should get rid of both do_* and
-do it with flags? But maybe it is not worth the additional code at
-all...
-
-Anyway, I am wondering why unused-but-set-variable is disabled while
-unused-variable is enabled. Shouldn't we just disable it as well rather
-than workaround this in the code? The warning is just pure noise in thi=
-s
-case.
-What about something like:
----
-=46rom e1136891fe86eacf9212b2144f80ff6b75b10194 Mon Sep 17 00:00:00 200=
-1
-=46rom: Michal Hocko <mhocko@suse.cz>
-Date: Tue, 27 Dec 2011 14:53:06 +0100
-Subject: [PATCH] Makefiles: Disable unused-variable warning
-
-We are already disabling unused-but-set-variable and Wunused-variable
-produces some noise as well.
-
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- Makefile |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index ea51081..25c76f3 100644
---- a/Makefile
-+++ b/Makefile
-@@ -578,6 +578,7 @@ endif
- # This warning generated too much noise in a regular build.
- # Use make W=3D1 to enable this warning (see scripts/Makefile.build)
- KBUILD_CFLAGS +=3D $(call cc-disable-warning, unused-but-set-variable)
-+KBUILD_CFLAGS +=3D $(call cc-disable-warning, unused-variable)
-=20
- ifdef CONFIG_FRAME_POINTER
- KBUILD_CFLAGS	+=3D -fno-omit-frame-pointer -fno-optimize-sibling-calls
---=20
-1.7.7.3
-
-
-
---=20
+-- 
 Michal Hocko
 SUSE Labs
 SUSE LINUX s.r.o.
 Lihovarska 1060/12
-190 00 Praha 9   =20
+190 00 Praha 9    
 Czech Republic
---
-To unsubscribe from this list: send the line "unsubscribe linux-kbuild"=
- in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
