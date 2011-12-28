@@ -1,174 +1,54 @@
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH] Makefiles: Disable unused-variable warning (was: Re:
- [PATCH 1/6] memcg: fix unused variable warning)
-Date: Tue, 27 Dec 2011 20:26:13 +0200
-Message-ID: <20111227182613.GA21840@shutemov.name>
-References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
- <20111227135752.GK5344@tiehlicka.suse.cz>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix to allow mounting a hierarchy by name
+Date: Wed, 28 Dec 2011 14:10:42 +0800
+Message-ID: <4EFAB2E2.4040008@cn.fujitsu.com>
+References: <4EF9291D.7030208@cn.fujitsu.com> <20111227163535.GA17712@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kbuild-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20111227135752.GK5344@tiehlicka.suse.cz>
-Sender: linux-kbuild-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111227163535.GA17712-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Marek <mmarek@suse.cz>, linux-kbuild@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Dec 27, 2011 at 02:57:52PM +0100, Michal Hocko wrote:
-> On Sat 24-12-11 05:00:14, Kirill A. Shutemov wrote:
-> > From: "Kirill A. Shutemov" <kirill@shutemov.name>
-> >=20
-> > mm/memcontrol.c: In function =E2=80=98memcg_check_events=E2=80=99:
-> > mm/memcontrol.c:784:22: warning: unused variable =E2=80=98do_numain=
-fo=E2=80=99 [-Wunused-variable]
-> >=20
-> > Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
-> > ---
-> >  mm/memcontrol.c |    7 ++++---
-> >  1 files changed, 4 insertions(+), 3 deletions(-)
-> >=20
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index d643bd6..a5e92bd 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -781,14 +781,15 @@ static void memcg_check_events(struct mem_cgr=
-oup *memcg, struct page *page)
-> >  	/* threshold event is triggered in finer grain than soft limit */
-> >  	if (unlikely(mem_cgroup_event_ratelimit(memcg,
-> >  						MEM_CGROUP_TARGET_THRESH))) {
-> > -		bool do_softlimit, do_numainfo;
-> > +		bool do_softlimit;
-> > =20
-> > -		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
-> > -						MEM_CGROUP_TARGET_SOFTLIMIT);
-> >  #if MAX_NUMNODES > 1
-> > +		bool do_numainfo;
-> >  		do_numainfo =3D mem_cgroup_event_ratelimit(memcg,
-> >  						MEM_CGROUP_TARGET_NUMAINFO);
-> >  #endif
-> > +		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
-> > +						MEM_CGROUP_TARGET_SOFTLIMIT);
->=20
-> I don't like this very much. Maybe we should get rid of both do_* and
-> do it with flags? But maybe it is not worth the additional code at
-> all...
+Tejun Heo wrote:
+> Hello, Li.
+> 
+> On Tue, Dec 27, 2011 at 10:10:37AM +0800, Li Zefan wrote:
+>> If we mount a hierarchy with a name specified, the name is unique,
+>> and we can use it to mount the hierarchy without specifying its
+>> set of subsystem names. This feature is documented is
+>> Documentation/cgroups/cgroups.txt section 2.3
+>>
+>> Here's an example:
+>>
+>> 	# mount -t cgroup -o cpuset,name=myhier xxx /cgroup1
+>> 	# mount -t cgroup -o name=myhier xxx /cgroup2
+>>
+>> But it was broken by commit 32a8cf235e2f192eb002755076994525cdbaa35a
+>> (cgroup: make the mount options parsing more accurate)
+>>
+>> This fixes the regression.
+> 
+> Hmmm... so that has been broken over a year and nobody complained?  Is
+> there any valid use case where specifying mount path as all other
+> filesystems wouldn't work?  Is this 'name' thing necessary at all?
+> Maybe we should rip it out instead of fixing it?  We can just leave it
+> as non-functional name which does nothing but being visible in mount
+> listing.
+> 
 
-Something like this (untested):
+The "name" option was introduced along with the "none" option, so we
+can distinguish between different cgroup hierarchies which have no
+bound subsystems, like this:
 
-=3D=3D=3D=3D
-=46rom f57e1a2e1aaaa167c75b963d5bf12fcbdd3331b8 Mon Sep 17 00:00:00 200=
-1
-=46rom: "Kirill A. Shutemov" <kirill@shutemov.name>
-Date: Tue, 27 Dec 2011 20:17:13 +0200
-Subject: [PATCH] memcg: cleanup memcg_check_events()
+	# mount -t cgroup -o none,name=hier1 xxx /cgroup1
+	# mount -t cgroup -o none,name=hier2 xxx /cgroup2
 
-Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
----
- mm/memcontrol.c |   42 ++++++++++++++++++++++++------------------
- 1 files changed, 24 insertions(+), 18 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d643bd6..40c2236 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -108,11 +108,12 @@ enum mem_cgroup_events_index {
-  * than using jiffies etc. to handle periodic memcg event.
-  */
- enum mem_cgroup_events_target {
--	MEM_CGROUP_TARGET_THRESH,
--	MEM_CGROUP_TARGET_SOFTLIMIT,
--	MEM_CGROUP_TARGET_NUMAINFO,
--	MEM_CGROUP_NTARGETS,
-+	MEM_CGROUP_TARGET_THRESH	=3D BIT(1),
-+	MEM_CGROUP_TARGET_SOFTLIMIT	=3D BIT(2),
-+	MEM_CGROUP_TARGET_NUMAINFO	=3D BIT(3),
- };
-+#define MEM_CGROUP_NTARGETS 3
-+
- #define THRESHOLDS_EVENTS_TARGET (128)
- #define SOFTLIMIT_EVENTS_TARGET (1024)
- #define NUMAINFO_EVENTS_TARGET	(1024)
-@@ -743,7 +744,7 @@ static unsigned long mem_cgroup_nr_lru_pages(struct=
- mem_cgroup *memcg,
- 	return total;
- }
-=20
--static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
-+static int mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- 				       enum mem_cgroup_events_target target)
- {
- 	unsigned long val, next;
-@@ -766,9 +767,9 @@ static bool mem_cgroup_event_ratelimit(struct mem_c=
-group *memcg,
- 			break;
- 		}
- 		__this_cpu_write(memcg->stat->targets[target], next);
--		return true;
-+		return target;
- 	}
--	return false;
-+	return 0;
- }
-=20
- /*
-@@ -777,29 +778,34 @@ static bool mem_cgroup_event_ratelimit(struct mem=
-_cgroup *memcg,
-  */
- static void memcg_check_events(struct mem_cgroup *memcg, struct page *=
-page)
- {
-+	int flags;
-+
- 	preempt_disable();
--	/* threshold event is triggered in finer grain than soft limit */
--	if (unlikely(mem_cgroup_event_ratelimit(memcg,
--						MEM_CGROUP_TARGET_THRESH))) {
--		bool do_softlimit, do_numainfo;
-+	flags =3D mem_cgroup_event_ratelimit(memcg, MEM_CGROUP_TARGET_THRESH)=
-;
-=20
--		do_softlimit =3D mem_cgroup_event_ratelimit(memcg,
-+	/*
-+	 * Threshold event is triggered in finer grain than soft limit
-+	 * and numainfo
-+	 */
-+	if (unlikely(flags)) {
-+		flags |=3D mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_SOFTLIMIT);
- #if MAX_NUMNODES > 1
--		do_numainfo =3D mem_cgroup_event_ratelimit(memcg,
-+		flags |=3D mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_NUMAINFO);
- #endif
--		preempt_enable();
-+	}
-+	preempt_enable();
-=20
-+	if (unlikely(flags)) {
- 		mem_cgroup_threshold(memcg);
--		if (unlikely(do_softlimit))
-+		if (unlikely(flags & MEM_CGROUP_TARGET_SOFTLIMIT))
- 			mem_cgroup_update_tree(memcg, page);
- #if MAX_NUMNODES > 1
--		if (unlikely(do_numainfo))
-+		if (unlikely(flags & MEM_CGROUP_TARGET_NUMAINFO))
- 			atomic_inc(&memcg->numainfo_events);
- #endif
--	} else
--		preempt_enable();
-+	}
- }
-=20
- struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont)
---=20
-1.7.7.3
-
---=20
- Kirill A. Shutemov
---
-To unsubscribe from this list: send the line "unsubscribe linux-kbuild"=
- in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As the name is unique, we have this "mount by hierarchy name" feature.
+It looks reasonable, but I guess few people know this feature. We can
+live with it, as it only saves us some typing when mounting an existing
+hierarchy. On the other hand, removing this small feature can hardly
+result in code reduction.
