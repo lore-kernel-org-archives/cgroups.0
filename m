@@ -1,113 +1,111 @@
-From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix to allow mounting a hierarchy by name
-Date: Fri, 30 Dec 2011 13:58:52 +0800
-Message-ID: <4EFD531C.50300@cn.fujitsu.com>
-References: <4EF9291D.7030208@cn.fujitsu.com> <20111227163535.GA17712@google.com> <4EFAB2E2.4040008@cn.fujitsu.com> <20111228163631.GN17712@google.com> <4EFBD55E.5030106@cn.fujitsu.com> <20111229162313.GD3516@google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: how to make memory.memsw.failcnt is nonzero
+Date: Tue, 3 Jan 2012 17:04:11 +0100
+Message-ID: <20120103160411.GD3891@tiehlicka.suse.cz>
+References: <4EFADFF8.5020703@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111229162313.GD3516-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4EFADFF8.5020703-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Peng Haitao <penght-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Tejun Heo wrote:
-> Hello,
+[Let's add some people to the CC list]
+
+Hi,
+sorry for the late reply (some vacation and holiday)
+
+On Wed 28-12-11 17:23:04, Peng Haitao wrote:
 > 
-> On Thu, Dec 29, 2011 at 10:50:06AM +0800, Li Zefan wrote:
->> Tejun Heo wrote:
->>> Hello, Li.
->>>
->>> On Wed, Dec 28, 2011 at 02:10:42PM +0800, Li Zefan wrote:
->>>> The "name" option was introduced along with the "none" option, so we
->>>> can distinguish between different cgroup hierarchies which have no
->>>> bound subsystems, like this:
->>>>
->>>> 	# mount -t cgroup -o none,name=hier1 xxx /cgroup1
->>>> 	# mount -t cgroup -o none,name=hier2 xxx /cgroup2
->>>>
->>>> As the name is unique, we have this "mount by hierarchy name" feature.
->>>
->>> I could be missing something but does that add anything other than
->>> naming convenience?
->>
->> The name option is necessary, otherwise how can we mount hierarchies
->> as shown in the above example?
+> memory.memsw.failcnt shows the number of memory+Swap hits limits.
+> So I think when memory+swap usage is equal to limit, memsw.failcnt should be nonzero.
 > 
-> I don't think mounting itself would be a problem.  We don't need name
-> option to create multiple tmpfs instances, right?  The problem is
-
-Right, but you can't mount the same tmpfs instance in more than one mount
-point.
-
-> referencing to them after they're created.  Filesystems generally
-> don't need such identifier because, once they're created, they can be
-> referenced by their mount points.  I'm still not very familiar with
-> different corners of cgroup, so it's entirely possible that I'm
-> missing something.  If I am, please point me to it.
+> I test as follows:
 > 
-
-Normal filesystems can have multi mount points, and an fs instance
-is identified by device name, but cgroupfs ignores device name like
-other pseudo filesystems. Instead a set of subsystems is used, so
-to mount the same cgroupfs instance in different mount points, we
-can do this:
-
-	# mount -t cgroup -o cpuset xxx /cgroup1
-	# mount -t cgroup -o cpuset xxx /cgroup2
-
-Now we have the "none" option, so a cgroupfs can have no subsystems
-bound to it, and we allow multi instances of such cgroupfs, so we
-have to assign names to each instance:
-
-	# mount -t cgroup -o none,name=hier1 xxx /cgroup1
-	# mount -t cgroup -o none,name=hier2 xxx /cgroup2
-
-Then we want to also mount "hier1" in another mount point, we can't
-do this:
-
-	# mount -t cgroup -o none xxx /mnt
-
-because we have two different instances with "none" subsystem. So
-we specify its name:
-
-	# mount -t cgroup -o none,name=hier1 xxx /mnt
-
-Hope I have made things clear to you?
-
->>> If it's a redundant feature which has been broken over a year without
->>> anyone complaining, it really doesn't need to exist.  It might not
->>> save a lot of code but would save some WTH moments.
->>>
->>
->> The redundant feature is mouting existing hierarchies by specifying name
->> only, and the cleanup patch I sent has this feature removed in effect.
->>
->> kernel/cgroup.c |   15 +++++++--------
->> 1 files changed, 7 insertions(+), 8 deletions(-)
->>
->> This is why I'm not so keen to remove the feature.
+> # uname -a
+> Linux K-test 3.2.0-rc7-17-g371de6e #2 SMP Wed Dec 28 12:02:52 CST 2011 x86_64 x86_64 x86_64 GNU/Linux
+> # mkdir /cgroup/memory/group
+> # cd /cgroup/memory/group/
+> # echo 10M > memory.limit_in_bytes
+> # echo 10M > memory.memsw.limit_in_bytes
+> # echo $$ > tasks
+> # dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
+> Killed
+> # cat memory.memsw.failcnt
+> 0
+> # grep "failcnt" /var/log/messages | tail -2
+> Dec 28 17:05:52 K-test kernel: memory: usage 10240kB, limit 10240kB, failcnt 21
+> Dec 28 17:05:52 K-test kernel: memory+swap: usage 10240kB, limit 10240kB, failcnt 0
 > 
-> Code reduction is definitely a plus and I don't want to remove a
-> useful feature either, but an unusual redundant feature without
-> necessity is confusing / misleading even if it doesn't necessasrily
-> add a lot of code complexity.
+> memory+swap usage is equal to limit, but memsw.failcnt is zero.
 > 
-> Also, I at least want to understand why it's actually necessary before
-> applying the patches.  :)
+> I change memory.memsw.limit_in_bytes to 15M.
 > 
+> # echo 15M > memory.memsw.limit_in_bytes
+> # dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
+> Killed
+> # grep "failcnt" /var/log/messages | tail -2
+> Dec 28 17:08:45 K-test kernel: memory: usage 10240kB, limit 10240kB, failcnt 86
+> Dec 28 17:08:45 K-test kernel: memory+swap: usage 10240kB, limit 15360kB, failcnt 0
+> # cat memory.memsw.failcnt
+> 0
+> 
+> The limit is 15M, but memory+swap usage also is 10M.
+> I think memory+swap usage should be 15M and memsw.failcnt should be nonzero.
+> 
+> This is a kernel bug or I misunderstand memory+swap?
 
-What I try to fix here is the behavior of "mount -t cgroup -o name=xxx ..."
-(no other options are specified), so what behavior do we want?
+Well, we might end up with memory.failcnt > 0 while memory.memsw.failcnt == 0
+quite easily and that would happen in the cases like you describe above
+when there is a big pagecache pressure on the hardlimit without much
+anonymous memory so there is not much that could be swapped out.
 
-1. find if any existing cgroupfs instance matches the name, which is
-the orginal behavior.
+Please note that memsw.limit_in_bytes is triggered only if we have
+consumed some swap space already (and the feature is primarily intended
+to stop extensive swap usage in fact).
+It goes like this: If we trigger hard limit (memory.limit_in_bytes) then
+we start the direct reclaim (with swap available). If we trigger memsw
+limit then we try to reclaim without swap available. We will OOM if we
+cannot reclaim enough to satisfy the respective limit.
 
-2. the same as "mount -t cgroup -o all,name=xxx ...", which is the
-current behavior due to the commit that broke (1).
+The other part of the answer is, yes there is something wrong going
+on her because we definitely shouldn't OOM. The workload is a single
+threaded and we have a plenty of page cache that could be reclaimed
+easily. On the other hand we end up with:
+# echo $$ > tasks 
+/dev/memctl/a# echo 10M > memory.limit_in_bytes 
+/dev/memctl/a# echo 10M > memory.memsw.limit_in_bytes 
+/dev/memctl/a# dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
+Killed
+/dev/memctl/a# cat memory.stat 
+cache 9265152
+rss 143360
+mapped_file 0
+pgpgin 3352
+pgpgout 1055
+swap 0
+pgfault 798
+pgmajfault 1
+inactive_anon 12288
+active_anon 114688
+inactive_file 9261056
+active_file 4096
+unevictable 0
+[...]
 
-3. make it invalid and fail to mount.
-
-4. any other idea?
+So there is almost 10M of page cache that we can simply reclaim. If we
+use 40M limit then we are OK. So this looks like the small limit somehow
+tricks our math in the reclaim path and we think there is nothing to
+reclaim.
+I will look into this.
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
