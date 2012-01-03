@@ -1,111 +1,56 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: how to make memory.memsw.failcnt is nonzero
-Date: Tue, 3 Jan 2012 17:04:11 +0100
-Message-ID: <20120103160411.GD3891@tiehlicka.suse.cz>
-References: <4EFADFF8.5020703@cn.fujitsu.com>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 5/6] memcg: fix broken boolen expression
+Date: Tue, 3 Jan 2012 12:54:28 -0800
+Message-ID: <20120103205428.GB17131@kroah.com>
+References: <1324695619-5537-1-git-send-email-kirill@shutemov.name>
+	<1324695619-5537-5-git-send-email-kirill@shutemov.name>
+	<20111226153138.0376bd66.kamezawa.hiroyu@jp.fujitsu.com>
+	<20111226065724.GA13459@shutemov.name>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4EFADFF8.5020703-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peng Haitao <penght-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=
+	messagingengine.com; h=date:from:to:cc:subject:message-id
+	:references:mime-version:content-type:in-reply-to; s=smtpout;
+	bh=wO9YHNUGPN6brYJtPh7wTRuUkGQ=; b=KBPnGO8k1pU9pkReY6IqUKQRZjqS
+	wG/nqmp6Xrp6w6gL5auiYiS/t8iiOw58zMwZNl2JWk+wW6ubAifUJBz/w1UtPZzZ
+	ySkeE3gkBT/bRPzUGhiAoIX450vPD63ZJn9NTmZ4YL/js7uTrmIc8k6Qfa9DsXMH
+	eGjmaFwh4CCQxWM=
+Content-Disposition: inline
+In-Reply-To: <20111226065724.GA13459-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-[Let's add some people to the CC list]
+On Mon, Dec 26, 2011 at 08:57:24AM +0200, Kirill A. Shutemov wrote:
+> On Mon, Dec 26, 2011 at 03:31:38PM +0900, KAMEZAWA Hiroyuki wrote:
+> > On Sat, 24 Dec 2011 05:00:18 +0200
+> > "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org> wrote:
+> > 
+> > > From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> > > 
+> > > action != CPU_DEAD || action != CPU_DEAD_FROZEN is always true.
+> > > 
+> > > Signed-off-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> > 
+> > maybe this should go stable..
+> 
+> CC stable@
 
-Hi,
-sorry for the late reply (some vacation and holiday)
+<formletter>
 
-On Wed 28-12-11 17:23:04, Peng Haitao wrote:
-> 
-> memory.memsw.failcnt shows the number of memory+Swap hits limits.
-> So I think when memory+swap usage is equal to limit, memsw.failcnt should be nonzero.
-> 
-> I test as follows:
-> 
-> # uname -a
-> Linux K-test 3.2.0-rc7-17-g371de6e #2 SMP Wed Dec 28 12:02:52 CST 2011 x86_64 x86_64 x86_64 GNU/Linux
-> # mkdir /cgroup/memory/group
-> # cd /cgroup/memory/group/
-> # echo 10M > memory.limit_in_bytes
-> # echo 10M > memory.memsw.limit_in_bytes
-> # echo $$ > tasks
-> # dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
-> Killed
-> # cat memory.memsw.failcnt
-> 0
-> # grep "failcnt" /var/log/messages | tail -2
-> Dec 28 17:05:52 K-test kernel: memory: usage 10240kB, limit 10240kB, failcnt 21
-> Dec 28 17:05:52 K-test kernel: memory+swap: usage 10240kB, limit 10240kB, failcnt 0
-> 
-> memory+swap usage is equal to limit, but memsw.failcnt is zero.
-> 
-> I change memory.memsw.limit_in_bytes to 15M.
-> 
-> # echo 15M > memory.memsw.limit_in_bytes
-> # dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
-> Killed
-> # grep "failcnt" /var/log/messages | tail -2
-> Dec 28 17:08:45 K-test kernel: memory: usage 10240kB, limit 10240kB, failcnt 86
-> Dec 28 17:08:45 K-test kernel: memory+swap: usage 10240kB, limit 15360kB, failcnt 0
-> # cat memory.memsw.failcnt
-> 0
-> 
-> The limit is 15M, but memory+swap usage also is 10M.
-> I think memory+swap usage should be 15M and memsw.failcnt should be nonzero.
-> 
-> This is a kernel bug or I misunderstand memory+swap?
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
 
-Well, we might end up with memory.failcnt > 0 while memory.memsw.failcnt == 0
-quite easily and that would happen in the cases like you describe above
-when there is a big pagecache pressure on the hardlimit without much
-anonymous memory so there is not much that could be swapped out.
-
-Please note that memsw.limit_in_bytes is triggered only if we have
-consumed some swap space already (and the feature is primarily intended
-to stop extensive swap usage in fact).
-It goes like this: If we trigger hard limit (memory.limit_in_bytes) then
-we start the direct reclaim (with swap available). If we trigger memsw
-limit then we try to reclaim without swap available. We will OOM if we
-cannot reclaim enough to satisfy the respective limit.
-
-The other part of the answer is, yes there is something wrong going
-on her because we definitely shouldn't OOM. The workload is a single
-threaded and we have a plenty of page cache that could be reclaimed
-easily. On the other hand we end up with:
-# echo $$ > tasks 
-/dev/memctl/a# echo 10M > memory.limit_in_bytes 
-/dev/memctl/a# echo 10M > memory.memsw.limit_in_bytes 
-/dev/memctl/a# dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
-Killed
-/dev/memctl/a# cat memory.stat 
-cache 9265152
-rss 143360
-mapped_file 0
-pgpgin 3352
-pgpgout 1055
-swap 0
-pgfault 798
-pgmajfault 1
-inactive_anon 12288
-active_anon 114688
-inactive_file 9261056
-active_file 4096
-unevictable 0
-[...]
-
-So there is almost 10M of page cache that we can simply reclaim. If we
-use 40M limit then we are OK. So this looks like the small limit somehow
-tricks our math in the reclaim path and we think there is nothing to
-reclaim.
-I will look into this.
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+</formletter>
