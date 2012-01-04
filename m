@@ -1,42 +1,75 @@
-From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
-Subject: Re: [PATCH 1/2] memcg: root_mem_cgroup makes static
-Date: Wed, 4 Jan 2012 12:34:39 -0500
-Message-ID: <CAHGf_=o-mBAZxAW=vHSKKBCGqtzc+ooXrc9+vHvPoo_t4A9Chg@mail.gmail.com>
-References: <1325633632-9978-1-git-send-email-kosaki.motohiro@gmail.com> <20120104084611.GA12581@tiehlicka.suse.cz>
+From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
+Date: Wed, 4 Jan 2012 11:36:14 -0800
+Message-ID: <20120104193614.GF9511@google.com>
+References: <20111221034334.GD17668@somewhere>
+ <20111221130848.GA19679@redhat.com>
+ <20111221175632.GF17668@somewhere>
+ <20111221190102.GE13529@google.com>
+ <20111221190817.GI17668@somewhere>
+ <20111221192413.GF13529@google.com>
+ <20111221200422.GJ17668@somewhere>
+ <20111222153004.GA30522@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=sNbc4CgSyuLfOpAzfIDUP8WciJMS7btZaLHW1K6gVoQ=;
-        b=e1WISyURL/UO8rFz5bRJALqi1NDYUY6Ai1/5RbdYY+RQ/gsi0X9BwSzJDY2ulqHycP
-         yLdfCO6tKejnrOAPsXwOXyJ+tZCEIT2MTx7s+hRJp5OSAOGx4evjHBnKEeQSQcUMKax/
-         FrI9e3qk3IH8n8/PACWVIbGLS2CvT6qYLghuo=
-In-Reply-To: <20120104084611.GA12581@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+        d=google.com; s=beta;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:x-operating-system
+         :user-agent;
+        bh=boPKwZdZ6WaRpDuceWWDhrk0R/KeA2y6MDv0yFVksCk=;
+        b=c5VTOFUb57ygnsl1wmAXXIEnLUunsL/osQfxZ6Dk83DOuuO8l+2bXAYXTJKLckwofp
+         9a2w6xJDEJlJRwX5sw9A==
+Content-Disposition: inline
+In-Reply-To: <20111222153004.GA30522-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-2012/1/4 Michal Hocko <mhocko@suse.cz>:
-> On Tue 03-01-12 18:33:51, kosaki.motohiro@gmail.com wrote:
->> From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
->>
->> root_mem_cgroup is only referenced from memcontrol.c. It should be static.
->
-> This has been already posted by Kirill
-> https://lkml.org/lkml/2011/12/23/292
+Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
+> On 12/21, Frederic Weisbecker wrote:
+> >
+> > On Wed, Dec 21, 2011 at 11:24:13AM -0800, Mandeep Singh Baines wrote:
+> > >
+> > > If you call exec from a thread other than g, g is now unlinked. So
+> > > "t != g" will always be true. If you then pthread_create, you now
+> > > have two threads so "t != __prev" will also always be true. So
+> > > you now have an infinite loop.
+> >
+> > Oh you're right.
+> >
+> > But then we can't use t != t->group_leader because that assumes while_each_thread()
+> > started on the leader.
+> 
+> Yes, this can't work.
+> 
+> Besides, we need more burriers to rely on the ->group_leader check.
+> 
+> See http://marc.info/?t=127688987300002
+> 
 
-Oops. I haven't noticed.
+I went through the thread. Were there any other concerns other than
+requiring that you start with the group_leader and the barrier?
 
-Thank you, Michal!
+You could modify zap_other_threads to start with the group leader by
+skipping p:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+if (p == t)
+   continue;
+
+> in particular, http://marc.info/?l=linux-kernel&m=127714242731448
+> I think this should work, but then we should do something with the
+> users like zap_threads().
+> 
+
+With that patch, won't you potentially miss the exec thread if an exec
+occurs while you're iterating over the list? Is that OK?
+
+Regards,
+Mandeep
+
+> Oleg.
+> 
