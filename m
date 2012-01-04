@@ -1,37 +1,42 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch] cgroup: move assignement out of condition in
- cgroup_attach_proc()
-Date: Wed, 4 Jan 2012 07:38:43 -0800
-Message-ID: <20120104153843.GM31746@google.com>
-References: <20120104072429.GF30978@elgon.mountain>
+From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
+Subject: Re: [PATCH 1/2] memcg: root_mem_cgroup makes static
+Date: Wed, 4 Jan 2012 12:34:39 -0500
+Message-ID: <CAHGf_=o-mBAZxAW=vHSKKBCGqtzc+ooXrc9+vHvPoo_t4A9Chg@mail.gmail.com>
+References: <1325633632-9978-1-git-send-email-kosaki.motohiro@gmail.com> <20120104084611.GA12581@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=gfm3PLppWWDEaiL2qRfmANKnvd4f39/4piRJJRIkCgE=;
-        b=gG0gO++YgTpt98ld/IQN2Uj2jpgzHxm7vZ2X8kmEh2G48i79z7eqkPEZr/h7KFY10J
-         GLh8gkoKKQJOfwmf1EuGkrcBd74xa6C/LgKaPLnHEZu0eHBXHkmpStD9i14Hg0T8DRRM
-         XqTU+c7JHLRofUmWYMo1wxDgA4wst9OnuDX5M=
-Content-Disposition: inline
-In-Reply-To: <20120104072429.GF30978-mgFCXtclrQlZLf2FXnZxJA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=sNbc4CgSyuLfOpAzfIDUP8WciJMS7btZaLHW1K6gVoQ=;
+        b=e1WISyURL/UO8rFz5bRJALqi1NDYUY6Ai1/5RbdYY+RQ/gsi0X9BwSzJDY2ulqHycP
+         yLdfCO6tKejnrOAPsXwOXyJ+tZCEIT2MTx7s+hRJp5OSAOGx4evjHBnKEeQSQcUMKax/
+         FrI9e3qk3IH8n8/PACWVIbGLS2CvT6qYLghuo=
+In-Reply-To: <20120104084611.GA12581@tiehlicka.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On Wed, Jan 04, 2012 at 10:24:29AM +0300, Dan Carpenter wrote:
-> Gcc complains about this: "kernel/cgroup.c:2179:4: warning: suggest
-> parentheses around assignment used as truth value [-Wparentheses]"
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+2012/1/4 Michal Hocko <mhocko@suse.cz>:
+> On Tue 03-01-12 18:33:51, kosaki.motohiro@gmail.com wrote:
+>> From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+>>
+>> root_mem_cgroup is only referenced from memcontrol.c. It should be static.
+>
+> This has been already posted by Kirill
+> https://lkml.org/lkml/2011/12/23/292
 
-Applied to cgroup/for-3.3.  Li, applied w/o your ack as it's trivial.
+Oops. I haven't noticed.
 
-Thanks.
+Thank you, Michal!
 
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
