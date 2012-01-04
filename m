@@ -1,43 +1,69 @@
-From: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [patch] cgroup: move assignement out of condition in
- cgroup_attach_proc()
-Date: Wed, 4 Jan 2012 10:24:29 +0300
-Message-ID: <20120104072429.GF30978@elgon.mountain>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 1/2] memcg: root_mem_cgroup makes static
+Date: Wed, 4 Jan 2012 09:46:11 +0100
+Message-ID: <20120104084611.GA12581@tiehlicka.suse.cz>
+References: <1325633632-9978-1-git-send-email-kosaki.motohiro@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1325633632-9978-1-git-send-email-kosaki.motohiro@gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: kosaki.motohiro@gmail.com
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-Gcc complains about this: "kernel/cgroup.c:2179:4: warning: suggest
-parentheses around assignment used as truth value [-Wparentheses]"
+On Tue 03-01-12 18:33:51, kosaki.motohiro@gmail.com wrote:
+> From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+> 
+> root_mem_cgroup is only referenced from memcontrol.c. It should be static.
 
-Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
----
-I feel like the original developer may have left the parens out on
-deliberately to stop checkpatch.pl complaining about long lines.  I so
-much hate the long line warning...
+This has been already posted by Kirill
+https://lkml.org/lkml/2011/12/23/292
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index cb3c131..6a057fe 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2175,9 +2175,12 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 		oldcg = tc->task->cgroups;
- 
- 		/* if we don't already have it in the list get a new one */
--		if (!css_set_check_fetched(cgrp, tc->task, oldcg, &newcg_list))
--			if (retval = css_set_prefetch(cgrp, oldcg, &newcg_list))
-+		if (!css_set_check_fetched(cgrp, tc->task, oldcg,
-+					&newcg_list)) {
-+			retval = css_set_prefetch(cgrp, oldcg, &newcg_list);
-+			if (retval)
- 				goto out_list_teardown;
-+		}
- 	}
- 
- 	/*
+> 
+> Signed-off-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@suse.cz>,
+> Cc: cgroups@vger.kernel.org
+> ---
+>  mm/memcontrol.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 90fdaeb..6adeeec 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -59,7 +59,7 @@
+>  
+>  struct cgroup_subsys mem_cgroup_subsys __read_mostly;
+>  #define MEM_CGROUP_RECLAIM_RETRIES	5
+> -struct mem_cgroup *root_mem_cgroup __read_mostly;
+> +static struct mem_cgroup *root_mem_cgroup __read_mostly;
+>  
+>  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
+>  /* Turned on only when memory cgroup is enabled && really_do_swap_account = 1 */
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
