@@ -1,58 +1,116 @@
 From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup: remove extra calls to find_existing_css_set
-Date: Thu, 05 Jan 2012 10:10:57 +0800
-Message-ID: <4F0506B1.1070909@cn.fujitsu.com>
-References: <1325654312-32477-1-git-send-email-msb@chromium.org> <1325654312-32477-3-git-send-email-msb@chromium.org>
+Subject: Re: [PATCH] cgroup: fix to allow mounting a hierarchy by name
+Date: Thu, 05 Jan 2012 10:20:36 +0800
+Message-ID: <4F0508F4.2020705@cn.fujitsu.com>
+References: <4EF9291D.7030208@cn.fujitsu.com> <20111227163535.GA17712@google.com> <4EFAB2E2.4040008@cn.fujitsu.com> <20111228163631.GN17712@google.com> <4EFBD55E.5030106@cn.fujitsu.com> <20111229162313.GD3516@google.com> <4EFD531C.50300@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1325654312-32477-3-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <4EFD531C.50300-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Mandeep Singh Baines wrote:
-> In cgroup_attach_proc, we indirectly call find_existing_css_set 3
-> times. It is an expensive call so we want to call it a minimum
-> of times. This patch only calls it once and stores the result so
-> that it can be used later on when we call cgroup_task_migrate.
-> 
-> This required modifying cgroup_task_migrate to take the new css_set
-> (which we obtained from find_css_set) as a parameter. The nice side
-> effect of this is that cgroup_task_migrate is now identical for
-> cgroup_attach_task and cgroup_attach_proc. It also now returns a
-> void since it can never fail.
-> 
-> Changes in V4:
-> * https://lkml.org/lkml/2011/12/22/421 (Li Zefan)
->   * Avoid GFP_KERNEL (sleep) in rcu_read_lock by getting css_set in
->     a separate loop not under an rcu_read_lock
-> Changes in V3:
-> * https://lkml.org/lkml/2011/12/22/13 (Li Zefan)
->   * Fixed earlier bug by creating a seperate patch to remove tasklist_lock
-> Changes in V2:
-> * https://lkml.org/lkml/2011/12/20/372 (Tejun Heo)
->   * Move find_css_set call into loop which creates the flex array
-> * Author
->   * Kill css_set_refs and use group_size instead
->   * Fix an off-by-one error in counting css_set refs
->   * Add a retval check in out_list_teardown
-> 
-> Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Any comments on this?
 
-Acked-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-> ---
->  kernel/cgroup.c |  142 +++++++++++-------------------------------------------
->  1 files changed, 29 insertions(+), 113 deletions(-)
+Li Zefan wrote:
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> On Thu, Dec 29, 2011 at 10:50:06AM +0800, Li Zefan wrote:
+>>> Tejun Heo wrote:
+>>>> Hello, Li.
+>>>>
+>>>> On Wed, Dec 28, 2011 at 02:10:42PM +0800, Li Zefan wrote:
+>>>>> The "name" option was introduced along with the "none" option, so we
+>>>>> can distinguish between different cgroup hierarchies which have no
+>>>>> bound subsystems, like this:
+>>>>>
+>>>>> 	# mount -t cgroup -o none,name=hier1 xxx /cgroup1
+>>>>> 	# mount -t cgroup -o none,name=hier2 xxx /cgroup2
+>>>>>
+>>>>> As the name is unique, we have this "mount by hierarchy name" feature.
+>>>>
+>>>> I could be missing something but does that add anything other than
+>>>> naming convenience?
+>>>
+>>> The name option is necessary, otherwise how can we mount hierarchies
+>>> as shown in the above example?
+>>
+>> I don't think mounting itself would be a problem.  We don't need name
+>> option to create multiple tmpfs instances, right?  The problem is
+> 
+> Right, but you can't mount the same tmpfs instance in more than one mount
+> point.
+> 
+>> referencing to them after they're created.  Filesystems generally
+>> don't need such identifier because, once they're created, they can be
+>> referenced by their mount points.  I'm still not very familiar with
+>> different corners of cgroup, so it's entirely possible that I'm
+>> missing something.  If I am, please point me to it.
+>>
+> 
+> Normal filesystems can have multi mount points, and an fs instance
+> is identified by device name, but cgroupfs ignores device name like
+> other pseudo filesystems. Instead a set of subsystems is used, so
+> to mount the same cgroupfs instance in different mount points, we
+> can do this:
+> 
+> 	# mount -t cgroup -o cpuset xxx /cgroup1
+> 	# mount -t cgroup -o cpuset xxx /cgroup2
+> 
+> Now we have the "none" option, so a cgroupfs can have no subsystems
+> bound to it, and we allow multi instances of such cgroupfs, so we
+> have to assign names to each instance:
+> 
+> 	# mount -t cgroup -o none,name=hier1 xxx /cgroup1
+> 	# mount -t cgroup -o none,name=hier2 xxx /cgroup2
+> 
+> Then we want to also mount "hier1" in another mount point, we can't
+> do this:
+> 
+> 	# mount -t cgroup -o none xxx /mnt
+> 
+> because we have two different instances with "none" subsystem. So
+> we specify its name:
+> 
+> 	# mount -t cgroup -o none,name=hier1 xxx /mnt
+> 
+> Hope I have made things clear to you?
+> 
+>>>> If it's a redundant feature which has been broken over a year without
+>>>> anyone complaining, it really doesn't need to exist.  It might not
+>>>> save a lot of code but would save some WTH moments.
+>>>>
+>>>
+>>> The redundant feature is mouting existing hierarchies by specifying name
+>>> only, and the cleanup patch I sent has this feature removed in effect.
+>>>
+>>> kernel/cgroup.c |   15 +++++++--------
+>>> 1 files changed, 7 insertions(+), 8 deletions(-)
+>>>
+>>> This is why I'm not so keen to remove the feature.
+>>
+>> Code reduction is definitely a plus and I don't want to remove a
+>> useful feature either, but an unusual redundant feature without
+>> necessity is confusing / misleading even if it doesn't necessasrily
+>> add a lot of code complexity.
+>>
+>> Also, I at least want to understand why it's actually necessary before
+>> applying the patches.  :)
+>>
+> 
+> What I try to fix here is the behavior of "mount -t cgroup -o name=xxx ..."
+> (no other options are specified), so what behavior do we want?
+> 
+> 1. find if any existing cgroupfs instance matches the name, which is
+> the orginal behavior.
+> 
+> 2. the same as "mount -t cgroup -o all,name=xxx ...", which is the
+> current behavior due to the commit that broke (1).
+> 
+> 3. make it invalid and fail to mount.
+> 
+> 4. any other idea?
