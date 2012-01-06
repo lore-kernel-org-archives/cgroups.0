@@ -1,7 +1,7 @@
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: [RESEND, PATCH 4/6] memcg: fix broken boolean expression
-Date: Fri,  6 Jan 2012 22:57:50 +0200
-Message-ID: <1325883472-5614-4-git-send-email-kirill@shutemov.name>
+Subject: [RESEND, PATCH 3/6] memcg: mark stat field of mem_cgroup struct as __percpu
+Date: Fri,  6 Jan 2012 22:57:49 +0200
+Message-ID: <1325883472-5614-3-git-send-email-kirill@shutemov.name>
 References: <1325883472-5614-1-git-send-email-kirill@shutemov.name>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1325883472-5614-1-git-send-email-kirill@shutemov.name>
@@ -11,14 +11,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, "Kirill A. Shutemov" <kirill@shutemov.name>, stable@kernel.org
+Cc: linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, "Kirill A. Shutemov" <kirill@shutemov.name>
 
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
 
-action != CPU_DEAD || action != CPU_DEAD_FROZEN is always true.
+It fixes a lot of sparse warnings.
 
 Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
-Cc: <stable@kernel.org>
 Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Acked-by: Michal Hocko <mhocko@suse.cz>
 ---
@@ -26,18 +25,18 @@ Acked-by: Michal Hocko <mhocko@suse.cz>
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 831cdc4..0b5a3f8 100644
+index 39c3d60..831cdc4 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2085,7 +2085,7 @@ static int __cpuinit memcg_cpu_hotplug_callback(struct notifier_block *nb,
- 		return NOTIFY_OK;
- 	}
- 
--	if ((action != CPU_DEAD) || action != CPU_DEAD_FROZEN)
-+	if (action != CPU_DEAD && action != CPU_DEAD_FROZEN)
- 		return NOTIFY_OK;
- 
- 	for_each_mem_cgroup(iter)
+@@ -282,7 +282,7 @@ struct mem_cgroup {
+ 	/*
+ 	 * percpu counter.
+ 	 */
+-	struct mem_cgroup_stat_cpu *stat;
++	struct mem_cgroup_stat_cpu __percpu *stat;
+ 	/*
+ 	 * used when a cpu is offlined or other synchronizations
+ 	 * See mem_cgroup_read_stat().
 -- 
 1.7.8.2
 
