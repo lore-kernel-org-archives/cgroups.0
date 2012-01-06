@@ -1,97 +1,63 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH] net: fix sock_clone reference mismatch with tcp memcontrol
-Date: Fri,  6 Jan 2012 10:16:39 +0400
-Message-ID: <1325830599-11857-1-git-send-email-glommer@parallels.com>
+From: Peng Haitao <penght-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: how to make memory.memsw.failcnt is nonzero
+Date: Fri, 06 Jan 2012 17:47:10 +0800
+Message-ID: <4F06C31E.4010904@cn.fujitsu.com>
+References: <4EFADFF8.5020703@cn.fujitsu.com> <20120103160411.GD3891@tiehlicka.suse.cz>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120103160411.GD3891-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Sockets can also be created through sock_clone. Because it copies
-all data in the sock structure, it also copies the memcg-related pointer,
-and all should be fine. However, since we now use reference counts in
-socket creation, we are left with some sockets that have no reference
-counts. It matters when we destroy them, since it leads to a mismatch.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-CC: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- include/net/sock.h |    6 ++++++
- mm/memcontrol.c    |   19 ++++++++++++++-----
- net/core/sock.c    |    2 ++
- 3 files changed, 22 insertions(+), 5 deletions(-)
+Michal Hocko said the following on 2012-1-4 0:04:
+>> # echo 15M > memory.memsw.limit_in_bytes
+>> # dd if=/dev/zero of=/tmp/temp_file count=20 bs=1M
+>> Killed
+>> # grep "failcnt" /var/log/messages | tail -2
+>> Dec 28 17:08:45 K-test kernel: memory: usage 10240kB, limit 10240kB, failcnt 86
+>> Dec 28 17:08:45 K-test kernel: memory+swap: usage 10240kB, limit 15360kB, failcnt 0
+>> # cat memory.memsw.failcnt
+>> 0
+>>
+>> The limit is 15M, but memory+swap usage also is 10M.
+>> I think memory+swap usage should be 15M and memsw.failcnt should be nonzero.
+>>
+> So there is almost 10M of page cache that we can simply reclaim. If we
+> use 40M limit then we are OK. So this looks like the small limit somehow
+> tricks our math in the reclaim path and we think there is nothing to
+> reclaim.
+> I will look into this.
 
-diff --git a/include/net/sock.h b/include/net/sock.h
-index bb972d2..0ed65e3 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -1103,6 +1103,12 @@ sk_sockets_allocated_read_positive(struct sock *sk)
- 	return percpu_counter_sum_positive(prot->sockets_allocated);
- }
- 
-+static inline void sk_update_clone(const struct sock *sk, struct sock *newsk)
-+{
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
-+		sock_update_memcg(newsk);
-+}
-+
- static inline int
- proto_sockets_allocated_sum_positive(struct proto *prot)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 94da8ee..9c72d5d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -381,16 +381,25 @@ static void mem_cgroup_put(struct mem_cgroup *memcg);
- static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
- void sock_update_memcg(struct sock *sk)
- {
--	/* A socket spends its whole life in the same cgroup */
--	if (sk->sk_cgrp) {
--		WARN_ON(1);
--		return;
--	}
- 	if (static_branch(&memcg_socket_limit_enabled)) {
- 		struct mem_cgroup *memcg;
- 
- 		BUG_ON(!sk->sk_prot->proto_cgroup);
- 
-+		/* Socket cloning can throw us here with sk_cgrp already
-+		 * filled. It won't however, necessarily happen from
-+		 * process context. So the test for root memcg given
-+		 * the current task's memcg won't help us in this case.
-+		 *
-+		 * Respecting the original socket's memcg is a better
-+		 * decision in this case.
-+		 */
-+		if (sk->sk_cgrp) {
-+			BUG_ON(mem_cgroup_is_root(sk->sk_cgrp->memcg));
-+			mem_cgroup_get(sk->sk_cgrp->memcg);
-+			return;
-+		}
-+
- 		rcu_read_lock();
- 		memcg = mem_cgroup_from_task(current);
- 		if (!mem_cgroup_is_root(memcg)) {
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 002939c..e80b64f 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -1362,6 +1362,8 @@ struct sock *sk_clone_lock(const struct sock *sk, const gfp_t priority)
- 		sk_set_socket(newsk, NULL);
- 		newsk->sk_wq = NULL;
- 
-+		sk_update_clone(sk, newsk);
-+
- 		if (newsk->sk_prot->sockets_allocated)
- 			sk_sockets_allocated_inc(newsk);
- 
+Thanks for you reply.
+If there is something wrong, I think the bug will be in mem_cgroup_do_charge()
+of mm/memcontrol.c
+
+2210         ret = res_counter_charge(&memcg->res, csize, &fail_res);
+2211 
+2212         if (likely(!ret)) {
+2213                 if (!do_swap_account)
+2214                         return CHARGE_OK;
+2215                 ret = res_counter_charge(&memcg->memsw, csize, &fail_res);
+2216                 if (likely(!ret))
+2217                         return CHARGE_OK;
+2218 
+2219                 res_counter_uncharge(&memcg->res, csize);
+2220                 mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
+2221                 flags |= MEM_CGROUP_RECLAIM_NOSWAP;
+2222         } else
+2223                 mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+
+When hit memory.limit_in_bytes, res_counter_charge() will return -ENOMEM,
+this will execute line 2222: } else.
+But I think when hit memory.limit_in_bytes, the function should determine further
+to memory.memsw.limit_in_bytes.
+This think is OK?
+
 -- 
-1.7.7.4
+Best Regards,
+Peng
