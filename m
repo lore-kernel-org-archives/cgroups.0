@@ -1,119 +1,35 @@
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: [RESEND, PATCH 6/6] memcg: cleanup memcg_check_events()
-Date: Fri,  6 Jan 2012 22:57:52 +0200
-Message-ID: <1325883472-5614-6-git-send-email-kirill@shutemov.name>
-References: <1325883472-5614-1-git-send-email-kirill@shutemov.name>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1325883472-5614-1-git-send-email-kirill@shutemov.name>
-Sender: owner-linux-mm@kvack.org
+From: chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org (Laurent Chavey)
+Subject: Re: [PATCH] net: fix sock_clone reference mismatch with tcp memcontrol
+Date: Fri,  6 Jan 2012 13:14:23 -0800 (PST)
+Message-ID: <20120106211423.967A716F64A@chavey.mtv.corp.google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=gamma;
+        h=to:cc:subject:message-id:date:from;
+        bh=oNUdtEPZOgai0RYyo4cTjVPGYxXdPS8ysnD0t8b4lhA=;
+        b=nQ+bw17ggUH5XUJbxDvehqlFEpCPZXtRZGghbuHnIinKpZI94J5T7yJR07O55jWaT5
+         eji7FUMagP7pFMD9zAXwQgih/fMkO0KjMn+wXzV8Wo2kMBsyIn9Rma3lqqO1MrabIKVR
+         uEgn7tojJZhf3Q5jUlpxnV/3tyoQ/AErKtxwo=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, "Kirill A. Shutemov" <kirill@shutemov.name>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
+> Sockets can also be created through sock_clone. Because it copies
+> all data in the sock structure, it also copies the memcg-related pointer,
+> and all should be fine. However, since we now use reference counts in
+> socket creation, we are left with some sockets that have no reference
+> counts. It matters when we destroy them, since it leads to a mismatch.
+>
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> CC: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> ---
 
-Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
----
- mm/memcontrol.c |   42 ++++++++++++++++++++++++------------------
- 1 files changed, 24 insertions(+), 18 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2eddcb5..0a13afa 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -108,11 +108,12 @@ enum mem_cgroup_events_index {
-  * than using jiffies etc. to handle periodic memcg event.
-  */
- enum mem_cgroup_events_target {
--	MEM_CGROUP_TARGET_THRESH,
--	MEM_CGROUP_TARGET_SOFTLIMIT,
--	MEM_CGROUP_TARGET_NUMAINFO,
--	MEM_CGROUP_NTARGETS,
-+	MEM_CGROUP_TARGET_THRESH	= BIT(1),
-+	MEM_CGROUP_TARGET_SOFTLIMIT	= BIT(2),
-+	MEM_CGROUP_TARGET_NUMAINFO	= BIT(3),
- };
-+#define MEM_CGROUP_NTARGETS 3
-+
- #define THRESHOLDS_EVENTS_TARGET 128
- #define SOFTLIMIT_EVENTS_TARGET 1024
- #define NUMAINFO_EVENTS_TARGET	1024
-@@ -734,7 +735,7 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
- 	return total;
- }
- 
--static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
-+static int mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- 				       enum mem_cgroup_events_target target)
- {
- 	unsigned long val, next;
-@@ -757,9 +758,9 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- 			break;
- 		}
- 		__this_cpu_write(memcg->stat->targets[target], next);
--		return true;
-+		return target;
- 	}
--	return false;
-+	return 0;
- }
- 
- /*
-@@ -768,29 +769,34 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
-  */
- static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
- {
-+	int flags;
-+
- 	preempt_disable();
--	/* threshold event is triggered in finer grain than soft limit */
--	if (unlikely(mem_cgroup_event_ratelimit(memcg,
--						MEM_CGROUP_TARGET_THRESH))) {
--		bool do_softlimit, do_numainfo;
-+	flags = mem_cgroup_event_ratelimit(memcg, MEM_CGROUP_TARGET_THRESH);
- 
--		do_softlimit = mem_cgroup_event_ratelimit(memcg,
-+	/*
-+	 * Threshold event is triggered in finer grain than soft limit
-+	 * and numainfo
-+	 */
-+	if (unlikely(flags)) {
-+		flags |= mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_SOFTLIMIT);
- #if MAX_NUMNODES > 1
--		do_numainfo = mem_cgroup_event_ratelimit(memcg,
-+		flags |= mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_NUMAINFO);
- #endif
--		preempt_enable();
-+	}
-+	preempt_enable();
- 
-+	if (unlikely(flags)) {
- 		mem_cgroup_threshold(memcg);
--		if (unlikely(do_softlimit))
-+		if (unlikely(flags & MEM_CGROUP_TARGET_SOFTLIMIT))
- 			mem_cgroup_update_tree(memcg, page);
- #if MAX_NUMNODES > 1
--		if (unlikely(do_numainfo))
-+		if (unlikely(flags & MEM_CGROUP_TARGET_NUMAINFO))
- 			atomic_inc(&memcg->numainfo_events);
- #endif
--	} else
--		preempt_enable();
-+	}
- }
- 
- struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont)
--- 
-1.7.8.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Tested-by: Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
