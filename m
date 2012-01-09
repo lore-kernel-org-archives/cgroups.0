@@ -1,41 +1,124 @@
-From: Michal Marek <mmarek-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] Makefiles: Disable unused-variable warning
-Date: Sun, 08 Jan 2012 16:01:17 +0100
-Message-ID: <4F09AFBD.60503@suse.cz>
-References: <1324695619-5537-1-git-send-email-kirill@shutemov.name> <20111227135752.GK5344@tiehlicka.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RESEND, PATCH 6/6] memcg: cleanup memcg_check_events()
+Date: Mon, 9 Jan 2012 14:41:08 +0100
+Message-ID: <20120109134108.GF3588@cmpxchg.org>
+References: <1325883472-5614-1-git-send-email-kirill@shutemov.name>
+ <1325883472-5614-6-git-send-email-kirill@shutemov.name>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111227135752.GK5344-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1325883472-5614-6-git-send-email-kirill@shutemov.name>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kbuild-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Michal Hocko <mhocko@suse.cz>
 
-Dne 27.12.2011 14:57, Michal Hocko napsal(a):
-> Anyway, I am wondering why unused-but-set-variable is disabled while
-> unused-variable is enabled.
+On Fri, Jan 06, 2012 at 10:57:52PM +0200, Kirill A. Shutemov wrote:
+> From: "Kirill A. Shutemov" <kirill@shutemov.name>
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
+> ---
+>  mm/memcontrol.c |   42 ++++++++++++++++++++++++------------------
+>  1 files changed, 24 insertions(+), 18 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2eddcb5..0a13afa 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -108,11 +108,12 @@ enum mem_cgroup_events_index {
+>   * than using jiffies etc. to handle periodic memcg event.
+>   */
+>  enum mem_cgroup_events_target {
+> -	MEM_CGROUP_TARGET_THRESH,
+> -	MEM_CGROUP_TARGET_SOFTLIMIT,
+> -	MEM_CGROUP_TARGET_NUMAINFO,
+> -	MEM_CGROUP_NTARGETS,
+> +	MEM_CGROUP_TARGET_THRESH	= BIT(1),
+> +	MEM_CGROUP_TARGET_SOFTLIMIT	= BIT(2),
+> +	MEM_CGROUP_TARGET_NUMAINFO	= BIT(3),
+>  };
+> +#define MEM_CGROUP_NTARGETS 3
 
-unused-but-set-variable was disabled, because it was a new warning in
-gcc 4.6 and produced too much noise relatively to its severity. A make
-W=1 build of x86_64_defconfig gives:
-$ grep -c 'Wunused-but-set-variable' log
-77
-$ grep -c 'Wunused-variable' log
-0
+That really asks for the next guy forgetting to increase the number
+when adding another bit.
 
-More exotic configuration will probably result in a couple of unused
-variable warnings, but that IMO no reason to disable them globally.
+> @@ -734,7 +735,7 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
+>  	return total;
+>  }
+>  
+> -static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+> +static int mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+>  				       enum mem_cgroup_events_target target)
+>  {
+>  	unsigned long val, next;
+> @@ -757,9 +758,9 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+>  			break;
+>  		}
+>  		__this_cpu_write(memcg->stat->targets[target], next);
+> -		return true;
+> +		return target;
+>  	}
+> -	return false;
+> +	return 0;
 
-> Shouldn't we just disable it as well rather
-> than workaround this in the code? The warning is just pure noise in this
-> case.
+Really weird interface - I'll return what you passed in, or zero...?
 
-If it's noise in a particular case, there is always the option to add
+> @@ -768,29 +769,34 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+>   */
+>  static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
+>  {
+> +	int flags;
+> +
+>  	preempt_disable();
+> -	/* threshold event is triggered in finer grain than soft limit */
+> -	if (unlikely(mem_cgroup_event_ratelimit(memcg,
+> -						MEM_CGROUP_TARGET_THRESH))) {
+> -		bool do_softlimit, do_numainfo;
+> +	flags = mem_cgroup_event_ratelimit(memcg, MEM_CGROUP_TARGET_THRESH);
+>  
+> -		do_softlimit = mem_cgroup_event_ratelimit(memcg,
+> +	/*
+> +	 * Threshold event is triggered in finer grain than soft limit
+> +	 * and numainfo
+> +	 */
+> +	if (unlikely(flags)) {
+> +		flags |= mem_cgroup_event_ratelimit(memcg,
+>  						MEM_CGROUP_TARGET_SOFTLIMIT);
+>  #if MAX_NUMNODES > 1
+> -		do_numainfo = mem_cgroup_event_ratelimit(memcg,
+> +		flags |= mem_cgroup_event_ratelimit(memcg,
+>  						MEM_CGROUP_TARGET_NUMAINFO);
+>  #endif
+> -		preempt_enable();
+> +	}
+> +	preempt_enable();
+>  
+> +	if (unlikely(flags)) {
+>  		mem_cgroup_threshold(memcg);
+> -		if (unlikely(do_softlimit))
+> +		if (unlikely(flags & MEM_CGROUP_TARGET_SOFTLIMIT))
+>  			mem_cgroup_update_tree(memcg, page);
+>  #if MAX_NUMNODES > 1
+> -		if (unlikely(do_numainfo))
+> +		if (unlikely(flags & MEM_CGROUP_TARGET_NUMAINFO))
+>  			atomic_inc(&memcg->numainfo_events);
+>  #endif
+> -	} else
+> -		preempt_enable();
+> +	}
+>  }
 
-CFLAGS_memcontrol.o := $(call cc-disable-warning, unused-variable)
+I'm about to remove the soft limit part of this code, so we'll be able
+to condense this back into a single #if block again, anyway.
 
-to the respective Makefile.
+I would much prefer having the extra #if in the code over this patch
+just to silence the warning for now.
 
-Michal
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
