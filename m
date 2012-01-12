@@ -1,114 +1,51 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 1/2] mm: memcg: per-memcg reclaim statistics
-Date: Thu, 12 Jan 2012 10:17:21 +0100
-Message-ID: <20120112091721.GH24386@cmpxchg.org>
-References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
- <1326207772-16762-2-git-send-email-hannes@cmpxchg.org>
- <CALWz4izbTw4+7zbfiED9Lx=6RwiqxE11g5-fNRHTh=mcP=vQ2Q@mail.gmail.com>
- <20120111003020.GD24386@cmpxchg.org>
- <CALWz4iy4hw9jQ++w4oiZG_hih-x9iieuEmnRBfxYKriAKSoOgw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH] net: decrement memcg jump label when limit, not usage, is changed
+Date: Thu, 12 Jan 2012 16:16:06 +0400
+Message-ID: <1326370566-4286-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CALWz4iy4hw9jQ++w4oiZG_hih-x9iieuEmnRBfxYKriAKSoOgw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Wed, Jan 11, 2012 at 02:33:59PM -0800, Ying Han wrote:
-> On Tue, Jan 10, 2012 at 4:30 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>=
- wrote:
-> > On Tue, Jan 10, 2012 at 03:54:05PM -0800, Ying Han wrote:
-> >> Thank you for the patch and the stats looks reasonable to me, few
-> >> questions as below:
-> >>
-> >> On Tue, Jan 10, 2012 at 7:02 AM, Johannes Weiner <hannes@cmpxchg.o=
-rg> wrote:
-> >> > With the single per-zone LRU gone and global reclaim scanning
-> >> > individual memcgs, it's straight-forward to collect meaningful a=
-nd
-> >> > accurate per-memcg reclaim statistics.
-> >> >
-> >> > This adds the following items to memory.stat:
-> >>
-> >> Some of the previous discussions including patches have similar st=
-ats
-> >> in memory.vmscan_stat API, which collects all the per-memcg vmscan
-> >> stats. I would like to understand more why we add into memory.stat
-> >> instead, and do we have plan to keep extending memory.stat for tho=
-se
-> >> vmstat like stats?
-> >
-> > I think they were put into an extra file in particular to be able t=
-o
-> > write to this file to reset the statistics. =A0But in my opinion, i=
-t's
-> > trivial to calculate a delta from before and after running a worklo=
-ad,
-> > so I didn't really like adding kernel code for that.
-> >
-> > Did you have another reason for a separate file in mind?
->=20
-> Another reason I had them in separate file is easier to extend. I
-> don't know if we have plan to have something like memory.vmstat, or
-> just keep adding stuff into memory.stat. In general, I wanted to keep
-> the memory.stat being reasonable size including only the basic
-> statistics. In my existing vmscan_stat path, i have breakdowns of
-> reclaim stats into file/anon which will make the memory.stat even
-> larger.
+The logic of the current code is that whenever we destroy
+a cgroup that had its limit set (set meaning different than
+maximum), we should decrement the jump_label counter.
+Otherwise we assume it was never incremented.
 
-Do you think it's a problem of presentation, where we want to allow
-admins to figure out the memcg parameters at a glance when looking at
-memory.stat but be able to debug malfunction by looking at the more
-extensive vmstat file?
+But what the code actually does is test for RES_USAGE
+instead of RES_LIMIT. Usage being different than maximum
+is likely to be true most of the time.
 
-> >> > =E1Reclaim activity from kswapd due to the memcg's own limit. =E1=
-Only
-> >> > =E1applicable to the root memcg for now since kswapd is only tri=
-ggered
-> >> > =E1by physical limits, but kswapd-style reclaim based on memcg h=
-ard
-> >> > =E1limits is being developped.
-> >> >
-> >> > hierarchy_pgreclaim
-> >> > hierarchy_pgscan
-> >> > hierarchy_kswapd_pgreclaim
-> >> > hierarchy_kswapd_pgscan
-> >>
-> >> "pgsteal_hierarchy"
-> >> "pgsteal_kswapd_hierarchy"
-> >> ..
-> >>
-> >> No strong option on the naming, but try to make it more consistent=
- to
-> >> existing API.
-> >
-> > I swear I tried, but the existing naming is pretty screwed up :(
-> >
-> > For example, pgscan_direct_* and pgscan_kswapd_* allow you to compa=
-re
-> > scan rates of direct reclaim vs. kswapd reclaim. =A0To get the tota=
-l
-> > number of pages reclaimed, you sum them up.
-> >
-> > On the other hand, pgsteal_* does not differentiate between direct
-> > reclaim and kswapd, so to get direct reclaim numbers, you add up th=
-e
-> > pgsteal_* counters and subtract kswapd_steal (notice the lack of pg=
-?),
-> > which is in turn not available at zone granularity.
->=20
-> agree and that always confuses me.
+The effect of this is that the key must become negative,
+and since the jump_label test says:
 
-I just have scripts that present it as 'Direct page reclaimed' and
-'Kswapd page reclaimed' when evaluating data so I don't have to
-remember anymore :-)
+        !!atomic_read(&key->enabled);
 
-But I think the wish for consistency is a bit misguided when we end up
-with something like pgpgin that means something completely different
-in memcg than it does on the global level.  Likewise, I don't want to
-use pgsteal_* and pgsteal_kswapd_* because of their similarity to
-/proc/vmstat while the numbers represent something different.
+we'll have jump_labels still on when no one else is
+using this functionality.
+
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+---
+ net/ipv4/tcp_memcontrol.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
+index 7fed04f..4997878 100644
+--- a/net/ipv4/tcp_memcontrol.c
++++ b/net/ipv4/tcp_memcontrol.c
+@@ -108,7 +108,7 @@ void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 	tcp = tcp_from_cgproto(cg_proto);
+ 	percpu_counter_destroy(&tcp->tcp_sockets_allocated);
+ 
+-	val = res_counter_read_u64(&tcp->tcp_memory_allocated, RES_USAGE);
++	val = res_counter_read_u64(&tcp->tcp_memory_allocated, RES_LIMIT);
+ 
+ 	if (val != RESOURCE_MAX)
+ 		jump_label_dec(&memcg_socket_limit_enabled);
+-- 
+1.7.7.4
