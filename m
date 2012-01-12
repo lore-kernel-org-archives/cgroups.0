@@ -1,124 +1,158 @@
-From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
-Date: Wed, 11 Jan 2012 16:31:02 -0800
-Message-ID: <20120112003102.GB9511@google.com>
-References: <20111221175632.GF17668@somewhere>
-	<20111221190102.GE13529@google.com>
-	<20111221190817.GI17668@somewhere>
-	<20111221192413.GF13529@google.com>
-	<20111221200422.GJ17668@somewhere>
-	<20111222153004.GA30522@redhat.com>
-	<20120104193614.GF9511@google.com>
-	<20120106152356.GA23995@redhat.com>
-	<20120106182535.GJ9511@google.com>
-	<20120111160730.GA24556@redhat.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
+Date: Thu, 12 Jan 2012 10:54:27 +0900
+Message-ID: <20120112105427.4b80437b.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
+	<1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=gamma;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:x-operating-system
-	:user-agent; bh=a/+u3F7/V40CvEw1znGfohOQ2byeHAesEttPW8i3yLE=;
-	b=OVPQnij/HxuClahbneZVTJBgtVWZGVIFsLYtlFHFos6K5CZ7C6PctksZ3RgxVrWs/+
-	B1E8xitTlOkGh9kpTBKdq8qpeiQIP2jAxn/D8vfBRGZ8e2jgm6KGxd9zijpjIenfuuwi
-	824PwdTdzLv2fqWSv8r8JQ3xwwAgILLKoOME8=
-Content-Disposition: inline
-In-Reply-To: <20120111160730.GA24556-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1326207772-16762-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Oleg,
+On Tue, 10 Jan 2012 16:02:52 +0100
+Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
-> On 01/06, Mandeep Singh Baines wrote:
-> >
-> > Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
-> > >
-> > > > > in particular, http://marc.info/?l=linux-kernel&m=127714242731448
-> > > > > I think this should work, but then we should do something with the
-> > > > > users like zap_threads().
-> > > > >
-> > > >
-> > > > With that patch, won't you potentially miss the exec thread if an exec
-> > > > occurs while you're iterating over the list? Is that OK?
-> > >
-> > > Of course it is not OK ;) Note the "we should do something with" above.
-> > >
-> >
-> > So requirements should be something like this:
+> Right now, memcg soft limits are implemented by having a sorted tree
+> of memcgs that are in excess of their limits.  Under global memory
+> pressure, kswapd first reclaims from the biggest excessor and then
+> proceeds to do regular global reclaim.  The result of this is that
+> pages are reclaimed from all memcgs, but more scanning happens against
+> those above their soft limit.
 > 
-> (I assume, you mean the lockless case)
+> With global reclaim doing memcg-aware hierarchical reclaim by default,
+> this is a lot easier to implement: everytime a memcg is reclaimed
+> from, scan more aggressively (per tradition with a priority of 0) if
+> it's above its soft limit.  With the same end result of scanning
+> everybody, but soft limit excessors a bit more.
 > 
-
-Correct.
-
-> > * Any task alive for the duration of the iteration MUST be visited
-> > * No task should be visited more than once
-> > * Any task born or exiting after starting the iteration MAY be skipped
-> > * You can start at any task in the thread group
+> Advantages:
 > 
-> Well yes, but it is not easy to exactly define what after/before
-> means in this case.
+>   o smoother reclaim: soft limit reclaim is a separate stage before
+>     global reclaim, whose result is not communicated down the line and
+>     so overreclaim of the groups in excess is very likely.  After this
+>     patch, soft limit reclaim is fully integrated into regular reclaim
+>     and each memcg is considered exactly once per cycle.
 > 
-> > Would something like this work:
-> >
-> > #define while_each_thread(g, t, o) \
-> > 	while (t->group_leader == o && (t = next_thread(t)) != g)
-> >
-> > Where o should have the value of g->group_leader.
+>   o true hierarchy support: soft limits are only considered when
+>     kswapd does global reclaim, but after this patch, targetted
+>     reclaim of a memcg will mind the soft limit settings of its child
+>     groups.
 > 
-> I don't understand how this helps... and how this can work even
-> ignoring the barriers.
+>   o code size: soft limit reclaim requires a lot of code to maintain
+>     the per-node per-zone rb-trees to quickly find the biggest
+>     offender, dedicated paths for soft limit reclaim etc. while this
+>     new implementation gets away without all that.
 > 
-> OK, we have the main thream M and the sub-thread T, we are doing
+> Test:
 > 
-> 	do {
-> 		do_something(t);
-> 	} while_each_thread(M, t, M);
+> The test consists of two concurrent kernel build jobs in separate
+> source trees, the master and the slave.  The two jobs get along nicely
+> on 600MB of available memory, so this is the zero overcommit control
+> case.  When available memory is decreased, the overcommit is
+> compensated by decreasing the soft limit of the slave by the same
+> amount, in the hope that the slave takes the hit and the master stays
+> unaffected.
 > 
-> why we can't miss T if it does exec?
+>                                     600M-0M-vanilla         600M-0M-patched
+> Master walltime (s)               552.65 (  +0.00%)       552.38 (  -0.05%)
+> Master walltime (stddev)            1.25 (  +0.00%)         0.92 ( -14.66%)
+> Master major faults               204.38 (  +0.00%)       205.38 (  +0.49%)
+> Master major faults (stddev)       27.16 (  +0.00%)        13.80 ( -47.43%)
+> Master reclaim                     31.88 (  +0.00%)        37.75 ( +17.87%)
+> Master reclaim (stddev)            34.01 (  +0.00%)        75.88 (+119.59%)
+> Master scan                        31.88 (  +0.00%)        37.75 ( +17.87%)
+> Master scan (stddev)               34.01 (  +0.00%)        75.88 (+119.59%)
+> Master kswapd reclaim           33922.12 (  +0.00%)     33887.12 (  -0.10%)
+> Master kswapd reclaim (stddev)    969.08 (  +0.00%)       492.22 ( -49.16%)
+> Master kswapd scan              34085.75 (  +0.00%)     33985.75 (  -0.29%)
+> Master kswapd scan (stddev)      1101.07 (  +0.00%)       563.33 ( -48.79%)
+> Slave walltime (s)                552.68 (  +0.00%)       552.12 (  -0.10%)
+> Slave walltime (stddev)             0.79 (  +0.00%)         1.05 ( +14.76%)
+> Slave major faults                212.50 (  +0.00%)       204.50 (  -3.75%)
+> Slave major faults (stddev)        26.90 (  +0.00%)        13.17 ( -49.20%)
+> Slave reclaim                      26.12 (  +0.00%)        35.00 ( +32.72%)
+> Slave reclaim (stddev)             29.42 (  +0.00%)        74.91 (+149.55%)
+> Slave scan                         31.38 (  +0.00%)        35.00 ( +11.20%)
+> Slave scan (stddev)                33.31 (  +0.00%)        74.91 (+121.24%)
+> Slave kswapd reclaim            34259.00 (  +0.00%)     33469.88 (  -2.30%)
+> Slave kswapd reclaim (stddev)     925.15 (  +0.00%)       565.07 ( -38.88%)
+> Slave kswapd scan               34354.62 (  +0.00%)     33555.75 (  -2.33%)
+> Slave kswapd scan (stddev)        969.62 (  +0.00%)       581.70 ( -39.97%)
 > 
-
-So for:
-
-struct task *M; /* assuming this is passed in to us */
-struct task *L = M->group_leader;
-struct task *I = M;
-
-do {
-	do_something(T);
-} while_each_thread(M, T, L);
-
-Here is my thinking.
-
-If some thread K does exec, you won't miss it because:
-
-1) Ignoring the group_leader check, you'll visit K just by following
-   next_thread(). That's the case today and is what you except
-   when iterating over an rcu_list.
-2) (t->group_leader == o) will fail iff t is the exec thread.
-   Since we test t->group_leader before re-assigning it (t=next_thread()),
-   the test will fail only after visiting the exec thread. So you'll
-   visit the exec thread and then terminate the loop.
-
-I realize its a klutzy interface (requires 3 variables) but it seems
-correct (ignoring barriers) and meets all the requirements. I'm hoping
-it inspires a solution which is less klutzy and meet its all the
-requirements.
-
-Regards,
-Mandeep
-
-> Oleg.
+> In the control case, the differences in elapsed time, number of major
+> faults taken, and reclaim statistics are within the noise for both the
+> master and the slave job.
 > 
+>                                      600M-280M-vanilla      600M-280M-patched
+> Master walltime (s)                  595.13 (  +0.00%)      553.19 (  -7.04%)
+> Master walltime (stddev)               8.31 (  +0.00%)        2.57 ( -61.64%)
+> Master major faults                 3729.75 (  +0.00%)      783.25 ( -78.98%)
+> Master major faults (stddev)         258.79 (  +0.00%)      226.68 ( -12.36%)
+> Master reclaim                       705.00 (  +0.00%)       29.50 ( -95.68%)
+> Master reclaim (stddev)              232.87 (  +0.00%)       44.72 ( -80.45%)
+> Master scan                          714.88 (  +0.00%)       30.00 ( -95.67%)
+> Master scan (stddev)                 237.44 (  +0.00%)       45.39 ( -80.54%)
+> Master kswapd reclaim                114.75 (  +0.00%)       50.00 ( -55.94%)
+> Master kswapd reclaim (stddev)       128.51 (  +0.00%)        9.45 ( -91.93%)
+> Master kswapd scan                   115.75 (  +0.00%)       50.00 ( -56.32%)
+> Master kswapd scan (stddev)          130.31 (  +0.00%)        9.45 ( -92.04%)
+> Slave walltime (s)                   631.18 (  +0.00%)      577.68 (  -8.46%)
+> Slave walltime (stddev)                9.89 (  +0.00%)        3.63 ( -57.47%)
+> Slave major faults                 28401.75 (  +0.00%)    14656.75 ( -48.39%)
+> Slave major faults (stddev)         2629.97 (  +0.00%)     1911.81 ( -27.30%)
+> Slave reclaim                      65400.62 (  +0.00%)     1479.62 ( -97.74%)
+> Slave reclaim (stddev)             11623.02 (  +0.00%)     1482.13 ( -87.24%)
+> Slave scan                       9050047.88 (  +0.00%)    95968.25 ( -98.94%)
+> Slave scan (stddev)              1912786.94 (  +0.00%)    93390.71 ( -95.12%)
+> Slave kswapd reclaim              327894.50 (  +0.00%)   227099.88 ( -30.74%)
+> Slave kswapd reclaim (stddev)      22289.43 (  +0.00%)    16113.14 ( -27.71%)
+> Slave kswapd scan               34987335.75 (  +0.00%)  1362367.12 ( -96.11%)
+> Slave kswapd scan (stddev)       2523642.98 (  +0.00%)   156754.74 ( -93.79%)
+> 
+> Here, the available memory is limited to 320 MB, the machine is
+> overcommitted by 280 MB.  The soft limit of the master is 300 MB, that
+> of the slave merely 20 MB.
+> 
+> Looking at the slave job first, it is much better off with the patched
+> kernel: direct reclaim is almost gone, kswapd reclaim is decreased by
+> a third.  The result is much fewer major faults taken, which in turn
+> lets the job finish quicker.
+> 
+> It would be a zero-sum game if the improvement happened at the cost of
+> the master but looking at the numbers, even the master performs better
+> with the patched kernel.  In fact, the master job is almost unaffected
+> on the patched kernel compared to the control case.
+> 
+> This is an odd phenomenon, as the patch does not directly change how
+> the master is reclaimed.  An explanation for this is that the severe
+> overreclaim of the slave in the unpatched kernel results in the master
+> growing bigger than in the patched case.  Combining the fact that
+> memcgs are scanned according to their size with the increased refault
+> rate of the overreclaimed slave triggering global reclaim more often
+> means that overall pressure on the master job is higher in the
+> unpatched kernel.
+> 
+> At any rate, the patched kernel seems to do a much better job at both
+> overall resource allocation under soft limit overcommit as well as the
+> requested prioritization of the master job.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Thank you for your work and the result seems atractive and code is much
+simpler. My small concerns are..
+
+1. This approach may increase latency of direct-reclaim because of priority=0.
+2. In a case numa-spread/interleave application run in its own container, 
+   pages on a node may paged-out again and again becasue of priority=0
+   if some other application runs in the node.
+   It seems difficult to use soft-limit with numa-aware applications.
+   Do you have suggestions ?
+
+
+Thanks,
+-Kame
