@@ -1,51 +1,101 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH] net: decrement memcg jump label when limit, not usage, is changed
-Date: Thu, 12 Jan 2012 16:16:06 +0400
-Message-ID: <1326370566-4286-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
+Date: Thu, 12 Jan 2012 18:07:28 +0100
+Message-ID: <20120112170728.GA25717@redhat.com>
+References: <20111221190102.GE13529@google.com>
+	<20111221190817.GI17668@somewhere>
+	<20111221192413.GF13529@google.com>
+	<20111221200422.GJ17668@somewhere>
+	<20111222153004.GA30522@redhat.com>
+	<20120104193614.GF9511@google.com>
+	<20120106152356.GA23995@redhat.com>
+	<20120106182535.GJ9511@google.com>
+	<20120111160730.GA24556@redhat.com>
+	<20120112003102.GB9511@google.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120112003102.GB9511-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-The logic of the current code is that whenever we destroy
-a cgroup that had its limit set (set meaning different than
-maximum), we should decrement the jump_label counter.
-Otherwise we assume it was never incremented.
+Hi Mandeep,
 
-But what the code actually does is test for RES_USAGE
-instead of RES_LIMIT. Usage being different than maximum
-is likely to be true most of the time.
+On 01/11, Mandeep Singh Baines wrote:
+> > >
+> > > #define while_each_thread(g, t, o) \
+> > > 	while (t->group_leader == o && (t = next_thread(t)) != g)
+> > >
+> > > Where o should have the value of g->group_leader.
+> >
+> > I don't understand how this helps... and how this can work even
+> > ignoring the barriers.
+> >
+> > OK, we have the main thream M and the sub-thread T, we are doing
+> >
+> > 	do {
+> > 		do_something(t);
+> > 	} while_each_thread(M, t, M);
+> >
+> > why we can't miss T if it does exec?
+> >
+>
+> So for:
+>
+> struct task *M; /* assuming this is passed in to us */
+> struct task *L = M->group_leader;
 
-The effect of this is that the key must become negative,
-and since the jump_label test says:
+L == M
 
-        !!atomic_read(&key->enabled);
+> do {
+> 	do_something(T);
+> } while_each_thread(M, T, L);
+>
+> Here is my thinking.
+>
+> If some thread K does exec, you won't miss it because:
+>
+> 1) Ignoring the group_leader check, you'll visit K just by following
+>    next_thread(). That's the case today and is what you except
+>    when iterating over an rcu_list.
+> 2) (t->group_leader == o) will fail iff t is the exec thread.
+>    Since we test t->group_leader before re-assigning it (t=next_thread()),
+>    the test will fail only after visiting the exec thread. So you'll
+>    visit the exec thread and then terminate the loop.
 
-we'll have jump_labels still on when no one else is
-using this functionality.
+Still can't understand... Lets look at this trivial example again.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
----
- net/ipv4/tcp_memcontrol.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+We start from the main thread M, it is ->group_leader. There is
+another thread T in this thread group. We are doing
 
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index 7fed04f..4997878 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -108,7 +108,7 @@ void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	tcp = tcp_from_cgproto(cg_proto);
- 	percpu_counter_destroy(&tcp->tcp_sockets_allocated);
- 
--	val = res_counter_read_u64(&tcp->tcp_memory_allocated, RES_USAGE);
-+	val = res_counter_read_u64(&tcp->tcp_memory_allocated, RES_LIMIT);
- 
- 	if (val != RESOURCE_MAX)
- 		jump_label_dec(&memcg_socket_limit_enabled);
--- 
-1.7.7.4
+	OLD = M;
+
+	t = M;
+	do {
+		do_smth(t);
+	}
+	while (t->group_leader == OLD && ((t = next_thread(t)) != M);
+
+The first iteration does do_smth(M).
+
+T calls de_thread() and, in particular, it does M->group_leader = T
+(see "leader->group_leader = tsk" in de_thread).
+
+after that t->group_leader == OLD fails. t == M, its group_leader == T.
+do_smth(T) won't be called.
+
+No?
+
+Oleg.
