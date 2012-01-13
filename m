@@ -1,134 +1,103 @@
 From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 0/8] cgroups: Task counter subsystem v7
-Date: Fri, 13 Jan 2012 19:13:45 +0100
-Message-ID: <1326478441-3048-2-git-send-email-fweisbec@gmail.com>
+Subject: [PATCH 1/8] cgroups: add res_counter_write_u64() API
+Date: Fri, 13 Jan 2012 19:13:46 +0100
+Message-ID: <1326478441-3048-3-git-send-email-fweisbec@gmail.com>
 References: <1326478441-3048-1-git-send-email-fweisbec@gmail.com>
-Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
+        bh=3ioVye9l6bpPStYWkl5doq/2soKH6p8EJ9IeqAUvDmQ=;
+        b=c+pjhbkV90PpVbBlayGUxsWQiwJs/Y4ozhKV/lnLe5B+P6fG4JFvY/XkkSuSWx0k26
+         GZugf5mlBWn4PNiNDSkIgh6tdONTwy3BuysNLhfi4+L8SOwWTAHR1mBf6ge063qiu1/j
+         ifs47e9VeDozNnFHMONdJO9wFtKciYTak7POA=
+In-Reply-To: <1326478441-3048-1-git-send-email-fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
-	h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-	bh=QHqb6FXVlE732NlArzSnIbQqiuk5DNt/e5jr93ROGII=;
-	b=Zod1S59IUSFj0XGVXwuxhOJ4aMSGbB26iiLiEiKq7w6x9vgRM74GA8uFBU9HLvLgkN
-	ODcYs/GjbzNeI2fKU5QpPnlXGuBcNZqj8LBHOk3QhlZoT5zjpIBTuk0msrFIOt7PRX6h
-	+miRCMGVL3uG6EbVN7XVclCfkQSpO0TuGBwNc=
-In-Reply-To: <1326478441-3048-1-git-send-email-fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi,
+Extend the resource counter API with a mirror of res_counter_read_u64() to
+make it handy to update a resource counter value from a cgroup subsystem
+u64 value file.
 
-This is the task counter limitation patchset rebased on top
-of Tejun's latest cgroup tree (cgroup/for-3.3). In a later
-iteration, I also intend to include its selftests once the
-selftest subsystem is merged after -rc1.
+Signed-off-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Cc: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+ include/linux/res_counter.h |    2 ++
+ kernel/res_counter.c        |   25 +++++++++++++++++++------
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
-In fact, the rebase mostly is a concern of the last patch. The
-others haven't changed except a few unnoticeable dusts. Some patches
-have also been removed because either the last cgroup patches cover
-what they were doing or they were tiny changes I merged in the last
-patch (like a missing include of err.h fixed by Stephen Rothwell).
-
-Please note that Andrew Morton had doubts whether we want to merge
-it upstream or not. So don't merge it too eagerly before we sort out
-the debate.
-
-
-= What is this ? =
-
-The task counter subsystem counts the tasks inside a cgroup and
-rejects forks and cgroup migration when they result in a number
-of task above the user tunable limit.
-
-= Why is this needed ? =
-
-We want to be able to run untrustee programs into sandboxes and
-secure containers while protecting against forkbombs.
-
-This patchset allow us to:
-
-1) Prevent against forkbombs by setting an upper bound number of tasks
-in a cgroup. This prevents from a forkbomb to spread. This is typically
-NR_PROC rlimit but in the scope of a cgroup. Traditional NR_PROC doesn't
-help us here because we don't want to have some container starving all the
-others by spawning a high number of tasks when all these containers
-are running under the same user.
-
-2) Kill safely a cgroup. We want a non-racy and reliable way to kill
-all tasks in a cgroup, without racing against concurrent forks.
-
-Some practical cases from people who request this can be found here:
-
-     https://lkml.org/lkml/2011/12/13/309
-     https://lkml.org/lkml/2011/12/13/364
-
-More details on the last patch that provides the documentation.
-
-
-= Can that be used by Systemd? =
-
-Systemd uses cgroups to keep track of services and the processes it
-creates. Some feature have been requested in order to be able to reliably
-kill all the processes in a cgroup such that systemd to kill services without
-race.
-
-(Note I'm not debating here to know if Systemd is doing the right thing by
-using cgroups. I'm just focusing here on this particular feature request).
-
-The task counter subsystem could be used to solve this problem. However
-this involves the whole task counting machinery and this is too much
-overhead to be used for system services that tend to fork often.
-
-A simple core latch that rejects forks in a cgroup would be much more efficient
-for this precise purpose.
-
-
-= How does it interact with NR_PROC rlimit? =
-
-Both can be used at the same time. They don't conflict, they
-are just complementary.
-
-
-
-Frederic Weisbecker (7):
-  cgroups: add res_counter_write_u64() API
-  cgroups: new resource counter inheritance API
-  cgroups: ability to stop res charge propagation on bounded ancestor
-  res_counter: allow charge failure pointer to be null
-  cgroups: pull up res counter charge failure interpretation to caller
-  cgroups: allow subsystems to cancel a fork
-  cgroups: Add a task counter subsystem
-
-Kirill A. Shutemov (1):
-  cgroups: add res counter common ancestor searching
-
- Documentation/cgroups/resource_counter.txt |   20 ++-
- Documentation/cgroups/task_counter.txt     |  153 ++++++++++++++++
- include/linux/cgroup.h                     |   20 ++-
- include/linux/cgroup_subsys.h              |    8 +
- include/linux/res_counter.h                |   27 +++-
- init/Kconfig                               |    9 +
- kernel/Makefile                            |    1 +
- kernel/cgroup.c                            |   23 ++-
- kernel/cgroup_freezer.c                    |    6 +-
- kernel/cgroup_task_counter.c               |  272 ++++++++++++++++++++++++++++
- kernel/exit.c                              |    2 +-
- kernel/fork.c                              |    7 +-
- kernel/res_counter.c                       |   97 +++++++++--
- 13 files changed, 612 insertions(+), 33 deletions(-)
- create mode 100644 Documentation/cgroups/task_counter.txt
- create mode 100644 kernel/cgroup_task_counter.c
-
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+index c9d625c..1b3fe05 100644
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -82,6 +82,8 @@ int res_counter_memparse_write_strategy(const char *buf,
+ int res_counter_write(struct res_counter *counter, int member,
+ 		      const char *buffer, write_strategy_fn write_strategy);
+ 
++void res_counter_write_u64(struct res_counter *counter, int member, u64 val);
++
+ /*
+  * the field descriptors. one for each member of res_counter
+  */
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index 6d269cc..58ae85e 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -167,12 +167,26 @@ int res_counter_memparse_write_strategy(const char *buf,
+ 	return 0;
+ }
+ 
++void res_counter_write_u64(struct res_counter *counter, int member, u64 val)
++{
++	unsigned long long *target;
++	unsigned long flags;
++
++	/*
++	 * We need the lock to protect against concurrent add/dec on 32 bits.
++	 * No need to ifdef it's seldom used.
++	 */
++	spin_lock_irqsave(&counter->lock, flags);
++	target = res_counter_member(counter, member);
++	*target = val;
++	spin_unlock_irqrestore(&counter->lock, flags);
++}
++
+ int res_counter_write(struct res_counter *counter, int member,
+ 		      const char *buf, write_strategy_fn write_strategy)
+ {
+ 	char *end;
+-	unsigned long flags;
+-	unsigned long long tmp, *val;
++	unsigned long long tmp;
+ 
+ 	if (write_strategy) {
+ 		if (write_strategy(buf, &tmp))
+@@ -182,9 +196,8 @@ int res_counter_write(struct res_counter *counter, int member,
+ 		if (*end != '\0')
+ 			return -EINVAL;
+ 	}
+-	spin_lock_irqsave(&counter->lock, flags);
+-	val = res_counter_member(counter, member);
+-	*val = tmp;
+-	spin_unlock_irqrestore(&counter->lock, flags);
++
++	res_counter_write_u64(counter, member, tmp);
++
+ 	return 0;
+ }
 -- 
 1.7.5.4
