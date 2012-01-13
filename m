@@ -1,58 +1,60 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: [RFC] [PATCH 1/7 v2] memcg: remove unnecessary check in
- mem_cgroup_update_page_stat()
-Date: Fri, 13 Jan 2012 17:32:27 +0900
-Message-ID: <20120113173227.df2baae3.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: [RFC] [PATCH 2/7 v2] memcg: add memory barrier for checking account
+ move.
+Date: Fri, 13 Jan 2012 17:33:47 +0900
+Message-ID: <20120113173347.6231f510.kamezawa.hiroyu@jp.fujitsu.com>
 References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120113173001.ee5260ca.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Ying Han <yinghan@google.com>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+I think this bugfix is needed before going ahead. thoughts?
+==
+From 2cb491a41782b39aae9f6fe7255b9159ac6c1563 Mon Sep 17 00:00:00 2001
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Date: Fri, 13 Jan 2012 14:27:20 +0900
+Subject: [PATCH 2/7] memcg: add memory barrier for checking account move.
 
-From 788aebf15f3fa37940e0745cab72547e20683bf2 Mon Sep 17 00:00:00 2001
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Date: Thu, 12 Jan 2012 16:08:33 +0900
-Subject: [PATCH 1/7] memcg: remove unnecessary check in mem_cgroup_update_page_stat()
+At starting move_account(), source memcg's per-cpu variable
+MEM_CGROUP_ON_MOVE is set. The page status update
+routine check it under rcu_read_lock(). But there is no memory
+barrier. This patch adds one.
 
-commit 10ea69f1182b removes move_lock_page_cgroup() in thp-split path.
-So, this PageTransHuge() check is unnecessary, too.
-
-Note:
- - considering when mem_cgroup_update_page_stat() is called,
-   there will be no race between split_huge_page() and update_page_stat().
-   All required locks are held in higher level.
-
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Signed-off-by: KAMAZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- mm/memcontrol.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ mm/memcontrol.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 21ba356..08b988d 100644
+index 08b988d..9019069 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1866,7 +1866,7 @@ void mem_cgroup_update_page_stat(struct page *page,
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
- 		goto out;
- 	/* pc->mem_cgroup is unstable ? */
--	if (unlikely(mem_cgroup_stealed(memcg)) || PageTransHuge(page)) {
-+	if (unlikely(mem_cgroup_stealed(memcg))) {
- 		/* take a lock against to access pc->mem_cgroup */
- 		move_lock_page_cgroup(pc, &flags);
- 		need_unlock = true;
+@@ -1256,8 +1256,10 @@ static void mem_cgroup_start_move(struct mem_cgroup *memcg)
+ 
+ 	get_online_cpus();
+ 	spin_lock(&memcg->pcp_counter_lock);
+-	for_each_online_cpu(cpu)
++	for_each_online_cpu(cpu) {
+ 		per_cpu(memcg->stat->count[MEM_CGROUP_ON_MOVE], cpu) += 1;
++		smp_wmb();
++	}
+ 	memcg->nocpu_base.count[MEM_CGROUP_ON_MOVE] += 1;
+ 	spin_unlock(&memcg->pcp_counter_lock);
+ 	put_online_cpus();
+@@ -1294,6 +1296,7 @@ static void mem_cgroup_end_move(struct mem_cgroup *memcg)
+ static bool mem_cgroup_stealed(struct mem_cgroup *memcg)
+ {
+ 	VM_BUG_ON(!rcu_read_lock_held());
++	smp_rmb();
+ 	return this_cpu_read(memcg->stat->count[MEM_CGROUP_ON_MOVE]) > 0;
+ }
+ 
 -- 
 1.7.4.1
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
