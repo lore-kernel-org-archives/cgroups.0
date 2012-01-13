@@ -1,96 +1,145 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Fri, 13 Jan 2012 17:34:23 +0100
-Message-ID: <20120113163423.GG17060@tiehlicka.suse.cz>
-References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
- <1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
- <20120113120406.GC17060@tiehlicka.suse.cz>
- <20120113155001.GB1653@cmpxchg.org>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 0/8] cgroups: Task counter subsystem v7
+Date: Fri, 13 Jan 2012 19:13:44 +0100
+Message-ID: <1326478441-3048-1-git-send-email-fweisbec@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120113155001.GB1653-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+	h=from:to:cc:subject:date:message-id:x-mailer;
+	bh=05q+LYgkvGK0uNEImCb/h5ilr39baW5Kdnhvcmd07/s=;
+	b=JveE/LJ88nz1mv4Gz/RMSSvstlS3FjyZUTMJD0im59DBv+4+f0w94Sg7hOmYAfP002
+	aAf8ZpcLrR363v/Q5Bec1GgS9uHHP0EtXhAam/qcjnNpTkB7Wu2RdllitKXn/nTaBKs5
+	uhZ9NHtS55jnQFjwhJ76tvNFyET8e3ZMkl+mI=
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-On Fri 13-01-12 16:50:01, Johannes Weiner wrote:
-> On Fri, Jan 13, 2012 at 01:04:06PM +0100, Michal Hocko wrote:
-> > On Tue 10-01-12 16:02:52, Johannes Weiner wrote:
-[...]
-> > > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
-> > > +			       struct mem_cgroup *memcg)
-> > > +{
-> > > +	if (mem_cgroup_disabled())
-> > > +		return false;
-> > > +
-> > > +	if (!root)
-> > > +		root = root_mem_cgroup;
-> > > +
-> > > +	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-> > > +		/* root_mem_cgroup does not have a soft limit */
-> > > +		if (memcg == root_mem_cgroup)
-> > > +			break;
-> > > +		if (res_counter_soft_limit_excess(&memcg->res))
-> > > +			return true;
-> > > +		if (memcg == root)
-> > > +			break;
-> > > +	}
-> > > +	return false;
-> > > +}
-> > 
-> > Well, this might be little bit tricky. We do not check whether memcg and
-> > root are in a hierarchy (in terms of use_hierarchy) relation. 
-> > 
-> > If we are under global reclaim then we iterate over all memcgs and so
-> > there is no guarantee that there is a hierarchical relation between the
-> > given memcg and its parent. While, on the other hand, if we are doing
-> > memcg reclaim then we have this guarantee.
-> > 
-> > Why should we punish a group (subtree) which is perfectly under its soft
-> > limit just because some other subtree contributes to the common parent's
-> > usage and makes it over its limit?
-> > Should we check memcg->use_hierarchy here?
-> 
-> We do, actually.  parent_mem_cgroup() checks the res_counter parent,
-> which is only set when ->use_hierarchy is also set.  
+Hi,
 
-Of course I am blind.. We do not setup res_counter parent for
-!use_hierarchy case. Sorry for noise...
-Now it makes much better sense. I was wondering how !use_hierarchy could
-ever work, this should be a signal that I am overlooking something
-terribly.
+This is the task counter limitation patchset rebased on top
+of Tejun's latest cgroup tree (cgroup/for-3.3). In a later
+iteration, I also intend to include its selftests once the
+selftest subsystem is merged after -rc1.
 
-[...]
-> > > @@ -2121,8 +2121,16 @@ static void shrink_zone(int priority, struct zone *zone,
-> > >  			.mem_cgroup = memcg,
-> > >  			.zone = zone,
-> > >  		};
-> > > +		int epriority = priority;
-> > > +		/*
-> > > +		 * Put more pressure on hierarchies that exceed their
-> > > +		 * soft limit, to push them back harder than their
-> > > +		 * well-behaving siblings.
-> > > +		 */
-> > > +		if (mem_cgroup_over_softlimit(root, memcg))
-> > > +			epriority = 0;
-> > 
-> > This sounds too aggressive to me. Shouldn't we just double the pressure
-> > or something like that?
-> 
-> That's the historical value.  When I tried priority - 1, it was not
-> aggressive enough.
+In fact, the rebase mostly is a concern of the last patch. The
+others haven't changed except a few unnoticeable dusts. Some patches
+have also been removed because either the last cgroup patches cover
+what they were doing or they were tiny changes I merged in the last
+patch (like a missing include of err.h fixed by Stephen Rothwell).
 
-Probably because we want to reclaim too much. Maybe we should do
-reduce nr_to_reclaim (ugly) or reclaim only overlimit groups until certain
-priority level as Ying suggested in her patchset.
+Please note that Andrew Morton had doubts whether we want to merge
+it upstream or not. So don't merge it too eagerly before we sort out
+the debate.
+
+
+= What is this ? =
+
+The task counter subsystem counts the tasks inside a cgroup and
+rejects forks and cgroup migration when they result in a number
+of task above the user tunable limit.
+
+= Why is this needed ? =
+
+We want to be able to run untrustee programs into sandboxes and
+secure containers while protecting against forkbombs.
+
+This patchset allow us to:
+
+1) Prevent against forkbombs by setting an upper bound number of tasks
+in a cgroup. This prevents from a forkbomb to spread. This is typically
+NR_PROC rlimit but in the scope of a cgroup. Traditional NR_PROC doesn't
+help us here because we don't want to have some container starving all the
+others by spawning a high number of tasks when all these containers
+are running under the same user.
+
+2) Kill safely a cgroup. We want a non-racy and reliable way to kill
+all tasks in a cgroup, without racing against concurrent forks.
+
+Some practical cases from people who request this can be found here:
+
+     https://lkml.org/lkml/2011/12/13/309
+     https://lkml.org/lkml/2011/12/13/364
+
+More details on the last patch that provides the documentation.
+
+
+= Can that be used by Systemd? =
+
+Systemd uses cgroups to keep track of services and the processes it
+creates. Some feature have been requested in order to be able to reliably
+kill all the processes in a cgroup such that systemd to kill services without
+race.
+
+(Note I'm not debating here to know if Systemd is doing the right thing by
+using cgroups. I'm just focusing here on this particular feature request).
+
+The task counter subsystem could be used to solve this problem. However
+this involves the whole task counting machinery and this is too much
+overhead to be used for system services that tend to fork often.
+
+A simple core latch that rejects forks in a cgroup would be much more efficient
+for this precise purpose.
+
+
+= How does it interact with NR_PROC rlimit? =
+
+Both can be used at the same time. They don't conflict, they
+are just complementary.
+
+
+= Why not rather focus on a generic solution to protect against forkbomb ? =
+
+If you know a more generic solution to protect against forkbombs that not
+only works in containers but in more cases, I'll be happy to drop this patchset
+and focus on that instead.
+
+Note we need a solution that meets our requirements for untrustees running in
+containers, something that also prevents a forkbomb from doing any damage like
+even a temporary DDOS. We don't want sandboxes and containers to severely impact
+the rest of the system.
+
+Thanks.
+
+---
+Frederic Weisbecker (7):
+  cgroups: add res_counter_write_u64() API
+  cgroups: new resource counter inheritance API
+  cgroups: ability to stop res charge propagation on bounded ancestor
+  res_counter: allow charge failure pointer to be null
+  cgroups: pull up res counter charge failure interpretation to caller
+  cgroups: allow subsystems to cancel a fork
+  cgroups: Add a task counter subsystem
+
+Kirill A. Shutemov (1):
+  cgroups: add res counter common ancestor searching
+
+ Documentation/cgroups/resource_counter.txt |   20 ++-
+ Documentation/cgroups/task_counter.txt     |  153 ++++++++++++++++
+ include/linux/cgroup.h                     |   20 ++-
+ include/linux/cgroup_subsys.h              |    8 +
+ include/linux/res_counter.h                |   27 +++-
+ init/Kconfig                               |    9 +
+ kernel/Makefile                            |    1 +
+ kernel/cgroup.c                            |   23 ++-
+ kernel/cgroup_freezer.c                    |    6 +-
+ kernel/cgroup_task_counter.c               |  272 ++++++++++++++++++++++++++++
+ kernel/exit.c                              |    2 +-
+ kernel/fork.c                              |    7 +-
+ kernel/res_counter.c                       |   97 +++++++++--
+ 13 files changed, 612 insertions(+), 33 deletions(-)
+ create mode 100644 Documentation/cgroups/task_counter.txt
+ create mode 100644 kernel/cgroup_task_counter.c
+
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+1.7.5.4
