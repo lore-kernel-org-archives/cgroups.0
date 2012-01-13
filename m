@@ -1,11 +1,12 @@
 From: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Fri, 13 Jan 2012 13:31:16 -0800
-Message-ID: <CALWz4iz3sQX+pCr19rE3_SwV+pRFhDJ7Lq-uJuYBq6u3mRU3AQ@mail.gmail.com>
+Date: Fri, 13 Jan 2012 13:45:30 -0800
+Message-ID: <CALWz4iyj4SMMyYhbuZ3HUq-jvcZUCGarceYY7vxm4b7X=yvCMg@mail.gmail.com>
 References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
 	<1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
-	<CALWz4izwNBN_qcSsqg-qYw-Esc9vBL3=4cv3Wsg1jf6001_fWQ@mail.gmail.com>
-	<20120112085904.GG24386@cmpxchg.org>
+	<20120113120406.GC17060@tiehlicka.suse.cz>
+	<20120113155001.GB1653@cmpxchg.org>
+	<20120113163423.GG17060@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -13,487 +14,125 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=gamma;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc:x-system-of-record:content-type:content-transfer-encoding;
-        bh=/AFmawpk7Ftgbs1t3hdLl/rs4EuQA8OPDFGGWsJvKdA=;
-        b=a+mWXsFWRRPQOg+x6x5w2Uvc0SgofbfzBkG/A7FxUSJstWNz72G14hqPz8xp5nq9nU
-         WzqIPTM4slrqoFQ+34XWTIGihCkxLlqRZ442lE++Eb5gvXA+0eCMtYmS7h2TI/PPxtyd
-         pE5kiiZyudvrjViPckqlgOZw1Y1RUHadulbFo=
-In-Reply-To: <20120112085904.GG24386-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=t4Z7HJpkDoiRrr5yS7q/iJ5wwepsDIBlKmBl1FqTfAU=;
+        b=yZoGq89exe8cllfKn1mllg85y/UIubLpilsJ/FbBnBVe/lF/lwp/hSGQ7108F34Mn3
+         7sk9PM+Uwnm4oYGNW75eE4B7avEA4sifQWzCGF3SjSKF9Lgmymr4ftjP1Byf4YPJGLOa
+         qfnYc3UTziZUY5M6TeibmXBtdZDt2bS7bP9JU=
+In-Reply-To: <20120113163423.GG17060-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Jan 12, 2012 at 12:59 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> =
-wrote:
-> On Wed, Jan 11, 2012 at 01:42:31PM -0800, Ying Han wrote:
->> On Tue, Jan 10, 2012 at 7:02 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org=
-> wrote:
->> > Right now, memcg soft limits are implemented by having a sorted tr=
-ee
->> > of memcgs that are in excess of their limits. =A0Under global memo=
-ry
->> > pressure, kswapd first reclaims from the biggest excessor and then
->> > proceeds to do regular global reclaim. =A0The result of this is th=
-at
->> > pages are reclaimed from all memcgs, but more scanning happens aga=
-inst
->> > those above their soft limit.
->> >
->> > With global reclaim doing memcg-aware hierarchical reclaim by defa=
-ult,
->> > this is a lot easier to implement: everytime a memcg is reclaimed
->> > from, scan more aggressively (per tradition with a priority of 0) =
-if
->> > it's above its soft limit. =A0With the same end result of scanning
->> > everybody, but soft limit excessors a bit more.
->> >
->> > Advantages:
->> >
->> > =A0o smoother reclaim: soft limit reclaim is a separate stage befo=
-re
->> > =A0 =A0global reclaim, whose result is not communicated down the l=
-ine and
->> > =A0 =A0so overreclaim of the groups in excess is very likely. =A0A=
-fter this
->> > =A0 =A0patch, soft limit reclaim is fully integrated into regular =
-reclaim
->> > =A0 =A0and each memcg is considered exactly once per cycle.
->> >
->> > =A0o true hierarchy support: soft limits are only considered when
->> > =A0 =A0kswapd does global reclaim, but after this patch, targetted
->> > =A0 =A0reclaim of a memcg will mind the soft limit settings of its=
- child
->> > =A0 =A0groups.
->>
->> Why we add soft limit reclaim into target reclaim?
->
-> =A0 =A0 =A0 =A0-> A hard limit 10G, usage 10G
-> =A0 =A0 =A0 =A0 =A0 -> A1 soft limit 8G, usage 5G
-> =A0 =A0 =A0 =A0 =A0 -> A2 soft limit 2G, usage 5G
->
-> When A hits its hard limit, A2 will experience more pressure than A1.
->
-> Soft limits are already applied hierarchically: the memcg that is
-> picked from the tree is reclaimed hierarchically. =A0What I wanted to
-> add is the soft limit also being /triggerable/ from non-global
-> hierarchy levels.
->
->> Based on the discussions, my understanding is that the soft limit on=
-ly
->> take effect while the whole machine is under memory contention. We
->> don't want to add extra pressure on a cgroup if there is free memory
->> on the system even the cgroup is above its limit.
->
-> If a hierarchy is under pressure, we will reclaim that hierarchy. =A0=
-We
-> allow groups to be prioritized under global pressure, why not allow i=
-t
-> for local pressure as well?
->
-> I am not quite sure what you are objecting to.
-
->
->> > =A0o code size: soft limit reclaim requires a lot of code to maint=
-ain
->> > =A0 =A0the per-node per-zone rb-trees to quickly find the biggest
->> > =A0 =A0offender, dedicated paths for soft limit reclaim etc. while=
- this
->> > =A0 =A0new implementation gets away without all that.
->> >
->> > Test:
->> >
->> > The test consists of two concurrent kernel build jobs in separate
->> > source trees, the master and the slave. =A0The two jobs get along =
-nicely
->> > on 600MB of available memory, so this is the zero overcommit contr=
-ol
->> > case. =A0When available memory is decreased, the overcommit is
->> > compensated by decreasing the soft limit of the slave by the same
->> > amount, in the hope that the slave takes the hit and the master st=
-ays
->> > unaffected.
->> >
->> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0600M-0M-vanilla =A0 =A0 =A0 =A0 600M-0M-patched
->> > Master walltime (s) =A0 =A0 =A0 =A0 =A0 =A0 =A0 552.65 ( =A0+0.00%=
-) =A0 =A0 =A0 552.38 ( =A0-0.05%)
->> > Master walltime (stddev) =A0 =A0 =A0 =A0 =A0 =A01.25 ( =A0+0.00%) =
-=A0 =A0 =A0 =A0 0.92 ( -14.66%)
->> > Master major faults =A0 =A0 =A0 =A0 =A0 =A0 =A0 204.38 ( =A0+0.00%=
-) =A0 =A0 =A0 205.38 ( =A0+0.49%)
->> > Master major faults (stddev) =A0 =A0 =A0 27.16 ( =A0+0.00%) =A0 =A0=
- =A0 =A013.80 ( -47.43%)
->> > Master reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 31.88 ( =A0=
-+0.00%) =A0 =A0 =A0 =A037.75 ( +17.87%)
->> > Master reclaim (stddev) =A0 =A0 =A0 =A0 =A0 =A034.01 ( =A0+0.00%) =
-=A0 =A0 =A0 =A075.88 (+119.59%)
->> > Master scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A031.88 (=
- =A0+0.00%) =A0 =A0 =A0 =A037.75 ( +17.87%)
->> > Master scan (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A0 34.01 ( =A0+0.00%=
-) =A0 =A0 =A0 =A075.88 (+119.59%)
->> > Master kswapd reclaim =A0 =A0 =A0 =A0 =A0 33922.12 ( =A0+0.00%) =A0=
- =A0 33887.12 ( =A0-0.10%)
->> > Master kswapd reclaim (stddev) =A0 =A0969.08 ( =A0+0.00%) =A0 =A0 =
-=A0 492.22 ( -49.16%)
->> > Master kswapd scan =A0 =A0 =A0 =A0 =A0 =A0 =A034085.75 ( =A0+0.00%=
-) =A0 =A0 33985.75 ( =A0-0.29%)
->> > Master kswapd scan (stddev) =A0 =A0 =A01101.07 ( =A0+0.00%) =A0 =A0=
- =A0 563.33 ( -48.79%)
->> > Slave walltime (s) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0552.68 ( =A0+0.0=
-0%) =A0 =A0 =A0 552.12 ( =A0-0.10%)
->> > Slave walltime (stddev) =A0 =A0 =A0 =A0 =A0 =A0 0.79 ( =A0+0.00%) =
-=A0 =A0 =A0 =A0 1.05 ( +14.76%)
->> > Slave major faults =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0212.50 ( =A0+0.0=
-0%) =A0 =A0 =A0 204.50 ( =A0-3.75%)
->> > Slave major faults (stddev) =A0 =A0 =A0 =A026.90 ( =A0+0.00%) =A0 =
-=A0 =A0 =A013.17 ( -49.20%)
->> > Slave reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A026.12 ( =A0=
-+0.00%) =A0 =A0 =A0 =A035.00 ( +32.72%)
->> > Slave reclaim (stddev) =A0 =A0 =A0 =A0 =A0 =A0 29.42 ( =A0+0.00%) =
-=A0 =A0 =A0 =A074.91 (+149.55%)
->> > Slave scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 31.38 (=
- =A0+0.00%) =A0 =A0 =A0 =A035.00 ( +11.20%)
->> > Slave scan (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A033.31 ( =A0+0.0=
-0%) =A0 =A0 =A0 =A074.91 (+121.24%)
->> > Slave kswapd reclaim =A0 =A0 =A0 =A0 =A0 =A034259.00 ( =A0+0.00%) =
-=A0 =A0 33469.88 ( =A0-2.30%)
->> > Slave kswapd reclaim (stddev) =A0 =A0 925.15 ( =A0+0.00%) =A0 =A0 =
-=A0 565.07 ( -38.88%)
->> > Slave kswapd scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 34354.62 ( =A0+0.00%=
-) =A0 =A0 33555.75 ( =A0-2.33%)
->> > Slave kswapd scan (stddev) =A0 =A0 =A0 =A0969.62 ( =A0+0.00%) =A0 =
-=A0 =A0 581.70 ( -39.97%)
->> >
->> > In the control case, the differences in elapsed time, number of ma=
-jor
->> > faults taken, and reclaim statistics are within the noise for both=
- the
->> > master and the slave job.
->>
->> What's the soft limit setting in the controlled case?
->
-> 300MB for both jobs.
->
->> I assume it is the default RESOURCE_MAX. So both Master and Slave ge=
-t
->> equal pressure before/after the patch, and no differences on the sta=
-ts
->> should be observed.
->
-> Yes. =A0The control case demonstrates that both jobs can fit
-> comfortably, don't compete for space and that in general the patch
-> does not have unexpected negative impact (after all, it modifies
-> codepaths that were invoked regularly outside of reclaim).
->
->> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 600M-280M-vanilla =A0 =A0 =A0600M-280M-patched
->> > Master walltime (s) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0595.13 ( =A0=
-+0.00%) =A0 =A0 =A0553.19 ( =A0-7.04%)
->> > Master walltime (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A0 8.31 ( =A0+0.=
-00%) =A0 =A0 =A0 =A02.57 ( -61.64%)
->> > Master major faults =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 3729.75 ( =A0+=
-0.00%) =A0 =A0 =A0783.25 ( -78.98%)
->> > Master major faults (stddev) =A0 =A0 =A0 =A0 258.79 ( =A0+0.00%) =A0=
- =A0 =A0226.68 ( -12.36%)
->> > Master reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 705.00 =
-( =A0+0.00%) =A0 =A0 =A0 29.50 ( -95.68%)
->> > Master reclaim (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A0232.87 ( =A0+0.=
-00%) =A0 =A0 =A0 44.72 ( -80.45%)
->> > Master scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0714=
-=2E88 ( =A0+0.00%) =A0 =A0 =A0 30.00 ( -95.67%)
->> > Master scan (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 237.44 ( =A0+=
-0.00%) =A0 =A0 =A0 45.39 ( -80.54%)
->> > Master kswapd reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0114.75 ( =A0+=
-0.00%) =A0 =A0 =A0 50.00 ( -55.94%)
->> > Master kswapd reclaim (stddev) =A0 =A0 =A0 128.51 ( =A0+0.00%) =A0=
- =A0 =A0 =A09.45 ( -91.93%)
->> > Master kswapd scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 115.75 ( =A0=
-+0.00%) =A0 =A0 =A0 50.00 ( -56.32%)
->> > Master kswapd scan (stddev) =A0 =A0 =A0 =A0 =A0130.31 ( =A0+0.00%)=
- =A0 =A0 =A0 =A09.45 ( -92.04%)
->> > Slave walltime (s) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 631.18 ( =A0=
-+0.00%) =A0 =A0 =A0577.68 ( =A0-8.46%)
->> > Slave walltime (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A09.89 ( =A0+=
-0.00%) =A0 =A0 =A0 =A03.63 ( -57.47%)
->> > Slave major faults =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 28401.75 ( =A0+=
-0.00%) =A0 =A014656.75 ( -48.39%)
->> > Slave major faults (stddev) =A0 =A0 =A0 =A0 2629.97 ( =A0+0.00%) =A0=
- =A0 1911.81 ( -27.30%)
->> > Slave reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A065400.62 =
-( =A0+0.00%) =A0 =A0 1479.62 ( -97.74%)
->> > Slave reclaim (stddev) =A0 =A0 =A0 =A0 =A0 =A0 11623.02 ( =A0+0.00=
-%) =A0 =A0 1482.13 ( -87.24%)
->> > Slave scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 9050047.88 =
-( =A0+0.00%) =A0 =A095968.25 ( -98.94%)
->> > Slave scan (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A01912786.94 ( =A0+0.=
-00%) =A0 =A093390.71 ( -95.12%)
->> > Slave kswapd reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0327894.50 ( =A0+0.=
-00%) =A0 227099.88 ( -30.74%)
->> > Slave kswapd reclaim (stddev) =A0 =A0 =A022289.43 ( =A0+0.00%) =A0=
- =A016113.14 ( -27.71%)
->> > Slave kswapd scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 34987335.75 ( =A0+0.=
-00%) =A01362367.12 ( -96.11%)
->> > Slave kswapd scan (stddev) =A0 =A0 =A0 2523642.98 ( =A0+0.00%) =A0=
- 156754.74 ( -93.79%)
->> >
->> > Here, the available memory is limited to 320 MB, the machine is
->> > overcommitted by 280 MB. =A0The soft limit of the master is 300 MB=
-, that
->> > of the slave merely 20 MB.
->> >
->> > Looking at the slave job first, it is much better off with the pat=
-ched
->> > kernel: direct reclaim is almost gone, kswapd reclaim is decreased=
- by
->> > a third. =A0The result is much fewer major faults taken, which in =
-turn
->> > lets the job finish quicker.
->>
->> What's the setting of the hard limit here? Is the direct reclaim
->> referring to per-memcg directly reclaim or global one.
->
-> The machine's memory is limited to 600M, the hard limits are unset.
-> All reclaim is a result of global memory pressure.
->
-> With the patched kernel, I could have used a dedicated parent cgroup
-> and let master and slave run in children of this group, the soft
-> limits would be taken into account just the same. =A0But this does no=
-t
-> work on the unpatched kernel, as soft limits are only recognized on
-> the global level there.
->
->> > It would be a zero-sum game if the improvement happened at the cos=
-t of
->> > the master but looking at the numbers, even the master performs be=
-tter
->> > with the patched kernel. =A0In fact, the master job is almost unaf=
-fected
->> > on the patched kernel compared to the control case.
->>
->> It makes sense since the master job get less affected by the patch
->> than the slave job under the example. Under the control case, if bot=
-h
->> master and slave have RESOURCE_MAX soft limit setting, they are unde=
-r
->> equal memory pressure(priority =3D DEF_PRIORITY) . On the second
->> example, only the slave pressure being increased by priority =3D 0, =
-and
->> the Master got scanned with same priority =3D DEF_PRIORITY pretty mu=
-ch.
->>
->> So I would expect to see more reclaim activities happens in slave on
->> the patched kernel compared to the control case. It seems match the
->> testing result.
->
-> Uhm,
->
->> > Slave reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A065400.62 =
-( =A0+0.00%) =A0 =A0 1479.62 ( -97.74%)
->> > Slave reclaim (stddev) =A0 =A0 =A0 =A0 =A0 =A0 11623.02 ( =A0+0.00=
-%) =A0 =A0 1482.13 ( -87.24%)
->> > Slave scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 9050047.88 =
-( =A0+0.00%) =A0 =A095968.25 ( -98.94%)
->> > Slave scan (stddev) =A0 =A0 =A0 =A0 =A0 =A0 =A01912786.94 ( =A0+0.=
-00%) =A0 =A093390.71 ( -95.12%)
->> > Slave kswapd reclaim =A0 =A0 =A0 =A0 =A0 =A0 =A0327894.50 ( =A0+0.=
-00%) =A0 227099.88 ( -30.74%)
->> > Slave kswapd reclaim (stddev) =A0 =A0 =A022289.43 ( =A0+0.00%) =A0=
- =A016113.14 ( -27.71%)
->> > Slave kswapd scan =A0 =A0 =A0 =A0 =A0 =A0 =A0 34987335.75 ( =A0+0.=
-00%) =A01362367.12 ( -96.11%)
->> > Slave kswapd scan (stddev) =A0 =A0 =A0 2523642.98 ( =A0+0.00%) =A0=
- 156754.74 ( -93.79%)
->
-> Direct reclaim _shrunk_ by 98%, kswapd reclaim by 31%.
->
->> > This is an odd phenomenon, as the patch does not directly change h=
-ow
->> > the master is reclaimed. =A0An explanation for this is that the se=
-vere
->> > overreclaim of the slave in the unpatched kernel results in the ma=
-ster
->> > growing bigger than in the patched case. =A0Combining the fact tha=
-t
->> > memcgs are scanned according to their size with the increased refa=
-ult
->> > rate of the overreclaimed slave triggering global reclaim more oft=
-en
->> > means that overall pressure on the master job is higher in the
->> > unpatched kernel.
->>
->> We can check the Master memory.usage_in_bytes while the job is runni=
-ng.
->
-> Yep, the plots of cache/rss over time confirmed exactly this. =A0The
-> unpatched kernel shows higher spikes in the size of the master job
-> followed by deeper pits when reclaim kicked in. =A0The patched kernel=
- is
-> much smoother in that regard.
->
->> On the other hand, I don't see why we expect the Master being less
->> reclaimed in the controlled case? On the unpatched kernel, the Maste=
-r
->> is being reclaimed under global pressure each time anyway since we
->> ignore the return value of softlimit.
->
-> I didn't expect that, I expected both jobs to perform equally in the
-> control case. =A0And in the pressurized case, the master being
-> unaffected and the slave taking the hit. =A0The patched kernel does
-> this, the unpatched one does not.
->
->> > @@ -121,6 +121,7 @@ struct zone_reclaim_stat *mem_cgroup_get_recla=
-im_stat(struct mem_cgroup *memcg,
->> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct zone *zone);
->> > =A0struct zone_reclaim_stat*
->> > =A0mem_cgroup_get_reclaim_stat_from_page(struct page *page);
->> > +bool mem_cgroup_over_softlimit(struct mem_cgroup *, struct mem_cg=
-roup *);
->>
->> Maybe something like "mem_cgroup_over_soft_limit()" ?
->
-> Probably more consistent, yeah. =A0Will do.
->
->> > @@ -343,7 +314,6 @@ static bool move_file(void)
->> > =A0* limit reclaim to prevent infinite loops, if they ever occur.
->> > =A0*/
->> > =A0#define =A0 =A0 =A0 =A0MEM_CGROUP_MAX_RECLAIM_LOOPS =A0 =A0 =A0=
- =A0 =A0 =A0(100)
->> > -#define =A0 =A0 =A0 =A0MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS (2=
+On Fri, Jan 13, 2012 at 8:34 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> On Fri 13-01-12 16:50:01, Johannes Weiner wrote:
+>> On Fri, Jan 13, 2012 at 01:04:06PM +0100, Michal Hocko wrote:
+>> > On Tue 10-01-12 16:02:52, Johannes Weiner wrote:
+> [...]
+>> > > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
+>> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct mem_cgro=
+up *memcg)
+>> > > +{
+>> > > + if (mem_cgroup_disabled())
+>> > > + =A0 =A0 =A0 =A0 return false;
+>> > > +
+>> > > + if (!root)
+>> > > + =A0 =A0 =A0 =A0 root =3D root_mem_cgroup;
+>> > > +
+>> > > + for (; memcg; memcg =3D parent_mem_cgroup(memcg)) {
+>> > > + =A0 =A0 =A0 =A0 /* root_mem_cgroup does not have a soft limit =
+*/
+>> > > + =A0 =A0 =A0 =A0 if (memcg =3D=3D root_mem_cgroup)
+>> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+>> > > + =A0 =A0 =A0 =A0 if (res_counter_soft_limit_excess(&memcg->res)=
 )
->>
->> You might need to remove the comment above as well.
->
-> Oops, will fix.
->
->> > @@ -1318,6 +1123,36 @@ static unsigned long mem_cgroup_margin(stru=
-ct mem_cgroup *memcg)
->> > =A0 =A0 =A0 =A0return margin >> PAGE_SHIFT;
->> > =A0}
+>> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return true;
+>> > > + =A0 =A0 =A0 =A0 if (memcg =3D=3D root)
+>> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+>> > > + }
+>> > > + return false;
+>> > > +}
 >> >
->> > +/**
->> > + * mem_cgroup_over_softlimit
->> > + * @root: hierarchy root
->> > + * @memcg: child of @root to test
->> > + *
->> > + * Returns %true if @memcg exceeds its own soft limit or contribu=
-tes
->> > + * to the soft limit excess of one of its parents up to and inclu=
-ding
->> > + * @root.
->> > + */
->> > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struc=
-t mem_cgroup *memcg)
->> > +{
->> > + =A0 =A0 =A0 if (mem_cgroup_disabled())
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return false;
->> > +
->> > + =A0 =A0 =A0 if (!root)
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 root =3D root_mem_cgroup;
->> > +
->> > + =A0 =A0 =A0 for (; memcg; memcg =3D parent_mem_cgroup(memcg)) {
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* root_mem_cgroup does not have a s=
-oft limit */
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (memcg =3D=3D root_mem_cgroup)
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (res_counter_soft_limit_excess(&m=
-emcg->res))
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return true;
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (memcg =3D=3D root)
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->> > + =A0 =A0 =A0 }
+>> > Well, this might be little bit tricky. We do not check whether mem=
+cg and
+>> > root are in a hierarchy (in terms of use_hierarchy) relation.
+>> >
+>> > If we are under global reclaim then we iterate over all memcgs and=
+ so
+>> > there is no guarantee that there is a hierarchical relation betwee=
+n the
+>> > given memcg and its parent. While, on the other hand, if we are do=
+ing
+>> > memcg reclaim then we have this guarantee.
+>> >
+>> > Why should we punish a group (subtree) which is perfectly under it=
+s soft
+>> > limit just because some other subtree contributes to the common pa=
+rent's
+>> > usage and makes it over its limit?
+>> > Should we check memcg->use_hierarchy here?
 >>
->> Here it adds pressure on a cgroup if one of its parents exceeds soft
->> limit, although the cgroup itself is under soft limit. It does chang=
-e
->> my understanding of soft limit, and might introduce regression of ou=
-r
->> existing use cases.
->>
->> Here is an example:
->>
->> Machine capacity 32G and we over-commit by 8G.
->>
->> root
->> =A0 -> A (hard limit 20G, soft limit 15G, usage 16G)
->> =A0 =A0 =A0 =A0-> A1 (soft limit 5G, usage 4G)
->> =A0 =A0 =A0 =A0-> A2 (soft limit 10G, usage 12G)
->> =A0 -> B (hard limit 20G, soft limit 10G, usage 16G)
->>
->> under global reclaim, we don't want to add pressure on A1 although i=
-ts
->> parent A exceeds its soft limit. Assume that if we set the soft limi=
-t
->> corresponding to each cgroup's working set size (hot memory), and it
->> will introduce regression to A1 in that case.
->>
->> In my existing implementation, i am checking the cgroup's soft limit
->> standalone w/o looking its ancestors.
+>> We do, actually. =A0parent_mem_cgroup() checks the res_counter paren=
+t,
+>> which is only set when ->use_hierarchy is also set.
 >
-> Why do you set the soft limit of A in the first place if you don't
-> want it to be enforced?
+> Of course I am blind.. We do not setup res_counter parent for
+> !use_hierarchy case. Sorry for noise...
+> Now it makes much better sense. I was wondering how !use_hierarchy co=
+uld
+> ever work, this should be a signal that I am overlooking something
+> terribly.
+>
+> [...]
+>> > > @@ -2121,8 +2121,16 @@ static void shrink_zone(int priority, str=
+uct zone *zone,
+>> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 .mem_cgroup =3D memcg,
+>> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 .zone =3D zone,
+>> > > =A0 =A0 =A0 =A0 =A0 };
+>> > > + =A0 =A0 =A0 =A0 int epriority =3D priority;
+>> > > + =A0 =A0 =A0 =A0 /*
+>> > > + =A0 =A0 =A0 =A0 =A0* Put more pressure on hierarchies that exc=
+eed their
+>> > > + =A0 =A0 =A0 =A0 =A0* soft limit, to push them back harder than=
+ their
+>> > > + =A0 =A0 =A0 =A0 =A0* well-behaving siblings.
+>> > > + =A0 =A0 =A0 =A0 =A0*/
+>> > > + =A0 =A0 =A0 =A0 if (mem_cgroup_over_softlimit(root, memcg))
+>> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 epriority =3D 0;
+>> >
+>> > This sounds too aggressive to me. Shouldn't we just double the pre=
+ssure
+>> > or something like that?
+>>
+>> That's the historical value. =A0When I tried priority - 1, it was no=
+t
+>> aggressive enough.
+>
+> Probably because we want to reclaim too much. Maybe we should do
+> reduce nr_to_reclaim (ugly) or reclaim only overlimit groups until ce=
+rtain
+> priority level as Ying suggested in her patchset.
 
-The soft limit should be enforced under certain condition, not always.
-The soft limit of A is set to be enforced when the parent of A and B
-is under memory pressure. For example:
+I plan to post that change on top of this, and this patch set does the
+basic stuff to allow us doing further improvement.
 
-Machine capacity 32G and we over-commit by 8G
+I still like the design to skip over_soft_limit cgroups until certain
+priority. One way to set up the soft limit for each cgroup is to base
+on its actual working set size, and we prefer to punish A first with
+lots of page cache ( cold file pages above soft limit) than reclaiming
+anon pages from B ( below soft limit ). Unless we can not get enough
+pages reclaimed from A, we will start reclaiming from B.
 
-root
--> A (hard limit 20G, soft limit 12G, usage 20G)
-=A0 =A0 =A0 =A0-> A1 (soft limit 2G, usage 1G)
-=A0 =A0 =A0 =A0-> A2 (soft limit 10G, usage 19G)
--> B (hard limit 20G, soft limit 10G, usage 0G)
-
-Now, A is under memory pressure since the total usage is hitting its
-hard limit. Then we start hierarchical reclaim under A, and each
-cgroup under A also takes consideration of soft limit. In this case,
-we should only set priority =3D 0 to A2 since it contributes to A's
-charge as well as exceeding its own soft limit. Why punishing A1 (set
-priority =3D 0) also which has usage under its soft limit ? I can
-imagine it will introduce regression to existing environment which the
-soft limit is set based on the working set size of the cgroup.
-
-To answer the question why we set soft limit to A, it is used to
-over-commit the host while sharing the resource with its sibling (B in
-this case). If the machine is under memory contention, we would like
-to push down memory to A or B depends on their usage and soft limit.
+This might not be the ideal solution, but should be a good start. Thoug=
+hts?
 
 --Ying
 
->
-> This is not really new behaviour, soft limit reclaim has always been
-> operating hierarchically on the biggest excessor. =A0In your case, th=
-e
-> excess of A is smaller than the excess of A2 and so that weird "only
-> pick the biggest excessor" behaviour hides it, but consider this:
->
-> =A0 =A0 =A0 =A0-> A soft 30G, usage 39G
-> =A0 =A0 =A0 =A0 =A0 -> A1 soft 5G, usage 4G
-> =A0 =A0 =A0 =A0 =A0 -> A2 soft 10G, usage 15G
-> =A0 =A0 =A0 =A0 =A0 -> A3 soft 15G, usage 20G
->
-> Upstream would pick A from the soft limit tree and reclaim its
-> children with priority 0, including A1.
->
-> On the other hand, if you don't consider ancestral soft limits, you
-> break perfectly reasonable setups like these
->
-> =A0 =A0 =A0 =A0-> A soft 10G, usage 20G
-> =A0 =A0 =A0 =A0 =A0 -> A1 usage 10G
-> =A0 =A0 =A0 =A0 =A0 -> A2 usage 10G
-> =A0 =A0 =A0 =A0-> B soft 10G, usage 11G
->
-> where upstream would pick A and reclaim it recursively, but your
-> version would only apply higher pressure to B.
->
-> If you would just not set the soft limit of A in your case:
->
-> =A0 =A0 =A0 =A0-> A (hard limit 20G, usage 16G)
-> =A0 =A0 =A0 =A0 =A0 -> A1 (soft limit 5G, usage 4G)
-> =A0 =A0 =A0 =A0 =A0 -> A2 (soft limit 10G, usage 12G)
-> =A0 =A0 =A0 =A0-> B (hard limit 20G, soft limit 10G, usage 16G)
->
-> only A2 and B would experience higher pressure upon global pressure.
+> --
+> Michal Hocko
+> SUSE Labs
+> SUSE LINUX s.r.o.
+> Lihovarska 1060/12
+> 190 00 Praha 9
+> Czech Republic
