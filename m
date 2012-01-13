@@ -1,40 +1,71 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] net: decrement memcg jump label when limit, not usage,
- is changed
-Date: Thu, 12 Jan 2012 12:28:16 -0800 (PST)
-Message-ID: <20120112.122816.1727420253535508242.davem@davemloft.net>
-References: <1326370566-4286-1-git-send-email-glommer@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: [RFC] [PATCH 0/7 v2] memcg: page_cgroup diet
+Date: Fri, 13 Jan 2012 17:30:01 +0900
+Message-ID: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1326370566-4286-1-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: glommer@parallels.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: Ying Han <yinghan@google.com>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
 
-From: Glauber Costa <glommer@parallels.com>
-Date: Thu, 12 Jan 2012 16:16:06 +0400
+This is just an RFC for dumping my queue to share and get better idea.
+Patch order may not be clean. Advice is welcomed.
 
-> The logic of the current code is that whenever we destroy
-> a cgroup that had its limit set (set meaning different than
-> maximum), we should decrement the jump_label counter.
-> Otherwise we assume it was never incremented.
-> 
-> But what the code actually does is test for RES_USAGE
-> instead of RES_LIMIT. Usage being different than maximum
-> is likely to be true most of the time.
-> 
-> The effect of this is that the key must become negative,
-> and since the jump_label test says:
-> 
->         !!atomic_read(&key->enabled);
-> 
-> we'll have jump_labels still on when no one else is
-> using this functionality.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: David S. Miller <davem@davemloft.net>
+Now, struct page_cgroup is defined as
+==
+struct page_cgroup {
+        unsigned long flags;
+        struct mem_cgroup *mem_cgroup;
+};
+==
 
-Applied, thanks.
+We want to remove ->flags to shrink the size (and integrate into 'struct page').
+To do that, we need to remove some flags.
+
+Now, flag is defined as
+==
+        PCG_LOCK,  /* Lock for pc->mem_cgroup and following bits. */
+        PCG_CACHE, /* charged as cache */
+        PCG_USED, /* this object is in use. */
+        PCG_MIGRATION, /* under page migration */
+        /* flags for mem_cgroup and file and I/O status */
+        PCG_MOVE_LOCK, /* For race between move_account v.s. following bits */
+        PCG_FILE_MAPPED, /* page is accounted as "mapped" */
+==
+We have 6bits now.
+
+This patch series removes PCG_CACHE, PCG_MOVE_LOCK, PCG_FILE_MAPPED.
+Then, if we use low 3bits of ->mem_cgroup for PCG_LOCK, PCG_USED, PCG_MIGRATION,
+we can remove pc->flags, I guess.
+
+To remove flags, this patch modifes page-stat accounting. After this set, 
+per-memcg page stat accounting will be
+
+	mem_cgroup_begin_update_page_stat() --(A)
+	modify page status
+	mem_cgroup_update_page_stat()
+	mem_cgroup_end_update_page_stat()   --(B)
+
+Between (A) and (B), it's guaranteed the page's pc->mem_cgroup will not be moved.
+By this change, move_account() can make use of page's information rather than
+page_cgroup's flag and we don't have to duplicate flags in page_cgroup.
+I think this is saner and allow us to add more per-memcg vmstat without any
+new flags.
+
+I'm now testing but don't see additional overheads.
+
+Thanks,
+-Kame
+
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
