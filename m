@@ -1,169 +1,95 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Fri, 13 Jan 2012 16:50:01 +0100
-Message-ID: <20120113155001.GB1653@cmpxchg.org>
-References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
- <1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
- <20120113120406.GC17060@tiehlicka.suse.cz>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
+Date: Fri, 13 Jan 2012 16:20:10 +0100
+Message-ID: <20120113152010.GA19215@redhat.com>
+References: <20111221192413.GF13529@google.com>
+	<20111221200422.GJ17668@somewhere>
+	<20111222153004.GA30522@redhat.com>
+	<20120104193614.GF9511@google.com>
+	<20120106152356.GA23995@redhat.com>
+	<20120106182535.GJ9511@google.com>
+	<20120111160730.GA24556@redhat.com>
+	<20120112003102.GB9511@google.com>
+	<20120112170728.GA25717@redhat.com>
+	<20120112175725.GD9511@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120113120406.GC17060@tiehlicka.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Ying Han <yinghan@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120112175725.GD9511-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On Fri, Jan 13, 2012 at 01:04:06PM +0100, Michal Hocko wrote:
-> On Tue 10-01-12 16:02:52, Johannes Weiner wrote:
-> > Right now, memcg soft limits are implemented by having a sorted tree
-> > of memcgs that are in excess of their limits.  Under global memory
-> > pressure, kswapd first reclaims from the biggest excessor and then
-> > proceeds to do regular global reclaim.  The result of this is that
-> > pages are reclaimed from all memcgs, but more scanning happens against
-> > those above their soft limit.
-> > 
-> > With global reclaim doing memcg-aware hierarchical reclaim by default,
-> > this is a lot easier to implement: everytime a memcg is reclaimed
-> > from, scan more aggressively (per tradition with a priority of 0) if
-> > it's above its soft limit.  With the same end result of scanning
-> > everybody, but soft limit excessors a bit more.
-> > 
-> > Advantages:
-> > 
-> >   o smoother reclaim: soft limit reclaim is a separate stage before
-> >     global reclaim, whose result is not communicated down the line and
-> >     so overreclaim of the groups in excess is very likely.  After this
-> >     patch, soft limit reclaim is fully integrated into regular reclaim
-> >     and each memcg is considered exactly once per cycle.
-> > 
-> >   o true hierarchy support: soft limits are only considered when
-> >     kswapd does global reclaim, but after this patch, targetted
-> >     reclaim of a memcg will mind the soft limit settings of its child
-> >     groups.
-> 
-> Yes it makes sense. At first I was thinking that soft limit should be
-> considered only under global mem. pressure (at least documentation says
-> so) but now it makes sense.
-> We can push on over-soft limit groups more because they told us they
-> could sacrifice something...  Anyway documentation needs an update as
-> well.
+On 01/12, Mandeep Singh Baines wrote:
+>
+> Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
+> >
+> > Still can't understand... Lets look at this trivial example again.
+> >
+> > We start from the main thread M, it is ->group_leader. There is
+> > another thread T in this thread group. We are doing
+> >
+> > 	OLD = M;
+> >
+> > 	t = M;
+> > 	do {
+> > 		do_smth(t);
+> > 	}
+> > 	while (t->group_leader == OLD && ((t = next_thread(t)) != M);
+> >
+> > The first iteration does do_smth(M).
+> >
+> > T calls de_thread() and, in particular, it does M->group_leader = T
+> > (see "leader->group_leader = tsk" in de_thread).
+> >
+> > after that t->group_leader == OLD fails. t == M, its group_leader == T.
+> > do_smth(T) won't be called.
+> >
+> > No?
+> >
+>
+> I think we can handle this by removing the assignment. So in de_thread():
+>
+> -		leader->group_leader = tsk;
 
-You are right, I'll look into it.
+Ah, so that was you plan. I was confused by the 3rd argument, why
+it is needed?
 
-> But we have to be little bit careful here. I am still quite confuses how
-> we should handle hierarchies vs. subtrees. See bellow.
+Yes, I thought about this too. Suppose we remove this assignment,
+then we can simply do
 
-> > @@ -1318,6 +1123,36 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
-> >  	return margin >> PAGE_SHIFT;
-> >  }
-> >  
-> > +/**
-> > + * mem_cgroup_over_softlimit
-> > + * @root: hierarchy root
-> > + * @memcg: child of @root to test
-> > + *
-> > + * Returns %true if @memcg exceeds its own soft limit or contributes
-> > + * to the soft limit excess of one of its parents up to and including
-> > + * @root.
-> > + */
-> > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
-> > +			       struct mem_cgroup *memcg)
-> > +{
-> > +	if (mem_cgroup_disabled())
-> > +		return false;
-> > +
-> > +	if (!root)
-> > +		root = root_mem_cgroup;
-> > +
-> > +	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-> > +		/* root_mem_cgroup does not have a soft limit */
-> > +		if (memcg == root_mem_cgroup)
-> > +			break;
-> > +		if (res_counter_soft_limit_excess(&memcg->res))
-> > +			return true;
-> > +		if (memcg == root)
-> > +			break;
-> > +	}
-> > +	return false;
-> > +}
-> 
-> Well, this might be little bit tricky. We do not check whether memcg and
-> root are in a hierarchy (in terms of use_hierarchy) relation. 
-> 
-> If we are under global reclaim then we iterate over all memcgs and so
-> there is no guarantee that there is a hierarchical relation between the
-> given memcg and its parent. While, on the other hand, if we are doing
-> memcg reclaim then we have this guarantee.
-> 
-> Why should we punish a group (subtree) which is perfectly under its soft
-> limit just because some other subtree contributes to the common parent's
-> usage and makes it over its limit?
-> Should we check memcg->use_hierarchy here?
+	#define while_each_thread(g, t) \
+		while (t->group_leader == g->group_leader && (t = next_thread(t)) != g)
 
-We do, actually.  parent_mem_cgroup() checks the res_counter parent,
-which is only set when ->use_hierarchy is also set.  The loop should
-never walk upwards outside of a hierarchy.
+with the same effect. (to remind, currently I ignore the barriers/etc).
 
-And yes, if you have this:
+But this can _only_ help if we start at the group leader!
 
-        A
-       / \
-      B   C
+May be we should enforce this rule (for the lockless case), I dunno...
+In that case I'd prefer to add the new while_each_thread_rcu() helper.
+But! in this case we do not need to change de_thread(), we can simply do
 
-and configured a soft limit for A, you asked for both B and C to be
-responsible when this limit is exceeded, that's not new behaviour.
+	#define while_each_thread_rcu(t) \
+		while (({ t = next_thread(t); !thread_group_leader(t); }))
 
-> Does it even makes sense to setup soft limit on a parent group without
-> hierarchies?
-> Well I have to admit that hierarchies makes me headache.
+The definition above was one of the possibilities I considered, but
+I wasn't able to convince myself this is the best option.
 
-There is no parent without a hierarchy.  It is insofar pretty
-confusing that you can actually create a directory hierarchy that does
-not reflect a memcg hierarchy:
+See? Or do you think I missed something?
 
-	# pwd
-	/sys/fs/cgroup/memory/foo/bar
-	# cat memory.usage_in_bytes 
-	450560
-	# cat ../memory.usage_in_bytes 
-	0
+Just in case... note that while_each_thread_rcu() doesn't use 'g'
+at all. May be it makes sense to keep the old "t != g &&", but this
+is minor.
 
-there is no accounting/limiting/whatever parent-child relationship
-between foo and bar.
-
-> > @@ -2121,8 +2121,16 @@ static void shrink_zone(int priority, struct zone *zone,
-> >  			.mem_cgroup = memcg,
-> >  			.zone = zone,
-> >  		};
-> > +		int epriority = priority;
-> > +		/*
-> > +		 * Put more pressure on hierarchies that exceed their
-> > +		 * soft limit, to push them back harder than their
-> > +		 * well-behaving siblings.
-> > +		 */
-> > +		if (mem_cgroup_over_softlimit(root, memcg))
-> > +			epriority = 0;
-> 
-> This sounds too aggressive to me. Shouldn't we just double the pressure
-> or something like that?
-
-That's the historical value.  When I tried priority - 1, it was not
-aggressive enough.
-
-> Previously we always had nr_to_reclaim == SWAP_CLUSTER_MAX when we did
-> memcg reclaim but this is not the case now. For the kswapd we have
-> nr_to_reclaim == ULONG_MAX so we will not break out of the reclaim early
-> and we have to scan a lot.
-> Direct reclaim (shrink or hard limit) shouldn't be affected here.
-
-It took me a while: we had SWAP_CLUSTER_MAX in _soft limit reclaim_,
-which means that even with priority 0 we would bail after reclaiming
-SWAP_CLUSTER_MAX from each lru of a zone.  But it's now happening with
-kswapd's own scan_control, so the overreclaim protection is gone.
-
-That is indeed a change in behaviour I haven't noticed, good catch!
-
-I will look into it.
+Oleg.
