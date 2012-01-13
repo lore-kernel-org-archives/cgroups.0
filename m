@@ -1,95 +1,96 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
-Date: Fri, 13 Jan 2012 16:20:10 +0100
-Message-ID: <20120113152010.GA19215@redhat.com>
-References: <20111221192413.GF13529@google.com>
-	<20111221200422.GJ17668@somewhere>
-	<20111222153004.GA30522@redhat.com>
-	<20120104193614.GF9511@google.com>
-	<20120106152356.GA23995@redhat.com>
-	<20120106182535.GJ9511@google.com>
-	<20120111160730.GA24556@redhat.com>
-	<20120112003102.GB9511@google.com>
-	<20120112170728.GA25717@redhat.com>
-	<20120112175725.GD9511@google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
+Date: Fri, 13 Jan 2012 17:34:23 +0100
+Message-ID: <20120113163423.GG17060@tiehlicka.suse.cz>
+References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
+ <1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
+ <20120113120406.GC17060@tiehlicka.suse.cz>
+ <20120113155001.GB1653@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120113155001.GB1653-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120112175725.GD9511-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 01/12, Mandeep Singh Baines wrote:
->
-> Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
-> >
-> > Still can't understand... Lets look at this trivial example again.
-> >
-> > We start from the main thread M, it is ->group_leader. There is
-> > another thread T in this thread group. We are doing
-> >
-> > 	OLD = M;
-> >
-> > 	t = M;
-> > 	do {
-> > 		do_smth(t);
-> > 	}
-> > 	while (t->group_leader == OLD && ((t = next_thread(t)) != M);
-> >
-> > The first iteration does do_smth(M).
-> >
-> > T calls de_thread() and, in particular, it does M->group_leader = T
-> > (see "leader->group_leader = tsk" in de_thread).
-> >
-> > after that t->group_leader == OLD fails. t == M, its group_leader == T.
-> > do_smth(T) won't be called.
-> >
-> > No?
-> >
->
-> I think we can handle this by removing the assignment. So in de_thread():
->
-> -		leader->group_leader = tsk;
+On Fri 13-01-12 16:50:01, Johannes Weiner wrote:
+> On Fri, Jan 13, 2012 at 01:04:06PM +0100, Michal Hocko wrote:
+> > On Tue 10-01-12 16:02:52, Johannes Weiner wrote:
+[...]
+> > > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
+> > > +			       struct mem_cgroup *memcg)
+> > > +{
+> > > +	if (mem_cgroup_disabled())
+> > > +		return false;
+> > > +
+> > > +	if (!root)
+> > > +		root = root_mem_cgroup;
+> > > +
+> > > +	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+> > > +		/* root_mem_cgroup does not have a soft limit */
+> > > +		if (memcg == root_mem_cgroup)
+> > > +			break;
+> > > +		if (res_counter_soft_limit_excess(&memcg->res))
+> > > +			return true;
+> > > +		if (memcg == root)
+> > > +			break;
+> > > +	}
+> > > +	return false;
+> > > +}
+> > 
+> > Well, this might be little bit tricky. We do not check whether memcg and
+> > root are in a hierarchy (in terms of use_hierarchy) relation. 
+> > 
+> > If we are under global reclaim then we iterate over all memcgs and so
+> > there is no guarantee that there is a hierarchical relation between the
+> > given memcg and its parent. While, on the other hand, if we are doing
+> > memcg reclaim then we have this guarantee.
+> > 
+> > Why should we punish a group (subtree) which is perfectly under its soft
+> > limit just because some other subtree contributes to the common parent's
+> > usage and makes it over its limit?
+> > Should we check memcg->use_hierarchy here?
+> 
+> We do, actually.  parent_mem_cgroup() checks the res_counter parent,
+> which is only set when ->use_hierarchy is also set.  
 
-Ah, so that was you plan. I was confused by the 3rd argument, why
-it is needed?
+Of course I am blind.. We do not setup res_counter parent for
+!use_hierarchy case. Sorry for noise...
+Now it makes much better sense. I was wondering how !use_hierarchy could
+ever work, this should be a signal that I am overlooking something
+terribly.
 
-Yes, I thought about this too. Suppose we remove this assignment,
-then we can simply do
+[...]
+> > > @@ -2121,8 +2121,16 @@ static void shrink_zone(int priority, struct zone *zone,
+> > >  			.mem_cgroup = memcg,
+> > >  			.zone = zone,
+> > >  		};
+> > > +		int epriority = priority;
+> > > +		/*
+> > > +		 * Put more pressure on hierarchies that exceed their
+> > > +		 * soft limit, to push them back harder than their
+> > > +		 * well-behaving siblings.
+> > > +		 */
+> > > +		if (mem_cgroup_over_softlimit(root, memcg))
+> > > +			epriority = 0;
+> > 
+> > This sounds too aggressive to me. Shouldn't we just double the pressure
+> > or something like that?
+> 
+> That's the historical value.  When I tried priority - 1, it was not
+> aggressive enough.
 
-	#define while_each_thread(g, t) \
-		while (t->group_leader == g->group_leader && (t = next_thread(t)) != g)
-
-with the same effect. (to remind, currently I ignore the barriers/etc).
-
-But this can _only_ help if we start at the group leader!
-
-May be we should enforce this rule (for the lockless case), I dunno...
-In that case I'd prefer to add the new while_each_thread_rcu() helper.
-But! in this case we do not need to change de_thread(), we can simply do
-
-	#define while_each_thread_rcu(t) \
-		while (({ t = next_thread(t); !thread_group_leader(t); }))
-
-The definition above was one of the possibilities I considered, but
-I wasn't able to convince myself this is the best option.
-
-See? Or do you think I missed something?
-
-Just in case... note that while_each_thread_rcu() doesn't use 'g'
-at all. May be it makes sense to keep the old "t != g &&", but this
-is minor.
-
-Oleg.
+Probably because we want to reclaim too much. Maybe we should do
+reduce nr_to_reclaim (ugly) or reclaim only overlimit groups until certain
+priority level as Ying suggested in her patchset.
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
