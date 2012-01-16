@@ -1,75 +1,58 @@
-From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Subject: Re: [PATCH 8/8] cgroups: Add a task counter subsystem
-Date: Mon, 16 Jan 2012 14:38:21 +0200
-Message-ID: <20120116123821.GA25918@shutemov.name>
-References: <1326478441-3048-1-git-send-email-fweisbec@gmail.com>
-	<1326478441-3048-17-git-send-email-fweisbec@gmail.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
+ pc->flags
+Date: Mon, 16 Jan 2012 14:55:26 +0200
+Message-ID: <20120116125526.GB25981@shutemov.name>
+References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1326478441-3048-17-git-send-email-fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Ying Han <yinghan@google.com>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
 
-On Fri, Jan 13, 2012 at 07:14:00PM +0100, Frederic Weisbecker wrote:
-> Add a new subsystem to limit the number of running tasks,
-> similar to the NR_PROC rlimit but in the scope of a cgroup.
+On Fri, Jan 13, 2012 at 05:40:19PM +0900, KAMEZAWA Hiroyuki wrote:
 > 
-> The user can set an upper bound limit that is checked every
-> time a task forks in a cgroup or is moved into a cgroup
-> with that subsystem binded.
+> From 1008e84d94245b1e7c4d237802ff68ff00757736 Mon Sep 17 00:00:00 2001
+> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Date: Thu, 12 Jan 2012 15:53:24 +0900
+> Subject: [PATCH 3/7] memcg: remove PCG_MOVE_LOCK flag from pc->flags.
 > 
-> The primary goal is to protect against forkbombs that explode
-> inside a container. The traditional NR_PROC rlimit is not
-> efficient in that case because if we run containers in parallel
-> under the same user, one of these could starve all the others
-> by spawning a high number of tasks close to the user wide limit.
+> PCG_MOVE_LOCK bit is used for bit spinlock for avoiding race between
+> memcg's account moving and page state statistics updates.
 > 
-> This is a prevention against forkbombs, so it's not deemed to
-> cure the effects of a forkbomb when the system is in a state
-> where it's not responsive. It's aimed at preventing from ever
-> reaching that state and stop the spreading of tasks early.
-> While defining the limit on the allowed number of tasks, it's
-> up to the user to find the right balance between the resource
-> its containers may need and what it can afford to provide.
+> Considering page-statistics update, very hot path, this lock is
+> taken only when someone is moving account (or PageTransHuge())
+> And, now, all moving-account between memcgroups (by task-move)
+> are serialized.
 > 
-> As it's totally dissociated from the rlimit NR_PROC, both
-> can be complementary: the cgroup task counter can set an upper
-> bound per container and the rlmit can be an upper bound on the
-> overall set of containers.
+> So, it seems too costly to have 1bit per page for this purpose.
 > 
-> Also this subsystem can be used to kill all the tasks in a cgroup
-> without races against concurrent forks, by setting the limit of
-> tasks to 0, any further forks can be rejected. This is a good
-> way to kill a forkbomb in a container, or simply kill any container
-> without the need to retry an unbound number of times.
+> This patch removes PCG_MOVE_LOCK and add hashed rwlock array
+> instead of it. This works well enough. Even when we need to
+> take the lock, we don't need to disable IRQ in hot path because
+> of using rwlock.
 > 
-> Signed-off-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
-> Cc: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-> Cc: Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Acked-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+...
+
+> +#define NR_MOVE_ACCOUNT_LOCKS	(NR_CPUS)
+> +#define move_account_hash(page) ((page_to_pfn(page) % NR_MOVE_ACCOUNT_LOCKS))
+
+You still tend to add too many parentheses into macros ;)
 
 -- 
  Kirill A. Shutemov
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
