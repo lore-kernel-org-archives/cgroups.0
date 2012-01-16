@@ -1,122 +1,57 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
-Date: Sat, 14 Jan 2012 18:36:48 +0100
-Message-ID: <20120114173648.GA32543@redhat.com>
-References: <20111222153004.GA30522@redhat.com>
-	<20120104193614.GF9511@google.com>
-	<20120106152356.GA23995@redhat.com>
-	<20120106182535.GJ9511@google.com>
-	<20120111160730.GA24556@redhat.com>
-	<20120112003102.GB9511@google.com>
-	<20120112170728.GA25717@redhat.com>
-	<20120112175725.GD9511@google.com>
-	<20120113152010.GA19215@redhat.com>
-	<20120113182750.GD18166@google.com>
+From: Li Zefan <lizf@cn.fujitsu.com>
+Subject: [PATCH] memcg: fix compile warning on non-numa systems
+Date: Mon, 16 Jan 2012 14:04:53 +0800
+Message-ID: <4F13BE05.70505@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120113182750.GD18166-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Cc: Michal Hocko <mhocko@suse.cz>, "bsingharora@gmail.com" <bsingharora@gmail.com>, Hiroyuki KAMEZAWA <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 01/13, Mandeep Singh Baines wrote:
->
-> Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
->
-> > Yes, I thought about this too. Suppose we remove this assignment,
-> > then we can simply do
-> >
-> > 	#define while_each_thread(g, t) \
-> > 		while (t->group_leader == g->group_leader && (t = next_thread(t)) != g)
-> >
-> > with the same effect. (to remind, currently I ignore the barriers/etc).
-> >
->
-> Nice! I think this works.
->
-> > But this can _only_ help if we start at the group leader!
->
-> But I don't think this solution requires we start at the group leader.
->
-> My thinking:
->
-> Case 1: g is the exec thread
-> ...
-> Case 2: g is the group leader
-> ...
-> Case 3: g is some other thread
->
-> In this case, g MUST be current
+Fix this warning:
 
-Why? This is not true. But I guess this doesn't matter, I think I am
-starting to understand why our discussion was a bit confusing.
+  CC      mm/memcontrol.o
+mm/memcontrol.c: In function 'memcg_check_events':
+mm/memcontrol.c:779:22: warning: unused variable 'do_numainfo'
 
-The problem is _not_ exec/de_thread by itself. The problem is that
-while_each_thread(g, t) can race with removing 'g' from the list.
-IOW, list_for_each_rcu-like things assume that the head of the list
-is "stable" but this is not true.
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+---
+ mm/memcontrol.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-And note that de_thread() does not matter in this sense, only
-__unhash_process()->list_del_rcu(&p->thread_group) does matter.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 602207b..c8aeab8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -776,14 +776,16 @@ static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
+ 	/* threshold event is triggered in finer grain than soft limit */
+ 	if (unlikely(mem_cgroup_event_ratelimit(memcg,
+ 						MEM_CGROUP_TARGET_THRESH))) {
+-		bool do_softlimit, do_numainfo;
+-
+-		do_softlimit = mem_cgroup_event_ratelimit(memcg,
+-						MEM_CGROUP_TARGET_SOFTLIMIT);
++		bool do_softlimit;
+ #if MAX_NUMNODES > 1
++		bool do_numainfo;
++
+ 		do_numainfo = mem_cgroup_event_ratelimit(memcg,
+ 						MEM_CGROUP_TARGET_NUMAINFO);
+ #endif
++
++		do_softlimit = mem_cgroup_event_ratelimit(memcg,
++						MEM_CGROUP_TARGET_SOFTLIMIT);
+ 		preempt_enable();
+ 
+ 		mem_cgroup_threshold(memcg);
+-- 
+1.7.3.1
 
-Now. If 'g' is the group leader, we should only worry about exec,
-otherwise it can't disappear before other threads.
-
-But if it is not the group leader, it can simply exit and
-while_each_thread(g, t) can never stop by the same reason.
-
-And we can't detect this case. OK, OK, we can, let me remind
-about http://marc.info/?l=linux-kernel&m=127714242731448 and the
-whole discussion. But this makes while_each_thread() more complex
-and this doesn't fork for zap_threads-like users which must not
-miss the "interesing" threads.
-
-Finally. If we restrict the lockless while_each_thread() so that
-is starts at the group leader, then we can rely on de_thread()
-which changes the leadership and try to detect this case.
-
-See?
-
-> > May be we should enforce this rule (for the lockless case), I dunno...
-> > In that case I'd prefer to add the new while_each_thread_rcu() helper.
-> > But! in this case we do not need to change de_thread(), we can simply do
-> >
-> > 	#define while_each_thread_rcu(t) \
-> > 		while (({ t = next_thread(t); !thread_group_leader(t); }))
-> >
->
-> Won't this terminate just before visiting the exec thread?
-
-Sure. But this is fine for zap_threads() or current_is_single_threaded(),
-the execing thread already has another ->mm. Just we shouldn't hang
-forever if we race with exec (we start at the group leader).
-
-And I hope this is fine in general (to remind, in the lockless case).
-If we race with exec we see either the old or the new leader with the
-same pid/signal/etc (at least).
-
-Hmm. On a second thought, perhaps I thought to much about zap_threads(),
-perhaps it would be better to find all threads we can...
-
-I dunno. But I am starting to like the ->group_leader more. Hmm, and
-with thread_group_leader() check we should ensure we do not visit the
-old leader twice.
-
-Thanks Mandeep.
-
-I'll try to recheck my thinking once again, what do you think? Anything
-else we could miss?
-
-Oleg.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
