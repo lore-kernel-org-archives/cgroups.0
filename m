@@ -1,60 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
- pc->flags
-Date: Tue, 17 Jan 2012 17:46:05 +0100
-Message-ID: <20120117164605.GB22142@tiehlicka.suse.cz>
-References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
- <20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: add xattr support
+Date: Tue, 17 Jan 2012 09:53:22 -0800
+Message-ID: <20120117175322.GC6762@google.com>
+References: <4F13DA90.2000603@cn.fujitsu.com>
+ <4F13DAA9.4070703@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=2C0+CXFyoZsIZnNqThSHfo34Au+EPqCX7dRNr08NeSY=;
+        b=eltc0d2PTcIzFOxcqqfal81GT49av/vpAZ8Rlhn2tKCGxdS+HsSb+s4Jt7ykmtS0Fm
+         BwzJyf0sX0db3JvWrXpbDM49bfqFyF6xgWeuQ/ZzatTCgLc/lNPhsiWQBCJibSk6nJHH
+         4bG79kjmJmFoGBvGVAuAYRvFJ2BkrH3H6hZfQ=
 Content-Disposition: inline
-In-Reply-To: <20120113174019.8dff3fc1.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <4F13DAA9.4070703-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
 
-On Fri 13-01-12 17:40:19, KAMEZAWA Hiroyuki wrote:
+Hello,
+
+On Mon, Jan 16, 2012 at 04:07:05PM +0800, Li Zefan wrote:
+> This is one of the items in the plumber's wish list.
 > 
-> From 1008e84d94245b1e7c4d237802ff68ff00757736 Mon Sep 17 00:00:00 2001
-> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Date: Thu, 12 Jan 2012 15:53:24 +0900
-> Subject: [PATCH 3/7] memcg: remove PCG_MOVE_LOCK flag from pc->flags.
+> For use cases:
 > 
-> PCG_MOVE_LOCK bit is used for bit spinlock for avoiding race between
-> memcg's account moving and page state statistics updates.
+> >> What would the use case be for this?
+> >
+> > Attaching meta information to services, in an easily discoverable
+> > way. For example, in systemd we create one cgroup for each service, and
+> > could then store data like the main pid of the specific service as an
+> > xattr on the cgroup itself. That way we'd have almost all service state
+> > in the cgroupfs, which would make it possible to terminate systemd and
+> > later restart it without losing any state information. But there's more:
+> > for example, some very peculiar services cannot be terminated on
+> > shutdown (i.e. fakeraid DM stuff) and it would be really nice if the
+> > services in question could just mark that on their cgroup, by setting an
+> > xattr. On the more desktopy side of things there are other
+> > possibilities: for example there are plans defining what an application
+> > is along the lines of a cgroup (i.e. an app being a collection of
+> > processes). With xattrs one could then attach an icon or human readable
+> > program name on the cgroup.
+> >
+> > The key idea is that this would allow attaching runtime meta information
+> > to cgroups and everything they model (services, apps, vms), that doesn't
+> > need any complex userspace infrastructure, has good access control
+> > (i.e. because the file system enforces that anyway, and there's the
+> > "trusted." xattr namespace), notifications (inotify), and can easily be
+> > shared among applications.
+> >
+> > Lennart
 > 
-> Considering page-statistics update, very hot path, this lock is
-> taken only when someone is moving account (or PageTransHuge())
+> Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-Outdated comment? THP is not an issue here.
+Ummm... I don't feel too good about this.  Why can't those extra
+information be kept somewhere else?  Overloading cgroupfs as storage
+for essentially opaque userland information doesn't seem like a good
+idea to me.
 
-> And, now, all moving-account between memcgroups (by task-move)
-> are serialized.
-> 
-> So, it seems too costly to have 1bit per page for this purpose.
-> 
-> This patch removes PCG_MOVE_LOCK and add hashed rwlock array
-> instead of it. This works well enough. Even when we need to
-> take the lock, 
+Thanks.
 
-Hmmm, rwlocks are not popular these days very much. 
-Anyway, can we rather make it (source) memcg (bit)spinlock instead. We
-would reduce false sharing this way and would penalize only pages from
-the moving group.
-
-The patch seems to be correct but I do not like the rwlock part very
-much. I would replace it if possible.
-
-[...]
-
-Thanks
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+tejun
