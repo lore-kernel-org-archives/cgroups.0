@@ -1,14 +1,14 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC] [PATCH 2/7 v2] memcg: add memory barrier for checking
- account move.
-Date: Tue, 17 Jan 2012 16:26:35 +0100
-Message-ID: <20120117152635.GA22142@tiehlicka.suse.cz>
+Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
+ pc->flags
+Date: Tue, 17 Jan 2012 17:46:05 +0100
+Message-ID: <20120117164605.GB22142@tiehlicka.suse.cz>
 References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
- <20120113173347.6231f510.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120113173347.6231f510.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <20120113174019.8dff3fc1.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,62 +16,41 @@ Content-Transfer-Encoding: 7bit
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri 13-01-12 17:33:47, KAMEZAWA Hiroyuki wrote:
-> I think this bugfix is needed before going ahead. thoughts?
-> ==
-> From 2cb491a41782b39aae9f6fe7255b9159ac6c1563 Mon Sep 17 00:00:00 2001
+On Fri 13-01-12 17:40:19, KAMEZAWA Hiroyuki wrote:
+> 
+> From 1008e84d94245b1e7c4d237802ff68ff00757736 Mon Sep 17 00:00:00 2001
 > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Date: Fri, 13 Jan 2012 14:27:20 +0900
-> Subject: [PATCH 2/7] memcg: add memory barrier for checking account move.
+> Date: Thu, 12 Jan 2012 15:53:24 +0900
+> Subject: [PATCH 3/7] memcg: remove PCG_MOVE_LOCK flag from pc->flags.
 > 
-> At starting move_account(), source memcg's per-cpu variable
-> MEM_CGROUP_ON_MOVE is set. The page status update
-> routine check it under rcu_read_lock(). But there is no memory
-> barrier. This patch adds one.
+> PCG_MOVE_LOCK bit is used for bit spinlock for avoiding race between
+> memcg's account moving and page state statistics updates.
+> 
+> Considering page-statistics update, very hot path, this lock is
+> taken only when someone is moving account (or PageTransHuge())
 
-OK this would help to enforce that the CPU would see the current value
-but what prevents us from the race with the value update without the
-lock? This is as racy as it was before AFAICS.
+Outdated comment? THP is not an issue here.
 
+> And, now, all moving-account between memcgroups (by task-move)
+> are serialized.
 > 
-> Signed-off-by: KAMAZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> ---
->  mm/memcontrol.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
+> So, it seems too costly to have 1bit per page for this purpose.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 08b988d..9019069 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1256,8 +1256,10 @@ static void mem_cgroup_start_move(struct mem_cgroup *memcg)
->  
->  	get_online_cpus();
->  	spin_lock(&memcg->pcp_counter_lock);
-> -	for_each_online_cpu(cpu)
-> +	for_each_online_cpu(cpu) {
->  		per_cpu(memcg->stat->count[MEM_CGROUP_ON_MOVE], cpu) += 1;
-> +		smp_wmb();
-> +	}
->  	memcg->nocpu_base.count[MEM_CGROUP_ON_MOVE] += 1;
->  	spin_unlock(&memcg->pcp_counter_lock);
->  	put_online_cpus();
-> @@ -1294,6 +1296,7 @@ static void mem_cgroup_end_move(struct mem_cgroup *memcg)
->  static bool mem_cgroup_stealed(struct mem_cgroup *memcg)
->  {
->  	VM_BUG_ON(!rcu_read_lock_held());
-> +	smp_rmb();
->  	return this_cpu_read(memcg->stat->count[MEM_CGROUP_ON_MOVE]) > 0;
->  }
->  
-> -- 
-> 1.7.4.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This patch removes PCG_MOVE_LOCK and add hashed rwlock array
+> instead of it. This works well enough. Even when we need to
+> take the lock, 
 
+Hmmm, rwlocks are not popular these days very much. 
+Anyway, can we rather make it (source) memcg (bit)spinlock instead. We
+would reduce false sharing this way and would penalize only pages from
+the moving group.
+
+The patch seems to be correct but I do not like the rwlock part very
+much. I would replace it if possible.
+
+[...]
+
+Thanks
 -- 
 Michal Hocko
 SUSE Labs
