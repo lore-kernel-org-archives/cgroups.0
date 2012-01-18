@@ -1,68 +1,90 @@
-From: Sha <handai.szj@gmail.com>
-Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Wed, 18 Jan 2012 19:25:27 +0800
-Message-ID: <4F16AC27.1080906@gmail.com>
-References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org> <1326207772-16762-3-git-send-email-hannes@cmpxchg.org> <CALWz4izwNBN_qcSsqg-qYw-Esc9vBL3=4cv3Wsg1jf6001_fWQ@mail.gmail.com> <20120112085904.GG24386@cmpxchg.org> <CALWz4iz3sQX+pCr19rE3_SwV+pRFhDJ7Lq-uJuYBq6u3mRU3AQ@mail.gmail.com> <20120113224424.GC1653@cmpxchg.org> <4F158418.2090509@gmail.com> <20120117145348.GA3144@cmpxchg.org> <CAFj3OHWY2Biw54gaGeH5fkxzgOhxn7NAibeYT_Jmga-_ypNSRg@mail.gmail.com> <20120118092509.GI24386@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [RFC] [PATCH 2/7 v2] memcg: add memory barrier for checking
+ account move.
+Date: Wed, 18 Jan 2012 13:37:59 +0100
+Message-ID: <20120118123759.GB31112@tiehlicka.suse.cz>
+References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120113173347.6231f510.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120117152635.GA22142@tiehlicka.suse.cz>
+ <20120118090656.83268b3e.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=xGmnopKKKj8PE4IIpaPJ270u1IDnICKPtdjJSYZBdNE=;
-        b=ppwt/xKU5GG6B0Rg4NMABNP1bpRD82DTa3v+eNXANf6QS4nQKnWX6Fh7PBpHNQBfMn
-         4JgjIRSL+VL7qhERmjyye4xq0gvyxo/1O3/pCbDTynoUod12VuMvfFVtrS+9nAXNPD0I
-         oglfI93qmQuWhp3dB7L7O0qHpEQdVCPcvk4QA=
-In-Reply-To: <20120118092509.GI24386@cmpxchg.org>
+Content-Disposition: inline
+In-Reply-To: <20120118090656.83268b3e.kamezawa.hiroyu@jp.fujitsu.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ying Han <yinghan@google.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Ying Han <yinghan@google.com>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
 
-On 01/18/2012 05:25 PM, Johannes Weiner wrote:
-> On Wed, Jan 18, 2012 at 03:17:25PM +0800, Sha wrote:
->>>> I don't think it solve the root of the problem, example:
->>>> root
->>>> ->  A (hard limit 20G, soft limit 12G, usage 20G)
->>>>    ->  A1 ( soft limit 2G,   usage 1G)
->>>>    ->  A2 ( soft limit 10G, usage 19G)
->>>>           ->B1 (soft limit 5G, usage 4G)
->>>>           ->B2 (soft limit 5G, usage 15G)
->>>>
->>>> Now A is hitting its hard limit and start hierarchical reclaim under A.
->>>> If we choose B1 to go through mem_cgroup_over_soft_limit, it will
->>>> return true because its parent A2 has a large usage and will lead to
->>>> priority=0 reclaiming. But in fact it should be B2 to be punished.
->>> Because A2 is over its soft limit, the whole hierarchy below it should
->>> be preferred over A1, so both B1 and B2 should be soft limit reclaimed
->>> to be consistent with behaviour at the root level.
->> Well it is just the behavior that I'm expecting actually. But with my
->> humble comprehension, I can't catch the soft-limit-based hierarchical
->> reclaiming under the target cgroup (A2) in the current implementation
->> or after the patch. Both the current mem_cgroup_soft_reclaim or
->> shrink_zone select victim sub-cgroup by mem_cgroup_iter, but it
->> doesn't take soft limit into consideration, do I left anything ?
-> No, currently soft limits are ignored if pressure originates from
-> below root_mem_cgroup.
->
-> But iff soft limits are applied right now, they are applied
-> hierarchically, see mem_cgroup_soft_limit_reclaim().
-Er... I'm even more confused: mem_cgroup_soft_limit_reclaim indeed
-choses the biggest soft-limit excessor first, but in the succeeding reclaim
-mem_cgroup_hierarchical_reclaim just selects a child cgroup  by css_id
-which has nothing to do with soft limit (see mem_cgroup_select_victim).
-IMHO, it's not a genuine hierarchical reclaim.
-I check this from the latest memcg-devel git tree (branch since-3.1)...
+On Wed 18-01-12 09:06:56, KAMEZAWA Hiroyuki wrote:
+> On Tue, 17 Jan 2012 16:26:35 +0100
+> Michal Hocko <mhocko@suse.cz> wrote:
+> 
+> > On Fri 13-01-12 17:33:47, KAMEZAWA Hiroyuki wrote:
+> > > I think this bugfix is needed before going ahead. thoughts?
+> > > ==
+> > > From 2cb491a41782b39aae9f6fe7255b9159ac6c1563 Mon Sep 17 00:00:00 2001
+> > > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> > > Date: Fri, 13 Jan 2012 14:27:20 +0900
+> > > Subject: [PATCH 2/7] memcg: add memory barrier for checking account move.
+> > > 
+> > > At starting move_account(), source memcg's per-cpu variable
+> > > MEM_CGROUP_ON_MOVE is set. The page status update
+> > > routine check it under rcu_read_lock(). But there is no memory
+> > > barrier. This patch adds one.
+> > 
+> > OK this would help to enforce that the CPU would see the current value
+> > but what prevents us from the race with the value update without the
+> > lock? This is as racy as it was before AFAICS.
+> > 
+> 
+> Hm, do I misunderstand ?
+> ==
+>    update                     reference
+> 
+>    CPU A                        CPU B
+>   set value                rcu_read_lock()
+>   smp_wmb()                smp_rmb()
+>                            read_value
+>                            rcu_read_unlock()
+>   synchronize_rcu().
+> ==
+> I expect
+> If synchronize_rcu() is called before rcu_read_lock() => move_lock_xxx will be held.
+> If synchronize_rcu() is called after rcu_read_lock() => update will be delayed.
 
-> In my opinion, the fact that soft limits are ignored when pressure is
-> triggered sub-root_mem_cgroup is an artifact of the per-zone tree, so
-> I allowed soft limits to be taken into account below root_mem_cgroup.
->
-> But IMO, this is something different from how soft limit reclaim is
-> applied once triggered: currently, soft limit reclaim applies to a
-> whole hierarchy, including all children.  And this I left unchanged.
+Ahh, OK I can see it now. Readers are not that important because it is
+actually the updater who is delayed until all preexisting rcu read
+sections are finished.
+
+In that case. Why do we need both barriers? spin_unlock is a full
+barrier so maybe we just need smp_rmb before we read value to make sure
+that we do not get stalled value when we start rcu_read section after
+synchronize_rcu?
+
+> Here, cpu B needs to read most recently updated value.
+
+If it reads the old value then it would think that we are not moving and
+so we would account to the old group and move it later on, right?
+
+> 
+> Thanks,
+> -Kame
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
