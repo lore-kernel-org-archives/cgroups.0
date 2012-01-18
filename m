@@ -1,398 +1,391 @@
-From: Sha <handai.szj@gmail.com>
-Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Wed, 18 Jan 2012 15:17:25 +0800
-Message-ID: <CAFj3OHWY2Biw54gaGeH5fkxzgOhxn7NAibeYT_Jmga-_ypNSRg@mail.gmail.com>
-References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
-	<1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
-	<CALWz4izwNBN_qcSsqg-qYw-Esc9vBL3=4cv3Wsg1jf6001_fWQ@mail.gmail.com>
-	<20120112085904.GG24386@cmpxchg.org>
-	<CALWz4iz3sQX+pCr19rE3_SwV+pRFhDJ7Lq-uJuYBq6u3mRU3AQ@mail.gmail.com>
-	<20120113224424.GC1653@cmpxchg.org>
-	<4F158418.2090509@gmail.com>
-	<20120117145348.GA3144@cmpxchg.org>
+From: Sha <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup: revise how we re-populate root directory
+Date: Wed, 18 Jan 2012 15:23:45 +0800
+Message-ID: <CAFj3OHUQzShbmdCKYhWMum=hqM5XqK-_wcDyUajnZ1XWFGX1Xg@mail.gmail.com>
+References: <4F13DA90.2000603@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: multipart/alternative; boundary=f46d041b4aa45187ca04b6c83d25
-Return-path: <owner-linux-mm@kvack.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=FglZDbKFBcuFMK4cLRb70j7o+bA7EiertUWk39zOaK0=;
-        b=BT/A75Ed2tJxfp8oPowchJrQzm1EZZdcMy5MCkgTqZlN5EG7MnovimAR1tCYCIooie
-         dFCKtLtW1tqu6R4SedGloSuJTMphcVVg0FudEpyULAFlUzi2790jeZMvDhetshM4qqwg
-         DmXBDzmonY9lRFRSvpxQjGsJ9IxXJZvgrYxoY=
-In-Reply-To: <20120117145348.GA3144@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+         :cc:content-type:content-transfer-encoding;
+        bh=eRdWfUu2QcFiR5Ko4GF0UJY2nUfIOrvj1A3ky2t8dgI=;
+        b=E8RiEHjSkgBqoawRzXJuJfc1HHj3BiSY9h+GXGtm4wB/Wz8yFbAZ9D3wA4z12g/bCe
+         H/CGp4y4QqFdyVsOeiNJ57d5sddtqx7/9ge3V0+UP9hUUyDeGGMxFOqRv0mp1prE0cBf
+         5Vjf23umugG4awP1lStn9WmxgwpedaxMJ1g6c=
+In-Reply-To: <4F13DA90.2000603-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ying Han <yinghan@google.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
 
---f46d041b4aa45187ca04b6c83d25
-Content-Type: text/plain; charset=ISO-8859-1
+Hi Zefan,
 
-**
-On 01/17/2012 10:53 PM, Johannes Weiner wrote:
+On Mon, Jan 16, 2012 at 4:06 PM, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> wrote:
+> When remounting cgroupfs with some subsystems added to it and some
+> removed, cgroup will remove all the files in root directory and then
+> re-popluate it.
+>
+> What I'm doing here is, only remove files which belong to subsystems =
+that
+> are to be unbound, and only create files for newly-added subsystems.
+> The purpose is to have all other files untouched.
+>
+> This is a preparation for cgroup xattr support.
+>
+> Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> ---
+> =C2=A0include/linux/cgroup.h | =C2=A0 11 +++---
+> =C2=A0kernel/cgroup.c =C2=A0 =C2=A0 =C2=A0 =C2=A0| =C2=A0 92 ++++++++=
++++++++++++++++++++++++----------------
+> =C2=A02 files changed, 67 insertions(+), 36 deletions(-)
+>
+> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+> index e9b6021..13db9e8 100644
+> --- a/include/linux/cgroup.h
+> +++ b/include/linux/cgroup.h
+> @@ -327,6 +327,9 @@ struct cftype {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0size_t max_write_len;
+>
+> + =C2=A0 =C2=A0 =C2=A0 /* The subsystem this cgroup file belongs to *=
+/
+> + =C2=A0 =C2=A0 =C2=A0 struct cgroup_subsys *subsys;
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int (*open)(struct inode *inode, struct fi=
+le *file);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ssize_t (*read)(struct cgroup *cgrp, struc=
+t cftype *cft,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0struct file *file,
+> @@ -419,16 +422,14 @@ struct cgroup_scanner {
+> =C2=A0* called by subsystems from within a populate() method
+> =C2=A0*/
+> =C2=A0int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *=
+subsys,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0const struct cftype *cft);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stru=
+ct cftype *cft);
+>
+> =C2=A0/*
+> =C2=A0* Add a set of new files to the given cgroup directory. Should
+> =C2=A0* only be called by subsystems from within a populate() method
+> =C2=A0*/
+> -int cgroup_add_files(struct cgroup *cgrp,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 struct cgroup_subsys *subsys,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 const struct cftype cft[],
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 int count);
+> +int cgroup_add_files(struct cgroup *cgrp, struct cgroup_subsys *subs=
+ys,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+struct cftype cft[], int count);
+>
+> =C2=A0int cgroup_is_removed(const struct cgroup *cgrp);
+>
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index a5d3b53..c4ed6fe 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -781,6 +781,8 @@ static int cgroup_mkdir(struct inode *dir, struct=
+ dentry *dentry, umode_t mode);
+> =C2=A0static struct dentry *cgroup_lookup(struct inode *, struct dent=
+ry *, struct nameidata *);
+> =C2=A0static int cgroup_rmdir(struct inode *unused_dir, struct dentry=
+ *dentry);
+> =C2=A0static int cgroup_populate_dir(struct cgroup *cgrp);
+> +static int cgroup_repopulate_dir(struct cgroup *cgrp, unsigned long =
+added_bits,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long removed_bits);
+> =C2=A0static const struct inode_operations cgroup_dir_inode_operation=
+s;
+> =C2=A0static const struct file_operations proc_cgroupstats_operations=
+;
+>
+> @@ -882,34 +884,44 @@ static void remove_dir(struct dentry *d)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0dput(parent);
+> =C2=A0}
+>
+> -static void cgroup_clear_directory(struct dentry *dentry)
+> +static void cgroup_clear_directory(struct dentry *dentry, bool remov=
+e_all,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long removed_=
+bits)
+> =C2=A0{
+> - =C2=A0 =C2=A0 =C2=A0 struct list_head *node;
+> + =C2=A0 =C2=A0 =C2=A0 LIST_HEAD(head);
+> + =C2=A0 =C2=A0 =C2=A0 struct dentry *d, *node;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0BUG_ON(!mutex_is_locked(&dentry->d_inode->=
+i_mutex));
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock(&dentry->d_lock);
+> - =C2=A0 =C2=A0 =C2=A0 node =3D dentry->d_subdirs.next;
+> - =C2=A0 =C2=A0 =C2=A0 while (node !=3D &dentry->d_subdirs) {
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct dentry *d =3D=
+ list_entry(node, struct dentry, d_u.d_child);
+> + =C2=A0 =C2=A0 =C2=A0 list_for_each_entry_safe(d, node, &dentry->d_s=
+ubdirs, d_u.d_child) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct cftype *cft=
+ =3D d->d_fsdata;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (!remove_all &&=
+ cft->subsys &&
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 !tes=
+t_bit(cft->subsys->subsys_id, &removed_bits))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 continue;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_nest=
+ed(&d->d_lock, DENTRY_D_LOCK_NESTED);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 list_del_init(node=
+);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 list_move(&d->d_u.=
+d_child, &head);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (d->d_inode=
+) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0/* This should never be called on a cgroup
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 * directory with child cgroups */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0BUG_ON(d->d_inode->i_mode & S_IFDIR);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0dget_dlock(d);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 spin_unlock(&d->d_lock);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 spin_unlock(&dentry->d_lock);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_unlock(&d->d_=
+lock);
+> + =C2=A0 =C2=A0 =C2=A0 }
+> + =C2=A0 =C2=A0 =C2=A0 spin_unlock(&dentry->d_lock);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 list_for_each_entry_safe(d, node, &head, d_u.d=
+_child) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_lock(&d->d_lo=
+ck);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 list_del_init(&d->=
+d_u.d_child);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_unlock(&d->d_=
+lock);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (d->d_inode) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0d_delete(d);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0simple_unlink(dentry->d_inode, d);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0dput(d);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 spin_lock(&dentry->d_lock);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 } else
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 spin_unlock(&d->d_lock);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 node =3D dentry->d=
+_subdirs.next;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> - =C2=A0 =C2=A0 =C2=A0 spin_unlock(&dentry->d_lock);
+> =C2=A0}
+>
+> =C2=A0/*
+> @@ -919,7 +931,7 @@ static void cgroup_d_remove_dir(struct dentry *de=
+ntry)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct dentry *parent;
+>
+> - =C2=A0 =C2=A0 =C2=A0 cgroup_clear_directory(dentry);
+> + =C2=A0 =C2=A0 =C2=A0 cgroup_clear_directory(dentry, true, 0);
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0parent =3D dentry->d_parent;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock(&parent->d_lock);
+> @@ -1284,6 +1296,7 @@ static int cgroup_remount(struct super_block *s=
+b, int *flags, char *data)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct cgroupfs_root *root =3D sb->s_fs_in=
+fo;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct cgroup *cgrp =3D &root->top_cgroup;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct cgroup_sb_opts opts;
+> + =C2=A0 =C2=A0 =C2=A0 unsigned long added_bits, removed_bits;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_lock(&cgrp->dentry->d_inode->i_mutex=
+);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_lock(&cgroup_mutex);
+> @@ -1294,6 +1307,9 @@ static int cgroup_remount(struct super_block *s=
+b, int *flags, char *data)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out_unloc=
+k;
+>
+> + =C2=A0 =C2=A0 =C2=A0 added_bits =3D opts.subsys_bits & ~root->subsy=
+s_bits;
+> + =C2=A0 =C2=A0 =C2=A0 removed_bits =3D root->subsys_bits & ~opts.sub=
+sys_bits;
+> +
 
-On Tue, Jan 17, 2012 at 10:22:16PM +0800, Sha wrote:
-
- On 01/14/2012 06:44 AM, Johannes Weiner wrote:
-
- On Fri, Jan 13, 2012 at 01:31:16PM -0800, Ying Han wrote:
-
- On Thu, Jan 12, 2012 at 12:59 AM, Johannes Weiner<hannes@cmpxchg.org>
-<hannes@cmpxchg.org>  wrote:
-
- On Wed, Jan 11, 2012 at 01:42:31PM -0800, Ying Han wrote:
-
- On Tue, Jan 10, 2012 at 7:02 AM, Johannes Weiner<hannes@cmpxchg.org>
-<hannes@cmpxchg.org>  wrote:
-
- @@ -1318,6 +1123,36 @@ static unsigned long mem_cgroup_margin(struct
-mem_cgroup *memcg)
-       return margin>>  PAGE_SHIFT;
- }
-
-+/**
-+ * mem_cgroup_over_softlimit
-+ * @root: hierarchy root
-+ * @memcg: child of @root to test
-+ *
-+ * Returns %true if @memcg exceeds its own soft limit or contributes
-+ * to the soft limit excess of one of its parents up to and including
-+ * @root.
-+ */
-+bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
-+                              struct mem_cgroup *memcg)
-+{
-+       if (mem_cgroup_disabled())
-+               return false;
-+
-+       if (!root)
-+               root = root_mem_cgroup;
-+
-+       for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-+               /* root_mem_cgroup does not have a soft limit */
-+               if (memcg == root_mem_cgroup)
-+                       break;
-+               if (res_counter_soft_limit_excess(&memcg->res))
-+                       return true;
-+               if (memcg == root)
-+                       break;
-+       }
-
- Here it adds pressure on a cgroup if one of its parents exceeds soft
-limit, although the cgroup itself is under soft limit. It does change
-my understanding of soft limit, and might introduce regression of our
-existing use cases.
-
-Here is an example:
-
-Machine capacity 32G and we over-commit by 8G.
-
-root
-  ->  A (hard limit 20G, soft limit 15G, usage 16G)
-       ->  A1 (soft limit 5G, usage 4G)
-       ->  A2 (soft limit 10G, usage 12G)
-  ->  B (hard limit 20G, soft limit 10G, usage 16G)
-
-under global reclaim, we don't want to add pressure on A1 although its
-parent A exceeds its soft limit. Assume that if we set the soft limit
-corresponding to each cgroup's working set size (hot memory), and it
-will introduce regression to A1 in that case.
-
-In my existing implementation, i am checking the cgroup's soft limit
-standalone w/o looking its ancestors.
-
- Why do you set the soft limit of A in the first place if you don't
-want it to be enforced?
-
- The soft limit should be enforced under certain condition, not always.
-The soft limit of A is set to be enforced when the parent of A and B
-is under memory pressure. For example:
-
-Machine capacity 32G and we over-commit by 8G
-
-root
-->  A (hard limit 20G, soft limit 12G, usage 20G)
-       ->  A1 (soft limit 2G, usage 1G)
-       ->  A2 (soft limit 10G, usage 19G)
-->  B (hard limit 20G, soft limit 10G, usage 0G)
-
-Now, A is under memory pressure since the total usage is hitting its
-hard limit. Then we start hierarchical reclaim under A, and each
-cgroup under A also takes consideration of soft limit. In this case,
-we should only set priority = 0 to A2 since it contributes to A's
-charge as well as exceeding its own soft limit. Why punishing A1 (set
-priority = 0) also which has usage under its soft limit ? I can
-imagine it will introduce regression to existing environment which the
-soft limit is set based on the working set size of the cgroup.
-
-To answer the question why we set soft limit to A, it is used to
-over-commit the host while sharing the resource with its sibling (B in
-this case). If the machine is under memory contention, we would like
-to push down memory to A or B depends on their usage and soft limit.
-
- D'oh, I think the problem is just that we walk up the hierarchy one
-too many when checking whether a group exceeds a soft limit.  The soft
-limit is a signal to distribute pressure that comes from above, it's
-meaningless and should indeed be ignored on the level the pressure
-originates from.
-
-Say mem_cgroup_over_soft_limit(root, memcg) would check everyone up to
-but not including root, wouldn't that do exactly what we both want?
-
-Example:
-
-1. If global memory is short, we reclaim with root=root_mem_cgroup.
-   A1 and A2 get soft limit reclaimed because of A's soft limit
-   excess, just like the current kernel would do.
-
-2. If A hits its hard limit, we reclaim with root=A, so we only mind
-   the soft limits of A1 and A2.  A1 is below its soft limit, all
-   good.  A2 is above its soft limit, gets treated accordingly.  This
-   is new behaviour, the current kernel would just reclaim them
-   equally.
-
-Code:
-
-bool mem_cgroup_over_soft_limit(struct mem_cgroup *root,
-			        struct mem_cgroup *memcg)
-{
-	if (mem_cgroup_disabled())
-		return false;
-
-	if (!root)
-		root = root_mem_cgroup;
-
-	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-		if (memcg == root)
-			break;
-		if (res_counter_soft_limit_excess(&memcg->res))
-			return true;
-	}
-	return false;
-}
-
- Hi Johannes,
-
-I don't think it solve the root of the problem, example:
-root
--> A (hard limit 20G, soft limit 12G, usage 20G)
-    -> A1 ( soft limit 2G,   usage 1G)
-    -> A2 ( soft limit 10G, usage 19G)
-           ->B1 (soft limit 5G, usage 4G)
-           ->B2 (soft limit 5G, usage 15G)
-
-Now A is hitting its hard limit and start hierarchical reclaim under A.
-If we choose B1 to go through mem_cgroup_over_soft_limit, it will
-return true because its parent A2 has a large usage and will lead to
-priority=0 reclaiming. But in fact it should be B2 to be punished.
-
- Because A2 is over its soft limit, the whole hierarchy below it should
-be preferred over A1, so both B1 and B2 should be soft limit reclaimed
-to be consistent with behaviour at the root level.
-
- Well it is just the behavior that I'm expecting actually. But with my
-humble comprehension, I can't catch the soft-limit-based hierarchical
-reclaiming under the target cgroup (A2) in the current implementation
-or after the patch. Both the current mem_cgroup_soft_reclaim or
-shrink_zone select victim sub-cgroup by mem_cgroup_iter, but it
-doesn't take soft limit into consideration, do I left anything ?
+Should it be the following=EF=BC=9F=EF=BC=9A
+          added_bits =3D opts.subsys_bits & ~root->actual_subsys_bits;
+          removed_bits =3D root->actual_subsys_bits & ~opts.subsys_bits=
+;
 
 Thanks,
 Sha
 
---f46d041b4aa45187ca04b6c83d25
-Content-Type: text/html; charset=ISO-8859-1
-
-<u></u>
-
-  
-    
-  
-  <div text="#000000" bgcolor="#ffffff">
-    On 01/17/2012 10:53 PM, Johannes Weiner wrote:
-    <blockquote type="cite">
-      <pre>On Tue, Jan 17, 2012 at 10:22:16PM +0800, Sha wrote:
-</pre>
-      <blockquote type="cite">
-        <pre>On 01/14/2012 06:44 AM, Johannes Weiner wrote:
-</pre>
-        <blockquote type="cite">
-          <pre>On Fri, Jan 13, 2012 at 01:31:16PM -0800, Ying Han wrote:
-</pre>
-          <blockquote type="cite">
-            <pre>On Thu, Jan 12, 2012 at 12:59 AM, Johannes Weiner<a href="mailto:hannes@cmpxchg.org" target="_blank">&lt;hannes@cmpxchg.org&gt;</a>  wrote:
-</pre>
-            <blockquote type="cite">
-              <pre>On Wed, Jan 11, 2012 at 01:42:31PM -0800, Ying Han wrote:
-</pre>
-              <blockquote type="cite">
-                <pre>On Tue, Jan 10, 2012 at 7:02 AM, Johannes Weiner<a href="mailto:hannes@cmpxchg.org" target="_blank">&lt;hannes@cmpxchg.org&gt;</a>  wrote:
-</pre>
-                <blockquote type="cite">
-                  <pre>@@ -1318,6 +1123,36 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
-       return margin&gt;&gt;  PAGE_SHIFT;
- }
-
-+/**
-+ * mem_cgroup_over_softlimit
-+ * @root: hierarchy root
-+ * @memcg: child of @root to test
-+ *
-+ * Returns %true if @memcg exceeds its own soft limit or contributes
-+ * to the soft limit excess of one of its parents up to and including
-+ * @root.
-+ */
-+bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
-+                              struct mem_cgroup *memcg)
-+{
-+       if (mem_cgroup_disabled())
-+               return false;
-+
-+       if (!root)
-+               root = root_mem_cgroup;
-+
-+       for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-+               /* root_mem_cgroup does not have a soft limit */
-+               if (memcg == root_mem_cgroup)
-+                       break;
-+               if (res_counter_soft_limit_excess(&amp;memcg-&gt;res))
-+                       return true;
-+               if (memcg == root)
-+                       break;
-+       }
-</pre>
-                </blockquote>
-                <pre>Here it adds pressure on a cgroup if one of its parents exceeds soft
-limit, although the cgroup itself is under soft limit. It does change
-my understanding of soft limit, and might introduce regression of our
-existing use cases.
-
-Here is an example:
-
-Machine capacity 32G and we over-commit by 8G.
-
-root
-  -&gt;  A (hard limit 20G, soft limit 15G, usage 16G)
-       -&gt;  A1 (soft limit 5G, usage 4G)
-       -&gt;  A2 (soft limit 10G, usage 12G)
-  -&gt;  B (hard limit 20G, soft limit 10G, usage 16G)
-
-under global reclaim, we don&#39;t want to add pressure on A1 although its
-parent A exceeds its soft limit. Assume that if we set the soft limit
-corresponding to each cgroup&#39;s working set size (hot memory), and it
-will introduce regression to A1 in that case.
-
-In my existing implementation, i am checking the cgroup&#39;s soft limit
-standalone w/o looking its ancestors.
-</pre>
-              </blockquote>
-              <pre>Why do you set the soft limit of A in the first place if you don&#39;t
-want it to be enforced?
-</pre>
-            </blockquote>
-            <pre>The soft limit should be enforced under certain condition, not always.
-The soft limit of A is set to be enforced when the parent of A and B
-is under memory pressure. For example:
-
-Machine capacity 32G and we over-commit by 8G
-
-root
--&gt;  A (hard limit 20G, soft limit 12G, usage 20G)
-       -&gt;  A1 (soft limit 2G, usage 1G)
-       -&gt;  A2 (soft limit 10G, usage 19G)
--&gt;  B (hard limit 20G, soft limit 10G, usage 0G)
-
-Now, A is under memory pressure since the total usage is hitting its
-hard limit. Then we start hierarchical reclaim under A, and each
-cgroup under A also takes consideration of soft limit. In this case,
-we should only set priority = 0 to A2 since it contributes to A&#39;s
-charge as well as exceeding its own soft limit. Why punishing A1 (set
-priority = 0) also which has usage under its soft limit ? I can
-imagine it will introduce regression to existing environment which the
-soft limit is set based on the working set size of the cgroup.
-
-To answer the question why we set soft limit to A, it is used to
-over-commit the host while sharing the resource with its sibling (B in
-this case). If the machine is under memory contention, we would like
-to push down memory to A or B depends on their usage and soft limit.
-</pre>
-          </blockquote>
-          <pre>D&#39;oh, I think the problem is just that we walk up the hierarchy one
-too many when checking whether a group exceeds a soft limit.  The soft
-limit is a signal to distribute pressure that comes from above, it&#39;s
-meaningless and should indeed be ignored on the level the pressure
-originates from.
-
-Say mem_cgroup_over_soft_limit(root, memcg) would check everyone up to
-but not including root, wouldn&#39;t that do exactly what we both want?
-
-Example:
-
-1. If global memory is short, we reclaim with root=root_mem_cgroup.
-   A1 and A2 get soft limit reclaimed because of A&#39;s soft limit
-   excess, just like the current kernel would do.
-
-2. If A hits its hard limit, we reclaim with root=A, so we only mind
-   the soft limits of A1 and A2.  A1 is below its soft limit, all
-   good.  A2 is above its soft limit, gets treated accordingly.  This
-   is new behaviour, the current kernel would just reclaim them
-   equally.
-
-Code:
-
-bool mem_cgroup_over_soft_limit(struct mem_cgroup *root,
-			        struct mem_cgroup *memcg)
-{
-	if (mem_cgroup_disabled())
-		return false;
-
-	if (!root)
-		root = root_mem_cgroup;
-
-	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-		if (memcg == root)
-			break;
-		if (res_counter_soft_limit_excess(&amp;memcg-&gt;res))
-			return true;
-	}
-	return false;
-}
-</pre>
-        </blockquote>
-        <pre>Hi Johannes,
-
-I don&#39;t think it solve the root of the problem, example:
-root
--&gt; A (hard limit 20G, soft limit 12G, usage 20G)
-    -&gt; A1 ( soft limit 2G,   usage 1G)
-    -&gt; A2 ( soft limit 10G, usage 19G)
-           -&gt;B1 (soft limit 5G, usage 4G)
-           -&gt;B2 (soft limit 5G, usage 15G)
-
-Now A is hitting its hard limit and start hierarchical reclaim under A.
-If we choose B1 to go through mem_cgroup_over_soft_limit, it will
-return true because its parent A2 has a large usage and will lead to
-priority=0 reclaiming. But in fact it should be B2 to be punished.
-</pre>
-      </blockquote>
-      <pre>Because A2 is over its soft limit, the whole hierarchy below it should
-be preferred over A1, so both B1 and B2 should be soft limit reclaimed
-to be consistent with behaviour at the root level.
-</pre>
-    </blockquote>
-    Well it is just the behavior that I&#39;m expecting actually. But with my<br>humble comprehension, I can&#39;t catch the soft-limit-based hierarchical<br>reclaiming under the target cgroup (A2) in the current implementation<br>
-or after the patch. Both the current mem_cgroup_soft_reclaim or<br>shrink_zone select victim sub-cgroup by mem_cgroup_iter, but it<br>doesn&#39;t take soft limit into consideration, do I left anything ?<br><br>Thanks,<br>
-Sha<br>
-  </div>
-
-
---f46d041b4aa45187ca04b6c83d25--
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Don't allow flags or name to change at =
+remount */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (opts.flags !=3D root->flags ||
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(opts.name && strcmp(opts.na=
+me, root->name))) {
+> @@ -1308,8 +1324,8 @@ static int cgroup_remount(struct super_block *s=
+b, int *flags, char *data)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out_unloc=
+k;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+> - =C2=A0 =C2=A0 =C2=A0 /* (re)populate subsystem files */
+> - =C2=A0 =C2=A0 =C2=A0 cgroup_populate_dir(cgrp);
+> + =C2=A0 =C2=A0 =C2=A0 /* re-populate subsystem files */
+> + =C2=A0 =C2=A0 =C2=A0 cgroup_repopulate_dir(cgrp, added_bits, remove=
+d_bits);
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (opts.release_agent)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0strcpy(root->r=
+elease_agent_path, opts.release_agent);
+> @@ -2710,16 +2726,17 @@ static umode_t cgroup_file_mode(const struct =
+cftype *cft)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0return mode;
+> =C2=A0}
+>
+> -int cgroup_add_file(struct cgroup *cgrp,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0struct cgroup_subsys *subsys,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0const struct cftype *cft)
+> +int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *subsy=
+s,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stru=
+ct cftype *cft)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct dentry *dir =3D cgrp->dentry;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct dentry *dentry;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int error;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0umode_t mode;
+> -
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0char name[MAX_CGROUP_TYPE_NAMELEN + MAX_CF=
+TYPE_NAME + 2] =3D { 0 };
+> +
+> + =C2=A0 =C2=A0 =C2=A0 cft->subsys =3D subsys;
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (subsys && !test_bit(ROOT_NOPREFIX, &cg=
+rp->root->flags)) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0strcpy(name, s=
+ubsys->name);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0strcat(name, "=
+=2E");
+> @@ -2740,10 +2757,8 @@ int cgroup_add_file(struct cgroup *cgrp,
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL_GPL(cgroup_add_file);
+>
+> -int cgroup_add_files(struct cgroup *cgrp,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 struct cgroup_subsys *subsys,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 const struct cftype cft[],
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 int count)
+> +int cgroup_add_files(struct cgroup *cgrp, struct cgroup_subsys *subs=
+ys,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+struct cftype cft[], int count)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int i, err;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0for (i =3D 0; i < count; i++) {
+> @@ -3703,26 +3718,27 @@ static struct cftype cft_release_agent =3D {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0.max_write_len =3D PATH_MAX,
+> =C2=A0};
+>
+> -static int cgroup_populate_dir(struct cgroup *cgrp)
+> +static int __cgroup_populate_dir(struct cgroup *cgrp, unsigned long =
+added_bits)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int err;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct cgroup_subsys *ss;
+>
+> - =C2=A0 =C2=A0 =C2=A0 /* First clear out any existing files */
+> - =C2=A0 =C2=A0 =C2=A0 cgroup_clear_directory(cgrp->dentry);
+> -
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D cgroup_add_files(cgrp, NULL, files=
+, ARRAY_SIZE(files));
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err < 0)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return err;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (cgrp =3D=3D cgrp->top_cgroup) {
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if ((err =3D cgrou=
+p_add_file(cgrp, NULL, &cft_release_agent)) < 0)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D cgroup_add=
+_file(cgrp, NULL, &cft_release_agent);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err < 0)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0return err;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0for_each_subsys(cgrp->root, ss) {
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (ss->populate &=
+& (err =3D ss->populate(ss, cgrp)) < 0)
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 return err;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (test_bit(ss->s=
+ubsys_id, &added_bits) && ss->populate) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 err =3D ss->populate(ss, cgrp);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 if (err < 0)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return err;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* This cgroup is ready now */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0for_each_subsys(cgrp->root, ss) {
+> @@ -3739,6 +3755,20 @@ static int cgroup_populate_dir(struct cgroup *=
+cgrp)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;
+> =C2=A0}
+>
+> +static int cgroup_populate_dir(struct cgroup *cgrp)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 return __cgroup_populate_dir(cgrp, cgrp->root-=
+>subsys_bits);
+> +}
+> +
+> +static int cgroup_repopulate_dir(struct cgroup *cgrp, unsigned long =
+added_bits,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long removed_bits)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 /* First clear out files */
+> + =C2=A0 =C2=A0 =C2=A0 cgroup_clear_directory(cgrp->dentry, false, re=
+moved_bits);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 return __cgroup_populate_dir(cgrp, added_bits)=
+;
+> +}
+> +
+> =C2=A0static void init_cgroup_css(struct cgroup_subsys_state *css,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct cgroup_subsys *ss,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct cgroup *cgrp)
+> --
+> 1.7.3.1
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
