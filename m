@@ -1,160 +1,63 @@
-From: Ying Han <yinghan@google.com>
-Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Wed, 18 Jan 2012 12:38:54 -0800
-Message-ID: <CALWz4iw85UZ4k1T8THhq=gnm0yEFW_=+7d9xtmcSfNm4sx5CAA@mail.gmail.com>
-References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
-	<1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
-	<20120113120406.GC17060@tiehlicka.suse.cz>
-	<20120113155001.GB1653@cmpxchg.org>
-	<20120113163423.GG17060@tiehlicka.suse.cz>
-	<CALWz4iyj4SMMyYhbuZ3HUq-jvcZUCGarceYY7vxm4b7X=yvCMg@mail.gmail.com>
-	<20120118094523.GJ24386@cmpxchg.org>
+From: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: add xattr support
+Date: Wed, 18 Jan 2012 22:28:42 +0100
+Message-ID: <CAPXgP13fT3V4L0x6uj9ZdAOw25BgQtEpa8QzLB-_c_Yn+9kO2Q@mail.gmail.com>
+References: <4F13DA90.2000603@cn.fujitsu.com> <4F13DAA9.4070703@cn.fujitsu.com>
+ <20120117175322.GC6762@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=gamma;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:x-system-of-record:content-type:content-transfer-encoding;
-        bh=EYm1VY1lN+gFVjbN0Qugeq8X9bCdj1KtZcPWwARlnZY=;
-        b=qjZqgJLn0z1LX+0xkWR1YcAqSHTJdWoZjw88ni1A8wzA+rzuBBfVQR/D4gmRssyL15
-         RDNNTzVcQqdJagitxQIo/IJ4acNaeztbUz3NvDE9fZZSUuy96upwvq2Z0QLLCH9qPZTq
-         Ur9jDjIDdZibrPm91lGs9Yi0b89KxywMwNnXM=
-In-Reply-To: <20120118094523.GJ24386@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+        d=vrfy.org; s=google;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding;
+        bh=+k7H4FCoJHTT7xkaw3CHyyAJ5Ehq4flYKeZm9ssB3Us=;
+        b=gDZ5dGRIUHggisgqu9WTM+GLnhMzfKahFFRYPG5WNzcfbhwEjGWcAGo0ypWTmrAG/j
+         vL7LMZDQrd3wyHsLBy/SHfGxDTW89YCd1UPhez39HBsmazP2WKzg3peTRkQkxNGbZcqL
+         ruomzL1XJMI2f381UmYLPk351/1IQDiTMKijY=
+In-Reply-To: <20120117175322.GC6762-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
 
-On Wed, Jan 18, 2012 at 1:45 AM, Johannes Weiner <hannes@cmpxchg.org> wrote=
-:
-> On Fri, Jan 13, 2012 at 01:45:30PM -0800, Ying Han wrote:
->> On Fri, Jan 13, 2012 at 8:34 AM, Michal Hocko <mhocko@suse.cz> wrote:
->> > On Fri 13-01-12 16:50:01, Johannes Weiner wrote:
->> >> On Fri, Jan 13, 2012 at 01:04:06PM +0100, Michal Hocko wrote:
->> >> > On Tue 10-01-12 16:02:52, Johannes Weiner wrote:
->> > [...]
->> >> > > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
->> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct mem_cgrou=
-p *memcg)
->> >> > > +{
->> >> > > + if (mem_cgroup_disabled())
->> >> > > + =A0 =A0 =A0 =A0 return false;
->> >> > > +
->> >> > > + if (!root)
->> >> > > + =A0 =A0 =A0 =A0 root =3D root_mem_cgroup;
->> >> > > +
->> >> > > + for (; memcg; memcg =3D parent_mem_cgroup(memcg)) {
->> >> > > + =A0 =A0 =A0 =A0 /* root_mem_cgroup does not have a soft limit *=
-/
->> >> > > + =A0 =A0 =A0 =A0 if (memcg =3D=3D root_mem_cgroup)
->> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->> >> > > + =A0 =A0 =A0 =A0 if (res_counter_soft_limit_excess(&memcg->res))
->> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return true;
->> >> > > + =A0 =A0 =A0 =A0 if (memcg =3D=3D root)
->> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->> >> > > + }
->> >> > > + return false;
->> >> > > +}
->> >> >
->> >> > Well, this might be little bit tricky. We do not check whether memc=
-g and
->> >> > root are in a hierarchy (in terms of use_hierarchy) relation.
->> >> >
->> >> > If we are under global reclaim then we iterate over all memcgs and =
-so
->> >> > there is no guarantee that there is a hierarchical relation between=
- the
->> >> > given memcg and its parent. While, on the other hand, if we are doi=
-ng
->> >> > memcg reclaim then we have this guarantee.
->> >> >
->> >> > Why should we punish a group (subtree) which is perfectly under its=
- soft
->> >> > limit just because some other subtree contributes to the common par=
-ent's
->> >> > usage and makes it over its limit?
->> >> > Should we check memcg->use_hierarchy here?
->> >>
->> >> We do, actually. =A0parent_mem_cgroup() checks the res_counter parent=
-,
->> >> which is only set when ->use_hierarchy is also set.
->> >
->> > Of course I am blind.. We do not setup res_counter parent for
->> > !use_hierarchy case. Sorry for noise...
->> > Now it makes much better sense. I was wondering how !use_hierarchy cou=
-ld
->> > ever work, this should be a signal that I am overlooking something
->> > terribly.
->> >
->> > [...]
->> >> > > @@ -2121,8 +2121,16 @@ static void shrink_zone(int priority, stru=
-ct zone *zone,
->> >> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 .mem_cgroup =3D memcg,
->> >> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 .zone =3D zone,
->> >> > > =A0 =A0 =A0 =A0 =A0 };
->> >> > > + =A0 =A0 =A0 =A0 int epriority =3D priority;
->> >> > > + =A0 =A0 =A0 =A0 /*
->> >> > > + =A0 =A0 =A0 =A0 =A0* Put more pressure on hierarchies that exce=
-ed their
->> >> > > + =A0 =A0 =A0 =A0 =A0* soft limit, to push them back harder than =
-their
->> >> > > + =A0 =A0 =A0 =A0 =A0* well-behaving siblings.
->> >> > > + =A0 =A0 =A0 =A0 =A0*/
->> >> > > + =A0 =A0 =A0 =A0 if (mem_cgroup_over_softlimit(root, memcg))
->> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 epriority =3D 0;
->> >> >
->> >> > This sounds too aggressive to me. Shouldn't we just double the pres=
-sure
->> >> > or something like that?
->> >>
->> >> That's the historical value. =A0When I tried priority - 1, it was not
->> >> aggressive enough.
->> >
->> > Probably because we want to reclaim too much. Maybe we should do
->> > reduce nr_to_reclaim (ugly) or reclaim only overlimit groups until cer=
-tain
->> > priority level as Ying suggested in her patchset.
->>
->> I plan to post that change on top of this, and this patch set does the
->> basic stuff to allow us doing further improvement.
->>
->> I still like the design to skip over_soft_limit cgroups until certain
->> priority. One way to set up the soft limit for each cgroup is to base
->> on its actual working set size, and we prefer to punish A first with
->> lots of page cache ( cold file pages above soft limit) than reclaiming
->> anon pages from B ( below soft limit ). Unless we can not get enough
->> pages reclaimed from A, we will start reclaiming from B.
->>
->> This might not be the ideal solution, but should be a good start. Though=
-ts?
->
-> I don't like this design at all because unless you add weird code to
-> detect if soft limits apply to any memcgs on the reclaimed hierarchy
-> you may iterate over the same bunch of memcgs doing nothing for
-> several times. =A0For example in the default case of no softlimits set
-> anywhere and you repeatedly walk ALL memcgs in the system doing jack
-> until you reach your threshold priority level. =A0Elegant is something
-> else in my book.
+On Tue, Jan 17, 2012 at 18:53, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 
-Agree that change isn't ready until the default soft limit is changed to "0=
-".
+>> > The key idea is that this would allow attaching runtime meta infor=
+mation
+>> > to cgroups and everything they model (services, apps, vms), that d=
+oesn't
+>> > need any complex userspace infrastructure, has good access control
+>> > (i.e. because the file system enforces that anyway, and there's th=
+e
+>> > "trusted." xattr namespace), notifications (inotify), and can easi=
+ly be
+>> > shared among applications.
 
-> Once we invert soft limits to mean guarantees and make the default
-> soft limit not infinity but zero, then we can ignore memcgs below
-> their soft limit for a few priority levels just fine because being
-> below the soft limit is the exception. =A0But I don't really want to
-> make this quite invasive behavioural change a requirement for a
-> refactoring patch if possible.
+> Ummm... I don't feel too good about this. =C2=A0Why can't those extra
+> information be kept somewhere else? =C2=A0Overloading cgroupfs as sto=
+rage
+> for essentially opaque userland information doesn't seem like a good
+> idea to me.
 
-Sounds reasonable to me.
+A bit of the background:
 
---Ying
+The /sys/fs/cgroup/systemd/ hierarchy represents something like a
+first class kernel-related system object, which we call an
+'application' or 'service' in userspace. Every 'service' or
+'application' has zero, one or many processes, and has some high-level
+metadata attached.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The general idea, not specifcally related to cgroups, is to try as
+hard as possible to stick metadata about objects to the objects
+themselves. It's a bit like the difference of lock files vs. locks
+attached to a process. In the later case, if the process dies, the
+lock is automatically cleaned up, in the former, we have a stale file.
+
+The idea with the cgroup fs xattrs was to be able to attach some
+general useful attributes to the 'service container' itself, instead
+of keeping them in the memory of the managing process or store them on
+disk which can get out-of-sync much easier.
+
+Kay
