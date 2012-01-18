@@ -1,72 +1,122 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
- pc->flags
-Date: Wed, 18 Jan 2012 09:12:26 +0900
-Message-ID: <20120118091226.b46e0f6e.kamezawa.hiroyu@jp.fujitsu.com>
-References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120117164605.GB22142@tiehlicka.suse.cz>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
+Date: Wed, 18 Jan 2012 14:26:38 +0900
+Message-ID: <20120118142638.11667d2c.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
+	<1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
+	<20120112105427.4b80437b.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120113121645.GA1653@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120117164605.GB22142@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120113121645.GA1653-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Ying Han <yinghan@google.com>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 17 Jan 2012 17:46:05 +0100
-Michal Hocko <mhocko@suse.cz> wrote:
+On Fri, 13 Jan 2012 13:16:56 +0100
+Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-> On Fri 13-01-12 17:40:19, KAMEZAWA Hiroyuki wrote:
-> > 
-> > From 1008e84d94245b1e7c4d237802ff68ff00757736 Mon Sep 17 00:00:00 2001
-> > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> > Date: Thu, 12 Jan 2012 15:53:24 +0900
-> > Subject: [PATCH 3/7] memcg: remove PCG_MOVE_LOCK flag from pc->flags.
-> > 
-> > PCG_MOVE_LOCK bit is used for bit spinlock for avoiding race between
-> > memcg's account moving and page state statistics updates.
-> > 
-> > Considering page-statistics update, very hot path, this lock is
-> > taken only when someone is moving account (or PageTransHuge())
-> 
-> Outdated comment? THP is not an issue here.
-> 
-Ah, sorry. I reorderd patches.
+> On Thu, Jan 12, 2012 at 10:54:27AM +0900, KAMEZAWA Hiroyuki wrote:
 
-> > And, now, all moving-account between memcgroups (by task-move)
-> > are serialized.
+> > Thank you for your work and the result seems atractive and code is much
+> > simpler. My small concerns are..
 > > 
-> > So, it seems too costly to have 1bit per page for this purpose.
-> > 
-> > This patch removes PCG_MOVE_LOCK and add hashed rwlock array
-> > instead of it. This works well enough. Even when we need to
-> > take the lock, 
+> > 1. This approach may increase latency of direct-reclaim because of priority=0.
 > 
-> Hmmm, rwlocks are not popular these days very much. 
-> Anyway, can we rather make it (source) memcg (bit)spinlock instead. We
-> would reduce false sharing this way and would penalize only pages from
-> the moving group.
+> I think strictly speaking yes, but note that with kswapd being less
+> likely to get stuck in hammering on one group, the need for allocators
+> to enter direct reclaim itself is reduced.
 > 
-per-memcg spinlock ? The reason I used rwlock() is to avoid disabling IRQ.
-This routine will be called by IRQ context (for dirty ratio support).
-So, IRQ disable will be required if we use spinlock.
+> However, if this really becomes a problem in real world loads, the fix
+> is pretty easy: just ignore the soft limit for direct reclaim.  We can
+> still consider it from hard limit reclaim and kswapd.
+> 
+> > 2. In a case numa-spread/interleave application run in its own container, 
+> >    pages on a node may paged-out again and again becasue of priority=0
+> >    if some other application runs in the node.
+> >    It seems difficult to use soft-limit with numa-aware applications.
+> >    Do you have suggestions ?
+> 
+> This is a question about soft limits in general rather than about this
+> particular patch, right?
+> 
+
+Partially, yes. My concern is related to "1".
+
+Assume an application is binded to some cpu/node and try to allocate memory.
+If its memcg's usage is over softlimit, this application will play bad because
+newly allocated memory will be reclaim target soon, again....
+
+
+> And if I understand correctly, the problem you are referring to is
+> this: an application and parts of a soft-limited container share a
+> node, the soft limit setting means that the container's pages on that
+> node are reclaimed harder.  At that point, the container's share on
+> that node becomes tiny, but since the soft limit is oblivious to
+> nodes, the expansion of the other application pushes the soft-limited
+> container off that node completely as long as the container stays
+> above its soft limit with the usage on other nodes.
+> 
+> What would you think about having node-local soft limits that take the
+> node size into account?
+> 
+> 	local_soft_limit = soft_limit * node_size / memcg_size
+> 
+> The soft limit can be exceeded globally, but the container is no
+> longer pushed off a node on which it's only occupying a small share of
+> memory.
+> 
+Yes, I think this kind of care is required.
+What is the 'node_size' here ? size of pgdat ?
+size of per-node usage in the memcg ?
+
+
+> Putting it into proportion of the memcg size, not overall memory size
+> has the following advantages:
+> 
+>   1. if the container is sitting on only one of several available
+>   nodes without exceeding the limit globally, the memcg will not be
+>   reclaimed harder just because it has a relatively large share of the
+>   node.
+> 
+>   2. if the soft limit excess is ridiculously high, the local soft
+>   limits will be pushed down, so the tolerance for smaller shares on
+>   nodes goes down in proportion to the global soft limit excess.
+> 
+> Example:
+> 
+> 	4G soft limit * 2G node / 4G container = 2G node-local limit
+> 
+> The container is globally within its soft limit, so the local limit is
+> at least the size of the node.  It's never reclaimed harder compared
+> to other applications on the node.
+> 
+> 	4G soft limit * 2G node / 5G container = ~1.6G node-local limit
+> 
+
+
+
+> Here, it will experience more pressure initially, but it will level
+> off when the shrinking usage and the thereby increasing node-local
+> soft limit meet.  From that point on, the container and the competing
+> application will be treated equally during reclaim.
+> 
+> Finally, if the container is 16G in size, i.e. 300% in excess, the
+> per-node tolerance is at 512M node-local soft limit, which IMO strikes
+> a good balance between zero tolerance and still applying some stress
+> to the hugely oversized container when other applications (with
+> virtually unlimited soft limits) want to run on the same node.
+> 
+> What do you think?
+
+I like the idea. Another idea is changing 'priority' based on per-node stats
+if not too complicated...
 
 Thanks,
 -Kame
 
 
 
-
-
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
