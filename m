@@ -1,67 +1,62 @@
-From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: add xattr support
-Date: Wed, 18 Jan 2012 16:27:18 +0800
-Message-ID: <4F168266.3060205@cn.fujitsu.com>
-References: <4F13DA90.2000603@cn.fujitsu.com> <4F13DAA9.4070703@cn.fujitsu.com> <20120117175322.GC6762@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
+Date: Wed, 18 Jan 2012 10:25:09 +0100
+Message-ID: <20120118092509.GI24386@cmpxchg.org>
+References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
+ <1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
+ <CALWz4izwNBN_qcSsqg-qYw-Esc9vBL3=4cv3Wsg1jf6001_fWQ@mail.gmail.com>
+ <20120112085904.GG24386@cmpxchg.org>
+ <CALWz4iz3sQX+pCr19rE3_SwV+pRFhDJ7Lq-uJuYBq6u3mRU3AQ@mail.gmail.com>
+ <20120113224424.GC1653@cmpxchg.org>
+ <4F158418.2090509@gmail.com>
+ <20120117145348.GA3144@cmpxchg.org>
+ <CAFj3OHWY2Biw54gaGeH5fkxzgOhxn7NAibeYT_Jmga-_ypNSRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120117175322.GC6762-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAFj3OHWY2Biw54gaGeH5fkxzgOhxn7NAibeYT_Jmga-_ypNSRg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Sha <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Tejun Heo wrote:
-> Hello,
+On Wed, Jan 18, 2012 at 03:17:25PM +0800, Sha wrote:
+> > > I don't think it solve the root of the problem, example:
+> > > root
+> > > -> A (hard limit 20G, soft limit 12G, usage 20G)
+> > >   -> A1 ( soft limit 2G,   usage 1G)
+> > >   -> A2 ( soft limit 10G, usage 19G)
+> > >          ->B1 (soft limit 5G, usage 4G)
+> > >          ->B2 (soft limit 5G, usage 15G)
+> > >
+> > > Now A is hitting its hard limit and start hierarchical reclaim under A.
+> > > If we choose B1 to go through mem_cgroup_over_soft_limit, it will
+> > > return true because its parent A2 has a large usage and will lead to
+> > > priority=0 reclaiming. But in fact it should be B2 to be punished.
 > 
-> On Mon, Jan 16, 2012 at 04:07:05PM +0800, Li Zefan wrote:
->> This is one of the items in the plumber's wish list.
->>
->> For use cases:
->>
->>>> What would the use case be for this?
->>>
->>> Attaching meta information to services, in an easily discoverable
->>> way. For example, in systemd we create one cgroup for each service, and
->>> could then store data like the main pid of the specific service as an
->>> xattr on the cgroup itself. That way we'd have almost all service state
->>> in the cgroupfs, which would make it possible to terminate systemd and
->>> later restart it without losing any state information. But there's more:
->>> for example, some very peculiar services cannot be terminated on
->>> shutdown (i.e. fakeraid DM stuff) and it would be really nice if the
->>> services in question could just mark that on their cgroup, by setting an
->>> xattr. On the more desktopy side of things there are other
->>> possibilities: for example there are plans defining what an application
->>> is along the lines of a cgroup (i.e. an app being a collection of
->>> processes). With xattrs one could then attach an icon or human readable
->>> program name on the cgroup.
->>>
->>> The key idea is that this would allow attaching runtime meta information
->>> to cgroups and everything they model (services, apps, vms), that doesn't
->>> need any complex userspace infrastructure, has good access control
->>> (i.e. because the file system enforces that anyway, and there's the
->>> "trusted." xattr namespace), notifications (inotify), and can easily be
->>> shared among applications.
->>>
->>> Lennart
->>
->> Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> > Because A2 is over its soft limit, the whole hierarchy below it should
+> > be preferred over A1, so both B1 and B2 should be soft limit reclaimed
+> > to be consistent with behaviour at the root level.
 > 
-> Ummm... I don't feel too good about this.  Why can't those extra
-> information be kept somewhere else?  Overloading cgroupfs as storage
-> for essentially opaque userland information doesn't seem like a good
-> idea to me.
-> 
+> Well it is just the behavior that I'm expecting actually. But with my
+> humble comprehension, I can't catch the soft-limit-based hierarchical
+> reclaiming under the target cgroup (A2) in the current implementation
+> or after the patch. Both the current mem_cgroup_soft_reclaim or
+> shrink_zone select victim sub-cgroup by mem_cgroup_iter, but it
+> doesn't take soft limit into consideration, do I left anything ?
 
-Long ago Paul M toyed with a patch that adds a control file for userspace
-to read/write per-cgroup user information, but there were no use cases.
-This patchset has a similar purpose, but this interface is more flexable
-and easier to use, and we do have systemd as a use case this time.
+No, currently soft limits are ignored if pressure originates from
+below root_mem_cgroup.
 
-I'll let Lennart answer if we can easily live without this.
+But iff soft limits are applied right now, they are applied
+hierarchically, see mem_cgroup_soft_limit_reclaim().
 
-Furthermore, I noticed tmpfs also implemented xattr support, and we
-should be able to share most of the code, which makes the cost for
-having this feature smaller.
+In my opinion, the fact that soft limits are ignored when pressure is
+triggered sub-root_mem_cgroup is an artifact of the per-zone tree, so
+I allowed soft limits to be taken into account below root_mem_cgroup.
+
+But IMO, this is something different from how soft limit reclaim is
+applied once triggered: currently, soft limit reclaim applies to a
+whole hierarchy, including all children.  And this I left unchanged.
