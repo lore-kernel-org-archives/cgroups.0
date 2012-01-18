@@ -1,62 +1,146 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [patch 2/2] mm: memcg: hierarchical soft limit reclaim
-Date: Wed, 18 Jan 2012 10:25:09 +0100
-Message-ID: <20120118092509.GI24386@cmpxchg.org>
+Date: Wed, 18 Jan 2012 10:45:23 +0100
+Message-ID: <20120118094523.GJ24386@cmpxchg.org>
 References: <1326207772-16762-1-git-send-email-hannes@cmpxchg.org>
  <1326207772-16762-3-git-send-email-hannes@cmpxchg.org>
- <CALWz4izwNBN_qcSsqg-qYw-Esc9vBL3=4cv3Wsg1jf6001_fWQ@mail.gmail.com>
- <20120112085904.GG24386@cmpxchg.org>
- <CALWz4iz3sQX+pCr19rE3_SwV+pRFhDJ7Lq-uJuYBq6u3mRU3AQ@mail.gmail.com>
- <20120113224424.GC1653@cmpxchg.org>
- <4F158418.2090509@gmail.com>
- <20120117145348.GA3144@cmpxchg.org>
- <CAFj3OHWY2Biw54gaGeH5fkxzgOhxn7NAibeYT_Jmga-_ypNSRg@mail.gmail.com>
+ <20120113120406.GC17060@tiehlicka.suse.cz>
+ <20120113155001.GB1653@cmpxchg.org>
+ <20120113163423.GG17060@tiehlicka.suse.cz>
+ <CALWz4iyj4SMMyYhbuZ3HUq-jvcZUCGarceYY7vxm4b7X=yvCMg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <CAFj3OHWY2Biw54gaGeH5fkxzgOhxn7NAibeYT_Jmga-_ypNSRg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CALWz4iyj4SMMyYhbuZ3HUq-jvcZUCGarceYY7vxm4b7X=yvCMg@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sha <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Ying Han <yinghan@google.com>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 18, 2012 at 03:17:25PM +0800, Sha wrote:
-> > > I don't think it solve the root of the problem, example:
-> > > root
-> > > -> A (hard limit 20G, soft limit 12G, usage 20G)
-> > >   -> A1 ( soft limit 2G,   usage 1G)
-> > >   -> A2 ( soft limit 10G, usage 19G)
-> > >          ->B1 (soft limit 5G, usage 4G)
-> > >          ->B2 (soft limit 5G, usage 15G)
-> > >
-> > > Now A is hitting its hard limit and start hierarchical reclaim under A.
-> > > If we choose B1 to go through mem_cgroup_over_soft_limit, it will
-> > > return true because its parent A2 has a large usage and will lead to
-> > > priority=0 reclaiming. But in fact it should be B2 to be punished.
-> 
-> > Because A2 is over its soft limit, the whole hierarchy below it should
-> > be preferred over A1, so both B1 and B2 should be soft limit reclaimed
-> > to be consistent with behaviour at the root level.
-> 
-> Well it is just the behavior that I'm expecting actually. But with my
-> humble comprehension, I can't catch the soft-limit-based hierarchical
-> reclaiming under the target cgroup (A2) in the current implementation
-> or after the patch. Both the current mem_cgroup_soft_reclaim or
-> shrink_zone select victim sub-cgroup by mem_cgroup_iter, but it
-> doesn't take soft limit into consideration, do I left anything ?
+On Fri, Jan 13, 2012 at 01:45:30PM -0800, Ying Han wrote:
+> On Fri, Jan 13, 2012 at 8:34 AM, Michal Hocko <mhocko@suse.cz> wrote:
+> > On Fri 13-01-12 16:50:01, Johannes Weiner wrote:
+> >> On Fri, Jan 13, 2012 at 01:04:06PM +0100, Michal Hocko wrote:
+> >> > On Tue 10-01-12 16:02:52, Johannes Weiner wrote:
+> > [...]
+> >> > > +bool mem_cgroup_over_softlimit(struct mem_cgroup *root,
+> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct mem_cgro=
+up *memcg)
+> >> > > +{
+> >> > > + if (mem_cgroup_disabled())
+> >> > > + =A0 =A0 =A0 =A0 return false;
+> >> > > +
+> >> > > + if (!root)
+> >> > > + =A0 =A0 =A0 =A0 root =3D root_mem_cgroup;
+> >> > > +
+> >> > > + for (; memcg; memcg =3D parent_mem_cgroup(memcg)) {
+> >> > > + =A0 =A0 =A0 =A0 /* root_mem_cgroup does not have a soft limit =
+*/
+> >> > > + =A0 =A0 =A0 =A0 if (memcg =3D=3D root_mem_cgroup)
+> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> >> > > + =A0 =A0 =A0 =A0 if (res_counter_soft_limit_excess(&memcg->res)=
+)
+> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return true;
+> >> > > + =A0 =A0 =A0 =A0 if (memcg =3D=3D root)
+> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> >> > > + }
+> >> > > + return false;
+> >> > > +}
+> >> >
+> >> > Well, this might be little bit tricky. We do not check whether mem=
+cg and
+> >> > root are in a hierarchy (in terms of use_hierarchy) relation.
+> >> >
+> >> > If we are under global reclaim then we iterate over all memcgs and=
+ so
+> >> > there is no guarantee that there is a hierarchical relation betwee=
+n the
+> >> > given memcg and its parent. While, on the other hand, if we are do=
+ing
+> >> > memcg reclaim then we have this guarantee.
+> >> >
+> >> > Why should we punish a group (subtree) which is perfectly under it=
+s soft
+> >> > limit just because some other subtree contributes to the common pa=
+rent's
+> >> > usage and makes it over its limit?
+> >> > Should we check memcg->use_hierarchy here?
+> >>
+> >> We do, actually. =A0parent_mem_cgroup() checks the res_counter paren=
+t,
+> >> which is only set when ->use_hierarchy is also set.
+> >
+> > Of course I am blind.. We do not setup res_counter parent for
+> > !use_hierarchy case. Sorry for noise...
+> > Now it makes much better sense. I was wondering how !use_hierarchy co=
+uld
+> > ever work, this should be a signal that I am overlooking something
+> > terribly.
+> >
+> > [...]
+> >> > > @@ -2121,8 +2121,16 @@ static void shrink_zone(int priority, str=
+uct zone *zone,
+> >> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 .mem_cgroup =3D memcg,
+> >> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 .zone =3D zone,
+> >> > > =A0 =A0 =A0 =A0 =A0 };
+> >> > > + =A0 =A0 =A0 =A0 int epriority =3D priority;
+> >> > > + =A0 =A0 =A0 =A0 /*
+> >> > > + =A0 =A0 =A0 =A0 =A0* Put more pressure on hierarchies that exc=
+eed their
+> >> > > + =A0 =A0 =A0 =A0 =A0* soft limit, to push them back harder than=
+ their
+> >> > > + =A0 =A0 =A0 =A0 =A0* well-behaving siblings.
+> >> > > + =A0 =A0 =A0 =A0 =A0*/
+> >> > > + =A0 =A0 =A0 =A0 if (mem_cgroup_over_softlimit(root, memcg))
+> >> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 epriority =3D 0;
+> >> >
+> >> > This sounds too aggressive to me. Shouldn't we just double the pre=
+ssure
+> >> > or something like that?
+> >>
+> >> That's the historical value. =A0When I tried priority - 1, it was no=
+t
+> >> aggressive enough.
+> >
+> > Probably because we want to reclaim too much. Maybe we should do
+> > reduce nr_to_reclaim (ugly) or reclaim only overlimit groups until ce=
+rtain
+> > priority level as Ying suggested in her patchset.
+>=20
+> I plan to post that change on top of this, and this patch set does the
+> basic stuff to allow us doing further improvement.
+>=20
+> I still like the design to skip over_soft_limit cgroups until certain
+> priority. One way to set up the soft limit for each cgroup is to base
+> on its actual working set size, and we prefer to punish A first with
+> lots of page cache ( cold file pages above soft limit) than reclaiming
+> anon pages from B ( below soft limit ). Unless we can not get enough
+> pages reclaimed from A, we will start reclaiming from B.
+>=20
+> This might not be the ideal solution, but should be a good start. Thoug=
+hts?
 
-No, currently soft limits are ignored if pressure originates from
-below root_mem_cgroup.
+I don't like this design at all because unless you add weird code to
+detect if soft limits apply to any memcgs on the reclaimed hierarchy
+you may iterate over the same bunch of memcgs doing nothing for
+several times.  For example in the default case of no softlimits set
+anywhere and you repeatedly walk ALL memcgs in the system doing jack
+until you reach your threshold priority level.  Elegant is something
+else in my book.
 
-But iff soft limits are applied right now, they are applied
-hierarchically, see mem_cgroup_soft_limit_reclaim().
+Once we invert soft limits to mean guarantees and make the default
+soft limit not infinity but zero, then we can ignore memcgs below
+their soft limit for a few priority levels just fine because being
+below the soft limit is the exception.  But I don't really want to
+make this quite invasive behavioural change a requirement for a
+refactoring patch if possible.
 
-In my opinion, the fact that soft limits are ignored when pressure is
-triggered sub-root_mem_cgroup is an artifact of the per-zone tree, so
-I allowed soft limits to be taken into account below root_mem_cgroup.
-
-But IMO, this is something different from how soft limit reclaim is
-applied once triggered: currently, soft limit reclaim applies to a
-whole hierarchy, including all children.  And this I left unchanged.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
+.ca/
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
