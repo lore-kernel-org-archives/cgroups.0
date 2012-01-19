@@ -1,52 +1,65 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
+From: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] memcg: restore ss->id_lock to spinlock, using RCU for
  next
-Date: Thu, 19 Jan 2012 15:31:03 +0800
-Message-ID: <4F17C6B7.5020606@cn.fujitsu.com>
+Date: Thu, 19 Jan 2012 08:33:21 +0100
+Message-ID: <1326958401.1113.22.camel@edumazet-laptop>
 References: <alpine.LSU.2.00.1201182155480.7862@eggly.anvils>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LSU.2.00.1201182155480.7862@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-type:x-mailer:content-transfer-encoding:mime-version;
+        bh=JunrcHlH1c/Qf0NjB3FIwNpfrDdMSncwltI9fmUJCoo=;
+        b=SQwhEahj9+WxFVrapvPvfq8RZgXYfvBVrOfMuedk/IsxctbJX/9p2h5SbcvNZ2wEnR
+         a0hLBxsd29W8hHgDXS6lfLt6hBXmasulh7nMq9vIrNK3o2p9CKYE3KeaVg4iCi19rWJ0
+         nssFmZQy2N1JlJAi6X4NzvfeZtBX+8bYQ3d/o=
+In-Reply-To: <alpine.LSU.2.00.1201182155480.7862-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Hugh Dickins <hughd@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Manfred Spraul <manfred@colorfullife.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Ying Han <yinghan@google.com>, Greg Thelen <gthelen@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Manfred Spraul <manfred-nhLOkwUX5cPe2c5cEj3t2g@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hugh Dickins wrote:
-> Commit c1e2ee2dc436 "memcg: replace ss->id_lock with a rwlock" has
-> now been seen to cause the unfair behavior we should have expected
-> from converting a spinlock to an rwlock: softlockup in cgroup_mkdir(),
-> whose get_new_cssid() is waiting for the wlock, while there are 19
-> tasks using the rlock in css_get_next() to get on with their memcg
-> workload (in an artificial test, admittedly).  Yet lib/idr.c was
-> made suitable for RCU way back.
-> 
-> 1. Revert that commit, restoring ss->id_lock to a spinlock.
-> 
+Le mercredi 18 janvier 2012 =C3=A0 22:05 -0800, Hugh Dickins a =C3=A9cr=
+it :
+
 > 2. Make one small adjustment to idr_get_next(): take the height from
-> the top layer (stable under RCU) instead of from the root (unprotected
+> the top layer (stable under RCU) instead of from the root (unprotecte=
+d
 > by RCU), as idr_find() does.
-> 
-> 3. Remove lock and unlock around css_get_next()'s call to idr_get_next():
-> memcg iterators (only users of css_get_next) already did rcu_read_lock(),
-> and comment demands that, but add a WARN_ON_ONCE to make sure of it.
-> 
-> Signed-off-by: Hugh Dickins <hughd@google.com>
+>=20
 
-Acked-by: Li Zefan <lizf@cn.fujitsu.com>
+> --- 3.2.0+/lib/idr.c	2012-01-04 15:55:44.000000000 -0800
+> +++ linux/lib/idr.c	2012-01-18 21:25:36.947963342 -0800
+> @@ -605,11 +605,11 @@ void *idr_get_next(struct idr *idp, int
+>  	int n, max;
+> =20
+>  	/* find first ent */
+> -	n =3D idp->layers * IDR_BITS;
+> -	max =3D 1 << n;
+>  	p =3D rcu_dereference_raw(idp->top);
+>  	if (!p)
+>  		return NULL;
+> +	n =3D (p->layer + 1) * IDR_BITS;
+> +	max =3D 1 << n;
+> =20
+>  	while (id < max) {
+>  		while (n > 0 && p) {
 
-> ---
-> 
->  include/linux/cgroup.h |    2 +-
->  kernel/cgroup.c        |   19 +++++++++----------
->  lib/idr.c              |    4 ++--
->  3 files changed, 12 insertions(+), 13 deletions(-)
+Interesting, but should be a patch on its own.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Maybe other idr users can benefit from your idea as well, if patch is
+labeled  "idr: allow idr_get_next() from rcu_read_lock" or something...
+
+I suggest introducing idr_get_next_rcu() helper to make the check about
+rcu cleaner.
+
+idr_get_next_rcu(...)
+{
+	WARN_ON_ONCE(!rcu_read_lock_held());
+	return idr_get_next(...);
+}
+
+
