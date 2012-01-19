@@ -1,78 +1,82 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] introduce res_counter_charge_nofail() for socket
- allocations
-Date: Thu, 19 Jan 2012 13:48:41 +0100
-Message-ID: <20120119124841.GL24386@cmpxchg.org>
-References: <1326899758-9013-1-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH] introduce res_counter_charge_nofail() for socket allocations
+Date: Thu, 19 Jan 2012 16:51:16 +0400
+Message-ID: <4F1811C4.50204@parallels.com>
+References: <1326899758-9013-1-git-send-email-glommer@parallels.com> <20120119124841.GL24386@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1326899758-9013-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20120119124841.GL24386-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-On Wed, Jan 18, 2012 at 07:15:58PM +0400, Glauber Costa wrote:
-> There is a case in __sk_mem_schedule(), where an allocation
-> is beyond the maximum, but yet we are allowed to proceed.
-> It happens under the following condition:
-> 
-> 	sk->sk_wmem_queued + size >= sk->sk_sndbuf
-> 
-> The network code won't revert the allocation in this case,
-> meaning that at some point later it'll try to do it. Since
-> this is never communicated to the underlying res_counter
-> code, there is an inbalance in res_counter uncharge operation.
-> 
-> I see two ways of fixing this:
-> 
-> 1) storing the information about those allocations somewhere
->    in memcg, and then deducting from that first, before
->    we start draining the res_counter,
-> 2) providing a slightly different allocation function for
->    the res_counter, that matches the original behavior of
->    the network code more closely.
-> 
-> I decided to go for #2 here, believing it to be more elegant,
-> since #1 would require us to do basically that, but in a more
-> obscure way.
-> 
-> I will eventually submit it through Dave for the -net tree,
-> but I wanted to query you guys first, to see if this approach
-> is acceptable or if you'd prefer me to try something else.
-> 
-> Thanks
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> ---
->  include/linux/res_counter.h |    6 ++++++
->  include/net/sock.h          |   10 ++++------
->  kernel/res_counter.c        |   25 +++++++++++++++++++++++++
->  net/core/sock.c             |    4 ++--
->  4 files changed, 37 insertions(+), 8 deletions(-)
-> 
-> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-> index c9d625c..32a7b02 100644
-> --- a/include/linux/res_counter.h
-> +++ b/include/linux/res_counter.h
-> @@ -109,12 +109,18 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent);
->   *
->   * returns 0 on success and <0 if the counter->usage will exceed the
->   * counter->limit _locked call expects the counter->lock to be taken
-> + *
-> + * charge_nofail works the same, except that it charges the resource
-> + * counter unconditionally, and returns < 0 if the after the current
-> + * charge we are over limit.
->   */
+On 01/19/2012 04:48 PM, Johannes Weiner wrote:
+> On Wed, Jan 18, 2012 at 07:15:58PM +0400, Glauber Costa wrote:
+>> There is a case in __sk_mem_schedule(), where an allocation
+>> is beyond the maximum, but yet we are allowed to proceed.
+>> It happens under the following condition:
+>>
+>> 	sk->sk_wmem_queued + size>= sk->sk_sndbuf
+>>
+>> The network code won't revert the allocation in this case,
+>> meaning that at some point later it'll try to do it. Since
+>> this is never communicated to the underlying res_counter
+>> code, there is an inbalance in res_counter uncharge operation.
+>>
+>> I see two ways of fixing this:
+>>
+>> 1) storing the information about those allocations somewhere
+>>     in memcg, and then deducting from that first, before
+>>     we start draining the res_counter,
+>> 2) providing a slightly different allocation function for
+>>     the res_counter, that matches the original behavior of
+>>     the network code more closely.
+>>
+>> I decided to go for #2 here, believing it to be more elegant,
+>> since #1 would require us to do basically that, but in a more
+>> obscure way.
+>>
+>> I will eventually submit it through Dave for the -net tree,
+>> but I wanted to query you guys first, to see if this approach
+>> is acceptable or if you'd prefer me to try something else.
+>>
+>> Thanks
+>>
+>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> Cc: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>> Cc: Johannes Weiner<hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>> Cc: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
+>> ---
+>>   include/linux/res_counter.h |    6 ++++++
+>>   include/net/sock.h          |   10 ++++------
+>>   kernel/res_counter.c        |   25 +++++++++++++++++++++++++
+>>   net/core/sock.c             |    4 ++--
+>>   4 files changed, 37 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+>> index c9d625c..32a7b02 100644
+>> --- a/include/linux/res_counter.h
+>> +++ b/include/linux/res_counter.h
+>> @@ -109,12 +109,18 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent);
+>>    *
+>>    * returns 0 on success and<0 if the counter->usage will exceed the
+>>    * counter->limit _locked call expects the counter->lock to be taken
+>> + *
+>> + * charge_nofail works the same, except that it charges the resource
+>> + * counter unconditionally, and returns<  0 if the after the current
+>> + * charge we are over limit.
+>>    */
+>
+> res_counter_margin() assumes usage<= limit is always true.  Just make
+> sure you return 0 if that is not the case, or the charge path can get
+> confused, thinking there is enough room and retry needlessly.
+>
+> Otherwise, looks good.
 
-res_counter_margin() assumes usage <= limit is always true.  Just make
-sure you return 0 if that is not the case, or the charge path can get
-confused, thinking there is enough room and retry needlessly.
+You mean return zero in res_counter_charge_fail() if we exceeded the limit?
 
-Otherwise, looks good.
+I do that, since one needs to know the allocation was supposed to fail.
+Or are you talking about something else ?
