@@ -1,52 +1,45 @@
-From: Lennart Poettering <mzxreary@0pointer.de>
-Subject: Re: [PATCH 2/2] cgroup: add xattr support
-Date: Thu, 19 Jan 2012 02:49:28 +0100
-Message-ID: <20120119014928.GH29242@tango.0pointer.de>
-References: <4F13DA90.2000603@cn.fujitsu.com>
- <4F13DAA9.4070703@cn.fujitsu.com>
- <20120117175322.GC6762@google.com>
- <4F168266.3060205@cn.fujitsu.com>
- <20120118174732.GG30664@google.com>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [RFC] splitting cgroup.c
+Date: Thu, 19 Jan 2012 10:13:59 +0800
+Message-ID: <4F177C67.6070907@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120118174732.GG30664@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizf@cn.fujitsu.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, 18.01.12 09:47, Tejun Heo (tj@kernel.org) wrote:
+While working on cgroup xattr, it appeared to me it's better to
+create a cgroup_xattr.c instead of stuffing things into cgroup.c.
 
-> 
-> Hello,
-> 
-> On Wed, Jan 18, 2012 at 04:27:18PM +0800, Li Zefan wrote:
-> > Furthermore, I noticed tmpfs also implemented xattr support, and we
-> > should be able to share most of the code, which makes the cost for
-> > having this feature smaller.
-> 
-> Yes, maybe, but tmpfs doesn't have any special semantics attached to
-> files.  It's supposed to store opaque data from userland.  Regardless
-> of code complexity, I just don't think this is a good idea.  What if
-> we later want to attach certain config meaning to or export statistics
-> via xattrs?  That would be quite unusual and require strong rationale
-> but at least fall in the similar usage as with the rest of the fs.
+Then I took a look at how big it is.
 
-If you plan to export kernel data to userspace via xattrs, then you
-should probably place that in the system.xxx xattr namespace, not in
-the user.xxx or trusted.xxx namespaces which are the only ones which can
-be manipulated by userspace.
+    $ ls -l -S kernel/*.c
+    -rw-rw-r--  1 lizf lizf 142717 Jan 18 10:15 cgroup.c
+    -rw-rw-r--  1 lizf lizf 106498 Jan 18 10:15 workqueue.c
+    -rw-rw-r--  1 lizf lizf 105206 Jan 18 10:15 lockdep.c
+    -rw-rw-r--  1 lizf lizf  91321 Jan 18 10:16 module.c
+    
+    $ wc -l kernel/*.c | sort -n -r
+      90397 total
+       5289 cgroup.c
+       4206 lockdep.c
+       3840 workqueue.c
+       3507 module.c
 
-See attr(5) for more information about the four available xattr
-namespaces.
+So I think for the sake of readability and maintainability, we'd
+better split cgroup.c into smaller pieces:
 
-In other words: kernel exported xattrs should never collide with xattrs
-set by userspace.
+- event_control.c
+- css_id.c
+- debug.c
+- proc.c
+- super.c
+...
+- cgroup.c
 
-Lennart
+We may add xattr.c and release_agency.c as I'm working on them.
 
--- 
-Lennart Poettering - Red Hat, Inc.
+Any objection?
