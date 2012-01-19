@@ -1,77 +1,120 @@
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [PATCH] memcg: restore ss->id_lock to spinlock, using RCU for
- next
-Date: Thu, 19 Jan 2012 14:30:18 +0100
-Message-ID: <1326979818.2249.12.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-References: <alpine.LSU.2.00.1201182155480.7862@eggly.anvils>
-	 <1326958401.1113.22.camel@edumazet-laptop>
-	 <CAOS58YO585NYMLtmJv3f9vVdadFqoWF+Y5vZ6Va=2qHELuePJA@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] introduce res_counter_charge_nofail() for socket
+ allocations
+Date: Thu, 19 Jan 2012 14:38:56 +0100
+Message-ID: <20120119133856.GP24386@cmpxchg.org>
+References: <1326899758-9013-1-git-send-email-glommer@parallels.com>
+ <20120119124841.GL24386@cmpxchg.org>
+ <4F1811C4.50204@parallels.com>
+ <20120119131217.GN24386@cmpxchg.org>
+ <4F1816E1.2050506@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-type:x-mailer:content-transfer-encoding:mime-version;
-        bh=Youns7XuQxaNDW4r52faIWT0Fzm9tCFKCECK9+yCBDo=;
-        b=wa/luk7vHMmwcojUXLNPSLEwA4L9vhCzJ+RO18eGLBTzSwQG9coWGYZz3XzyaoX5p0
-         AhJGmyKc2lHFaho7shiP9uqBMaYSGx6ReOl5Fw7LYfjWajIqD4T8G9gHiJA0KbqZgTIg
-         fGlyqrizLdfSx3bP+shUTFmntDrsxUg01mt4s=
-In-Reply-To: <CAOS58YO585NYMLtmJv3f9vVdadFqoWF+Y5vZ6Va=2qHELuePJA@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4F1816E1.2050506-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>, Li Zefan <lizf@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Manfred Spraul <manfred@colorfullife.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Ying Han <yinghan@google.com>, Greg Thelen <gthelen@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Le jeudi 19 janvier 2012 =C3=A0 04:28 -0800, Tejun Heo a =C3=A9crit :
-> Hello,
->=20
-> On Wed, Jan 18, 2012 at 11:33 PM, Eric Dumazet <eric.dumazet@gmail.com>=
- wrote:
-> > Interesting, but should be a patch on its own.
->=20
-> Yeap, agreed.
->=20
-> > Maybe other idr users can benefit from your idea as well, if patch is
-> > labeled  "idr: allow idr_get_next() from rcu_read_lock" or something.=
-..
+On Thu, Jan 19, 2012 at 05:13:05PM +0400, Glauber Costa wrote:
+> On 01/19/2012 05:12 PM, Johannes Weiner wrote:
+> >On Thu, Jan 19, 2012 at 04:51:16PM +0400, Glauber Costa wrote:
+> >>On 01/19/2012 04:48 PM, Johannes Weiner wrote:
+> >>>On Wed, Jan 18, 2012 at 07:15:58PM +0400, Glauber Costa wrote:
+> >>>>There is a case in __sk_mem_schedule(), where an allocation
+> >>>>is beyond the maximum, but yet we are allowed to proceed.
+> >>>>It happens under the following condition:
+> >>>>
+> >>>>	sk->sk_wmem_queued + size>= sk->sk_sndbuf
+> >>>>
+> >>>>The network code won't revert the allocation in this case,
+> >>>>meaning that at some point later it'll try to do it. Since
+> >>>>this is never communicated to the underlying res_counter
+> >>>>code, there is an inbalance in res_counter uncharge operation.
+> >>>>
+> >>>>I see two ways of fixing this:
+> >>>>
+> >>>>1) storing the information about those allocations somewhere
+> >>>>    in memcg, and then deducting from that first, before
+> >>>>    we start draining the res_counter,
+> >>>>2) providing a slightly different allocation function for
+> >>>>    the res_counter, that matches the original behavior of
+> >>>>    the network code more closely.
+> >>>>
+> >>>>I decided to go for #2 here, believing it to be more elegant,
+> >>>>since #1 would require us to do basically that, but in a more
+> >>>>obscure way.
+> >>>>
+> >>>>I will eventually submit it through Dave for the -net tree,
+> >>>>but I wanted to query you guys first, to see if this approach
+> >>>>is acceptable or if you'd prefer me to try something else.
+> >>>>
+> >>>>Thanks
+> >>>>
+> >>>>Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> >>>>Cc: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> >>>>Cc: Johannes Weiner<hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> >>>>Cc: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
+> >>>>---
+> >>>>  include/linux/res_counter.h |    6 ++++++
+> >>>>  include/net/sock.h          |   10 ++++------
+> >>>>  kernel/res_counter.c        |   25 +++++++++++++++++++++++++
+> >>>>  net/core/sock.c             |    4 ++--
+> >>>>  4 files changed, 37 insertions(+), 8 deletions(-)
+> >>>>
+> >>>>diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+> >>>>index c9d625c..32a7b02 100644
+> >>>>--- a/include/linux/res_counter.h
+> >>>>+++ b/include/linux/res_counter.h
+> >>>>@@ -109,12 +109,18 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent);
+> >>>>   *
+> >>>>   * returns 0 on success and<0 if the counter->usage will exceed the
+> >>>>   * counter->limit _locked call expects the counter->lock to be taken
+> >>>>+ *
+> >>>>+ * charge_nofail works the same, except that it charges the resource
+> >>>>+ * counter unconditionally, and returns<   0 if the after the current
+> >>>>+ * charge we are over limit.
+> >>>>   */
+> >>>
+> >>>res_counter_margin() assumes usage<= limit is always true.  Just make
+> >>>sure you return 0 if that is not the case, or the charge path can get
+> >>>confused, thinking there is enough room and retry needlessly.
+> >>>
+> >>>Otherwise, looks good.
+> >>
+> >>You mean return zero in res_counter_charge_fail() if we exceeded the limit?
+> >>
+> >>I do that, since one needs to know the allocation was supposed to fail.
+> >>Or are you talking about something else ?
 > >
-> > I suggest introducing idr_get_next_rcu() helper to make the check abo=
-ut
-> > rcu cleaner.
+> >Yes, I mean the calculation in res_counter_margin(), which is supposed
+> >to tell the margin for new charges.  Its current code will underflow
+> >and return something large when the usage exceeds the limit, which is
+> >not possible before your patch, so I think you need to include this:
 > >
-> > idr_get_next_rcu(...)
-> > {
-> >        WARN_ON_ONCE(!rcu_read_lock_held());
-> >        return idr_get_next(...);
-> > }
->=20
-> Hmmm... I don't know. Does having a separate set of interface help
-> much?  It's easy to avoid/miss the test by using the other one.  If we
-> really worry about it, maybe indicating which locking is to be used
-> during init is better? We can remember the lockdep map and trigger
-> WARN_ON_ONCE() if neither the lock or RCU read lock is held.
+> >diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+> >index c9d625c..d06d014 100644
+> >--- a/include/linux/res_counter.h
+> >+++ b/include/linux/res_counter.h
+> >@@ -142,7 +142,10 @@ static inline unsigned long long res_counter_margin(struct res_counter *cnt)
+> >  	unsigned long flags;
+> >
+> >  	spin_lock_irqsave(&cnt->lock, flags);
+> >-	margin = cnt->limit - cnt->usage;
+> >+	if (cnt->limit>  cnt->usage)
+> >+		margin = cnt->limit - cnt->usage;
+> >+	else
+> >+		margin = 0;
+> >  	spin_unlock_irqrestore(&cnt->lock, flags);
+> >  	return margin;
+> >  }
+> Ah, I see.
+> 
+> Okay, I will update my patch to include this. (Or would you think it
+> would be better to add this as a preparation patch?)
 
-
-There is a rcu_dereference_raw(ptr) in idr_get_next()
-
-This could be changed to rcu_dereference_check(ptr, condition) to get
-lockdep support for free :)
-
-[ condition would be the appropriate
-lockdep_is_held(&the_lock_protecting_my_idr) or 'I use the rcu variant'
-and I hold rcu_read_lock ]
-
-This would need to add a 'condition' parameter to idr_gen_next(), but we
-have very few users in kernel at this moment.
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Probably better to just include it as we wouldn't need this check
+stand-alone.
