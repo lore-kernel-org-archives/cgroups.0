@@ -1,89 +1,149 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [BUG] kernel BUG at mm/memcontrol.c:1074!
-Date: Thu, 19 Jan 2012 14:52:50 +0900
-Message-ID: <20120119145250.acf3ccc8.kamezawa.hiroyu@jp.fujitsu.com>
-References: <1326949826.5016.5.camel@lappy>
+From: Hugh Dickins <hughd@google.com>
+Subject: [PATCH] memcg: restore ss->id_lock to spinlock, using RCU for next
+Date: Wed, 18 Jan 2012 22:05:12 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1201182155480.7862@eggly.anvils>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1326949826.5016.5.camel@lappy>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=gamma;
+        h=date:from:x-x-sender:to:cc:subject:message-id:user-agent
+         :mime-version:content-type;
+        bh=fKeYffzwMThydkQLl/mG1JzAqNWmyA3BMNcJ/U7vmnQ=;
+        b=p2rFKQkuvKDzHRYmI6nQqBPFx7SztYqFpHF6dUUFzCL03FT3pNhjuKcg13etm3FY/j
+         GuPj4Xxdw6EYrFP0yb6qk2o+5VYVce3Gyyun9AfTu02WlAup/2IenqfSf6h9Dr5353FJ
+         L4z7cfuRYpRK9sO+n2d7avtHW+Kk4Zv0NZQeo=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizf@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Manfred Spraul <manfred@colorfullife.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Ying Han <yinghan@google.com>, Greg Thelen <gthelen@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, 19 Jan 2012 07:10:26 +0200
-Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+Commit c1e2ee2dc436 "memcg: replace ss->id_lock with a rwlock" has
+now been seen to cause the unfair behavior we should have expected
+from converting a spinlock to an rwlock: softlockup in cgroup_mkdir(),
+whose get_new_cssid() is waiting for the wlock, while there are 19
+tasks using the rlock in css_get_next() to get on with their memcg
+workload (in an artificial test, admittedly).  Yet lib/idr.c was
+made suitable for RCU way back.
 
-> The problem is, that it looks like this has triggered a BUG() in the memory cgroup code:
-> 
-> [  526.737227] ------------[ cut here ]------------
-> [  526.738032] 
-> [  526.738032] invalid opcode: 0000 [#1] PREEMPT SMP 
-> [  526.738032] CPU 0 
-> [  526.738032] Pid: 1091, comm: kswapd0 Not tainted 3.2.0-next-20120119-sasha #128  
-> [  526.738032] RIP: 0010:[<ffffffff811c4b4a>]  [<ffffffff811c4b4a>] mem_cgroup_lru_del_list+0xca/0xd0
-> [  526.738032] RSP: 0018:ffff8800127139a0  EFLAGS: 00010046
-> [  526.738032] RAX: 0000000000000001 RBX: ffffea0000358300 RCX: 0000000000000000
-> [  526.738032] RDX: ffff880012c0b800 RSI: 0000000000000000 RDI: 0000000000000000
-> [  526.738032] RBP: ffff8800127139b0 R08: ffff880012713ad0 R09: 0000000000000001
-> [  526.738032] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000002
-> [  526.738032] R13: ffffea0000358300 R14: ffffea0000358320 R15: 0000000000000001
-> [  526.738032] FS:  0000000000000000(0000) GS:ffff880013a00000(0000) knlGS:0000000000000000
-> [  526.738032] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [  526.738032] CR2: 00007fea7fa42e66 CR3: 000000000c42a000 CR4: 00000000000406f0
-> [  526.738032] DR0: ffffffff810aaee0 DR1: 0000000000000000 DR2: 0000000000000000
-> [  526.738032] DR3: 0000000000000000 DR6: 00000000ffff4ff0 DR7: 0000000000000600
-> [  526.738032] Process kswapd0 (pid: 1091, threadinfo ffff880012712000, task ffff880012f7d840)
-> [  526.738032] Stack:
-> [  526.738032]  ffff880012c0b968 ffff880012c0b968 ffff8800127139c0 ffffffff811c4f0a
-> [  526.738032]  ffff880012713a70 ffffffff81178c63 ffff8800127139e0 ffffea00000cbba0
-> [  526.738032]  ffff880012713a40 ffff880012713b08 0000000000000001 ffffffffffffffff
-> [  526.738032] Call Trace:
-> [  526.738032]  [<ffffffff811c4f0a>] mem_cgroup_lru_del+0x3a/0x40
-> [  526.738032]  [<ffffffff81178c63>] isolate_lru_pages+0xe3/0x330
-> [  526.738032]  [<ffffffff8117a11e>] ? shrink_inactive_list+0xce/0x480
-> [  526.738032]  [<ffffffff8117a153>] shrink_inactive_list+0x103/0x480
-> [  526.738032]  [<ffffffff811c2a46>] ? mem_cgroup_iter+0x176/0x310
-> [  526.738032]  [<ffffffff810e2c55>] ? sched_clock_local+0x25/0x90
-> [  526.738032]  [<ffffffff8117ac04>] shrink_mem_cgroup_zone+0x3f4/0x580
-> [  526.738032]  [<ffffffff81107cfe>] ? put_lock_stats.clone.18+0xe/0x40
-> [  526.738032]  [<ffffffff8117adfe>] shrink_zone+0x6e/0xa0
-> [  526.738032]  [<ffffffff8117be65>] balance_pgdat+0x545/0x750
-> [  526.738032]  [<ffffffff810de1ed>] ? sub_preempt_count+0x9d/0xd0
-> [  526.738032]  [<ffffffff8117c233>] kswapd+0x1c3/0x320
-> [  526.738032]  [<ffffffff810cee30>] ? abort_exclusive_wait+0xb0/0xb0
-> [  526.738032]  [<ffffffff8117c070>] ? balance_pgdat+0x750/0x750
-> [  526.738032]  [<ffffffff810ce06e>] kthread+0xbe/0xd0
-> [  526.738032]  [<ffffffff82585df4>] kernel_thread_helper+0x4/0x10
-> [  526.738032]  [<ffffffff810d8c88>] ? finish_task_switch+0x78/0x100
-> [  526.738032]  [<ffffffff825840f8>] ? retint_restore_args+0x13/0x13
-> [  526.738032]  [<ffffffff810cdfb0>] ? kthread_flush_work_fn+0x10/0x10
-> [  526.738032]  [<ffffffff82585df0>] ? gs_change+0x13/0x13
-> [  526.738032] Code: 8b 1c 24 4c 8b 64 24 08 c9 c3 0f 1f 80 00 00 00 00 8b 4b 68 eb ba 0f 1f 00 0f b6 4b 68 bb 01 00 00 00 d3 e3 48 63 cb eb c2 0f 0b <0f> 0b 0f 1f 40 00 55 48 89 e5 48 83 ec 60 48 89 5d d8 4c 89 65 
-> [  526.738032] RIP  [<ffffffff811c4b4a>] mem_cgroup_lru_del_list+0xca/0xd0
-> [  526.738032]  RSP <ffff8800127139a0>
-> [  526.738032] ---[ end trace 866f4f6c624b8d58 ]---
+1. Revert that commit, restoring ss->id_lock to a spinlock.
 
-my memo here.
+2. Make one small adjustment to idr_get_next(): take the height from
+the top layer (stable under RCU) instead of from the root (unprotected
+by RCU), as idr_find() does.
 
-1. This is caused by pc->mem_cgroup was NULL at mem_cgroup_lru_del().
+3. Remove lock and unlock around css_get_next()'s call to idr_get_next():
+memcg iterators (only users of css_get_next) already did rcu_read_lock(),
+and comment demands that, but add a WARN_ON_ONCE to make sure of it.
 
-2. IIUC, PageLRU(page) should be true to cause this BUG. Then,
-   there is a page whose pc->mem_cgroup == NULL but PageLRU(page)==true.
-   But, memcg's lru_add() routine accesses pc->mem_cgroup...so it should
-   cause NULL pointer access if the page was added to LRU with pc->mem_cgroup is NULL.
+Signed-off-by: Hugh Dickins <hughd@google.com>
+---
 
-   One possibility is that the page was PageLRU set but not added to memcg's LRU
-   ... added to zone's LRU directly..
-   Or PageLRU(page) was true but not added to any lru list without pc->mem_cgroup updates.
+ include/linux/cgroup.h |    2 +-
+ kernel/cgroup.c        |   19 +++++++++----------
+ lib/idr.c              |    4 ++--
+ 3 files changed, 12 insertions(+), 13 deletions(-)
 
-3. IIUC, There is no routine to set pc->mem_cgroup as NULL once page is used.
-   But I need to check it....
+--- 3.2.0+/include/linux/cgroup.h	2012-01-14 13:01:57.532007832 -0800
++++ linux/include/linux/cgroup.h	2012-01-18 21:21:45.695966602 -0800
+@@ -535,7 +535,7 @@ struct cgroup_subsys {
+ 	struct list_head sibling;
+ 	/* used when use_id == true */
+ 	struct idr idr;
+-	rwlock_t id_lock;
++	spinlock_t id_lock;
+ 
+ 	/* should be defined only by modular subsystems */
+ 	struct module *module;
+--- 3.2.0+/kernel/cgroup.c	2012-01-14 13:01:57.824007839 -0800
++++ linux/kernel/cgroup.c	2012-01-18 21:29:05.199958492 -0800
+@@ -4939,9 +4939,9 @@ void free_css_id(struct cgroup_subsys *s
+ 
+ 	rcu_assign_pointer(id->css, NULL);
+ 	rcu_assign_pointer(css->id, NULL);
+-	write_lock(&ss->id_lock);
++	spin_lock(&ss->id_lock);
+ 	idr_remove(&ss->idr, id->id);
+-	write_unlock(&ss->id_lock);
++	spin_unlock(&ss->id_lock);
+ 	kfree_rcu(id, rcu_head);
+ }
+ EXPORT_SYMBOL_GPL(free_css_id);
+@@ -4967,10 +4967,10 @@ static struct css_id *get_new_cssid(stru
+ 		error = -ENOMEM;
+ 		goto err_out;
+ 	}
+-	write_lock(&ss->id_lock);
++	spin_lock(&ss->id_lock);
+ 	/* Don't use 0. allocates an ID of 1-65535 */
+ 	error = idr_get_new_above(&ss->idr, newid, 1, &myid);
+-	write_unlock(&ss->id_lock);
++	spin_unlock(&ss->id_lock);
+ 
+ 	/* Returns error when there are no free spaces for new ID.*/
+ 	if (error) {
+@@ -4985,9 +4985,9 @@ static struct css_id *get_new_cssid(stru
+ 	return newid;
+ remove_idr:
+ 	error = -ENOSPC;
+-	write_lock(&ss->id_lock);
++	spin_lock(&ss->id_lock);
+ 	idr_remove(&ss->idr, myid);
+-	write_unlock(&ss->id_lock);
++	spin_unlock(&ss->id_lock);
+ err_out:
+ 	kfree(newid);
+ 	return ERR_PTR(error);
+@@ -4999,7 +4999,7 @@ static int __init_or_module cgroup_init_
+ {
+ 	struct css_id *newid;
+ 
+-	rwlock_init(&ss->id_lock);
++	spin_lock_init(&ss->id_lock);
+ 	idr_init(&ss->idr);
+ 
+ 	newid = get_new_cssid(ss, 0);
+@@ -5087,6 +5087,8 @@ css_get_next(struct cgroup_subsys *ss, i
+ 		return NULL;
+ 
+ 	BUG_ON(!ss->use_id);
++	WARN_ON_ONCE(!rcu_read_lock_held());
++
+ 	/* fill start point for scan */
+ 	tmpid = id;
+ 	while (1) {
+@@ -5094,10 +5096,7 @@ css_get_next(struct cgroup_subsys *ss, i
+ 		 * scan next entry from bitmap(tree), tmpid is updated after
+ 		 * idr_get_next().
+ 		 */
+-		read_lock(&ss->id_lock);
+ 		tmp = idr_get_next(&ss->idr, &tmpid);
+-		read_unlock(&ss->id_lock);
+-
+ 		if (!tmp)
+ 			break;
+ 		if (tmp->depth >= depth && tmp->stack[depth] == rootid) {
+--- 3.2.0+/lib/idr.c	2012-01-04 15:55:44.000000000 -0800
++++ linux/lib/idr.c	2012-01-18 21:25:36.947963342 -0800
+@@ -605,11 +605,11 @@ void *idr_get_next(struct idr *idp, int
+ 	int n, max;
+ 
+ 	/* find first ent */
+-	n = idp->layers * IDR_BITS;
+-	max = 1 << n;
+ 	p = rcu_dereference_raw(idp->top);
+ 	if (!p)
+ 		return NULL;
++	n = (p->layer + 1) * IDR_BITS;
++	max = 1 << n;
+ 
+ 	while (id < max) {
+ 		while (n > 0 && p) {
 
-Regards,
--Kame
-
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
