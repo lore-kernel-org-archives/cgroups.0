@@ -1,76 +1,84 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: Hugh Dickins <hughd@google.com>
 Subject: Re: [BUG] kernel BUG at mm/memcontrol.c:1074!
-Date: Thu, 19 Jan 2012 13:03:53 +0900
-Message-ID: <20120119130353.0ca97435.kamezawa.hiroyu@jp.fujitsu.com>
-References: <1326949826.5016.5.camel@lappy>
-	<20120119122354.66eb9820.kamezawa.hiroyu@jp.fujitsu.com>
-	<alpine.LSU.2.00.1201181932040.2287@eggly.anvils>
+Date: Wed, 18 Jan 2012 21:16:09 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1201182100010.2830@eggly.anvils>
+References: <1326949826.5016.5.camel@lappy> <20120119122354.66eb9820.kamezawa.hiroyu@jp.fujitsu.com> <alpine.LSU.2.00.1201181932040.2287@eggly.anvils> <20120119130353.0ca97435.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LSU.2.00.1201181932040.2287-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=gamma;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=HFQOhD0M+LcpuTvMQGmwFSawVOuX+XQuBEmgvwaYGOA=;
+        b=IU90pFaYKQg8nl4iCNzu2hYFkdcMmi84tvrwGxhCUoAIAtes84KiqlX9O8Bklbg3vC
+         384zjXNFLQnWC30+eFmhCVKk+ZQQUA1sUrwR1n736oIeB7KrUzYnHOdCZnhgDNB7LsXN
+         tnRACRBKmrp4HIsh1somOo5cEZhy74INvea+M=
+In-Reply-To: <20120119130353.0ca97435.kamezawa.hiroyu@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>, hannes <hannes@cmpxchg.org>, mhocko@suse.cz, bsingharora@gmail.com, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, 18 Jan 2012 19:41:44 -0800 (PST)
-Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-
-> On Thu, 19 Jan 2012, KAMEZAWA Hiroyuki wrote:
-> > On Thu, 19 Jan 2012 07:10:26 +0200
-> > Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Thu, 19 Jan 2012, KAMEZAWA Hiroyuki wrote:
+> On Wed, 18 Jan 2012 19:41:44 -0800 (PST)
+> Hugh Dickins <hughd@google.com> wrote:
 > > 
-> > > Hi all,
-> > > 
-> > > During testing, I have triggered the OOM killer by mmap()ing a large block of memory. The OOM kicked in and tried to kill the process:
-> > > 
+> > I notice that, unlike Linus's git, this linux-next still has
+> > mm-isolate-pages-for-immediate-reclaim-on-their-own-lru.patch in.
 > > 
-> > two questions.
+> > I think that was well capable of oopsing in mem_cgroup_lru_del_list(),
+> > since it didn't always know which lru a page belongs to.
 > > 
-> > 1. What is the kernel version  ?
+> > I'm going to be optimistic and assume that was the cause.
+> > 
+> Hmm, because the log hits !memcg at lru "del", the page should be added
+> to LRU somewhere and the lru must be determined by pc->mem_cgroup.
 > 
-> It says 3.2.0-next-20120119-sasha #128
+> Once set, pc->mem_cgroup is not cleared, just overwritten. AFAIK, there is
+> only one chance to set pc->mem_cgroup as NULL... initalization.
+> I wonder why it hits lru_del() rather than lru_add()...
+> ................
 > 
-> > 2. are you using memcg moutned ?
+> Ahhhh, ok, it seems you are right. the patch has following kinds of codes
+> ==
+> +static void pagevec_putback_immediate_fn(struct page *page, void *arg)
+> +{
+> +       struct zone *zone = page_zone(page);
+> +
+> +       if (PageLRU(page)) {
+> +               enum lru_list lru = page_lru(page);
+> +               list_move(&page->lru, &zone->lru[lru].list);
+> +       }
+> +}
+> ==
+> ..this will bypass mem_cgroup_lru_add(), and we can see bug in lru_del()
+> rather than lru_add()..
+
+I've not thought it through in detail (and your questioning reminds me
+that the worst I saw from that patch was updating of the wrong counts,
+leading to underflow, then livelock from the mismatch between empty list
+and enormous count: I never saw an oops from it, and may be mistaken).
+
 > 
-> I notice that, unlike Linus's git, this linux-next still has
-> mm-isolate-pages-for-immediate-reclaim-on-their-own-lru.patch in.
-> 
-> I think that was well capable of oopsing in mem_cgroup_lru_del_list(),
-> since it didn't always know which lru a page belongs to.
-> 
-> I'm going to be optimistic and assume that was the cause.
-> 
-Hmm, because the log hits !memcg at lru "del", the page should be added
-to LRU somewhere and the lru must be determined by pc->mem_cgroup.
+> Another question is who pushes pages to LRU before setting pc->mem_cgroup..
+> Anyway, I think we need to fix memcg to be LRU_IMMEDIATE aware.
 
-Once set, pc->mem_cgroup is not cleared, just overwritten. AFAIK, there is
-only one chance to set pc->mem_cgroup as NULL... initalization.
-I wonder why it hits lru_del() rather than lru_add()...
-................
+I don't think so: Mel agreed that the patch could not go forward as is,
+without an additional pageflag, and asked Andrew to drop it from mmotm
+in mail on 29th December (I didn't notice an mm-commits message to say
+akpm did drop it, and marc is blacked out in protest for today, so I
+cannot check: but certainly akpm left it out of his push to Linus).
 
-Ahhhh, ok, it seems you are right. the patch has following kinds of codes
-==
-+static void pagevec_putback_immediate_fn(struct page *page, void *arg)
-+{
-+       struct zone *zone = page_zone(page);
-+
-+       if (PageLRU(page)) {
-+               enum lru_list lru = page_lru(page);
-+               list_move(&page->lru, &zone->lru[lru].list);
-+       }
-+}
-==
-..this will bypass mem_cgroup_lru_add(), and we can see bug in lru_del()
-rather than lru_add()..
+Oh, and Mel noticed another bug in it on the 30th, that the PageLRU
+check in the function you quote above is wrong: see PATCH 11/11 thread.
 
-Another question is who pushes pages to LRU before setting pc->mem_cgroup..
-Anyway, I think we need to fix memcg to be LRU_IMMEDIATE aware.
+Hugh
 
-Thanks,
--Kmae
-
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
