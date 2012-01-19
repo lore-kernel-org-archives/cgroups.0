@@ -1,54 +1,142 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: add xattr support
-Date: Wed, 18 Jan 2012 18:40:21 -0800
-Message-ID: <20120119024021.GI21533@google.com>
-References: <4F13DA90.2000603@cn.fujitsu.com>
- <4F13DAA9.4070703@cn.fujitsu.com>
- <20120117175322.GC6762@google.com>
- <CAPXgP13fT3V4L0x6uj9ZdAOw25BgQtEpa8QzLB-_c_Yn+9kO2Q@mail.gmail.com>
- <20120118213638.GA21533@google.com>
- <20120119014727.GG29242@tango.0pointer.de>
- <20120119022005.GG21533@google.com>
+From: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [BUG] kernel BUG at mm/memcontrol.c:1074!
+Date: Thu, 19 Jan 2012 07:10:26 +0200
+Message-ID: <1326949826.5016.5.camel@lappy>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=wfnZ2AkvdkU9xoLDsIjLUEBL6atKAX+zne8qypVei2c=;
-        b=bmsQ9eWBaw3RYdPErZGmOv8nK7+7iOm3nAAadzrhwoB6nP/cHukqst85jC/6tYDKNO
-         3AgwWy3Nkr4hTnkCAouu3pP0qA7VpMeEuxXWrJTaxE1Cn2y8Spazztc4myS8vwPtVr6N
-         W+vhIyFJMuajVMv+vYr554fxVqkuBW1kqaoUo=
-Content-Disposition: inline
-In-Reply-To: <20120119022005.GG21533-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        h=message-id:subject:from:to:cc:date:content-type:x-mailer
+         :content-transfer-encoding:mime-version;
+        bh=gkQNJixZBCz1XnAZ92SgEdhp8l/YbPA4hoFrFlDi0eg=;
+        b=hU7ll8pjCGXdsq7PsQ2fm/vWQmo+K9ZiCBw5cvsjNzpuhdtIacFTjGlf5zPkKnbUUJ
+         CPMBpS26rqCRipdSdAto3f1WlYXtEROo1cNC8Wf11A6J2wh+LZrPBIYLFK85ZtATEz23
+         QgujJYSU7MszHuSRe5CyQoCvTIhpoLXDxMi5k=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
-Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: hannes <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, Jan 18, 2012 at 06:20:05PM -0800, Tejun Heo wrote:
-> Hello, Lennart, Li.
-> 
-> Two things.
-> 
-> * Probably I'm missing something but isn't the systemd cgroup
->   hierarchy already managed by systemd?  If so, I don't see how
->   managing tmpfs on the side would noticeably make things more
->   fragile.  It would take a bit more care after, for example, restart
->   but it shouldn't be too complex, no?
-> 
-> * FS attributes already being used for userland information seems like
->   a good argument, but we shouldn't add separate specialized xattr
->   implementation to different pseudo filesystems.  For it to be
->   acceptable, it should be a libfs thing easily applicable to any
->   pseudo FS and definitely shouldn't be using kmem for storage.
+Hi all,
 
-Also note that tmpfs also implies size limit.  We definitely need some
-form of control over the amount of memory xattr may consume.
+During testing, I have triggered the OOM killer by mmap()ing a large block of memory. The OOM kicked in and tried to kill the process:
 
-Thanks.
+[  526.657446] trinity invoked oom-killer: gfp_mask=0x201da, order=0, oom_adj=0, oom_score_adj=0
+[  526.659083] trinity cpuset=/ mems_allowed=0
+[  526.659854] Pid: 2200, comm: trinity Not tainted 3.2.0-next-20120119-sasha #128
+[  526.661203] Call Trace:
+[  526.661703]  [<ffffffff82583260>] ? _raw_spin_unlock+0x30/0x60
+[  526.662839]  [<ffffffff8116aefe>] dump_header+0x7e/0x330
+[  526.663841]  [<ffffffff82583303>] ? _raw_spin_unlock_irqrestore+0x73/0xa0
+[  526.665104]  [<ffffffff81835b20>] ? ___ratelimit+0xd0/0x180
+[  526.666149]  [<ffffffff8116b5cd>] oom_kill_process+0x7d/0x2d0
+[  526.667224]  [<ffffffff8116bcc0>] out_of_memory+0x1d0/0x400
+[  526.668237]  [<ffffffff81171011>] __alloc_pages_nodemask+0x8f1/0x910
+[  526.669388]  [<ffffffff811a8870>] alloc_pages_current+0xa0/0x110
+[  526.670486]  [<ffffffff8116713f>] __page_cache_alloc+0x8f/0xa0
+[  526.671610]  [<ffffffff81167f3a>] filemap_fault+0x34a/0x4e0
+[  526.672666]  [<ffffffff8118779f>] __do_fault+0x7f/0x5c0
+[  526.673665]  [<ffffffff810de041>] ? get_parent_ip+0x11/0x50
+[  526.674744]  [<ffffffff81053900>] ? native_sched_clock+0x60/0x90
+[  526.675868]  [<ffffffff8118a6e1>] handle_pte_fault+0xa1/0xa20
+[  526.676941]  [<ffffffff81107cfe>] ? put_lock_stats.clone.18+0xe/0x40
+[  526.678118]  [<ffffffff81108012>] ? lock_release_holdtime+0xb2/0x160
+[  526.679300]  [<ffffffff8118c7ae>] handle_mm_fault+0x1ce/0x330
+[  526.680405]  [<ffffffff8107d94d>] do_page_fault+0x15d/0x4d0
+[  526.681464]  [<ffffffff810aaf53>] ? do_fork+0x73/0x340
+[  526.682440]  [<ffffffff811ebff5>] ? vfsmount_lock_local_unlock+0x55/0x80
+[  526.683645]  [<ffffffff811ec988>] ? mntput_no_expire+0x38/0x100
+[  526.684709]  [<ffffffff811ed46e>] ? mntput+0x1e/0x30
+[  526.685605]  [<ffffffff811ce463>] ? fput+0x1b3/0x2b0
+[  526.686514]  [<ffffffff81076d11>] do_async_page_fault+0x31/0x90
+[  526.687573]  [<ffffffff825843d5>] async_page_fault+0x25/0x30
+[  526.688585] Mem-Info:
+[  526.689000] Node 0 DMA per-cpu:
+[  526.689605] CPU    0: hi:    0, btch:   1 usd:   0
+[  526.690484] Node 0 DMA32 per-cpu:
+[  526.691171] CPU    0: hi:   90, btch:  15 usd:   0
+[  526.692085] active_anon:1218 inactive_anon:12 isolated_anon:0
+[  526.692087]  active_file:1 inactive_file:6 isolated_file:0
+[  526.692087]  immediate:0 unevictable:48358 dirty:6 writeback:0 unstable:0
+[  526.692088]  free:864 slab_reclaimable:1696 slab_unreclaimable:3992
+[  526.692089]  mapped:5 shmem:2 pagetables:141 bounce:0
+[  526.697504] Node 0 DMA free:1300kB min:108kB low:132kB high:160kB active_anon:0kB inactive_anon:0kB active_file:0kB inactive_file:0kB immediate:0kB unevictable:14568kB isolated(anon):0kB isolated(file):0kB present:15656kB mlocked:14576kB dirty:0kB writeback:0kB mapped:0kB shmem:0kB slab_reclaimable:0kB slab_unreclaimable:0kB kernel_stack:0kB pagetables:32kB unstable:0kB bounce:0kB writeback_tmp:0kB pages_scanned:0 all_unreclaimable? yes
+[  526.704557] lowmem_reserve[]: 0 299 299 299
+[  526.705458] Node 0 DMA32 free:2156kB min:2156kB low:2692kB high:3232kB active_anon:4872kB inactive_anon:48kB active_file:4kB inactive_file:24kB immediate:0kB unevictable:178864kB isolated(anon):0kB isolated(file):0kB present:306432kB mlocked:178880kB dirty:24kB writeback:0kB mapped:20kB shmem:8kB slab_reclaimable:6784kB slab_unreclaimable:15968kB kernel_stack:1376kB pagetables:532kB unstable:0kB bounce:0kB writeback_tmp:0kB pages_scanned:44 all_unreclaimable? yes
+[  526.712825] lowmem_reserve[]: 0 0 0 0
+[  526.713633] Node 0 DMA: 1*4kB 1*8kB 1*16kB 0*32kB 0*64kB 0*128kB 1*256kB 0*512kB 1*1024kB 0*2048kB 0*4096kB = 1308kB
+[  526.715878] Node 0 DMA32: 10*4kB 6*8kB 4*16kB 1*32kB 1*64kB 1*128kB 1*256kB 1*512kB 1*1024kB 0*2048kB 0*4096kB = 2168kB
+[  526.718169] 10 total pagecache pages
+[  526.718820] 0 pages in swap cache
+[  526.719449] Swap cache stats: add 0, delete 0, find 0/0
+[  526.720392] Free swap  = 0kB
+[  526.720947] Total swap = 0kB
+[  526.722927] 81904 pages RAM
+[  526.723470] 14810 pages reserved
+[  526.724094] 558 pages shared
+[  526.724611] 65388 pages non-shared
+[  526.725239] [ pid ]   uid  tgid total_vm      rss cpu oom_adj oom_score_adj name
+[  526.726586] [ 2193]     0  2193     4505       92   0       0             0 sh
+[  526.727884] [ 2200]     0  2200     3959      560   0       0             0 trinity
+[  526.729301] [ 2201]     0  2201     3959      561   0       0             0 trinity
+[  526.730804] [13370]     0 13370   528247    48921   0       0             0 trinity
+[  526.732207] Out of memory: Kill process 13370 (trinity) score 700 or sacrifice child
+[  526.733624] Killed process 13370 (trinity) total-vm:2112988kB, anon-rss:195680kB, file-rss:4kB
+
+So far, everything went on as expected.
+
+The problem is, that it looks like this has triggered a BUG() in the memory cgroup code:
+
+[  526.737227] ------------[ cut here ]------------
+[  526.738032] 
+[  526.738032] invalid opcode: 0000 [#1] PREEMPT SMP 
+[  526.738032] CPU 0 
+[  526.738032] Pid: 1091, comm: kswapd0 Not tainted 3.2.0-next-20120119-sasha #128  
+[  526.738032] RIP: 0010:[<ffffffff811c4b4a>]  [<ffffffff811c4b4a>] mem_cgroup_lru_del_list+0xca/0xd0
+[  526.738032] RSP: 0018:ffff8800127139a0  EFLAGS: 00010046
+[  526.738032] RAX: 0000000000000001 RBX: ffffea0000358300 RCX: 0000000000000000
+[  526.738032] RDX: ffff880012c0b800 RSI: 0000000000000000 RDI: 0000000000000000
+[  526.738032] RBP: ffff8800127139b0 R08: ffff880012713ad0 R09: 0000000000000001
+[  526.738032] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000002
+[  526.738032] R13: ffffea0000358300 R14: ffffea0000358320 R15: 0000000000000001
+[  526.738032] FS:  0000000000000000(0000) GS:ffff880013a00000(0000) knlGS:0000000000000000
+[  526.738032] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  526.738032] CR2: 00007fea7fa42e66 CR3: 000000000c42a000 CR4: 00000000000406f0
+[  526.738032] DR0: ffffffff810aaee0 DR1: 0000000000000000 DR2: 0000000000000000
+[  526.738032] DR3: 0000000000000000 DR6: 00000000ffff4ff0 DR7: 0000000000000600
+[  526.738032] Process kswapd0 (pid: 1091, threadinfo ffff880012712000, task ffff880012f7d840)
+[  526.738032] Stack:
+[  526.738032]  ffff880012c0b968 ffff880012c0b968 ffff8800127139c0 ffffffff811c4f0a
+[  526.738032]  ffff880012713a70 ffffffff81178c63 ffff8800127139e0 ffffea00000cbba0
+[  526.738032]  ffff880012713a40 ffff880012713b08 0000000000000001 ffffffffffffffff
+[  526.738032] Call Trace:
+[  526.738032]  [<ffffffff811c4f0a>] mem_cgroup_lru_del+0x3a/0x40
+[  526.738032]  [<ffffffff81178c63>] isolate_lru_pages+0xe3/0x330
+[  526.738032]  [<ffffffff8117a11e>] ? shrink_inactive_list+0xce/0x480
+[  526.738032]  [<ffffffff8117a153>] shrink_inactive_list+0x103/0x480
+[  526.738032]  [<ffffffff811c2a46>] ? mem_cgroup_iter+0x176/0x310
+[  526.738032]  [<ffffffff810e2c55>] ? sched_clock_local+0x25/0x90
+[  526.738032]  [<ffffffff8117ac04>] shrink_mem_cgroup_zone+0x3f4/0x580
+[  526.738032]  [<ffffffff81107cfe>] ? put_lock_stats.clone.18+0xe/0x40
+[  526.738032]  [<ffffffff8117adfe>] shrink_zone+0x6e/0xa0
+[  526.738032]  [<ffffffff8117be65>] balance_pgdat+0x545/0x750
+[  526.738032]  [<ffffffff810de1ed>] ? sub_preempt_count+0x9d/0xd0
+[  526.738032]  [<ffffffff8117c233>] kswapd+0x1c3/0x320
+[  526.738032]  [<ffffffff810cee30>] ? abort_exclusive_wait+0xb0/0xb0
+[  526.738032]  [<ffffffff8117c070>] ? balance_pgdat+0x750/0x750
+[  526.738032]  [<ffffffff810ce06e>] kthread+0xbe/0xd0
+[  526.738032]  [<ffffffff82585df4>] kernel_thread_helper+0x4/0x10
+[  526.738032]  [<ffffffff810d8c88>] ? finish_task_switch+0x78/0x100
+[  526.738032]  [<ffffffff825840f8>] ? retint_restore_args+0x13/0x13
+[  526.738032]  [<ffffffff810cdfb0>] ? kthread_flush_work_fn+0x10/0x10
+[  526.738032]  [<ffffffff82585df0>] ? gs_change+0x13/0x13
+[  526.738032] Code: 8b 1c 24 4c 8b 64 24 08 c9 c3 0f 1f 80 00 00 00 00 8b 4b 68 eb ba 0f 1f 00 0f b6 4b 68 bb 01 00 00 00 d3 e3 48 63 cb eb c2 0f 0b <0f> 0b 0f 1f 40 00 55 48 89 e5 48 83 ec 60 48 89 5d d8 4c 89 65 
+[  526.738032] RIP  [<ffffffff811c4b4a>] mem_cgroup_lru_del_list+0xca/0xd0
+[  526.738032]  RSP <ffff8800127139a0>
+[  526.738032] ---[ end trace 866f4f6c624b8d58 ]---
 
 -- 
-tejun
+
+Sasha.
