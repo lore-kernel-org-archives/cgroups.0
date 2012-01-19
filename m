@@ -1,56 +1,52 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] splitting cgroup.c
-Date: Wed, 18 Jan 2012 18:24:01 -0800
-Message-ID: <20120119022401.GH21533@google.com>
-References: <4F177C67.6070907@cn.fujitsu.com>
+Subject: Re: [PATCH 2/2] cgroup: add xattr support
+Date: Wed, 18 Jan 2012 18:40:21 -0800
+Message-ID: <20120119024021.GI21533@google.com>
+References: <4F13DA90.2000603@cn.fujitsu.com>
+ <4F13DAA9.4070703@cn.fujitsu.com>
+ <20120117175322.GC6762@google.com>
+ <CAPXgP13fT3V4L0x6uj9ZdAOw25BgQtEpa8QzLB-_c_Yn+9kO2Q@mail.gmail.com>
+ <20120118213638.GA21533@google.com>
+ <20120119014727.GG29242@tango.0pointer.de>
+ <20120119022005.GG21533@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Id1D5n7ny3GWLmqjpHXAVD7I00fX3Eb+bsSlxQlPts8=;
-        b=iq3UmyzCG94QuhhcDw3as/j4mBR+rKw6vwmSCR5h+BdN+fOf1NCdF/Yr8NhKlGr/EH
-         BSg2FDXN1wMzqb8dXI2sKu4zwEcc0j8Utt/uovWJ+06xCHTE37/W/vWOMKu5VFY84SG8
-         Fqx1sEXKsDX12EPZY70Pc2VmbSRM1aEBRczyE=
+        bh=wfnZ2AkvdkU9xoLDsIjLUEBL6atKAX+zne8qypVei2c=;
+        b=bmsQ9eWBaw3RYdPErZGmOv8nK7+7iOm3nAAadzrhwoB6nP/cHukqst85jC/6tYDKNO
+         3AgwWy3Nkr4hTnkCAouu3pP0qA7VpMeEuxXWrJTaxE1Cn2y8Spazztc4myS8vwPtVr6N
+         W+vhIyFJMuajVMv+vYr554fxVqkuBW1kqaoUo=
 Content-Disposition: inline
-In-Reply-To: <4F177C67.6070907-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <20120119022005.GG21533-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
+Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
-
-On Thu, Jan 19, 2012 at 10:13:59AM +0800, Li Zefan wrote:
-> While working on cgroup xattr, it appeared to me it's better to
-> create a cgroup_xattr.c instead of stuffing things into cgroup.c.
+On Wed, Jan 18, 2012 at 06:20:05PM -0800, Tejun Heo wrote:
+> Hello, Lennart, Li.
 > 
-> Then I took a look at how big it is.
+> Two things.
 > 
->     $ ls -l -S kernel/*.c
->     -rw-rw-r--  1 lizf lizf 142717 Jan 18 10:15 cgroup.c
->     -rw-rw-r--  1 lizf lizf 106498 Jan 18 10:15 workqueue.c
->     -rw-rw-r--  1 lizf lizf 105206 Jan 18 10:15 lockdep.c
->     -rw-rw-r--  1 lizf lizf  91321 Jan 18 10:16 module.c
->     
->     $ wc -l kernel/*.c | sort -n -r
->       90397 total
->        5289 cgroup.c
->        4206 lockdep.c
->        3840 workqueue.c
->        3507 module.c
+> * Probably I'm missing something but isn't the systemd cgroup
+>   hierarchy already managed by systemd?  If so, I don't see how
+>   managing tmpfs on the side would noticeably make things more
+>   fragile.  It would take a bit more care after, for example, restart
+>   but it shouldn't be too complex, no?
+> 
+> * FS attributes already being used for userland information seems like
+>   a good argument, but we shouldn't add separate specialized xattr
+>   implementation to different pseudo filesystems.  For it to be
+>   acceptable, it should be a libfs thing easily applicable to any
+>   pseudo FS and definitely shouldn't be using kmem for storage.
 
-Yeah, cgroup.c one giant file.
-
-> So I think for the sake of readability and maintainability, we'd
-> better split cgroup.c into smaller pieces:
-
-I agree that splitting is necessary but IMHO splitting usually tends
-to go too far.  Maybe we can split it into two and think about further
-splitting later on?  e.g. internal logic vs. userland interfacing.
+Also note that tmpfs also implies size limit.  We definitely need some
+form of control over the amount of memory xattr may consume.
 
 Thanks.
 
