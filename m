@@ -1,43 +1,78 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] splitting cgroup.c
-Date: Thu, 19 Jan 2012 04:30:23 -0800
-Message-ID: <CAOS58YMAQ0siUa=j8KsdWiAM3rqtZTvbOvmGc3L3cU0zwpuHPQ@mail.gmail.com>
-References: <4F177C67.6070907@cn.fujitsu.com>
-	<20120119022401.GH21533@google.com>
-	<4F17C5A6.50501@cn.fujitsu.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] introduce res_counter_charge_nofail() for socket
+ allocations
+Date: Thu, 19 Jan 2012 13:48:41 +0100
+Message-ID: <20120119124841.GL24386@cmpxchg.org>
+References: <1326899758-9013-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type
-         :content-transfer-encoding;
-        bh=gZVzLcjUo9taqQzoZgH2lgmZAckwqHsieL2QBD/nFtg=;
-        b=w+4lZK+Iq5J1wVJviSl4AvoQk5hp2y/DPm86Nv3AS+B+B8Iof10K3pvjY9n7zITR8y
-         3hbbEJcfb3870C3zk3OBVcfwU6N7UPBXA67pMC0q+J04/0LUUPzEVkFMlySUuRVkoIu+
-         xo1RqhamBSnz1D9rKhLw7le7X6/G7idvpu2lg=
-In-Reply-To: <4F17C5A6.50501-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1326899758-9013-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Hello, Li.
+On Wed, Jan 18, 2012 at 07:15:58PM +0400, Glauber Costa wrote:
+> There is a case in __sk_mem_schedule(), where an allocation
+> is beyond the maximum, but yet we are allowed to proceed.
+> It happens under the following condition:
+> 
+> 	sk->sk_wmem_queued + size >= sk->sk_sndbuf
+> 
+> The network code won't revert the allocation in this case,
+> meaning that at some point later it'll try to do it. Since
+> this is never communicated to the underlying res_counter
+> code, there is an inbalance in res_counter uncharge operation.
+> 
+> I see two ways of fixing this:
+> 
+> 1) storing the information about those allocations somewhere
+>    in memcg, and then deducting from that first, before
+>    we start draining the res_counter,
+> 2) providing a slightly different allocation function for
+>    the res_counter, that matches the original behavior of
+>    the network code more closely.
+> 
+> I decided to go for #2 here, believing it to be more elegant,
+> since #1 would require us to do basically that, but in a more
+> obscure way.
+> 
+> I will eventually submit it through Dave for the -net tree,
+> but I wanted to query you guys first, to see if this approach
+> is acceptable or if you'd prefer me to try something else.
+> 
+> Thanks
+> 
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> ---
+>  include/linux/res_counter.h |    6 ++++++
+>  include/net/sock.h          |   10 ++++------
+>  kernel/res_counter.c        |   25 +++++++++++++++++++++++++
+>  net/core/sock.c             |    4 ++--
+>  4 files changed, 37 insertions(+), 8 deletions(-)
+> 
+> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+> index c9d625c..32a7b02 100644
+> --- a/include/linux/res_counter.h
+> +++ b/include/linux/res_counter.h
+> @@ -109,12 +109,18 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent);
+>   *
+>   * returns 0 on success and <0 if the counter->usage will exceed the
+>   * counter->limit _locked call expects the counter->lock to be taken
+> + *
+> + * charge_nofail works the same, except that it charges the resource
+> + * counter unconditionally, and returns < 0 if the after the current
+> + * charge we are over limit.
+>   */
 
-On Wed, Jan 18, 2012 at 11:26 PM, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> wrote:
->> I agree that splitting is necessary but IMHO splitting usually tends
->> to go too far. =A0Maybe we can split it into two and think about fur=
-ther
->> splitting later on? =A0e.g. internal logic vs. userland interfacing.
->
-> This isn't feasible. The feasible way is to split by functionality,
-> which I think was the way taken by perf developers.
+res_counter_margin() assumes usage <= limit is always true.  Just make
+sure you return 0 if that is not the case, or the charge path can get
+confused, thinking there is enough room and retry needlessly.
 
-Eh? Feasible or desirable?  How can it be not feasible?  Why?
-
-Thanks.
-
---=20
-tejun
+Otherwise, looks good.
