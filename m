@@ -1,97 +1,89 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [RFC] [PATCH 2/7 v2] memcg: add memory barrier for checking
- account move.
-Date: Fri, 20 Jan 2012 08:57:59 +0900
-Message-ID: <20120120085759.2338d9cc.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [RFC] [PATCH 1/7 v2] memcg: remove unnecessary check in
+ mem_cgroup_update_page_stat()
+Date: Fri, 20 Jan 2012 09:48:21 +0900
+Message-ID: <20120120094821.7f23e5a1.kamezawa.hiroyu@jp.fujitsu.com>
 References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120113173347.6231f510.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120117152635.GA22142@tiehlicka.suse.cz>
-	<20120118090656.83268b3e.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120118123759.GB31112@tiehlicka.suse.cz>
-	<20120119111727.6337bde4.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120119092833.GA13932@tiehlicka.suse.cz>
+	<20120113173227.df2baae3.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120117151619.GA21348@tiehlicka.suse.cz>
+	<20120118085558.6ed1a988.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120118130102.GC31112@tiehlicka.suse.cz>
+	<CALWz4iy=hpEbXgjdkD+OH69MHjBorSELB3RZ8BxWNFjk=5yRNw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120119092833.GA13932-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <CALWz4iy=hpEbXgjdkD+OH69MHjBorSELB3RZ8BxWNFjk=5yRNw@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Ying Han <yinghan@google.com>
+Cc: Michal Hocko <mhocko@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
 
-On Thu, 19 Jan 2012 10:28:34 +0100
-Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+On Thu, 19 Jan 2012 12:07:22 -0800
+Ying Han <yinghan@google.com> wrote:
 
-> On Thu 19-01-12 11:17:27, KAMEZAWA Hiroyuki wrote:
-> > On Wed, 18 Jan 2012 13:37:59 +0100
-> > Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> > 
-> > > On Wed 18-01-12 09:06:56, KAMEZAWA Hiroyuki wrote:
-> > > > On Tue, 17 Jan 2012 16:26:35 +0100
-> > > > Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> > > > 
-> > > > > On Fri 13-01-12 17:33:47, KAMEZAWA Hiroyuki wrote:
-> > > > > > I think this bugfix is needed before going ahead. thoughts?
-> > > > > > ==
-> > > > > > From 2cb491a41782b39aae9f6fe7255b9159ac6c1563 Mon Sep 17 00:00:00 2001
-> > > > > > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> > > > > > Date: Fri, 13 Jan 2012 14:27:20 +0900
-> > > > > > Subject: [PATCH 2/7] memcg: add memory barrier for checking account move.
-> > > > > > 
-> > > > > > At starting move_account(), source memcg's per-cpu variable
-> > > > > > MEM_CGROUP_ON_MOVE is set. The page status update
-> > > > > > routine check it under rcu_read_lock(). But there is no memory
-> > > > > > barrier. This patch adds one.
-> > > > > 
-> > > > > OK this would help to enforce that the CPU would see the current value
-> > > > > but what prevents us from the race with the value update without the
-> > > > > lock? This is as racy as it was before AFAICS.
-> > > > > 
-> > > > 
-> > > > Hm, do I misunderstand ?
-> > > > ==
-> > > >    update                     reference
-> > > > 
-> > > >    CPU A                        CPU B
-> > > >   set value                rcu_read_lock()
-> > > >   smp_wmb()                smp_rmb()
-> > > >                            read_value
-> > > >                            rcu_read_unlock()
-> > > >   synchronize_rcu().
-> > > > ==
-> > > > I expect
-> > > > If synchronize_rcu() is called before rcu_read_lock() => move_lock_xxx will be held.
-> > > > If synchronize_rcu() is called after rcu_read_lock() => update will be delayed.
-> > > 
-> > > Ahh, OK I can see it now. Readers are not that important because it is
-> > > actually the updater who is delayed until all preexisting rcu read
-> > > sections are finished.
-> > > 
-> > > In that case. Why do we need both barriers? spin_unlock is a full
-> > > barrier so maybe we just need smp_rmb before we read value to make sure
-> > > that we do not get stalled value when we start rcu_read section after
-> > > synchronize_rcu?
-> > > 
-> > 
-> > I doubt .... If no barrier, this case happens
-> > 
-> > ==
-> > 	update			reference
-> > 	CPU A			CPU B
-> > 	set value
-> > 	synchronize_rcu()	rcu_read_lock()
-> > 				read_value <= find old value
-> > 				rcu_read_unlock()
-> > 				do no lock
-> > ==
-> 
-> OK, I have looked at Documentation/memory-barriers.txt again and
-> spin_unlock is not a full barrier so we cannot rely on it.
-> Anyway you still could do the barrier once after we set all values?
-
-Ok. I'll move that after for_each_cpu.
+> On Wed, Jan 18, 2012 at 5:01 AM, Michal Hocko <mhocko@suse.cz> wrote:
+> > On Wed 18-01-12 08:55:58, KAMEZAWA Hiroyuki wrote:
+> >> On Tue, 17 Jan 2012 16:16:20 +0100
+> >> Michal Hocko <mhocko@suse.cz> wrote:
+> >>
+> >> > On Fri 13-01-12 17:32:27, KAMEZAWA Hiroyuki wrote:
+> >> > >
+> >> > > From 788aebf15f3fa37940e0745cab72547e20683bf2 Mon Sep 17 00:00:0=
+0 2001
+> >> > > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> >> > > Date: Thu, 12 Jan 2012 16:08:33 +0900
+> >> > > Subject: [PATCH 1/7] memcg: remove unnecessary check in mem_cgro=
+up_update_page_stat()
+> >> > >
+> >> > > commit 10ea69f1182b removes move_lock_page_cgroup() in thp-split=
+ path.
+> >> > > So, this PageTransHuge() check is unnecessary, too.
+> >> >
+> >> > I do not see commit like that in the tree. I guess you meant
+> >> > memcg: make mem_cgroup_split_huge_fixup() more efficient which is =
+not
+> >> > merged yet, right?
+> >> >
+> >>
+> >> This commit in the linux-next.
+> >
+> > Referring to commits from linux-next is tricky as it changes all the
+> > time. I guess that the full commit subject should be sufficient.
+> >
+> >> > > Note:
+> >> > > =C2=A0- considering when mem_cgroup_update_page_stat() is called=
+,
+> >> > > =C2=A0 =C2=A0there will be no race between split_huge_page() and=
+ update_page_stat().
+> >> > > =C2=A0 =C2=A0All required locks are held in higher level.
+> >> >
+> >> > We should never have THP page in this path in the first place. So =
+why
+> >> > not changing this to VM_BUG_ON(PageTransHuge).
+> >> >
+> >>
+> >> Ying Han considers to support mlock stat.
+> >
+> > OK, got it. What about the following updated changelog instead?
+> >
+> > =3D=3D=3D
+> > We do not have to check PageTransHuge in mem_cgroup_update_page_stat
+> > and fallback into the locked accounting because both move charge and =
+thp
+>=20
+> one nitpick. Should it be "move account" instead of "move charge"?
+>=20
+Ah, yes. you'r right.
+Considering Michal's comment, I'll update and post v3.
 
 Thanks,
 -Kame
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
+.ca/
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
