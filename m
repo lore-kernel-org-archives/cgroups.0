@@ -1,49 +1,65 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
-Date: Fri, 20 Jan 2012 16:06:20 +0100
-Message-ID: <20120120150620.GB9081@redhat.com>
-References: <20120111160730.GA24556@redhat.com>
-	<20120112003102.GB9511@google.com>
-	<20120112170728.GA25717@redhat.com>
-	<20120112175725.GD9511@google.com>
-	<20120113152010.GA19215@redhat.com>
-	<20120113182750.GD18166@google.com>
-	<20120114173648.GA32543@redhat.com>
-	<20120118231742.GS18166@google.com>
-	<20120119154522.GA14058@redhat.com>
-	<20120119181803.GU18166@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/3] net: introduce res_counter_charge_nofail() for
+ socket allocations
+Date: Fri, 20 Jan 2012 09:07:49 -0800
+Message-ID: <20120120170749.GA3086@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <1327071436-20763-1-git-send-email-glommer@parallels.com>
+ <1327071436-20763-4-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=LIcuhpGspUNaMvsWmcfAdEZaU6oJmZmOP8YXmLUBxKI=;
+        b=xjF0yHmN4YlexA33FIXc1HL2rrz13LE6tINPF4ekWEKiVHqYAv/QOxHPOMag7ZxMVd
+         OK1Adi/c6px4rY6SkRcUubc7j0L6NFB1M0/AWVzgOMpglRXr/jsOeRerPIlddAiw7G+m
+         QxmACgBveMoBbn8l9h/vMGsnYSd4kqUOTqwJM=
+Content-Disposition: inline
+In-Reply-To: <1327071436-20763-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120119181803.GU18166-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 01/19, Mandeep Singh Baines wrote:
->
-> Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
-> > But we did
-> > have a reason (reasons?). Hopefully, the only really important reason
-> > was already removed by 087806b1.
->
-> Ah. So the leader->group_leader may have been necessary earlier in order
-> to prevent two tasks, old leader and new leader from both returning true
-> for thread_group_leader(tsk).
+On Fri, Jan 20, 2012 at 06:57:16PM +0400, Glauber Costa wrote:
+> There is a case in __sk_mem_schedule(), where an allocation
+> is beyond the maximum, but yet we are allowed to proceed.
+> It happens under the following condition:
+> 
+> 	sk->sk_wmem_queued + size >= sk->sk_sndbuf
+> 
+> The network code won't revert the allocation in this case,
+> meaning that at some point later it'll try to do it. Since
+> this is never communicated to the underlying res_counter
+> code, there is an inbalance in res_counter uncharge operation.
+> 
+> I see two ways of fixing this:
+> 
+> 1) storing the information about those allocations somewhere
+>    in memcg, and then deducting from that first, before
+>    we start draining the res_counter,
+> 2) providing a slightly different allocation function for
+>    the res_counter, that matches the original behavior of
+>    the network code more closely.
+> 
+> I decided to go for #2 here, believing it to be more elegant,
+> since #1 would require us to do basically that, but in a more
+> obscure way.
+> 
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> CC: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> CC: Laurent Chavey <chavey-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Not really. de_thread() does release_task(old_leader). Please look, for
-example, at __exit_signal(). thread_group_leader() must not be true in
-this case.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Oleg.
+Thanks.
+
+-- 
+tejun
