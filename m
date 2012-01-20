@@ -1,51 +1,112 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
-Subject: [PATCH 1/2] cgroup: remove cgroup_attach_task_current_cg()
-Date: Fri, 20 Jan 2012 11:58:09 +0800
-Message-ID: <4F18E651.2000109@cn.fujitsu.com>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH 2/2] cgroup: move struct cgroup_pidlist out from the header
+ file
+Date: Fri, 20 Jan 2012 11:58:43 +0800
+Message-ID: <4F18E673.9070306@cn.fujitsu.com>
+References: <4F18E651.2000109@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F18E651.2000109-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-It's just a wrapper of cgroup_attach_task_all(), and it's no longer
-used after commit 87d6a412bd1ed82c14cabd4b408003b23bbd2880
-(vhost: fix attach to cgroups regression)
+It's internally used only.
 
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 ---
- include/linux/cgroup.h |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+ include/linux/cgroup.h |   32 --------------------------------
+ kernel/cgroup.c        |   32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 32 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index e9b6021..dee53bd 100644
+index dee53bd..7da3e74 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -602,11 +602,6 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan);
- int cgroup_attach_task(struct cgroup *, struct task_struct *);
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
+@@ -160,38 +160,6 @@ enum {
+ 	CGRP_CLONE_CHILDREN,
+ };
  
--static inline int cgroup_attach_task_current_cg(struct task_struct *tsk)
--{
--	return cgroup_attach_task_all(current, tsk);
--}
+-/* which pidlist file are we talking about? */
+-enum cgroup_filetype {
+-	CGROUP_FILE_PROCS,
+-	CGROUP_FILE_TASKS,
+-};
 -
+-/*
+- * A pidlist is a list of pids that virtually represents the contents of one
+- * of the cgroup files ("procs" or "tasks"). We keep a list of such pidlists,
+- * a pair (one each for procs, tasks) for each pid namespace that's relevant
+- * to the cgroup.
+- */
+-struct cgroup_pidlist {
+-	/*
+-	 * used to find which pidlist is wanted. doesn't change as long as
+-	 * this particular list stays in the list.
+-	 */
+-	struct { enum cgroup_filetype type; struct pid_namespace *ns; } key;
+-	/* array of xids */
+-	pid_t *list;
+-	/* how many elements the above list has */
+-	int length;
+-	/* how many files are using the current array */
+-	int use_count;
+-	/* each of these stored in a list by its cgroup */
+-	struct list_head links;
+-	/* pointer to the cgroup we belong to, for list removal purposes */
+-	struct cgroup *owner;
+-	/* protects the other fields */
+-	struct rw_semaphore mutex;
+-};
+-
+ struct cgroup {
+ 	unsigned long flags;		/* "unsigned long" so bitops work */
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a5d3b53..6ca7aca 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3043,6 +3043,38 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
+  *
+  */
+ 
++/* which pidlist file are we talking about? */
++enum cgroup_filetype {
++	CGROUP_FILE_PROCS,
++	CGROUP_FILE_TASKS,
++};
++
++/*
++ * A pidlist is a list of pids that virtually represents the contents of one
++ * of the cgroup files ("procs" or "tasks"). We keep a list of such pidlists,
++ * a pair (one each for procs, tasks) for each pid namespace that's relevant
++ * to the cgroup.
++ */
++struct cgroup_pidlist {
++	/*
++	 * used to find which pidlist is wanted. doesn't change as long as
++	 * this particular list stays in the list.
++	*/
++	struct { enum cgroup_filetype type; struct pid_namespace *ns; } key;
++	/* array of xids */
++	pid_t *list;
++	/* how many elements the above list has */
++	int length;
++	/* how many files are using the current array */
++	int use_count;
++	/* each of these stored in a list by its cgroup */
++	struct list_head links;
++	/* pointer to the cgroup we belong to, for list removal purposes */
++	struct cgroup *owner;
++	/* protects the other fields */
++	struct rw_semaphore mutex;
++};
++
  /*
-  * CSS ID is ID for cgroup_subsys_state structs under subsys. This only works
-  * if cgroup_subsys.use_id == true. It can be used for looking up and scanning.
-@@ -669,10 +664,6 @@ static inline int cgroup_attach_task_all(struct task_struct *from,
- {
- 	return 0;
- }
--static inline int cgroup_attach_task_current_cg(struct task_struct *t)
--{
--	return 0;
--}
- 
- #endif /* !CONFIG_CGROUPS */
- 
+  * The following two functions "fix" the issue where there are more pids
+  * than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
 -- 
 1.7.3.1
