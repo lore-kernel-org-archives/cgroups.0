@@ -1,89 +1,75 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC] [PATCH 1/7 v2] memcg: remove unnecessary check in
- mem_cgroup_update_page_stat()
-Date: Fri, 20 Jan 2012 09:48:21 +0900
-Message-ID: <20120120094821.7f23e5a1.kamezawa.hiroyu@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFC] [PATCH 7/7 v2] memcg: make mem_cgroup_begin_update_stat
+ to use global pcpu.
+Date: Fri, 20 Jan 2012 11:19:47 +0900
+Message-ID: <20120120111947.400b2b15.kamezawa.hiroyu@jp.fujitsu.com>
 References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120113173227.df2baae3.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120117151619.GA21348@tiehlicka.suse.cz>
-	<20120118085558.6ed1a988.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120118130102.GC31112@tiehlicka.suse.cz>
-	<CALWz4iy=hpEbXgjdkD+OH69MHjBorSELB3RZ8BxWNFjk=5yRNw@mail.gmail.com>
+	<20120113174510.5e0f6131.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120119144712.GG13932@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CALWz4iy=hpEbXgjdkD+OH69MHjBorSELB3RZ8BxWNFjk=5yRNw@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120119144712.GG13932-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Ying Han <yinghan@google.com>
-Cc: Michal Hocko <mhocko@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Thu, 19 Jan 2012 12:07:22 -0800
-Ying Han <yinghan@google.com> wrote:
+On Thu, 19 Jan 2012 15:47:12 +0100
+Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
 
-> On Wed, Jan 18, 2012 at 5:01 AM, Michal Hocko <mhocko@suse.cz> wrote:
-> > On Wed 18-01-12 08:55:58, KAMEZAWA Hiroyuki wrote:
-> >> On Tue, 17 Jan 2012 16:16:20 +0100
-> >> Michal Hocko <mhocko@suse.cz> wrote:
-> >>
-> >> > On Fri 13-01-12 17:32:27, KAMEZAWA Hiroyuki wrote:
-> >> > >
-> >> > > From 788aebf15f3fa37940e0745cab72547e20683bf2 Mon Sep 17 00:00:0=
-0 2001
-> >> > > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> >> > > Date: Thu, 12 Jan 2012 16:08:33 +0900
-> >> > > Subject: [PATCH 1/7] memcg: remove unnecessary check in mem_cgro=
-up_update_page_stat()
-> >> > >
-> >> > > commit 10ea69f1182b removes move_lock_page_cgroup() in thp-split=
- path.
-> >> > > So, this PageTransHuge() check is unnecessary, too.
-> >> >
-> >> > I do not see commit like that in the tree. I guess you meant
-> >> > memcg: make mem_cgroup_split_huge_fixup() more efficient which is =
-not
-> >> > merged yet, right?
-> >> >
-> >>
-> >> This commit in the linux-next.
-> >
-> > Referring to commits from linux-next is tricky as it changes all the
-> > time. I guess that the full commit subject should be sufficient.
-> >
-> >> > > Note:
-> >> > > =C2=A0- considering when mem_cgroup_update_page_stat() is called=
-,
-> >> > > =C2=A0 =C2=A0there will be no race between split_huge_page() and=
- update_page_stat().
-> >> > > =C2=A0 =C2=A0All required locks are held in higher level.
-> >> >
-> >> > We should never have THP page in this path in the first place. So =
-why
-> >> > not changing this to VM_BUG_ON(PageTransHuge).
-> >> >
-> >>
-> >> Ying Han considers to support mlock stat.
-> >
-> > OK, got it. What about the following updated changelog instead?
-> >
-> > =3D=3D=3D
-> > We do not have to check PageTransHuge in mem_cgroup_update_page_stat
-> > and fallback into the locked accounting because both move charge and =
-thp
->=20
-> one nitpick. Should it be "move account" instead of "move charge"?
->=20
-Ah, yes. you'r right.
-Considering Michal's comment, I'll update and post v3.
+> On Fri 13-01-12 17:45:10, KAMEZAWA Hiroyuki wrote:
+> > From 3df71cef5757ee6547916c4952f04a263c1b8ddb Mon Sep 17 00:00:00 2001
+> > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> > Date: Fri, 13 Jan 2012 17:07:35 +0900
+> > Subject: [PATCH 7/7] memcg: make mem_cgroup_begin_update_stat to use global pcpu.
+> > 
+> > Now, a per-cpu flag to show the memcg is under account moving is
+> > now implemented as per-memcg-per-cpu.
+> > 
+> > So, when accessing this, we need to access memcg 1st. But this
+> > function is called even when status update doesn't occur. Then,
+> > accessing struct memcg is an overhead in such case.
+> > 
+> > This patch removes per-cpu-per-memcg MEM_CGROUP_ON_MOVE and add
+> > per-cpu vairable to do the same work. For per-memcg, atomic
+> > counter is added. By this, mem_cgroup_begin_update_stat() will
+> > just access percpu variable in usual case and don't need to find & access
+> > memcg. This reduces overhead.
+> 
+> I agree that move_account is not a hotpath and that we don't have
+> to optimize for it but I guess we can do better. If we use a cookie
+> parameter for
+> mem_cgroup_{begin,end}_update_stat(struct page *page, unsigned long *cookie)
+> then we can stab page_cgroup inside and use the last bit for
+> locked.  Then we do not have to call lookup_page_cgroup again in
+> mem_cgroup_update_page_stat and just replace page by the cookie.
+> What do you think?
+> 
+
+Because these routine is called as
+
+	mem_cgroup_begin_update_stat()
+	if (condition)
+		set_page_flag
+		mem_cgroup_update_stat()
+	mem_cgroup_end_update_stat()
+
+In earlier version(not posted), I did so. Now, I don't because of 2 reasons.
+
+1. I wonder it's better not to have extra arguments in begin_xxx it
+   will be overhead itself.
+2. my work's final purpose is integrate page_cgroup to struct page.
+   If I can do, lookup_page_cgroup() cost will be almost 0 and we'll revert
+   the cookie, finally.
+
+So, can't we keep this update routine simple for a while ?
+If we saw it's finally impossible to integrate page_cgroup to page,
+I'd like to consider 'cookie' again.
+
+BTW, If we use spinlock and need to do irq_disable() in begin_update_stat()
+we'll need to pass *flags...
 
 Thanks,
 -Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
