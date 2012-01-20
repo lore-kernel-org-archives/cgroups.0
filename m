@@ -1,63 +1,49 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 1/3] net: fix socket memcg build with !CONFIG_NET
-Date: Fri, 20 Jan 2012 18:57:14 +0400
-Message-ID: <1327071436-20763-2-git-send-email-glommer@parallels.com>
-References: <1327071436-20763-1-git-send-email-glommer@parallels.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1327071436-20763-1-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
+Date: Fri, 20 Jan 2012 16:06:20 +0100
+Message-ID: <20120120150620.GB9081@redhat.com>
+References: <20120111160730.GA24556@redhat.com>
+	<20120112003102.GB9511@google.com>
+	<20120112170728.GA25717@redhat.com>
+	<20120112175725.GD9511@google.com>
+	<20120113152010.GA19215@redhat.com>
+	<20120113182750.GD18166@google.com>
+	<20120114173648.GA32543@redhat.com>
+	<20120118231742.GS18166@google.com>
+	<20120119154522.GA14058@redhat.com>
+	<20120119181803.GU18166@google.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: davem@davemloft.net
-Cc: linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, eric.dumazet@gmail.com, cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120119181803.GU18166-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-There is still a build bug with the sock memcg code, that triggers
-with !CONFIG_NET, that survived my series of randconfig builds.
+On 01/19, Mandeep Singh Baines wrote:
+>
+> Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
+> > But we did
+> > have a reason (reasons?). Hopefully, the only really important reason
+> > was already removed by 087806b1.
+>
+> Ah. So the leader->group_leader may have been necessary earlier in order
+> to prevent two tasks, old leader and new leader from both returning true
+> for thread_group_leader(tsk).
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-CC: Hiroyouki Kamezawa <kamezawa.hiroyu@jp.fujitsu.com>
----
- include/net/sock.h |    2 +-
- mm/memcontrol.c    |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Not really. de_thread() does release_task(old_leader). Please look, for
+example, at __exit_signal(). thread_group_leader() must not be true in
+this case.
 
-diff --git a/include/net/sock.h b/include/net/sock.h
-index bb972d2..3cae112 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -921,7 +921,7 @@ inline void sk_refcnt_debug_release(const struct sock *sk)
- #define sk_refcnt_debug_release(sk) do { } while (0)
- #endif /* SOCK_REFCNT_DEBUG */
- 
--#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM) && defined(CONFIG_NET)
- extern struct jump_label_key memcg_socket_limit_enabled;
- static inline struct cg_proto *parent_cg_proto(struct proto *proto,
- 					       struct cg_proto *cg_proto)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3dbff4d..c3688df 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -379,7 +379,7 @@ static void mem_cgroup_put(struct mem_cgroup *memcg);
- static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
- void sock_update_memcg(struct sock *sk)
- {
--	if (static_branch(&memcg_socket_limit_enabled)) {
-+	if (mem_cgroup_sockets_enabled) {
- 		struct mem_cgroup *memcg;
- 
- 		BUG_ON(!sk->sk_prot->proto_cgroup);
-@@ -411,7 +411,7 @@ EXPORT_SYMBOL(sock_update_memcg);
- 
- void sock_release_memcg(struct sock *sk)
- {
--	if (static_branch(&memcg_socket_limit_enabled) && sk->sk_cgrp) {
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp) {
- 		struct mem_cgroup *memcg;
- 		WARN_ON(!sk->sk_cgrp->memcg);
- 		memcg = sk->sk_cgrp->memcg;
--- 
-1.7.7.4
+Oleg.
