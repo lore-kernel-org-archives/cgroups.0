@@ -1,39 +1,39 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup: remove extra calls to find_existing_css_set
-Date: Fri, 20 Jan 2012 21:52:45 -0800
-Message-ID: <CAOS58YOZEcDrUEaZXBmrys32bnRTPN_n5mZeyYXgVH=-6swz8Q@mail.gmail.com>
-References: <1325654312-32477-1-git-send-email-msb@chromium.org>
-	<1325654312-32477-3-git-send-email-msb@chromium.org>
-	<20120121000842.GB2908@dhcp-172-17-108-109.mtv.corp.google.com>
-	<20120121025712.GB4656@google.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 1/3] net: fix socket memcg build with !CONFIG_NET
+Date: Sat, 21 Jan 2012 18:17:26 +0400
+Message-ID: <4F1AC8F6.1060703@parallels.com>
+References: <1327071436-20763-1-git-send-email-glommer@parallels.com> <1327071436-20763-2-git-send-email-glommer@parallels.com> <20120120.141446.136970067758991080.davem@davemloft.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-        bh=4700kTLTKPjZHIEH7l/8Ezk/GbKrDnZKPmnnREbwu5I=;
-        b=QbFIoXjbdRJLjzDuZjs7bhqJZ0EnGtdUJ+70twCWYHwfQnkXy/esYk114xkmwNmGmH
-         8wnVmJatJZDTaup5ZIpnHvoIV0V5+/nk/J8m8ft/5xQkIu8juPguljW2s6580KqafjeN
-         js3Ml0VzA/VEfSTRtDuh6xfTo8Bjw2Hnvp6lY=
-In-Reply-To: <20120121025712.GB4656-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20120120.141446.136970067758991080.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On 01/20/2012 11:14 PM, David Miller wrote:
+> From: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Date: Fri, 20 Jan 2012 18:57:14 +0400
+>
+>> There is still a build bug with the sock memcg code, that triggers
+>> with !CONFIG_NET, that survived my series of randconfig builds.
+>>
+>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> Reported-by: Randy Dunlap<rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+>> CC: Hiroyouki Kamezawa<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>
+> Why are you undoing the static branch optimization?  That was a one of
+> the things that made me agree to even putting this code in.
+>
+> Find a way to fix this without removing the static branch.
+>
+Dave,
 
-On Fri, Jan 20, 2012 at 6:57 PM, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
-> If I break out of step 2 via the goto (out_put_css_set_refs), I only
-> want to put back the refs I've gotten so far.
+I am not removing the static branch. This is just a macro, that expands 
+to the static branch when the options are in place, and to 0 if they are 
+not.
 
-But isn't tc->cg NULL if that happens?  (ooh, the if statement should
-be testing tc->cg, my bad).
-
-Thanks.
-
--- 
-tejun
+if (0) { } is certainly be removed to the compiler, so the code is out
+anyway.
