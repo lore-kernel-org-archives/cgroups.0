@@ -1,47 +1,39 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: add xattr support
-Date: Fri, 20 Jan 2012 20:00:58 -0800 (PST)
-Message-ID: <alpine.LSU.2.00.1201201951100.1448@eggly.anvils>
-References: <4F13DA90.2000603@cn.fujitsu.com> <4F13DAA9.4070703@cn.fujitsu.com> <20120117175322.GC6762@google.com> <CAPXgP13fT3V4L0x6uj9ZdAOw25BgQtEpa8QzLB-_c_Yn+9kO2Q@mail.gmail.com> <20120118213638.GA21533@google.com> <20120119014727.GG29242@tango.0pointer.de>
- <20120119022005.GG21533@google.com> <20120119024021.GI21533@google.com> <20120121030204.GE2100@tango.0pointer.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/3] cgroup: remove extra calls to find_existing_css_set
+Date: Fri, 20 Jan 2012 21:52:45 -0800
+Message-ID: <CAOS58YOZEcDrUEaZXBmrys32bnRTPN_n5mZeyYXgVH=-6swz8Q@mail.gmail.com>
+References: <1325654312-32477-1-git-send-email-msb@chromium.org>
+	<1325654312-32477-3-git-send-email-msb@chromium.org>
+	<20120121000842.GB2908@dhcp-172-17-108-109.mtv.corp.google.com>
+	<20120121025712.GB4656@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=gamma;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=ziuT1upzUxoSa/DDBBPTMHm+u+uzYU57OUUUEEkvbwM=;
-        b=leDalNc/FdTQz3jGaXSBN0VpxkquOzRZfIP+JZxuMnxaI6i2+SIUwFfOKlr4SmVtID
-         o+B+rTnMAAl0uYXIYwaMURNKG7wZNRxhmCDzsSVe8nu9VLFm37GNks8nZW9SCshz5ozp
-         oddoNl50UPZRoiE92D3xqaBzb89MmYcsKgNBQ=
-In-Reply-To: <20120121030204.GE2100-kS5D54t9nk0aINubkmmoJbNAH6kLmebB@public.gmane.org>
+        d=gmail.com; s=gamma;
+        h=mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=4700kTLTKPjZHIEH7l/8Ezk/GbKrDnZKPmnnREbwu5I=;
+        b=QbFIoXjbdRJLjzDuZjs7bhqJZ0EnGtdUJ+70twCWYHwfQnkXy/esYk114xkmwNmGmH
+         8wnVmJatJZDTaup5ZIpnHvoIV0V5+/nk/J8m8ft/5xQkIu8juPguljW2s6580KqafjeN
+         js3Ml0VzA/VEfSTRtDuh6xfTo8Bjw2Hnvp6lY=
+In-Reply-To: <20120121025712.GB4656-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On Sat, 21 Jan 2012, Lennart Poettering wrote:
-> On Wed, 18.01.12 18:40, Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
-> > On Wed, Jan 18, 2012 at 06:20:05PM -0800, Tejun Heo wrote:
-> > 
-> > Also note that tmpfs also implies size limit.  We definitely need some
-> > form of control over the amount of memory xattr may consume.
-> 
-> Good point. But then again we don't even have anything resembling for
-> tmpfs either, where it would be much more important... :-(
+Hello,
 
-But although the tmpfs framework for xattrs is general, the validation
-function only permits XATTR_SECURITY_PREFIX and XATTR_TRUSTED_PREFIX.
+On Fri, Jan 20, 2012 at 6:57 PM, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
+> If I break out of step 2 via the goto (out_put_css_set_refs), I only
+> want to put back the refs I've gotten so far.
 
-Yes, it would be very necessary to impose size limits if tmpfs went
-beyond those to permit XATTR_USER_PREFIX - which the cgroupfs patch
-under discussion does permit.
+But isn't tc->cg NULL if that happens?  (ooh, the if statement should
+be testing tc->cg, my bad).
 
-> 
-> Given that cgroupfs is probably mostly read-only for normal users, the
-> requirement for quotas on it is probably much less important than for tmpfs
-> though.
+Thanks.
 
-Hugh
+-- 
+tejun
