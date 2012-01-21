@@ -1,66 +1,58 @@
-From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup: remove extra calls to find_existing_css_set
-Date: Fri, 20 Jan 2012 18:57:12 -0800
-Message-ID: <20120121025712.GB4656@google.com>
-References: <1325654312-32477-1-git-send-email-msb@chromium.org>
-	<1325654312-32477-3-git-send-email-msb@chromium.org>
-	<20120121000842.GB2908@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: add xattr support
+Date: Sat, 21 Jan 2012 03:59:46 +0100
+Message-ID: <20120121025946.GD2100@tango.0pointer.de>
+References: <4F13DA90.2000603@cn.fujitsu.com>
+ <4F13DAA9.4070703@cn.fujitsu.com>
+ <20120117175322.GC6762@google.com>
+ <CAPXgP13fT3V4L0x6uj9ZdAOw25BgQtEpa8QzLB-_c_Yn+9kO2Q@mail.gmail.com>
+ <20120118213638.GA21533@google.com>
+ <20120119014727.GG29242@tango.0pointer.de>
+ <20120119022005.GG21533@google.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120119022005.GG21533-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=gamma;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:in-reply-to:x-operating-system:user-agent:x-gm-message-state
-	:content-type:content-disposition;
-	bh=JVDWud0i5XxOf/Rqa18oHjEsHk7N97EBnsEP1Kd0raY=;
-	b=JiRKKNbWHbJnJFQIPuCNtbo8XAVXOqn5srvFkgug6O0969sF8OnKH9dS7UzHWwxmku
-	ZV+sn8FRuvREzvjzmaDkehAgd2RMu97BWvpO4Kh7s/FKrykDU4W88ZGfLdw5B/182E9O
-	Y2oS2dwa0QCooMlprBDmEYIs0cVfid49Nlc+Q=
-In-Reply-To: <20120121000842.GB2908-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
-> On Tue, Jan 03, 2012 at 09:18:32PM -0800, Mandeep Singh Baines wrote:
-> > +out_put_css_set_refs:
-> > +	if (retval) {
-> > +		for (i = 0; i < css_set_refs; i++) {
-> > +			tc = flex_array_get(group, i);
-> > +			put_css_set(tc->cg);
-> 
-> Why not the following
-> 
-> 	for (i = 0; i < group_size; i++) {
-> 		tc = flex_array_get(group, i);
-> 		if (tc)
-> 			put_css_set(tc->cg);
-> 	}
-> 
-> and remove css_set_refs?
-> 
+On Wed, 18.01.12 18:20, Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
 
-If I break out of step 2 via the goto (out_put_css_set_refs), I only
-want to put back the refs I've gotten so far. I could reset group_size
-in that case but wanted avoid overloading group_size: someone
-could later add more error path code that isn't expecting that
-group_size will get re-assigned and have its meaning change.
+Heya,
 
-Regards,
-Mandeep
+> * Probably I'm missing something but isn't the systemd cgroup
+>   hierarchy already managed by systemd?  If so, I don't see how
+>   managing tmpfs on the side would noticeably make things more
+>   fragile.  It would take a bit more care after, for example, restart
+>   but it shouldn't be too complex, no?
 
-> Thanks
-> 
-> -- 
-> tejun
+Well, it becomes more complex, for example, if we miss a cgroups event,
+or we go away and come back (i.e. systemd can reexecute itself for
+upgrades), and as soon as it isn't just systemd anymore which needs meta
+data attached to a cgroup, but we need something shared. For example,
+the logic described in
+http://www.freedesktop.org/wiki/Software/systemd/PaxControlGroups
+regarding "persistant" cgroups would be much nicer using xattrs (it
+currently misuses the sticky bit as flag instead).
+
+It's just much nicer if meta data doesn't get stale just because the
+process owning it goes awol. And if process want to share meta data, too.
+ 
+> * FS attributes already being used for userland information seems like
+>   a good argument, but we shouldn't add separate specialized xattr
+>   implementation to different pseudo filesystems.  For it to be
+>   acceptable, it should be a libfs thing easily applicable to any
+>   pseudo FS and definitely shouldn't be using kmem for storage.
+
+I think the code that was recently added to tmpfs for the same purposes
+was supposed to be reusable on other virtual file systems. Might be
+worth looking into that.
+
+Lennart
+
+-- 
+Lennart Poettering - Red Hat, Inc.
