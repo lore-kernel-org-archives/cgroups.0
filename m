@@ -1,60 +1,59 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/3] idr: make idr_get_next() good for rcu_read_lock()
-Date: Fri, 20 Jan 2012 15:48:07 -0800
-Message-ID: <20120120154807.c55c9ac7.akpm@linux-foundation.org>
-References: <alpine.LSU.2.00.1201182155480.7862@eggly.anvils>
-	<1326958401.1113.22.camel@edumazet-laptop>
-	<CAOS58YO585NYMLtmJv3f9vVdadFqoWF+Y5vZ6Va=2qHELuePJA@mail.gmail.com>
-	<1326979818.2249.12.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-	<alpine.LSU.2.00.1201191235330.29542@eggly.anvils>
-	<alpine.LSU.2.00.1201191247210.29542@eggly.anvils>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/3] cgroup: replace tasklist_lock with rcu_read_lock
+Date: Fri, 20 Jan 2012 16:00:03 -0800
+Message-ID: <20120121000003.GA2908@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <1325654312-32477-1-git-send-email-msb@chromium.org>
+ <1325654312-32477-2-git-send-email-msb@chromium.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LSU.2.00.1201191247210.29542@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=LZ94mo5caVzPOl2Xm0v+lnMfqaazNmRtfANvK7VkRKA=;
+        b=WPrzt0Y22dhpl8/KbpkUZ96lgPwtkxYhqymr/xcjFb797ohqkNcgTAMF09bOfxckbR
+         ZEXMTP5gOQKFzAmvCSj8BH81DELIz5VZ9RDTPzyi4HXjyZaJyl1ytadSetnmDcryHrMK
+         2gdNh+d3TFZ0lxTkEbloE9zPnvtLSbkr4RdeA=
+Content-Disposition: inline
+In-Reply-To: <1325654312-32477-2-git-send-email-msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Hugh Dickins <hughd@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Eric Dumazet <eric.dumazet@gmail.com>, Li Zefan <lizf@cn.fujitsu.com>, Manfred Spraul <manfred@colorfullife.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Ying Han <yinghan@google.com>, Greg Thelen <gthelen@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On Thu, 19 Jan 2012 12:48:48 -0800 (PST)
-Hugh Dickins <hughd@google.com> wrote:
-
-> Make one small adjustment to idr_get_next(): take the height from the
-> top layer (stable under RCU) instead of from the root (unprotected by
-> RCU), as idr_find() does: so that it can be used with RCU locking.
-> Copied comment on RCU locking from idr_find().
+On Tue, Jan 03, 2012 at 09:18:31PM -0800, Mandeep Singh Baines wrote:
+> We can replace the tasklist_lock in cgroup_attach_proc with an
+> rcu_read_lock.
 > 
-> Signed-off-by: Hugh Dickins <hughd@google.com>
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> Acked-by: Li Zefan <lizf@cn.fujitsu.com>
-> ---
->  lib/idr.c |    8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+> Changes in V4:
+> * https://lkml.org/lkml/2011/12/23/284 (Frederic Weisbecker)
+>   * Minimize size of rcu_read_lock critical section
+>   * Add comment
+> * https://lkml.org/lkml/2011/12/26/136 (Li Zefan)
+>   * Split into two patches
+> Changes in V3:
+> * https://lkml.org/lkml/2011/12/22/419 (Frederic Weisbecker)
+>   * Add an rcu_read_lock to protect against exit
+> Changes in V2:
+> * https://lkml.org/lkml/2011/12/22/86 (Tejun Heo)
+>   * Use a goto instead of returning -EAGAIN
 > 
-> --- 3.2.0+.orig/lib/idr.c	2012-01-04 15:55:44.000000000 -0800
-> +++ 3.2.0+/lib/idr.c	2012-01-19 11:55:28.780206713 -0800
-> @@ -595,8 +595,10 @@ EXPORT_SYMBOL(idr_for_each);
->   * Returns pointer to registered object with id, which is next number to
->   * given id. After being looked up, *@nextidp will be updated for the next
->   * iteration.
-> + *
-> + * This function can be called under rcu_read_lock(), given that the leaf
-> + * pointers lifetimes are correctly managed.
+> Suggested-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-Awkward comment.  It translates to "..., because the leaf pointers
-lifetimes are correctly managed".
+Applied 1 and 2 to cgroup/for-3.4 w/ ack's added.
 
-Is that what we really meant?  Or did we mean "..., provided the leaf
-pointers lifetimes are correctly managed"?
+Thanks.
 
-Also, "pointers" should have been "pointer" or "pointer's"!
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
