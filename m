@@ -1,121 +1,60 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
- pc->flags
-Date: Tue, 24 Jan 2012 13:59:38 +0900
-Message-ID: <20120124135938.dc9bae10.kamezawa.hiroyu@jp.fujitsu.com>
-References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120117164605.GB22142@tiehlicka.suse.cz>
-	<20120118091226.b46e0f6e.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120118104703.GA31112@tiehlicka.suse.cz>
-	<20120119085309.616cadb4.kamezawa.hiroyu@jp.fujitsu.com>
-	<CALWz4ixAT411PZMwngh17V8VZEDGbMNNzbWFwbpC5M-JO+TVOQ@mail.gmail.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [RFC 0/4] per-namespace allowed filesystems list
+Date: Tue, 24 Jan 2012 09:17:27 +0200
+Message-ID: <20120124071727.GA22292@shutemov.name>
+References: <1327337772-1972-1-git-send-email-glommer@parallels.com>
+ <20120123211218.GF23916@ZenIV.linux.org.uk>
+ <20120123230457.GA14347@shutemov.name>
+ <20120123231239.GH23916@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CALWz4ixAT411PZMwngh17V8VZEDGbMNNzbWFwbpC5M-JO+TVOQ@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120123231239.GH23916@ZenIV.linux.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Ying Han <yinghan@google.com>
-Cc: Michal Hocko <mhocko@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, ebiederm@xmission.com, serge@hallyn.com, daniel.lezcano@free.fr, pjt@google.com, mzxreary@0pointer.de, xemul@parallels.com, James.Bottomley@HansenPartnership.com, tj@kernel.org, eric.dumazet@gmail.com
 
-On Mon, 23 Jan 2012 14:05:33 -0800
-Ying Han <yinghan@google.com> wrote:
+On Mon, Jan 23, 2012 at 11:12:39PM +0000, Al Viro wrote:
+> On Tue, Jan 24, 2012 at 01:04:57AM +0200, Kirill A. Shutemov wrote:
+> > On Mon, Jan 23, 2012 at 09:12:19PM +0000, Al Viro wrote:
+> > > This is bloody ridiculous; if you want to prevent a luser adming playing with
+> > > the set of mounts you've given it, the right way to go is not to mess with the
+> > > "which fs types are allowed" but to add a per-namespace "immutable" flag.
+> > > And add a new clone(2)/unshare(2) flag, used only along with the CLONE_NEWNS
+> > > and setting the "immutable" on the copied namespace.
+> > 
+> > How will it work if we want to allow namespaced environment to mount block
+> > devices, but not, let say, debugfs?
+> > 
+> > Differentiation between filesystem type and source is one of broken things
+> > in Unix API.
+> 
+> Translation, please?
 
-> On Wed, Jan 18, 2012 at 3:53 PM, KAMEZAWA Hiroyuki
-> <kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> > On Wed, 18 Jan 2012 11:47:03 +0100
-> > Michal Hocko <mhocko@suse.cz> wrote:
-> >
-> >> On Wed 18-01-12 09:12:26, KAMEZAWA Hiroyuki wrote:
-> >> > On Tue, 17 Jan 2012 17:46:05 +0100
-> >> > Michal Hocko <mhocko@suse.cz> wrote:
-> >> >
-> >> > > On Fri 13-01-12 17:40:19, KAMEZAWA Hiroyuki wrote:
-> >> [...]
-> >> > > > This patch removes PCG_MOVE_LOCK and add hashed rwlock array
-> >> > > > instead of it. This works well enough. Even when we need to
-> >> > > > take the lock,
-> >> > >
-> >> > > Hmmm, rwlocks are not popular these days very much.
-> >> > > Anyway, can we rather make it (source) memcg (bit)spinlock inste=
-ad. We
-> >> > > would reduce false sharing this way and would penalize only page=
-s from
-> >> > > the moving group.
-> >> > >
-> >> > per-memcg spinlock ?
-> >>
-> >> Yes
-> >>
-> >> > The reason I used rwlock() is to avoid disabling IRQ. =C2=A0This r=
-outine
-> >> > will be called by IRQ context (for dirty ratio support). =C2=A0So,=
- IRQ
-> >> > disable will be required if we use spinlock.
-> >>
-> >> OK, I have missed the comment about disabling IRQs. It's true that w=
-e do
-> >> not have to be afraid about deadlocks if the lock is held only for
-> >> reading from the irq context but does the spinlock makes a performan=
-ce
-> >> bottleneck? We are talking about the slowpath.
-> >> I could see the reason for the read lock when doing hashed locks bec=
-ause
-> >> they are global but if we make the lock per memcg then we shouldn't
-> >> interfere with other updates which are not blocked by the move.
-> >>
-> >
-> > Hm, ok. In the next version, I'll use per-memcg spinlock (with hash i=
-f necessary)
->=20
-> Just want to make sure I understand it, even we make the lock
-> per-memcg, there is still a false sharing of pc within one memcg. Do
-> we need to demonstrate the effect ?
->=20
+mount(2) should take a file descriptor and mount it to a mountpoint. File
+descriptor provides known interface at that point (9p?). It doesn't matter
+here what's the actual type of filesystem or what's the source (no fake
+names for sources of pseudo-fs).
 
-Hmm, I'll try some. Account_move occurs when
+> > I don't see an easy way to fix it. Only plan9. :)
+> 
+> Huh?  Plan 9 does *not* contain anything of that kind. And their '#<letter>'
+> convention for in-kernel filesystems is one of the uglier things about their
+> API, IMO...
 
- a) a task is moved to other cgroup
- b) a cgroup is removed.
+Yes, it's ugly. But in plan9 it can be fixed quite straight forward:
+- kernel provides a way to boot to an early userspace environment without
+  access to any media (initrd);
+- kernel provides *one* '#<letter>' fs which contains handles to create
+  any other in-kernel filesystems. This special fs can be mounted only
+  once. After that you have (about) all resources as files and can
+  construct any other environment using mount and bind.
 
-I think checking case a) will be enough because there is no task in a mem=
-cg
-while it is being removed. Then, I'll measure performace of file mapping
-while moving task repeatedly. There will be spinlock conflict.
+In fact, list of available (pseudo-)filesystems is yet another resource
+namespace. With approach above we can get rid of it in plan9.
 
-- I'll consider to make the range of spinlock small.
-- I'll consider have a hash of spinlock or spinlock based of page-zone an=
-d types.
-  (It's easy to make spinlock as to be per-memcg-per-zone.)
-
-> Also, I don't get the point of why spinlock instead of rwlock in this c=
-ase?
->=20
-From Documentation/spinlocks.txt
-
->    NOTE! reader-writer locks require more atomic memory operations than
->    simple spinlocks.  Unless the reader critical section is long, you
->    are better off just using spinlocks.
-
->    NOTE! We are working hard to remove reader-writer spinlocks in most
->    cases, so please don't add a new one without consensus.  (Instead, s=
-ee
->    Documentation/RCU/rcu.txt for complete information.)
->=20
-
-I don't have enough strong motivation to use rwlock.
-But if rwlock works enough well rather than spinlocks, it will be a choic=
-e.
-
-Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+ Kirill A. Shutemov
