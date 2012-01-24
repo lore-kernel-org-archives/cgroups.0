@@ -1,59 +1,74 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [RFC 0/4] per-namespace allowed filesystems list
-Date: Mon, 23 Jan 2012 16:04:06 -0800
-Message-ID: <m1vco2m0eh.fsf@fess.ebiederm.org>
-References: <1327337772-1972-1-git-send-email-glommer@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFC] [PATCH 7/7 v2] memcg: make mem_cgroup_begin_update_stat
+ to use global pcpu.
+Date: Tue, 24 Jan 2012 12:18:46 +0900
+Message-ID: <20120124121846.051d225b.kamezawa.hiroyu@jp.fujitsu.com>
+References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120113174510.5e0f6131.kamezawa.hiroyu@jp.fujitsu.com>
+	<CAHH2K0ZzE55Dx=pz+cR1US3UnUbUxuyVjM=N3kf3NN+Rz8GJjQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1327337772-1972-1-git-send-email-glommer@parallels.com> (Glauber
-	Costa's message of "Mon, 23 Jan 2012 20:56:08 +0400")
-Sender: linux-fsdevel-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAHH2K0ZzE55Dx=pz+cR1US3UnUbUxuyVjM=N3kf3NN+Rz8GJjQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, serge@hallyn.com, daniel.lezcano@free.fr, pjt@google.com, mzxreary@0pointer.de, xemul@parallels.com, James.Bottomley@HansenPartnership.com, tj@kernel.org, eric.dumazet@gmail.com
+Content-Type: text/plain; charset="utf-8"
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Glauber Costa <glommer@parallels.com> writes:
+On Fri, 20 Jan 2012 00:40:34 -0800
+Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-> This patch creates a list of allowed filesystems per-namespace.
-> The goal is to prevent users inside a container, even root,
-> to mount filesystems that are not allowed by the main box admin.
->
-> My main two motivators to pursue this are:
->  1) We want to prevent a certain tailored view of some virtual
->     filesystems, for example, by bind-mounting files with userspace
->     generated data into /proc. The ability of mounting /proc inside
->     the container works against this effort, while disallowing it
->     via capabilities would have the effect of disallowing other
->     mounts as well.
->
-> 2) Some filesystems are known not to behave well under a container
->    environment. They require changes to work in a safe-way. We can
->    whitelist only the filesystems we want.
->
-> This works as a whitelist. Only filesystems in the list are allowed
-> to be mounted. Doing a blacklist would create problems when, say,
-> a module is loaded. The whitelist is only checked if it is enabled first.
-> So any setup that was already working, will keep working. And whoever
-> is not interested in limiting filesystem mount, does not need
-> to bother about it.
+> On Fri, Jan 13, 2012 at 12:45 AM, KAMEZAWA Hiroyuki
 
-My first impression is that this looks like a hack to avoid finishing
-the user namespace.
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 8b67ccf..4836e8d 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -89,7 +89,6 @@ enum mem_cgroup_stat_index {
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0MEM_CGROUP_STAT_FILE_MAPPED, =C2=A0/* # =
+of pages charged as file rss */
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0MEM_CGROUP_STAT_SWAPOUT, /* # of pages, =
+swapped out */
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0MEM_CGROUP_STAT_DATA, /* end of data req=
+uires synchronization */
+> > - =C2=A0 =C2=A0 =C2=A0 MEM_CGROUP_ON_MOVE, =C2=A0 =C2=A0 /* someone=
+ is moving account between groups */
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0MEM_CGROUP_STAT_NSTATS,
+> > =C2=A0};
+> >
+> > @@ -279,6 +278,8 @@ struct mem_cgroup {
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 * mem_cgroup ? And what type of charges=
+ should we move ?
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long =C2=A0 move_charge_at_immi=
+grate;
+> > + =C2=A0 =C2=A0 =C2=A0 /* set when a page under this memcg may be m=
+oving to other memcg */
+> > + =C2=A0 =C2=A0 =C2=A0 atomic_t =C2=A0 =C2=A0 =C2=A0 =C2=A0account_=
+moving;
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 * percpu counter.
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> > @@ -1250,20 +1251,27 @@ int mem_cgroup_swappiness(struct mem_cgroup=
+ *memcg)
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0return memcg->swappiness;
+> > =C2=A0}
+> >
+> > +/*
+> > + * For quick check, for avoiding looking up memcg, system-wide
+> > + * per-cpu check is provided.
+> > + */
+> > +DEFINE_PER_CPU(int, mem_cgroup_account_moving);
+>=20
+> Why is this a per-cpu counter?  Can this be an single atomic_t
+> instead, or does cpu hotplug require per-cpu state?  In the common
+> case, when there is no move in progress, then the counter would be
+> zero and clean in all cpu caches that need it.  When moving pages,
+> mem_cgroup_start_move() would atomic_inc the counter.
+>=20
 
-This is a terrible way to go about implementing unprivileged mounts.
+Ok, atomic_t will be simple.
 
-If there are technical reasons why it is unsafe to mount filesystems
-that we need to whitelist/blacklist filesystems in the kernel where we
-can check things.
-
-Why in the world would anyone want the ability to not mount a specific
-filesystem type?
-
-Using netlink as an interface when you are talking filesystems to
-filesystem is pretty horrid.  Netlink is great for networking developers
-they get networking, but filesystem people understand filesystems and
-you want to use netlink?  
-
-Eric
+Thanks,
+-Kame
