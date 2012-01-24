@@ -1,312 +1,154 @@
-From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: [PATCH] cgroup: remove extra calls to find_existing_css_set
-Date: Tue, 24 Jan 2012 10:26:31 -0800
-Message-ID: <1327429591-8507-1-git-send-email-msb@chromium.org>
+From: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] [PATCH 2/7 v2] memcg: add memory barrier for checking
+ account move.
+Date: Tue, 24 Jan 2012 11:04:16 -0800
+Message-ID: <CALWz4iyaWtes=aU79DAbEfBsNUTaHKLK5HZbNfShaxgC8UX_TQ@mail.gmail.com>
+References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120113173347.6231f510.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120117152635.GA22142@tiehlicka.suse.cz>
+	<20120118090656.83268b3e.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120118123759.GB31112@tiehlicka.suse.cz>
+	<20120119111727.6337bde4.kamezawa.hiroyu@jp.fujitsu.com>
+	<CALWz4iz59=-J+cif+XickXBG3zUSy58yHhkX6j3zbJyBXGzpYw@mail.gmail.com>
+	<20120123090436.GA12375@tiehlicka.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:x-system-of-record:x-gm-message-state:content-type
+         :content-transfer-encoding;
+        bh=kornTmG8pJGtCrMp0l10RB/To2C+wTYuRWWpuHyaSxQ=;
+        b=1TYVzvw88v3MaMZdGB5pYN2Ai6TlBmezpZwd0dQbYPriI4rDIrPIJDwCjE70uCNT9p
+         a3MZjuP9T0Ts3EtxeTOIiVsfGO94euFpZhZWdJ3KOm2oSfuel1ALKjNxIaxXtTro6YKA
+         alQz4UgaqTrdPGdqoprkqgWgeAkcW1FS56xAs=
+In-Reply-To: <20120123090436.GA12375-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-In cgroup_attach_proc, we indirectly call find_existing_css_set 3
-times. It is an expensive call so we want to call it a minimum
-of times. This patch only calls it once and stores the result so
-that it can be used later on when we call cgroup_task_migrate.
+On Mon, Jan 23, 2012 at 1:04 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> On Fri 20-01-12 10:08:44, Ying Han wrote:
+>> On Wed, Jan 18, 2012 at 6:17 PM, KAMEZAWA Hiroyuki
+>> <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
+>> > On Wed, 18 Jan 2012 13:37:59 +0100
+>> > Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+>> >
+>> >> On Wed 18-01-12 09:06:56, KAMEZAWA Hiroyuki wrote:
+>> >> > On Tue, 17 Jan 2012 16:26:35 +0100
+>> >> > Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+>> >> >
+>> >> > > On Fri 13-01-12 17:33:47, KAMEZAWA Hiroyuki wrote:
+>> >> > > > I think this bugfix is needed before going ahead. thoughts?
+>> >> > > > =3D=3D
+>> >> > > > From 2cb491a41782b39aae9f6fe7255b9159ac6c1563 Mon Sep 17 00=
+:00:00 2001
+>> >> > > > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>> >> > > > Date: Fri, 13 Jan 2012 14:27:20 +0900
+>> >> > > > Subject: [PATCH 2/7] memcg: add memory barrier for checking=
+ account move.
+>> >> > > >
+>> >> > > > At starting move_account(), source memcg's per-cpu variable
+>> >> > > > MEM_CGROUP_ON_MOVE is set. The page status update
+>> >> > > > routine check it under rcu_read_lock(). But there is no mem=
+ory
+>> >> > > > barrier. This patch adds one.
+>> >> > >
+>> >> > > OK this would help to enforce that the CPU would see the curr=
+ent value
+>> >> > > but what prevents us from the race with the value update with=
+out the
+>> >> > > lock? This is as racy as it was before AFAICS.
+>> >> > >
+>> >> >
+>> >> > Hm, do I misunderstand ?
+>> >> > =3D=3D
+>> >> > =A0 =A0update =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 reference
+>> >> >
+>> >> > =A0 =A0CPU A =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0CPU=
+ B
+>> >> > =A0 set value =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rcu_read_lock()
+>> >> > =A0 smp_wmb() =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0smp_rmb()
+>> >> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0read_val=
+ue
+>> >> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rcu_read=
+_unlock()
+>> >> > =A0 synchronize_rcu().
+>> >> > =3D=3D
+>> >> > I expect
+>> >> > If synchronize_rcu() is called before rcu_read_lock() =3D> move=
+_lock_xxx will be held.
+>> >> > If synchronize_rcu() is called after rcu_read_lock() =3D> updat=
+e will be delayed.
+>> >>
+>> >> Ahh, OK I can see it now. Readers are not that important because =
+it is
+>> >> actually the updater who is delayed until all preexisting rcu rea=
+d
+>> >> sections are finished.
+>> >>
+>> >> In that case. Why do we need both barriers? spin_unlock is a full
+>> >> barrier so maybe we just need smp_rmb before we read value to mak=
+e sure
+>> >> that we do not get stalled value when we start rcu_read section a=
+fter
+>> >> synchronize_rcu?
+>> >>
+>> >
+>> > I doubt .... If no barrier, this case happens
+>> >
+>> > =3D=3D
+>> > =A0 =A0 =A0 =A0update =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0reference
+>> > =A0 =A0 =A0 =A0CPU A =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 CPU B
+>> > =A0 =A0 =A0 =A0set value
+>> > =A0 =A0 =A0 =A0synchronize_rcu() =A0 =A0 =A0 rcu_read_lock()
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rea=
+d_value <=3D find old value
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rcu=
+_read_unlock()
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0do =
+no lock
+>> > =3D=3D
+>>
+>> Hi Kame,
+>>
+>> Can you help to clarify a bit more on the example above? Why
+>> read_value got the old value after synchronize_rcu().
+>
+> AFAIU it is because rcu_read_unlock doesn't force any memory barrier
+> and we synchronize only the updater (with synchronize_rcu), so nothin=
+g
+> guarantees that the value set on CPUA is visible to CPUB.
 
-This required modifying cgroup_task_migrate to take the new css_set
-(which we obtained from find_css_set) as a parameter. The nice side
-effect of this is that cgroup_task_migrate is now identical for
-cgroup_attach_task and cgroup_attach_proc. It also now returns a
-void since it can never fail.
+Thanks, and i might have found similar comment on the
+documentation/rcu/checklist.txt:
+"
+The various RCU read-side primitives do -not- necessarily contain
+memory barriers.
+"
 
-Changes in V5:
-* https://lkml.org/lkml/2012/1/20/344 (Tejun Heo)
-  * Remove css_set_refs
-Changes in V4:
-* https://lkml.org/lkml/2011/12/22/421 (Li Zefan)
-  * Avoid GFP_KERNEL (sleep) in rcu_read_lock by getting css_set in
-    a separate loop not under an rcu_read_lock
-Changes in V3:
-* https://lkml.org/lkml/2011/12/22/13 (Li Zefan)
-  * Fixed earlier bug by creating a seperate patch to remove tasklist_lock
-Changes in V2:
-* https://lkml.org/lkml/2011/12/20/372 (Tejun Heo)
-  * Move find_css_set call into loop which creates the flex array
-* Author
-  * Kill css_set_refs and use group_size instead
-  * Fix an off-by-one error in counting css_set refs
-  * Add a retval check in out_list_teardown
+So, the read barrier here is to make sure no reordering between the
+reader and the rcu_read_lock. The same for the write barrier which
+makes sure no reordering between the updater and synchronize_rcu. The
+the rcu here is to synchronize between the updater and reader. If so,
+why not the change like :
 
-Signed-off-by: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
----
- kernel/cgroup.c |  143 +++++++++++--------------------------------------------
- 1 files changed, 28 insertions(+), 115 deletions(-)
+       for_each_online_cpu(cpu)
+               per_cpu(memcg->stat->count[MEM_CGROUP_ON_MOVE], cpu) +=3D=
+ 1;
++      smp_wmb();
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1626152..0c03271 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1763,6 +1763,7 @@ EXPORT_SYMBOL_GPL(cgroup_path);
- struct task_and_cgroup {
- 	struct task_struct	*task;
- 	struct cgroup		*cgrp;
-+	struct css_set		*cg;
- };
- 
- struct cgroup_taskset {
-@@ -1843,11 +1844,10 @@ EXPORT_SYMBOL_GPL(cgroup_taskset_size);
-  * will already exist. If not set, this function might sleep, and can fail with
-  * -ENOMEM. Must be called with cgroup_mutex and threadgroup locked.
-  */
--static int cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
--			       struct task_struct *tsk, bool guarantee)
-+static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
-+				struct task_struct *tsk, struct css_set *newcg)
- {
- 	struct css_set *oldcg;
--	struct css_set *newcg;
- 
- 	/*
- 	 * We are synchronized through threadgroup_lock() against PF_EXITING
-@@ -1857,23 +1857,6 @@ static int cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
- 	WARN_ON_ONCE(tsk->flags & PF_EXITING);
- 	oldcg = tsk->cgroups;
- 
--	/* locate or allocate a new css_set for this task. */
--	if (guarantee) {
--		/* we know the css_set we want already exists. */
--		struct cgroup_subsys_state *template[CGROUP_SUBSYS_COUNT];
--		read_lock(&css_set_lock);
--		newcg = find_existing_css_set(oldcg, cgrp, template);
--		BUG_ON(!newcg);
--		get_css_set(newcg);
--		read_unlock(&css_set_lock);
--	} else {
--		might_sleep();
--		/* find_css_set will give us newcg already referenced. */
--		newcg = find_css_set(oldcg, cgrp);
--		if (!newcg)
--			return -ENOMEM;
--	}
--
- 	task_lock(tsk);
- 	rcu_assign_pointer(tsk->cgroups, newcg);
- 	task_unlock(tsk);
-@@ -1892,7 +1875,6 @@ static int cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
- 	put_css_set(oldcg);
- 
- 	set_bit(CGRP_RELEASABLE, &oldcgrp->flags);
--	return 0;
- }
- 
- /**
-@@ -1910,6 +1892,7 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
- 	struct cgroup *oldcgrp;
- 	struct cgroupfs_root *root = cgrp->root;
- 	struct cgroup_taskset tset = { };
-+	struct css_set *newcg;
- 
- 	/* @tsk either already exited or can't exit until the end */
- 	if (tsk->flags & PF_EXITING)
-@@ -1939,9 +1922,13 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
- 		}
- 	}
- 
--	retval = cgroup_task_migrate(cgrp, oldcgrp, tsk, false);
--	if (retval)
-+	newcg = find_css_set(tsk->cgroups, cgrp);
-+	if (!newcg) {
-+		retval = -ENOMEM;
- 		goto out;
-+	}
-+
-+	cgroup_task_migrate(cgrp, oldcgrp, tsk, newcg);
- 
- 	for_each_subsys(root, ss) {
- 		if (ss->attach)
-@@ -1997,66 +1984,6 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- }
- EXPORT_SYMBOL_GPL(cgroup_attach_task_all);
- 
--/*
-- * cgroup_attach_proc works in two stages, the first of which prefetches all
-- * new css_sets needed (to make sure we have enough memory before committing
-- * to the move) and stores them in a list of entries of the following type.
-- * TODO: possible optimization: use css_set->rcu_head for chaining instead
-- */
--struct cg_list_entry {
--	struct css_set *cg;
--	struct list_head links;
--};
--
--static bool css_set_check_fetched(struct cgroup *cgrp,
--				  struct task_struct *tsk, struct css_set *cg,
--				  struct list_head *newcg_list)
--{
--	struct css_set *newcg;
--	struct cg_list_entry *cg_entry;
--	struct cgroup_subsys_state *template[CGROUP_SUBSYS_COUNT];
--
--	read_lock(&css_set_lock);
--	newcg = find_existing_css_set(cg, cgrp, template);
--	read_unlock(&css_set_lock);
--
--	/* doesn't exist at all? */
--	if (!newcg)
--		return false;
--	/* see if it's already in the list */
--	list_for_each_entry(cg_entry, newcg_list, links)
--		if (cg_entry->cg == newcg)
--			return true;
--
--	/* not found */
--	return false;
--}
--
--/*
-- * Find the new css_set and store it in the list in preparation for moving the
-- * given task to the given cgroup. Returns 0 or -ENOMEM.
-- */
--static int css_set_prefetch(struct cgroup *cgrp, struct css_set *cg,
--			    struct list_head *newcg_list)
--{
--	struct css_set *newcg;
--	struct cg_list_entry *cg_entry;
--
--	/* ensure a new css_set will exist for this thread */
--	newcg = find_css_set(cg, cgrp);
--	if (!newcg)
--		return -ENOMEM;
--	/* add it to the list */
--	cg_entry = kmalloc(sizeof(struct cg_list_entry), GFP_KERNEL);
--	if (!cg_entry) {
--		put_css_set(newcg);
--		return -ENOMEM;
--	}
--	cg_entry->cg = newcg;
--	list_add(&cg_entry->links, newcg_list);
--	return 0;
--}
--
- /**
-  * cgroup_attach_proc - attach all threads in a threadgroup to a cgroup
-  * @cgrp: the cgroup to attach to
-@@ -2067,23 +1994,15 @@ static int css_set_prefetch(struct cgroup *cgrp, struct css_set *cg,
-  */
- static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- {
--	int retval, i, group_size;
-+	int retval, i, group_size, css_set_refs = 0;
- 	struct cgroup_subsys *ss, *failed_ss = NULL;
- 	/* guaranteed to be initialized later, but the compiler needs this */
--	struct css_set *oldcg;
- 	struct cgroupfs_root *root = cgrp->root;
- 	/* threadgroup list cursor and array */
- 	struct task_struct *tsk;
- 	struct task_and_cgroup *tc;
- 	struct flex_array *group;
- 	struct cgroup_taskset tset = { };
--	/*
--	 * we need to make sure we have css_sets for all the tasks we're
--	 * going to move -before- we actually start moving them, so that in
--	 * case we get an ENOMEM we can bail out before making any changes.
--	 */
--	struct list_head newcg_list;
--	struct cg_list_entry *cg_entry, *temp_nobe;
- 
- 	/*
- 	 * step 0: in order to do expensive, possibly blocking operations for
-@@ -2119,15 +2038,15 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 
- 		/* as per above, nr_threads may decrease, but not increase. */
- 		BUG_ON(i >= group_size);
--		/*
--		 * saying GFP_ATOMIC has no effect here because we did prealloc
--		 * earlier, but it's good form to communicate our expectations.
--		 */
- 		ent.task = tsk;
- 		ent.cgrp = task_cgroup_from_root(tsk, root);
- 		/* nothing to do if this task is already in the cgroup */
- 		if (ent.cgrp == cgrp)
- 			continue;
-+		/*
-+		 * saying GFP_ATOMIC has no effect here because we did prealloc
-+		 * earlier, but it's good form to communicate our expectations.
-+		 */
- 		retval = flex_array_put(group, i, &ent, GFP_ATOMIC);
- 		BUG_ON(retval != 0);
- 		i++;
-@@ -2156,21 +2075,17 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 		}
- 	}
- 
--	/*
-+        /*
- 	 * step 2: make sure css_sets exist for all threads to be migrated.
- 	 * we use find_css_set, which allocates a new one if necessary.
- 	 */
--	INIT_LIST_HEAD(&newcg_list);
- 	for (i = 0; i < group_size; i++) {
- 		tc = flex_array_get(group, i);
--		oldcg = tc->task->cgroups;
--
--		/* if we don't already have it in the list get a new one */
--		if (!css_set_check_fetched(cgrp, tc->task, oldcg,
--					   &newcg_list)) {
--			retval = css_set_prefetch(cgrp, oldcg, &newcg_list);
--			if (retval)
--				goto out_list_teardown;
-+		tc->cg = find_css_set(tc->task->cgroups, cgrp);
-+		if (!tc->cg) {
-+			retval = -ENOMEM;
-+			css_set_refs = i;
-+			goto out_put_css_set_refs;
- 		}
- 	}
- 
-@@ -2181,8 +2096,7 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 	 */
- 	for (i = 0; i < group_size; i++) {
- 		tc = flex_array_get(group, i);
--		retval = cgroup_task_migrate(cgrp, tc->cgrp, tc->task, true);
--		BUG_ON(retval);
-+		cgroup_task_migrate(cgrp, tc->cgrp, tc->task, tc->cg);
- 	}
- 	/* nothing is sensitive to fork() after this point. */
- 
-@@ -2200,15 +2114,14 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 	synchronize_rcu();
- 	cgroup_wakeup_rmdir_waiter(cgrp);
- 	retval = 0;
--out_list_teardown:
--	/* clean up the list of prefetched css_sets. */
--	list_for_each_entry_safe(cg_entry, temp_nobe, &newcg_list, links) {
--		list_del(&cg_entry->links);
--		put_css_set(cg_entry->cg);
--		kfree(cg_entry);
-+out_put_css_set_refs:
-+	if (retval) {
-+		for (i = 0; i < css_set_refs; i++) {
-+			tc = flex_array_get(group, i);
-+			put_css_set(tc->cg);
-+		}
- 	}
- out_cancel_attach:
--	/* same deal as in cgroup_attach_task */
- 	if (retval) {
- 		for_each_subsys(root, ss) {
- 			if (ss == failed_ss)
--- 
-1.7.7.3
+Sorry, the use of per-cpu variable MEM_CGROUP_ON_MOVE does confuse me.
+
+--Ying
+>
+> --
+> Michal Hocko
+> SUSE Labs
+> SUSE LINUX s.r.o.
+> Lihovarska 1060/12
+> 190 00 Praha 9
+> Czech Republic
