@@ -1,45 +1,121 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
  pc->flags
-Date: Tue, 24 Jan 2012 13:47:50 +0900
-Message-ID: <20120124134750.de5f31ee.kamezawa.hiroyu@jp.fujitsu.com>
+Date: Tue, 24 Jan 2012 13:59:38 +0900
+Message-ID: <20120124135938.dc9bae10.kamezawa.hiroyu@jp.fujitsu.com>
 References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
 	<20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
-	<CALWz4izasaECifCYoRXL45x1YXYzACC=kUHQivnGZKRH+ySjuw@mail.gmail.com>
+	<20120117164605.GB22142@tiehlicka.suse.cz>
+	<20120118091226.b46e0f6e.kamezawa.hiroyu@jp.fujitsu.com>
+	<20120118104703.GA31112@tiehlicka.suse.cz>
+	<20120119085309.616cadb4.kamezawa.hiroyu@jp.fujitsu.com>
+	<CALWz4ixAT411PZMwngh17V8VZEDGbMNNzbWFwbpC5M-JO+TVOQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CALWz4izasaECifCYoRXL45x1YXYzACC=kUHQivnGZKRH+ySjuw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <CALWz4ixAT411PZMwngh17V8VZEDGbMNNzbWFwbpC5M-JO+TVOQ@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Ying Han <yinghan@google.com>
+Cc: Michal Hocko <mhocko@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
 
-On Mon, 23 Jan 2012 14:02:48 -0800
-Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Mon, 23 Jan 2012 14:05:33 -0800
+Ying Han <yinghan@google.com> wrote:
 
-> On Fri, Jan 13, 2012 at 12:40 AM, KAMEZAWA Hiroyuki
-> <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
+> On Wed, Jan 18, 2012 at 3:53 PM, KAMEZAWA Hiroyuki
+> <kamezawa.hiroyu@jp.fujitsu.com> wrote:
+> > On Wed, 18 Jan 2012 11:47:03 +0100
+> > Michal Hocko <mhocko@suse.cz> wrote:
 > >
-> > From 1008e84d94245b1e7c4d237802ff68ff00757736 Mon Sep 17 00:00:00 2001
-> > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> > Date: Thu, 12 Jan 2012 15:53:24 +0900
-> > Subject: [PATCH 3/7] memcg: remove PCG_MOVE_LOCK flag from pc->flags.
+> >> On Wed 18-01-12 09:12:26, KAMEZAWA Hiroyuki wrote:
+> >> > On Tue, 17 Jan 2012 17:46:05 +0100
+> >> > Michal Hocko <mhocko@suse.cz> wrote:
+> >> >
+> >> > > On Fri 13-01-12 17:40:19, KAMEZAWA Hiroyuki wrote:
+> >> [...]
+> >> > > > This patch removes PCG_MOVE_LOCK and add hashed rwlock array
+> >> > > > instead of it. This works well enough. Even when we need to
+> >> > > > take the lock,
+> >> > >
+> >> > > Hmmm, rwlocks are not popular these days very much.
+> >> > > Anyway, can we rather make it (source) memcg (bit)spinlock inste=
+ad. We
+> >> > > would reduce false sharing this way and would penalize only page=
+s from
+> >> > > the moving group.
+> >> > >
+> >> > per-memcg spinlock ?
+> >>
+> >> Yes
+> >>
+> >> > The reason I used rwlock() is to avoid disabling IRQ. =C2=A0This r=
+outine
+> >> > will be called by IRQ context (for dirty ratio support). =C2=A0So,=
+ IRQ
+> >> > disable will be required if we use spinlock.
+> >>
+> >> OK, I have missed the comment about disabling IRQs. It's true that w=
+e do
+> >> not have to be afraid about deadlocks if the lock is held only for
+> >> reading from the irq context but does the spinlock makes a performan=
+ce
+> >> bottleneck? We are talking about the slowpath.
+> >> I could see the reason for the read lock when doing hashed locks bec=
+ause
+> >> they are global but if we make the lock per memcg then we shouldn't
+> >> interfere with other updates which are not blocked by the move.
+> >>
 > >
-> > PCG_MOVE_LOCK bit is used for bit spinlock for avoiding race between
-> > memcg's account moving and page state statistics updates.
-> >
-> > Considering page-statistics update, very hot path, this lock is
-> > taken only when someone is moving account (or PageTransHuge())
-> > And, now, all moving-account between memcgroups (by task-move)
-> > are serialized.
-> 
-> This might be a side question, can you clarify the serialization here?
-> Does it mean that we only allow one task-move at a time system-wide?
-> 
+> > Hm, ok. In the next version, I'll use per-memcg spinlock (with hash i=
+f necessary)
+>=20
+> Just want to make sure I understand it, even we make the lock
+> per-memcg, there is still a false sharing of pc within one memcg. Do
+> we need to demonstrate the effect ?
+>=20
 
-current implementation has that limit by mutex.
+Hmm, I'll try some. Account_move occurs when
+
+ a) a task is moved to other cgroup
+ b) a cgroup is removed.
+
+I think checking case a) will be enough because there is no task in a mem=
+cg
+while it is being removed. Then, I'll measure performace of file mapping
+while moving task repeatedly. There will be spinlock conflict.
+
+- I'll consider to make the range of spinlock small.
+- I'll consider have a hash of spinlock or spinlock based of page-zone an=
+d types.
+  (It's easy to make spinlock as to be per-memcg-per-zone.)
+
+> Also, I don't get the point of why spinlock instead of rwlock in this c=
+ase?
+>=20
+From Documentation/spinlocks.txt
+
+>    NOTE! reader-writer locks require more atomic memory operations than
+>    simple spinlocks.  Unless the reader critical section is long, you
+>    are better off just using spinlocks.
+
+>    NOTE! We are working hard to remove reader-writer spinlocks in most
+>    cases, so please don't add a new one without consensus.  (Instead, s=
+ee
+>    Documentation/RCU/rcu.txt for complete information.)
+>=20
+
+I don't have enough strong motivation to use rwlock.
+But if rwlock works enough well rather than spinlocks, it will be a choic=
+e.
 
 Thanks,
 -Kame
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
+.ca/
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
