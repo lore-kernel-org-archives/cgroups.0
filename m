@@ -1,163 +1,89 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [RFC] [PATCH 2/7 v2] memcg: add memory barrier for checking
- account move.
-Date: Tue, 24 Jan 2012 09:49:47 +0100
-Message-ID: <20120124084947.GF26289@tiehlicka.suse.cz>
-References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
- <20120113173347.6231f510.kamezawa.hiroyu@jp.fujitsu.com>
- <20120117152635.GA22142@tiehlicka.suse.cz>
- <20120118090656.83268b3e.kamezawa.hiroyu@jp.fujitsu.com>
- <20120118123759.GB31112@tiehlicka.suse.cz>
- <20120119111727.6337bde4.kamezawa.hiroyu@jp.fujitsu.com>
- <CALWz4iz59=-J+cif+XickXBG3zUSy58yHhkX6j3zbJyBXGzpYw@mail.gmail.com>
- <20120123090436.GA12375@tiehlicka.suse.cz>
- <20120124122120.53f01da5.kamezawa.hiroyu@jp.fujitsu.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [RFC 0/4] per-namespace allowed filesystems list
+Date: Tue, 24 Jan 2012 14:22:49 +0400
+Message-ID: <4F1E8679.5060606@parallels.com>
+References: <1327337772-1972-1-git-send-email-glommer@parallels.com> <20120123211218.GF23916@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120124122120.53f01da5.kamezawa.hiroyu@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120123211218.GF23916-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Ying Han <yinghan@google.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "hugh.dickins@tiscali.co.uk" <hugh.dickins@tiscali.co.uk>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "bsingharora@gmail.com" <bsingharora@gmail.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, daniel.lezcano-GANU6spQydw@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org, xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Tue 24-01-12 12:21:20, KAMEZAWA Hiroyuki wrote:
-> On Mon, 23 Jan 2012 10:04:36 +0100
-> Michal Hocko <mhocko@suse.cz> wrote:
->=20
-> > On Fri 20-01-12 10:08:44, Ying Han wrote:
-> > > On Wed, Jan 18, 2012 at 6:17 PM, KAMEZAWA Hiroyuki
-> > > <kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> > > > On Wed, 18 Jan 2012 13:37:59 +0100
-> > > > Michal Hocko <mhocko@suse.cz> wrote:
-> > > >
-> > > >> On Wed 18-01-12 09:06:56, KAMEZAWA Hiroyuki wrote:
-> > > >> > On Tue, 17 Jan 2012 16:26:35 +0100
-> > > >> > Michal Hocko <mhocko@suse.cz> wrote:
-> > > >> >
-> > > >> > > On Fri 13-01-12 17:33:47, KAMEZAWA Hiroyuki wrote:
-> > > >> > > > I think this bugfix is needed before going ahead. thoughts=
-?
-> > > >> > > > =3D=3D
-> > > >> > > > From 2cb491a41782b39aae9f6fe7255b9159ac6c1563 Mon Sep 17 0=
-0:00:00 2001
-> > > >> > > > From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> > > >> > > > Date: Fri, 13 Jan 2012 14:27:20 +0900
-> > > >> > > > Subject: [PATCH 2/7] memcg: add memory barrier for checkin=
-g account move.
-> > > >> > > >
-> > > >> > > > At starting move_account(), source memcg's per-cpu variabl=
-e
-> > > >> > > > MEM_CGROUP_ON_MOVE is set. The page status update
-> > > >> > > > routine check it under rcu_read_lock(). But there is no me=
-mory
-> > > >> > > > barrier. This patch adds one.
-> > > >> > >
-> > > >> > > OK this would help to enforce that the CPU would see the cur=
-rent value
-> > > >> > > but what prevents us from the race with the value update wit=
-hout the
-> > > >> > > lock? This is as racy as it was before AFAICS.
-> > > >> > >
-> > > >> >
-> > > >> > Hm, do I misunderstand ?
-> > > >> > =3D=3D
-> > > >> > =A0 =A0update =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 referenc=
-e
-> > > >> >
-> > > >> > =A0 =A0CPU A =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0CP=
-U B
-> > > >> > =A0 set value =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rcu_read_lock()
-> > > >> > =A0 smp_wmb() =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0smp_rmb()
-> > > >> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0read_va=
-lue
-> > > >> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rcu_rea=
-d_unlock()
-> > > >> > =A0 synchronize_rcu().
-> > > >> > =3D=3D
-> > > >> > I expect
-> > > >> > If synchronize_rcu() is called before rcu_read_lock() =3D> mov=
-e_lock_xxx will be held.
-> > > >> > If synchronize_rcu() is called after rcu_read_lock() =3D> upda=
-te will be delayed.
-> > > >>
-> > > >> Ahh, OK I can see it now. Readers are not that important because=
- it is
-> > > >> actually the updater who is delayed until all preexisting rcu re=
-ad
-> > > >> sections are finished.
-> > > >>
-> > > >> In that case. Why do we need both barriers? spin_unlock is a ful=
-l
-> > > >> barrier so maybe we just need smp_rmb before we read value to ma=
-ke sure
-> > > >> that we do not get stalled value when we start rcu_read section =
-after
-> > > >> synchronize_rcu?
-> > > >>
-> > > >
-> > > > I doubt .... If no barrier, this case happens
-> > > >
-> > > > =3D=3D
-> > > > =A0 =A0 =A0 =A0update =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0referenc=
-e
-> > > > =A0 =A0 =A0 =A0CPU A =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 CPU B
-> > > > =A0 =A0 =A0 =A0set value
-> > > > =A0 =A0 =A0 =A0synchronize_rcu() =A0 =A0 =A0 rcu_read_lock()
-> > > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0re=
-ad_value <=3D find old value
-> > > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rc=
-u_read_unlock()
-> > > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0do=
- no lock
-> > > > =3D=3D
-> > >=20
-> > > Hi Kame,
-> > >=20
-> > > Can you help to clarify a bit more on the example above? Why
-> > > read_value got the old value after synchronize_rcu().
-> >=20
-> > AFAIU it is because rcu_read_unlock doesn't force any memory barrier
-> > and we synchronize only the updater (with synchronize_rcu), so nothin=
-g
-> > guarantees that the value set on CPUA is visible to CPUB.
-> >=20
->=20
-> Thank you.=20
->=20
-> ...Finally, I'd like to make this check to atomic_t rather than complic=
-ated
-> percpu counter. Hmm, do it now ?
+On 01/24/2012 01:12 AM, Al Viro wrote:
+> On Mon, Jan 23, 2012 at 08:56:08PM +0400, Glauber Costa wrote:
+>> This patch creates a list of allowed filesystems per-namespace.
+>> The goal is to prevent users inside a container, even root,
+>> to mount filesystems that are not allowed by the main box admin.
+>>
+>> My main two motivators to pursue this are:
+>>   1) We want to prevent a certain tailored view of some virtual
+>>      filesystems, for example, by bind-mounting files with userspace
+>>      generated data into /proc. The ability of mounting /proc inside
+>>      the container works against this effort, while disallowing it
+>>      via capabilities would have the effect of disallowing other
+>>      mounts as well.
+>
+> Translation, please.
+>
+>> 2) Some filesystems are known not to behave well under a container
+>>     environment. They require changes to work in a safe-way. We can
+>>     whitelist only the filesystems we want.
+>
+> So fix them.
+>
+>> This works as a whitelist. Only filesystems in the list are allowed
+>> to be mounted. Doing a blacklist would create problems when, say,
+>> a module is loaded. The whitelist is only checked if it is enabled first.
+>> So any setup that was already working, will keep working. And whoever
+>> is not interested in limiting filesystem mount, does not need
+>> to bother about it.
+>>
+>> Please let me know what you guys think about it.
+>
+> NAKed-by: Al Viro<viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+> NAKed-because: too fucking ugly
+>
+> This is bloody ridiculous; if you want to prevent a luser adming playing with
+> the set of mounts you've given it, the right way to go is not to mess with the
+> "which fs types are allowed" but to add a per-namespace "immutable" flag.
+> And add a new clone(2)/unshare(2) flag, used only along with the CLONE_NEWNS
+> and setting the "immutable" on the copied namespace.
 
-I thought you wanted to prevent from atomics but you would need a read
-barrier in the reader side because only atomics which change the state
-imply a memory barrier IIRC. So it is a question why atomic is
-simpler...
+Okay, not that I laid down the problem, I am happy to pursue any 
+solutions we think is better. But let me develop it a bit more, first.
 
->=20
-> Thanks,
-> -Kame
->=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+An immutable flag does not work, because I don't want to prevent a luser 
+(loved that) to mess up with the mounts they are given. In general, it 
+is perfectly fine for them to mount things inside the cointainer as the 
+time goes.
 
---=20
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9   =20
-Czech Republic
+But some others, I don't consider so. The example of /proc I've given, 
+let me elaborate: Much of the information living on /proc, is really 
+global, rather than per-container. The ones pertaining to pid namespace, 
+and other namespaces are already per-namespace so they are fine. But 
+there is more: some of the things /proc track, like cpu usage, memory, 
+and the like, are resource-constrained by other entities, for instance, 
+cgroups. In some cases, like /proc/stat, information exists in cgroup, 
+but come from more than once cgroup. All of them are independent in 
+nature, making it hard to come out with a
+coherent vision.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Furthermore, there is no connection between namespaces and cgroups, so 
+it is not obvious at all (there were discussions before), which 
+information should the process see - unlike namespaces, the mere fact 
+that a process lives in a cgroup, does not really mean it is isolated 
+from the system in this sense.
+
+One of the solutions, is to do it all in userspace, from outside the 
+container, and bind mount the files inside the container's /proc. But it 
+only works if we can prevent the user from remounting the real /proc 
+somewhere. Not because it would screw up his system, which I don't care 
+about, but because it will give him information about the global state 
+of the system.
+
+An immutable flag fixes this, but then it prevents all further 
+legitimate mounts
