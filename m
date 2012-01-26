@@ -1,57 +1,46 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] memcg: fix compile warning on non-numa systems
-Date: Thu, 26 Jan 2012 10:01:15 +0100
-Message-ID: <20120126090115.GB13421@tiehlicka.suse.cz>
-References: <4F13BE05.70505@cn.fujitsu.com>
- <20120116084715.GA1639@tiehlicka.suse.cz>
- <20120126005521.07ac0faf.akpm@linux-foundation.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [RFC] [PATCH 3/7 v2] memcg: remove PCG_MOVE_LOCK flag from
+ pc->flags
+Date: Thu, 26 Jan 2012 10:16:03 +0100
+Message-ID: <20120126091602.GC13421@tiehlicka.suse.cz>
+References: <20120113173001.ee5260ca.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120113174019.8dff3fc1.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120117164605.GB22142@tiehlicka.suse.cz>
+ <20120118091226.b46e0f6e.kamezawa.hiroyu@jp.fujitsu.com>
+ <20120118104703.GA31112@tiehlicka.suse.cz>
+ <20120119085309.616cadb4.kamezawa.hiroyu@jp.fujitsu.com>
+ <CALWz4ixAT411PZMwngh17V8VZEDGbMNNzbWFwbpC5M-JO+TVOQ@mail.gmail.com>
+ <20120124084335.GE26289@tiehlicka.suse.cz>
+ <CALWz4iy0ajriTk7V0xL1+W7rDFS+-M5w4OdPjasMGUTH=ZLgrw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120126005521.07ac0faf.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CALWz4iy0ajriTk7V0xL1+W7rDFS+-M5w4OdPjasMGUTH=ZLgrw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Li Zefan <lizf@cn.fujitsu.com>, linux-mm@kvack.org, "bsingharora@gmail.com" <bsingharora@gmail.com>, Hiroyuki KAMEZAWA <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Kirill A. Shutemov" <kirill@shutemov.name>
+To: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org" <hugh.dickins-IWqWACnzNjwqdlJmJB21zg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Thu 26-01-12 00:55:21, Andrew Morton wrote:
-> On Mon, 16 Jan 2012 09:47:15 +0100 Michal Hocko <mhocko@suse.cz> wrote:
+On Wed 25-01-12 15:07:47, Ying Han wrote:
+> On Tue, Jan 24, 2012 at 12:43 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> > On Mon 23-01-12 14:05:33, Ying Han wrote:
+[...]
+> >> Just want to make sure I understand it, even we make the lock
+> >> per-memcg, there is still a false sharing of pc within one memcg.
+> >
+> > Yes that is true. I have missed that we might fault in several pages at
+> > once but this would happen only during task move, right? And that is not
+> > a hot path anyway. Or?
 > 
-> > On Mon 16-01-12 14:04:53, Li Zefan wrote:
-> > > Fix this warning:
-> > > 
-> > >   CC      mm/memcontrol.o
-> > > mm/memcontrol.c: In function 'memcg_check_events':
-> > > mm/memcontrol.c:779:22: warning: unused variable 'do_numainfo'
-> > 
-> > This has been already posted by Kirill and I didn't like the solution
-> > (https://lkml.org/lkml/2011/12/27/86). He then reposted with a different
-> > version (https://lkml.org/lkml/2012/1/6/281).
-> > The later one looks better but I still think this is not worth
-> > complicate the code just to get rid of this warning.
-> 
-> This?
+> I was thinking of page-statistics update which is hot path. If the
+> moving task and non-moving task share the same per-memcg lock, any
+> page-statistic update from the non-moving task will be blocked? Sorry
+> If i missed something here :)
 
-Haven't seen this one but it looks sane.
-Acked-by: Michal Hocko <mhocko@suse.cz>
-
-> 
-> --- a/mm/memcontrol.c~a
-> +++ a/mm/memcontrol.c
-> @@ -776,7 +776,8 @@ static void memcg_check_events(struct me
->  	/* threshold event is triggered in finer grain than soft limit */
->  	if (unlikely(mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_THRESH))) {
-> -		bool do_softlimit, do_numainfo;
-> +		bool do_softlimit;
-> +		bool do_numainfo __maybe_unused;
->  
->  		do_softlimit = mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_SOFTLIMIT);
-> _
-> 
+OK, I got your point, finally. I guess there is a plan to reduce the
+effect by array of locks.
 
 -- 
 Michal Hocko
