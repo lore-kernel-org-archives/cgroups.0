@@ -1,22 +1,22 @@
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [PATCH] memcg: fix compile warning on non-numa systems
-Date: Thu, 26 Jan 2012 10:54:48 +0200
-Message-ID: <20120126085448.GA32013@shutemov.name>
+Date: Thu, 26 Jan 2012 10:01:15 +0100
+Message-ID: <20120126090115.GB13421@tiehlicka.suse.cz>
 References: <4F13BE05.70505@cn.fujitsu.com>
  <20120116084715.GA1639@tiehlicka.suse.cz>
  <20120126005521.07ac0faf.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20120126005521.07ac0faf.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Li Zefan <lizf@cn.fujitsu.com>, linux-mm@kvack.org, "bsingharora@gmail.com" <bsingharora@gmail.com>, Hiroyuki KAMEZAWA <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: Li Zefan <lizf@cn.fujitsu.com>, linux-mm@kvack.org, "bsingharora@gmail.com" <bsingharora@gmail.com>, Hiroyuki KAMEZAWA <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Kirill A. Shutemov" <kirill@shutemov.name>
 
-On Thu, Jan 26, 2012 at 12:55:21AM -0800, Andrew Morton wrote:
+On Thu 26-01-12 00:55:21, Andrew Morton wrote:
 > On Mon, 16 Jan 2012 09:47:15 +0100 Michal Hocko <mhocko@suse.cz> wrote:
 > 
 > > On Mon 16-01-12 14:04:53, Li Zefan wrote:
@@ -33,6 +33,10 @@ On Thu, Jan 26, 2012 at 12:55:21AM -0800, Andrew Morton wrote:
 > > complicate the code just to get rid of this warning.
 > 
 > This?
+
+Haven't seen this one but it looks sane.
+Acked-by: Michal Hocko <mhocko@suse.cz>
+
 > 
 > --- a/mm/memcontrol.c~a
 > +++ a/mm/memcontrol.c
@@ -47,15 +51,12 @@ On Thu, Jan 26, 2012 at 12:55:21AM -0800, Andrew Morton wrote:
 >  		do_softlimit = mem_cgroup_event_ratelimit(memcg,
 >  						MEM_CGROUP_TARGET_SOFTLIMIT);
 > _
-
-Acked-by: Kirill A. Shutemov <kirill@shutemov.name>
+> 
 
 -- 
- Kirill A. Shutemov
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
