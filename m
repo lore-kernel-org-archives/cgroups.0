@@ -1,982 +1,382 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
-Subject: [PATCH] cgroup: remove cgroup_subsys argument from callbacks
-Date: Tue, 31 Jan 2012 13:47:36 +0800
-Message-ID: <4F278078.5030703@cn.fujitsu.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [RFC] sched: special case cpuacct cpuusage when cpu cgroup is comounted
+Date: Tue, 31 Jan 2012 16:57:51 +0400
+Message-ID: <1328014671-5838-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, container cgroup <containers@lists.linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, netdev <netdev@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-The argument is not used at all, and it's not necessary, because
-a specific callback handler of course knows which subsys it
-belongs to.
+The cpuacct cgroup needs to do hierarchy walks in scheduler core paths
+to update its cpuusage information. Those hierarchy walks are done on
+a totally different structure than the one the scheduler naturally uses,
+which is the cpu cgroup's. For the cfs case it is even worse, since
+we already track this data in cfs_rq's exec_clock as of right now.
 
-Now only ->pupulate() takes this argument, because the handlers of
-this callback always call cgroup_add_file()/cgroup_add_files().
+We can't really get rid of it in a clean way, or just move to the
+cpu cgroup, but we can do a lot better when cpu an cpuacct are mounted
+in the same hierarchy: in this case, we're guaranteed to have the same
+set of tasks. There is then no need to walk the cpuacct hierachy,
+since what we record for the task_group will yield
+the same results.
 
-So we reduce a few lines of code, though the shrinking of object size
-is minimal.
+For the rt tasks, we need to record tg's rt_rq total execution time
+somewhere in the structure. delta_exec is accumulated in the sched_entity,
+but recorded nowehere in rt_rq.
 
- 16 files changed, 113 insertions(+), 162 deletions(-)
+Let me know what you guys think about it.
 
-   text    data     bss     dec     hex filename
-5486240  656987 7039960 13183187         c928d3 vmlinux.o.orig
-5486170  656987 7039960 13183117         c9288d vmlinux.o
-
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+CC: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+CC: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+CC: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/cgroups/cgroups.txt |   26 ++++++++-----------
- block/blk-cgroup.c                |   22 ++++++----------
- include/linux/cgroup.h            |   29 +++++++++-------------
- include/net/sock.h                |    7 ++---
- include/net/tcp_memcontrol.h      |    2 +-
- kernel/cgroup.c                   |   43 ++++++++++++++++-----------------
- kernel/cgroup_freezer.c           |   11 +++-----
- kernel/cpuset.c                   |   16 ++++--------
- kernel/events/core.c              |   13 ++++------
- kernel/sched/core.c               |   20 ++++++---------
- mm/memcontrol.c                   |   48 ++++++++++++++----------------------
- net/core/netprio_cgroup.c         |   10 +++----
- net/core/sock.c                   |    6 ++--
- net/ipv4/tcp_memcontrol.c         |    2 +-
- net/sched/cls_cgroup.c            |   10 +++----
- security/device_cgroup.c          |   10 +++----
- 16 files changed, 113 insertions(+), 162 deletions(-)
+ kernel/sched/core.c  |  197 ++++++++++++++++++++++++++++++++++++++++++++++----
+ kernel/sched/rt.c    |    5 ++
+ kernel/sched/sched.h |    3 +
+ 3 files changed, 192 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index a7c96ae..8e74980 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -558,8 +558,7 @@ Each subsystem may export the following methods. The only mandatory
- methods are create/destroy. Any others that are null are presumed to
- be successful no-ops.
- 
--struct cgroup_subsys_state *create(struct cgroup_subsys *ss,
--				   struct cgroup *cgrp)
-+struct cgroup_subsys_state *create(struct cgroup *cgrp)
- (cgroup_mutex held by caller)
- 
- Called to create a subsystem state object for a cgroup. The
-@@ -574,7 +573,7 @@ identified by the passed cgroup object having a NULL parent (since
- it's the root of the hierarchy) and may be an appropriate place for
- initialization code.
- 
--void destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+void destroy(struct cgroup *cgrp)
- (cgroup_mutex held by caller)
- 
- The cgroup system is about to destroy the passed cgroup; the subsystem
-@@ -585,7 +584,7 @@ cgroup->parent is still valid. (Note - can also be called for a
- newly-created cgroup if an error occurs after this subsystem's
- create() method has been called for the new cgroup).
- 
--int pre_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp);
-+int pre_destroy(struct cgroup *cgrp);
- 
- Called before checking the reference count on each subsystem. This may
- be useful for subsystems which have some extra references even if
-@@ -593,8 +592,7 @@ there are not tasks in the cgroup. If pre_destroy() returns error code,
- rmdir() will fail with it. From this behavior, pre_destroy() can be
- called multiple times against a cgroup.
- 
--int can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--	       struct cgroup_taskset *tset)
-+int can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- (cgroup_mutex held by caller)
- 
- Called prior to moving one or more tasks into a cgroup; if the
-@@ -615,8 +613,7 @@ fork. If this method returns 0 (success) then this should remain valid
- while the caller holds cgroup_mutex and it is ensured that either
- attach() or cancel_attach() will be called in future.
- 
--void cancel_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--		   struct cgroup_taskset *tset)
-+void cancel_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- (cgroup_mutex held by caller)
- 
- Called when a task attach operation has failed after can_attach() has succeeded.
-@@ -625,23 +622,22 @@ function, so that the subsystem can implement a rollback. If not, not necessary.
- This will be called only about subsystems whose can_attach() operation have
- succeeded. The parameters are identical to can_attach().
- 
--void attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--	    struct cgroup_taskset *tset)
-+void attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- (cgroup_mutex held by caller)
- 
- Called after the task has been attached to the cgroup, to allow any
- post-attachment activity that requires memory allocations or blocking.
- The parameters are identical to can_attach().
- 
--void fork(struct cgroup_subsy *ss, struct task_struct *task)
-+void fork(struct task_struct *task)
- 
- Called when a task is forked into a cgroup.
- 
--void exit(struct cgroup_subsys *ss, struct task_struct *task)
-+void exit(struct task_struct *task)
- 
- Called during task exit.
- 
--int populate(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+int populate(struct cgroup *cgrp)
- (cgroup_mutex held by caller)
- 
- Called after creation of a cgroup to allow a subsystem to populate
-@@ -651,7 +647,7 @@ include/linux/cgroup.h for details).  Note that although this
- method can return an error code, the error code is currently not
- always handled well.
- 
--void post_clone(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+void post_clone(struct cgroup *cgrp)
- (cgroup_mutex held by caller)
- 
- Called during cgroup_create() to do any parameter
-@@ -659,7 +655,7 @@ initialization which might be required before a task could attach.  For
- example in cpusets, no task may attach before 'cpus' and 'mems' are set
- up.
- 
--void bind(struct cgroup_subsys *ss, struct cgroup *root)
-+void bind(struct cgroup *root)
- (cgroup_mutex and ss->hierarchy_mutex held by caller)
- 
- Called when a cgroup subsystem is rebound to a different hierarchy
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index fa8f263..1359d63 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -28,13 +28,10 @@ static LIST_HEAD(blkio_list);
- struct blkio_cgroup blkio_root_cgroup = { .weight = 2*BLKIO_WEIGHT_DEFAULT };
- EXPORT_SYMBOL_GPL(blkio_root_cgroup);
- 
--static struct cgroup_subsys_state *blkiocg_create(struct cgroup_subsys *,
--						  struct cgroup *);
--static int blkiocg_can_attach(struct cgroup_subsys *, struct cgroup *,
--			      struct cgroup_taskset *);
--static void blkiocg_attach(struct cgroup_subsys *, struct cgroup *,
--			   struct cgroup_taskset *);
--static void blkiocg_destroy(struct cgroup_subsys *, struct cgroup *);
-+static struct cgroup_subsys_state *blkiocg_create(struct cgroup *);
-+static int blkiocg_can_attach(struct cgroup *, struct cgroup_taskset *);
-+static void blkiocg_attach(struct cgroup *, struct cgroup_taskset *);
-+static void blkiocg_destroy(struct cgroup *);
- static int blkiocg_populate(struct cgroup_subsys *, struct cgroup *);
- 
- /* for encoding cft->private value on file */
-@@ -1548,7 +1545,7 @@ static int blkiocg_populate(struct cgroup_subsys *subsys, struct cgroup *cgroup)
- 				ARRAY_SIZE(blkio_files));
- }
- 
--static void blkiocg_destroy(struct cgroup_subsys *subsys, struct cgroup *cgroup)
-+static void blkiocg_destroy(struct cgroup *cgroup)
- {
- 	struct blkio_cgroup *blkcg = cgroup_to_blkio_cgroup(cgroup);
- 	unsigned long flags;
-@@ -1598,8 +1595,7 @@ static void blkiocg_destroy(struct cgroup_subsys *subsys, struct cgroup *cgroup)
- 		kfree(blkcg);
- }
- 
--static struct cgroup_subsys_state *
--blkiocg_create(struct cgroup_subsys *subsys, struct cgroup *cgroup)
-+static struct cgroup_subsys_state *blkiocg_create(struct cgroup *cgroup)
- {
- 	struct blkio_cgroup *blkcg;
- 	struct cgroup *parent = cgroup->parent;
-@@ -1628,8 +1624,7 @@ done:
-  * of the main cic data structures.  For now we allow a task to change
-  * its cgroup only if it's the only owner of its ioc.
-  */
--static int blkiocg_can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			      struct cgroup_taskset *tset)
-+static int blkiocg_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- {
- 	struct task_struct *task;
- 	struct io_context *ioc;
-@@ -1648,8 +1643,7 @@ static int blkiocg_can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
- 	return ret;
- }
- 
--static void blkiocg_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			   struct cgroup_taskset *tset)
-+static void blkiocg_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- {
- 	struct task_struct *task;
- 	struct io_context *ioc;
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 7da3e74..501adb1 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -452,23 +452,18 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
-  */
- 
- struct cgroup_subsys {
--	struct cgroup_subsys_state *(*create)(struct cgroup_subsys *ss,
--						  struct cgroup *cgrp);
--	int (*pre_destroy)(struct cgroup_subsys *ss, struct cgroup *cgrp);
--	void (*destroy)(struct cgroup_subsys *ss, struct cgroup *cgrp);
--	int (*can_attach)(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			  struct cgroup_taskset *tset);
--	void (*cancel_attach)(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			      struct cgroup_taskset *tset);
--	void (*attach)(struct cgroup_subsys *ss, struct cgroup *cgrp,
--		       struct cgroup_taskset *tset);
--	void (*fork)(struct cgroup_subsys *ss, struct task_struct *task);
--	void (*exit)(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			struct cgroup *old_cgrp, struct task_struct *task);
--	int (*populate)(struct cgroup_subsys *ss,
--			struct cgroup *cgrp);
--	void (*post_clone)(struct cgroup_subsys *ss, struct cgroup *cgrp);
--	void (*bind)(struct cgroup_subsys *ss, struct cgroup *root);
-+	struct cgroup_subsys_state *(*create)(struct cgroup *cgrp);
-+	int (*pre_destroy)(struct cgroup *cgrp);
-+	void (*destroy)(struct cgroup *cgrp);
-+	int (*can_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
-+	void (*cancel_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
-+	void (*attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
-+	void (*fork)(struct task_struct *task);
-+	void (*exit)(struct cgroup *cgrp, struct cgroup *old_cgrp,
-+		     struct task_struct *task);
-+	int (*populate)(struct cgroup_subsys *ss, struct cgroup *cgrp);
-+	void (*post_clone)(struct cgroup *cgrp);
-+	void (*bind)(struct cgroup *root);
- 
- 	int subsys_id;
- 	int active;
-diff --git a/include/net/sock.h b/include/net/sock.h
-index bb972d2..705d1ad 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -68,7 +68,7 @@ struct cgroup;
- struct cgroup_subsys;
- #ifdef CONFIG_NET
- int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss);
-+void mem_cgroup_sockets_destroy(struct cgroup *cgrp);
- #else
- static inline
- int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-@@ -76,7 +76,7 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	return 0;
- }
- static inline
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
- {
- }
- #endif
-@@ -869,8 +869,7 @@ struct proto {
- 	 */
- 	int			(*init_cgroup)(struct cgroup *cgrp,
- 					       struct cgroup_subsys *ss);
--	void			(*destroy_cgroup)(struct cgroup *cgrp,
--						  struct cgroup_subsys *ss);
-+	void			(*destroy_cgroup)(struct cgroup *cgrp);
- 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
- #endif
- };
-diff --git a/include/net/tcp_memcontrol.h b/include/net/tcp_memcontrol.h
-index 3512082..48410ff 100644
---- a/include/net/tcp_memcontrol.h
-+++ b/include/net/tcp_memcontrol.h
-@@ -13,7 +13,7 @@ struct tcp_memcontrol {
- 
- struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg);
- int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
-+void tcp_destroy_cgroup(struct cgroup *cgrp);
- unsigned long long tcp_max_memory(const struct mem_cgroup *memcg);
- void tcp_prot_mem(struct mem_cgroup *memcg, long val, int idx);
- #endif /* _TCP_MEMCG_H */
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 43a224f..865d89a 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -818,7 +818,7 @@ static int cgroup_call_pre_destroy(struct cgroup *cgrp)
- 
- 	for_each_subsys(cgrp->root, ss)
- 		if (ss->pre_destroy) {
--			ret = ss->pre_destroy(ss, cgrp);
-+			ret = ss->pre_destroy(cgrp);
- 			if (ret)
- 				break;
- 		}
-@@ -846,7 +846,7 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
- 		 * Release the subsystem state objects.
- 		 */
- 		for_each_subsys(cgrp->root, ss)
--			ss->destroy(ss, cgrp);
-+			ss->destroy(cgrp);
- 
- 		cgrp->root->number_of_cgroups--;
- 		mutex_unlock(&cgroup_mutex);
-@@ -1015,7 +1015,7 @@ static int rebind_subsystems(struct cgroupfs_root *root,
- 			list_move(&ss->sibling, &root->subsys_list);
- 			ss->root = root;
- 			if (ss->bind)
--				ss->bind(ss, cgrp);
-+				ss->bind(cgrp);
- 			mutex_unlock(&ss->hierarchy_mutex);
- 			/* refcount was already taken, and we're keeping it */
- 		} else if (bit & removed_bits) {
-@@ -1025,7 +1025,7 @@ static int rebind_subsystems(struct cgroupfs_root *root,
- 			BUG_ON(cgrp->subsys[i]->cgroup != cgrp);
- 			mutex_lock(&ss->hierarchy_mutex);
- 			if (ss->bind)
--				ss->bind(ss, dummytop);
-+				ss->bind(dummytop);
- 			dummytop->subsys[i]->cgroup = dummytop;
- 			cgrp->subsys[i] = NULL;
- 			subsys[i]->root = &rootnode;
-@@ -1908,7 +1908,7 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
- 
- 	for_each_subsys(root, ss) {
- 		if (ss->can_attach) {
--			retval = ss->can_attach(ss, cgrp, &tset);
-+			retval = ss->can_attach(cgrp, &tset);
- 			if (retval) {
- 				/*
- 				 * Remember on which subsystem the can_attach()
-@@ -1932,7 +1932,7 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
- 
- 	for_each_subsys(root, ss) {
- 		if (ss->attach)
--			ss->attach(ss, cgrp, &tset);
-+			ss->attach(cgrp, &tset);
- 	}
- 
- 	synchronize_rcu();
-@@ -1954,7 +1954,7 @@ out:
- 				 */
- 				break;
- 			if (ss->cancel_attach)
--				ss->cancel_attach(ss, cgrp, &tset);
-+				ss->cancel_attach(cgrp, &tset);
- 		}
- 	}
- 	return retval;
-@@ -2067,7 +2067,7 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 	 */
- 	for_each_subsys(root, ss) {
- 		if (ss->can_attach) {
--			retval = ss->can_attach(ss, cgrp, &tset);
-+			retval = ss->can_attach(cgrp, &tset);
- 			if (retval) {
- 				failed_ss = ss;
- 				goto out_cancel_attach;
-@@ -2104,7 +2104,7 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
- 	 */
- 	for_each_subsys(root, ss) {
- 		if (ss->attach)
--			ss->attach(ss, cgrp, &tset);
-+			ss->attach(cgrp, &tset);
- 	}
- 
- 	/*
-@@ -2128,7 +2128,7 @@ out_cancel_attach:
- 			if (ss == failed_ss)
- 				break;
- 			if (ss->cancel_attach)
--				ss->cancel_attach(ss, cgrp, &tset);
-+				ss->cancel_attach(cgrp, &tset);
- 		}
- 	}
- out_free_group_list:
-@@ -3756,7 +3756,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 		set_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
- 
- 	for_each_subsys(root, ss) {
--		struct cgroup_subsys_state *css = ss->create(ss, cgrp);
-+		struct cgroup_subsys_state *css = ss->create(cgrp);
- 
- 		if (IS_ERR(css)) {
- 			err = PTR_ERR(css);
-@@ -3770,7 +3770,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 		}
- 		/* At error, ->destroy() callback has to free assigned ID. */
- 		if (clone_children(parent) && ss->post_clone)
--			ss->post_clone(ss, cgrp);
-+			ss->post_clone(cgrp);
- 	}
- 
- 	cgroup_lock_hierarchy(root);
-@@ -3804,7 +3804,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 
- 	for_each_subsys(root, ss) {
- 		if (cgrp->subsys[ss->subsys_id])
--			ss->destroy(ss, cgrp);
-+			ss->destroy(cgrp);
- 	}
- 
- 	mutex_unlock(&cgroup_mutex);
-@@ -4028,7 +4028,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	/* Create the top cgroup state for this subsystem */
- 	list_add(&ss->sibling, &rootnode.subsys_list);
- 	ss->root = &rootnode;
--	css = ss->create(ss, dummytop);
-+	css = ss->create(dummytop);
- 	/* We don't handle early failures gracefully */
- 	BUG_ON(IS_ERR(css));
- 	init_cgroup_css(css, ss, dummytop);
-@@ -4117,7 +4117,7 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
- 	 * no ss->create seems to need anything important in the ss struct, so
- 	 * this can happen first (i.e. before the rootnode attachment).
- 	 */
--	css = ss->create(ss, dummytop);
-+	css = ss->create(dummytop);
- 	if (IS_ERR(css)) {
- 		/* failure case - need to deassign the subsys[] slot. */
- 		subsys[i] = NULL;
-@@ -4135,7 +4135,7 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
- 		int ret = cgroup_init_idr(ss, css);
- 		if (ret) {
- 			dummytop->subsys[ss->subsys_id] = NULL;
--			ss->destroy(ss, dummytop);
-+			ss->destroy(dummytop);
- 			subsys[i] = NULL;
- 			mutex_unlock(&cgroup_mutex);
- 			return ret;
-@@ -4233,7 +4233,7 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
- 	 * pointer to find their state. note that this also takes care of
- 	 * freeing the css_id.
- 	 */
--	ss->destroy(ss, dummytop);
-+	ss->destroy(dummytop);
- 	dummytop->subsys[ss->subsys_id] = NULL;
- 
- 	mutex_unlock(&cgroup_mutex);
-@@ -4509,7 +4509,7 @@ void cgroup_fork_callbacks(struct task_struct *child)
- 		for (i = 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
- 			struct cgroup_subsys *ss = subsys[i];
- 			if (ss->fork)
--				ss->fork(ss, child);
-+				ss->fork(child);
- 		}
- 	}
- }
-@@ -4611,7 +4611,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
- 				struct cgroup *old_cgrp =
- 					rcu_dereference_raw(cg->subsys[i])->cgroup;
- 				struct cgroup *cgrp = task_cgroup(tsk, i);
--				ss->exit(ss, cgrp, old_cgrp, tsk);
-+				ss->exit(cgrp, old_cgrp, tsk);
- 			}
- 		}
- 	}
-@@ -5066,8 +5066,7 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
- }
- 
- #ifdef CONFIG_CGROUP_DEBUG
--static struct cgroup_subsys_state *debug_create(struct cgroup_subsys *ss,
--						   struct cgroup *cont)
-+static struct cgroup_subsys_state *debug_create(struct cgroup *cont)
- {
- 	struct cgroup_subsys_state *css = kzalloc(sizeof(*css), GFP_KERNEL);
- 
-@@ -5077,7 +5076,7 @@ static struct cgroup_subsys_state *debug_create(struct cgroup_subsys *ss,
- 	return css;
- }
- 
--static void debug_destroy(struct cgroup_subsys *ss, struct cgroup *cont)
-+static void debug_destroy(struct cgroup *cont)
- {
- 	kfree(cont->subsys[debug_subsys_id]);
- }
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index fc0646b..f86e939 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -128,8 +128,7 @@ struct cgroup_subsys freezer_subsys;
-  *    task->alloc_lock (inside __thaw_task(), prevents race with refrigerator())
-  *     sighand->siglock
-  */
--static struct cgroup_subsys_state *freezer_create(struct cgroup_subsys *ss,
--						  struct cgroup *cgroup)
-+static struct cgroup_subsys_state *freezer_create(struct cgroup *cgroup)
- {
- 	struct freezer *freezer;
- 
-@@ -142,8 +141,7 @@ static struct cgroup_subsys_state *freezer_create(struct cgroup_subsys *ss,
- 	return &freezer->css;
- }
- 
--static void freezer_destroy(struct cgroup_subsys *ss,
--			    struct cgroup *cgroup)
-+static void freezer_destroy(struct cgroup *cgroup)
- {
- 	struct freezer *freezer = cgroup_freezer(cgroup);
- 
-@@ -164,8 +162,7 @@ static bool is_task_frozen_enough(struct task_struct *task)
-  * a write to that file racing against an attach, and hence the
-  * can_attach() result will remain valid until the attach completes.
-  */
--static int freezer_can_attach(struct cgroup_subsys *ss,
--			      struct cgroup *new_cgroup,
-+static int freezer_can_attach(struct cgroup *new_cgroup,
- 			      struct cgroup_taskset *tset)
- {
- 	struct freezer *freezer;
-@@ -185,7 +182,7 @@ static int freezer_can_attach(struct cgroup_subsys *ss,
- 	return 0;
- }
- 
--static void freezer_fork(struct cgroup_subsys *ss, struct task_struct *task)
-+static void freezer_fork(struct task_struct *task)
- {
- 	struct freezer *freezer;
- 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index a09ac2b..5d57583 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1399,8 +1399,7 @@ static nodemask_t cpuset_attach_nodemask_from;
- static nodemask_t cpuset_attach_nodemask_to;
- 
- /* Called by cgroups to determine if a cpuset is usable; cgroup_mutex held */
--static int cpuset_can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			     struct cgroup_taskset *tset)
-+static int cpuset_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- {
- 	struct cpuset *cs = cgroup_cs(cgrp);
- 	struct task_struct *task;
-@@ -1436,8 +1435,7 @@ static int cpuset_can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
- 	return 0;
- }
- 
--static void cpuset_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			  struct cgroup_taskset *tset)
-+static void cpuset_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- {
- 	struct mm_struct *mm;
- 	struct task_struct *task;
-@@ -1833,8 +1831,7 @@ static int cpuset_populate(struct cgroup_subsys *ss, struct cgroup *cont)
-  * (and likewise for mems) to the new cgroup. Called with cgroup_mutex
-  * held.
-  */
--static void cpuset_post_clone(struct cgroup_subsys *ss,
--			      struct cgroup *cgroup)
-+static void cpuset_post_clone(struct cgroup *cgroup)
- {
- 	struct cgroup *parent, *child;
- 	struct cpuset *cs, *parent_cs;
-@@ -1857,13 +1854,10 @@ static void cpuset_post_clone(struct cgroup_subsys *ss,
- 
- /*
-  *	cpuset_create - create a cpuset
-- *	ss:	cpuset cgroup subsystem
-  *	cont:	control group that the new cpuset will be part of
-  */
- 
--static struct cgroup_subsys_state *cpuset_create(
--	struct cgroup_subsys *ss,
--	struct cgroup *cont)
-+static struct cgroup_subsys_state *cpuset_create(struct cgroup *cont)
- {
- 	struct cpuset *cs;
- 	struct cpuset *parent;
-@@ -1902,7 +1896,7 @@ static struct cgroup_subsys_state *cpuset_create(
-  * will call async_rebuild_sched_domains().
-  */
- 
--static void cpuset_destroy(struct cgroup_subsys *ss, struct cgroup *cont)
-+static void cpuset_destroy(struct cgroup *cont)
- {
- 	struct cpuset *cs = cgroup_cs(cont);
- 
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index a8f4ac0..a5d1ee9 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -6906,8 +6906,7 @@ unlock:
- device_initcall(perf_event_sysfs_init);
- 
- #ifdef CONFIG_CGROUP_PERF
--static struct cgroup_subsys_state *perf_cgroup_create(
--	struct cgroup_subsys *ss, struct cgroup *cont)
-+static struct cgroup_subsys_state *perf_cgroup_create(struct cgroup *cont)
- {
- 	struct perf_cgroup *jc;
- 
-@@ -6924,8 +6923,7 @@ static struct cgroup_subsys_state *perf_cgroup_create(
- 	return &jc->css;
- }
- 
--static void perf_cgroup_destroy(struct cgroup_subsys *ss,
--				struct cgroup *cont)
-+static void perf_cgroup_destroy(struct cgroup *cont)
- {
- 	struct perf_cgroup *jc;
- 	jc = container_of(cgroup_subsys_state(cont, perf_subsys_id),
-@@ -6941,8 +6939,7 @@ static int __perf_cgroup_move(void *info)
- 	return 0;
- }
- 
--static void perf_cgroup_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
--			       struct cgroup_taskset *tset)
-+static void perf_cgroup_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- {
- 	struct task_struct *task;
- 
-@@ -6950,8 +6947,8 @@ static void perf_cgroup_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
- 		task_function_call(task, __perf_cgroup_move, task);
- }
- 
--static void perf_cgroup_exit(struct cgroup_subsys *ss, struct cgroup *cgrp,
--		struct cgroup *old_cgrp, struct task_struct *task)
-+static void perf_cgroup_exit(struct cgroup *cgrp, struct cgroup *old_cgrp,
-+			     struct task_struct *task)
- {
- 	/*
- 	 * cgroup_exit() is called in the copy_process() failure path.
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index df00cb0..ff12f72 100644
+index a4c31bf..b9be4ba 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -7530,8 +7530,7 @@ static inline struct task_group *cgroup_tg(struct cgroup *cgrp)
- 			    struct task_group, css);
+@@ -6839,6 +6839,45 @@ int in_sched_functions(unsigned long addr)
+ struct task_group root_task_group;
+ #endif
+ 
++#if defined(CONFIG_CGROUP_SCHED) && defined(CONFIG_CGROUP_CPUACCT)
++struct jump_label_key cpu_cpuacct_comounted_branch;
++
++static void cpu_cpuacct_update_jump_labels(struct cgroup *root,
++					   struct cgroupfs_root *sys_root)
++{
++	/* When we are adding a cgroup, we first bind it to the new root,
++	 * then call bind().
++	 * When deleting one, we first call bind(), then move it away.
++	 *
++	 * As a result, when the two roots are different, we can be sure that
++	 * we're either adding the first one of them in a hierarchy, or we
++	 * are deleting the last of them. In any of those cases, we don't need
++	 * to mess with the jump labels. (first test)
++	 *
++	 * So if our root equals the root bind() were provided, that's because
++	 * we are doing an addition (update root first, then call bind())
++	 *
++	 * Analog logic for removal
++	 */
++	if (root_cpuacct.css.cgroup->root != root_task_group.css.cgroup->root)
++		return;
++
++	if (root->root == sys_root)
++		jump_label_inc(&cpu_cpuacct_comounted_branch);
++	else
++		jump_label_dec(&cpu_cpuacct_comounted_branch);
++
++}
++
++#define cpu_cpuacct_comounted static_branch(&cpu_cpuacct_comounted_branch)
++#elif defined(CONFIG_CGROUP_SCHED) || defined(CONFIG_CGROUP_CPUACCT)
++static void cpu_cpuacct_update_jump_labels(struct cgroup *cgrp,
++					   struct cgroupfs_root *sys_root)
++{
++}
++#define cpu_cpuacct_comounted 0
++#endif
++
+ DECLARE_PER_CPU(cpumask_var_t, load_balance_tmpmask);
+ 
+ void __init sched_init(void)
+@@ -7942,6 +7981,11 @@ static int cpu_cgroup_populate(struct cgroup_subsys *ss, struct cgroup *cont)
+ 	return cgroup_add_files(cont, ss, cpu_files, ARRAY_SIZE(cpu_files));
  }
  
--static struct cgroup_subsys_state *
--cpu_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+static struct cgroup_subsys_state *cpu_cgroup_create(struct cgroup *cgrp)
- {
- 	struct task_group *tg, *parent;
- 
-@@ -7548,15 +7547,14 @@ cpu_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cgrp)
- 	return &tg->css;
- }
- 
--static void
--cpu_cgroup_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+static void cpu_cgroup_destroy(struct cgroup *cgrp)
- {
- 	struct task_group *tg = cgroup_tg(cgrp);
- 
- 	sched_destroy_group(tg);
- }
- 
--static int cpu_cgroup_can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
-+static int cpu_cgroup_can_attach(struct cgroup *cgrp,
- 				 struct cgroup_taskset *tset)
- {
- 	struct task_struct *task;
-@@ -7574,7 +7572,7 @@ static int cpu_cgroup_can_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
- 	return 0;
- }
- 
--static void cpu_cgroup_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
-+static void cpu_cgroup_attach(struct cgroup *cgrp,
- 			      struct cgroup_taskset *tset)
- {
- 	struct task_struct *task;
-@@ -7584,8 +7582,8 @@ static void cpu_cgroup_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
- }
- 
- static void
--cpu_cgroup_exit(struct cgroup_subsys *ss, struct cgroup *cgrp,
--		struct cgroup *old_cgrp, struct task_struct *task)
-+cpu_cgroup_exit(struct cgroup *cgrp, struct cgroup *old_cgrp,
-+		struct task_struct *task)
- {
- 	/*
- 	 * cgroup_exit() is called in the copy_process() failure path.
-@@ -7935,8 +7933,7 @@ struct cgroup_subsys cpu_cgroup_subsys = {
-  */
- 
- /* create a new cpu accounting group */
--static struct cgroup_subsys_state *cpuacct_create(
--	struct cgroup_subsys *ss, struct cgroup *cgrp)
-+static struct cgroup_subsys_state *cpuacct_create(struct cgroup *cgrp)
- {
- 	struct cpuacct *ca;
- 
-@@ -7966,8 +7963,7 @@ out:
- }
- 
- /* destroy an existing cpu accounting group */
--static void
--cpuacct_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+static void cpuacct_destroy(struct cgroup *cgrp)
- {
- 	struct cpuacct *ca = cgroup_ca(cgrp);
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3dbff4d..ae2f0a8 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4580,10 +4580,9 @@ static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
- 	return mem_cgroup_sockets_init(cont, ss);
++void cpu_cgroup_bind(struct cgroup_subsys *ss, struct cgroup *root)
++{
++	cpu_cpuacct_update_jump_labels(root, root_task_group.css.cgroup->root);
++}
++
+ struct cgroup_subsys cpu_cgroup_subsys = {
+ 	.name		= "cpu",
+ 	.create		= cpu_cgroup_create,
+@@ -7951,6 +7995,7 @@ struct cgroup_subsys cpu_cgroup_subsys = {
+ 	.exit		= cpu_cgroup_exit,
+ 	.populate	= cpu_cgroup_populate,
+ 	.subsys_id	= cpu_cgroup_subsys_id,
++	.bind		= cpu_cgroup_bind,
+ 	.early_init	= 1,
  };
  
--static void kmem_cgroup_destroy(struct cgroup_subsys *ss,
--				struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct cgroup *cont)
- {
--	mem_cgroup_sockets_destroy(cont, ss);
-+	mem_cgroup_sockets_destroy(cont);
- }
- #else
- static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-@@ -4591,8 +4590,7 @@ static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
- 	return 0;
+@@ -8007,8 +8052,102 @@ cpuacct_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
+ 	kfree(ca);
  }
  
--static void kmem_cgroup_destroy(struct cgroup_subsys *ss,
--				struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct cgroup *cont)
+-static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu)
++#ifdef CONFIG_CGROUP_SCHED
++#ifdef CONFIG_FAIR_GROUP_SCHED
++static struct cfs_rq *
++cpu_cgroup_cfs_rq(struct cgroup *cgrp, int cpu)
++{
++	struct task_group *tg = cgroup_tg(cgrp);
++
++	if (tg == &root_task_group)
++		return &cpu_rq(cpu)->cfs;
++
++	return tg->cfs_rq[cpu];
++}
++
++static void cpu_cgroup_update_cpuusage_cfs(struct cgroup *cgrp, int cpu)
++{
++	struct cfs_rq *cfs = cpu_cgroup_cfs_rq(cgrp, cpu);
++	cfs->prev_exec_clock = cfs->exec_clock;
++}
++static u64 cpu_cgroup_cpuusage_cfs(struct cgroup *cgrp, int cpu)
++{
++	struct cfs_rq *cfs = cpu_cgroup_cfs_rq(cgrp, cpu);
++	return cfs->exec_clock - cfs->prev_exec_clock;
++}
++#else
++static void cpu_cgroup_update_cpuusage_cfs(struct cgroup *cgrp, int cpu)
++{
++}
++
++static u64 cpu_cgroup_cpuusage_cfs(struct cgroup *cgrp, int cpu)
++{
++	return 0;
++}
++#endif
++
++#ifdef CONFIG_RT_GROUP_SCHED
++static struct rt_rq *
++cpu_cgroup_rt_rq(struct cgroup *cgrp, int cpu)
++{
++	struct task_group *tg = cgroup_tg(cgrp);
++	if (tg == &root_task_group)
++		return &cpu_rq(cpu)->rt;
++
++	return tg->rt_rq[cpu];
++
++}
++static void cpu_cgroup_update_cpuusage_rt(struct cgroup *cgrp, int cpu)
++{
++	struct rt_rq *rt = cpu_cgroup_rt_rq(cgrp, cpu);
++	rt->prev_exec_clock = rt->exec_clock;
++}
++
++static u64 cpu_cgroup_cpuusage_rt(struct cgroup *cgrp, int cpu)
++{
++	struct rt_rq *rt = cpu_cgroup_rt_rq(cgrp, cpu);
++	return rt->exec_clock - rt->prev_exec_clock;
++}
++#else
++static void cpu_cgroup_update_cpuusage_rt(struct cgroup *cgrp, int cpu)
  {
++}
++static u64 cpu_cgroup_cpuusage_rt(struct cgroup *cgrp, int cpu)
++{
++	return 0;
++}
++#endif
++
++static int cpu_cgroup_cpuusage_write(struct cgroup *cgrp, int cpu, u64 val)
++{
++	cpu_cgroup_update_cpuusage_cfs(cgrp, cpu);
++	cpu_cgroup_update_cpuusage_rt(cgrp, cpu);
++	return 0;
++}
++
++static u64 cpu_cgroup_cpuusage_read(struct cgroup *cgrp, int cpu)
++{
++	return cpu_cgroup_cpuusage_cfs(cgrp, cpu) +
++	       cpu_cgroup_cpuusage_rt(cgrp, cpu);
++}
++
++#else
++static u64 cpu_cgroup_cpuusage_read(struct cgroup *cgrp, int i)
++{
++	BUG();
++	return 0;
++}
++
++static int cpu_cgroup_cpuusage_write(struct cgroup *cgrp, int cpu, u64 val)
++{
++	BUG();
++	return 0;
++}
++#endif /* CONFIG_CGROUP_SCHED */
++
++static u64 cpuacct_cpuusage_read(struct cgroup *cgrp, int cpu)
++{
++	struct cpuacct *ca = cgroup_ca(cgrp);
+ 	u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
+ 	u64 data;
+ 
+@@ -8026,8 +8165,9 @@ static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu)
+ 	return data;
  }
+ 
+-static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu, u64 val)
++static void cpuacct_cpuusage_write(struct cgroup *cgrp, int cpu, u64 val)
+ {
++	struct cpuacct *ca = cgroup_ca(cgrp);
+ 	u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
+ 
+ #ifndef CONFIG_64BIT
+@@ -8042,15 +8182,21 @@ static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu, u64 val)
  #endif
-@@ -4884,7 +4882,7 @@ err_cleanup:
  }
  
- static struct cgroup_subsys_state * __ref
--mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
-+mem_cgroup_create(struct cgroup *cont)
++static u64 cpuusage_read_percpu(struct cgroup *cgrp, int cpu)
++{
++	if (cpu_cpuacct_comounted)
++		return cpu_cgroup_cpuusage_read(cgrp, cpu);
++	return cpuacct_cpuusage_read(cgrp, cpu);
++}
++
+ /* return total cpu usage (in nanoseconds) of a group */
+ static u64 cpuusage_read(struct cgroup *cgrp, struct cftype *cft)
  {
- 	struct mem_cgroup *memcg, *parent;
- 	long error = -ENOMEM;
-@@ -4946,20 +4944,18 @@ free_out:
- 	return ERR_PTR(error);
- }
+-	struct cpuacct *ca = cgroup_ca(cgrp);
+ 	u64 totalcpuusage = 0;
+ 	int i;
  
--static int mem_cgroup_pre_destroy(struct cgroup_subsys *ss,
--					struct cgroup *cont)
-+static int mem_cgroup_pre_destroy(struct cgroup *cont)
+ 	for_each_present_cpu(i)
+-		totalcpuusage += cpuacct_cpuusage_read(ca, i);
++		totalcpuusage += cpuusage_read_percpu(cgrp, i);
+ 
+ 	return totalcpuusage;
+ }
+@@ -8058,7 +8204,6 @@ static u64 cpuusage_read(struct cgroup *cgrp, struct cftype *cft)
+ static int cpuusage_write(struct cgroup *cgrp, struct cftype *cftype,
+ 								u64 reset)
  {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	struct cpuacct *ca = cgroup_ca(cgrp);
+ 	int err = 0;
+ 	int i;
  
- 	return mem_cgroup_force_empty(memcg, false);
- }
+@@ -8067,8 +8212,12 @@ static int cpuusage_write(struct cgroup *cgrp, struct cftype *cftype,
+ 		goto out;
+ 	}
  
--static void mem_cgroup_destroy(struct cgroup_subsys *ss,
--				struct cgroup *cont)
-+static void mem_cgroup_destroy(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	for_each_present_cpu(i)
+-		cpuacct_cpuusage_write(ca, i, 0);
++	for_each_present_cpu(i) {
++		if (cpu_cpuacct_comounted)
++			cpu_cgroup_cpuusage_write(cgrp, i, 0);
++		else
++			cpuacct_cpuusage_write(cgrp, i, 0);
++	}
  
--	kmem_cgroup_destroy(ss, cont);
-+	kmem_cgroup_destroy(cont);
- 
- 	mem_cgroup_put(memcg);
- }
-@@ -5296,9 +5292,8 @@ static void mem_cgroup_clear_mc(void)
- 	mem_cgroup_end_move(from);
- }
- 
--static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
--				struct cgroup *cgroup,
--				struct cgroup_taskset *tset)
-+static int mem_cgroup_can_attach(struct cgroup *cgroup,
-+				 struct cgroup_taskset *tset)
- {
- 	struct task_struct *p = cgroup_taskset_first(tset);
- 	int ret = 0;
-@@ -5336,9 +5331,8 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
- 	return ret;
- }
- 
--static void mem_cgroup_cancel_attach(struct cgroup_subsys *ss,
--				struct cgroup *cgroup,
--				struct cgroup_taskset *tset)
-+static void mem_cgroup_cancel_attach(struct cgroup *cgroup,
-+				     struct cgroup_taskset *tset)
- {
- 	mem_cgroup_clear_mc();
- }
-@@ -5453,9 +5447,8 @@ retry:
- 	up_read(&mm->mmap_sem);
- }
- 
--static void mem_cgroup_move_task(struct cgroup_subsys *ss,
--				struct cgroup *cont,
--				struct cgroup_taskset *tset)
-+static void mem_cgroup_move_task(struct cgroup *cont,
-+				 struct cgroup_taskset *tset)
- {
- 	struct task_struct *p = cgroup_taskset_first(tset);
- 	struct mm_struct *mm = get_task_mm(p);
-@@ -5470,20 +5463,17 @@ static void mem_cgroup_move_task(struct cgroup_subsys *ss,
- 		mem_cgroup_clear_mc();
- }
- #else	/* !CONFIG_MMU */
--static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
--				struct cgroup *cgroup,
--				struct cgroup_taskset *tset)
-+static int mem_cgroup_can_attach(struct cgroup *cgroup,
-+				 struct cgroup_taskset *tset)
- {
- 	return 0;
- }
--static void mem_cgroup_cancel_attach(struct cgroup_subsys *ss,
--				struct cgroup *cgroup,
--				struct cgroup_taskset *tset)
-+static void mem_cgroup_cancel_attach(struct cgroup *cgroup,
-+				     struct cgroup_taskset *tset)
- {
- }
--static void mem_cgroup_move_task(struct cgroup_subsys *ss,
--				struct cgroup *cont,
--				struct cgroup_taskset *tset)
-+static void mem_cgroup_move_task(struct cgroup *cont,
-+				 struct cgroup_taskset *tset)
- {
- }
- #endif
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 3a9fd48..22036ab 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -23,9 +23,8 @@
- #include <net/sock.h>
- #include <net/netprio_cgroup.h>
- 
--static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
--					       struct cgroup *cgrp);
--static void cgrp_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp);
-+static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp);
-+static void cgrp_destroy(struct cgroup *cgrp);
- static int cgrp_populate(struct cgroup_subsys *ss, struct cgroup *cgrp);
- 
- struct cgroup_subsys net_prio_subsys = {
-@@ -120,8 +119,7 @@ static void update_netdev_tables(void)
- 	rtnl_unlock();
- }
- 
--static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
--						 struct cgroup *cgrp)
-+static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
- {
- 	struct cgroup_netprio_state *cs;
- 	int ret;
-@@ -145,7 +143,7 @@ static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
- 	return &cs->css;
- }
- 
--static void cgrp_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+static void cgrp_destroy(struct cgroup *cgrp)
- {
- 	struct cgroup_netprio_state *cs;
- 	struct net_device *dev;
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 5c5af998..688037c 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -160,19 +160,19 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
  out:
- 	list_for_each_entry_continue_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp, ss);
-+			proto->destroy_cgroup(cgrp);
- 	mutex_unlock(&proto_list_mutex);
- 	return ret;
- }
- 
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
+ 	return err;
+@@ -8077,12 +8226,11 @@ out:
+ static int cpuacct_percpu_seq_read(struct cgroup *cgroup, struct cftype *cft,
+ 				   struct seq_file *m)
  {
- 	struct proto *proto;
+-	struct cpuacct *ca = cgroup_ca(cgroup);
+ 	u64 percpu;
+ 	int i;
  
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp, ss);
-+			proto->destroy_cgroup(cgrp);
- 	mutex_unlock(&proto_list_mutex);
- }
- #endif
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index 4997878..e714c68 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -94,7 +94,7 @@ create_files:
- }
- EXPORT_SYMBOL(tcp_init_cgroup);
- 
--void tcp_destroy_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+void tcp_destroy_cgroup(struct cgroup *cgrp)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
- 	struct cg_proto *cg_proto;
-diff --git a/net/sched/cls_cgroup.c b/net/sched/cls_cgroup.c
-index f84fdc3..1afaa28 100644
---- a/net/sched/cls_cgroup.c
-+++ b/net/sched/cls_cgroup.c
-@@ -22,9 +22,8 @@
- #include <net/sock.h>
- #include <net/cls_cgroup.h>
- 
--static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
--					       struct cgroup *cgrp);
--static void cgrp_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp);
-+static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp);
-+static void cgrp_destroy(struct cgroup *cgrp);
- static int cgrp_populate(struct cgroup_subsys *ss, struct cgroup *cgrp);
- 
- struct cgroup_subsys net_cls_subsys = {
-@@ -51,8 +50,7 @@ static inline struct cgroup_cls_state *task_cls_state(struct task_struct *p)
- 			    struct cgroup_cls_state, css);
- }
- 
--static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
--						 struct cgroup *cgrp)
-+static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
- {
- 	struct cgroup_cls_state *cs;
- 
-@@ -66,7 +64,7 @@ static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
- 	return &cs->css;
- }
- 
--static void cgrp_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+static void cgrp_destroy(struct cgroup *cgrp)
- {
- 	kfree(cgrp_cls_state(cgrp));
- }
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index 8b5b5d8..c43a332 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -61,8 +61,8 @@ static inline struct dev_cgroup *task_devcgroup(struct task_struct *task)
- 
- struct cgroup_subsys devices_subsys;
- 
--static int devcgroup_can_attach(struct cgroup_subsys *ss,
--			struct cgroup *new_cgrp, struct cgroup_taskset *set)
-+static int devcgroup_can_attach(struct cgroup *new_cgrp,
-+				struct cgroup_taskset *set)
- {
- 	struct task_struct *task = cgroup_taskset_first(set);
- 
-@@ -156,8 +156,7 @@ remove:
- /*
-  * called from kernel/cgroup.c with cgroup_lock() held.
+ 	for_each_present_cpu(i) {
+-		percpu = cpuacct_cpuusage_read(ca, i);
++		percpu = cpuusage_read_percpu(cgroup, i);
+ 		seq_printf(m, "%llu ", (unsigned long long) percpu);
+ 	}
+ 	seq_printf(m, "\n");
+@@ -8149,14 +8297,11 @@ static int cpuacct_populate(struct cgroup_subsys *ss, struct cgroup *cgrp)
+  *
+  * called with rq->lock held.
   */
--static struct cgroup_subsys_state *devcgroup_create(struct cgroup_subsys *ss,
--						struct cgroup *cgroup)
-+static struct cgroup_subsys_state *devcgroup_create(struct cgroup *cgroup)
+-void cpuacct_charge(struct task_struct *tsk, u64 cputime)
++static void __cpuacct_charge(struct task_struct *tsk, u64 cputime)
  {
- 	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup;
- 	struct cgroup *parent_cgroup;
-@@ -195,8 +194,7 @@ static struct cgroup_subsys_state *devcgroup_create(struct cgroup_subsys *ss,
- 	return &dev_cgroup->css;
+ 	struct cpuacct *ca;
+ 	int cpu;
+ 
+-	if (unlikely(!cpuacct_subsys.active))
+-		return;
+-
+ 	cpu = task_cpu(tsk);
+ 
+ 	rcu_read_lock();
+@@ -8171,11 +8316,37 @@ void cpuacct_charge(struct task_struct *tsk, u64 cputime)
+ 	rcu_read_unlock();
  }
  
--static void devcgroup_destroy(struct cgroup_subsys *ss,
--			struct cgroup *cgroup)
-+static void devcgroup_destroy(struct cgroup *cgroup)
- {
- 	struct dev_cgroup *dev_cgroup;
- 	struct dev_whitelist_item *wh, *tmp;
++void cpuacct_charge(struct task_struct *tsk, u64 cputime)
++{
++	if (unlikely(!cpuacct_subsys.active))
++		return;
++
++/* 
++ * If schedstats are not enabled, we don't accumulate task_group
++ * execution time in exec_clock. Therefore, we need to walk the
++ * structure all over again here.
++ *
++ * If we're comounted, we'll just use the same tg pointers already
++ * in the cache, since we now use cgrp's parent as cpuacct parent
++ * pointer
++ */
++#ifdef CONFIG_SCHEDSTATS
++	if (!cpu_cpuacct_comounted)
++#endif
++		__cpuacct_charge(tsk, cputime);
++}
++
++void cpuacct_bind(struct cgroup_subsys *ss, struct cgroup *root)
++{
++	cpu_cpuacct_update_jump_labels(root, root_cpuacct.css.cgroup->root);
++}
++
+ struct cgroup_subsys cpuacct_subsys = {
+ 	.name = "cpuacct",
+ 	.create = cpuacct_create,
+ 	.destroy = cpuacct_destroy,
+ 	.populate = cpuacct_populate,
+ 	.subsys_id = cpuacct_subsys_id,
++	.bind = cpuacct_bind,
+ };
+ #endif	/* CONFIG_CGROUP_CPUACCT */
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index f42ae7f..f92611c 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -894,6 +894,11 @@ static void update_curr_rt(struct rq *rq)
+ 
+ 	sched_rt_avg_update(rq, delta_exec);
+ 
++	for_each_sched_rt_entity(rt_se) {
++		rt_rq = rt_rq_of_se(rt_se);
++		schedstat_add(rt_rq, exec_clock, delta_exec);
++	}
++
+ 	if (!rt_bandwidth_enabled())
+ 		return;
+ 
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 8a2c768..53d13dd 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -208,6 +208,7 @@ struct cfs_rq {
+ 	unsigned long nr_running, h_nr_running;
+ 
+ 	u64 exec_clock;
++	u64 prev_exec_clock;
+ 	u64 min_vruntime;
+ #ifndef CONFIG_64BIT
+ 	u64 min_vruntime_copy;
+@@ -307,6 +308,8 @@ struct rt_rq {
+ 	struct plist_head pushable_tasks;
+ #endif
+ 	int rt_throttled;
++	u64 exec_clock;
++	u64 prev_exec_clock;
+ 	u64 rt_time;
+ 	u64 rt_runtime;
+ 	/* Nests inside the rq lock: */
 -- 
-1.7.3.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.7.7.4
