@@ -1,38 +1,54 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
-Subject: Re: [PATCH 4/6] netprio_cgroup: use IS_ENABLED() and family
-Date: Wed, 01 Feb 2012 15:22:59 +0800
-Message-ID: <4F28E853.7000104@cn.fujitsu.com>
-References: <4F28E203.10502@cn.fujitsu.com>	<20120201.015954.2098592611164231843.davem@davemloft.net>	<4F28E48D.3040505@cn.fujitsu.com> <20120201.020738.1965865410881089752.davem@davemloft.net>
+From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Subject: Re: [PATCH 6/6] cls_cgroup: remove redundant rcu_read_lock/unlock
+Date: Wed, 1 Feb 2012 18:23:07 +1100
+Message-ID: <20120201072307.GA6358@gondor.apana.org.au>
+References: <4F28E1D1.900@cn.fujitsu.com> <4F28E22A.703@cn.fujitsu.com> <1328080039.22641.2.camel@edumazet-laptop> <4F28E7A0.6000309@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120201.020738.1965865410881089752.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4F28E7A0.6000309-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, nhorman@tuxdriver.com
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
->>> Do not mix genuine bug fixes and cleanups.
->>>
->>> Otherwise I cannot apply your bug fixes to the 'net' tree.
->>>
->>> Seperate things out, submit only pure bug fixes first, then
->>> later once those changes propagate you can submit the cleanups.
->>>
->>
->> I did seperate them out, so the first three patches are fixes,
->> and others are cleanups. I can resend cleanup patches once
->> fixes hit mainline.
+On Wed, Feb 01, 2012 at 03:20:00PM +0800, Li Zefan wrote:
+> Cc: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
 > 
-> Seperate them in different groups, don't submit them as one
-> collection.  And definitely don't submit them all at the
-> same damn time!  You have to wait with the dependent cleanups
-> until the fixes go in, and subsequently show up in my net-next
-> tree.
+> >> diff --git a/net/core/sock.c b/net/core/sock.c
+> >> index 213c856..c0bab23 100644
+> >> --- a/net/core/sock.c
+> >> +++ b/net/core/sock.c
+> >> @@ -1160,9 +1160,7 @@ void sock_update_classid(struct sock *sk)
+> >>  {
+> >>  	u32 classid;
+> >>  
+> >> -	rcu_read_lock();  /* doing current task, which cannot vanish. */
+> >>  	classid = task_cls_classid(current);
+> >> -	rcu_read_unlock();
+> >>  	if (classid && classid != sk->sk_classid)
+> >>  		sk->sk_classid = classid;
+> > 
+> > Yes, this seems fine.
+> > 
+> > Then, I wonder why we do the "if (classid && classid != sk->sk_classid)"
+> > 
+> > before the :
+> > 
+> > 	sk->sk_classid = classid;
+> > 
+> > This seems unnecessary checks.
+> > 
 > 
-> I'm not applying this stuff until you submit it properly, in
-> two stages.
-> 
+> I was wondering about this too. He who added this may provide us with an
+> answer.
 
-I'll do this when I get some comments/acks.
+Well writing a cache-line unnecessarily is bad.
+
+Cheers,
+-- 
+Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
