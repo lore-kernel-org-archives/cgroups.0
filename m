@@ -1,39 +1,23 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
-Subject: [PATCH 6/6] cls_cgroup: remove redundant rcu_read_lock/unlock
-Date: Wed, 01 Feb 2012 14:56:42 +0800
-Message-ID: <4F28E22A.703@cn.fujitsu.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH 4/6] netprio_cgroup: use IS_ENABLED() and family
+Date: Wed, 01 Feb 2012 01:59:54 -0500 (EST)
+Message-ID: <20120201.015954.2098592611164231843.davem@davemloft.net>
 References: <4F28E1D1.900@cn.fujitsu.com>
+	<4F28E203.10502@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <4F28E1D1.900@cn.fujitsu.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F28E203.10502-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Neil Horman <nhorman@tuxdriver.com>
+Content-Type: Text/Plain; charset="us-ascii"
+To: lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org
 
-We've already used rcu_read_lock/unlock inside task_classid(),
-so don't use the lock/unlock pair twice in this hot path.
 
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
----
- net/core/sock.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Do not mix genuine bug fixes and cleanups.
 
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 213c856..c0bab23 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -1160,9 +1160,7 @@ void sock_update_classid(struct sock *sk)
- {
- 	u32 classid;
- 
--	rcu_read_lock();  /* doing current task, which cannot vanish. */
- 	classid = task_cls_classid(current);
--	rcu_read_unlock();
- 	if (classid && classid != sk->sk_classid)
- 		sk->sk_classid = classid;
- }
--- 
-1.7.3.1
+Otherwise I cannot apply your bug fixes to the 'net' tree.
+
+Seperate things out, submit only pure bug fixes first, then
+later once those changes propagate you can submit the cleanups.
