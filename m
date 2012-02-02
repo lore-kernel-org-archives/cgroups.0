@@ -1,80 +1,54 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 00/10] cgroups: Task counter subsystem v8
-Date: Thu, 2 Feb 2012 15:50:02 +0100
-Message-ID: <20120202145000.GC9071@somewhere.redhat.com>
-References: <1328067470-5980-1-git-send-email-fweisbec@gmail.com>
- <20120201163126.GA19837@google.com>
- <20120201184959.GH6731@somewhere.redhat.com>
- <20120201115107.93e11471.akpm@linux-foundation.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: remove cgroup_subsys argument from callbacks
+Date: Thu, 2 Feb 2012 09:26:11 -0800
+Message-ID: <20120202172611.GF19837@google.com>
+References: <4F278078.5030703@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=aR5XioQHZtKMnK/RZnkLjRMnqXB3zhFLY+TjSSUJbpo=;
-        b=aRakenWTu2hp3g1Ta4GSThQQoMBsrIj6xmuoc7yCO6+GUsRtc9FT02KkJKlzsrljeG
-         2x10OYjoG/PgtMOXHIP4GTcXeby0lbWJlx1QNNmE5MEO5uTAAwW62lICkUNYGBJWksPa
-         TZ7026EV69aCcVtCwSSsAXwpxx/TU31uNp3Wg=
+        bh=h/EYzfFDEnFDl8rsT0oTY/hzguWtB8Of0yiXu/dQtbo=;
+        b=en6h5NHCoXJKEOh6yZyhlSc51VmAXrwU3tsSWd3vhqCTZmOHu7DR+3a7p+G5vi0Fza
+         jnSFktEC1wrPmSAPJtmkY42udedEvNgT4o3CP2bAC/JrMrosBaKpB9R1xzhq6eu9noQw
+         Wl9sduDWEfMhuM5yGVfShGWf9yfA5/sWpCmrw=
 Content-Disposition: inline
-In-Reply-To: <20120201115107.93e11471.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <4F278078.5030703@cn.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+To: Li Zefan <lizf@cn.fujitsu.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, container cgroup <containers@lists.linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, netdev <netdev@vger.kernel.org>
 
-On Wed, Feb 01, 2012 at 11:51:07AM -0800, Andrew Morton wrote:
-> On Wed, 1 Feb 2012 19:50:01 +0100
-> Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Tue, Jan 31, 2012 at 01:47:36PM +0800, Li Zefan wrote:
+> The argument is not used at all, and it's not necessary, because
+> a specific callback handler of course knows which subsys it
+> belongs to.
 > 
-> > On Wed, Feb 01, 2012 at 08:31:26AM -0800, Tejun Heo wrote:
-> > > On Wed, Feb 01, 2012 at 04:37:40AM +0100, Frederic Weisbecker wrote:
-> > > > Changes In this version:
-> > > > 
-> > > > - Split 32/64 bits version of res_counter_write_u64() [1/10]
-> > > >   Courtesy of Kirill A. Shutemov
-> > > > 
-> > > > - Added Kirill's ack [8/10]
-> > > > 
-> > > > - Added selftests [9/10], [10/10]
-> > > > 
-> > > > Please consider for merging. At least two users want this feature:
-> > > 
-> > > Has there been further discussion about this approach?  IIRC, we
-> > > weren't sure whether this should be merged.
-> > 
-> > The doubts I have noticed were:
-> > 
-> > Q: Can't we rather focus on a global solution to fight forkbombs?
-> > 
-> > If we can find a reliable solution that works in any case and that
-> > prevent from any forkbomb to impact the rest of the system then it
-> > may be an acceptable solution. But I'm not aware of such feature.
-> > 
-> > Besides, another point in having this task counter is that we
-> > have a per container limit. Assuming all containers are running under
-> > the same user, we can protect against a container starving all others
-> > with a massive amount of processes close to the NR_PROC rlimit.
-> > 
-> > Q: Can/should we implement a limitation on the number of "fork" as well?
-> >    (as in https://lkml.org/lkml/2011/11/3/233 )
-> > 
-> > I'm still not sure about why such a thing is needed. Is it really something we
-> > want? Why can't the task counter be used instead?
-> > 
-> > I need more details from the author of this patch. But I doubt we can merge
-> > both subsystems, they have pretty different semantics.
+> Now only ->pupulate() takes this argument, because the handlers of
+> this callback always call cgroup_add_file()/cgroup_add_files().
 > 
-> What I struggle with is "is this feature useful enough to warrant
-> merging it"?
+> So we reduce a few lines of code, though the shrinking of object size
+> is minimal.
+> 
+>  16 files changed, 113 insertions(+), 162 deletions(-)
+> 
+>    text    data     bss     dec     hex filename
+> 5486240  656987 7039960 13183187         c928d3 vmlinux.o.orig
+> 5486170  656987 7039960 13183117         c9288d vmlinux.o
+> 
+> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
 
-The reason why I've been working on it is because we need this feature
-(at least) for LXC.
+Nice cleanup, applied to cgroup/for-3.4.  Thank you!
 
-Two people from our teams have jumped onto the discussion to express
-that they want this feature and why:
+-- 
+tejun
 
-https://lkml.org/lkml/2011/12/13/309
-https://lkml.org/lkml/2011/12/13/364
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
