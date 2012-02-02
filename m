@@ -1,38 +1,39 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Sha Zhengju <handai.szj@gmail.com>
 Subject: [PATCH] memcg: make threshold index in the right position
-Date: Thu,  2 Feb 2012 15:58:14 +0800
-Message-ID: <1328169494-10249-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Date: Thu,  2 Feb 2012 17:45:19 +0800
+Message-ID: <1328175919-11209-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=ys+dCIi8mtx5VOSUpKLr4GjcRaAPnruwd14EZUVRSSc=;
-        b=Bf0dthlWXusq+2G/gpUw3BZiOZwmvmJr+Ao+feUvp3dQg6iJml6TZbCC8PInZGgztO
-         oJ44UksSU2z8bMTeLymgp9DJSKUv5xGiDPl43czJmuFjtiBz8GzPGwYAjBETKGCUfV80
-         It7seF3bBMsGhkQKV7vff0VgAXcAP/xPwc0W8=
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=hlTjLcQ9C1VpUkY479+wWPqH5wFCZJotcwZE7/Jf7zA=;
+        b=C7DsKESlsZCTLL+AuUee/IQJazILM8LQGdAnYg535fi5md2z3BkFPcGcd101fY6Gev
+         n0j43hvPcd+Ye0lCyb2kvXgzj59cR08zPUqfRCW8d3M3BlJkB1kTg7Fe9xGXAcjzZ+Jw
+         sPxUQdbfOkx6T4CaIhnjiypuUtiq88/89Sw08=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: Sha Zhengju <handai.szj@taobao.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, "Kirill A. Shutemov" <kirill@shutemov.name>
 
-From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+From: Sha Zhengju <handai.szj@taobao.com>
 
 Index current_threshold may point to threshold that just equal to
 usage after __mem_cgroup_threshold is triggerd. But after registering
-a new event, it will change (pointing to threshold just below usage). 
+a new event, it will change (pointing to threshold just below usage).
 So make it consistent here.
 
-Cc: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Kirill A. Shutemov <kirill@shutemov.name>
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
 ---
- mm/memcontrol.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ mm/memcontrol.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 22d94f5..ba46a01 100644
+index 22d94f5..79f4a58 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
 @@ -183,7 +183,7 @@ struct mem_cgroup_threshold {
@@ -44,7 +45,7 @@ index 22d94f5..ba46a01 100644
  	int current_threshold;
  	/* Size of entries[] */
  	unsigned int size;
-@@ -4319,7 +4319,7 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+@@ -4319,14 +4319,15 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
  	/* Find current threshold */
  	new->current_threshold = -1;
  	for (i = 0; i < size; i++) {
@@ -53,5 +54,21 @@ index 22d94f5..ba46a01 100644
  			/*
  			 * new->current_threshold will not be used until
  			 * rcu_assign_pointer(), so it's safe to increment
+ 			 * it here.
+ 			 */
+ 			++new->current_threshold;
+-		}
++		} else
++			break;
+ 	}
+ 
+ 	/* Free old spare buffer and save old primary buffer as spare */
 -- 
 1.7.4.1
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
