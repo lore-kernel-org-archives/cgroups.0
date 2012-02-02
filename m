@@ -1,81 +1,80 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 4/5] expose fine-grained per-cpu data for cpuacct stats
-Date: Thu,  2 Feb 2012 18:19:31 +0400
-Message-ID: <1328192372-9551-5-git-send-email-glommer@parallels.com>
-References: <1328192372-9551-1-git-send-email-glommer@parallels.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 00/10] cgroups: Task counter subsystem v8
+Date: Thu, 2 Feb 2012 15:50:02 +0100
+Message-ID: <20120202145000.GC9071@somewhere.redhat.com>
+References: <1328067470-5980-1-git-send-email-fweisbec@gmail.com>
+ <20120201163126.GA19837@google.com>
+ <20120201184959.GH6731@somewhere.redhat.com>
+ <20120201115107.93e11471.akpm@linux-foundation.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1328192372-9551-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=aR5XioQHZtKMnK/RZnkLjRMnqXB3zhFLY+TjSSUJbpo=;
+        b=aRakenWTu2hp3g1Ta4GSThQQoMBsrIj6xmuoc7yCO6+GUsRtc9FT02KkJKlzsrljeG
+         2x10OYjoG/PgtMOXHIP4GTcXeby0lbWJlx1QNNmE5MEO5uTAAwW62lICkUNYGBJWksPa
+         TZ7026EV69aCcVtCwSSsAXwpxx/TU31uNp3Wg=
+Content-Disposition: inline
+In-Reply-To: <20120201115107.93e11471.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-The cpuacct cgroup already exposes user and system numbers in a per-cgroup
-fashion. But they are a summation along the whole group, not a per-cpu figure.
-Also, they are coarse-grained version of the stats usually shown at places
-like /proc/stat.
+On Wed, Feb 01, 2012 at 11:51:07AM -0800, Andrew Morton wrote:
+> On Wed, 1 Feb 2012 19:50:01 +0100
+> Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> 
+> > On Wed, Feb 01, 2012 at 08:31:26AM -0800, Tejun Heo wrote:
+> > > On Wed, Feb 01, 2012 at 04:37:40AM +0100, Frederic Weisbecker wrote:
+> > > > Changes In this version:
+> > > > 
+> > > > - Split 32/64 bits version of res_counter_write_u64() [1/10]
+> > > >   Courtesy of Kirill A. Shutemov
+> > > > 
+> > > > - Added Kirill's ack [8/10]
+> > > > 
+> > > > - Added selftests [9/10], [10/10]
+> > > > 
+> > > > Please consider for merging. At least two users want this feature:
+> > > 
+> > > Has there been further discussion about this approach?  IIRC, we
+> > > weren't sure whether this should be merged.
+> > 
+> > The doubts I have noticed were:
+> > 
+> > Q: Can't we rather focus on a global solution to fight forkbombs?
+> > 
+> > If we can find a reliable solution that works in any case and that
+> > prevent from any forkbomb to impact the rest of the system then it
+> > may be an acceptable solution. But I'm not aware of such feature.
+> > 
+> > Besides, another point in having this task counter is that we
+> > have a per container limit. Assuming all containers are running under
+> > the same user, we can protect against a container starving all others
+> > with a massive amount of processes close to the NR_PROC rlimit.
+> > 
+> > Q: Can/should we implement a limitation on the number of "fork" as well?
+> >    (as in https://lkml.org/lkml/2011/11/3/233 )
+> > 
+> > I'm still not sure about why such a thing is needed. Is it really something we
+> > want? Why can't the task counter be used instead?
+> > 
+> > I need more details from the author of this patch. But I doubt we can merge
+> > both subsystems, they have pretty different semantics.
+> 
+> What I struggle with is "is this feature useful enough to warrant
+> merging it"?
 
-I want to have enough cgroup data to emulate the /proc/stat interface. To
-achieve that, I am creating a new file "stat_percpu" that displays the
-fine-grained per-cpu data. The original data is left alone.
+The reason why I've been working on it is because we need this feature
+(at least) for LXC.
 
-Note that in this first version, I am using clock_t units, being quite
-proc-centric. It made my testing easier, but I am happy to show any units
-you guys would prefer.
+Two people from our teams have jumped onto the discussion to express
+that they want this feature and why:
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
----
- kernel/sched/core.c |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
-
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 91ea913..013ca9c 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -8308,6 +8308,29 @@ static int cpuacct_stats_show(struct cgroup *cgrp, struct cftype *cft,
- 	return 0;
- }
- 
-+static int cpuacct_stats_percpu_show(struct cgroup *cgrp, struct cftype *cft,
-+				     struct seq_file *m)
-+{
-+	struct cpuacct *ca = cgroup_ca(cgrp);
-+	int cpu;
-+
-+	for_each_online_cpu(cpu) {
-+		struct kernel_cpustat *kcpustat = per_cpu_ptr(ca->cpustat, cpu);
-+		seq_printf(m,
-+		"cpu%d %llu %llu %llu %llu %llu %llu %llu\n", cpu,
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_USER]),
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_NICE]),
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_SYSTEM]),
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_IRQ]),
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_SOFTIRQ]),
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_GUEST]),
-+		(unsigned long long)cputime_to_clock_t(kcpustat->cpustat[CPUTIME_GUEST_NICE])
-+		);
-+	}
-+
-+	return 0;
-+}
-+
- static struct cftype files[] = {
- 	{
- 		.name = "usage",
-@@ -8322,6 +8345,11 @@ static struct cftype files[] = {
- 		.name = "stat",
- 		.read_map = cpuacct_stats_show,
- 	},
-+	{
-+		.name = "stat_percpu",
-+		.read_seq_string = cpuacct_stats_percpu_show,
-+	},
-+
- };
- 
- static int cpuacct_populate(struct cgroup_subsys *ss, struct cgroup *cgrp)
--- 
-1.7.7.4
+https://lkml.org/lkml/2011/12/13/309
+https://lkml.org/lkml/2011/12/13/364
