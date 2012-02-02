@@ -1,68 +1,57 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH 00/10] cgroups: Task counter subsystem v8
-Date: Wed, 1 Feb 2012 11:51:07 -0800
-Message-ID: <20120201115107.93e11471.akpm@linux-foundation.org>
-References: <1328067470-5980-1-git-send-email-fweisbec@gmail.com>
-	<20120201163126.GA19837@google.com>
-	<20120201184959.GH6731@somewhere.redhat.com>
-Mime-Version: 1.0
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] memcg: make threshold index in the right position
+Date: Thu,  2 Feb 2012 15:58:14 +0800
+Message-ID: <1328169494-10249-1-git-send-email-handai.szj@taobao.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=ys+dCIi8mtx5VOSUpKLr4GjcRaAPnruwd14EZUVRSSc=;
+        b=Bf0dthlWXusq+2G/gpUw3BZiOZwmvmJr+Ao+feUvp3dQg6iJml6TZbCC8PInZGgztO
+         oJ44UksSU2z8bMTeLymgp9DJSKUv5xGiDPl43czJmuFjtiBz8GzPGwYAjBETKGCUfV80
+         It7seF3bBMsGhkQKV7vff0VgAXcAP/xPwc0W8=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20120201184959.GH6731-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 
-On Wed, 1 Feb 2012 19:50:01 +0100
-Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-> On Wed, Feb 01, 2012 at 08:31:26AM -0800, Tejun Heo wrote:
-> > On Wed, Feb 01, 2012 at 04:37:40AM +0100, Frederic Weisbecker wrote:
-> > > Changes In this version:
-> > > 
-> > > - Split 32/64 bits version of res_counter_write_u64() [1/10]
-> > >   Courtesy of Kirill A. Shutemov
-> > > 
-> > > - Added Kirill's ack [8/10]
-> > > 
-> > > - Added selftests [9/10], [10/10]
-> > > 
-> > > Please consider for merging. At least two users want this feature:
-> > 
-> > Has there been further discussion about this approach?  IIRC, we
-> > weren't sure whether this should be merged.
-> 
-> The doubts I have noticed were:
-> 
-> Q: Can't we rather focus on a global solution to fight forkbombs?
-> 
-> If we can find a reliable solution that works in any case and that
-> prevent from any forkbomb to impact the rest of the system then it
-> may be an acceptable solution. But I'm not aware of such feature.
-> 
-> Besides, another point in having this task counter is that we
-> have a per container limit. Assuming all containers are running under
-> the same user, we can protect against a container starving all others
-> with a massive amount of processes close to the NR_PROC rlimit.
-> 
-> Q: Can/should we implement a limitation on the number of "fork" as well?
->    (as in https://lkml.org/lkml/2011/11/3/233 )
-> 
-> I'm still not sure about why such a thing is needed. Is it really something we
-> want? Why can't the task counter be used instead?
-> 
-> I need more details from the author of this patch. But I doubt we can merge
-> both subsystems, they have pretty different semantics.
+Index current_threshold may point to threshold that just equal to
+usage after __mem_cgroup_threshold is triggerd. But after registering
+a new event, it will change (pointing to threshold just below usage). 
+So make it consistent here.
 
-What I struggle with is "is this feature useful enough to warrant
-merging it"?
+Cc: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 22d94f5..ba46a01 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -183,7 +183,7 @@ struct mem_cgroup_threshold {
+ 
+ /* For threshold */
+ struct mem_cgroup_threshold_ary {
+-	/* An array index points to threshold just below usage. */
++	/* An array index points to threshold just below or equal to usage. */
+ 	int current_threshold;
+ 	/* Size of entries[] */
+ 	unsigned int size;
+@@ -4319,7 +4319,7 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+ 	/* Find current threshold */
+ 	new->current_threshold = -1;
+ 	for (i = 0; i < size; i++) {
+-		if (new->entries[i].threshold < usage) {
++		if (new->entries[i].threshold <= usage) {
+ 			/*
+ 			 * new->current_threshold will not be used until
+ 			 * rcu_assign_pointer(), so it's safe to increment
+-- 
+1.7.4.1
