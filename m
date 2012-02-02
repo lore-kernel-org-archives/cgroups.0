@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 1/5] make steal time's to-tick routine generic
-Date: Thu,  2 Feb 2012 18:19:28 +0400
-Message-ID: <1328192372-9551-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH 3/5] account guest time per-cgroup as well.
+Date: Thu,  2 Feb 2012 18:19:30 +0400
+Message-ID: <1328192372-9551-4-git-send-email-glommer@parallels.com>
 References: <1328192372-9551-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1328192372-9551-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,43 +13,43 @@ Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-In this patchset, I am exposing other data as ticks as well,
-that are originally nanoseconds. Whether or not I should do it,
-it is open for debate, and I am happy to drop this patch if we
-decide not to. But right now this exists to support the
-further patch that uses it.
+We already track multiple tick statistics per-cgroup, using
+the task_group_account_field facility. This patch accounts
+guest_time in that manner as well.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 ---
- kernel/sched/core.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+ kernel/sched/core.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index b9be4ba..455810f 100644
+index fe35316..91ea913 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -850,13 +850,18 @@ EXPORT_SYMBOL_GPL(account_system_vtime);
- 
- #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
- 
-+static inline u64 nsec_to_tick(u64 nsec)
-+{
-+	if (unlikely(nsec > NSEC_PER_SEC))
-+		return div_u64(nsec, TICK_NSEC);
-+
-+	return __iter_div_u64_rem(nsec, TICK_NSEC, &nsec);
-+}
-+
- #ifdef CONFIG_PARAVIRT
- static inline u64 steal_ticks(u64 steal)
+@@ -2734,8 +2734,6 @@ void account_user_time(struct task_struct *p, cputime_t cputime,
+ static void account_guest_time(struct task_struct *p, cputime_t cputime,
+ 			       cputime_t cputime_scaled)
  {
--	if (unlikely(steal > NSEC_PER_SEC))
--		return div_u64(steal, TICK_NSEC);
+-	u64 *cpustat = kcpustat_this_cpu->cpustat;
 -
--	return __iter_div_u64_rem(steal, TICK_NSEC, &steal);
-+	return nsec_to_tick(steal);
+ 	/* Add guest time to process. */
+ 	p->utime += cputime;
+ 	p->utimescaled += cputime_scaled;
+@@ -2744,11 +2742,11 @@ static void account_guest_time(struct task_struct *p, cputime_t cputime,
+ 
+ 	/* Add guest time to cpustat. */
+ 	if (TASK_NICE(p) > 0) {
+-		cpustat[CPUTIME_NICE] += (__force u64) cputime;
+-		cpustat[CPUTIME_GUEST_NICE] += (__force u64) cputime;
++		task_group_account_field(p, CPUTIME_NICE, (__force u64) cputime);
++		task_group_account_field(p, CPUTIME_GUEST, (__force u64) cputime);
+ 	} else {
+-		cpustat[CPUTIME_USER] += (__force u64) cputime;
+-		cpustat[CPUTIME_GUEST] += (__force u64) cputime;
++		task_group_account_field(p, CPUTIME_USER, (__force u64) cputime);
++		task_group_account_field(p, CPUTIME_GUEST, (__force u64) cputime);
+ 	}
  }
- #endif
  
 -- 
 1.7.7.4
