@@ -1,54 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: remove cgroup_subsys argument from callbacks
-Date: Thu, 2 Feb 2012 09:26:11 -0800
-Message-ID: <20120202172611.GF19837@google.com>
-References: <4F278078.5030703@cn.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] memcg: make threshold index in the right position
+Date: Fri, 3 Feb 2012 10:35:30 +0900
+Message-ID: <20120203103530.417b7d9c.kamezawa.hiroyu@jp.fujitsu.com>
+References: <1328175919-11209-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=h/EYzfFDEnFDl8rsT0oTY/hzguWtB8Of0yiXu/dQtbo=;
-        b=en6h5NHCoXJKEOh6yZyhlSc51VmAXrwU3tsSWd3vhqCTZmOHu7DR+3a7p+G5vi0Fza
-         jnSFktEC1wrPmSAPJtmkY42udedEvNgT4o3CP2bAC/JrMrosBaKpB9R1xzhq6eu9noQw
-         Wl9sduDWEfMhuM5yGVfShGWf9yfA5/sWpCmrw=
-Content-Disposition: inline
-In-Reply-To: <4F278078.5030703@cn.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1328175919-11209-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf@cn.fujitsu.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, container cgroup <containers@lists.linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, netdev <netdev@vger.kernel.org>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 
-On Tue, Jan 31, 2012 at 01:47:36PM +0800, Li Zefan wrote:
-> The argument is not used at all, and it's not necessary, because
-> a specific callback handler of course knows which subsys it
-> belongs to.
-> 
-> Now only ->pupulate() takes this argument, because the handlers of
-> this callback always call cgroup_add_file()/cgroup_add_files().
-> 
-> So we reduce a few lines of code, though the shrinking of object size
-> is minimal.
-> 
->  16 files changed, 113 insertions(+), 162 deletions(-)
-> 
->    text    data     bss     dec     hex filename
-> 5486240  656987 7039960 13183187         c928d3 vmlinux.o.orig
-> 5486170  656987 7039960 13183117         c9288d vmlinux.o
-> 
-> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+On Thu,  2 Feb 2012 17:45:19 +0800
+Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-Nice cleanup, applied to cgroup/for-3.4.  Thank you!
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> 
+> Index current_threshold may point to threshold that just equal to
+> usage after __mem_cgroup_threshold is triggerd. But after registering
+> a new event, it will change (pointing to threshold just below usage).
+> So make it consistent here.
+> 
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
--- 
-tejun
+Could you add the explanation you did to Kirill into the patch description ?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Thanks,
+-Kame
+
+
+> ---
+>  mm/memcontrol.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 22d94f5..79f4a58 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -183,7 +183,7 @@ struct mem_cgroup_threshold {
+>  
+>  /* For threshold */
+>  struct mem_cgroup_threshold_ary {
+> -	/* An array index points to threshold just below usage. */
+> +	/* An array index points to threshold just below or equal to usage. */
+>  	int current_threshold;
+>  	/* Size of entries[] */
+>  	unsigned int size;
+> @@ -4319,14 +4319,15 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+>  	/* Find current threshold */
+>  	new->current_threshold = -1;
+>  	for (i = 0; i < size; i++) {
+> -		if (new->entries[i].threshold < usage) {
+> +		if (new->entries[i].threshold <= usage) {
+>  			/*
+>  			 * new->current_threshold will not be used until
+>  			 * rcu_assign_pointer(), so it's safe to increment
+>  			 * it here.
+>  			 */
+>  			++new->current_threshold;
+> -		}
+> +		} else
+> +			break;
+>  	}
+>  
+>  	/* Free old spare buffer and save old primary buffer as spare */
+> -- 
+> 1.7.4.1
+> 
+> 
