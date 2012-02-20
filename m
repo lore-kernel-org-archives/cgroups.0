@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V1 7/9] hugetlbfs: Add truncate region functions
-Date: Mon, 20 Feb 2012 16:51:40 +0530
-Message-ID: <1329736902-26870-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V1 9/9] hugetlbfs: Add HugeTLB controller documentation
+Date: Mon, 20 Feb 2012 16:51:42 +0530
+Message-ID: <1329736902-26870-10-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1329736902-26870-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1329736902-26870-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,213 +15,72 @@ Cc: linux-kernel@vger.kernel.org, cgroups@kernel.org, "Aneesh Kumar K.V" <aneesh
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This will later be used by the task migration patches.
-
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- fs/hugetlbfs/hugetlb_cgroup.c  |   84 ++++++++++++++++++++++++++++++++++++++++
- fs/hugetlbfs/region.c          |   58 +++++++++++++++++++++++++++
- include/linux/hugetlb_cgroup.h |   12 +++++-
- 3 files changed, 153 insertions(+), 1 deletions(-)
+ Documentation/cgroups/hugetlb.txt |   54 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 54 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/cgroups/hugetlb.txt
 
-diff --git a/fs/hugetlbfs/hugetlb_cgroup.c b/fs/hugetlbfs/hugetlb_cgroup.c
-index a4c6786..b8b319b 100644
---- a/fs/hugetlbfs/hugetlb_cgroup.c
-+++ b/fs/hugetlbfs/hugetlb_cgroup.c
-@@ -323,6 +323,90 @@ long hugetlb_truncate_cgroup(struct hstate *h,
- 	return chg;
- }
- 
-+long hugetlb_truncate_cgroup_range(struct hstate *h,
-+				   struct list_head *head, long from, long to)
-+{
-+	long chg = 0, csize;
-+	int idx = h - hstates;
-+	struct hugetlb_cgroup *h_cg;
-+	struct file_region *rg, *trg;
+diff --git a/Documentation/cgroups/hugetlb.txt b/Documentation/cgroups/hugetlb.txt
+new file mode 100644
+index 0000000..722aa8e
+--- /dev/null
++++ b/Documentation/cgroups/hugetlb.txt
+@@ -0,0 +1,54 @@
++HugeTLB controller
++-----------------
 +
-+	/* Locate the region we are either in or before. */
-+	list_for_each_entry(rg, head, link)
-+		if (from <= rg->to)
-+			break;
-+	if (&rg->link == head)
-+		return 0;
++The HugetTLB controller is used to group tasks using cgroups and
++limit the HugeTLB pages used by these groups of tasks. HugetTLB cgroup
++enforce the limit during mmap(2). This enables application to fall back
++to allocation using smaller page size if the cgroup resource limit prevented
++them from allocating HugeTLB pages.
 +
-+	/* If we are in the middle of a region then adjust it. */
-+	if (from > rg->from) {
-+		if (to < rg->to) {
-+			struct file_region *nrg;
-+			/* rg->from from to rg->to */
-+			nrg = kmalloc(sizeof(*nrg), GFP_KERNEL);
-+			/*
-+			 * If we fail to allocate we return the
-+			 * with the 0 charge . Later a complete
-+			 * truncate will reclaim the left over space
-+			 */
-+			if (!nrg)
-+				return 0;
-+			nrg->from = to;
-+			nrg->to = rg->to;
-+			nrg->data = rg->data;
-+			INIT_LIST_HEAD(&nrg->link);
-+			list_add(&nrg->link, &rg->link);
 +
-+			/* Adjust the rg entry */
-+			rg->to = from;
-+			chg = to - from;
-+			h_cg = (struct hugetlb_cgroup *)rg->data;
-+			if (!hugetlb_cgroup_is_root(h_cg)) {
-+				csize = chg * huge_page_size(h);
-+				res_counter_uncharge(&h_cg->memhuge[idx],
-+						     csize);
-+			}
-+			return chg;
-+		}
-+		chg = rg->to - from;
-+		rg->to = from;
-+		h_cg = (struct hugetlb_cgroup *)rg->data;
-+		if (!hugetlb_cgroup_is_root(h_cg)) {
-+			csize = chg * huge_page_size(h);
-+			res_counter_uncharge(&h_cg->memhuge[idx], csize);
-+		}
-+		rg = list_entry(rg->link.next, typeof(*rg), link);
-+	}
-+	/* Drop any remaining regions till to */
-+	list_for_each_entry_safe(rg, trg, rg->link.prev, link) {
-+		if (rg->from >= to)
-+			break;
-+		if (&rg->link == head)
-+			break;
-+		if (rg->to > to) {
-+			/* rg->from to rg->to */
-+			chg += to - rg->from;
-+			rg->from = to;
-+			h_cg = (struct hugetlb_cgroup *)rg->data;
-+			if (!hugetlb_cgroup_is_root(h_cg)) {
-+				csize = (to - rg->from) * huge_page_size(h);
-+				res_counter_uncharge(&h_cg->memhuge[idx],
-+						     csize);
-+			}
-+			return chg;
-+		}
-+		chg += rg->to - rg->from;
-+		h_cg = (struct hugetlb_cgroup *)rg->data;
-+		if (!hugetlb_cgroup_is_root(h_cg)) {
-+			csize = (rg->to - rg->from) * huge_page_size(h);
-+			res_counter_uncharge(&h_cg->memhuge[idx], csize);
-+		}
-+		list_del(&rg->link);
-+		kfree(rg);
-+	}
-+	return chg;
-+}
++The HugetTLB controller supports multi-hierarchy groups and task migration
++across cgroups.
 +
- int hugetlb_priv_page_charge(struct resv_map *map, struct hstate *h, long chg)
- {
- 	long csize;
-diff --git a/fs/hugetlbfs/region.c b/fs/hugetlbfs/region.c
-index d2445fb..8ac63b0 100644
---- a/fs/hugetlbfs/region.c
-+++ b/fs/hugetlbfs/region.c
-@@ -200,3 +200,61 @@ long region_count(struct list_head *head, long f, long t)
- 
- 	return chg;
- }
++HugeTLB groups can be created by first mounting the cgroup filesystem.
 +
-+long region_truncate_range(struct list_head *head, long from, long to)
-+{
-+	long chg = 0;
-+	struct file_region *rg, *trg;
++# mount -t cgroup -o hugetlb none /sys/fs/cgroup
 +
-+	/* Locate the region we are either in or before. */
-+	list_for_each_entry(rg, head, link)
-+		if (from <= rg->to)
-+			break;
-+	if (&rg->link == head)
-+		return 0;
++With the above step, the initial or the root HugeTLB cgroup becomes
++visible at /sys/fs/cgroup. At bootup, this group includes all the tasks in
++the system. /sys/fs/cgroup/tasks lists the tasks in this cgroup. HugeTLB
++cgroup create seperate limit, usage and max_usage files for each huge page
++size supported. An example listing is given below
 +
-+	/* If we are in the middle of a region then adjust it. */
-+	if (from > rg->from) {
-+		if (to < rg->to) {
-+			struct file_region *nrg;
-+			/* rf->from f t rg->to */
-+			nrg = kmalloc(sizeof(*nrg), GFP_KERNEL);
-+			/*
-+			 * If we fail to allocate we return the
-+			 * with the 0 charge . Later a complete
-+			 * truncate will reclaim the left over space
-+			 */
-+			if (!nrg)
-+				return 0;
-+			nrg->from = to;
-+			nrg->to = rg->to;
-+			nrg->data = rg->data;
-+			INIT_LIST_HEAD(&nrg->link);
-+			list_add(&nrg->link, &rg->link);
++hugetlb.16GB.limit_in_bytes
++hugetlb.16GB.max_usage_in_bytes
++hugetlb.16GB.usage_in_bytes
++hugetlb.16MB.limit_in_bytes
++hugetlb.16MB.max_usage_in_bytes
++hugetlb.16MB.usage_in_bytes
 +
-+			/* Adjust the rg entry */
-+			rg->to = from;
-+			chg = to - from;
-+			return chg;
-+		}
-+		chg = rg->to - from;
-+		rg->to = from;
-+		rg = list_entry(rg->link.next, typeof(*rg), link);
-+	}
-+	/* Drop any remaining regions till to */
-+	list_for_each_entry_safe(rg, trg, rg->link.prev, link) {
-+		if (rg->from >= to)
-+			break;
-+		if (&rg->link == head)
-+			break;
-+		if (rg->to > to) {
-+			chg += to - rg->from;
-+			rg->from = to;
-+			return chg;
-+		}
-+		chg += rg->to - rg->from;
-+		list_del(&rg->link);
-+		kfree(rg);
-+	}
-+	return chg;
-+}
-diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-index eaad86b..68c1d61 100644
---- a/include/linux/hugetlb_cgroup.h
-+++ b/include/linux/hugetlb_cgroup.h
-@@ -27,7 +27,7 @@ extern void region_add(struct list_head *head, long f, long t,
- 		       unsigned long data);
- extern long region_truncate(struct list_head *head, long end);
- extern long region_count(struct list_head *head, long f, long t);
--
-+extern long region_truncate_range(struct list_head *head, long from, long end);
- #ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
- extern u64 hugetlb_cgroup_read(struct cgroup *cgroup, struct cftype *cft);
- extern int hugetlb_cgroup_write(struct cgroup *cgroup, struct cftype *cft,
-@@ -40,6 +40,9 @@ extern void hugetlb_page_uncharge(struct list_head *head,
- extern void hugetlb_commit_page_charge(struct list_head *head, long f, long t);
- extern long hugetlb_truncate_cgroup(struct hstate *h,
- 				    struct list_head *head, long from);
-+extern long  hugetlb_truncate_cgroup_range(struct hstate *h,
-+					   struct list_head *head,
-+					   long from, long end);
- extern int hugetlb_priv_page_charge(struct resv_map *map,
- 				    struct hstate *h, long chg);
- extern void hugetlb_priv_page_uncharge(struct resv_map *map,
-@@ -69,6 +72,13 @@ static inline long hugetlb_truncate_cgroup(struct hstate *h,
- 	return region_truncate(head, from);
- }
- 
-+static inline long  hugetlb_truncate_cgroup_range(struct hstate *h,
-+						  struct list_head *head,
-+						  long from, long end)
-+{
-+	return region_truncate_range(head, from, end);
-+}
++/sys/fs/cgroup/hugetlb.<pagesize>.usage_in_bytes  gives the HugeTLB usage
++by this group which is essentially the total size HugeTLB pages obtained
++by all the tasks in the system.
 +
- static inline int hugetlb_priv_page_charge(struct resv_map *map,
- 					   struct hstate *h, long chg)
- {
++New cgroup can be created under root HugeTLB cgroup /sys/fs/cgroup
++
++# cd /sys/fs/cgroup
++# mkdir g1
++# echo $$ > g1/tasks
++
++The above steps create a new group g1 and move the current shell
++process (bash) into it. 16MB HugeTLB pages consumed by this bash and its
++children can be obtained from g1/hugetlb.16MB.usage_in_bytes and the same
++is accumulated in /sys/fs/cgroup/hugetlb.16MB.usage_in_bytes.
++
++We can limit the usage of 16MB hugepage by a hugeTLB cgroup using
++hugetlb.16MB.limit_in_bytes
++
++# echo 16M > /sys/fs/cgroup/g1/hugetlb.16MB.limit_in_bytes
++# hugectl  --heap=16M /root/heap
++libhugetlbfs: WARNING: New heap segment map at 0x20000000000 failed: Cannot allocate memory
++# echo -1 > /sys/fs/cgroup/g1/hugetlb.16MB.limit_in_bytes
++# hugectl  --heap=16M /root/heap
++#
 -- 
 1.7.9
 
