@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 6/7] track dcache per-memcg
-Date: Tue, 21 Feb 2012 15:34:38 +0400
-Message-ID: <1329824079-14449-7-git-send-email-glommer@parallels.com>
+Subject: [PATCH 5/7] shrink support for memcg kmem controller
+Date: Tue, 21 Feb 2012 15:34:37 +0400
+Message-ID: <1329824079-14449-6-git-send-email-glommer@parallels.com>
 References: <1329824079-14449-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1329824079-14449-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,15 +11,18 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 
-This patch allows to track kernel memory used by dentry caches
-in the memory controller. It uses the infrastructure already laid
-down, and register the dcache as the first users of it.
+This patch adds the shrinker interface to memcg proposed kmem
+controller. With this, softlimits starts being meaningful. I didn't
+played to much with softlimits itself, since it is a bit in progress
+for the general case as well. But this patch at least makes vmscan.c
+no longer skip shrink_slab for the memcg case.
 
-A new cache is created for that purpose, and new allocations
-coming from tasks belonging to that cgroup will be serviced from
-the new cache.
+It also allows us to set the hard limit to a lower value than
+current usage, as it is possible for the current memcg: a reclaim
+is carried on, and if we succeed in freeing enough of kernel memory,
+we can lower the limit.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
@@ -29,144 +32,342 @@ CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 CC: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-CC: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+CC: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 ---
- fs/dcache.c            |   38 +++++++++++++++++++++++++++++++++-----
- include/linux/dcache.h |    3 +++
- 2 files changed, 36 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h |    5 +++
+ include/linux/shrinker.h   |    4 ++
+ mm/memcontrol.c            |   87 ++++++++++++++++++++++++++++++++++++++++++--
+ mm/vmscan.c                |   60 +++++++++++++++++++++++++++++--
+ 4 files changed, 150 insertions(+), 6 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index 16a53cc..a452c19 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -86,7 +86,7 @@ __cacheline_aligned_in_smp DEFINE_SEQLOCK(rename_lock);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 6138d10..246b2d4 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -33,12 +33,16 @@ struct mm_struct;
+ struct memcg_kmem_cache {
+ 	struct kmem_cache *cache;
+ 	struct work_struct destroy;
++	struct list_head lru;
++	u32 nr_objects;
+ 	struct mem_cgroup *memcg; /* Should be able to do without this */
+ };
  
- EXPORT_SYMBOL(rename_lock);
+ struct memcg_cache_struct {
+ 	int index;
+ 	struct kmem_cache *cache;
++	int (*shrink_fn)(struct shrinker *shrink, struct shrink_control *sc);
++	struct shrinker shrink;
+ };
  
--static struct kmem_cache *dentry_cache __read_mostly;
-+static struct memcg_kmem_cache dentry_cache __read_mostly;
+ enum memcg_cache_indexes {
+@@ -53,6 +57,7 @@ struct mem_cgroup *memcg_from_shrinker(struct shrinker *s);
+ struct memcg_kmem_cache *memcg_cache_get(struct mem_cgroup *memcg, int index);
+ void register_memcg_cache(struct memcg_cache_struct *cache);
+ void memcg_slab_destroy(struct kmem_cache *cache, struct mem_cgroup *memcg);
++bool memcg_slab_reclaim(struct mem_cgroup *memcg);
  
- /*
-  * This is the single most critical data structure when it comes
-@@ -144,7 +144,7 @@ static void __d_free(struct rcu_head *head)
- 	WARN_ON(!list_empty(&dentry->d_alias));
- 	if (dname_external(dentry))
- 		kfree(dentry->d_name.name);
--	kmem_cache_free(dentry_cache, dentry); 
-+	kmem_cache_free(dentry->d_cache->cache, dentry);
- }
- 
- /*
-@@ -234,6 +234,7 @@ static void dentry_lru_add(struct dentry *dentry)
- 	if (list_empty(&dentry->d_lru)) {
- 		spin_lock(&dcache_lru_lock);
- 		list_add(&dentry->d_lru, &dentry->d_sb->s_dentry_lru);
-+		dentry->d_cache->nr_objects++;
- 		dentry->d_sb->s_nr_dentry_unused++;
- 		dentry_stat.nr_unused++;
- 		spin_unlock(&dcache_lru_lock);
-@@ -1178,6 +1179,21 @@ void shrink_dcache_parent(struct dentry * parent)
- }
- EXPORT_SYMBOL(shrink_dcache_parent);
- 
-+static struct memcg_kmem_cache *dcache_pick_cache(void)
-+{
-+	struct mem_cgroup *memcg;
-+	struct memcg_kmem_cache *kmem = &dentry_cache;
-+
-+	rcu_read_lock();
-+	memcg = mem_cgroup_from_task(current);
-+	rcu_read_unlock();
-+
-+	if (memcg)
-+		kmem = memcg_cache_get(memcg, CACHE_DENTRY);
-+
-+	return kmem;
-+}
-+
- /**
-  * __d_alloc	-	allocate a dcache entry
-  * @sb: filesystem it will belong to
-@@ -1192,15 +1208,18 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
- {
- 	struct dentry *dentry;
- 	char *dname;
-+	struct memcg_kmem_cache *cache;
-+
-+	cache = dcache_pick_cache();
- 
--	dentry = kmem_cache_alloc(dentry_cache, GFP_KERNEL);
-+	dentry = kmem_cache_alloc(cache->cache, GFP_KERNEL);
- 	if (!dentry)
- 		return NULL;
- 
- 	if (name->len > DNAME_INLINE_LEN-1) {
- 		dname = kmalloc(name->len + 1, GFP_KERNEL);
- 		if (!dname) {
--			kmem_cache_free(dentry_cache, dentry); 
-+			kmem_cache_free(cache->cache, dentry);
- 			return NULL;
- 		}
- 	} else  {
-@@ -1222,6 +1241,7 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
- 	dentry->d_sb = sb;
- 	dentry->d_op = NULL;
- 	dentry->d_fsdata = NULL;
-+	dentry->d_cache = cache;
- 	INIT_HLIST_BL_NODE(&dentry->d_hash);
- 	INIT_LIST_HEAD(&dentry->d_lru);
- 	INIT_LIST_HEAD(&dentry->d_subdirs);
-@@ -2990,6 +3010,11 @@ static void __init dcache_init_early(void)
- 		INIT_HLIST_BL_HEAD(dentry_hashtable + loop);
- }
- 
-+struct memcg_cache_struct memcg_dcache = {
-+	.index = CACHE_DENTRY,
-+	.shrink_fn = dcache_shrink_memcg,
-+};
-+
- static void __init dcache_init(void)
- {
- 	int loop;
-@@ -2999,7 +3024,7 @@ static void __init dcache_init(void)
- 	 * but it is probably not worth it because of the cache nature
- 	 * of the dcache. 
- 	 */
--	dentry_cache = KMEM_CACHE(dentry,
-+	dentry_cache.cache = KMEM_CACHE(dentry,
- 		SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|SLAB_MEM_SPREAD);
- 
- 	/* Hash may have been set up in dcache_init_early */
-@@ -3018,6 +3043,9 @@ static void __init dcache_init(void)
- 
- 	for (loop = 0; loop < (1 << d_hash_shift); loop++)
- 		INIT_HLIST_BL_HEAD(dentry_hashtable + loop);
-+
-+	memcg_dcache.cache = dentry_cache.cache;
-+	register_memcg_cache(&memcg_dcache);
- }
- 
- /* SLAB cache for __getname() consumers */
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index d64a55b..4d94b657 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -113,6 +113,8 @@ full_name_hash(const unsigned char *name, unsigned int len)
- # endif
- #endif
+ struct kmem_cache *
+ kmem_cache_dup(struct mem_cgroup *memcg, struct kmem_cache *base);
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 07ceb97..11efdba 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -1,6 +1,7 @@
+ #ifndef _LINUX_SHRINKER_H
+ #define _LINUX_SHRINKER_H
  
 +struct mem_cgroup;
-+
- struct dentry {
- 	/* RCU lookup touched fields */
- 	unsigned int d_flags;		/* protected by d_lock */
-@@ -142,6 +144,7 @@ struct dentry {
- 	} d_u;
- 	struct list_head d_subdirs;	/* our children */
- 	struct list_head d_alias;	/* inode alias list */
-+	struct memcg_kmem_cache *d_cache;
+ /*
+  * This struct is used to pass information from page reclaim to the shrinkers.
+  * We consolidate the values for easier extention later.
+@@ -10,6 +11,7 @@ struct shrink_control {
+ 
+ 	/* How many slab objects shrinker() should scan and try to reclaim */
+ 	unsigned long nr_to_scan;
++	struct mem_cgroup *memcg;
  };
  
  /*
+@@ -40,4 +42,6 @@ struct shrinker {
+ #define DEFAULT_SEEKS 2 /* A good number if you don't know better. */
+ extern void register_shrinker(struct shrinker *);
+ extern void unregister_shrinker(struct shrinker *);
++
++extern void register_shrinker_memcg(struct shrinker *);
+ #endif
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1b1db88..9c89a3c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3460,6 +3460,54 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 	return ret;
+ }
+ 
++static int mem_cgroup_resize_kmem_limit(struct mem_cgroup *memcg,
++					unsigned long long val)
++{
++
++	int retry_count;
++	int ret = 0;
++	int children = mem_cgroup_count_children(memcg);
++	u64 curusage, oldusage;
++
++	struct shrink_control shrink = {
++		.gfp_mask = GFP_KERNEL,
++		.memcg = memcg,
++	};
++
++	/*
++	 * For keeping hierarchical_reclaim simple, how long we should retry
++	 * is depends on callers. We set our retry-count to be function
++	 * of # of children which we should visit in this loop.
++	 */
++	retry_count = MEM_CGROUP_RECLAIM_RETRIES * children;
++
++	oldusage = res_counter_read_u64(&memcg->kmem, RES_USAGE);
++
++	while (retry_count) {
++		if (signal_pending(current)) {
++			ret = -EINTR;
++			break;
++		}
++		mutex_lock(&set_limit_mutex);
++		ret = res_counter_set_limit(&memcg->kmem, val);
++		mutex_unlock(&set_limit_mutex);
++		if (!ret)
++			break;
++
++		shrink_slab(&shrink, 0, 0);
++
++		curusage = res_counter_read_u64(&memcg->kmem, RES_USAGE);
++
++		/* Usage is reduced ? */
++		if (curusage >= oldusage)
++			retry_count--;
++		else
++			oldusage = curusage;
++	}
++	return ret;
++
++}
++
+ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 					unsigned long long val)
+ {
+@@ -3895,13 +3943,17 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 			break;
+ 		if (type == _MEM)
+ 			ret = mem_cgroup_resize_limit(memcg, val);
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+ 		else if (type == _KMEM) {
+ 			if (!memcg->kmem_independent_accounting) {
+ 				ret = -EINVAL;
+ 				break;
+ 			}
+-			ret = res_counter_set_limit(&memcg->kmem, val);
+-		} else
++
++			ret = mem_cgroup_resize_kmem_limit(memcg, val);
++		}
++#endif
++		else
+ 			ret = mem_cgroup_resize_memsw_limit(memcg, val);
+ 		break;
+ 	case RES_SOFT_LIMIT:
+@@ -5007,9 +5059,19 @@ struct memcg_kmem_cache *memcg_cache_get(struct mem_cgroup *memcg, int index)
+ 
+ void register_memcg_cache(struct memcg_cache_struct *cache)
+ {
++	struct shrinker *shrink;
++
+ 	BUG_ON(kmem_avail_caches[cache->index]);
+ 
+ 	kmem_avail_caches[cache->index] = cache;
++	if (!kmem_avail_caches[cache->index]->shrink_fn)
++		return;
++
++	shrink = &kmem_avail_caches[cache->index]->shrink;
++	shrink->seeks = DEFAULT_SEEKS;
++	shrink->shrink = kmem_avail_caches[cache->index]->shrink_fn;
++	shrink->batch = 1024;
++	register_shrinker_memcg(shrink);
+ }
+ 
+ #define memcg_kmem(memcg) \
+@@ -5055,8 +5117,21 @@ int memcg_kmem_newpage(struct mem_cgroup *memcg, struct page *page, unsigned lon
+ {
+ 	unsigned long size = pages << PAGE_SHIFT;
+ 	struct res_counter *fail;
++	int ret;
++	bool do_softlimit;
++
++	ret = res_counter_charge(memcg_kmem(memcg), size, &fail);
++	if (unlikely(mem_cgroup_event_ratelimit(memcg,
++						MEM_CGROUP_TARGET_THRESH))) {
++
++		do_softlimit = mem_cgroup_event_ratelimit(memcg,
++						MEM_CGROUP_TARGET_SOFTLIMIT);
++		mem_cgroup_threshold(memcg);
++		if (unlikely(do_softlimit))
++			mem_cgroup_update_tree(memcg, page);
++	}
+ 
+-	return res_counter_charge(memcg_kmem(memcg), size, &fail);
++	return ret;
+ }
+ 
+ void memcg_kmem_freepage(struct mem_cgroup *memcg, struct page *page, unsigned long pages)
+@@ -5083,6 +5158,7 @@ void memcg_create_kmem_caches(struct mem_cgroup *memcg)
+ 		else
+ 			memcg->kmem_cache[i].cache = kmem_cache_dup(memcg, cache);
+ 		INIT_WORK(&memcg->kmem_cache[i].destroy, memcg_cache_destroy);
++		INIT_LIST_HEAD(&memcg->kmem_cache[i].lru);
+ 		memcg->kmem_cache[i].memcg = memcg;
+ 	}
+ }
+@@ -5157,6 +5233,11 @@ free_out:
+ 	return ERR_PTR(error);
+ }
+ 
++bool memcg_slab_reclaim(struct mem_cgroup *memcg)
++{
++	return !memcg->kmem_independent_accounting;
++}
++
+ void memcg_slab_destroy(struct kmem_cache *cache, struct mem_cgroup *memcg)
+ {
+ 	int i;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index c52b235..b9bceb6 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -159,6 +159,23 @@ long vm_total_pages;	/* The total number of pages which the VM controls */
+ static LIST_HEAD(shrinker_list);
+ static DECLARE_RWSEM(shrinker_rwsem);
+ 
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++/*
++ * If we could guarantee the root mem cgroup will always exist, we could just
++ * use the normal shrinker_list, and assume that the root memcg is passed
++ * as a parameter. But we're not quite there yet. Because of that, the shinkers
++ * from the memcg case can be different from the normal shrinker for the same
++ * object. This is not the ideal situation but is a step towards that.
++ *
++ * Also, not all caches will have their memcg version (also likely to change),
++ * so scanning the whole list is a waste.
++ *
++ * I am using, however, the same lock for both lists. Updates to it should
++ * be unfrequent, so I don't expect that to generate contention
++ */
++static LIST_HEAD(shrinker_memcg_list);
++#endif
++
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR
+ static bool global_reclaim(struct scan_control *sc)
+ {
+@@ -169,6 +186,11 @@ static bool scanning_global_lru(struct mem_cgroup_zone *mz)
+ {
+ 	return !mz->mem_cgroup;
+ }
++
++static bool global_slab_reclaim(struct scan_control *sc)
++{
++	return !memcg_slab_reclaim(sc->target_mem_cgroup);
++}
+ #else
+ static bool global_reclaim(struct scan_control *sc)
+ {
+@@ -179,6 +201,11 @@ static bool scanning_global_lru(struct mem_cgroup_zone *mz)
+ {
+ 	return true;
+ }
++
++static bool global_slab_reclaim(struct scan_control *sc)
++{
++	return true;
++}
+ #endif
+ 
+ static struct zone_reclaim_stat *get_reclaim_stat(struct mem_cgroup_zone *mz)
+@@ -225,6 +252,16 @@ void unregister_shrinker(struct shrinker *shrinker)
+ }
+ EXPORT_SYMBOL(unregister_shrinker);
+ 
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++void register_shrinker_memcg(struct shrinker *shrinker)
++{
++	atomic_long_set(&shrinker->nr_in_batch, 0);
++	down_write(&shrinker_rwsem);
++	list_add_tail(&shrinker->list, &shrinker_memcg_list);
++	up_write(&shrinker_rwsem);
++}
++#endif
++
+ static inline int do_shrinker_shrink(struct shrinker *shrinker,
+ 				     struct shrink_control *sc,
+ 				     unsigned long nr_to_scan)
+@@ -234,6 +271,18 @@ static inline int do_shrinker_shrink(struct shrinker *shrinker,
+ }
+ 
+ #define SHRINK_BATCH 128
++
++static inline struct list_head
++*get_shrinker_list(struct shrink_control *shrink)
++{
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	if (shrink->memcg)
++		return &shrinker_memcg_list;
++	else
++#endif
++		return &shrinker_list;
++}
++
+ /*
+  * Call the shrink functions to age shrinkable caches
+  *
+@@ -259,6 +308,9 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ {
+ 	struct shrinker *shrinker;
+ 	unsigned long ret = 0;
++	struct list_head *slist;
++
++	slist = get_shrinker_list(shrink);
+ 
+ 	if (nr_pages_scanned == 0)
+ 		nr_pages_scanned = SWAP_CLUSTER_MAX;
+@@ -269,7 +321,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		goto out;
+ 	}
+ 
+-	list_for_each_entry(shrinker, &shrinker_list, list) {
++	list_for_each_entry(shrinker, slist, list) {
+ 		unsigned long long delta;
+ 		long total_scan;
+ 		long max_pass;
+@@ -2351,9 +2403,9 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 
+ 		/*
+ 		 * Don't shrink slabs when reclaiming memory from
+-		 * over limit cgroups
++		 * over limit cgroups, if kernel memory is controlled independently
+ 		 */
+-		if (global_reclaim(sc)) {
++		if (!global_slab_reclaim(sc)) {
+ 			unsigned long lru_pages = 0;
+ 			for_each_zone_zonelist(zone, z, zonelist,
+ 					gfp_zone(sc->gfp_mask)) {
+@@ -2362,8 +2414,10 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 
+ 				lru_pages += zone_reclaimable_pages(zone);
+ 			}
++			shrink->memcg = sc->target_mem_cgroup;
+ 
+ 			shrink_slab(shrink, sc->nr_scanned, lru_pages);
++
+ 			if (reclaim_state) {
+ 				sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+ 				reclaim_state->reclaimed_slab = 0;
 -- 
 1.7.7.6
