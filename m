@@ -1,71 +1,52 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 0/7] memcg kernel memory tracking
-Date: Tue, 21 Feb 2012 15:34:32 +0400
-Message-ID: <1329824079-14449-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH 1/7] small cleanup for memcontrol.c
+Date: Tue, 21 Feb 2012 15:34:33 +0400
+Message-ID: <1329824079-14449-2-git-send-email-glommer@parallels.com>
+References: <1329824079-14449-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1329824079-14449-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: devel@openvz.org, linux-mm@kvack.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-This is a first structured approach to tracking general kernel
-memory within the memory controller. Please tell me what you think.
+Move some hardcoded definitions to an enum type.
 
-As previously proposed, one has the option of keeping kernel memory
-accounted separatedly, or together with the normal userspace memory.
-However, this time I made the option to, in this later case, bill
-the memory directly to memcg->res. It has the disadvantage that it becomes
-complicated to know which memory came from user or kernel, but OTOH,
-it does not create any overhead of drawing from multiple res_counters
-at read time. (and if you want them to be joined, you probably don't care)
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+CC: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+CC: Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+CC: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ mm/memcontrol.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Kernel memory is never tracked for the root memory cgroup. This means
-that a system where no memory cgroups exists other than the root, the
-time cost of this implementation is a couple of branches in the slub
-code - none of them in fast paths. At the moment, this works only
-with the slub.
-
-At cgroup destruction, memory is billed to the parent. With no hierarchy,
-this would mean the root memcg. But since we are not billing to that,
-it simply ceases to be tracked.
-
-The caches that we want to be tracked need to explicit register into
-the infrastructure.
-
-If you would like to give it a try, you'll need one of Frederic's patches
-that is used as a basis for this 
-(cgroups: ability to stop res charge propagation on bounded ancestor)
-
-Glauber Costa (7):
-  small cleanup for memcontrol.c
-  Basic kernel memory functionality for the Memory Controller
-  per-cgroup slab caches
-  chained slab caches: move pages to a different cache when a cache is
-    destroyed.
-  shrink support for memcg kmem controller
-  track dcache per-memcg
-  example shrinker for memcg-aware dcache
-
- fs/dcache.c                |  136 +++++++++++++++++-
- include/linux/dcache.h     |    4 +
- include/linux/memcontrol.h |   35 +++++
- include/linux/shrinker.h   |    4 +
- include/linux/slab.h       |   12 ++
- include/linux/slub_def.h   |    3 +
- mm/memcontrol.c            |  344 +++++++++++++++++++++++++++++++++++++++++++-
- mm/slub.c                  |  237 ++++++++++++++++++++++++++++---
- mm/vmscan.c                |   60 ++++++++-
- 9 files changed, 806 insertions(+), 29 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6728a7a..b15a693 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -351,9 +351,13 @@ enum charge_type {
+ };
+ 
+ /* for encoding cft->private value on file */
+-#define _MEM			(0)
+-#define _MEMSWAP		(1)
+-#define _OOM_TYPE		(2)
++
++enum mem_type {
++	_MEM = 0,
++	_MEMSWAP,
++	_OOM_TYPE,
++};
++
+ #define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
+ #define MEMFILE_TYPE(val)	(((val) >> 16) & 0xffff)
+ #define MEMFILE_ATTR(val)	((val) & 0xffff)
 -- 
 1.7.7.6
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
