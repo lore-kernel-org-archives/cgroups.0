@@ -1,119 +1,94 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V1 2/9] hugetlbfs: Add usage and max usage files to hugetlb cgroup
-Date: Mon, 20 Feb 2012 16:51:35 +0530
-Message-ID: <1329736902-26870-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-References: <1329736902-26870-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1329736902-26870-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] memcg: rework inactive_ratio logic
+Date: Tue, 21 Feb 2012 11:18:26 +0100
+Message-ID: <20120221101825.GA1676@cmpxchg.org>
+References: <20120215162442.13588.21790.stgit@zurg>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120215162442.13588.21790.stgit@zurg>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+On Wed, Feb 15, 2012 at 08:24:42PM +0400, Konstantin Khlebnikov wrote:
+> This patch adds mem_cgroup->inactive_ratio calculated from hierarchical memory limit.
+> It updated at each limit change before shrinking cgroup to this new limit.
+> Ratios for all child cgroups are updated too, because parent limit can affect them.
+> Update precedure can be greatly optimized if its performance becomes the problem.
+> Inactive ratio for unlimited or huge limit does not matter, because we'll never hit it.
+> 
+> At global reclaim always use global ratio from zone->inactive_ratio.
+> At mem-cgroup reclaim use inactive_ratio from target memory cgroup,
+> this is cgroup which hit its limit and cause this reclaimer invocation.
+> 
+> Thus, global memory reclaimer will try to keep ratio for all lru lists in zone
+> above one mark, this guarantee that total ratio in this zone will be above too.
+> Meanwhile mem-cgroup will do the same thing for its lru lists in all zones, and
+> for all lru lists in all sub-cgroups in hierarchy.
+> 
+> Also this patch removes some redundant code.
+> 
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> ---
+>  include/linux/memcontrol.h |   16 ++------
+>  mm/memcontrol.c            |   85 ++++++++++++++++++++++++--------------------
+>  mm/vmscan.c                |   82 +++++++++++++++++++++++-------------------
+>  3 files changed, 93 insertions(+), 90 deletions(-)
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
----
- fs/hugetlbfs/hugetlb_cgroup.c  |   12 ++++++++++++
- include/linux/hugetlb.h        |    2 ++
- include/linux/hugetlb_cgroup.h |    1 +
- mm/hugetlb.c                   |   21 +++++++++++++++++++++
- 4 files changed, 36 insertions(+), 0 deletions(-)
+> @@ -3373,6 +3341,32 @@ void mem_cgroup_print_bad_page(struct page *page)
+>  
+>  static DEFINE_MUTEX(set_limit_mutex);
+>  
+> +/*
+> + * Update inactive_ratio accoring to new memory limit
+> + */
+> +static void mem_cgroup_update_inactive_ratio(struct mem_cgroup *memcg,
+> +					     unsigned long long target)
+> +{
+> +	unsigned long long mem_limit, memsw_limit, gb;
+> +	struct mem_cgroup *iter;
+> +
+> +	for_each_mem_cgroup_tree(iter, memcg) {
+> +		memcg_get_hierarchical_limit(iter, &mem_limit, &memsw_limit);
+> +		mem_limit = min(mem_limit, target);
+> +
+> +		gb = mem_limit >> 30;
+> +		if (gb && 10 * gb < INT_MAX)
+> +			iter->inactive_ratio = int_sqrt(10 * gb);
+> +		else
+> +			iter->inactive_ratio = 1;
+> +	}
+> +}
 
-diff --git a/fs/hugetlbfs/hugetlb_cgroup.c b/fs/hugetlbfs/hugetlb_cgroup.c
-index b5b3cb8..75dbdd8 100644
---- a/fs/hugetlbfs/hugetlb_cgroup.c
-+++ b/fs/hugetlbfs/hugetlb_cgroup.c
-@@ -99,6 +99,18 @@ int hugetlb_cgroup_write(struct cgroup *cgroup, struct cftype *cft,
- 	return ret;
- }
- 
-+int hugetlb_cgroup_reset(struct cgroup *cgroup, unsigned int event)
-+{
-+	int name, idx;
-+	struct hugetlb_cgroup *h_cgroup = cgroup_to_hugetlbcgroup(cgroup);
-+
-+	idx = MEMFILE_TYPE(event);
-+	name = MEMFILE_ATTR(event);
-+
-+	res_counter_reset_max(&h_cgroup->memhuge[idx]);
-+	return 0;
-+}
-+
- static int hugetlbcgroup_can_attach(struct cgroup_subsys *ss,
- 				    struct cgroup *new_cgrp,
- 				    struct cgroup_taskset *set)
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index 2b6b231..4392b6a 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -228,6 +228,8 @@ struct hstate {
- 	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
- 	/* cgroup control files */
- 	struct cftype cgroup_limit_file;
-+	struct cftype cgroup_usage_file;
-+	struct cftype cgroup_max_usage_file;
- 	char name[HSTATE_NAME_LEN];
- };
- 
-diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-index 2330dd0..11cd6c4 100644
---- a/include/linux/hugetlb_cgroup.h
-+++ b/include/linux/hugetlb_cgroup.h
-@@ -18,4 +18,5 @@
- extern u64 hugetlb_cgroup_read(struct cgroup *cgroup, struct cftype *cft);
- extern int hugetlb_cgroup_write(struct cgroup *cgroup, struct cftype *cft,
- 				const char *buffer);
-+extern int hugetlb_cgroup_reset(struct cgroup *cgroup, unsigned int event);
- #endif
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index f643f72..865b41f 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -1814,6 +1814,13 @@ int register_hugetlb_cgroup_files(struct cgroup_subsys *ss,
- 		ret = cgroup_add_file(cgroup, ss, &h->cgroup_limit_file);
- 		if (ret)
- 			return ret;
-+		ret = cgroup_add_file(cgroup, ss, &h->cgroup_usage_file);
-+		if (ret)
-+			return ret;
-+		ret = cgroup_add_file(cgroup, ss, &h->cgroup_max_usage_file);
-+		if (ret)
-+			return ret;
-+
- 	}
- 	return ret;
- }
-@@ -1845,6 +1852,20 @@ static int hugetlb_cgroup_file_init(struct hstate *h, int idx)
- 	cft->read_u64 = hugetlb_cgroup_read;
- 	cft->write_string = hugetlb_cgroup_write;
- 
-+	/* Add the usage file */
-+	cft = &h->cgroup_usage_file;
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.usage_in_bytes", buf);
-+	cft->private  = MEMFILE_PRIVATE(idx, RES_USAGE);
-+	cft->read_u64 = hugetlb_cgroup_read;
-+
-+	/* Add the MAX usage file */
-+	cft = &h->cgroup_max_usage_file;
-+	snprintf(cft->name, MAX_CFTYPE_NAME,
-+		 "%s.max_usage_in_bytes", buf);
-+	cft->private  = MEMFILE_PRIVATE(idx, RES_MAX_USAGE);
-+	cft->trigger  = hugetlb_cgroup_reset;
-+	cft->read_u64 = hugetlb_cgroup_read;
-+
- 	return 0;
- }
- #else
--- 
-1.7.9
+The memcg could have two pages on one zone and a gazillion pages on
+another zone.  Why would you want to enforce the same ratios on both
+LRU list pairs?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> @@ -1818,29 +1809,33 @@ static int inactive_anon_is_low(struct mem_cgroup_zone *mz)
+>  	if (!total_swap_pages)
+>  		return 0;
+>  
+> -	if (!scanning_global_lru(mz))
+> -		return mem_cgroup_inactive_anon_is_low(mz->mem_cgroup,
+> -						       mz->zone);
+> +	if (global_reclaim(sc))
+> +		ratio = mz->zone->inactive_ratio;
+> +	else
+> +		ratio = mem_cgroup_inactive_ratio(sc->target_mem_cgroup);
+
+I don't think we should take the zone ratio when we then proceed to
+scan a bunch of LRU lists that could individually be much smaller than
+the zone.  Especially since the ratio function is not a linear one.
+
+Otherwise the target ratios can be way too big for small lists, see
+the comment above mm/page_alloc.c::calculate_zone_inactive_ratio().
+
+Consequently, I also disagree on using sc->target_mem_cgroup.
+
+This whole mechanism is about balancing one specific pair of inactive
+vs. an active list according their size.  We shouldn't derive policy
+from numbers that are not correlated to this size.
