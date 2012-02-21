@@ -1,57 +1,62 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 1/2] memcg: fix page_referencies cgroup filter on global
- reclaim
-Date: Tue, 21 Feb 2012 11:46:22 +0100
-Message-ID: <20120221104622.GB1676@cmpxchg.org>
-References: <20120215162830.13902.60256.stgit@zurg>
+From: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] memcg: rework inactive_ratio logic
+Date: Tue, 21 Feb 2012 15:01:25 +0400
+Message-ID: <4F437985.7060005@openvz.org>
+References: <20120215162442.13588.21790.stgit@zurg> <20120221101825.GA1676@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120215162830.13902.60256.stgit@zurg>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=8ykoBvF+pjLie9vGEleCj+DQUPDvZLaKdPpa60Vs7yU=;
+        b=HIs102YHMop7Q4IggCfBSta6FYvEi2OsG6VCXuVfGeS3q+gcOsntYHBJ9YEW72PPy3
+         LTuUYHlshRAGEqdgb0IGh/f2sQC3SKkz/B9V42RECJ7VRlO3Nipvz5+q4+00KC+RNCKz
+         NKH9Wr5Gi7fPR0dV81FAW7ri8IyH8B9pOgi5Q=
+In-Reply-To: <20120221101825.GA1676-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Feb 15, 2012 at 08:28:30PM +0400, Konstantin Khlebnikov wrote:
-> Global memory reclaimer should't skip referencies for any pages,
-> even if they are shared between different cgroups.
+Johannes Weiner wrote:
+> On Wed, Feb 15, 2012 at 08:24:42PM +0400, Konstantin Khlebnikov wrote:
+>> This patch adds mem_cgroup->inactive_ratio calculated from hierarchical memory limit.
+>> It updated at each limit change before shrinking cgroup to this new limit.
+>> Ratios for all child cgroups are updated too, because parent limit can affect them.
+>> Update precedure can be greatly optimized if its performance becomes the problem.
+>> Inactive ratio for unlimited or huge limit does not matter, because we'll never hit it.
+>>
+>> At global reclaim always use global ratio from zone->inactive_ratio.
+>> At mem-cgroup reclaim use inactive_ratio from target memory cgroup,
+>> this is cgroup which hit its limit and cause this reclaimer invocation.
+>>
+>> Thus, global memory reclaimer will try to keep ratio for all lru lists in zone
+>> above one mark, this guarantee that total ratio in this zone will be above too.
+>> Meanwhile mem-cgroup will do the same thing for its lru lists in all zones, and
+>> for all lru lists in all sub-cgroups in hierarchy.
+>>
+>> Also this patch removes some redundant code.
+>>
+>> Signed-off-by: Konstantin Khlebnikov<khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+>
+> I don't think we should take the zone ratio when we then proceed to
+> scan a bunch of LRU lists that could individually be much smaller than
+> the zone.  Especially since the ratio function is not a linear one.
+>
+> Otherwise the target ratios can be way too big for small lists, see
+> the comment above mm/page_alloc.c::calculate_zone_inactive_ratio().
+>
+> Consequently, I also disagree on using sc->target_mem_cgroup.
+>
+> This whole mechanism is about balancing one specific pair of inactive
+> vs. an active list according their size.  We shouldn't derive policy
+> from numbers that are not correlated to this size.
 
-Agreed: if we reclaim from one memcg because of its limit, we want to
-reclaim those pages that this group is not using.  If it's used by
-someone else, it should be evicted and refaulted by the group that
-needs it.
-
-If we reclaim globally, all references are "true" because we want to
-evict those pages that are not used by any cgroup.
-
-But if we reclaim a hierarchical subgroup, we don't want to evict
-pages that are shared among this hierarchy, either, even if the memcg
-that has the page charged to it is not using it.  Bouncing the page
-around the hierarchy is not sensible, because it does not solve the
-problem of the parent hitting its limit when the sibling group will
-refault it in a blink of an eye.  It should only be evicted if the
-memcg that's not using it nears its own limit, because only in that
-case would reclaiming the page remedy the situation.
-
-> This patch adds scan_control->current_mem_cgroup, which points to currently
-> shrinking sub-cgroup in hierarchy, at global reclaim it always NULL.
-
-So to be consistent, I'm wondering if we should pass
-sc->target_mem_cgroup - the limit-hitting hierarchy root - to
-page_referenced() and then have mm_match_cgroup() do a
-mem_cgroup_same_or_subtree() check to see if the vma is in the
-hierarchy rooted at sc->target_mem_cgroup.
-
-Global reclaim is handled automatically, because mm_match_cgroup() is
-not checked when the passed memcg is NULL, which sc->target_mem_cgroup
-is for global reclaim.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Ok, maybe then we can move this inactive_ratio calculation right into
+inactive_anon_is_low(). Then we can kill precalculated zone->inactive_ratio
+and calculate it every time, even in non-memcg case, because zone-size also
+not always correlate with anon lru size.
+Looks like int_sqrt() is fast enough for this.
