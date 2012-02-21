@@ -1,173 +1,157 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 1/2] memcg: fix page_referencies cgroup filter on global
- reclaim
-Date: Tue, 21 Feb 2012 14:11:22 +0100
-Message-ID: <20120221131122.GC1676@cmpxchg.org>
-References: <20120215162830.13902.60256.stgit@zurg>
- <20120221104622.GB1676@cmpxchg.org>
- <4F43821C.7080001@openvz.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [RFD] cgroup: about multiple hierarchies
+Date: Tue, 21 Feb 2012 13:19:38 -0800
+Message-ID: <20120221211938.GE12236@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=QwyB/5JbgF79KdmRwfV6YzB502u1zIps+KPTaQ5IRXM=;
+        b=Fr486IrTzC7G+QfJIiuJkUvsPBogPLCU3aiC9vVWIxPoFNrL7qRMdtqI5YtcUxPFqE
+         +kdwqWK7mdRn1lrSp6BJQh12bw+tAotBbNFVLbn9kGFvjPDpN0skvLm54QXjW5wdsgfy
+         0ZwlU2iiYN/uOh1CIWmN9joWq7oeKCID2Im9k=
 Content-Disposition: inline
-In-Reply-To: <4F43821C.7080001@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Feb 21, 2012 at 03:38:04PM +0400, Konstantin Khlebnikov wrote:
-> Johannes Weiner wrote:
-> >On Wed, Feb 15, 2012 at 08:28:30PM +0400, Konstantin Khlebnikov wrote:
-> >>Global memory reclaimer should't skip referencies for any pages,
-> >>even if they are shared between different cgroups.
-> >
-> >Agreed: if we reclaim from one memcg because of its limit, we want to
-> >reclaim those pages that this group is not using.  If it's used by
-> >someone else, it should be evicted and refaulted by the group that
-> >needs it.
-> >
-> >If we reclaim globally, all references are "true" because we want to
-> >evict those pages that are not used by any cgroup.
-> >
-> >But if we reclaim a hierarchical subgroup, we don't want to evict
-> >pages that are shared among this hierarchy, either, even if the memcg
-> >that has the page charged to it is not using it.  Bouncing the page
-> >around the hierarchy is not sensible, because it does not solve the
-> >problem of the parent hitting its limit when the sibling group will
-> >refault it in a blink of an eye.  It should only be evicted if the
-> >memcg that's not using it nears its own limit, because only in that
-> >case would reclaiming the page remedy the situation.
-> >
-> >>This patch adds scan_control->current_mem_cgroup, which points to currently
-> >>shrinking sub-cgroup in hierarchy, at global reclaim it always NULL.
-> >
-> >So to be consistent, I'm wondering if we should pass
-> >sc->target_mem_cgroup - the limit-hitting hierarchy root - to
-> >page_referenced() and then have mm_match_cgroup() do a
-> >mem_cgroup_same_or_subtree() check to see if the vma is in the
-> >hierarchy rooted at sc->target_mem_cgroup.
-> >
-> >Global reclaim is handled automatically, because mm_match_cgroup() is
-> >not checked when the passed memcg is NULL, which sc->target_mem_cgroup
-> >is for global reclaim.
-> 
-> Also we can try to recharge page to other cgroup, if we found in rmap another its user
-> outsize of currently shrinking hierarchy, page there is isolated, so at the end we will
-> insert page directly to its lru.
+Hello, guys.
 
-Not sure if it's worth the trouble, but that could work.
+I've been thinking about multiple hierarchy support in cgroup for a
+while, especially after Frederic's pending task counter patchset.
+This is a write up of what I've been thinking.  I don't know what to
+do yet and simply continuing the current situation definitely is an
+option, so please read on and throw in your 20 Won (or whatever amount
+in whatever currency you want).
 
-> But the main purpose of this patch for me is killing mz->mem_cgroup dereference,
-> because I plan to replace mz with direct reference to lruvec, which will be memcg-free object.
+* The problems.
 
-I like that plan.  How about this patch then?
+The support for multiple process hierarchies always struck me as
+rather strange.  If you forget about the current cgroup controllers
+and their implementations, the *only* reason to support multiple
+hierarchies is if you want to apply resource limits based on different
+orthogonal categorizations.
 
----
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: mm: memcg: count pte references from every member of the reclaimed hierarchy
+Documentation/cgroups.txt seems to be written with this consideration
+on mind.  It's giving an example of applying limits accoring to two
+orthogonal categorizations - user groups (profressors, students...)
+and applications (WWW, NFS...).  While it may sound like a valid use
+case, I'm very skeptical how useful or common mixing such orthogonal
+categorizations in a single setup would be.
 
-The rmap walker checking page table references has historically
-ignored references from VMAs that were not part of the memcg that was
-being reclaimed during memcg hard limit reclaim.
+If support for multiple hierarchies comes for free, at least in terms
+of features, maybe it can be better but of course it isn't so.  Any
+given cgroup subsystem (or controller) can only be applied to a single
+hierarchy, which makes sense for a lot of things - what would two
+different limits on the same resource from different hierarchies mean?
+But, there also are things which can be used and useful in all
+hierarchies - e.g. cgroup freezer and task counter.
 
-When transitioning global reclaim to memcg hierarchy reclaim, I missed
-that bit and now references from outside a memcg are ignored even
-during global reclaim.
+While the current cgroup implementation and conventions can probably
+allow admins and engineers to tailor cgroup configuration for a
+specific setup, it is very difficult to use in generic and automated
+way.  I mean, who owns the freezer or task counter?  If they're
+mounted on their own hierarchies, how should they be structured?
+Should the different hierarchies be structured such that they are
+projections of one unified hierarchy so that those generic mechanisms
+can be applied uniformly?  If so, why do we need multiple hierarchies
+at all?
 
-Reverting back to traditional behaviour - count all references during
-global reclaim and only mind references of the memcg being reclaimed
-during limit reclaim would be one option.
+A related limitation is that as different subsystems don't know which
+hierarchies they'll end up on, they can't cooperate.  Wouldn't it make
+more sense if task counter is a separate thing watching the resources
+and triggers different actions as conifgured - be it failing forks or
+freezing?
 
-However, the more generic idea is to ignore references exactly then
-when they are outside the hierarchy that is currently under reclaim;
-because only then will their reclamation be of any use to help the
-pressure situation.  It makes no sense to ignore references from a
-sibling memcg and then evict a page that will be immediately refaulted
-by that sibling which contributes to the same usage of the common
-ancestor under reclaim.
+And yet another oddity is how cgroup handles nested cgroups - some
+care about nesting but others just treat both internal and leaf nodes
+equally.  They don't care about the topology at all.  This, too, can
+be fine if you approach things subsys by subsys and use them in
+different ways but if you try to combine them in generic way you get
+sucked into the lala land of whatevers.
 
-The solution: make the rmap walker ignore references from VMAs that
-are not part of the hierarchy that is being reclaimed.
+The following is a "best practices" document on using cgroups.
 
-Flat limit reclaim will stay the same, hierarchical limit reclaim will
-mind the references only to pages that the hierarchy owns.  Global
-reclaim, since it reclaims from all memcgs, will be fixed to regard
-all references.
+  http://www.freedesktop.org/wiki/Software/systemd/PaxControlGroups
 
-Reported-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/memcontrol.h |    3 ++-
- mm/memcontrol.c            |    2 +-
- mm/vmscan.c                |    6 ++++--
- 3 files changed, 7 insertions(+), 4 deletions(-)
+To me, it seems to demonstrate the rather ugly situation that the
+current cgroup is providing.  Everyone should tip-toe around cgroup
+hierarchies and nobody has full knowledge or control over them.
+e.g. base system management (e.g. systemd) can't use freezer or task
+counter as someone else might want to use it for different hierarchy
+layout.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 8537c5d..ba9455d 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -78,6 +78,7 @@ extern void mem_cgroup_uncharge_page(struct page *page);
- extern void mem_cgroup_uncharge_cache_page(struct page *page);
- 
- extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask);
-+bool mem_cgroup_same_or_subtree(const struct mem_cgroup *, struct mem_cgroup *);
- int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg);
- 
- extern struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page);
-@@ -91,7 +92,7 @@ int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
- 	rcu_read_unlock();
--	return cgroup == memcg;
-+	return mem_cgroup_same_or_subtree(cgroup, memcg);
- }
- 
- extern struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e4be95a..f91d762 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1044,7 +1044,7 @@ struct lruvec *mem_cgroup_lru_move_lists(struct zone *zone,
-  * Checks whether given mem is same or in the root_mem_cgroup's
-  * hierarchy subtree
-  */
--static bool mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
-+bool mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
- 		struct mem_cgroup *memcg)
- {
- 	if (root_memcg != memcg) {
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index c631234..120646e 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -708,7 +708,8 @@ static enum page_references page_check_references(struct page *page,
- 	int referenced_ptes, referenced_page;
- 	unsigned long vm_flags;
- 
--	referenced_ptes = page_referenced(page, 1, mz->mem_cgroup, &vm_flags);
-+	referenced_ptes = page_referenced(page, 1, sc->target_mem_cgroup,
-+					  &vm_flags);
- 	referenced_page = TestClearPageReferenced(page);
- 
- 	/* Lumpy reclaim - ignore references */
-@@ -1710,7 +1711,8 @@ static void shrink_active_list(unsigned long nr_pages,
- 			continue;
- 		}
- 
--		if (page_referenced(page, 0, mz->mem_cgroup, &vm_flags)) {
-+		if (page_referenced(page, 0, sc->target_mem_cgroup,
-+				    &vm_flags)) {
- 			nr_rotated += hpage_nr_pages(page);
- 			/*
- 			 * Identify referenced, file-backed active pages and
--- 
-1.7.7.6
+It seems to me that cgroup interface is too complicated and inflexible
+at the same time to be useful in generic manner.  Sure, it can be
+useful for setups individually crafted by engineers and admins to
+match specific sites or applications but as soon as you try to do
+something automatic and generic with it, there just are too many
+different scenarios and limitations to consider.
+
+
+* So, what to do?
+
+Heh, I don't know.  IIRC, last year at LinuxCon Japan, I heard
+Christoph saying that the biggest problem w/ cgroup was that it was
+building completely separate hierarchies out of the traditional
+process hierarchies.  After thinking about this stuff for a while, I
+fully agree with him.  I think this whole thing should have been a
+layer over the process tree like sessions or program groups.
+
+Unfortunately, that ship sailed long ago and we gotta make do with
+what we have on our collective hands.  Here are some paths that we can
+take.
+
+1. We're screwed anyway.  Just don't worry about it and continue down
+   on this path.  Can't get much worse, right?
+
+   This approach has the apparent advantage of not having to do
+   anything and is probably most likely to be taken.  This isn't ideal
+   but hey nothing is. :P
+
+2. Make it more flexible (and likely more complex, unfortunately).
+   Allow the utility type subsystems to be used in multiple
+   hierarchies.  The easiest and probably dirtiest way to achieve that
+   would be embedding them into cgroup core.
+
+   Thinking about doing this depresses me and it's not like I have a
+   cheerful personality to begin with. :(
+
+3. Head towards single hierarchy with the pie-in-the-sky goal of
+   merging things into process hierarchy in some distant future.
+
+   The first step would be herding people to use a unified hierarchy
+   (ie. all subsystems mounted on a single cgroup tree) which is
+   controlled by single entity in userland (be it systemd or cgroupd,
+   cgroup-kit or whatever); however, even if we exclude supporting
+   orthogonal categorizations, there are good number of non-trivial
+   hurdles to clear before this can be realized.
+
+   Most importantly, we would need to clean up how nesting is handled
+   across different subsystems.  Handling internal and leaf nodes as
+   equals simply can't work.  Membership should be recursive, and for
+   subsystems which can't support proper nesting, the right thing to
+   do would be somehow ensuring that only single node in the path from
+   root to leaf is active for the controller.  We may even have to
+   introduce an alternative of operation to support this (yuck).
+
+   This path would require the most amount of work and we would be
+   excluding a feature - support for multiple orthogonal
+   categorizations - which has been available till now, probably
+   through deprecation process spanning years; however, this at least
+   gives us hope that we may reach sanity in the end, how distant that
+   end may be.  Oh, hope. :)
+
+So, I mean, I don't know.  What do other people think?  Is this a
+unnecessary worry?  Are people generally happy with the way things
+are?  Lennart, Kay, what do you guys think?
+
+Thanks.
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
