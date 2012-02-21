@@ -1,62 +1,71 @@
-From: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] memcg: rework inactive_ratio logic
-Date: Tue, 21 Feb 2012 15:01:25 +0400
-Message-ID: <4F437985.7060005@openvz.org>
-References: <20120215162442.13588.21790.stgit@zurg> <20120221101825.GA1676@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=8ykoBvF+pjLie9vGEleCj+DQUPDvZLaKdPpa60Vs7yU=;
-        b=HIs102YHMop7Q4IggCfBSta6FYvEi2OsG6VCXuVfGeS3q+gcOsntYHBJ9YEW72PPy3
-         LTuUYHlshRAGEqdgb0IGh/f2sQC3SKkz/B9V42RECJ7VRlO3Nipvz5+q4+00KC+RNCKz
-         NKH9Wr5Gi7fPR0dV81FAW7ri8IyH8B9pOgi5Q=
-In-Reply-To: <20120221101825.GA1676-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH 0/7] memcg kernel memory tracking
+Date: Tue, 21 Feb 2012 15:34:32 +0400
+Message-ID: <1329824079-14449-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org
+Cc: devel@openvz.org, linux-mm@kvack.org
 
-Johannes Weiner wrote:
-> On Wed, Feb 15, 2012 at 08:24:42PM +0400, Konstantin Khlebnikov wrote:
->> This patch adds mem_cgroup->inactive_ratio calculated from hierarchical memory limit.
->> It updated at each limit change before shrinking cgroup to this new limit.
->> Ratios for all child cgroups are updated too, because parent limit can affect them.
->> Update precedure can be greatly optimized if its performance becomes the problem.
->> Inactive ratio for unlimited or huge limit does not matter, because we'll never hit it.
->>
->> At global reclaim always use global ratio from zone->inactive_ratio.
->> At mem-cgroup reclaim use inactive_ratio from target memory cgroup,
->> this is cgroup which hit its limit and cause this reclaimer invocation.
->>
->> Thus, global memory reclaimer will try to keep ratio for all lru lists in zone
->> above one mark, this guarantee that total ratio in this zone will be above too.
->> Meanwhile mem-cgroup will do the same thing for its lru lists in all zones, and
->> for all lru lists in all sub-cgroups in hierarchy.
->>
->> Also this patch removes some redundant code.
->>
->> Signed-off-by: Konstantin Khlebnikov<khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
->
-> I don't think we should take the zone ratio when we then proceed to
-> scan a bunch of LRU lists that could individually be much smaller than
-> the zone.  Especially since the ratio function is not a linear one.
->
-> Otherwise the target ratios can be way too big for small lists, see
-> the comment above mm/page_alloc.c::calculate_zone_inactive_ratio().
->
-> Consequently, I also disagree on using sc->target_mem_cgroup.
->
-> This whole mechanism is about balancing one specific pair of inactive
-> vs. an active list according their size.  We shouldn't derive policy
-> from numbers that are not correlated to this size.
+This is a first structured approach to tracking general kernel
+memory within the memory controller. Please tell me what you think.
 
-Ok, maybe then we can move this inactive_ratio calculation right into
-inactive_anon_is_low(). Then we can kill precalculated zone->inactive_ratio
-and calculate it every time, even in non-memcg case, because zone-size also
-not always correlate with anon lru size.
-Looks like int_sqrt() is fast enough for this.
+As previously proposed, one has the option of keeping kernel memory
+accounted separatedly, or together with the normal userspace memory.
+However, this time I made the option to, in this later case, bill
+the memory directly to memcg->res. It has the disadvantage that it becomes
+complicated to know which memory came from user or kernel, but OTOH,
+it does not create any overhead of drawing from multiple res_counters
+at read time. (and if you want them to be joined, you probably don't care)
+
+Kernel memory is never tracked for the root memory cgroup. This means
+that a system where no memory cgroups exists other than the root, the
+time cost of this implementation is a couple of branches in the slub
+code - none of them in fast paths. At the moment, this works only
+with the slub.
+
+At cgroup destruction, memory is billed to the parent. With no hierarchy,
+this would mean the root memcg. But since we are not billing to that,
+it simply ceases to be tracked.
+
+The caches that we want to be tracked need to explicit register into
+the infrastructure.
+
+If you would like to give it a try, you'll need one of Frederic's patches
+that is used as a basis for this 
+(cgroups: ability to stop res charge propagation on bounded ancestor)
+
+Glauber Costa (7):
+  small cleanup for memcontrol.c
+  Basic kernel memory functionality for the Memory Controller
+  per-cgroup slab caches
+  chained slab caches: move pages to a different cache when a cache is
+    destroyed.
+  shrink support for memcg kmem controller
+  track dcache per-memcg
+  example shrinker for memcg-aware dcache
+
+ fs/dcache.c                |  136 +++++++++++++++++-
+ include/linux/dcache.h     |    4 +
+ include/linux/memcontrol.h |   35 +++++
+ include/linux/shrinker.h   |    4 +
+ include/linux/slab.h       |   12 ++
+ include/linux/slub_def.h   |    3 +
+ mm/memcontrol.c            |  344 +++++++++++++++++++++++++++++++++++++++++++-
+ mm/slub.c                  |  237 ++++++++++++++++++++++++++++---
+ mm/vmscan.c                |   60 ++++++++-
+ 9 files changed, 806 insertions(+), 29 deletions(-)
+
+-- 
+1.7.7.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
