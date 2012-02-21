@@ -1,165 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Tue, 21 Feb 2012 13:21:06 -0800
-Message-ID: <20120221212106.GF12236@google.com>
-References: <20120221211938.GE12236@google.com>
+From: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/7] memcg kernel memory tracking
+Date: Tue, 21 Feb 2012 15:25:18 -0800
+Message-ID: <CABCjUKCwLTOFOYR7E6v_z5=tUCUKch7TTMpAOrhQ_JKT1sqTqA@mail.gmail.com>
+References: <1329824079-14449-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=UYJWX5hi+D1jmjF1V7dHQeLPWYcKtLkAr+vItB/PeBU=;
-        b=TAJ96qOxxILf2mQnnRcEznqrbO8ULuRSNfJ0zo+bu74cOmZlXtZfPSEslJ096m7RRp
-         16P5qNsxOCZ1YEnUBIwgjXk1cDKiqHeoC84TinT4ufZfClNc+M4DV3bkK55DuyCzrKxf
-         xUvYUvT3EByLk3LA0DdiuS7CgyVue6/XDFuAE=
-Content-Disposition: inline
-In-Reply-To: <20120221211938.GE12236-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:x-system-of-record;
+        bh=9FBG8Ut9kdLDDxp+Ep+HvGpPkNZyg6KS92qcgznfZb0=;
+        b=ByloVtavsp7WHCnhRDT45rZKNeVUairfrGjNsWpITMa4MmabupwGda11sVSfE9/cXw
+         e5kJYPOZe03QBO74ESfg6hz6xCXw99VfbrmkERhXCQqvOD9Lb25FzKpuGNCPsP2FHQcb
+         6nCG21FoHDVggXn9x3tD3WFUuqkKlefSk1R5k=
+In-Reply-To: <1329824079-14449-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Sorry, forgot to cc hch.  Cc'ing him and quoting whole message.
+Hi Glauber,
 
-On Tue, Feb 21, 2012 at 01:19:38PM -0800, Tejun Heo wrote:
-> Hello, guys.
-> 
-> I've been thinking about multiple hierarchy support in cgroup for a
-> while, especially after Frederic's pending task counter patchset.
-> This is a write up of what I've been thinking.  I don't know what to
-> do yet and simply continuing the current situation definitely is an
-> option, so please read on and throw in your 20 Won (or whatever amount
-> in whatever currency you want).
-> 
-> * The problems.
-> 
-> The support for multiple process hierarchies always struck me as
-> rather strange.  If you forget about the current cgroup controllers
-> and their implementations, the *only* reason to support multiple
-> hierarchies is if you want to apply resource limits based on different
-> orthogonal categorizations.
-> 
-> Documentation/cgroups.txt seems to be written with this consideration
-> on mind.  It's giving an example of applying limits accoring to two
-> orthogonal categorizations - user groups (profressors, students...)
-> and applications (WWW, NFS...).  While it may sound like a valid use
-> case, I'm very skeptical how useful or common mixing such orthogonal
-> categorizations in a single setup would be.
-> 
-> If support for multiple hierarchies comes for free, at least in terms
-> of features, maybe it can be better but of course it isn't so.  Any
-> given cgroup subsystem (or controller) can only be applied to a single
-> hierarchy, which makes sense for a lot of things - what would two
-> different limits on the same resource from different hierarchies mean?
-> But, there also are things which can be used and useful in all
-> hierarchies - e.g. cgroup freezer and task counter.
-> 
-> While the current cgroup implementation and conventions can probably
-> allow admins and engineers to tailor cgroup configuration for a
-> specific setup, it is very difficult to use in generic and automated
-> way.  I mean, who owns the freezer or task counter?  If they're
-> mounted on their own hierarchies, how should they be structured?
-> Should the different hierarchies be structured such that they are
-> projections of one unified hierarchy so that those generic mechanisms
-> can be applied uniformly?  If so, why do we need multiple hierarchies
-> at all?
-> 
-> A related limitation is that as different subsystems don't know which
-> hierarchies they'll end up on, they can't cooperate.  Wouldn't it make
-> more sense if task counter is a separate thing watching the resources
-> and triggers different actions as conifgured - be it failing forks or
-> freezing?
-> 
-> And yet another oddity is how cgroup handles nested cgroups - some
-> care about nesting but others just treat both internal and leaf nodes
-> equally.  They don't care about the topology at all.  This, too, can
-> be fine if you approach things subsys by subsys and use them in
-> different ways but if you try to combine them in generic way you get
-> sucked into the lala land of whatevers.
-> 
-> The following is a "best practices" document on using cgroups.
-> 
->   http://www.freedesktop.org/wiki/Software/systemd/PaxControlGroups
-> 
-> To me, it seems to demonstrate the rather ugly situation that the
-> current cgroup is providing.  Everyone should tip-toe around cgroup
-> hierarchies and nobody has full knowledge or control over them.
-> e.g. base system management (e.g. systemd) can't use freezer or task
-> counter as someone else might want to use it for different hierarchy
-> layout.
-> 
-> It seems to me that cgroup interface is too complicated and inflexible
-> at the same time to be useful in generic manner.  Sure, it can be
-> useful for setups individually crafted by engineers and admins to
-> match specific sites or applications but as soon as you try to do
-> something automatic and generic with it, there just are too many
-> different scenarios and limitations to consider.
-> 
-> 
-> * So, what to do?
-> 
-> Heh, I don't know.  IIRC, last year at LinuxCon Japan, I heard
-> Christoph saying that the biggest problem w/ cgroup was that it was
-> building completely separate hierarchies out of the traditional
-> process hierarchies.  After thinking about this stuff for a while, I
-> fully agree with him.  I think this whole thing should have been a
-> layer over the process tree like sessions or program groups.
-> 
-> Unfortunately, that ship sailed long ago and we gotta make do with
-> what we have on our collective hands.  Here are some paths that we can
-> take.
-> 
-> 1. We're screwed anyway.  Just don't worry about it and continue down
->    on this path.  Can't get much worse, right?
-> 
->    This approach has the apparent advantage of not having to do
->    anything and is probably most likely to be taken.  This isn't ideal
->    but hey nothing is. :P
-> 
-> 2. Make it more flexible (and likely more complex, unfortunately).
->    Allow the utility type subsystems to be used in multiple
->    hierarchies.  The easiest and probably dirtiest way to achieve that
->    would be embedding them into cgroup core.
-> 
->    Thinking about doing this depresses me and it's not like I have a
->    cheerful personality to begin with. :(
-> 
-> 3. Head towards single hierarchy with the pie-in-the-sky goal of
->    merging things into process hierarchy in some distant future.
-> 
->    The first step would be herding people to use a unified hierarchy
->    (ie. all subsystems mounted on a single cgroup tree) which is
->    controlled by single entity in userland (be it systemd or cgroupd,
->    cgroup-kit or whatever); however, even if we exclude supporting
->    orthogonal categorizations, there are good number of non-trivial
->    hurdles to clear before this can be realized.
-> 
->    Most importantly, we would need to clean up how nesting is handled
->    across different subsystems.  Handling internal and leaf nodes as
->    equals simply can't work.  Membership should be recursive, and for
->    subsystems which can't support proper nesting, the right thing to
->    do would be somehow ensuring that only single node in the path from
->    root to leaf is active for the controller.  We may even have to
->    introduce an alternative of operation to support this (yuck).
-> 
->    This path would require the most amount of work and we would be
->    excluding a feature - support for multiple orthogonal
->    categorizations - which has been available till now, probably
->    through deprecation process spanning years; however, this at least
->    gives us hope that we may reach sanity in the end, how distant that
->    end may be.  Oh, hope. :)
-> 
-> So, I mean, I don't know.  What do other people think?  Is this a
-> unnecessary worry?  Are people generally happy with the way things
-> are?  Lennart, Kay, what do you guys think?
-> 
-> Thanks.
-> 
-> --
-> tejun
+On Tue, Feb 21, 2012 at 3:34 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> This is a first structured approach to tracking general kernel
+> memory within the memory controller. Please tell me what you think.
 
--- 
-tejun
+Thanks for posting these.
+
+> As previously proposed, one has the option of keeping kernel memory
+> accounted separatedly, or together with the normal userspace memory.
+> However, this time I made the option to, in this later case, bill
+> the memory directly to memcg->res. It has the disadvantage that it becomes
+> complicated to know which memory came from user or kernel, but OTOH,
+> it does not create any overhead of drawing from multiple res_counters
+> at read time. (and if you want them to be joined, you probably don't care)
+
+It would be nice to still keep a kernel memory counter (that gets
+updated at the same time as memcg->res) even when the limits are not
+independent, because sometimes it's important to know how much kernel
+memory is being used by a cgroup.
+
+> Kernel memory is never tracked for the root memory cgroup. This means
+> that a system where no memory cgroups exists other than the root, the
+> time cost of this implementation is a couple of branches in the slub
+> code - none of them in fast paths. At the moment, this works only
+> with the slub.
+>
+> At cgroup destruction, memory is billed to the parent. With no hierarchy,
+> this would mean the root memcg. But since we are not billing to that,
+> it simply ceases to be tracked.
+>
+> The caches that we want to be tracked need to explicit register into
+> the infrastructure.
+
+Why not track every cache unless otherwise specified? If you don't,
+you might end up polluting code all around the kernel to create
+per-cgroup caches.
+From what I've seen, there are a fair amount of different caches that
+can end up using a significant amount of memory, and having to go
+around and explicitly mark each one doesn't seem like the right thing
+to do.
+
+-- Suleiman
