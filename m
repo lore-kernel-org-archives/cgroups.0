@@ -1,68 +1,152 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 4/7] chained slab caches: move pages to a different cache
- when a cache is destroyed.
-Date: Wed, 22 Feb 2012 18:57:17 +0400
-Message-ID: <4F45024D.1010007@parallels.com>
-References: <1329824079-14449-1-git-send-email-glommer@parallels.com> <1329824079-14449-5-git-send-email-glommer@parallels.com> <20120222102512.021d9d54.kamezawa.hiroyu@jp.fujitsu.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Wed, 22 Feb 2012 16:45:04 +0100
+Message-ID: <20120222154501.GA1693@somewhere.redhat.com>
+References: <20120221211938.GE12236@google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120222102512.021d9d54.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+	h=date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=s/qXFxdO/5ETfCmtyLvJvEVptlVDOOzGxjMz5nOJ47w=;
+	b=o2Dz1ou1HeYIsfaMGak1j9Wwtgsziq92DwJh/kMdbUSTbxloeVqrffLX4GeiS/jkAy
+	f7JsNvJReBJ7plN1T38GqAeJGtcJolIUs8tc4pLA+MCbxRa8RKPOMQc2CSZgDllQikxw
+	g8ehJl7pobeSdd1czwGQo3wdStfmz++mcpzgw=
+Content-Disposition: inline
+In-Reply-To: <20120221211938.GE12236-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
 
-On 02/22/2012 05:25 AM, KAMEZAWA Hiroyuki wrote:
-> On Tue, 21 Feb 2012 15:34:36 +0400
-> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->
->> In the context of tracking kernel memory objects to a cgroup, the
->> following problem appears: we may need to destroy a cgroup, but
->> this does not guarantee that all objects inside the cache are dead.
->> This can't be guaranteed even if we shrink the cache beforehand.
->>
->> The simple option is to simply leave the cache around. However,
->> intensive workloads may have generated a lot of objects and thus
->> the dead cache will live in memory for a long while.
->>
->> Scanning the list of objects in the dead cache takes time, and
->> would probably require us to lock the free path of every objects
->> to make sure we're not racing against the update.
->>
->> I decided to give a try to a different idea then - but I'd be
->> happy to pursue something else if you believe it would be better.
->>
->> Upon memcg destruction, all the pages on the partial list
->> are moved to the new slab (usually the parent memcg, or root memcg)
->> When an object is freed, there are high stakes that no list locks
->> are needed - so this case poses no overhead. If list manipulation
->> is indeed needed, we can detect this case, and perform it
->> in the right slab.
->>
->> If all pages were residing in the partial list, we can free
->> the cache right away. Otherwise, we do it when the last cache
->> leaves the full list.
->>
->
-> How about starting from 'don't handle slabs on dead memcg'
-> if shrink_slab() can find them....
->
-> This "move" complicates all implementation, I think...
->
+On Tue, Feb 21, 2012 at 01:19:38PM -0800, Tejun Heo wrote:
+> Hello, guys.
+> 
+> I've been thinking about multiple hierarchy support in cgroup for a
+> while, especially after Frederic's pending task counter patchset.
+> This is a write up of what I've been thinking.  I don't know what to
+> do yet and simply continuing the current situation definitely is an
+> option, so please read on and throw in your 20 Won (or whatever amount
+> in whatever currency you want).
+> 
+> * The problems.
+> 
+> The support for multiple process hierarchies always struck me as
+> rather strange.  If you forget about the current cgroup controllers
+> and their implementations, the *only* reason to support multiple
+> hierarchies is if you want to apply resource limits based on different
+> orthogonal categorizations.
+> 
+> Documentation/cgroups.txt seems to be written with this consideration
+> on mind.  It's giving an example of applying limits accoring to two
+> orthogonal categorizations - user groups (profressors, students...)
+> and applications (WWW, NFS...).  While it may sound like a valid use
+> case, I'm very skeptical how useful or common mixing such orthogonal
+> categorizations in a single setup would be.
+> 
+> If support for multiple hierarchies comes for free, at least in terms
+> of features, maybe it can be better but of course it isn't so.  Any
+> given cgroup subsystem (or controller) can only be applied to a single
+> hierarchy, which makes sense for a lot of things - what would two
+> different limits on the same resource from different hierarchies mean?
+> But, there also are things which can be used and useful in all
+> hierarchies - e.g. cgroup freezer and task counter.
+> 
+> While the current cgroup implementation and conventions can probably
+> allow admins and engineers to tailor cgroup configuration for a
+> specific setup, it is very difficult to use in generic and automated
+> way.  I mean, who owns the freezer or task counter?  If they're
+> mounted on their own hierarchies, how should they be structured?
+> Should the different hierarchies be structured such that they are
+> projections of one unified hierarchy so that those generic mechanisms
+> can be applied uniformly?  If so, why do we need multiple hierarchies
+> at all?
+> 
+> A related limitation is that as different subsystems don't know which
+> hierarchies they'll end up on, they can't cooperate.  Wouldn't it make
+> more sense if task counter is a separate thing watching the resources
+> and triggers different actions as conifgured - be it failing forks or
+> freezing?
 
-You mean, whenever pressure kicks in, start by reclaiming from dead 
-memcg? Well, I can work with that, for sure. I am not that sure that 
-this will be a win, but there is only way to know for sure.
+For this particular example, I think we'd better have a file in which
+a task can poll and get woken up when the task limit has been reached.
+Then that task can decide to freeze or whatever.
 
-Note that in this case, we need to keep the memcg around anyway. Also, 
-it is yet another reason why I believe we should explicit register a 
-cache for being tracked. If your memcg is gone, but the objects are not, 
-you really depend on the shrinker to make them go away. So we better 
-make sure this works before registering.
+> 
+> And yet another oddity is how cgroup handles nested cgroups - some
+> care about nesting but others just treat both internal and leaf nodes
+> equally.  They don't care about the topology at all.  This, too, can
+> be fine if you approach things subsys by subsys and use them in
+> different ways but if you try to combine them in generic way you get
+> sucked into the lala land of whatevers.
+> 
+> The following is a "best practices" document on using cgroups.
+> 
+>   http://www.freedesktop.org/wiki/Software/systemd/PaxControlGroups
+> 
+> To me, it seems to demonstrate the rather ugly situation that the
+> current cgroup is providing.  Everyone should tip-toe around cgroup
+> hierarchies and nobody has full knowledge or control over them.
+> e.g. base system management (e.g. systemd) can't use freezer or task
+> counter as someone else might want to use it for different hierarchy
+> layout.
+> 
+> It seems to me that cgroup interface is too complicated and inflexible
+> at the same time to be useful in generic manner.  Sure, it can be
+> useful for setups individually crafted by engineers and admins to
+> match specific sites or applications but as soon as you try to do
+> something automatic and generic with it, there just are too many
+> different scenarios and limitations to consider.
+> 
+> 
+> * So, what to do?
+> 
+> Heh, I don't know.  IIRC, last year at LinuxCon Japan, I heard
+> Christoph saying that the biggest problem w/ cgroup was that it was
+> building completely separate hierarchies out of the traditional
+> process hierarchies.  After thinking about this stuff for a while, I
+> fully agree with him.  I think this whole thing should have been a
+> layer over the process tree like sessions or program groups.
+> 
+> Unfortunately, that ship sailed long ago and we gotta make do with
+> what we have on our collective hands.  Here are some paths that we can
+> take.
+> 
+> 1. We're screwed anyway.  Just don't worry about it and continue down
+>    on this path.  Can't get much worse, right?
+> 
+>    This approach has the apparent advantage of not having to do
+>    anything and is probably most likely to be taken.  This isn't ideal
+>    but hey nothing is. :P
 
-Also, I have another question for you guys: How would you feel if we 
-triggered an agressive slab reclaim before deleting the memcg? With 
-this, maybe we can reduce the pages considerably - and probably get rid 
-of the memcg altogether at destruction stage.
+Thing is we have an ABI now and it has been there for a while now. Aren't
+we stuck with it? I'm no big fan of that multiple hierarchies thing either
+but now I fear we have to support it.
+
+> 
+> 2. Make it more flexible (and likely more complex, unfortunately).
+>    Allow the utility type subsystems to be used in multiple
+>    hierarchies.  The easiest and probably dirtiest way to achieve that
+>    would be embedding them into cgroup core.
+> 
+>    Thinking about doing this depresses me and it's not like I have a
+>    cheerful personality to begin with. :(
+
+Another solution is to support a class of multi-bindable subsystems as in
+this old patch from Paul:
+
+	https://lkml.org/lkml/2009/7/1/578
+
+It sounds to me more healthy to iterate only over subsystems in fork/exit.
+We probably don't want to add a new iteration over cgroups themselves
+on these fast path.
