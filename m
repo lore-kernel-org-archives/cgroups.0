@@ -1,70 +1,75 @@
-From: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/7] per-cgroup slab caches
-Date: Tue, 21 Feb 2012 15:50:32 -0800
-Message-ID: <CABCjUKAmjGS1j6kNgj8it_QZSPKJiCmgpme6BTxAGkoJ=DSR7w@mail.gmail.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH 1/7] small cleanup for memcontrol.c
+Date: Wed, 22 Feb 2012 09:46:19 +0900
+Message-ID: <20120222094619.caffc432.kamezawa.hiroyu@jp.fujitsu.com>
 References: <1329824079-14449-1-git-send-email-glommer@parallels.com>
-	<1329824079-14449-4-git-send-email-glommer@parallels.com>
+	<1329824079-14449-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=gamma;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=jfkrjG37rtLjfMAV8UoBezc6ycZ/3P/Aln0U4OC90C4=;
-        b=v28wztWssmPc/2BETA+kudn8tmJny0pORa4+B8/1mQSUdA93oqm853m1LvEiDpvvUE
-         NpUnabLmno9eIWMfCdDzGL6rtnltqA+k2wGOyDIcmL1Cf5DYV8x20RYNEhZ4iXprmUZq
-         1wyQLgR9Xx4velTgBwXdDT10x1wzOyE4/rpM8=
-In-Reply-To: <1329824079-14449-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1329824079-14449-2-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hiroyouki Kamezawa <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, devel@openvz.org, linux-mm@kvack.org, "Kirill A. Shutemov" <kirill@shutemov.name>, Greg Thelen <gthelen@google.com>, Johannes Weiner <jweiner@redhat.com>, Michal Hocko <mhocko@suse.cz>, Paul Turner <pjt@google.com>, Frederic Weisbecker <fweisbec@gmail.com>
 
-On Tue, Feb 21, 2012 at 3:34 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> =
-wrote:
+On Tue, 21 Feb 2012 15:34:33 +0400
+Glauber Costa <glommer@parallels.com> wrote:
+
+> Move some hardcoded definitions to an enum type.
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Kirill A. Shutemov <kirill@shutemov.name>
+> CC: Greg Thelen <gthelen@google.com>
+> CC: Johannes Weiner <jweiner@redhat.com>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Hiroyouki Kamezawa <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Paul Turner <pjt@google.com>
+> CC: Frederic Weisbecker <fweisbec@gmail.com>
+
+seems ok to me.
+
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+
+a nitpick..
+
+> ---
+>  mm/memcontrol.c |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+> 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 26fda11..2aa35b0 100644
+> index 6728a7a..b15a693 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> +struct kmem_cache *
-> +kmem_cache_dup(struct mem_cgroup *memcg, struct kmem_cache *base)
-> +{
-> + =A0 =A0 =A0 struct kmem_cache *s;
-> + =A0 =A0 =A0 unsigned long pages;
-> + =A0 =A0 =A0 struct res_counter *fail;
-> + =A0 =A0 =A0 /*
-> + =A0 =A0 =A0 =A0* TODO: We should use an ida-like index here, instea=
-d
-> + =A0 =A0 =A0 =A0* of the kernel address
-> + =A0 =A0 =A0 =A0*/
-> + =A0 =A0 =A0 char *kname =3D kasprintf(GFP_KERNEL, "%s-%p", base->na=
-me, memcg);
+> @@ -351,9 +351,13 @@ enum charge_type {
+>  };
+>  
+>  /* for encoding cft->private value on file */
+> -#define _MEM			(0)
+> -#define _MEMSWAP		(1)
+> -#define _OOM_TYPE		(2)
+> +
+> +enum mem_type {
+> +	_MEM = 0,
 
-Would it make more sense to use the memcg name instead of the pointer?
+=0 is required ?
 
+> +	_MEMSWAP,
+> +	_OOM_TYPE,
+> +};
 > +
-> + =A0 =A0 =A0 WARN_ON(mem_cgroup_is_root(memcg));
-> +
-> + =A0 =A0 =A0 if (!kname)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return NULL;
-> +
-> + =A0 =A0 =A0 s =3D kmem_cache_create_cg(memcg, kname, base->size,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0base=
-->align, base->flags, base->ctor);
-> + =A0 =A0 =A0 if (WARN_ON(!s))
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
-> +
-> +
-> + =A0 =A0 =A0 pages =3D slab_nr_pages(s);
-> +
-> + =A0 =A0 =A0 if (res_counter_charge(memcg_kmem(memcg), pages << PAGE=
-_SHIFT, &fail)) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 kmem_cache_destroy(s);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 s =3D NULL;
-> + =A0 =A0 =A0 }
+>  #define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
+>  #define MEMFILE_TYPE(val)	(((val) >> 16) & 0xffff)
+>  #define MEMFILE_ATTR(val)	((val) & 0xffff)
+> -- 
+> 1.7.7.6
+> 
+> 
 
-What are we charging here? Does it ever get uncharged?
-
--- Suleiman
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
