@@ -1,41 +1,45 @@
-From: Pekka Enberg <penberg@kernel.org>
-Subject: Re: [PATCH 0/7] memcg kernel memory tracking
-Date: Wed, 22 Feb 2012 09:08:26 +0200
-Message-ID: <CAOJsxLHOM7e2SpFMXrMZf7u5Y59H1eGyPsrKzSj6jyG9KkWsMw@mail.gmail.com>
-References: <1329824079-14449-1-git-send-email-glommer@parallels.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Wed, 22 Feb 2012 14:30:59 +0100
+Message-ID: <1329917459.24994.14.camel@twins>
+References: <20120221211938.GE12236@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-        bh=PVUQoPQcirmiwCpkAQVoioUCS3fPMFmYBNCH6SMfJQ8=;
-        b=ht2JiC0GtiQqllj0+mB+1WDToByXDN2mWGoWn5w26PGEoETVlEsxukiLweXCL+SIY0
-         iieCV6ol39ArJO9dLD8jh9PejflR8VV+7Ubf7cbwFU1mEWtxQjdFLBb7BCF+NfzmSdU+
-         c2JVRMlVkCUjRB4nsYMKCdpKm8fiwwTPlmLBA=
-In-Reply-To: <1329824079-14449-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120221211938.GE12236-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, devel@openvz.org, linux-mm@kvack.org, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
-Hi Glauber,
+On Tue, 2012-02-21 at 13:19 -0800, Tejun Heo wrote:
+> So, I mean, I don't know.  What do other people think?  Is this a
+> unnecessary worry?  Are people generally happy with the way things
+> are?  Lennart, Kay, what do you guys think? 
 
-On Tue, Feb 21, 2012 at 1:34 PM, Glauber Costa <glommer@parallels.com> wrote:
-> This is a first structured approach to tracking general kernel
-> memory within the memory controller. Please tell me what you think.
+FWIW I'm all for ripping the orthogonal hierarchy crap out, I hate it
+just about as much as you do judging from your write-up.
 
-I like it! I only skimmed through the SLUB changes but they seemed
-reasonable enough. What kind of performance hit are we taking when
-memcg configuration option is enabled but the feature is disabled?
+Yes it will make some people unhappy, but I can live with that since my
+life will be easier.. :-)
 
-                        Pekka
+I'm not sure on your process hierarchy pie though, I rather like being
+able to assign tasks to cgroups of my making without having to mirror
+that in the process hierarchy.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Having seen what userspace does (libvirt in particular, I've still
+managed to not get infected by the systemd crap) its utterly and
+completely insane. Now I don't think any of my machines actually still
+have libvirt on it, so I don't care if we break that either ;-)
+
+Another thing I dislike about all the cgroup crap is all the dozens of
+tiny controllers being proposed left right and center. Like WTF isn't
+the hugetlb controller part of memcg? Its all memory, right?
+
+Now I appreciate all this is new and exciting and Linux does the
+evolutionary development thing so its bound to be a mess sometimes, but
+shees.. 
+
+So +1 on just ripping everything apart and trying again.
+
