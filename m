@@ -1,105 +1,105 @@
-From: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/7] memcg kernel memory tracking
-Date: Thu, 23 Feb 2012 10:18:22 -0800
-Message-ID: <CALWz4izD0Ykx8YJWVoECk7jdBLTxSm1vXOjKfkAgUaUVv2FkJw@mail.gmail.com>
-References: <1329824079-14449-1-git-send-email-glommer@parallels.com>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Thu, 23 Feb 2012 12:47:01 -0600
+Message-ID: <20120223184701.GA4394@vostro.hallyn.com>
+References: <20120221211938.GE12236@google.com>
+	<20120221212106.GF12236@google.com>
+	<4F44EEE4.2000809@parallels.com>
+	<20120223074526.GA15835@mail.hallyn.com>
+	<20120223172915.GC22536@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=gamma;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=28YotxkfGv6yhps+PlwBMAR1jdNPtgdEVkxmZRfrz0Q=;
-        b=xlQwohCD62S7xzKzjqWwHgb1ul9683YCBIf1YwaeyhqHB2EupIvekMaR/1EWC3drgP
-         pRmuc9wPsei6qM9KQKWamEBoGsLnWn5Ys6YsjekInmwVZgkjMOf9QHnku01xhm+DeI3N
-         UeS3VqkboxvcngW+SA7n91QRyuk92KAlSANew=
-In-Reply-To: <1329824079-14449-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120223172915.GC22536-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, Feb 21, 2012 at 3:34 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> =
-wrote:
-> This is a first structured approach to tracking general kernel
-> memory within the memory controller. Please tell me what you think.
->
-> As previously proposed, one has the option of keeping kernel memory
-> accounted separatedly, or together with the normal userspace memory.
-> However, this time I made the option to, in this later case, bill
-> the memory directly to memcg->res. It has the disadvantage that it be=
-comes
-> complicated to know which memory came from user or kernel, but OTOH,
-> it does not create any overhead of drawing from multiple res_counters
-> at read time. (and if you want them to be joined, you probably don't =
-care)
+Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> Hey, Serge.
+> 
+> On Thu, Feb 23, 2012 at 07:45:26AM +0000, Serge E. Hallyn wrote:
+> > > >>Documentation/cgroups.txt seems to be written with this consideration
+> > > >>on mind.  It's giving an example of applying limits accoring to two
+> > > >>orthogonal categorizations - user groups (profressors, students...)
+> > > >>and applications (WWW, NFS...).  While it may sound like a valid use
+> > > >>case, I'm very skeptical how useful or common mixing such orthogonal
+> > > >>categorizations in a single setup would be.
+> > 
+> > My first inclination is to agree, but counterexamples do come to mind.
+> > 
+> > I could imagine a site saying "users can run (X) (say, ftpds), but the
+> > memory consumed by all those ftpds must not be > 10% total RAM".  At
+> > the same time, they may run several apaches but want them all locked to
+> > two of the cpus.
+> 
+> Orthogonal hierarchies is a feature and it does allow use cases which
 
-Keeping one counter for user and kernel pages makes it easier for
-admins to configure the system. About reporting, we should still
-report the user and kernel memory separately. It will be extremely
-useful when diagnosing the system like heavily memory pressure or OOM.
+Of course.  Note that while I used myself in the examples, I'm not
+opposed to any of what you've suggested.  Just trying to raise
+discussion.
 
-> Kernel memory is never tracked for the root memory cgroup. This means
-> that a system where no memory cgroups exists other than the root, the
-> time cost of this implementation is a couple of branches in the slub
-> code - none of them in fast paths. At the moment, this works only
-> with the slub.
->
-> At cgroup destruction, memory is billed to the parent. With no hierar=
-chy,
-> this would mean the root memcg. But since we are not billing to that,
-> it simply ceases to be tracked.
->
-> The caches that we want to be tracked need to explicit register into
-> the infrastructure.
+> aren't possible to support otherwise.  It's not too difficult to come
+> up with a use case crafted to exploit the feature.  The main thing is
+> whether the added functionality justifies the complexity and other
 
-It would be hard to let users to register which slab to track
-explicitly. We should track them all in general, even with the ones
-without shrinker, we want to understand how much is used by which
-cgroup.
+And (somehow) I think we need to get input from the users - the ones not
+on lkml.  There is an end-user summit coming up, right?  Perhaps this
+question should be floated there?
 
---Ying
+> disadvantages described earlier in the thread.  To me, the scenarios
+> seem not realistic, common place or essential enough.
+> 
+> Also, it's not like there's only one problem to solve these issues.
+> It may not be exactly the same thing but that's just part of the
+> trade-off game we all play.
+> 
+> > It might be worth a formal description of the new limits on use cases
+> > such changes (both dropping support for orthogonal cgroups, and limiting
+> > cgroups hierarchies to a mirror pstrees, separately) would bring.
+> 
+> The word "formal" scares me. :)
 
->
-> If you would like to give it a try, you'll need one of Frederic's pat=
-ches
-> that is used as a basis for this
-> (cgroups: ability to stop res charge propagation on bounded ancestor)
->
-> Glauber Costa (7):
-> =A0small cleanup for memcontrol.c
-> =A0Basic kernel memory functionality for the Memory Controller
-> =A0per-cgroup slab caches
-> =A0chained slab caches: move pages to a different cache when a cache =
-is
-> =A0 =A0destroyed.
-> =A0shrink support for memcg kmem controller
-> =A0track dcache per-memcg
-> =A0example shrinker for memcg-aware dcache
->
-> =A0fs/dcache.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0136 ++++++++++++++=
-+++-
-> =A0include/linux/dcache.h =A0 =A0 | =A0 =A04 +
-> =A0include/linux/memcontrol.h | =A0 35 +++++
-> =A0include/linux/shrinker.h =A0 | =A0 =A04 +
-> =A0include/linux/slab.h =A0 =A0 =A0 | =A0 12 ++
-> =A0include/linux/slub_def.h =A0 | =A0 =A03 +
-> =A0mm/memcontrol.c =A0 =A0 =A0 =A0 =A0 =A0| =A0344 ++++++++++++++++++=
-+++++++++++++++++++++++++-
-> =A0mm/slub.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0237 ++++++++++++=
-++++++++++++++++---
-> =A0mm/vmscan.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 60 ++++++++-
-> =A09 files changed, 806 insertions(+), 29 deletions(-)
->
-> --
-> 1.7.7.6
->
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org =A0For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Fight unfair telecom internet charges in Canada: sign http://stopthem=
-eter.ca/
-> Don't email: <a href=3Dmailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+The upside would be a clear explanation of what userspace can do to
+work around the more limited kernel functionality.
+
+> > To me personally the hierarchy limitation is more worrying.  There have
+> > been times when I've simply created cgroups for 'compile' and 'image
+> > build', with particular cpu and memory limits.  If I started a second
+> > simultaneous compile, I'd want both compiles confined together.  (That's
+> > not to say the simplification might not be worth it, just bringing up
+> > the other side)
+> 
+> Yeah, that's an interesting point, but wouldn't something like the
+> following work too?
+> 
+> 1. create_cgroup --cpu 40% --mem 20% screen
+> 2. tell screen to create as many build screens you want
+> 3. issue builds from those screens
+
+That works for a single user.  Gets more complicated if you have multiple
+users but still want to confine compiles differently from other workloads.
+
+Still, we now have 'namespace attach', so even if we generally shadow
+pstree with the cgroups, perhaps we could implement a cgroup transfer
+much more cleanly than the current cgroup attach stuff.
+
+Or, maybe it's just not something users would deem worthwhile.  *I*
+will be fine either way.
+
+> To me, something like the above seems far more consistent with
+> everything else we have on the system than moving tasks around by
+> echoing pids to some sysfs file.
+
+-serge
