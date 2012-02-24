@@ -1,67 +1,57 @@
-From: Anton Vorontsov <anton.vorontsov@linaro.org>
-Subject: [PATCH] mm: memcg: Remove redundant BUG_ON() in
- mem_cgroup_usage_unregister_event
-Date: Fri, 24 Feb 2012 05:22:27 +0400
-Message-ID: <20120224012227.GA32689@oksana.dev.rtsoft.ru>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Fri, 24 Feb 2012 12:33:16 +0100
+Message-ID: <1330083196.11248.24.camel@twins>
+References: <20120221211938.GE12236@google.com>
+	<20120222163858.GB4128@redhat.com> <20120222165714.GC4128@redhat.com>
+	<1329990094.24994.64.camel@twins> <20120223213847.GK19691@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20120223213847.GK19691-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-In the following code:
+On Thu, 2012-02-23 at 16:38 -0500, Vivek Goyal wrote:
+> > > Again, it does not mean I am advocating flat hiearchy. I am just wondering
+> > > in case of fully nested hierarchies (task at same level as groups), how
+> > > does one explain it to a layman user who understands things in terms of
+> > > % of resources. 
+> > 
+> > If your complete control is % based then I would assume its a % of a %.
+> > Simple enough.
+> 
+> But % of % will vary dynamically and not be static. So if root has got
+> 100% of resources and we want 25% of that for a group, then hierarchy
+> might look as follows.
+> 
+>                                 root
+>                                 / | \
+>                                T1 T2 g1
+> 
+> T1, T2 are tasks and g1 is the group needing 25% of root's resources. Now
+> number of tasks running in parallel to g1 will determine its effective %
+> and tasks come and go. So the only way to do this would be that move T1
+> and T2 in a child group under root and make sure new tasks don't show up
+> in root. 
 
-	if (type == _MEM)
-		thresholds = &memcg->thresholds;
-	else if (type == _MEMSWAP)
-		thresholds = &memcg->memsw_thresholds;
-	else
-		BUG();
+Which is exactly that the scheduler stuff does.. so tough luck for the
+sysad who can't grasp it.
 
-	BUG_ON(!thresholds);
+> Otherwise creating a group under root does not ensure that you get minimum
+> % of resource. It just makes sure that you can't get more than 25% of
+> % resources when things are tight. 
 
-The BUG_ON() seems redundant.
-
-Signed-off-by: Anton Vorontsov <anton.vorontsov@linaro.org>
----
- mm/memcontrol.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6728a7a..b423577 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4404,20 +4404,14 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
- 	if (type == _MEM)
- 		thresholds = &memcg->thresholds;
- 	else if (type == _MEMSWAP)
- 		thresholds = &memcg->memsw_thresholds;
- 	else
- 		BUG();
- 
--	/*
--	 * Something went wrong if we trying to unregister a threshold
--	 * if we don't have thresholds
--	 */
--	BUG_ON(!thresholds);
--
- 	usage = mem_cgroup_usage(memcg, type == _MEMSWAP);
- 
- 	/* Check if a threshold crossed before removing */
- 	__mem_cgroup_threshold(memcg, type == _MEMSWAP);
- 
- 	/* Calculate new number of threshold */
- 	size = 0;
--- 
-1.7.9
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+You never said anything about minimum resource guarantees in the initial
+problem statement.
