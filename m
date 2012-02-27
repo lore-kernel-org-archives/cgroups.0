@@ -1,134 +1,114 @@
-From: Frederic Weisbecker <fweisbec@gmail.com>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Mon, 27 Feb 2012 18:46:13 +0100
-Message-ID: <20120227174610.GC30232@somewhere.redhat.com>
-References: <20120221211938.GE12236@google.com>
- <20120222154501.GA1693@somewhere.redhat.com>
- <20120222182207.GC32694@google.com>
+From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+Subject: [PATCH 00/10] memcg: Kernel Memory Accounting.
+Date: Mon, 27 Feb 2012 14:58:43 -0800
+Message-ID: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=d06a5EndkUyQnT1x4idTqk5r3kPQUe1EVIdsxFL3a3Y=;
-        b=k56nEyxYSEo8JbpbNzxX04WEoI2C1ubjxN0xA+4jgUoi9SLTQ/kMuJv+KtT5Hv0Jxg
-         q+Fgu94osEb+Tg92pIfOPZe06WpFq7ycX+QLm0XK3HnDfRd0P7tK/SrX0Ag5Dg270+EN
-         R7zLwXTqEGroVc8bJ5DI4M1Gf2gha3duGhnpI=
-Content-Disposition: inline
-In-Reply-To: <20120222182207.GC32694@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizf@cn.fujitsu.com>, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, linux-kernel@vger.kernel.org, Paul Menage <paul@paulmenage.org>
+To: cgroups@vger.kernel.org
+Cc: suleiman@google.com, glommer@parallels.com, kamezawa.hiroyu@jp.fujitsu.com, penberg@kernel.org, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org, Suleiman Souhlal <ssouhlal@FreeBSD.org>
 
-On Wed, Feb 22, 2012 at 10:22:07AM -0800, Tejun Heo wrote:
-> Hey, Frederic.
-> 
-> On Wed, Feb 22, 2012 at 04:45:04PM +0100, Frederic Weisbecker wrote:
-> > > A related limitation is that as different subsystems don't know which
-> > > hierarchies they'll end up on, they can't cooperate.  Wouldn't it make
-> > > more sense if task counter is a separate thing watching the resources
-> > > and triggers different actions as conifgured - be it failing forks or
-> > > freezing?
-> > 
-> > For this particular example, I think we'd better have a file in which
-> > a task can poll and get woken up when the task limit has been reached.
-> > Then that task can decide to freeze or whatever.
-> 
-> Yes, that may be a solution but to "guarantee" that the limit is never
-> breached, we need to stop it first somehow.  Probably making freezing
-> the default behavior with userland notifier (inotify event should
-> suffice) should do, which we can't do now. :(
+This patch series introduces kernel memory accounting to memcg.
+It currently only accounts for slab.
 
-The limit can't be breached because forks are rejected once we reached the
-limit given by the user.
+It's very similar to the patchset I sent back in October, but
+with a number of fixes and improvements.
+There is also overlap with Glauber's patchset, but I decided to
+send this because there are some pretty significant differences.
 
-With this rejection, another task can take control of this and freeze the
-cgroup.
+With this patchset, kernel memory gets counted in a memcg's
+memory.kmem.usage_in_bytes.
+It's possible to have a limit to the kernel memory by setting
+memory.kmem.independent_kmem_limit to 1 and setting the limit in
+memory.kmem.limit_in_bytes.
+If memory.kmem.independent_kmem_limit is unset, kernel memory also
+gets counted in the cgroup's memory.usage_in_bytes, and kernel
+memory allocations may trigger memcg reclaim or OOM.
 
-> 
-> > > 1. We're screwed anyway.  Just don't worry about it and continue down
-> > >    on this path.  Can't get much worse, right?
-> > > 
-> > >    This approach has the apparent advantage of not having to do
-> > >    anything and is probably most likely to be taken.  This isn't ideal
-> > >    but hey nothing is. :P
-> > 
-> > Thing is we have an ABI now and it has been there for a while now. Aren't
-> > we stuck with it? I'm no big fan of that multiple hierarchies thing either
-> > but now I fear we have to support it.
-> 
-> Well, yes and no.  While maintaining userland ABI is very important,
-> its importance isn't infinite and there are different types of
-> userland ABIs.  We definitely don't want to screw with syscalls.  We
-> should keep userland visible dynamic files which are used by common
-> usertools stable at almost all costs.  When it comes over to system
-> interface which is used mostly by base system tools, it can be a bit
-> flexible.  If the ABI in question is an optional thing, we probably
-> can be slightly more flexible.
 
-But cgroups falls into the general purpose category to me. Not something
-that was used only by a finite circle of a few well known and defined tools.
+Slab gets accounted per-page, by using per-cgroup kmem_caches that
+get created the first time an allocation of that type is done by
+that cgroup.
 
-> We of course can't change things drastically.  It should be done
-> carefully with rather long deprecation period, but it can be done and
-> in fact isn't too uncommon.  Stuff under /sysfs tends to be somewhat
-> volatile and sysfs itself went through several ABI incompatible
-> iterations.
-> 
-> So, we can transition in baby steps.  e.g. we can first implement
-> proper nesting behavior without changing the default behavior and then
-> the base system can be updated to mount and control all subsystems by
-> default (with configuration opt-outs) so that the hierarchy reflects
-> pstree, effectively driving people away from multiple hierarchies and
-> we can implement new features assuming the new structure.  After a few
-> years, the kernel can start whining about non-start hierarchies and
-> then eventually remove the support.  It's a long process but
-> definitely doable.
+The main difference with Glauber's patches is here: We try to
+track all the slab allocations, while Glauber only tracks ones
+that are explicitly marked.
+We feel that it's important to track everything, because there
+are a lot of different slab allocations that may use significant
+amounts of memory, that we may not know of ahead of time.
+This is also the main source of complexity in the patchset.
 
-Well, if we can I'll be glad.
 
-> 
-> > > 2. Make it more flexible (and likely more complex, unfortunately).
-> > >    Allow the utility type subsystems to be used in multiple
-> > >    hierarchies.  The easiest and probably dirtiest way to achieve that
-> > >    would be embedding them into cgroup core.
-> > > 
-> > >    Thinking about doing this depresses me and it's not like I have a
-> > >    cheerful personality to begin with. :(
-> > 
-> > Another solution is to support a class of multi-bindable subsystems as in
-> > this old patch from Paul:
-> > 
-> > 	https://lkml.org/lkml/2009/7/1/578
-> 
-> Heh, yeah, this would be closer to the proper way to achieve
-> multi-attach but I can't help feeling that this just buries ourselves
-> deeper into s*it and we're already knee-deep.  If multiple hierarchies
-> is an essential feature, maybe, but, if it's not, and I'm extremely
-> skeptical that it is, why the hell would we want to go that way?
+The per-cgroup kmem_cache approach makes it so that we only have
+to do charges/uncharges in the slow path of the slab allocator,
+which should have low performance impacts.
 
-I don't know, it just depend what will happen on these multiple
-hierarchies.
+A per-cgroup kmem_cache will appear in slabinfo named like its
+original cache, with the cgroup's name in parenthesis.
+On cgroup deletion, the accounting gets moved to the root cgroup
+and any existing cgroup kmem_cache gets "dead" appended to its
+name, to indicate that its accounting was migrated.
+The dead caches get removed once they no longer have any active
+objects in them.
 
-> 
-> > It sounds to me more healthy to iterate only over subsystems in fork/exit.
-> > We probably don't want to add a new iteration over cgroups themselves
-> > on these fast path.
-> 
-> Hmmm?  Don't follow why this is relevant.
 
-If you make something a cgroup core feature instead of a subsystem and you
-need to do something on these cgroups during forks, then you need to
-iterate over these as well as the subsystems.
+This patchset does not include any shrinker changes. We already have
+patches for that, but I felt like it's more important to get the
+accounting right first, before concentrating on the slab shrinking.
 
-Typically adding some more loop on fork is not considered very welcome.
 
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+Some caveats:
+	- Only supports slab.c.
+	- There is a difference with non-memcg slab allocation in
+	  that with this, some slab allocations might fail when
+	  they never failed before. For example, a GFP_NOIO slab
+	  allocation wouldn't fail, but now it might.
+	  We have a change that makes slab accounting behave
+	  the same as non-accounted allocations, but I wasn't sure
+	  how important it was to include.
+	- We currently do two atomic operations on every accounted
+	  slab free, when we increment and decrement the kmem_cache's
+	  refcount. It's most likely possible to fix this.
+	- When CONFIG_CGROUP_MEM_RES_CTLR_KMEM is enabled, some
+	  conditional branches get added to the slab fast paths.
+	  That said, when the config option is disabled, this
+	  patchset is essentially a no-op.
+
+
+I hope either this or Glauber's patchset will evolve into something
+that is satisfactory to all the parties.
+
+Patch series, based on Linus HEAD from today:
+
+1/10 memcg: Kernel memory accounting infrastructure.
+2/10 memcg: Uncharge all kmem when deleting a cgroup.
+3/10 memcg: Reclaim when more than one page needed.
+4/10 memcg: Introduce __GFP_NOACCOUNT.
+5/10 memcg: Slab accounting.
+6/10 memcg: Track all the memcg children of a kmem_cache.
+7/10 memcg: Stop res_counter underflows.
+8/10 memcg: Add CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT.
+9/10 memcg: Per-memcg memory.kmem.slabinfo file.
+10/10 memcg: Document kernel memory accounting.
+
+Documentation/cgroups/memory.txt |   44 +++-
+include/linux/gfp.h              |    2 +
+include/linux/memcontrol.h       |   30 ++-
+include/linux/slab.h             |    1 +
+include/linux/slab_def.h         |  102 +++++++-
+init/Kconfig                     |    8 +
+mm/memcontrol.c                  |  607 ++++++++++++++++++++++++++++++++++++--
+mm/slab.c                        |  395 ++++++++++++++++++++++---
+8 files changed, 1115 insertions(+), 74 deletions(-)
+
+-- Suleiman
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
