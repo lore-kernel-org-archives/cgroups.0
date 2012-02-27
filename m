@@ -1,238 +1,45 @@
-From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
-Subject: [PATCH 01/10] memcg: Kernel memory accounting infrastructure.
-Date: Mon, 27 Feb 2012 14:58:44 -0800
-Message-ID: <1330383533-20711-2-git-send-email-ssouhlal@FreeBSD.org>
+From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+Subject: [PATCH 04/10] memcg: Introduce __GFP_NOACCOUNT.
+Date: Mon, 27 Feb 2012 14:58:47 -0800
+Message-ID: <1330383533-20711-5-git-send-email-ssouhlal@FreeBSD.org>
 References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1330383533-20711-1-git-send-email-ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: suleiman@google.com, glommer@parallels.com, kamezawa.hiroyu@jp.fujitsu.com, penberg@kernel.org, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org, Suleiman Souhlal <ssouhlal@FreeBSD.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
 
-Enabled with CONFIG_CGROUP_MEM_RES_CTLR_KMEM.
+This is used to indicate that we don't want an allocation to be accounted
+to the current cgroup.
 
-Adds the following files:
-    - memory.kmem.independent_kmem_limit
-    - memory.kmem.usage_in_bytes
-    - memory.kmem.limit_in_bytes
-
-Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- mm/memcontrol.c |  121 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 120 insertions(+), 1 deletions(-)
+ include/linux/gfp.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 228d646..11e31d6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -235,6 +235,10 @@ struct mem_cgroup {
- 	 */
- 	struct res_counter memsw;
- 	/*
-+	 * the counter to account for kernel memory usage.
-+	 */
-+	struct res_counter kmem_bytes;
-+	/*
- 	 * Per cgroup active and inactive list, similar to the
- 	 * per zone LRU lists.
- 	 */
-@@ -293,6 +297,7 @@ struct mem_cgroup {
- #ifdef CONFIG_INET
- 	struct tcp_memcontrol tcp_mem;
- #endif
-+	int independent_kmem_limit;
- };
- 
- /* Stuffs for move charges at task migration. */
-@@ -354,6 +359,7 @@ enum charge_type {
- #define _MEM			(0)
- #define _MEMSWAP		(1)
- #define _OOM_TYPE		(2)
-+#define _KMEM			(3)
- #define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
- #define MEMFILE_TYPE(val)	(((val) >> 16) & 0xffff)
- #define MEMFILE_ATTR(val)	((val) & 0xffff)
-@@ -370,6 +376,8 @@ enum charge_type {
- 
- static void mem_cgroup_get(struct mem_cgroup *memcg);
- static void mem_cgroup_put(struct mem_cgroup *memcg);
-+static void memcg_kmem_init(struct mem_cgroup *memcg,
-+    struct mem_cgroup *parent);
- 
- /* Writing them here to avoid exposing memcg's inner layout */
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-@@ -1402,6 +1410,10 @@ done:
- 		res_counter_read_u64(&memcg->memsw, RES_USAGE) >> 10,
- 		res_counter_read_u64(&memcg->memsw, RES_LIMIT) >> 10,
- 		res_counter_read_u64(&memcg->memsw, RES_FAILCNT));
-+	printk(KERN_INFO "kmem: usage %llukB, limit %llukB, failcnt %llu\n",
-+		res_counter_read_u64(&memcg->kmem_bytes, RES_USAGE) >> 10,
-+		res_counter_read_u64(&memcg->kmem_bytes, RES_LIMIT) >> 10,
-+		res_counter_read_u64(&memcg->kmem_bytes, RES_FAILCNT));
- }
- 
- /*
-@@ -3840,6 +3852,9 @@ static u64 mem_cgroup_read(struct cgroup *cont, struct cftype *cft)
- 		else
- 			val = res_counter_read_u64(&memcg->memsw, name);
- 		break;
-+	case _KMEM:
-+		val = res_counter_read_u64(&memcg->kmem_bytes, name);
-+		break;
- 	default:
- 		BUG();
- 		break;
-@@ -3872,8 +3887,14 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
- 			break;
- 		if (type == _MEM)
- 			ret = mem_cgroup_resize_limit(memcg, val);
--		else
-+		else if (type == _MEMSWAP)
- 			ret = mem_cgroup_resize_memsw_limit(memcg, val);
-+		else if (type == _KMEM) {
-+			if (!memcg->independent_kmem_limit)
-+				return -EINVAL;
-+			ret = res_counter_set_limit(&memcg->kmem_bytes, val);
-+		} else
-+			return -EINVAL;
- 		break;
- 	case RES_SOFT_LIMIT:
- 		ret = res_counter_memparse_write_strategy(buffer, &val);
-@@ -4572,8 +4593,47 @@ static int mem_control_numa_stat_open(struct inode *unused, struct file *file)
- #endif /* CONFIG_NUMA */
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+static u64
-+mem_cgroup_independent_kmem_limit_read(struct cgroup *cgrp, struct cftype *cft)
-+{
-+	return mem_cgroup_from_cont(cgrp)->independent_kmem_limit;
-+}
-+
-+static int mem_cgroup_independent_kmem_limit_write(struct cgroup *cgrp,
-+    struct cftype *cft, u64 val)
-+{
-+	mem_cgroup_from_cont(cgrp)->independent_kmem_limit = !!val;
-+
-+	return 0;
-+}
-+
-+static struct cftype kmem_cgroup_files[] = {
-+	{
-+		.name = "kmem.independent_kmem_limit",
-+		.write_u64 = mem_cgroup_independent_kmem_limit_write,
-+		.read_u64 = mem_cgroup_independent_kmem_limit_read,
-+	},
-+	{
-+		.name = "kmem.limit_in_bytes",
-+		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
-+		.write_string = mem_cgroup_write,
-+		.read_u64 = mem_cgroup_read,
-+	},
-+	{
-+		.name = "kmem.usage_in_bytes",
-+		.private = MEMFILE_PRIVATE(_KMEM, RES_USAGE),
-+		.read_u64 = mem_cgroup_read,
-+	},
-+};
-+
- static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
- {
-+	int ret;
-+
-+	ret = cgroup_add_files(cont, ss, kmem_cgroup_files,
-+	    ARRAY_SIZE(kmem_cgroup_files));
-+	if (ret)
-+		return ret;
- 	/*
- 	 * Part of this would be better living in a separate allocation
- 	 * function, leaving us with just the cgroup tree population work.
-@@ -4587,6 +4647,10 @@ static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
- static void kmem_cgroup_destroy(struct cgroup_subsys *ss,
- 				struct cgroup *cont)
- {
-+	struct mem_cgroup *memcg;
-+
-+	memcg = mem_cgroup_from_cont(cont);
-+	BUG_ON(res_counter_read_u64(&memcg->kmem_bytes, RES_USAGE) != 0);
- 	mem_cgroup_sockets_destroy(cont, ss);
- }
- #else
-@@ -4938,6 +5002,7 @@ mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
- 	}
- 	memcg->last_scanned_node = MAX_NUMNODES;
- 	INIT_LIST_HEAD(&memcg->oom_notify);
-+	memcg_kmem_init(memcg, parent && parent->use_hierarchy ? parent : NULL);
- 
- 	if (parent)
- 		memcg->swappiness = mem_cgroup_swappiness(parent);
-@@ -5519,3 +5584,57 @@ static int __init enable_swap_account(char *s)
- __setup("swapaccount=", enable_swap_account);
- 
- #endif
-+
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+int
-+memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, long long delta)
-+{
-+	struct res_counter *fail_res;
-+	struct mem_cgroup *_memcg;
-+	int may_oom, ret;
-+
-+	may_oom = (gfp & __GFP_WAIT) && (gfp & __GFP_FS) &&
-+	    !(gfp & __GFP_NORETRY);
-+
-+	ret = 0;
-+
-+	if (memcg && !memcg->independent_kmem_limit) {
-+		_memcg = memcg;
-+		if (__mem_cgroup_try_charge(NULL, gfp, delta / PAGE_SIZE,
-+		    &_memcg, may_oom) != 0)
-+			return -ENOMEM;
-+	}
-+
-+	if (_memcg)
-+		ret = res_counter_charge(&_memcg->kmem_bytes, delta, &fail_res);
-+
-+	return ret;
-+}
-+
-+void
-+memcg_uncharge_kmem(struct mem_cgroup *memcg, long long delta)
-+{
-+	if (memcg)
-+		res_counter_uncharge(&memcg->kmem_bytes, delta);
-+
-+	if (memcg && !memcg->independent_kmem_limit)
-+		res_counter_uncharge(&memcg->res, delta);
-+}
-+
-+static void
-+memcg_kmem_init(struct mem_cgroup *memcg, struct mem_cgroup *parent)
-+{
-+	struct res_counter *parent_res;
-+
-+	parent_res = NULL;
-+	if (parent && parent != root_mem_cgroup)
-+		parent_res = &parent->kmem_bytes;
-+	res_counter_init(&memcg->kmem_bytes, parent_res);
-+	memcg->independent_kmem_limit = 0;
-+}
-+#else /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-+static void
-+memcg_kmem_init(struct mem_cgroup *memcg, struct mem_cgroup *parent)
-+{
-+}
-+#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+index 581e74b..765c20f 100644
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -23,6 +23,7 @@ struct vm_area_struct;
+ #define ___GFP_REPEAT		0x400u
+ #define ___GFP_NOFAIL		0x800u
+ #define ___GFP_NORETRY		0x1000u
++#define ___GFP_NOACCOUNT	0x2000u
+ #define ___GFP_COMP		0x4000u
+ #define ___GFP_ZERO		0x8000u
+ #define ___GFP_NOMEMALLOC	0x10000u
+@@ -76,6 +77,7 @@ struct vm_area_struct;
+ #define __GFP_REPEAT	((__force gfp_t)___GFP_REPEAT)	/* See above */
+ #define __GFP_NOFAIL	((__force gfp_t)___GFP_NOFAIL)	/* See above */
+ #define __GFP_NORETRY	((__force gfp_t)___GFP_NORETRY) /* See above */
++#define __GFP_NOACCOUNT	((__force gfp_t)___GFP_NOACCOUNT) /* Don't account to the current cgroup */
+ #define __GFP_COMP	((__force gfp_t)___GFP_COMP)	/* Add compound page metadata */
+ #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
+ #define __GFP_NOMEMALLOC ((__force gfp_t)___GFP_NOMEMALLOC) /* Don't use emergency reserves */
 -- 
 1.7.7.3
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
