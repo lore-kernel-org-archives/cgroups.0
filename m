@@ -1,177 +1,134 @@
-From: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+From: Frederic Weisbecker <fweisbec@gmail.com>
 Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Sun, 26 Feb 2012 08:59:57 +0400
-Message-ID: <4F49BC4D.4050203@openvz.org>
-References: <20120221211938.GE12236@google.com> <20120221212106.GF12236@google.com>
+Date: Mon, 27 Feb 2012 18:46:13 +0100
+Message-ID: <20120227174610.GC30232@somewhere.redhat.com>
+References: <20120221211938.GE12236@google.com>
+ <20120222154501.GA1693@somewhere.redhat.com>
+ <20120222182207.GC32694@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=gamma;
-        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=sTCD3HmWchagtytWpx663OCfyx2QOEGTsbtgMC72Yvc=;
-        b=mJ/G/SrurtfFkcrF73N/y2QJIDyPCrMQi3Amvft4dzKXFZX6Z9lZ5G8WaKPD/wuvoR
-         5ZDOtT3T5UTGwFbciMXHBYaKdOqI3jXirC4ob0Ozke4m3o09gSfimjZV1vmKq6sgHUWh
-         YBcUno/iguBgsDHf6aAcwyMPmlJYr7O42lmko=
-In-Reply-To: <20120221212106.GF12236-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=d06a5EndkUyQnT1x4idTqk5r3kPQUe1EVIdsxFL3a3Y=;
+        b=k56nEyxYSEo8JbpbNzxX04WEoI2C1ubjxN0xA+4jgUoi9SLTQ/kMuJv+KtT5Hv0Jxg
+         q+Fgu94osEb+Tg92pIfOPZe06WpFq7ycX+QLm0XK3HnDfRd0P7tK/SrX0Ag5Dg270+EN
+         R7zLwXTqEGroVc8bJ5DI4M1Gf2gha3duGhnpI=
+Content-Disposition: inline
+In-Reply-To: <20120222182207.GC32694@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizf@cn.fujitsu.com>, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, linux-kernel@vger.kernel.org, Paul Menage <paul@paulmenage.org>
 
-Tejun Heo wrote:
-> Sorry, forgot to cc hch.  Cc'ing him and quoting whole message.
->
-> On Tue, Feb 21, 2012 at 01:19:38PM -0800, Tejun Heo wrote:
->> Hello, guys.
->>
->> I've been thinking about multiple hierarchy support in cgroup for a
->> while, especially after Frederic's pending task counter patchset.
->> This is a write up of what I've been thinking.  I don't know what to
->> do yet and simply continuing the current situation definitely is an
->> option, so please read on and throw in your 20 Won (or whatever amount
->> in whatever currency you want).
->>
->> * The problems.
->>
->> The support for multiple process hierarchies always struck me as
->> rather strange.  If you forget about the current cgroup controllers
->> and their implementations, the *only* reason to support multiple
->> hierarchies is if you want to apply resource limits based on different
->> orthogonal categorizations.
->>
->> Documentation/cgroups.txt seems to be written with this consideration
->> on mind.  It's giving an example of applying limits accoring to two
->> orthogonal categorizations - user groups (profressors, students...)
->> and applications (WWW, NFS...).  While it may sound like a valid use
->> case, I'm very skeptical how useful or common mixing such orthogonal
->> categorizations in a single setup would be.
->>
->> If support for multiple hierarchies comes for free, at least in terms
->> of features, maybe it can be better but of course it isn't so.  Any
->> given cgroup subsystem (or controller) can only be applied to a single
->> hierarchy, which makes sense for a lot of things - what would two
->> different limits on the same resource from different hierarchies mean?
->> But, there also are things which can be used and useful in all
->> hierarchies - e.g. cgroup freezer and task counter.
->>
->> While the current cgroup implementation and conventions can probably
->> allow admins and engineers to tailor cgroup configuration for a
->> specific setup, it is very difficult to use in generic and automated
->> way.  I mean, who owns the freezer or task counter?  If they're
->> mounted on their own hierarchies, how should they be structured?
->> Should the different hierarchies be structured such that they are
->> projections of one unified hierarchy so that those generic mechanisms
->> can be applied uniformly?  If so, why do we need multiple hierarchies
->> at all?
+On Wed, Feb 22, 2012 at 10:22:07AM -0800, Tejun Heo wrote:
+> Hey, Frederic.
+> 
+> On Wed, Feb 22, 2012 at 04:45:04PM +0100, Frederic Weisbecker wrote:
+> > > A related limitation is that as different subsystems don't know which
+> > > hierarchies they'll end up on, they can't cooperate.  Wouldn't it make
+> > > more sense if task counter is a separate thing watching the resources
+> > > and triggers different actions as conifgured - be it failing forks or
+> > > freezing?
+> > 
+> > For this particular example, I think we'd better have a file in which
+> > a task can poll and get woken up when the task limit has been reached.
+> > Then that task can decide to freeze or whatever.
+> 
+> Yes, that may be a solution but to "guarantee" that the limit is never
+> breached, we need to stop it first somehow.  Probably making freezing
+> the default behavior with userland notifier (inotify event should
+> suffice) should do, which we can't do now. :(
 
-We can keep orthogonal categorization in a single hierarchy, if we allow task
-to live in several cgroups simultaneously, each controller in independent cgroup.
-Task to cgroup links already organized through css, which can store any combination
-of subsystems. I think it might be easier than current multiple hierarchies.
+The limit can't be breached because forks are rejected once we reached the
+limit given by the user.
 
->>
->> A related limitation is that as different subsystems don't know which
->> hierarchies they'll end up on, they can't cooperate.  Wouldn't it make
->> more sense if task counter is a separate thing watching the resources
->> and triggers different actions as conifgured - be it failing forks or
->> freezing?
->>
->> And yet another oddity is how cgroup handles nested cgroups - some
->> care about nesting but others just treat both internal and leaf nodes
->> equally.  They don't care about the topology at all.  This, too, can
->> be fine if you approach things subsys by subsys and use them in
->> different ways but if you try to combine them in generic way you get
->> sucked into the lala land of whatevers.
->>
->> The following is a "best practices" document on using cgroups.
->>
->>    http://www.freedesktop.org/wiki/Software/systemd/PaxControlGroups
->>
->> To me, it seems to demonstrate the rather ugly situation that the
->> current cgroup is providing.  Everyone should tip-toe around cgroup
->> hierarchies and nobody has full knowledge or control over them.
->> e.g. base system management (e.g. systemd) can't use freezer or task
->> counter as someone else might want to use it for different hierarchy
->> layout.
->>
->> It seems to me that cgroup interface is too complicated and inflexible
->> at the same time to be useful in generic manner.  Sure, it can be
->> useful for setups individually crafted by engineers and admins to
->> match specific sites or applications but as soon as you try to do
->> something automatic and generic with it, there just are too many
->> different scenarios and limitations to consider.
->>
->>
->> * So, what to do?
->>
->> Heh, I don't know.  IIRC, last year at LinuxCon Japan, I heard
->> Christoph saying that the biggest problem w/ cgroup was that it was
->> building completely separate hierarchies out of the traditional
->> process hierarchies.  After thinking about this stuff for a while, I
->> fully agree with him.  I think this whole thing should have been a
->> layer over the process tree like sessions or program groups.
+With this rejection, another task can take control of this and freeze the
+cgroup.
 
-I agree too. Zombies can not live in cgroups, this is not fair!
-It seems, to integrate cgroups into normal process hierarchies, we should
-link cgroup-css with struct pid rather than struct task.
-Struct pid always rcu-protected and well managed. This change should
-simplify cgroup iteration and allows to drop ugly "use_task_css_set_links"
-together with "css_set_lock" on fork/exit paths.
+> 
+> > > 1. We're screwed anyway.  Just don't worry about it and continue down
+> > >    on this path.  Can't get much worse, right?
+> > > 
+> > >    This approach has the apparent advantage of not having to do
+> > >    anything and is probably most likely to be taken.  This isn't ideal
+> > >    but hey nothing is. :P
+> > 
+> > Thing is we have an ABI now and it has been there for a while now. Aren't
+> > we stuck with it? I'm no big fan of that multiple hierarchies thing either
+> > but now I fear we have to support it.
+> 
+> Well, yes and no.  While maintaining userland ABI is very important,
+> its importance isn't infinite and there are different types of
+> userland ABIs.  We definitely don't want to screw with syscalls.  We
+> should keep userland visible dynamic files which are used by common
+> usertools stable at almost all costs.  When it comes over to system
+> interface which is used mostly by base system tools, it can be a bit
+> flexible.  If the ABI in question is an optional thing, we probably
+> can be slightly more flexible.
 
->>
->> Unfortunately, that ship sailed long ago and we gotta make do with
->> what we have on our collective hands.  Here are some paths that we can
->> take.
->>
->> 1. We're screwed anyway.  Just don't worry about it and continue down
->>     on this path.  Can't get much worse, right?
->>
->>     This approach has the apparent advantage of not having to do
->>     anything and is probably most likely to be taken.  This isn't ideal
->>     but hey nothing is. :P
->>
->> 2. Make it more flexible (and likely more complex, unfortunately).
->>     Allow the utility type subsystems to be used in multiple
->>     hierarchies.  The easiest and probably dirtiest way to achieve that
->>     would be embedding them into cgroup core.
->>
->>     Thinking about doing this depresses me and it's not like I have a
->>     cheerful personality to begin with. :(
->>
->> 3. Head towards single hierarchy with the pie-in-the-sky goal of
->>     merging things into process hierarchy in some distant future.
->>
->>     The first step would be herding people to use a unified hierarchy
->>     (ie. all subsystems mounted on a single cgroup tree) which is
->>     controlled by single entity in userland (be it systemd or cgroupd,
->>     cgroup-kit or whatever); however, even if we exclude supporting
->>     orthogonal categorizations, there are good number of non-trivial
->>     hurdles to clear before this can be realized.
->>
->>     Most importantly, we would need to clean up how nesting is handled
->>     across different subsystems.  Handling internal and leaf nodes as
->>     equals simply can't work.  Membership should be recursive, and for
->>     subsystems which can't support proper nesting, the right thing to
->>     do would be somehow ensuring that only single node in the path from
->>     root to leaf is active for the controller.  We may even have to
->>     introduce an alternative of operation to support this (yuck).
->>
->>     This path would require the most amount of work and we would be
->>     excluding a feature - support for multiple orthogonal
->>     categorizations - which has been available till now, probably
->>     through deprecation process spanning years; however, this at least
->>     gives us hope that we may reach sanity in the end, how distant that
->>     end may be.  Oh, hope. :)
->>
->> So, I mean, I don't know.  What do other people think?  Is this a
->> unnecessary worry?  Are people generally happy with the way things
->> are?  Lennart, Kay, what do you guys think?
->>
->> Thanks.
->>
->> --
->> tejun
->
+But cgroups falls into the general purpose category to me. Not something
+that was used only by a finite circle of a few well known and defined tools.
+
+> We of course can't change things drastically.  It should be done
+> carefully with rather long deprecation period, but it can be done and
+> in fact isn't too uncommon.  Stuff under /sysfs tends to be somewhat
+> volatile and sysfs itself went through several ABI incompatible
+> iterations.
+> 
+> So, we can transition in baby steps.  e.g. we can first implement
+> proper nesting behavior without changing the default behavior and then
+> the base system can be updated to mount and control all subsystems by
+> default (with configuration opt-outs) so that the hierarchy reflects
+> pstree, effectively driving people away from multiple hierarchies and
+> we can implement new features assuming the new structure.  After a few
+> years, the kernel can start whining about non-start hierarchies and
+> then eventually remove the support.  It's a long process but
+> definitely doable.
+
+Well, if we can I'll be glad.
+
+> 
+> > > 2. Make it more flexible (and likely more complex, unfortunately).
+> > >    Allow the utility type subsystems to be used in multiple
+> > >    hierarchies.  The easiest and probably dirtiest way to achieve that
+> > >    would be embedding them into cgroup core.
+> > > 
+> > >    Thinking about doing this depresses me and it's not like I have a
+> > >    cheerful personality to begin with. :(
+> > 
+> > Another solution is to support a class of multi-bindable subsystems as in
+> > this old patch from Paul:
+> > 
+> > 	https://lkml.org/lkml/2009/7/1/578
+> 
+> Heh, yeah, this would be closer to the proper way to achieve
+> multi-attach but I can't help feeling that this just buries ourselves
+> deeper into s*it and we're already knee-deep.  If multiple hierarchies
+> is an essential feature, maybe, but, if it's not, and I'm extremely
+> skeptical that it is, why the hell would we want to go that way?
+
+I don't know, it just depend what will happen on these multiple
+hierarchies.
+
+> 
+> > It sounds to me more healthy to iterate only over subsystems in fork/exit.
+> > We probably don't want to add a new iteration over cgroups themselves
+> > on these fast path.
+> 
+> Hmmm?  Don't follow why this is relevant.
+
+If you make something a cgroup core feature instead of a subsystem and you
+need to do something on these cgroups during forks, then you need to
+iterate over these as well as the subsystems.
+
+Typically adding some more loop on fork is not considered very welcome.
+
+> 
+> Thanks.
+> 
+> -- 
+> tejun
