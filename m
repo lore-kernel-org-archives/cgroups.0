@@ -1,147 +1,55 @@
-From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
-Subject: [PATCH 08/10] memcg: Add CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT.
-Date: Mon, 27 Feb 2012 14:58:51 -0800
-Message-ID: <1330383533-20711-9-git-send-email-ssouhlal@FreeBSD.org>
-References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
+From: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+Subject: Re: [PATCH 10/10] memcg: Document kernel memory accounting.
+Date: Mon, 27 Feb 2012 15:05:36 -0800
+Message-ID: <4F4C0C40.5080604@xenotime.net>
+References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org> <1330383533-20711-11-git-send-email-ssouhlal@FreeBSD.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=xenotime.net; s=default;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Subject:CC:To:MIME-Version:From:Date:Message-ID; bh=raPmCK9kKxcBDmW3/Hga9RvpMkh8Dhx6kvDMA1/oNns=;
+	b=obiwcBJitcOKi5YdJ7/Wt1nXX0eE/ISFvYIfg2jpWw3CSKzSw/xT7Ci6R/tmldpxJLsRVU6A3WiSJLdv5U7OyQTyw31YGJj88rp//W/AzjofcU5erW6e3zEPef7ttsSD;
+In-Reply-To: <1330383533-20711-11-git-send-email-ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: suleiman@google.com, glommer@parallels.com, kamezawa.hiroyu@jp.fujitsu.com, penberg@kernel.org, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org, Suleiman Souhlal <ssouhlal@FreeBSD.org>
+To: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-This config option dictates whether or not kernel memory in the
-root cgroup should be accounted.
+On 02/27/2012 02:58 PM, Suleiman Souhlal wrote:
 
-This may be useful in an environment where everything is supposed to be
-in a cgroup and accounted for. Large amounts of kernel memory in the
-root cgroup would indicate problems with memory isolation or accounting.
+> Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  Documentation/cgroups/memory.txt |   44 +++++++++++++++++++++++++++++++++++--
+>  1 files changed, 41 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+> index 4c95c00..64c6cc8 100644
+> --- a/Documentation/cgroups/memory.txt
+> +++ b/Documentation/cgroups/memory.txt
 
-Signed-off-by: Suleiman Souhlal <suleiman@google.com>
----
- init/Kconfig    |    8 ++++++++
- mm/memcontrol.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+), 0 deletions(-)
+> +2.7.1.1 Slab memory accounting
+> +
+> +Slab gets accounted on a per-page basis, which is done by using per-cgroup
+> +kmem_caches. These per-cgroup kmem_caches get created on-demand, the first
+> +time a specific kmem_cache gets used by a cgroup.
+> +
+> +Slab memory that cannot be attributed to a cgroup gets charged to the root
+> +cgroup.
+> +
+> +A per-cgroup kmem_cache is named like the original, with the cgroup's name
+> +in parethesis.
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 3f42cd6..a119270 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -714,6 +714,14 @@ config CGROUP_MEM_RES_CTLR_KMEM
- 	  Memory Controller, which are page-based, and can be swapped. Users of
- 	  the kmem extension can use it to guarantee that no group of processes
- 	  will ever exhaust kernel resources alone.
-+config CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+	bool "Root Cgroup Kernel Memory Accounting (EXPERIMENTAL)"
-+	depends on CGROUP_MEM_RES_CTLR_KMEM
-+	default n
-+	help
-+	  Account for kernel memory used by the root cgroup. This may be useful
-+	  to know how much kernel memory isn't currently accounted to any
-+	  cgroup.
- 
- config CGROUP_PERF
- 	bool "Enable perf_event per-cpu per-container group (cgroup) monitoring"
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6a475ed..d4cdb8e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -61,6 +61,10 @@ struct cgroup_subsys mem_cgroup_subsys __read_mostly;
- #define MEM_CGROUP_RECLAIM_RETRIES	5
- struct mem_cgroup *root_mem_cgroup __read_mostly;
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+atomic64_t pre_memcg_kmem_bytes;	/* kmem usage before memcg is enabled */
-+#endif
-+
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
- /* Turned on only when memory cgroup is enabled && really_do_swap_account = 1 */
- int do_swap_account __read_mostly;
-@@ -5643,6 +5647,13 @@ memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, long long delta)
- 
- 	if (memcg)
- 		ret = res_counter_charge(&memcg->kmem_bytes, delta, &fail_res);
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+	else if (root_mem_cgroup != NULL)
-+		ret = res_counter_charge(&root_mem_cgroup->kmem_bytes, delta,
-+		    &fail_res);
-+	else
-+		atomic64_add(delta, &pre_memcg_kmem_bytes);
-+#endif
- 
- 	return ret;
- }
-@@ -5668,6 +5679,12 @@ memcg_uncharge_kmem(struct mem_cgroup *memcg, long long delta)
- 
- 	if (memcg)
- 		res_counter_uncharge(&memcg->kmem_bytes, delta);
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+	else if (root_mem_cgroup != NULL)
-+		res_counter_uncharge(&root_mem_cgroup->kmem_bytes, delta);
-+	else
-+		atomic64_sub(delta, &pre_memcg_kmem_bytes);
-+#endif
- 
- 	if (memcg && !memcg->independent_kmem_limit)
- 		res_counter_uncharge(&memcg->res, delta);
-@@ -5953,7 +5970,12 @@ memcg_slab_move(struct mem_cgroup *memcg)
- 		cachep = rcu_access_pointer(memcg->slabs[i]);
- 		if (cachep != NULL) {
- 			rcu_assign_pointer(memcg->slabs[i], NULL);
-+
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+			cachep->memcg = root_mem_cgroup;
-+#else
- 			cachep->memcg = NULL;
-+#endif
- 
- 			/* The space for this is already allocated */
- 			strcat((char *)cachep->name, "dead");
-@@ -5991,6 +6013,15 @@ memcg_kmem_init(struct mem_cgroup *memcg, struct mem_cgroup *parent)
- 
- 	memcg_slab_init(memcg);
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+	if (memcg == root_mem_cgroup) {
-+		long kmem_bytes;
-+
-+		kmem_bytes = atomic64_xchg(&pre_memcg_kmem_bytes, 0);
-+		memcg->kmem_bytes.usage = kmem_bytes;
-+	}
-+#endif
-+
- 	atomic64_set(&memcg->kmem_bypassed, 0);
- 	memcg->independent_kmem_limit = 0;
- }
-@@ -6010,6 +6041,19 @@ memcg_kmem_move(struct mem_cgroup *memcg)
- 	spin_unlock_irqrestore(&memcg->kmem_bytes.lock, flags);
- 	if (!memcg->independent_kmem_limit)
- 		res_counter_uncharge(&memcg->res, kmem_bytes);
-+
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT
-+	{
-+		struct res_counter *dummy;
-+		int err;
-+
-+		/* Can't fail because it's the root cgroup */
-+		err = res_counter_charge(&root_mem_cgroup->kmem_bytes,
-+		    kmem_bytes, &dummy);
-+		err = res_counter_charge(&root_mem_cgroup->res, kmem_bytes,
-+		    &dummy);
-+	}
-+#endif
- }
- #else /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
- static void
+
+      parentheses.
+
+> +
+> +When a cgroup is destroyed, all its kmem_caches get migrated to the root
+> +cgroup, and "dead" is appended to their name, to indicate that they are not
+> +going to be used for new allocations.
+> +These dead caches automatically get removed once there are no more active
+> +slab objects in them.
+> +
+
 -- 
-1.7.7.3
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+~Randy
