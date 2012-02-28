@@ -1,7 +1,7 @@
 From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Tue, 28 Feb 2012 22:43:54 +0100
-Message-ID: <1330465434.11248.98.camel@twins>
+Date: Tue, 28 Feb 2012 22:53:59 +0100
+Message-ID: <1330466039.11248.103.camel@twins>
 References: <20120221211938.GE12236@google.com>
 	<20120222163858.GB4128@redhat.com> <20120222165714.GC4128@redhat.com>
 	<1329990094.24994.64.camel@twins> <20120223213847.GK19691@redhat.com>
@@ -26,10 +26,29 @@ To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
 On Tue, 2012-02-28 at 16:35 -0500, Vivek Goyal wrote:
-> For
-> cpu controller, it is priority at the group level no fixed minimum/maximum
-> % shares. And that's a limitation of treating task and group at same level.
+> Yes this is how scheduler does to handle hierarchy. Treat task and group
+> at same level. 
 
-Depends on what you mean by min/max %, you can do it on the group level
-by using bandwidth caps (for max) or inverted (max on everybody else,
-for min).
+...
+
+> Whether it is a good thing or bad thing, I don't know. 
+
+That's IMO what the cgroupfs interface provides for, if you do anything
+different there's this shadow group that contains the tasks for which
+you then have to provide extra parameter control.
+
+Furthermore, by treating tasks and groups at the same level you can
+create the extra group, but you can't do the reverse. So its the more
+versatile solution as well.
+
+> I think previous
+> design was allocating a group for every user. I guess, in that case we
+> will have fixed % share of each user (until and unless users are created/
+> removed). 
+
+Not even, it depended on if the user had anything runnable or not. It
+was very much like the current cgroup stuff if you create a cgroup for
+each user and stick the tasks in.
+
+The cpu-cgroup stuff is purely runnable based, so every wakeup/sleep
+changes the entire weight distribution, yay! :-)
