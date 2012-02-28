@@ -1,93 +1,160 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Tue, 28 Feb 2012 17:31:09 -0500
-Message-ID: <20120228223109.GL9920@redhat.com>
-References: <20120222165714.GC4128@redhat.com>
-	<1329990094.24994.64.camel@twins>
-	<20120223213847.GK19691@redhat.com>
-	<20120223223457.GJ22536@google.com>
-	<20120228211627.GH9920@redhat.com>
-	<1330464100.11248.94.camel@twins>
-	<20120228213526.GI9920@redhat.com>
-	<1330465434.11248.98.camel@twins>
-	<20120228215439.GJ9920@redhat.com>
-	<1330466421.11248.107.camel@twins>
+From: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/10] memcg: Kernel Memory Accounting.
+Date: Tue, 28 Feb 2012 14:47:52 -0800
+Message-ID: <CABCjUKCQk0RDWH80uQw+SxYsu=1L4GSGBNJWNFD=20o_j8P+ng@mail.gmail.com>
+References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
+	<4F4CD0AF.1050508@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1330466421.11248.107.camel@twins>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=pIxsv53a7OavwFGA+hzXkWvUuigqMLNvou6gyQfrJCI=;
+        b=kyTu227SEKsaU7k5ilXNCh8x2Sl3CAmpufnFMg1iJyeWhEnL1lKzsI4NS4OtlyGPxP
+         uHtMY9jFmAJ8ETzKEv08P1fdYQc8ymhZ4eTXvSIDs51jZG3Pz/bb44jeZPQJcABTF2gZ
+         uPRQobRxYBNwqBzqRBbWdHQmRQVf9fLPjGpP0=
+In-Reply-To: <4F4CD0AF.1050508-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Tue, Feb 28, 2012 at 11:00:21PM +0100, Peter Zijlstra wrote:
-> On Tue, 2012-02-28 at 16:54 -0500, Vivek Goyal wrote:
-> > On Tue, Feb 28, 2012 at 10:43:54PM +0100, Peter Zijlstra wrote:
-> > > On Tue, 2012-02-28 at 16:35 -0500, Vivek Goyal wrote:
-> > > > For
-> > > > cpu controller, it is priority at the group level no fixed minimum/maximum
-> > > > % shares. And that's a limitation of treating task and group at same level.
-> > > 
-> > > Depends on what you mean by min/max %, you can do it on the group level
-> > > by using bandwidth caps (for max) or inverted (max on everybody else,
-> > > for min).
-> > 
-> > I was referring to using pure proportional controller. max bandwidth is
-> > new and I am looking for a quick documentation file which describes
-> > what are the knobs and how to use it. Did not find any in
-> > Documentation/cgroups/. Is there any documentation available?
-> 
-> Its written in C, its at kernel/sched/fair.c ;-)
+Hello,
 
-/me does not know enough of scheduler code to parse it fast. But now I found
-Documentation/scheduler/sched-bwc.txt to explain what max bandwidth
-control is.
+On Tue, Feb 28, 2012 at 5:03 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> =
+wrote:
+> Hi,
+>
+>
+> On 02/27/2012 07:58 PM, Suleiman Souhlal wrote:
+>>
+>> This patch series introduces kernel memory accounting to memcg.
+>> It currently only accounts for slab.
+>>
+>> It's very similar to the patchset I sent back in October, but
+>> with a number of fixes and improvements.
+>> There is also overlap with Glauber's patchset, but I decided to
+>> send this because there are some pretty significant differences.
+>
+>
+> Indeed. I will comment in details at your patches. I hope we can reac=
+h an
+> agreement soon about the best way to move forward.
 
-> 
-> > I am assuming that max are being specified for groups in some absolute
-> > quantity. That is fine. It will not still be max %, as again for % you
-> > need fixed number of entities at any level and that's not the case with
-> > tasks.
-> > 
-> > Minimum for one group (max for everyone else) will also only work if 
-> > task and groups are not at same level.
-> 
-> I'm really not seeing this.
+Thanks a lot.
 
-Assume I have following hierarchy.
+>> Slab gets accounted per-page, by using per-cgroup kmem_caches that
+>> get created the first time an allocation of that type is done by
+>> that cgroup.
+>
+>
+> I don't particularly care, but doesn't that introduce potential high
+> latencies for task within the cgroup?
+>
+> Having the cgroup creation taking longer to complete is one thing,
+> but having an object allocation taking a lot longer than it would
+> take otherwise can be detrimental to some users. Again, for my usecas=
+e, this
+> is not terribly important.
 
-				 root
-			       /  |  \
-			   Tasks  G1  G2
+Given that this is only done for the first allocation of a particular
+type in a cgroup, and that cache creation shouldn't be *that*
+expensive, I don't really think this is a big concern, unless your
+cgroups are *extremely* short-lived.
 
-Assume I have given upper limit of 20% to G1. (period=50ms, quota=10ms), 
-then it still does not gurantee the minimum bandwidth for G2. If I 
-upper limit G2 also, then I am assuming it just gives minimum gurantee
-for any tasks in root. (Right now I am assuming just 1 cpu in the system
-for simplicity).
+That said, if you really think this is a problem, it would be trivial
+to change the code to always  do the creation of the per-cgroup
+kmem_caches asynchronously.
+We already to do this when the first allocation is not GFP_KERNEL: We
+let the allocation use the regular cache (so it won't be accounted to
+the cgroup), and defer the creation to a workqueue.
 
-So to get a minimum % bandwdith gurantee for G2, I shall have to move
-"Tasks" in a children group. Now both upper limit/proportional weight 
-on G3 will help to determine minimum % share of G2.
+> Maybe we can pick a couple of caches that we know to be of more impor=
+tance,
+> (like the dcache), and create them at memcg create time ?
 
-				 root
-			       /  |  \
-			      G3  G1  G2
-			      |
-			     Tasks
+I don't understand. Are you suggesting pre-allocating some caches,
+like dcache, at cgroup creation, and letting "less important" caches
+get created on-demand?
+I guess that would be possible, but I'm not sure it's really
+necessary, given what I mentioned above.
 
-Please correct me if I have understood the whole thing wrong.
+>> The main difference with Glauber's patches is here: We try to
+>> track all the slab allocations, while Glauber only tracks ones
+>> that are explicitly marked.
+>> We feel that it's important to track everything, because there
+>> are a lot of different slab allocations that may use significant
+>> amounts of memory, that we may not know of ahead of time.
+>
+>
+> Note that "explicitly marking" does not mean not tracking them all in=
+ the
+> end. I am just quite worried about having the heavy-caches like the d=
+cache
+> lying around without a proper memcg-shrinker.
 
-Thanks
-Vivek
+I agree that we definitely need memcg-aware shrinkers.
+We have patches for those, but I didn't want to include them in this
+patchset, so that we could concentrate on getting the accounting right
+first.
+Once we can reach consensus on how to do the accounting, I will be
+happy to start discussing shrinking. :-)
+
+>> A per-cgroup kmem_cache will appear in slabinfo named like its
+>> original cache, with the cgroup's name in parenthesis.
+>
+>
+> There is another problem associated with names. You can use just the
+> trailing piece of the cgroup name, since it may lead to duplicates li=
+ke
+> memory/foo and memory/bar/foo all named "dcache-foo" (which I believe=
+ is
+> what you do here, right?). But then you need to include the full path=
+, and
+> can end up with some quite monstruous things that will sure render
+> /proc/slabinfo useless for human readers.
+
+I hadn't considered the fact that two cgroups could have the same base =
+name.
+I think having a name makes it a lot easier for a human to understand
+which cgroup is using slab, so what about having both the base name of
+the cgroup AND its css id, so that the caches are named like
+"dentry(5:foo)"?
+This should let us use the name of the cgroup while still being able
+to distiguish cgroups that have the same base name.
+
+> I was thinking: How about we don't bother to show them at all, and in=
+stead,
+> show a proc-like file inside the cgroup with information about that c=
+group?
+
+One of the patches in the series adds a per-memcg memory.kmem.slabinfo.
+
+>> =A0 =A0 =A0 =A0- There is a difference with non-memcg slab allocatio=
+n in
+>> =A0 =A0 =A0 =A0 =A0that with this, some slab allocations might fail =
+when
+>> =A0 =A0 =A0 =A0 =A0they never failed before. For example, a GFP_NOIO=
+ slab
+>> =A0 =A0 =A0 =A0 =A0allocation wouldn't fail, but now it might.
+>> =A0 =A0 =A0 =A0 =A0We have a change that makes slab accounting behav=
+e
+>> =A0 =A0 =A0 =A0 =A0the same as non-accounted allocations, but I wasn=
+'t sure
+>> =A0 =A0 =A0 =A0 =A0how important it was to include.
+>
+> How about we don't account them, then ?
+
+The patch we have (but I haven't included) makes it so that we account
+for them most of the times. However, when we are in OOM conditions,
+they get bypassed to the root (or not accounted for at all, if that's
+what you prefer).
+I guess I will make sure the patch is included in the v2 of this series=
+=2E
+
+
+Thanks for your comments.
+-- Suleiman
