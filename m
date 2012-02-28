@@ -1,82 +1,62 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Tue, 28 Feb 2012 17:09:32 -0500
-Message-ID: <20120228220932.GK9920@redhat.com>
-References: <20120221211938.GE12236@google.com>
-	<20120222163858.GB4128@redhat.com>
-	<20120222165714.GC4128@redhat.com>
-	<1329990094.24994.64.camel@twins>
-	<20120223213847.GK19691@redhat.com>
-	<20120223223457.GJ22536@google.com>
-	<20120228211627.GH9920@redhat.com>
-	<1330464100.11248.94.camel@twins>
-	<20120228213526.GI9920@redhat.com>
-	<1330466039.11248.103.camel@twins>
+From: Suleiman Souhlal <suleiman@google.com>
+Subject: Re: [PATCH 00/10] memcg: Kernel Memory Accounting.
+Date: Tue, 28 Feb 2012 14:12:47 -0800
+Message-ID: <CABCjUKA10uYsTm9KBUObXK92nM0HSrPZt591Bt5t+jst8BBdPQ@mail.gmail.com>
+References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
+	<alpine.LFD.2.02.1202281043420.4106@tux.localdomain>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:x-system-of-record;
+        bh=XJayHnSApWD+eXBu/tw3pxtQZTjuTf6KO4h+Fe92idY=;
+        b=oe5U4JmutQNXIWeOy/dgqWo0dkW8BJLikmbla0R4oHvgLW+/bnCCWClx5v9B5ww1J5
+         xSgEVOB57u2E8s38Gj+zrBOrQPefGU/O5YVTcdXaXCRVstxqETqbCbMJfXHrcpzY23UX
+         UkH7dVY8CO7nPdzWcHJE+RakIQvC5lClJApco=
+In-Reply-To: <alpine.LFD.2.02.1202281043420.4106@tux.localdomain>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1330466039.11248.103.camel@twins>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Pekka Enberg <penberg@kernel.org>
+Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, cgroups@vger.kernel.org, glommer@parallels.com, kamezawa.hiroyu@jp.fujitsu.com, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org, rientjes@google.com, cl@linux-foundation.org, akpm@linux-foundation.org
 
-On Tue, Feb 28, 2012 at 10:53:59PM +0100, Peter Zijlstra wrote:
-> On Tue, 2012-02-28 at 16:35 -0500, Vivek Goyal wrote:
-> > Yes this is how scheduler does to handle hierarchy. Treat task and group
-> > at same level. 
-> 
-> ...
-> 
-> > Whether it is a good thing or bad thing, I don't know. 
-> 
-> That's IMO what the cgroupfs interface provides for, if you do anything
-> different there's this shadow group that contains the tasks for which
-> you then have to provide extra parameter control.
-> 
-> Furthermore, by treating tasks and groups at the same level you can
-> create the extra group, but you can't do the reverse. So its the more
-> versatile solution as well.
+Hello,
 
-Agreed that it is more versatile. And one can move all the tasks to a
-new group to achieve what a shadow group will do.
+On Tue, Feb 28, 2012 at 12:49 AM, Pekka Enberg <penberg@kernel.org> wrote:
+> On Mon, 27 Feb 2012, Suleiman Souhlal wrote:
+>> The main difference with Glauber's patches is here: We try to
+>> track all the slab allocations, while Glauber only tracks ones
+>> that are explicitly marked.
+>> We feel that it's important to track everything, because there
+>> are a lot of different slab allocations that may use significant
+>> amounts of memory, that we may not know of ahead of time.
+>> This is also the main source of complexity in the patchset.
+>
+> Well, what are the performance implications of your patches? Can we
+> reasonably expect distributions to be able to enable this thing on
+> generic kernels and leave the feature disabled by default? Can we
+> accommodate your patches to support Glauber's use case?
 
-The only thing is what is a good default. If we are thinking of dividing
-resources in terms of % and writing a user space tool, then in default
-model we just don't know what's the %. May be it is dynamically varying
-% and should be shown accordingly.
+I don't have up to date performance numbers, but we haven't found any
+critical performance degradations on our workloads, with our internal
+versions of this patchset.
 
-Or if idea of minimum % proportional bandwidth is more natural, then 
-we shall have to change userspace and things like systemd to not run
-any task in /. Then a user space tool can go through cgroup hierarchy
-and calculate minimum % share of a group and display it.
+There are some conditional branches added to the slab fast paths, but
+I think it should be possible to come with a way to get rid of those
+when the feature is disabled, maybe by using  a static_branch. This
+should hopefully make it possible to keep the feature compiled in but
+disabled at runtime.
 
-> 
-> > I think previous
-> > design was allocating a group for every user. I guess, in that case we
-> > will have fixed % share of each user (until and unless users are created/
-> > removed). 
-> 
-> Not even, it depended on if the user had anything runnable or not. It
-> was very much like the current cgroup stuff if you create a cgroup for
-> each user and stick the tasks in.
-> 
-> The cpu-cgroup stuff is purely runnable based, so every wakeup/sleep
-> changes the entire weight distribution, yay! :-)
+I think it's definitely possible to accommodate my patches to support
+Glauber's use case, with a bit of work.
 
-:-). That's fine. If a group is not using its bandwidth because there is
-no runnable task, then other groups get more cpu. I thought that's the 
-proportional definition.
+-- Suleiman
 
-Thanks
-Vivek
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
