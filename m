@@ -1,49 +1,64 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 08/10] memcg: Add CONFIG_CGROUP_MEM_RES_CTLR_KMEM_ACCT_ROOT.
-Date: Wed, 29 Feb 2012 14:09:25 -0300
-Message-ID: <4F4E5BC5.9010408@parallels.com>
-References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org> <1330383533-20711-9-git-send-email-ssouhlal@FreeBSD.org> <4F4CD7E7.1070901@parallels.com> <CABCjUKAUQZuW9hFeMJ1Oh=0UeS2Ffx4-vHpnaGpjOFu+3KktAA@mail.gmail.com>
+Subject: Re: [PATCH 1/7] small cleanup for memcontrol.c
+Date: Wed, 29 Feb 2012 14:30:35 -0300
+Message-ID: <4F4E60BB.9030007@parallels.com>
+References: <1329824079-14449-1-git-send-email-glommer@parallels.com> <1329824079-14449-2-git-send-email-glommer@parallels.com> <20120222094619.caffc432.kamezawa.hiroyu@jp.fujitsu.com> <4F44F54A.8010902@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CABCjUKAUQZuW9hFeMJ1Oh=0UeS2Ffx4-vHpnaGpjOFu+3KktAA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <4F44F54A.8010902-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 02/28/2012 08:36 PM, Suleiman Souhlal wrote:
-> On Tue, Feb 28, 2012 at 5:34 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->> On 02/27/2012 07:58 PM, Suleiman Souhlal wrote:
+On 02/22/2012 12:01 PM, Glauber Costa wrote:
+> On 02/22/2012 04:46 AM, KAMEZAWA Hiroyuki wrote:
+>> On Tue, 21 Feb 2012 15:34:33 +0400
+>> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+>>
+>>> Move some hardcoded definitions to an enum type.
 >>>
->>> This config option dictates whether or not kernel memory in the
->>> root cgroup should be accounted.
+>>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>>> CC: Kirill A. Shutemov<kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+>>> CC: Greg Thelen<gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>> CC: Johannes Weiner<jweiner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>> CC: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
+>>> CC: Hiroyouki Kamezawa<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>>> CC: Paul Turner<pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>> CC: Frederic Weisbecker<fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>
+>> seems ok to me.
+>>
+>> Acked-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>
+> BTW, this series is likely to go through many rounds of discussion.
+> This patch can be probably picked separately, if you want to.
+>
+>> a nitpick..
+>>
+>>> ---
+>>> mm/memcontrol.c | 10 +++++++---
+>>> 1 files changed, 7 insertions(+), 3 deletions(-)
 >>>
->>> This may be useful in an environment where everything is supposed to be
->>> in a cgroup and accounted for. Large amounts of kernel memory in the
->>> root cgroup would indicate problems with memory isolation or accounting.
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 6728a7a..b15a693 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>>> @@ -351,9 +351,13 @@ enum charge_type {
+>>> };
+>>>
+>>> /* for encoding cft->private value on file */
+>>> -#define _MEM (0)
+>>> -#define _MEMSWAP (1)
+>>> -#define _OOM_TYPE (2)
+>>> +
+>>> +enum mem_type {
+>>> + _MEM = 0,
 >>
->>
->> I don't like accounting this stuff to the root memory cgroup. This causes
->> overhead for everybody, including people who couldn't care less about memcg.
->>
->> If it were up to me, we would simply not account it, and end of story.
->>
->> However, if this is terribly important for you, I think you need to at
->> least make it possible to enable it at runtime, and default it to disabled.
->
-> Yes, that is why I made it a config option. If the config option is
-> disabled, that memory does not get accounted at all.
+>> =0 is required ?
+> I believe not, but I always liked to use it to be 100 % explicit.
+> Personal taste... Can change it, if this is a big deal.
 
-Doesn't work. In reality, most of the distributions enable those stuff 
-if there is the possibility that someone will end up using. So everybody 
-gets to pay the penalty.
-
-> Making it configurable at runtime is not ideal, because we would
-> prefer slab memory that was allocated before cgroups are created to
-> still be counted toward root.
->
-
-Again: Why is that you really need it ? Accounting slab to the root 
-cgroup feels quite weird to me
+Kame, would you like me to send this cleanup without the = 0 ?
