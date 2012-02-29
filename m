@@ -1,56 +1,104 @@
-From: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 04/10] memcg: Introduce __GFP_NOACCOUNT.
-Date: Wed, 29 Feb 2012 11:09:50 -0800
-Message-ID: <CABCjUKBHjLHKUmW6_r0SOyw42WfV0zNO7Kd7FhhRQTT6jZdyeQ@mail.gmail.com>
+From: Suleiman Souhlal <suleiman@google.com>
+Subject: Re: [PATCH 07/10] memcg: Stop res_counter underflows.
+Date: Wed, 29 Feb 2012 11:17:27 -0800
+Message-ID: <CABCjUKCgyvG+za1JpCPxCKjzB8C2RcDKZXt7Gz6soMbMD8CSHg@mail.gmail.com>
 References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
-	<1330383533-20711-5-git-send-email-ssouhlal@FreeBSD.org>
-	<20120229150041.62c1feeb.kamezawa.hiroyu@jp.fujitsu.com>
+	<1330383533-20711-8-git-send-email-ssouhlal@FreeBSD.org>
+	<4F4CD731.60908@parallels.com>
+	<CABCjUKCaJVGShRKRkvBMrz_XNVGNrcguQ1uTP8Am1fQ1Te6PWA@mail.gmail.com>
+	<4F4E5AF0.1080303@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=BFmY3lDZ8MWgBwViTgcye0FYsjfOe10cksbXuXOEXVs=;
-        b=UZDJdeB66jbK+stg1utw/TxBPZ201k5FN0WqnJCx4bfsqcjgtHONUT9U96WCxt1a2U
-         3Pr2YdWCh26NjQXnsB1ftxMoTogVzm+QAAH4psszwEnKVpLlkFAJ52YvGyMbiNAh3eip
-         ZZ+R8lNkN4cIw3QSJwGtwJzFYRE72tg7Zrz96X/2+OMLRlqOdWy+f9rt+pEMcovo9BgO
-         PpVxCAXZEYQ2Dbg8zgfvnAGSyIk5YnazNPrRmwJMWUvPnfZhCuycML8bBlmGS8/m5d0H
-         l9u4mYsVLpPSnoLbAkjRsgMZnNr7yuLRozVl7zk5fnRgFEW8zIIA/t6+9NEjUdzasfbA
-         35Mg==
-In-Reply-To: <20120229150041.62c1feeb.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=PSpQt2mebQYwcu+hEZn6rYGibs5aOcUpUggtZpEifbg=;
+        b=lWsi1R5vqWcg0XafKxiG0qTgr37Aqdcc3PSWzf3Y6s3V/Y858PrMhS+ZJI7G1om0Zr
+         iWt/bFJebsKYu0LbKK7kHCc70ueuVDeU/2fX2m5QVAX/yML7CGjpGwMgpzedOkVaaRfN
+         J9+0y5RZdMVRhQ/qETrP1sN5GccY+PgA+2foO7SM2+a/Y8ICJooVmTMrkYTbFxnQFXAX
+         bOr9GW1FhLfg4f78Mqhh61MXvHtp625WdvgP1XkpGFRrfbQsJzh/QEPv1XrxbQ9HKitd
+         B4aiag0mfhCScLHU0jpzWM0GjTcTXSsozol6CkEjJFUowbOVS8B1fhhGb+iJ+fnUMBkv
+         SdVQ==
+In-Reply-To: <4F4E5AF0.1080303@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, penberg@kernel.org, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org
 
-On Tue, Feb 28, 2012 at 10:00 PM, KAMEZAWA Hiroyuki
-<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
-> On Mon, 27 Feb 2012 14:58:47 -0800
-> Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org> wrote:
->
->> This is used to indicate that we don't want an allocation to be acco=
-unted
->> to the current cgroup.
+On Wed, Feb 29, 2012 at 9:05 AM, Glauber Costa <glommer@parallels.com> wrot=
+e:
+> On 02/28/2012 08:07 PM, Suleiman Souhlal wrote:
 >>
->> Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> On Tue, Feb 28, 2012 at 5:31 AM, Glauber Costa<glommer@parallels.com>
+>> =A0wrote:
+>>>
+>>> I don't fully understand this.
+>>> To me, the whole purpose of having a cache tied to a memcg, is that we
+>>> know
+>>> all allocations from that particular cache should be billed to a specif=
+ic
+>>> memcg. So after a cache is created, and has an assigned memcg,
+>>> what's the point in bypassing it to root?
+>>>
+>>> It smells like you're just using this to circumvent something...
+>>
+>>
+>> In the vast majority of the cases, we will be able to account to the
+>> cgroup.
+>> However, there are cases when __mem_cgroup_try_charge() is not able to
+>> do so, like when the task is being killed.
+>> When this happens, the allocation will not get accounted to the
+>> cgroup, but the slab accounting code will still think the page belongs
+>> to the memcg's kmem_cache.
+>> So, when we go to free the page, we assume that the page belongs to
+>> the memcg and uncharge it, even though it was never charged to us in
+>> the first place.
+>>
+>> This is the situation this patch is trying to address, by keeping a
+>> counter of how much memory has been bypassed like this, and uncharging
+>> from the root if we have any outstanding bypassed memory.
+>>
+>> Does that make sense?
+>>
+> Yes, but how about the following:
 >
-> I don't like this.
+> I had a similar problem in tcp accounting, and solved that by adding
+> res_counter_charge_nofail().
 >
-> Please add
+> I actually implemented something very similar to your bypass (now that I
+> understand it better...) and gave up in favor of this.
 >
-> ___GFP_ACCOUNT =A0"account this allocation to memcg"
+> The tcp code has its particularities, but still, that could work okay for
+> the general slab.
 >
-> Or make this as slab's flag if this work is for slab allocation.
+> Reason being:
+>
+> Consider you have a limit of X, and is currently at X-1. You bypassed a
+> page.
+>
+> So in reality, you should fail the next allocation, but you will not -
+> (unless you start considering the bypassed memory at allocation time as
+> well).
+>
+> If you use res_counter_charge_nofail(), you will:
+>
+> =A01) Still proceed with the allocations that shouldn't fail - so no
+> =A0 =A0difference here
+> =A02) fail the normal allocations if you have "bypassed" memory filling
+> =A0 =A0up your limit
+> =A03) all that without coupling something alien to the res_counter API.
 
-We would like to account for all the slab allocations that happen in
-process context.
+Ok. I'll give it a try.
 
-Manually marking every single allocation or kmem_cache with a GFP flag
-really doesn't seem like the right thing to do..
-
-Can you explain why you don't like this flag?
-
+Thanks!
 -- Suleiman
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
