@@ -1,70 +1,37 @@
-From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] cgroup: revise how we re-populate root directory
-Date: Thu, 1 Mar 2012 20:48:21 +0800
-Message-ID: <CAJd=RBAh-GzsfMiViGzKMeDV+G01K_OHZQHJ=amnp0trVhMABQ@mail.gmail.com>
-References: <4F4F1459.4080300@cn.fujitsu.com>
-	<4F4F148F.6040808@cn.fujitsu.com>
+From: Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Thu, 01 Mar 2012 18:19:05 +0100
+Message-ID: <4F4FAF89.3090706@redhat.com>
+References: <20120221211938.GE12236@google.com>
+	<20120222163858.GB4128@redhat.com>
+	<20120222165714.GC4128@redhat.com>
+	<1329990094.24994.64.camel@twins> <1330006399.11248.20.camel@twins>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding;
-        bh=fEIbWIBvOlQTDgKvmCXt+YtYVWtd00DX1po1jsHfCJQ=;
-        b=DV2263h4jFObFITtN+3+bzRpEBJATDE23qbcyUTX8M7yb5LhVNRKoLdO6/+cHIxS70
-         8NCW91bDPiXaPR1HiUfUbOOijBiV77H+AoX2LBwqNFvi2b+Hurh+TZPQdjPHCsOQNFxt
-         5Jpjx9xVXh+S3NeX3voC7/dmNSKpPrWq7+XD4=
-In-Reply-To: <4F4F148F.6040808-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1330006399.11248.20.camel@twins>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-T24gVGh1LCBNYXIgMSwgMjAxMiBhdCAyOjE3IFBNLCBMaSBaZWZhbiA8bGl6ZkBjbi5mdWppdHN1
-LmNvbT4gd3JvdGU6Cj4KPiAtc3RhdGljIHZvaWQgY2dyb3VwX2NsZWFyX2RpcmVjdG9yeShzdHJ1
-Y3QgZGVudHJ5ICpkZW50cnkpCj4gK3N0YXRpYyB2b2lkIGNncm91cF9jbGVhcl9kaXJlY3Rvcnko
-c3RydWN0IGRlbnRyeSAqZGVudHJ5LCBib29sIHJlbW92ZV9hbGwsCj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHVuc2lnbmVkIGxvbmcgcmVtb3Zl
-ZF9iaXRzKQo+IMKgewo+IC0gwqAgwqAgwqAgc3RydWN0IGxpc3RfaGVhZCAqbm9kZTsKPiArIMKg
-IMKgIMKgIExJU1RfSEVBRChoZWFkKTsKPiArIMKgIMKgIMKgIHN0cnVjdCBkZW50cnkgKmQsICpu
-b2RlOwo+Cj4gwqAgwqAgwqAgwqBCVUdfT04oIW11dGV4X2lzX2xvY2tlZCgmZGVudHJ5LT5kX2lu
-b2RlLT5pX211dGV4KSk7Cj4gKwo+IMKgIMKgIMKgIMKgc3Bpbl9sb2NrKCZkZW50cnktPmRfbG9j
-ayk7Cj4gLSDCoCDCoCDCoCBub2RlID0gZGVudHJ5LT5kX3N1YmRpcnMubmV4dDsKPiAtIMKgIMKg
-IMKgIHdoaWxlIChub2RlICE9ICZkZW50cnktPmRfc3ViZGlycykgewo+IC0gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgc3RydWN0IGRlbnRyeSAqZCA9IGxpc3RfZW50cnkobm9kZSwgc3RydWN0IGRlbnRy
-eSwgZF91LmRfY2hpbGQpOwo+ICsgwqAgwqAgwqAgbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKGQs
-IG5vZGUsICZkZW50cnktPmRfc3ViZGlycywgZF91LmRfY2hpbGQpIHsKPiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHN0cnVjdCBjZnR5cGUgKmNmdCA9IGQtPmRfZnNkYXRhOwo+ICsKPiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIGlmICghcmVtb3ZlX2FsbCAmJiBjZnQtPnN1YnN5cyAmJgo+ICsgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgIXRlc3RfYml0KGNmdC0+c3Vic3lzLT5zdWJzeXNfaWQs
-ICZyZW1vdmVkX2JpdHMpKQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY29u
-dGludWU7Cj4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNwaW5fbG9ja19uZXN0ZWQoJmQtPmRf
-bG9jaywgREVOVFJZX0RfTE9DS19ORVNURUQpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgbGlz
-dF9kZWxfaW5pdChub2RlKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGxpc3RfbW92ZSgmZC0+
-ZF91LmRfY2hpbGQsICZoZWFkKTsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGlmIChkLT5kX2lu
-b2RlKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAvKiBUaGlzIHNob3Vs
-ZCBuZXZlciBiZSBjYWxsZWQgb24gYSBjZ3JvdXAKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCAqIGRpcmVjdG9yeSB3aXRoIGNoaWxkIGNncm91cHMgKi8KPiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEJVR19PTihkLT5kX2lub2RlLT5pX21vZGUgJiBTX0lG
-RElSKTsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGRnZXRfZGxvY2soZCk7
-Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBzcGluX3VubG9jaygmZC0+ZF9s
-b2NrKTsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwaW5fdW5sb2NrKCZk
-ZW50cnktPmRfbG9jayk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9Cj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCBzcGluX3VubG9jaygmZC0+ZF9sb2NrKTsKPiArIMKgIMKgIMKgIH0KPiArIMKg
-IMKgIMKgIHNwaW5fdW5sb2NrKCZkZW50cnktPmRfbG9jayk7Cj4gKwoKU2FmZSB0byBwcm9jZXNz
-IGlzb2xhdGVkIGVudHJpZXMgd2l0aG91dCBkZW50cnktPmRfbG9jayBoZWxkPwoKLWhkCgo+ICsg
-wqAgwqAgwqAgbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKGQsIG5vZGUsICZoZWFkLCBkX3UuZF9j
-aGlsZCkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgc3Bpbl9sb2NrKCZkLT5kX2xvY2spOwo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbGlzdF9kZWxfaW5pdCgmZC0+ZF91LmRfY2hpbGQpOwo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgc3Bpbl91bmxvY2soJmQtPmRfbG9jayk7Cj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCBpZiAoZC0+ZF9pbm9kZSkgewo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgZF9kZWxldGUoZCk7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqBzaW1wbGVfdW5saW5rKGRlbnRyeS0+ZF9pbm9kZSwgZCk7Cj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBkcHV0KGQpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgc3Bpbl9sb2NrKCZkZW50cnktPmRfbG9jayk7Cj4gLSDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCB9IGVsc2UKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwaW5f
-dW5sb2NrKCZkLT5kX2xvY2spOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgbm9kZSA9IGRlbnRy
-eS0+ZF9zdWJkaXJzLm5leHQ7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9Cj4gwqAgwqAgwqAg
-wqB9Cj4gLSDCoCDCoCDCoCBzcGluX3VubG9jaygmZGVudHJ5LT5kX2xvY2spOwo+IMKgfQo+Cg==
+Dne 23.2.2012 15:13, Peter Zijlstra napsal:
+> My utter disregard for cgroups comes from having to actually implement a
+> controller for them, its a frigging nightmare. The systemd retards
+> mandating all this nonsense for booting a machine is completely bonghit
+> inspired and hasn't made me feel any better about it.
+
+systemd requires only CONFIG_CGROUPS=y. It does not need any controllers.
+
+The insults are entirely unnecessary.
+
+Michal
