@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V2 8/9] hugetlbfs: Add memcg control files for hugetlbfs
-Date: Thu,  1 Mar 2012 14:46:19 +0530
-Message-ID: <1330593380-1361-9-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V2 7/9] memcg: track resource index in cftype private
+Date: Thu,  1 Mar 2012 14:46:18 +0530
+Message-ID: <1330593380-1361-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,169 +15,80 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This add control files for hugetlbfs in memcg
+This helps in using same memcg callbacks for non reclaim resource
+control files.
 
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- include/linux/hugetlb.h |    5 ++++
- mm/hugetlb.c            |   39 ++++++++++++++++++++++++++++++++++++-
- mm/memcontrol.c         |   49 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 92 insertions(+), 1 deletions(-)
+ mm/memcontrol.c |   27 +++++++++++++++++++++------
+ 1 files changed, 21 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index d9d6c86..8498fa8 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -4,6 +4,7 @@
- #include <linux/mm_types.h>
- #include <linux/fs.h>
- #include <linux/hugetlb_inline.h>
-+#include <linux/cgroup.h>
- 
- struct ctl_table;
- struct user_struct;
-@@ -220,6 +221,10 @@ struct hstate {
- 	unsigned int nr_huge_pages_node[MAX_NUMNODES];
- 	unsigned int free_huge_pages_node[MAX_NUMNODES];
- 	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
-+	/* cgroup control files */
-+	struct cftype cgroup_limit_file;
-+	struct cftype cgroup_usage_file;
-+	struct cftype cgroup_max_usage_file;
- 	char name[HSTATE_NAME_LEN];
- };
- 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 2d99d0a..9229715 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -23,6 +23,7 @@
- #include <linux/swapops.h>
- #include <linux/region.h>
- #include <linux/memcontrol.h>
-+#include <linux/res_counter.h>
- 
- #include <asm/page.h>
- #include <asm/pgtable.h>
-@@ -1761,6 +1762,42 @@ static int __init hugetlb_init(void)
- }
- module_init(hugetlb_init);
- 
-+#ifdef CONFIG_MEM_RES_CTLR_NORECLAIM
-+int register_hugetlb_memcg_files(struct cgroup *cgroup,
-+				 struct cgroup_subsys *ss)
-+{
-+	int ret = 0;
-+	struct hstate *h;
-+
-+	for_each_hstate(h) {
-+		ret = cgroup_add_file(cgroup, ss, &h->cgroup_limit_file);
-+		if (ret)
-+			return ret;
-+		ret = cgroup_add_file(cgroup, ss, &h->cgroup_usage_file);
-+		if (ret)
-+			return ret;
-+		ret = cgroup_add_file(cgroup, ss, &h->cgroup_max_usage_file);
-+		if (ret)
-+			return ret;
-+
-+	}
-+	return ret;
-+}
-+/* mm/memcontrol.c because mem_cgroup is not availabel outside */
-+int hugetlb_memcg_file_init(struct hstate *h, int idx);
-+#else
-+int register_hugetlb_memcg_files(struct cgroup *cgroup,
-+				  struct cgroup_subsys *ss)
-+{
-+	return 0;
-+}
-+
-+static int hugetlb_memcg_file_init(struct hstate *h, int idx)
-+{
-+	return 0;
-+}
-+#endif
-+
- /* Should be called on processing a hugepagesz=... option */
- void __init hugetlb_add_hstate(unsigned order)
- {
-@@ -1784,7 +1821,7 @@ void __init hugetlb_add_hstate(unsigned order)
- 	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
- 	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
- 					huge_page_size(h)/1024);
--
-+	hugetlb_memcg_file_init(h, max_hstate - 1);
- 	parsed_hstate = h;
- }
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 25bc5f7..410d53d 100644
+index b00d028..25bc5f7 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5012,6 +5012,52 @@ static void mem_cgroup_destroy(struct cgroup_subsys *ss,
- 	mem_cgroup_put(memcg);
- }
+@@ -365,9 +365,14 @@ enum charge_type {
+ #define _MEM			(0)
+ #define _MEMSWAP		(1)
+ #define _OOM_TYPE		(2)
+-#define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
+-#define MEMFILE_TYPE(val)	(((val) >> 16) & 0xffff)
+-#define MEMFILE_ATTR(val)	((val) & 0xffff)
++#define _MEMNORCL		(3)
++
++/*  0 ... val ...16.... x...24...idx...32*/
++#define __MEMFILE_PRIVATE(idx, x, val)	(((idx) << 24) | ((x) << 16) | (val))
++#define MEMFILE_PRIVATE(x, val)		__MEMFILE_PRIVATE(0, x, val)
++#define MEMFILE_TYPE(val)		(((val) >> 16) & 0xff)
++#define MEMFILE_IDX(val)		(((val) >> 24) & 0xff)
++#define MEMFILE_ATTR(val)		((val) & 0xffff)
+ /* Used for OOM nofiier */
+ #define OOM_CONTROL		(0)
  
-+#if defined(CONFIG_MEM_RES_CTLR_NORECLAIM) && defined(CONFIG_HUGETLBFS)
-+static char *mem_fmt(char *buf, unsigned long n)
-+{
-+	if (n >= (1UL << 30))
-+		sprintf(buf, "%luGB", n >> 30);
-+	else if (n >= (1UL << 20))
-+		sprintf(buf, "%luMB", n >> 20);
-+	else
-+		sprintf(buf, "%luKB", n >> 10);
-+	return buf;
-+}
-+
-+int hugetlb_memcg_file_init(struct hstate *h, int idx)
-+{
-+	char buf[32];
-+	struct cftype *cft;
-+
-+	/* format the size */
-+	mem_fmt(buf, huge_page_size(h));
-+
-+	/* Add the limit file */
-+	cft = &h->cgroup_limit_file;
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.limit_in_bytes", buf);
-+	cft->private = __MEMFILE_PRIVATE(idx, _MEMNORCL, RES_LIMIT);
-+	cft->read_u64 = mem_cgroup_read;
-+	cft->write_string = mem_cgroup_write;
-+
-+	/* Add the usage file */
-+	cft = &h->cgroup_usage_file;
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.usage_in_bytes", buf);
-+	cft->private  = __MEMFILE_PRIVATE(idx, _MEMNORCL, RES_USAGE);
-+	cft->read_u64 = mem_cgroup_read;
-+
-+	/* Add the MAX usage file */
-+	cft = &h->cgroup_max_usage_file;
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.max_usage_in_bytes", buf);
-+	cft->private  = __MEMFILE_PRIVATE(idx, _MEMNORCL, RES_MAX_USAGE);
-+	cft->trigger  = mem_cgroup_reset;
-+	cft->read_u64 = mem_cgroup_read;
-+
-+	return 0;
-+}
-+#endif
-+
-+int register_hugetlb_memcg_files(struct cgroup *cgroup,
-+				  struct cgroup_subsys *ss);
- static int mem_cgroup_populate(struct cgroup_subsys *ss,
- 				struct cgroup *cont)
+@@ -3834,7 +3839,7 @@ static u64 mem_cgroup_read(struct cgroup *cont, struct cftype *cft)
  {
-@@ -5026,6 +5072,9 @@ static int mem_cgroup_populate(struct cgroup_subsys *ss,
- 	if (!ret)
- 		ret = register_kmem_files(cont, ss);
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 	u64 val;
+-	int type, name;
++	int type, name, idx;
  
-+	if (!ret)
-+		ret = register_hugetlb_memcg_files(cont, ss);
-+
- 	return ret;
- }
- 
+ 	type = MEMFILE_TYPE(cft->private);
+ 	name = MEMFILE_ATTR(cft->private);
+@@ -3851,6 +3856,10 @@ static u64 mem_cgroup_read(struct cgroup *cont, struct cftype *cft)
+ 		else
+ 			val = res_counter_read_u64(&memcg->memsw, name);
+ 		break;
++	case _MEMNORCL:
++		idx = MEMFILE_IDX(cft->private);
++		val = res_counter_read_u64(&memcg->no_rcl_res[idx], name);
++		break;
+ 	default:
+ 		BUG();
+ 		break;
+@@ -3883,7 +3892,10 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 			break;
+ 		if (type == _MEM)
+ 			ret = mem_cgroup_resize_limit(memcg, val);
+-		else
++		else if (type == _MEMNORCL) {
++			int idx = MEMFILE_IDX(cft->private);
++			ret = res_counter_set_limit(&memcg->no_rcl_res[idx], val);
++		} else
+ 			ret = mem_cgroup_resize_memsw_limit(memcg, val);
+ 		break;
+ 	case RES_SOFT_LIMIT:
+@@ -3947,7 +3959,10 @@ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+ 	case RES_MAX_USAGE:
+ 		if (type == _MEM)
+ 			res_counter_reset_max(&memcg->res);
+-		else
++		else if (type == _MEMNORCL) {
++			int idx = MEMFILE_IDX(event);
++			res_counter_reset_max(&memcg->no_rcl_res[idx]);
++		} else
+ 			res_counter_reset_max(&memcg->memsw);
+ 		break;
+ 	case RES_FAILCNT:
 -- 
 1.7.9
 
