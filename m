@@ -1,7 +1,7 @@
 From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH v2 1/3] xattr: extract kmem_xattr code from tmpfs
-Date: Thu, 01 Mar 2012 14:17:16 +0800
-Message-ID: <4F4F146C.9090300@cn.fujitsu.com>
+Subject: [PATCH v2 2/3] cgroup: revise how we re-populate root directory
+Date: Thu, 01 Mar 2012 14:17:51 +0800
+Message-ID: <4F4F148F.6040808@cn.fujitsu.com>
 References: <4F4F1459.4080300@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -13,490 +13,255 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Extract in-memory xattr APIs from tmpfs. Will be used by cgroup.
+When remounting cgroupfs with some subsystems added to it and some
+removed, cgroup will remove all the files in root directory and then
+re-popluate it.
 
-$ size vmlinux.o
-   text    data     bss     dec     hex filename
-5480650  655744 7039512 13175906         c90c62 vmlinux.o
-$ size vmlinux.o
-   text    data     bss     dec     hex filename
-5480427  655744 7039448 13175619         c90b43 vmlinux.o
+What I'm doing here is, only remove files which belong to subsystems that
+are to be unbinded, and only create files for newly-added subsystems.
+The purpose is to have all other files untouched.
+
+This is a preparation for cgroup xattr support.
 
 Signed-off-by: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 ---
- fs/xattr.c               |  167 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/shmem_fs.h |    3 +-
- include/linux/xattr.h    |   23 ++++++
- mm/shmem.c               |  151 +++--------------------------------------
- 4 files changed, 202 insertions(+), 142 deletions(-)
+ include/linux/cgroup.h |   11 +++---
+ kernel/cgroup.c        |   92 +++++++++++++++++++++++++++++++----------------
+ 2 files changed, 67 insertions(+), 36 deletions(-)
 
-diff --git a/fs/xattr.c b/fs/xattr.c
-index 82f4337..8af1b7f 100644
---- a/fs/xattr.c
-+++ b/fs/xattr.c
-@@ -757,3 +757,170 @@ EXPORT_SYMBOL(generic_getxattr);
- EXPORT_SYMBOL(generic_listxattr);
- EXPORT_SYMBOL(generic_setxattr);
- EXPORT_SYMBOL(generic_removexattr);
-+
-+/*
-+ * initialize the kmem_xattrs structure
-+ */
-+void kmem_xattrs_init(struct kmem_xattrs *xattrs)
-+{
-+	INIT_LIST_HEAD(&xattrs->head);
-+	spin_lock_init(&xattrs->lock);
-+}
-+
-+/*
-+ * free all the xattrs
-+ */
-+void kmem_xattrs_free(struct kmem_xattrs *xattrs)
-+{
-+	struct kmem_xattr *xattr, *node;
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry_safe(xattr, node, &xattrs->head, list) {
-+		kfree(xattr->name);
-+		kfree(xattr);
-+	}
-+	spin_unlock(&xattrs->lock);
-+}
-+
-+/*
-+ * xattr GET operation for in-memory/pseudo filesystems
-+ */
-+int kmem_xattr_get(struct kmem_xattrs *xattrs, const char *name,
-+		   void *buffer, size_t size)
-+{
-+	struct kmem_xattr *xattr;
-+	int ret = -ENODATA;
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry(xattr, &xattrs->head, list) {
-+		if (strcmp(name, xattr->name))
-+			continue;
-+
-+		ret = xattr->size;
-+		if (buffer) {
-+			if (size < xattr->size)
-+				ret = -ERANGE;
-+			else
-+				memcpy(buffer, xattr->value, xattr->size);
-+		}
-+		break;
-+	}
-+	spin_unlock(&xattrs->lock);
-+	return ret;
-+}
-+
-+static int __kmem_xattr_set(struct kmem_xattrs *xattrs, const char *name,
-+			    const void *value, size_t size, int flags)
-+{
-+	struct kmem_xattr *xattr;
-+	struct kmem_xattr *new_xattr = NULL;
-+	size_t len;
-+	int err = 0;
-+
-+	/* value == NULL means remove */
-+	if (value) {
-+		/* wrap around? */
-+		len = sizeof(*new_xattr) + size;
-+		if (len <= sizeof(*new_xattr))
-+			return -ENOMEM;
-+
-+		new_xattr = kmalloc(len, GFP_KERNEL);
-+		if (!new_xattr)
-+			return -ENOMEM;
-+
-+		new_xattr->name = kstrdup(name, GFP_KERNEL);
-+		if (!new_xattr->name) {
-+			kfree(new_xattr);
-+			return -ENOMEM;
-+		}
-+
-+		new_xattr->size = size;
-+		memcpy(new_xattr->value, value, size);
-+	}
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry(xattr, &xattrs->head, list) {
-+		if (!strcmp(name, xattr->name)) {
-+			if (flags & XATTR_CREATE) {
-+				xattr = new_xattr;
-+				err = -EEXIST;
-+			} else if (new_xattr) {
-+				list_replace(&xattr->list, &new_xattr->list);
-+			} else {
-+				list_del(&xattr->list);
-+			}
-+			goto out;
-+		}
-+	}
-+	if (flags & XATTR_REPLACE) {
-+		xattr = new_xattr;
-+		err = -ENODATA;
-+	} else {
-+		list_add(&new_xattr->list, &xattrs->head);
-+		xattr = NULL;
-+	}
-+out:
-+	spin_unlock(&xattrs->lock);
-+	if (xattr)
-+		kfree(xattr->name);
-+	kfree(xattr);
-+	return err;
-+
-+}
-+
-+/*
-+ * xattr SET operation for in-memory/pseudo filesystems
-+ */
-+int kmem_xattr_set(struct kmem_xattrs *xattrs, const char *name,
-+		   const void *value, size_t size, int flags)
-+{
-+	if (size == 0)
-+		value = ""; /* empty EA, do not remove */
-+	return __kmem_xattr_set(xattrs, name, value, size, flags);
-+}
-+
-+/*
-+ * xattr REMOVE operation for in-memory/pseudo filesystems
-+ */
-+int kmem_xattr_remove(struct kmem_xattrs *xattrs, const char *name)
-+{
-+        return __kmem_xattr_set(xattrs, name, NULL, 0, XATTR_REPLACE);
-+}
-+
-+static bool xattr_is_trusted(const char *name)
-+{
-+	return !strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN);
-+}
-+
-+/*
-+ * xattr LIST operation for in-memory/pseudo filesystems
-+ */
-+ssize_t kmem_xattr_list(struct kmem_xattrs *xattrs, char *buffer, size_t size)
-+{
-+	bool trusted = capable(CAP_SYS_ADMIN);
-+	struct kmem_xattr *xattr;
-+	size_t used = 0;
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry(xattr, &xattrs->head, list) {
-+		size_t len;
-+
-+		/* skip "trusted." attributes for unprivileged callers */
-+		if (!trusted && xattr_is_trusted(xattr->name))
-+			continue;
-+
-+		len = strlen(xattr->name) + 1;
-+		used += len;
-+		if (buffer) {
-+			if (size < used) {
-+				used = -ERANGE;
-+				break;
-+			}
-+			memcpy(buffer, xattr->name, len);
-+			buffer += len;
-+		}
-+	}
-+	spin_unlock(&xattrs->lock);
-+
-+	return used;
-+}
-diff --git a/include/linux/shmem_fs.h b/include/linux/shmem_fs.h
-index e4c711c..6d006b6 100644
---- a/include/linux/shmem_fs.h
-+++ b/include/linux/shmem_fs.h
-@@ -5,6 +5,7 @@
- #include <linux/mempolicy.h>
- #include <linux/pagemap.h>
- #include <linux/percpu_counter.h>
-+#include <linux/xattr.h>
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 501adb1..9b93c9a 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -295,6 +295,9 @@ struct cftype {
+ 	 */
+ 	size_t max_write_len;
  
- /* inode in-kernel data */
++	/* The subsystem this cgroup file belongs to */
++	struct cgroup_subsys *subsys;
++
+ 	int (*open)(struct inode *inode, struct file *file);
+ 	ssize_t (*read)(struct cgroup *cgrp, struct cftype *cft,
+ 			struct file *file,
+@@ -387,16 +390,14 @@ struct cgroup_scanner {
+  * called by subsystems from within a populate() method
+  */
+ int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *subsys,
+-		       const struct cftype *cft);
++		    struct cftype *cft);
  
-@@ -18,7 +19,7 @@ struct shmem_inode_info {
- 	};
- 	struct shared_policy	policy;		/* NUMA memory alloc policy */
- 	struct list_head	swaplist;	/* chain of maybes on swap */
--	struct list_head	xattr_list;	/* list of shmem_xattr */
-+	struct kmem_xattrs	xattrs;		/* list of xattrs */
- 	struct inode		vfs_inode;
+ /*
+  * Add a set of new files to the given cgroup directory. Should
+  * only be called by subsystems from within a populate() method
+  */
+-int cgroup_add_files(struct cgroup *cgrp,
+-			struct cgroup_subsys *subsys,
+-			const struct cftype cft[],
+-			int count);
++int cgroup_add_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
++		     struct cftype cft[], int count);
+ 
+ int cgroup_is_removed(const struct cgroup *cgrp);
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index c6877fe..5ec9048 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -781,6 +781,8 @@ static int cgroup_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode);
+ static struct dentry *cgroup_lookup(struct inode *, struct dentry *, struct nameidata *);
+ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry);
+ static int cgroup_populate_dir(struct cgroup *cgrp);
++static int cgroup_repopulate_dir(struct cgroup *cgrp, unsigned long added_bits,
++				 unsigned long removed_bits);
+ static const struct inode_operations cgroup_dir_inode_operations;
+ static const struct file_operations proc_cgroupstats_operations;
+ 
+@@ -882,34 +884,44 @@ static void remove_dir(struct dentry *d)
+ 	dput(parent);
+ }
+ 
+-static void cgroup_clear_directory(struct dentry *dentry)
++static void cgroup_clear_directory(struct dentry *dentry, bool remove_all,
++				   unsigned long removed_bits)
+ {
+-	struct list_head *node;
++	LIST_HEAD(head);
++	struct dentry *d, *node;
+ 
+ 	BUG_ON(!mutex_is_locked(&dentry->d_inode->i_mutex));
++
+ 	spin_lock(&dentry->d_lock);
+-	node = dentry->d_subdirs.next;
+-	while (node != &dentry->d_subdirs) {
+-		struct dentry *d = list_entry(node, struct dentry, d_u.d_child);
++	list_for_each_entry_safe(d, node, &dentry->d_subdirs, d_u.d_child) {
++		struct cftype *cft = d->d_fsdata;
++
++		if (!remove_all && cft->subsys &&
++		    !test_bit(cft->subsys->subsys_id, &removed_bits))
++			continue;
+ 
+ 		spin_lock_nested(&d->d_lock, DENTRY_D_LOCK_NESTED);
+-		list_del_init(node);
++		list_move(&d->d_u.d_child, &head);
+ 		if (d->d_inode) {
+ 			/* This should never be called on a cgroup
+ 			 * directory with child cgroups */
+ 			BUG_ON(d->d_inode->i_mode & S_IFDIR);
+ 			dget_dlock(d);
+-			spin_unlock(&d->d_lock);
+-			spin_unlock(&dentry->d_lock);
++		}
++		spin_unlock(&d->d_lock);
++	}
++	spin_unlock(&dentry->d_lock);
++
++	list_for_each_entry_safe(d, node, &head, d_u.d_child) {
++		spin_lock(&d->d_lock);
++		list_del_init(&d->d_u.d_child);
++		spin_unlock(&d->d_lock);
++		if (d->d_inode) {
+ 			d_delete(d);
+ 			simple_unlink(dentry->d_inode, d);
+ 			dput(d);
+-			spin_lock(&dentry->d_lock);
+-		} else
+-			spin_unlock(&d->d_lock);
+-		node = dentry->d_subdirs.next;
++		}
+ 	}
+-	spin_unlock(&dentry->d_lock);
+ }
+ 
+ /*
+@@ -919,7 +931,7 @@ static void cgroup_d_remove_dir(struct dentry *dentry)
+ {
+ 	struct dentry *parent;
+ 
+-	cgroup_clear_directory(dentry);
++	cgroup_clear_directory(dentry, true, 0);
+ 
+ 	parent = dentry->d_parent;
+ 	spin_lock(&parent->d_lock);
+@@ -1284,6 +1296,7 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 	struct cgroupfs_root *root = sb->s_fs_info;
+ 	struct cgroup *cgrp = &root->top_cgroup;
+ 	struct cgroup_sb_opts opts;
++	unsigned long added_bits, removed_bits;
+ 
+ 	mutex_lock(&cgrp->dentry->d_inode->i_mutex);
+ 	mutex_lock(&cgroup_mutex);
+@@ -1294,6 +1307,9 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 	if (ret)
+ 		goto out_unlock;
+ 
++	added_bits = opts.subsys_bits & ~root->subsys_bits;
++	removed_bits = root->subsys_bits & ~opts.subsys_bits;
++
+ 	/* Don't allow flags or name to change at remount */
+ 	if (opts.flags != root->flags ||
+ 	    (opts.name && strcmp(opts.name, root->name))) {
+@@ -1308,8 +1324,8 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 		goto out_unlock;
+ 	}
+ 
+-	/* (re)populate subsystem files */
+-	cgroup_populate_dir(cgrp);
++	/* re-populate subsystem files */
++	cgroup_repopulate_dir(cgrp, added_bits, removed_bits);
+ 
+ 	if (opts.release_agent)
+ 		strcpy(root->release_agent_path, opts.release_agent);
+@@ -2607,16 +2623,17 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
+ 	return mode;
+ }
+ 
+-int cgroup_add_file(struct cgroup *cgrp,
+-		       struct cgroup_subsys *subsys,
+-		       const struct cftype *cft)
++int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *subsys,
++		    struct cftype *cft)
+ {
+ 	struct dentry *dir = cgrp->dentry;
+ 	struct dentry *dentry;
+ 	int error;
+ 	umode_t mode;
+-
+ 	char name[MAX_CGROUP_TYPE_NAMELEN + MAX_CFTYPE_NAME + 2] = { 0 };
++
++	cft->subsys = subsys;
++
+ 	if (subsys && !test_bit(ROOT_NOPREFIX, &cgrp->root->flags)) {
+ 		strcpy(name, subsys->name);
+ 		strcat(name, ".");
+@@ -2637,10 +2654,8 @@ int cgroup_add_file(struct cgroup *cgrp,
+ }
+ EXPORT_SYMBOL_GPL(cgroup_add_file);
+ 
+-int cgroup_add_files(struct cgroup *cgrp,
+-			struct cgroup_subsys *subsys,
+-			const struct cftype cft[],
+-			int count)
++int cgroup_add_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
++		     struct cftype cft[], int count)
+ {
+ 	int i, err;
+ 	for (i = 0; i < count; i++) {
+@@ -3638,26 +3653,27 @@ static struct cftype cft_release_agent = {
+ 	.max_write_len = PATH_MAX,
  };
  
-diff --git a/include/linux/xattr.h b/include/linux/xattr.h
-index e5d1220..4d07f97 100644
---- a/include/linux/xattr.h
-+++ b/include/linux/xattr.h
-@@ -60,6 +60,7 @@
- #ifdef  __KERNEL__
- 
- #include <linux/types.h>
-+#include <linux/spinlock.h>
- 
- struct inode;
- struct dentry;
-@@ -96,6 +97,28 @@ ssize_t vfs_getxattr_alloc(struct dentry *dentry, const char *name,
- 			   char **xattr_value, size_t size, gfp_t flags);
- int vfs_xattr_cmp(struct dentry *dentry, const char *xattr_name,
- 		  const char *value, size_t size, gfp_t flags);
-+
-+struct kmem_xattrs {
-+	struct list_head head;
-+	spinlock_t lock;
-+};
-+
-+struct kmem_xattr {
-+	struct list_head list;
-+	char *name;
-+	size_t size;
-+	char value[0];
-+};
-+
-+void kmem_xattrs_init(struct kmem_xattrs *xattrs);
-+void kmem_xattrs_free(struct kmem_xattrs *xattrs);
-+int kmem_xattr_get(struct kmem_xattrs *xattrs, const char *name,
-+		   void *buffer, size_t size);
-+int kmem_xattr_set(struct kmem_xattrs *xattrs, const char *name,
-+		   const void *value, size_t size, int flags);
-+int kmem_xattr_remove(struct kmem_xattrs *xattrs, const char *name);
-+ssize_t kmem_xattr_list(struct kmem_xattrs *xattrs, char *buffer, size_t size);
-+
- #endif  /*  __KERNEL__  */
- 
- #endif	/* _LINUX_XATTR_H */
-diff --git a/mm/shmem.c b/mm/shmem.c
-index feead19..2e1e416 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -76,13 +76,6 @@ static struct vfsmount *shm_mnt;
- /* Symlink up to this size is kmalloc'ed instead of using a swappable page */
- #define SHORT_SYMLINK_LEN 128
- 
--struct shmem_xattr {
--	struct list_head list;	/* anchored by shmem_inode_info->xattr_list */
--	char *name;		/* xattr name */
--	size_t size;
--	char value[0];
--};
--
- /* Flag allocation requirements to shmem_getpage */
- enum sgp_type {
- 	SGP_READ,	/* don't exceed i_size, don't allocate page */
-@@ -545,7 +538,6 @@ static int shmem_setattr(struct dentry *dentry, struct iattr *attr)
- static void shmem_evict_inode(struct inode *inode)
+-static int cgroup_populate_dir(struct cgroup *cgrp)
++static int __cgroup_populate_dir(struct cgroup *cgrp, unsigned long added_bits)
  {
- 	struct shmem_inode_info *info = SHMEM_I(inode);
--	struct shmem_xattr *xattr, *nxattr;
- 
- 	if (inode->i_mapping->a_ops == &shmem_aops) {
- 		shmem_unacct_size(info->flags, inode->i_size);
-@@ -559,10 +551,7 @@ static void shmem_evict_inode(struct inode *inode)
- 	} else
- 		kfree(info->symlink);
- 
--	list_for_each_entry_safe(xattr, nxattr, &info->xattr_list, list) {
--		kfree(xattr->name);
--		kfree(xattr);
--	}
-+	kmem_xattrs_free(&info->xattrs);
- 	BUG_ON(inode->i_blocks);
- 	shmem_free_inode(inode->i_sb);
- 	end_writeback(inode);
-@@ -1114,7 +1103,7 @@ static struct inode *shmem_get_inode(struct super_block *sb, const struct inode
- 		spin_lock_init(&info->lock);
- 		info->flags = flags & VM_NORESERVE;
- 		INIT_LIST_HEAD(&info->swaplist);
--		INIT_LIST_HEAD(&info->xattr_list);
-+		kmem_xattrs_init(&info->xattrs);
- 		cache_no_acl(inode);
- 
- 		switch (mode & S_IFMT) {
-@@ -1679,93 +1668,6 @@ static void shmem_put_link(struct dentry *dentry, struct nameidata *nd, void *co
-  * filesystem level, though.
-  */
- 
--static int shmem_xattr_get(struct dentry *dentry, const char *name,
--			   void *buffer, size_t size)
--{
--	struct shmem_inode_info *info;
--	struct shmem_xattr *xattr;
--	int ret = -ENODATA;
--
--	info = SHMEM_I(dentry->d_inode);
--
--	spin_lock(&info->lock);
--	list_for_each_entry(xattr, &info->xattr_list, list) {
--		if (strcmp(name, xattr->name))
--			continue;
--
--		ret = xattr->size;
--		if (buffer) {
--			if (size < xattr->size)
--				ret = -ERANGE;
--			else
--				memcpy(buffer, xattr->value, xattr->size);
--		}
--		break;
--	}
--	spin_unlock(&info->lock);
--	return ret;
--}
--
--static int shmem_xattr_set(struct dentry *dentry, const char *name,
--			   const void *value, size_t size, int flags)
--{
--	struct inode *inode = dentry->d_inode;
--	struct shmem_inode_info *info = SHMEM_I(inode);
--	struct shmem_xattr *xattr;
--	struct shmem_xattr *new_xattr = NULL;
--	size_t len;
--	int err = 0;
--
--	/* value == NULL means remove */
--	if (value) {
--		/* wrap around? */
--		len = sizeof(*new_xattr) + size;
--		if (len <= sizeof(*new_xattr))
--			return -ENOMEM;
--
--		new_xattr = kmalloc(len, GFP_KERNEL);
--		if (!new_xattr)
--			return -ENOMEM;
--
--		new_xattr->name = kstrdup(name, GFP_KERNEL);
--		if (!new_xattr->name) {
--			kfree(new_xattr);
--			return -ENOMEM;
--		}
--
--		new_xattr->size = size;
--		memcpy(new_xattr->value, value, size);
--	}
--
--	spin_lock(&info->lock);
--	list_for_each_entry(xattr, &info->xattr_list, list) {
--		if (!strcmp(name, xattr->name)) {
--			if (flags & XATTR_CREATE) {
--				xattr = new_xattr;
--				err = -EEXIST;
--			} else if (new_xattr) {
--				list_replace(&xattr->list, &new_xattr->list);
--			} else {
--				list_del(&xattr->list);
--			}
--			goto out;
--		}
--	}
--	if (flags & XATTR_REPLACE) {
--		xattr = new_xattr;
--		err = -ENODATA;
--	} else {
--		list_add(&new_xattr->list, &info->xattr_list);
--		xattr = NULL;
--	}
--out:
--	spin_unlock(&info->lock);
--	if (xattr)
--		kfree(xattr->name);
--	kfree(xattr);
--	return err;
--}
--
- static const struct xattr_handler *shmem_xattr_handlers[] = {
- #ifdef CONFIG_TMPFS_POSIX_ACL
- 	&generic_acl_access_handler,
-@@ -1796,6 +1698,7 @@ static int shmem_xattr_validate(const char *name)
- static ssize_t shmem_getxattr(struct dentry *dentry, const char *name,
- 			      void *buffer, size_t size)
- {
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
  	int err;
+ 	struct cgroup_subsys *ss;
  
- 	/*
-@@ -1810,12 +1713,13 @@ static ssize_t shmem_getxattr(struct dentry *dentry, const char *name,
- 	if (err)
+-	/* First clear out any existing files */
+-	cgroup_clear_directory(cgrp->dentry);
+-
+ 	err = cgroup_add_files(cgrp, NULL, files, ARRAY_SIZE(files));
+ 	if (err < 0)
  		return err;
  
--	return shmem_xattr_get(dentry, name, buffer, size);
-+	return kmem_xattr_get(&info->xattrs, name, buffer, size);
+ 	if (cgrp == cgrp->top_cgroup) {
+-		if ((err = cgroup_add_file(cgrp, NULL, &cft_release_agent)) < 0)
++		err = cgroup_add_file(cgrp, NULL, &cft_release_agent);
++		if (err < 0)
+ 			return err;
+ 	}
+ 
+ 	for_each_subsys(cgrp->root, ss) {
+-		if (ss->populate && (err = ss->populate(ss, cgrp)) < 0)
+-			return err;
++		if (test_bit(ss->subsys_id, &added_bits) && ss->populate) {
++			err = ss->populate(ss, cgrp);
++			if (err < 0)
++				return err;
++		}
+ 	}
+ 	/* This cgroup is ready now */
+ 	for_each_subsys(cgrp->root, ss) {
+@@ -3674,6 +3690,20 @@ static int cgroup_populate_dir(struct cgroup *cgrp)
+ 	return 0;
  }
  
- static int shmem_setxattr(struct dentry *dentry, const char *name,
- 			  const void *value, size_t size, int flags)
- {
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
- 	int err;
- 
- 	/*
-@@ -1830,15 +1734,12 @@ static int shmem_setxattr(struct dentry *dentry, const char *name,
- 	if (err)
- 		return err;
- 
--	if (size == 0)
--		value = "";  /* empty EA, do not remove */
--
--	return shmem_xattr_set(dentry, name, value, size, flags);
--
-+	return kmem_xattr_set(&info->xattrs, name, value, size, flags);
- }
- 
- static int shmem_removexattr(struct dentry *dentry, const char *name)
- {
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
- 	int err;
- 
- 	/*
-@@ -1853,45 +1754,13 @@ static int shmem_removexattr(struct dentry *dentry, const char *name)
- 	if (err)
- 		return err;
- 
--	return shmem_xattr_set(dentry, name, NULL, 0, XATTR_REPLACE);
--}
--
--static bool xattr_is_trusted(const char *name)
--{
--	return !strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN);
-+	return kmem_xattr_remove(&info->xattrs, name);
- }
- 
- static ssize_t shmem_listxattr(struct dentry *dentry, char *buffer, size_t size)
- {
--	bool trusted = capable(CAP_SYS_ADMIN);
--	struct shmem_xattr *xattr;
--	struct shmem_inode_info *info;
--	size_t used = 0;
--
--	info = SHMEM_I(dentry->d_inode);
--
--	spin_lock(&info->lock);
--	list_for_each_entry(xattr, &info->xattr_list, list) {
--		size_t len;
--
--		/* skip "trusted." attributes for unprivileged callers */
--		if (!trusted && xattr_is_trusted(xattr->name))
--			continue;
--
--		len = strlen(xattr->name) + 1;
--		used += len;
--		if (buffer) {
--			if (size < used) {
--				used = -ERANGE;
--				break;
--			}
--			memcpy(buffer, xattr->name, len);
--			buffer += len;
--		}
--	}
--	spin_unlock(&info->lock);
--
--	return used;
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
-+	return kmem_xattr_list(&info->xattrs, buffer, size);
- }
- #endif /* CONFIG_TMPFS_XATTR */
- 
++static int cgroup_populate_dir(struct cgroup *cgrp)
++{
++	return __cgroup_populate_dir(cgrp, cgrp->root->subsys_bits);
++}
++
++static int cgroup_repopulate_dir(struct cgroup *cgrp, unsigned long added_bits,
++				 unsigned long removed_bits)
++{
++	/* First clear out files */
++	cgroup_clear_directory(cgrp->dentry, false, removed_bits);
++
++	return __cgroup_populate_dir(cgrp, added_bits);
++}
++
+ static void init_cgroup_css(struct cgroup_subsys_state *css,
+ 			       struct cgroup_subsys *ss,
+ 			       struct cgroup *cgrp)
 -- 
 1.7.3.1
