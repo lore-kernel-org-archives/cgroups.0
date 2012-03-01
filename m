@@ -1,33 +1,38 @@
-From: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Thu, 01 Mar 2012 23:04:08 +0100
-Message-ID: <1330639448.7414.97.camel@marge.simpson.net>
-References: <20120221211938.GE12236@google.com>
-	 <20120222163858.GB4128@redhat.com> <20120222165714.GC4128@redhat.com>
-	 <1329990094.24994.64.camel@twins> <1330006399.11248.20.camel@twins>
-	 <4F4FAF89.3090706@redhat.com> <1330633603.7414.49.camel@marge.simpson.net>
-	 <20120301210213.GF13533@redhat.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH -V2 1/9] mm:  move hugetlbfs region tracking function to
+ common code
+Date: Thu, 1 Mar 2012 14:33:45 -0800
+Message-ID: <20120301143345.7e928efe.akpm@linux-foundation.org>
+References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+	<1330593380-1361-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120301210213.GF13533-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1330593380-1361-2-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Righi <andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-On Thu, 2012-03-01 at 16:02 -0500, Vivek Goyal wrote: 
-> On Thu, Mar 01, 2012 at 09:26:43PM +0100, Mike Galbraith wrote:
+On Thu,  1 Mar 2012 14:46:12 +0530
+"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
 
-> > Q: you say systemd requires CONFIG_CGROUPS=y.  Why is that?  It's taking
-> > over sysvinits job afaiui, what does that have to do with cgroups?
+> This patch moves the hugetlbfs region tracking function to
+> common code. We will be using this in later patches in the
+> series.
 > 
-> I think they were using it to track all the children forked by a service
-> and cleanup all of them if need be. So they just need it for logical
-> grouping functionality and don't require any controllers as such.
+> ...
+>
+> +struct file_region {
+> +	struct list_head link;
+> +	long from;
+> +	long to;
+> +};
 
-Hm.  Controllers are perhaps not required, but cpu controller was
-configured and used without consent.  I didn't receive an offer.
+Both Andrea Righi and John Stultz are working on (more sophisticated)
+versions of file region tracking code.  And we already have a (poor)
+implementation in fs/locks.c.
 
--Mike
+That's four versions of the same thing floating around the place.  This
+is nutty.
