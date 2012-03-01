@@ -1,38 +1,48 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH -V2 1/9] mm:  move hugetlbfs region tracking function to
- common code
-Date: Thu, 1 Mar 2012 14:33:45 -0800
-Message-ID: <20120301143345.7e928efe.akpm@linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH -V2 0/9] memcg: add HugeTLB resource tracking
+Date: Thu, 1 Mar 2012 14:40:29 -0800
+Message-ID: <20120301144029.545a5589.akpm@linux-foundation.org>
 References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<1330593380-1361-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1330593380-1361-2-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Righi <andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, David Gibson <david@gibson.dropbear.id.au>
 
-On Thu,  1 Mar 2012 14:46:12 +0530
-"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+On Thu,  1 Mar 2012 14:46:11 +0530
+"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
 
-> This patch moves the hugetlbfs region tracking function to
-> common code. We will be using this in later patches in the
-> series.
+> This patchset implements a memory controller extension to control
+> HugeTLB allocations. It is similar to the existing hugetlb quota
+> support in that, the limit is enforced at mmap(2) time and not at
+> fault time. HugeTLB's quota mechanism limits the number of huge pages
+> that can allocated per superblock.
 > 
-> ...
->
-> +struct file_region {
-> +	struct list_head link;
-> +	long from;
-> +	long to;
-> +};
+> For shared mappings we track the regions mapped by a task along with the
+> memcg. We keep the memory controller charged even after the task
+> that did mmap(2) exits. Uncharge happens during truncate. For Private
+> mappings we charge and uncharge from the current task cgroup.
 
-Both Andrea Righi and John Stultz are working on (more sophisticated)
-versions of file region tracking code.  And we already have a (poor)
-implementation in fs/locks.c.
+I haven't begin to get my head around this yet, but I'd like to draw
+your attention to https://lkml.org/lkml/2012/2/15/548.  That fix has
+been hanging around for a while, but I haven't done anything with it
+yet because I don't like its additional blurring of the separation
+between hugetlb core code and hugetlbfs.  I want to find time to sit
+down and see if the fix can be better architected but haven't got
+around to that yet.
 
-That's four versions of the same thing floating around the place.  This
-is nutty.
+I expect that your patches will conflict at least mechanically with
+David's, which is not a big issue.  But I wonder whether your patches
+will copy the same bug into other places, and whether you can think of
+a tidier way of addressing the bug which David is seeing?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
