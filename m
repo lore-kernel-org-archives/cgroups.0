@@ -1,55 +1,47 @@
-From: David Gibson <dwg-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH -V2 0/9] memcg: add HugeTLB resource tracking
-Date: Fri, 2 Mar 2012 14:28:53 +1100
-Message-ID: <20120302032853.GB2728@truffala.fritz.box>
-References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <20120301144029.545a5589.akpm@linux-foundation.org>
+From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] xattr: extract kmem_xattr code from tmpfs
+Date: Fri, 02 Mar 2012 13:23:03 +0800
+Message-ID: <4F505937.9080904@cn.fujitsu.com>
+References: <4F4F1459.4080300@cn.fujitsu.com>	<4F4F146C.9090300@cn.fujitsu.com> <CAJd=RBB+2r-Q8K1FQqPh90EdtAdmz3R8FWU48M_ePqyziNfcLw@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120301144029.545a5589.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <CAJd=RBB+2r-Q8K1FQqPh90EdtAdmz3R8FWU48M_ePqyziNfcLw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Mar 01, 2012 at 02:40:29PM -0800, Andrew Morton wrote:
-> On Thu,  1 Mar 2012 14:46:11 +0530
-> "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+Hillf Danton wrote:
+> On Thu, Mar 1, 2012 at 2:17 PM, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> wrote:
+>> +/*
+>> + * free all the xattrs
+>> + */
+>> +void kmem_xattrs_free(struct kmem_xattrs *xattrs)
+>> +{
+>> +       struct kmem_xattr *xattr, *node;
+>> +
+>> +       spin_lock(&xattrs->lock);
+>> +       list_for_each_entry_safe(xattr, node, &xattrs->head, list) {
+>> +               kfree(xattr->name);
+>> +               kfree(xattr);
+>> +       }
+>> +       spin_unlock(&xattrs->lock);
 > 
-> > This patchset implements a memory controller extension to control
-> > HugeTLB allocations. It is similar to the existing hugetlb quota
-> > support in that, the limit is enforced at mmap(2) time and not at
-> > fault time. HugeTLB's quota mechanism limits the number of huge pages
-> > that can allocated per superblock.
-> > 
-> > For shared mappings we track the regions mapped by a task along with the
-> > memcg. We keep the memory controller charged even after the task
-> > that did mmap(2) exits. Uncharge happens during truncate. For Private
-> > mappings we charge and uncharge from the current task cgroup.
+> In your work it is a library function, operations on &xattrs->head
+> are no longer allowed, say list_empty(), after it called, though I
+> dunno if such operations exist.
 > 
-> I haven't begin to get my head around this yet, but I'd like to draw
-> your attention to https://lkml.org/lkml/2012/2/15/548.  That fix has
-> been hanging around for a while, but I haven't done anything with it
-> yet because I don't like its additional blurring of the separation
-> between hugetlb core code and hugetlbfs.  I want to find time to sit
-> down and see if the fix can be better architected but haven't got
-> around to that yet.
 
-So.. that version of the fix I specifically rebuilt to address your
-concerns about that blurring - in fact I think it reduces the current
-layer blurring.  I haven't had any reply - what problems do see it as
-still having?
+I'd prefer to make it safer to use, so I'll re-init the list head
+after freeing all the list items.
 
-> I expect that your patches will conflict at least mechanically with
-> David's, which is not a big issue.  But I wonder whether your patches
-> will copy the same bug into other places, and whether you can think of
-> a tidier way of addressing the bug which David is seeing?
+> And kmem_xattrs is too close to kmem_xattr, kmem_xattr_list
+> is not pron of typo.
+> 
 
--- 
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
+Then you won't pass compile. ;)
+
+kmem_xattr_list exposed the data structure we used internally.
+We might change to use an rbtree.
