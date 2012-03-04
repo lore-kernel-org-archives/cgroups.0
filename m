@@ -1,69 +1,45 @@
-From: Suleiman Souhlal <suleiman@google.com>
-Subject: Re: [PATCH 04/10] memcg: Introduce __GFP_NOACCOUNT.
-Date: Sat, 3 Mar 2012 16:10:34 -0800
-Message-ID: <CABCjUKBP=pKgDP5RkD4BimTjoE=bQQO7NxNNAiGUfy602T4c7A@mail.gmail.com>
-References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
-	<1330383533-20711-5-git-send-email-ssouhlal@FreeBSD.org>
-	<20120229150041.62c1feeb.kamezawa.hiroyu@jp.fujitsu.com>
-	<CABCjUKBHjLHKUmW6_r0SOyw42WfV0zNO7Kd7FhhRQTT6jZdyeQ@mail.gmail.com>
-	<20120301091044.1a62d42c.kamezawa.hiroyu@jp.fujitsu.com>
-	<4F4EC1AB.8050506@parallels.com>
-	<20120301150537.8996bbf6.kamezawa.hiroyu@jp.fujitsu.com>
-	<4F522910.1050402@parallels.com>
-	<CABCjUKBngJx0o5jnJk3FEjWUDA6aNTAiFENdEF+M7BwB85NaLg@mail.gmail.com>
-	<4F52A81A.3030408@parallels.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH -V2 1/9] mm:  move hugetlbfs region tracking function to common code
+Date: Sun, 04 Mar 2012 23:07:50 +0530
+Message-ID: <87linge07l.fsf@linux.vnet.ibm.com>
+References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1330593380-1361-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120301143345.7e928efe.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=geyW3H2M7uSwUyxMJNTZNn/zSEcWtn7t31V//zuNuiI=;
-        b=U0dwXUAgnvTA9Dk4W8LVYymAvpWvRw7lJzD3rregLSsHDDB05TyxwM/VZh9qvTxq+b
-         scY41hamw5O8XnAnPCenM5ivSHPrPTnr9pRTEywXe+i3Un1HiSMkcFSzJjfd4tDvBlrw
-         Si73OmAm0zHBRjbNoMeKfw3s+pUoZxVnBp35snVZkyMDoMuFhmKS7NQf8JRrWf0IlAzB
-         SRIz8HSCN2BN+9msVUpk2q0HawaWzWW04G97MDzSNDhMWV6+Ez2kEr2+VCJv/1dRPTk+
-         aa/u5Bd0gpgaQ+alT2cwsvlKxSAtktOLowkjaQz4SWCP02dvVcpgG49KrufAlGXOAmAQ
-         gfVw==
-In-Reply-To: <4F52A81A.3030408@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120301143345.7e928efe.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer@parallels.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <ssouhlal@freebsd.org>, cgroups@vger.kernel.org, penberg@kernel.org, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Righi <andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-On Sat, Mar 3, 2012 at 3:24 PM, Glauber Costa <glommer@parallels.com> wrote=
-:
-> On 03/03/2012 01:38 PM, Suleiman Souhlal wrote:
->> Another possible example might be the skb data, which are just kmalloc
->> and are already accounted by your TCP accounting changes, so we might
->> not want to account them a second time.
->
->
-> How so?
->
-> struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0int fclone, int no=
-de)
-> {
-> =A0 =A0 =A0 =A0[ ... ]
-> =A0 =A0 =A0 =A0cache =3D fclone ? skbuff_fclone_cache : skbuff_head_cache=
-;
->
-> =A0 =A0 =A0 =A0/* Get the HEAD */
-> =A0 =A0 =A0 =A0skb =3D kmem_cache_alloc_node(cache, gfp_mask & ~__GFP_DMA=
-, node);
+On Thu, 1 Mar 2012 14:33:45 -0800, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+> On Thu,  1 Mar 2012 14:46:12 +0530
+> "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+> 
+> > This patch moves the hugetlbfs region tracking function to
+> > common code. We will be using this in later patches in the
+> > series.
+> > 
+> > ...
+> >
+> > +struct file_region {
+> > +	struct list_head link;
+> > +	long from;
+> > +	long to;
+> > +};
+> 
+> Both Andrea Righi and John Stultz are working on (more sophisticated)
+> versions of file region tracking code.  And we already have a (poor)
+> implementation in fs/locks.c.
+> 
+> That's four versions of the same thing floating around the place.  This
+> is nutty.
 
-Just a few lines below:
 
-        data =3D kmalloc_node_track_caller(size, gfp_mask, node);
+We should be able to remove region.c once other alternatives are in
+upstream. I will also look at the alternatives and see if it would need
+any change to make it usable for this work.
 
--- Suleiman
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+-aneesh
