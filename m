@@ -1,90 +1,97 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC] memcg usage_in_bytes does not account file mapped and
- slab memory
-Date: Mon, 5 Mar 2012 09:19:34 +0900
-Message-ID: <20120305091934.588c160b.kamezawa.hiroyu@jp.fujitsu.com>
-References: <20120302162753.GA11748@oksana.dev.rtsoft.ru>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 00/10] cgroups: Task counter subsystem v8
+Date: Mon, 5 Mar 2012 04:21:33 +0100
+Message-ID: <20120305032130.GD18143@somewhere.redhat.com>
+References: <1328067470-5980-1-git-send-email-fweisbec@gmail.com>
+ <20120201163126.GA19837@google.com>
+ <20120201184959.GH6731@somewhere.redhat.com>
+ <20120201115107.93e11471.akpm@linux-foundation.org>
+ <20120202145000.GC9071@somewhere.redhat.com>
+ <4F4FFDE4.8050908@free.fr>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120302162753.GA11748@oksana.dev.rtsoft.ru>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=W5k88sYMQiiixxns9IJritFGmhoYzjO5l0mFm5OR1OM=;
+        b=snplgI+MUVfnw83y2mBI7oZcxWGmhGPAqZ62kO3iLH8kizQRxfDmkUmzE3DRPAyhat
+         z3qydWUzEt6L6eUqfADuLoyY/i8ZL+pFNjZsx0hjlisCbmipIfmLpa9vpAN4OdV+fA0Q
+         i6N/h+AqSBRK2/uWvXo95uBDBBoPkb/BLsEGrGc2LKw9Z5Rxb2FvXjsikCGz62NkZxhi
+         T9UFlUuI3nTegiH72Zyj63W34HEkd0wTp3mvQRqUEeNeZgCmAXwz0jmziw51Ef3FhtEz
+         2PZQoX+G5Gb+AmMQ6hcReTWVmjvmg6Vl+QQkqKStrxy23DH0RQFB+ecxm7F9Typ4DGUO
+         iqiw==
+Content-Disposition: inline
+In-Reply-To: <4F4FFDE4.8050908-GANU6spQydw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Anton Vorontsov <anton.vorontsov@linaro.org>
-Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, John Stultz <john.stultz@linaro.org>
+Content-Transfer-Encoding: 7bit
+To: Daniel Lezcano <daniel.lezcano-GANU6spQydw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Papp =?iso-8859-1?Q?Tam=E1s?= <tompos-Rh2PkUZwdwxYmEVqv0PRRg@public.gmane.org>, Ulli Horlacher <framstag-otB+qtk3XKcL63KmMnjC+CEWGD4kr0XT@public.gmane.org>
 
-On Fri, 2 Mar 2012 20:27:53 +0400
-Anton Vorontsov <anton.vorontsov@linaro.org> wrote:
+On Thu, Mar 01, 2012 at 11:53:24PM +0100, Daniel Lezcano wrote:
+> On 02/02/2012 03:50 PM, Frederic Weisbecker wrote:
+> >On Wed, Feb 01, 2012 at 11:51:07AM -0800, Andrew Morton wrote:
+> >>On Wed, 1 Feb 2012 19:50:01 +0100
+> >>Frederic Weisbecker<fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>  wrote:
+> >>
+> >>>On Wed, Feb 01, 2012 at 08:31:26AM -0800, Tejun Heo wrote:
+> >>>>On Wed, Feb 01, 2012 at 04:37:40AM +0100, Frederic Weisbecker wrote:
+> >>>>>Changes In this version:
+> >>>>>
+> >>>>>- Split 32/64 bits version of res_counter_write_u64() [1/10]
+> >>>>>   Courtesy of Kirill A. Shutemov
+> >>>>>
+> >>>>>- Added Kirill's ack [8/10]
+> >>>>>
+> >>>>>- Added selftests [9/10], [10/10]
+> >>>>>
+> >>>>>Please consider for merging. At least two users want this feature:
+> >>>>Has there been further discussion about this approach?  IIRC, we
+> >>>>weren't sure whether this should be merged.
+> >>>The doubts I have noticed were:
+> >>>
+> >>>Q: Can't we rather focus on a global solution to fight forkbombs?
+> >>>
+> >>>If we can find a reliable solution that works in any case and that
+> >>>prevent from any forkbomb to impact the rest of the system then it
+> >>>may be an acceptable solution. But I'm not aware of such feature.
+> >>>
+> >>>Besides, another point in having this task counter is that we
+> >>>have a per container limit. Assuming all containers are running under
+> >>>the same user, we can protect against a container starving all others
+> >>>with a massive amount of processes close to the NR_PROC rlimit.
+> >>>
+> >>>Q: Can/should we implement a limitation on the number of "fork" as well?
+> >>>    (as in https://lkml.org/lkml/2011/11/3/233 )
+> >>>
+> >>>I'm still not sure about why such a thing is needed. Is it really something we
+> >>>want? Why can't the task counter be used instead?
+> >>>
+> >>>I need more details from the author of this patch. But I doubt we can merge
+> >>>both subsystems, they have pretty different semantics.
+> >>What I struggle with is "is this feature useful enough to warrant
+> >>merging it"?
+> >The reason why I've been working on it is because we need this feature
+> >(at least) for LXC.
+> 
+> This feature is a recurrent request from the users of LXC. Recently,
+> a container administrator complained an user was able to crash the
+> entire host from a container.
+> 
+> http://sourceforge.net/mailarchive/message.php?msg_id=28915923
+> 
+> This feature is really useful to make the containers secure.
 
-> ... and thus is useless for low memory notifications.
-> 
-> Hi all!
-> 
-> While working on userspace low memory killer daemon (a supposed
-> substitution for the kernel low memory killer, i.e.
-> drivers/staging/android/lowmemorykiller.c), I noticed that current
-> cgroups memory notifications aren't suitable for such a daemon.
-> 
-> Suppose we want to install a notification when free memory drops below
-> 8 MB. Logically (taking memory hotplug aside), using current usage_in_bytes
-> notifications we would install an event on 'total_ram - 8MB' threshold.
-> 
-> But as usage_in_bytes doesn't account file mapped memory and memory
-> used by kernel slab, the formula won't work.
-> 
-> Currently I use the following patch that makes things going:
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 228d646..c8abdc5 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3812,6 +3812,9 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
->  
->         val = mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_CACHE);
->         val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
-> +       val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
-> +       val += global_page_state(NR_SLAB_RECLAIMABLE);
-> +       val += global_page_state(NR_SLAB_UNRECLAIMABLE);
-> 
-> 
-> But here are some questions:
-> 
-> 1. Is there any particular reason we don't currently account file mapped
->    memory in usage_in_bytes?
-> 
+Time for me to try to wake up again this discussion.
+Andrew, Tejun, Li, as you can see we don't lack the users
+for this feature.
 
-CACHE includes all file caches. Why do you think FILE_MAPPED is not included in CACHE ?
+If you think we should solve our security problems on containers
+by following another direction, please tell us so we know where to
+go and we can move forward.
 
+Otherwise please consider the task counter for merging.
 
->    To me, MEM_CGROUP_STAT_FILE_MAPPED hunk seems logical even if we
->    don't use it for lowmemory notifications.
-> 
->    Plus, it seems that FILE_MAPPED _is_ accounted for the non-root
->    cgroups, so I guess it's clearly a bug for the root memcg?
-> 
-> 2. As for NR_SLAB_RECLAIMABLE and NR_SLAB_UNRECLAIMABLE, it seems that
->    these numbers are only applicable for the root memcg.
->    I'm not sure that usage_in_bytes semantics should actually account
->    these, but I tend to think that we should.
-> 
-
-Now, SLAB is not accounted by memcg at all.
-See memifo if necessary.
-
-> All in all, not accounting both 1. and 2. looks like bugs to me.
-> 
-
-It's spec. not bug. If you want to see slab status in memcg's file,
-Please add kernel memory accounting feature. There has been already 2 proposals.
-Check them and comment.
-
-Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
