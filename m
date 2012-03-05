@@ -1,57 +1,86 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V2 0/9] memcg: add HugeTLB resource tracking
-Date: Mon, 05 Mar 2012 00:45:55 +0530
-Message-ID: <878vjgdvo4.fsf@linux.vnet.ibm.com>
-References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120301144029.545a5589.akpm@linux-foundation.org>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [RFC] memcg usage_in_bytes does not account file mapped and
+ slab memory
+Date: Mon, 5 Mar 2012 09:19:34 +0900
+Message-ID: <20120305091934.588c160b.kamezawa.hiroyu@jp.fujitsu.com>
+References: <20120302162753.GA11748@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120301144029.545a5589.akpm@linux-foundation.org>
+In-Reply-To: <20120302162753.GA11748@oksana.dev.rtsoft.ru>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, David Gibson <david@gibson.dropbear.id.au>
+To: Anton Vorontsov <anton.vorontsov@linaro.org>
+Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, John Stultz <john.stultz@linaro.org>
 
-On Thu, 1 Mar 2012 14:40:29 -0800, Andrew Morton <akpm@linux-foundation.org> wrote:
-> On Thu,  1 Mar 2012 14:46:11 +0530
-> "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
+On Fri, 2 Mar 2012 20:27:53 +0400
+Anton Vorontsov <anton.vorontsov@linaro.org> wrote:
+
+> ... and thus is useless for low memory notifications.
 > 
-> > This patchset implements a memory controller extension to control
-> > HugeTLB allocations. It is similar to the existing hugetlb quota
-> > support in that, the limit is enforced at mmap(2) time and not at
-> > fault time. HugeTLB's quota mechanism limits the number of huge pages
-> > that can allocated per superblock.
-> > 
-> > For shared mappings we track the regions mapped by a task along with the
-> > memcg. We keep the memory controller charged even after the task
-> > that did mmap(2) exits. Uncharge happens during truncate. For Private
-> > mappings we charge and uncharge from the current task cgroup.
+> Hi all!
 > 
-> I haven't begin to get my head around this yet, but I'd like to draw
-> your attention to https://lkml.org/lkml/2012/2/15/548.
-
-Hmm that's really serious bug.
-
->  That fix has
-> been hanging around for a while, but I haven't done anything with it
-> yet because I don't like its additional blurring of the separation
-> between hugetlb core code and hugetlbfs.  I want to find time to sit
-> down and see if the fix can be better architected but haven't got
-> around to that yet.
+> While working on userspace low memory killer daemon (a supposed
+> substitution for the kernel low memory killer, i.e.
+> drivers/staging/android/lowmemorykiller.c), I noticed that current
+> cgroups memory notifications aren't suitable for such a daemon.
 > 
-> I expect that your patches will conflict at least mechanically with
-> David's, which is not a big issue.  But I wonder whether your patches
-> will copy the same bug into other places, and whether you can think of
-> a tidier way of addressing the bug which David is seeing?
+> Suppose we want to install a notification when free memory drops below
+> 8 MB. Logically (taking memory hotplug aside), using current usage_in_bytes
+> notifications we would install an event on 'total_ram - 8MB' threshold.
+> 
+> But as usage_in_bytes doesn't account file mapped memory and memory
+> used by kernel slab, the formula won't work.
+> 
+> Currently I use the following patch that makes things going:
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 228d646..c8abdc5 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3812,6 +3812,9 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+>  
+>         val = mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_CACHE);
+>         val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
+> +       val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
+> +       val += global_page_state(NR_SLAB_RECLAIMABLE);
+> +       val += global_page_state(NR_SLAB_UNRECLAIMABLE);
+> 
+> 
+> But here are some questions:
+> 
+> 1. Is there any particular reason we don't currently account file mapped
+>    memory in usage_in_bytes?
 > 
 
-I will go through the implementation again and make sure the problem
-explained by David doesn't happen in the new code path added by the
-patch series.
+CACHE includes all file caches. Why do you think FILE_MAPPED is not included in CACHE ?
 
-Thanks
--aneesh
+
+>    To me, MEM_CGROUP_STAT_FILE_MAPPED hunk seems logical even if we
+>    don't use it for lowmemory notifications.
+> 
+>    Plus, it seems that FILE_MAPPED _is_ accounted for the non-root
+>    cgroups, so I guess it's clearly a bug for the root memcg?
+> 
+> 2. As for NR_SLAB_RECLAIMABLE and NR_SLAB_UNRECLAIMABLE, it seems that
+>    these numbers are only applicable for the root memcg.
+>    I'm not sure that usage_in_bytes semantics should actually account
+>    these, but I tend to think that we should.
+> 
+
+Now, SLAB is not accounted by memcg at all.
+See memifo if necessary.
+
+> All in all, not accounting both 1. and 2. looks like bugs to me.
+> 
+
+It's spec. not bug. If you want to see slab status in memcg's file,
+Please add kernel memory accounting feature. There has been already 2 proposals.
+Check them and comment.
+
+Thanks,
+-Kame
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
