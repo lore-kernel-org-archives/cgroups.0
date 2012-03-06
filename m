@@ -1,41 +1,51 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 04/10] memcg: Introduce __GFP_NOACCOUNT.
-Date: Tue, 6 Mar 2012 14:36:43 +0400
-Message-ID: <4F55E8BB.5060704@parallels.com>
-References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org> <1330383533-20711-5-git-send-email-ssouhlal@FreeBSD.org> <20120229150041.62c1feeb.kamezawa.hiroyu@jp.fujitsu.com> <CABCjUKBHjLHKUmW6_r0SOyw42WfV0zNO7Kd7FhhRQTT6jZdyeQ@mail.gmail.com> <20120301091044.1a62d42c.kamezawa.hiroyu@jp.fujitsu.com> <4F4EC1AB.8050506@parallels.com> <20120301150537.8996bbf6.kamezawa.hiroyu@jp.fujitsu.com> <4F522910.1050402@parallels.com> <CABCjUKBngJx0o5jnJk3FEjWUDA6aNTAiFENdEF+M7BwB85NaLg@mail.gmail.com> <4F52A81A.3030408@parallels.com> <CABCjUKBP=pKgDP5RkD4BimTjoE=bQQO7NxNNAiGUfy602T4c7A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] memcg: revise the position of threshold index while unregistering event
+Date: Tue,  6 Mar 2012 20:12:23 +0800
+Message-ID: <1331035943-7456-1-git-send-email-handai.szj@taobao.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CABCjUKBP=pKgDP5RkD4BimTjoE=bQQO7NxNNAiGUfy602T4c7A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=3vOYW1U86eTLroKBBzVUuCBAwR7KlrTZcs1kHw/fFVs=;
+        b=fzFYKQRntDE7CF91WPoOuSWhbV4QkSAYV67taxPg7UFPQy+cWI86w477zIuXGlt5Eb
+         lZiC2mluHfOKllAyK26YRY/UWHiH2fbGJfANB7t04Vdw515E0KaTGKq0XK1BFN+ZKm8y
+         YZ1XWmesZJDZCY8y00MkTzu7yDV3qMgDVIVOs8VI85iquPJtHk0CJtDmaDBZEnnn4bCv
+         lXaX7GIdciqm5Tfb8bh2fCf3mSjUktsksCo0iGLC42xIGIIjRqeI4A77XBaxb0rKvM+u
+         +pRo6zQ9XTu3s0//uQcx1Gt9CeDLQ4ACIMl15wlexAuWO28kRPvTQA8YP0AoSQbo5fIa
+         5MYQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On 03/04/2012 04:10 AM, Suleiman Souhlal wrote:
-> On Sat, Mar 3, 2012 at 3:24 PM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->> On 03/03/2012 01:38 PM, Suleiman Souhlal wrote:
->>> Another possible example might be the skb data, which are just kmalloc
->>> and are already accounted by your TCP accounting changes, so we might
->>> not want to account them a second time.
->>
->>
->> How so?
->>
->> struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
->>                             int fclone, int node)
->> {
->>         [ ... ]
->>         cache = fclone ? skbuff_fclone_cache : skbuff_head_cache;
->>
->>         /* Get the HEAD */
->>         skb = kmem_cache_alloc_node(cache, gfp_mask&  ~__GFP_DMA, node);
->
-> Just a few lines below:
->
->          data = kmalloc_node_track_caller(size, gfp_mask, node);
->
-> -- Suleiman
-Can't we just make sure those come from the root cgroup's slabs?
-Then we need no flag.
+From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+
+Index current_threshold should point to threshold just below or equal to usage.
+See below:
+http://www.spinics.net/lists/cgroups/msg00844.html
+
+
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+
+---
+ mm/memcontrol.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 22d94f5..cd40d67 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4398,7 +4398,7 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
+ 			continue;
+ 
+ 		new->entries[j] = thresholds->primary->entries[i];
+-		if (new->entries[j].threshold < usage) {
++		if (new->entries[j].threshold <= usage) {
+ 			/*
+ 			 * new->current_threshold will not be used
+ 			 * until rcu_assign_pointer(), so it's safe to increment
+-- 
+1.7.4.1
