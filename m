@@ -1,61 +1,63 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 04/10] memcg: Introduce __GFP_NOACCOUNT.
-Date: Tue, 6 Mar 2012 22:31:55 +0400
-Message-ID: <4F56581B.3040709@parallels.com>
-References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org> <1330383533-20711-5-git-send-email-ssouhlal@FreeBSD.org> <20120229150041.62c1feeb.kamezawa.hiroyu@jp.fujitsu.com> <CABCjUKBHjLHKUmW6_r0SOyw42WfV0zNO7Kd7FhhRQTT6jZdyeQ@mail.gmail.com> <20120301091044.1a62d42c.kamezawa.hiroyu@jp.fujitsu.com> <4F4EC1AB.8050506@parallels.com> <20120301150537.8996bbf6.kamezawa.hiroyu@jp.fujitsu.com> <4F522910.1050402@parallels.com> <CABCjUKBngJx0o5jnJk3FEjWUDA6aNTAiFENdEF+M7BwB85NaLg@mail.gmail.com> <4F52A81A.3030408@parallels.com> <CABCjUKBP=pKgDP5RkD4BimTjoE=bQQO7NxNNAiGUfy602T4c7A@mail.gmail.com> <4F55E8BB.5060704@parallels.com> <CABCjUKD6_7p_OvsSPOJi9q4WRcHVhn3Y-R=dndomNLb13fVApA@mail.gmail.com>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 0/3] cgroup: add xattr support
+Date: Tue, 6 Mar 2012 13:37:36 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1203061314400.17934@eggly.anvils>
+References: <4F4F1459.4080300@cn.fujitsu.com> <20120304180516.GB20787@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CABCjUKD6_7p_OvsSPOJi9q4WRcHVhn3Y-R=dndomNLb13fVApA@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=H5g4i8cm5Efz5BqVzdNXAoDzO7i1gKBR5MJw/BS/cZI=;
+        b=Ycj/MpQ314ggCTjiERym+P9zxKMfeftDIkJcElXW3SkACvWzQfHZCHez4bvR9rtGIx
+         LNbhtxPul9oimY9X6EWv+ML7cAwc/B/yunQEFUmXq8ZmpqRT/A4YYj00JRNfQj3pYe5G
+         R86bvu7LkDb4tBAFc3qQivIez/dLrnDDv2OXn316K0AonUaHsymu6z3QyBLrpVw6rUWs
+         JJT+Bi+C/ERuo6HO26pFMdP+rgp7uL1XhbeYjg0L7Z9cFzD63BX3LGhaWWNiUa136DcE
+         Ye2YBT/lVnWEOju6Z8p1kokRmU8mEvW7RypoGtjQP971cB3izS7eC+t9u/d+jJfWZ/+I
+         VfUg==
+In-Reply-To: <20120304180516.GB20787-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Suleiman Souhlal <suleiman@google.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <ssouhlal@freebsd.org>, cgroups@vger.kernel.org, penberg@kernel.org, yinghan@google.com, hughd@google.com, gthelen@google.com, linux-mm@kvack.org, devel@openvz.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miklos Szeredi <mszeredi-AlSwsSmVLrQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 03/06/2012 08:13 PM, Suleiman Souhlal wrote:
-> On Tue, Mar 6, 2012 at 2:36 AM, Glauber Costa<glommer@parallels.com>  wrote:
->> On 03/04/2012 04:10 AM, Suleiman Souhlal wrote:
->>>
->>> Just a few lines below:
->>>
->>>          data = kmalloc_node_track_caller(size, gfp_mask, node);
->>>
->>> -- Suleiman
->>
->> Can't we just make sure those come from the root cgroup's slabs?
->> Then we need no flag.
->
-> Do you mean make it so that all kmallocs come from the root cgroup's slabs?
-No.
+On Sun, 4 Mar 2012, Tejun Heo wrote:
+> On Thu, Mar 01, 2012 at 02:16:57PM +0800, Li Zefan wrote:
+> > This can be used to attach metadata to a cgroup, which is required
+> > by systemd.
 
-> We would really like to account kmallocs in general (and all the other
-> slab types) to the right cgroup...
-For the record, even in the scenario where we mark the slabs we want to 
-track, I'd still like to account and limit kmallocs. They are a big 
-source of memory usage.
+I've not reviewed your patches in detail, but I'm very happy for most
+of the shmem xattr code to move out to a library for use elsewhere.
 
-What I mean, is that if we can specify which cgroup certain kmallocs 
-should be billed against, we could use that to get rid of this GFP flag.
-And if we really want another non-kmalloc slab to escape accounting,
-then we can use a SLAB flag instead of a GFP flag.
+Note that the linux-next mm/shmem.c now includes Jarkko Sakkinen's
+shmem_initxattrs() work, maybe you can draw from that too.
 
->
-> That said, I'm probably going to concentrate on accounting specially
-> marked caches only, for now, since there seems to be a strong
-> opposition on accounting everything, even though I don't understand
-> this point of view.
+> > 
+> > As lazy as I am, here just quoted from Lennart for the detailed use
+> > cases:
+> 
+> I much prefer this version but would prefer to deal with this in the
+> next merge window as we're already on rc6.  On a cursory look...
+> 
+> * I'm not sure kmem_ is a good prefix.  It sucks that xattr values are
+>   stored in kmem w/o size limit and we probably want to improve on
+>   both fronts in the future.  Wouldn't it be better to name them
+>   simple_*() and put them in fs/libfs.c?
 
-Give me a couple of days to sketch something on the lines of what I 
-described above.
+Yes, simple_*() in fs/libfs.c sounds much better to me than kmem_*().
 
-I think that would be a good compromise for us here. If it is also okay 
-for Kame, we might have good chances of reaching consensus with that.
+On the size limit issue, shmem has its own shmem_xattr_validate(),
+which rejects XATTR_USER_PREFIX, and the patches leave that unchanged.
 
+I don't know whether the cgroup xattrs need to support USER or not,
+and I don't know what permissions would be involved if they do;
+but it's an important concern.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Hugh
+
+> 
+> * I don't think we want CONFIG option for cgroupfs xattr.  Let's just
+>   add a mount option.
