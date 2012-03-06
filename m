@@ -1,201 +1,62 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V2 0/9] memcg: add HugeTLB resource tracking
-Date: Tue, 06 Mar 2012 19:35:56 +0530
-Message-ID: <87hay1akor.fsf@linux.vnet.ibm.com>
-References: <1330593380-1361-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120301144029.545a5589.akpm@linux-foundation.org> <878vjgdvo4.fsf@linux.vnet.ibm.com> <CAJd=RBAJxVs0Jz+=PNO222oDvF0n6+hh7FNuFpSYTS3EJL8fpw@mail.gmail.com>
+From: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 04/10] memcg: Introduce __GFP_NOACCOUNT.
+Date: Tue, 6 Mar 2012 08:13:12 -0800
+Message-ID: <CABCjUKD6_7p_OvsSPOJi9q4WRcHVhn3Y-R=dndomNLb13fVApA@mail.gmail.com>
+References: <1330383533-20711-1-git-send-email-ssouhlal@FreeBSD.org>
+	<1330383533-20711-5-git-send-email-ssouhlal@FreeBSD.org>
+	<20120229150041.62c1feeb.kamezawa.hiroyu@jp.fujitsu.com>
+	<CABCjUKBHjLHKUmW6_r0SOyw42WfV0zNO7Kd7FhhRQTT6jZdyeQ@mail.gmail.com>
+	<20120301091044.1a62d42c.kamezawa.hiroyu@jp.fujitsu.com>
+	<4F4EC1AB.8050506@parallels.com>
+	<20120301150537.8996bbf6.kamezawa.hiroyu@jp.fujitsu.com>
+	<4F522910.1050402@parallels.com>
+	<CABCjUKBngJx0o5jnJk3FEjWUDA6aNTAiFENdEF+M7BwB85NaLg@mail.gmail.com>
+	<4F52A81A.3030408@parallels.com>
+	<CABCjUKBP=pKgDP5RkD4BimTjoE=bQQO7NxNNAiGUfy602T4c7A@mail.gmail.com>
+	<4F55E8BB.5060704@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAJd=RBAJxVs0Jz+=PNO222oDvF0n6+hh7FNuFpSYTS3EJL8fpw@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=hmMBDG6OB2WuK+ropc+wLb+MILKZ+jcEzCwXYOZLtTI=;
+        b=Zp1VLVjPQP1YbtKi9nyrWnJMwYl/85xYsPGNFxIhKsvY6Re+rLludk6lFlTJrPVeDv
+         Dg5Y0agjKxNOaGdQAwwIrGKzKlBonysAmbv21KYKNEQW1thWRs8K3jXhezi4LhKW2ByX
+         O8ayISbx1jGlWHumcICdkaP8sYIlsaFjQG5pyorxydzc/C039OkltcGv2Qpr9wwsXRqx
+         K8Gxw4cxQC4ZaUlEBd33RXeTR2lEiBdMnvJ/P610zv0nfkgG4kQxRa7kzru1nnHMGleb
+         lKV/YH6gWUV71Xzz8eJqV0oaLIBxVql5w6EGXLAwAI+mEWxP4Q6olbcFYFtUwAKBWLZS
+         MOmQ==
+In-Reply-To: <4F55E8BB.5060704-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Hillf Danton <dhillf@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, David Gibson <david@gibson.dropbear.id.au>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Mon, 5 Mar 2012 21:56:50 +0800, Hillf Danton <dhillf@gmail.com> wrote:
-> On Mon, Mar 5, 2012 at 3:15 AM, Aneesh Kumar K.V
-> <aneesh.kumar@linux.vnet.ibm.com> wrote:
-> > On Thu, 1 Mar 2012 14:40:29 -0800, Andrew Morton <akpm@linux-foundation=
-.org> wrote:
-> >> I haven't begin to get my head around this yet, but I'd like to draw
-> >> your attention to https://lkml.org/lkml/2012/2/15/548.
-> >
-> > Hmm that's really serious bug.
-> >
-> >> =C2=A0That fix has
-> >> been hanging around for a while, but I haven't done anything with it
-> >> yet because I don't like its additional blurring of the separation
-> >> between hugetlb core code and hugetlbfs. =C2=A0I want to find time to =
-sit
-> >> down and see if the fix can be better architected but haven't got
-> >> around to that yet.
-> >>
-> >> I expect that your patches will conflict at least mechanically with
-> >> David's, which is not a big issue. =C2=A0But I wonder whether your pat=
-ches
-> >> will copy the same bug into other places, and whether you can think of
-> >> a tidier way of addressing the bug which David is seeing?
-> >>
-> >
-> > I will go through the implementation again and make sure the problem
-> > explained by David doesn't happen in the new code path added by the
-> > patch series.
-> >
-> Hi Aneesh
->=20
-> When you tackle that problem, please take the following approach also
-> into account, though it is a draft, in which quota handback is simply
-> eliminated when huge page is freed, if that problem is caused by extra
-> reference count.
-> And get_quota is carefully paired with put_quota for newly allocated
-> page. That is all, and feel free to correct me.
+On Tue, Mar 6, 2012 at 2:36 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> w=
+rote:
+> On 03/04/2012 04:10 AM, Suleiman Souhlal wrote:
+>>
+>> Just a few lines below:
+>>
+>> =A0 =A0 =A0 =A0 data =3D kmalloc_node_track_caller(size, gfp_mask, n=
+ode);
+>>
+>> -- Suleiman
+>
+> Can't we just make sure those come from the root cgroup's slabs?
+> Then we need no flag.
 
-But we should not do put quota until the page is added back to the free pool
-right ? otherwise quota subsystem (the actual hugetlb pool) will
-indicate availability where as the file system won't have any free
-pages.=20
+Do you mean make it so that all kmallocs come from the root cgroup's sl=
+abs?
+We would really like to account kmallocs in general (and all the other
+slab types) to the right cgroup...
 
--aneesh
+That said, I'm probably going to concentrate on accounting specially
+marked caches only, for now, since there seems to be a strong
+opposition on accounting everything, even though I don't understand
+this point of view.
 
->=20
-> Best Regards
-> -hd
->=20
-> --- a/mm/hugetlb.c	Mon Mar  5 20:20:34 2012
-> +++ b/mm/hugetlb.c	Mon Mar  5 21:20:14 2012
-> @@ -533,9 +533,7 @@ static void free_huge_page(struct page *
->  	 */
->  	struct hstate *h =3D page_hstate(page);
->  	int nid =3D page_to_nid(page);
-> -	struct address_space *mapping;
->=20
-> -	mapping =3D (struct address_space *) page_private(page);
->  	set_page_private(page, 0);
->  	page->mapping =3D NULL;
->  	BUG_ON(page_count(page));
-> @@ -551,8 +549,6 @@ static void free_huge_page(struct page *
->  		enqueue_huge_page(h, page);
->  	}
->  	spin_unlock(&hugetlb_lock);
-> -	if (mapping)
-> -		hugetlb_put_quota(mapping, 1);
->  }
->=20
->  static void prep_new_huge_page(struct hstate *h, struct page *page, int =
-nid)
-> @@ -1021,7 +1017,8 @@ static void vma_commit_reservation(struc
->  }
->=20
->  static struct page *alloc_huge_page(struct vm_area_struct *vma,
-> -				    unsigned long addr, int avoid_reserve)
-> +				    unsigned long addr, int avoid_reserve,
-> +				    long *quota)
->  {
->  	struct hstate *h =3D hstate_vma(vma);
->  	struct page *page;
-> @@ -1050,7 +1047,8 @@ static struct page *alloc_huge_page(stru
->  	if (!page) {
->  		page =3D alloc_buddy_huge_page(h, NUMA_NO_NODE);
->  		if (!page) {
-> -			hugetlb_put_quota(inode->i_mapping, chg);
-> +			if (chg)
-> +				hugetlb_put_quota(inode->i_mapping, chg);
->  			return ERR_PTR(-VM_FAULT_SIGBUS);
->  		}
->  	}
-> @@ -1058,6 +1056,8 @@ static struct page *alloc_huge_page(stru
->  	set_page_private(page, (unsigned long) mapping);
->=20
->  	vma_commit_reservation(h, vma, addr);
-> +	if (quota)
-> +		*quota =3D chg;
->=20
->  	return page;
->  }
-> @@ -2365,6 +2365,7 @@ static int hugetlb_cow(struct mm_struct
->  	struct page *old_page, *new_page;
->  	int avoidcopy;
->  	int outside_reserve =3D 0;
-> +	long quota =3D 0;
->=20
->  	old_page =3D pte_page(pte);
->=20
-> @@ -2397,7 +2398,8 @@ retry_avoidcopy:
->=20
->  	/* Drop page_table_lock as buddy allocator may be called */
->  	spin_unlock(&mm->page_table_lock);
-> -	new_page =3D alloc_huge_page(vma, address, outside_reserve);
-> +	quota =3D 0;
-> +	new_page =3D alloc_huge_page(vma, address, outside_reserve, &quota);
->=20
->  	if (IS_ERR(new_page)) {
->  		page_cache_release(old_page);
-> @@ -2439,6 +2441,8 @@ retry_avoidcopy:
->  	if (unlikely(anon_vma_prepare(vma))) {
->  		page_cache_release(new_page);
->  		page_cache_release(old_page);
-> +		if (quota)
-> +			hugetlb_put_quota(vma->vm_file->f_mapping, quota);
->  		/* Caller expects lock to be held */
->  		spin_lock(&mm->page_table_lock);
->  		return VM_FAULT_OOM;
-> @@ -2470,6 +2474,8 @@ retry_avoidcopy:
->  			address & huge_page_mask(h),
->  			(address & huge_page_mask(h)) + huge_page_size(h));
->  	}
-> +	else if (quota)
-> +		hugetlb_put_quota(vma->vm_file->f_mapping, quota);
->  	page_cache_release(new_page);
->  	page_cache_release(old_page);
->  	return 0;
-> @@ -2519,6 +2525,7 @@ static int hugetlb_no_page(struct mm_str
->  	struct page *page;
->  	struct address_space *mapping;
->  	pte_t new_pte;
-> +	long quota =3D 0;
->=20
->  	/*
->  	 * Currently, we are forced to kill the process in the event the
-> @@ -2540,12 +2547,13 @@ static int hugetlb_no_page(struct mm_str
->  	 * before we get page_table_lock.
->  	 */
->  retry:
-> +	quota =3D 0;
->  	page =3D find_lock_page(mapping, idx);
->  	if (!page) {
->  		size =3D i_size_read(mapping->host) >> huge_page_shift(h);
->  		if (idx >=3D size)
->  			goto out;
-> -		page =3D alloc_huge_page(vma, address, 0);
-> +		page =3D alloc_huge_page(vma, address, 0, &quota);
->  		if (IS_ERR(page)) {
->  			ret =3D -PTR_ERR(page);
->  			goto out;
-> @@ -2560,6 +2568,8 @@ retry:
->  			err =3D add_to_page_cache(page, mapping, idx, GFP_KERNEL);
->  			if (err) {
->  				put_page(page);
-> +				if (quota)
-> +					hugetlb_put_quota(mapping, quota);
->  				if (err =3D=3D -EEXIST)
->  					goto retry;
->  				goto out;
-> @@ -2633,6 +2643,8 @@ backout:
->  backout_unlocked:
->  	unlock_page(page);
->  	put_page(page);
-> +	if (quota)
-> +		hugetlb_put_quota(mapping, quota);
->  	goto out;
->  }
->=20
-> --
->=20
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- Suleiman
