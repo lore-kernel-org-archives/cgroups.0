@@ -1,63 +1,120 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] cgroup: add xattr support
-Date: Tue, 6 Mar 2012 13:37:36 -0800 (PST)
-Message-ID: <alpine.LSU.2.00.1203061314400.17934@eggly.anvils>
-References: <4F4F1459.4080300@cn.fujitsu.com> <20120304180516.GB20787@dhcp-172-17-108-109.mtv.corp.google.com>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch] mm, memcg: pass charge order to oom killer
+Date: Wed, 7 Mar 2012 13:43:05 -0800 (PST)
+Message-ID: <alpine.DEB.2.00.1203071341320.4520@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=H5g4i8cm5Efz5BqVzdNXAoDzO7i1gKBR5MJw/BS/cZI=;
-        b=Ycj/MpQ314ggCTjiERym+P9zxKMfeftDIkJcElXW3SkACvWzQfHZCHez4bvR9rtGIx
-         LNbhtxPul9oimY9X6EWv+ML7cAwc/B/yunQEFUmXq8ZmpqRT/A4YYj00JRNfQj3pYe5G
-         R86bvu7LkDb4tBAFc3qQivIez/dLrnDDv2OXn316K0AonUaHsymu6z3QyBLrpVw6rUWs
-         JJT+Bi+C/ERuo6HO26pFMdP+rgp7uL1XhbeYjg0L7Z9cFzD63BX3LGhaWWNiUa136DcE
-         Ye2YBT/lVnWEOju6Z8p1kokRmU8mEvW7RypoGtjQP971cB3izS7eC+t9u/d+jJfWZ/+I
-         VfUg==
-In-Reply-To: <20120304180516.GB20787-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=date:from:x-x-sender:to:cc:subject:message-id:user-agent
+         :mime-version:content-type;
+        bh=h1mM+UxX+aXUmOrLjNXA6MZC3qp1ES/z3aUQ+BRoRwg=;
+        b=pJl1XSpERY+HvFN2J0lpA2HyHCbmtONiiKBRR44uRbYxEf3LyGdNrMhXrDoBASFrFG
+         3LmKE7Q+pUpWDPQhtcryFobm48fhOLf3/3RgSMwHNW1XVY9A4uo15gNIm0EjgRVriulI
+         EVlPsDZoKb3KN+xXOu1+JQmOOUNNTFr8CRbs+boGuZ7+rH4sFxnwof3iw0fTYEf40Wqz
+         je1cmscU1nKemjJ7veCzTF/anJy2DsakFiNvqJLIRCgucIpA8nk1VHm76j/L7/a6Pmrq
+         kJAAhOwJT/WVjhwLBoUJ3hz3r0LQx9ILEGvl2BCyntCmUHLeJ+VV2tw/fFTE514+KPiJ
+         r9sw==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miklos Szeredi <mszeredi-AlSwsSmVLrQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Sun, 4 Mar 2012, Tejun Heo wrote:
-> On Thu, Mar 01, 2012 at 02:16:57PM +0800, Li Zefan wrote:
-> > This can be used to attach metadata to a cgroup, which is required
-> > by systemd.
+The oom killer typically displays the allocation order at the time of oom
+as a part of its diangostic messages (for global, cpuset, and mempolicy
+ooms).
 
-I've not reviewed your patches in detail, but I'm very happy for most
-of the shmem xattr code to move out to a library for use elsewhere.
+The memory controller may also pass the charge order to the oom killer so
+it can emit the same information.  This is useful in determining how
+large the memory allocation is that triggered the oom killer.
 
-Note that the linux-next mm/shmem.c now includes Jarkko Sakkinen's
-shmem_initxattrs() work, maybe you can draw from that too.
+Signed-off-by: David Rientjes <rientjes@google.com>
+---
+ include/linux/memcontrol.h |    3 ++-
+ mm/memcontrol.c            |    6 +++---
+ mm/oom_kill.c              |    7 ++++---
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
-> > 
-> > As lazy as I am, here just quoted from Lennart for the detailed use
-> > cases:
-> 
-> I much prefer this version but would prefer to deal with this in the
-> next merge window as we're already on rc6.  On a cursory look...
-> 
-> * I'm not sure kmem_ is a good prefix.  It sucks that xattr values are
->   stored in kmem w/o size limit and we probably want to improve on
->   both fronts in the future.  Wouldn't it be better to name them
->   simple_*() and put them in fs/libfs.c?
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -77,7 +77,8 @@ extern void mem_cgroup_uncharge_end(void);
+ extern void mem_cgroup_uncharge_page(struct page *page);
+ extern void mem_cgroup_uncharge_cache_page(struct page *page);
+ 
+-extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask);
++extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
++				     int order);
+ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg);
+ 
+ extern struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1791,7 +1791,7 @@ static void memcg_oom_recover(struct mem_cgroup *memcg)
+ /*
+  * try to call OOM killer. returns false if we should exit memory-reclaim loop.
+  */
+-bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask)
++bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
+ {
+ 	struct oom_wait_info owait;
+ 	bool locked, need_to_kill;
+@@ -1821,7 +1821,7 @@ bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask)
+ 
+ 	if (need_to_kill) {
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
+-		mem_cgroup_out_of_memory(memcg, mask);
++		mem_cgroup_out_of_memory(memcg, mask, order);
+ 	} else {
+ 		schedule();
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
+@@ -2192,7 +2192,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (!oom_check)
+ 		return CHARGE_NOMEM;
+ 	/* check OOM */
+-	if (!mem_cgroup_handle_oom(mem_over_limit, gfp_mask))
++	if (!mem_cgroup_handle_oom(mem_over_limit, gfp_mask, get_order(csize)))
+ 		return CHARGE_OOM_DIE;
+ 
+ 	return CHARGE_RETRY;
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -561,7 +561,8 @@ static void check_panic_on_oom(enum oom_constraint constraint, gfp_t gfp_mask,
+ }
+ 
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR
+-void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask)
++void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
++			      int order)
+ {
+ 	unsigned long limit;
+ 	unsigned int points = 0;
+@@ -577,7 +578,7 @@ void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask)
+ 		return;
+ 	}
+ 
+-	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, 0, NULL);
++	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
+ 	limit = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT;
+ 	read_lock(&tasklist_lock);
+ retry:
+@@ -585,7 +586,7 @@ retry:
+ 	if (!p || PTR_ERR(p) == -1UL)
+ 		goto out;
+ 
+-	if (oom_kill_process(p, gfp_mask, 0, points, limit, memcg, NULL,
++	if (oom_kill_process(p, gfp_mask, order, points, limit, memcg, NULL,
+ 				"Memory cgroup out of memory"))
+ 		goto retry;
+ out:
 
-Yes, simple_*() in fs/libfs.c sounds much better to me than kmem_*().
-
-On the size limit issue, shmem has its own shmem_xattr_validate(),
-which rejects XATTR_USER_PREFIX, and the patches leave that unchanged.
-
-I don't know whether the cgroup xattrs need to support USER or not,
-and I don't know what permissions would be involved if they do;
-but it's an important concern.
-
-Hugh
-
-> 
-> * I don't think we want CONFIG option for cgroupfs xattr.  Let's just
->   add a mount option.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
