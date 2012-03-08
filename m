@@ -1,52 +1,60 @@
-From: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] cgroup: add xattr support
-Date: Thu, 08 Mar 2012 17:03:50 +0800
-Message-ID: <4F5875F6.9010804@cn.fujitsu.com>
-References: <4F4F1459.4080300@cn.fujitsu.com> <20120304180516.GB20787@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] memcg: revise the position of threshold index while unregistering
+ event
+Date: Thu, 08 Mar 2012 17:37:44 +0800
+Message-ID: <4F587DE8.6090005@gmail.com>
+References: <1331035943-7456-1-git-send-email-handai.szj@taobao.com>	<20120308144448.889337cf.kamezawa.hiroyu@jp.fujitsu.com>	<4F58599A.3090100@gmail.com> <20120308163028.df8b6bde.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120304180516.GB20787-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=Q8QjJPZKXd23ff6il98224K981gG1hh5QOrqmARodIg=;
+        b=My4TBnEQqnN91wTIVu9Rf953Xaqh8mF3c8+6cQln2vtGncSIlGfuU8B/J5NVccxfMh
+         EAD+XWq51nKg4pH5chlaHjOVsN8ZPNC9Cfiv2p7H+61vtbw9zc19L7C0o/DvirbZI9zU
+         UDN9BuF/QNTFJ/jN5dCvZx6W/lzrqewFG5IkuVa066OmjhabdGpmcJomBhd5qijANrys
+         a6dRcOJMezV5SIqYWDhgAJUfRlWt8IXxJzHymZi1DA3wfWhTaY0Jo9+XhaJfZZBF+uN7
+         fKQp5pXrlw+h5kCWJnfLXwHaqvtwRaJZhpjg5NEoxOuIRH5S1kqXy5TujeLF0+Cj9ky3
+         sO3g==
+In-Reply-To: <20120308163028.df8b6bde.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Tejun Heo wrote:
-> Hello, Li.
-> 
-> Sorry about the delay.  Was on vacation.
-> 
-
-Me too. ;)
-
-> On Thu, Mar 01, 2012 at 02:16:57PM +0800, Li Zefan wrote:
->> This can be used to attach metadata to a cgroup, which is required
->> by systemd.
+On 03/08/2012 03:30 PM, KAMEZAWA Hiroyuki wrote:
+> On Thu, 08 Mar 2012 15:02:50 +0800
+> Sha Zhengju<handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>  wrote:
+>
+>> On 03/08/2012 01:44 PM, KAMEZAWA Hiroyuki wrote:
+>>> On Tue,  6 Mar 2012 20:12:23 +0800
+>>> Sha Zhengju<handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>   wrote:
+>>>
+>>>> From: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+>>>>
+>>>> Index current_threshold should point to threshold just below or equal to usage.
+>>>> See below:
+>>>> http://www.spinics.net/lists/cgroups/msg00844.html
+>>>>
+>>>>
+>>>> Signed-off-by: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+>>> Thank you for resending.
+>>>
+>>> Acked-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>>>
+>> It's not a resending, though they are for the same reason.  May be I should
+>> merge them together ...
 >>
->> As lazy as I am, here just quoted from Lennart for the detailed use
->> cases:
-> 
-> I much prefer this version but would prefer to deal with this in the
-> next merge window as we're already on rc6.  On a cursory look...
-> 
+> Ah. Hmm..If your previous patch isn't picked up yet, could you send it again
+> (or merge and post merged one ) ?
+>
+> Thanks,
+> -Kame
+>
+Ok, I'll send a new version one later. :-)
 
-I'm fine with this, especially I'm busy with other stuff.
-
-> * I'm not sure kmem_ is a good prefix.  It sucks that xattr values are
->   stored in kmem w/o size limit and we probably want to improve on
->   both fronts in the future.  Wouldn't it be better to name them
->   simple_*() and put them in fs/libfs.c?
-> 
-
-Ok.
-
-> * I don't think we want CONFIG option for cgroupfs xattr.  Let's just
->   add a mount option.
-
-Ok.
-
-> 
-> Thanks.
-> 
+Thanks,
+Sha
