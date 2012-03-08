@@ -1,71 +1,69 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] memcg: Free spare array to avoid memory leak
-Date: Thu, 08 Mar 2012 10:11:32 +0800
-Message-ID: <4F581554.6020801@gmail.com>
-References: <1331036004-7550-1-git-send-email-handai.szj@taobao.com> <20120307230819.GA10238@shutemov.name>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch] mm, memcg: do not allow tasks to be attached with zero
+ limit
+Date: Wed, 7 Mar 2012 19:14:49 -0800 (PST)
+Message-ID: <alpine.DEB.2.00.1203071914150.15244@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=P6cjtSOVWU9rumvbFchyND4/soFkhGoE1lChHQ9O/yA=;
-        b=IkWihuJRb5MwIvgJnDR3K91uuO4g825uT5D/J8huSy8eJqdhpTB/NTtKc6n86KRiZc
-         19yCXO6yswBsn4eVPtXfJFLG1Log49IKsS9QJIT/AYGOFlX0a4Q8PcuUKfsUXVVPAubZ
-         1ZbYHJZ9oK/6pSTZmyD1rT7m9oRV1dvaa8zpNPPUGP3Ygj5rOjrZgRIZq/IxSDMTzfZs
-         4QqJ4ZjLpRcyExW5NaL46uJhuCabDKadKgSwdSf4lxpeHKlOnwL233vGuHhlBJlfDjVi
-         OGv1ZVc7q+Zq8d0crOq3250B6spiiZR1C4mJgGXcZiS1Y8l1RPx+58cRg1JtjPUlcb32
-         tWxg==
-In-Reply-To: <20120307230819.GA10238-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:message-id:user-agent
+         :mime-version:content-type;
+        bh=Un2fTCFWU3O4D9oIXbxkMKwZl08gkjcFvEOv4hcFKBs=;
+        b=Pv2ic0dGtmcC8QLZgLWFgv9QHSuIxBHCszm68xXkcLaqhx/tcU1w64MHnnmzxbppey
+         b31SrU/FJcb+pZ0UZ7UP3518pCYZh9Ym/gus6Q46/44ToiJ/53Jd6W5oG697j0E+sMca
+         jq9O0kXe4cer2e2j6kTtkrKlzKmH+bCQMMyJKpmGG2Ont8V0O9U6hC2dzBgMFQcX1YNW
+         g5/ObmPltCgrIF4Ac78m0cowV9Nn2cGZY4MLu0g+93XPOmB8lVAGE2wHuUXAfFIs5DIU
+         dtkE4nLnZ9xpyrwUfNQsMESsE76W+i9s1rnlhYjuFuB5cYdWADKBh7nSmi1989+KugA6
+         xHiw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 03/08/2012 07:08 AM, Kirill A. Shutemov wrote:
-> On Tue, Mar 06, 2012 at 08:13:24PM +0800, Sha Zhengju wrote:
->> From: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->>
->> When the last event is unregistered, there is no need to keep the spare
->> array anymore. So free it to avoid memory leak.
-> It's not a leak. It will be freed on next event register.
+This patch prevents tasks from being attached to a memcg if there is a
+hard limit of zero.  Additionally, the hard limit may not be changed to
+zero if there are tasks attached.
 
+This is consistent with cpusets which do not allow tasks to be attached
+if there are no mems and prevents all mems from being removed if there
+are tasks attached.
 
-Yeah, I noticed that. But what if it is just the last one and no more
-event registering ?
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-
-Thanks,
-Sha
-
-> Yeah, we don't have to keep spare if primary is empty. But is it worth to
-> make code more complicated to save few bytes of memory?
->
->> Signed-off-by: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->>
->> ---
->>   mm/memcontrol.c |    6 ++++++
->>   1 files changed, 6 insertions(+), 0 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 22d94f5..3c09a84 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -4412,6 +4412,12 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
->>   swap_buffers:
->>   	/* Swap primary and spare array */
->>   	thresholds->spare = thresholds->primary;
->> +	/* If all events are unregistered, free the spare array */
->> +	if (!new) {
->> +		kfree(thresholds->spare);
->> +		thresholds->spare = NULL;
->> +	}
->> +
->>   	rcu_assign_pointer(thresholds->primary, new);
->>
->>   	/* To be sure that nobody uses thresholds */
->> -- 
->> 1.7.4.1
->>
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3868,9 +3868,14 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 		ret = res_counter_memparse_write_strategy(buffer, &val);
+ 		if (ret)
+ 			break;
+-		if (type == _MEM)
++		if (type == _MEM) {
++			/* Don't allow zero limit with tasks attached */
++			if (!val && cgroup_task_count(cont)) {
++				ret = -ENOSPC;
++				break;
++			}
+ 			ret = mem_cgroup_resize_limit(memcg, val);
+-		else
++		} else
+ 			ret = mem_cgroup_resize_memsw_limit(memcg, val);
+ 		break;
+ 	case RES_SOFT_LIMIT:
+@@ -5306,6 +5311,10 @@ static int mem_cgroup_can_attach(struct cgroup_subsys *ss,
+ 	int ret = 0;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
+ 
++	/* Don't allow tasks attached with a zero limit */
++	if (!res_counter_read_u64(&memcg->res, RES_LIMIT))
++		return -ENOSPC;
++
+ 	if (memcg->move_charge_at_immigrate) {
+ 		struct mm_struct *mm;
+ 		struct mem_cgroup *from = mem_cgroup_from_task(p);
