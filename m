@@ -1,8 +1,8 @@
 From: Jeff Liu <jeff.liu@oracle.com>
-Subject: [RFC PATCH v1 4/4] cgroup quota: validate and charge  inode quota
- for XFS
-Date: Fri, 09 Mar 2012 19:21:22 +0800
-Message-ID: <4F59E7B2.6090006@oracle.com>
+Subject: [RFC PATCH v1 1/4] cgroup quota: add disk space parse strategy to
+ res_counter
+Date: Fri, 09 Mar 2012 19:20:57 +0800
+Message-ID: <4F59E799.6030409@oracle.com>
 Reply-To: jeff.liu@oracle.com
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -11,54 +11,99 @@ Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: cgroups@vger.kernel.org
-Cc: lxc-devel@lists.sourceforge.net, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, tj@kernel.org, Li Zefan <lizf@cn.fujitsu.com>, Daniel Lezcano <daniel.lezcano@free.fr>, Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Christopher Jones <christopher.jones@oracle.com>, Dave Chinner <david@fromorbit.com>, jack@suse.cz, tytso@mit.edu
+Cc: lxc-devel@lists.sourceforge.net, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, tj@kernel.org, Li Zefan <lizf@cn.fujitsu.com>, Daniel Lezcano <daniel.lezcano@free.fr>, Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Christopher Jones <christopher.jones@oracle.com>, Dave Chinner <david@fromorbit.com>, jack@suse.cz, tytso@MIT.EDU
+
+Introduce a new disk space parse strategy routine for cgroup quota supports.
+disk_space_parse() is simply copied from mmparse() with Petabytes and Terabytes parse.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_vnodeops.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ include/linux/res_counter.h |    3 ++
+ kernel/res_counter.c        |   58 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index ce9268a..4824eef 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -50,6 +50,8 @@
- #include "xfs_vnodeops.h"
- #include "xfs_trace.h"
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+index c9d625c..f8ce315 100644
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -79,6 +79,9 @@ typedef int (*write_strategy_fn)(const char *buf, unsigned long long *val);
+ int res_counter_memparse_write_strategy(const char *buf,
+ 					unsigned long long *res);
  
-+#include <linux/quota_cgroup.h>
++int res_counter_diskspace_parse_write_strategy(const char *buf,
++					       unsigned long long *res);
 +
- /*
-  * The maximum pathlen is 1024 bytes. Since the minimum file system
-  * blocksize is 512 bytes, we can get a max of 2 extents back from
-@@ -853,6 +855,10 @@ xfs_create(
- 	else
- 		prid = XFS_PROJID_DEFAULT;
+ int res_counter_write(struct res_counter *counter, int member,
+ 		      const char *buffer, write_strategy_fn write_strategy);
  
-+	error = quota_cgroup_validate_pquota(QUOTA_NEW_INODE, prid, 1);
-+	if (error)
-+		return error;
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index 34683ef..42c1623 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -145,6 +145,64 @@ u64 res_counter_read_u64(struct res_counter *counter, int member)
+ }
+ #endif
+ 
++/*
++ * Copy from memparse(), add terabytes, petabytes parse support.
++ */
++unsigned long long disk_space_parse(const char *ptr, char **retptr)
++{
++	char *endptr; /* local pointer to end of parsed string */
++	unsigned long long ret = kstrtoull(ptr, &endptr, 0);
 +
- 	/*
- 	 * Make sure that we have allocated dquot(s) on disk.
- 	 */
-@@ -983,6 +989,8 @@ xfs_create(
- 	 */
- 	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp);
- 
-+	quota_cgroup_charge_pquota(QUOTA_NEW_INODE, prid, 1);
++	switch (*endptr) {
++	case 'P':
++	case 'p':
++		ret <<= 10;
++	case 'T':
++	case 't':
++		ret <<= 10;
++	case 'G':
++	case 'g':
++		ret <<= 10;
++	case 'M':
++	case 'm':
++		ret <<= 10;
++	case 'K':
++	case 'k':
++		ret <<= 10;
++		endptr++;
++	default:
++		break;
++	}
 +
- 	error = xfs_bmap_finish(&tp, &free_list, &committed);
- 	if (error)
- 		goto out_bmap_cancel;
-@@ -1354,6 +1362,8 @@ xfs_remove(
- 	if (!is_dir && link_zero && xfs_inode_is_filestream(ip))
- 		xfs_filestream_deassociate(ip);
- 
-+	quota_cgroup_charge_pquota(QUOTA_DROP_INODE, xfs_get_projid(ip), 1);
++	if (retptr)
++		*retptr = endptr;
 +
- 	return 0;
- 
-  out_bmap_cancel:
++	return ret;
++}
++
++int res_counter_diskspace_parse_write_strategy(const char *buf,
++					       unsigned long long *res)
++{
++	char *end;
++
++	/* return RESOURCE_MAX(unlimited) if "-1" is specified */
++	if (*buf == '-') {
++		*res = kstrtoull(buf + 1, &end, 10);
++		if (*res != 1 || *end != '\0')
++			return -EINVAL;
++		*res = RESOURCE_MAX;
++		return 0;
++	}
++
++	/* FIXME - make memparse() take const char* args */
++	*res = disk_space_parse((char *)buf, &end);
++	if (*end != '\0')
++		return -EINVAL;
++
++	/* FIXME - need to return *res as block aligned? */
++	return 0;
++}
++
+ int res_counter_memparse_write_strategy(const char *buf,
+ 					unsigned long long *res)
+ {
 -- 
 1.7.9
