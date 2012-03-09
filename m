@@ -1,76 +1,103 @@
-From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
-Subject: [PATCH v2 00/13] Memcg Kernel Memory Tracking.
-Date: Fri,  9 Mar 2012 12:39:03 -0800
-Message-ID: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+Subject: [PATCH v2 03/13] memcg: Uncharge all kmem when deleting a cgroup.
+Date: Fri,  9 Mar 2012 12:39:06 -0800
+Message-ID: <1331325556-16447-4-git-send-email-ssouhlal@FreeBSD.org>
+References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+To: cgroups@vger.kernel.org
+Cc: suleiman@google.com, glommer@parallels.com, kamezawa.hiroyu@jp.fujitsu.com, penberg@kernel.org, cl@linux.com, yinghan@google.com, hughd@google.com, gthelen@google.com, peterz@infradead.org, dan.magenheimer@oracle.com, hannes@cmpxchg.org, mgorman@suse.de, James.Bottomley@HansenPartnership.com, linux-mm@kvack.org, devel@openvz.org, linux-kernel@vger.kernel.org, Suleiman Souhlal <ssouhlal@FreeBSD.org>
 
-This is v2 of my kernel memory tracking patchset for memcg.
+Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+---
+ mm/memcontrol.c |   31 ++++++++++++++++++++++++++++++-
+ 1 files changed, 30 insertions(+), 1 deletions(-)
 
-Lots of changes based on feedback from Glauber and Kamezawa.
-In particular, I changed it to be opt-in instead of opt-out:
-In order for a slab type to be tracked, it has to be marked with
-SLAB_MEMCG_ACCT at kmem_cache_create() time.
-Currently, only dentries and kmalloc are tracked.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e6fd558..6fbb438 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -382,6 +382,7 @@ static void mem_cgroup_get(struct mem_cgroup *memcg);
+ static void mem_cgroup_put(struct mem_cgroup *memcg);
+ static void memcg_kmem_init(struct mem_cgroup *memcg,
+     struct mem_cgroup *parent);
++static void memcg_kmem_move(struct mem_cgroup *memcg);
+ 
+ static inline bool
+ mem_cgroup_test_flag(const struct mem_cgroup *memcg, enum memcg_flags flag)
+@@ -3700,6 +3701,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg, bool free_all)
+ 	int ret;
+ 	int node, zid, shrink;
+ 	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
++	unsigned long usage;
+ 	struct cgroup *cgrp = memcg->css.cgroup;
+ 
+ 	css_get(&memcg->css);
+@@ -3719,6 +3721,8 @@ move_account:
+ 		/* This is for making all *used* pages to be on LRU. */
+ 		lru_add_drain_all();
+ 		drain_all_stock_sync(memcg);
++		if (!free_all)
++			memcg_kmem_move(memcg);
+ 		ret = 0;
+ 		mem_cgroup_start_move(memcg);
+ 		for_each_node_state(node, N_HIGH_MEMORY) {
+@@ -3740,8 +3744,14 @@ move_account:
+ 		if (ret == -ENOMEM)
+ 			goto try_to_free;
+ 		cond_resched();
++		usage = memcg->res.usage;
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++		if (free_all && !mem_cgroup_test_flag(memcg,
++		    MEMCG_INDEPENDENT_KMEM_LIMIT))
++			usage -= memcg->kmem.usage;
++#endif
+ 	/* "ret" should also be checked to ensure all lists are empty. */
+-	} while (memcg->res.usage > 0 || ret);
++	} while (usage > 0 || ret);
+ out:
+ 	css_put(&memcg->css);
+ 	return ret;
+@@ -5689,9 +5699,28 @@ memcg_kmem_init(struct mem_cgroup *memcg, struct mem_cgroup *parent)
+ 		parent_res = &parent->kmem;
+ 	res_counter_init(&memcg->kmem, parent_res);
+ }
++
++static void
++memcg_kmem_move(struct mem_cgroup *memcg)
++{
++	unsigned long flags;
++	long kmem;
++
++	spin_lock_irqsave(&memcg->kmem.lock, flags);
++	kmem = memcg->kmem.usage;
++	res_counter_uncharge_locked(&memcg->kmem, kmem);
++	spin_unlock_irqrestore(&memcg->kmem.lock, flags);
++	if (!mem_cgroup_test_flag(memcg, MEMCG_INDEPENDENT_KMEM_LIMIT))
++		res_counter_uncharge(&memcg->res, kmem);
++}
+ #else /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+ static void
+ memcg_kmem_init(struct mem_cgroup *memcg, struct mem_cgroup *parent)
+ {
+ }
++
++static void
++memcg_kmem_move(struct mem_cgroup *memcg)
++{
++}
+ #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+-- 
+1.7.7.3
 
-Planned for v3:
- - Slub support.
- - Using a static_branch to remove overhead when no cgroups have been
-   created.
- - Getting rid of kmem_cache_get_ref/drop_ref pair in kmem_cache_free.
-
-Detailed change list from v1 (http://marc.info/?l=linux-mm&m=133038361014525):
- - Fixed misspelling in documentation.
- - Added flags field to struct mem_cgroup.
- - Moved independent_kmem_limit into flags.
- - Renamed kmem_bytes to kmem.
- - Divided consume_stock changes into two changes.
- - Fixed crash at boot when not every commit is applied.
- - Moved the new fields in kmem_cache into their own struct.
- - Got rid of SLAB_MEMCG slab flag.
- - Dropped accounting to root.
- - Added css_id into memcg slab name.
- - Changed memcg cache creation to always be deferred to workqueue.
- - Replaced bypass_bytes with overcharging the cgroup.
- - Got rid of #ifdef CONFIG_SLAB from memcontrol.c.
- - Got rid of __GFP_NOACCOUNT, changing to an opt-in model.
- - Remove kmem limit when turning off independent limit.
- - Moved the accounting of kmalloc to its own patch.
- - Removed useless parameters from memcg_create_kmem_cache().
- - Get a ref to the css when enqueing cache for creation.
- - increased MAX_KMEM_CACHE_TYPES to 400.
-
-Suleiman Souhlal (13):
-  memcg: Consolidate various flags into a single flags field.
-  memcg: Kernel memory accounting infrastructure.
-  memcg: Uncharge all kmem when deleting a cgroup.
-  memcg: Make it possible to use the stock for more than one page.
-  memcg: Reclaim when more than one page needed.
-  slab: Add kmem_cache_gfp_flags() helper function.
-  memcg: Slab accounting.
-  memcg: Make dentry slab memory accounted in kernel memory accounting.
-  memcg: Account for kmalloc in kernel memory accounting.
-  memcg: Track all the memcg children of a kmem_cache.
-  memcg: Handle bypassed kernel memory charges.
-  memcg: Per-memcg memory.kmem.slabinfo file.
-  memcg: Document kernel memory accounting.
-
- Documentation/cgroups/memory.txt |   44 +++-
- fs/dcache.c                      |    4 +-
- include/linux/memcontrol.h       |   30 ++-
- include/linux/slab.h             |   56 ++++
- include/linux/slab_def.h         |   79 +++++-
- include/linux/slob_def.h         |    6 +
- include/linux/slub_def.h         |    9 +
- init/Kconfig                     |    2 +-
- mm/memcontrol.c                  |  633 ++++++++++++++++++++++++++++++++++---
- mm/slab.c                        |  431 +++++++++++++++++++++++---
- 10 files changed, 1183 insertions(+), 111 deletions(-)
-
--- Suleiman
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
