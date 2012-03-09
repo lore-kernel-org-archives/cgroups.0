@@ -1,67 +1,55 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch] mm, memcg: do not allow tasks to be attached with zero
- limit
-Date: Fri, 9 Mar 2012 10:57:06 +0900
-Message-ID: <20120309105706.4001646a.kamezawa.hiroyu@jp.fujitsu.com>
-References: <alpine.DEB.2.00.1203071914150.15244@chino.kir.corp.google.com>
-	<20120308122951.2988ec4e.akpm@linux-foundation.org>
-	<20120309102255.bbf94164.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120308173818.ae5f621b.akpm@linux-foundation.org>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] memcg: Free spare array to avoid memory leak
+Date: Fri, 09 Mar 2012 11:24:22 +0800
+Message-ID: <4F5977E6.5040205@gmail.com>
+References: <1331036004-7550-1-git-send-email-handai.szj@taobao.com>	<20120307230819.GA10238@shutemov.name>	<4F581554.6020801@gmail.com>	<20120308103510.GA12897@shutemov.name>	<4F588DF5.60300@gmail.com> <20120309102431.5a8a1c3d.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120308173818.ae5f621b.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=aU7ec0EqRcf7CaY9RsxP+HtKBPZtw5+nukzeoLVW9Q0=;
+        b=s+G3UFJLK7FYYbBXby5LdPpOkb02LbYUuLFO7yNhWzHr+f+KpFfjornAz6vc4FAWkg
+         lfq/o09zKlVHPYxUmmjKSZSVnC/tlZGrOp2QIK7DXWp2kQGZ6y92BN9iFAFg2cMP+TFm
+         D0NYhEk9kcV715aCA9bQ5Ot1UG/RkJhaaUVB6oKEuLLeocFnHXaspIKB0r9HVbkC56gj
+         m4W0XAvvOP54kXJB31ZvShg+1m7Y6AwgLEd17/GigzcYgagBLoFKYCpofTYxY/Vwf4YQ
+         iq+8x1TTzeUXt+NmWIk9iRPyVupVq4mo6+UHxOFT14eEW2viOuM1Rk1ThQ5eijMknw4O
+         jxsQ==
+In-Reply-To: <20120309102431.5a8a1c3d.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 8 Mar 2012 17:38:18 -0800
-Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+On 03/09/2012 09:24 AM, KAMEZAWA Hiroyuki wrote:
+> On Thu, 08 Mar 2012 18:46:13 +0800
+> Sha Zhengju<handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>  wrote:
+>
+>> On 03/08/2012 06:35 PM, Kirill A. Shutemov wrote:
+>>> On Thu, Mar 08, 2012 at 10:11:32AM +0800, Sha Zhengju wrote:
+>>>> On 03/08/2012 07:08 AM, Kirill A. Shutemov wrote:
+>>>>> On Tue, Mar 06, 2012 at 08:13:24PM +0800, Sha Zhengju wrote:
+>>>>>> From: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+>>>>>>
+>>>>>> When the last event is unregistered, there is no need to keep the spare
+>>>>>> array anymore. So free it to avoid memory leak.
+>>>>> It's not a leak. It will be freed on next event register.
+>>>> Yeah, I noticed that. But what if it is just the last one and no more
+>>>> event registering ?
+>>> See my question below. ;)
+>>>
+>>>>> Yeah, we don't have to keep spare if primary is empty. But is it worth to
+>>>>> make code more complicated to save few bytes of memory?
+>>>>>
+>> If we unregister the last event and *don't* register a new event anymore,
+>> the primary is freed but the spare is still kept which has no chance to
+>> free.
+>>
+>> IMHO, it's obvious not a problem of saving bytes but *memory leak*.
+>>
+> IMHO, it's cached. It will be freed when a memcg is destroyed.
 
-> On Fri, 9 Mar 2012 10:22:55 +0900 KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
-> 
-> > On Thu, 8 Mar 2012 12:29:51 -0800
-> > Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> > 
-> > > On Wed, 7 Mar 2012 19:14:49 -0800 (PST)
-> > > David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > > 
-> > > > This patch prevents tasks from being attached to a memcg if there is a
-> > > > hard limit of zero.
-> > > 
-> > > We're talking about the memcg's limit_in_bytes here, yes?
-> > > 
-> > > > Additionally, the hard limit may not be changed to
-> > > > zero if there are tasks attached.
-> > > 
-> > > hm, well...  why?  That would be user error, wouldn't it?  What is
-> > > special about limit_in_bytes=0?  The memcg will also be unviable if
-> > > limit_in_bytes=1, but we permit that.
-> > > 
-> > > IOW, confused.
-> > > 
-> > Ah, yes. limit_in_bytes < some small size can cause the same trouble.
-> > Hmm... should we have configurable min_limit_in_bytes as sysctl or root memcg's
-> > attaribute.. ?
-> 
-> Why do *anything*?  If the operator chose an irrational configuration
-> then things won't work correctly and the operator will then fix the
-> configuration?
-> 
-
-Because the result of 'error operaton' is SIGKILL to a task, which may be
-owned by very importang customer of hosting service.
-
-Isn't this severe punishment for error operation ?
-
-Considering again, I have 2 thoughts.
-
-- it should be guarded by MiddleWare, it's not kernel job !
-- memcg should be more easy-to-use, friendly to users.
-
-If the result is just an error as EINVAL or EBUSY, I may not be nervous....
-
-Thanks,
--Kame 
+I didn't see that behavior.  Could you point it out ? :-)
