@@ -1,167 +1,170 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [RFC PATCH v1 0/4] cgroup quota
-Date: Sun, 11 Mar 2012 15:57:51 +0400
-Message-ID: <4F5C933F.3000409@parallels.com>
-References: <4F59E78A.7060903@oracle.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v2 09/13] memcg: Account for kmalloc in kernel memory
+ accounting.
+Date: Sun, 11 Mar 2012 16:21:43 +0400
+Message-ID: <4F5C98D7.2070508@parallels.com>
+References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org> <1331325556-16447-10-git-send-email-ssouhlal@FreeBSD.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F59E78A.7060903-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1331325556-16447-10-git-send-email-ssouhlal@FreeBSD.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Daniel Lezcano <daniel.lezcano-GANU6spQydw@public.gmane.org>, Ben Myers <bpm-sJ/iWh9BUns@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Chris Mason <chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christopher Jones <christopher.jones-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, jack-AlSwsSmVLrQ@public.gmane.org, tytso-DPNOqEs/LNQ@public.gmane.org
+To: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+Cc: cgroups@vger.kernel.org, suleiman@google.com, kamezawa.hiroyu@jp.fujitsu.com, penberg@kernel.org, cl@linux.com, yinghan@google.com, hughd@google.com, gthelen@google.com, peterz@infradead.org, dan.magenheimer@oracle.com, hannes@cmpxchg.org, mgorman@suse.de, James.Bottomley@HansenPartnership.com, linux-mm@kvack.org, devel@openvz.org, linux-kernel@vger.kernel.org
 
-On 03/09/2012 03:20 PM, Jeff Liu wrote:
-> Hello,
+On 03/10/2012 12:39 AM, Suleiman Souhlal wrote:
+> In order to do this, we have to create a kmalloc_no_account()
+> function that is used for kmalloc allocations that we do not
+> want to account, because the kernel memory accounting code has
+> to make some kmalloc allocations and is not allowed to recurse.
 >
-> Disk quota feature has been asked at LXC list from time to time.
-> Given that the project quota has already implemented in XFS for a long time, and it was also in progress for EXT4.
-> So the major idea is to assign one or more project IDs(or tree ID?) to container, but leaving quota setup via cgroup
-> config files, so all the tasks running at container could have project quota constraints applied.
+> Signed-off-by: Suleiman Souhlal<suleiman@google.com>
+> ---
+>   include/linux/slab.h |    8 ++++++++
+>   mm/memcontrol.c      |    2 +-
+>   mm/slab.c            |   42 +++++++++++++++++++++++++++++++++++++++---
+>   3 files changed, 48 insertions(+), 4 deletions(-)
 >
-> I'd like to post an initial patch sets here, the stupid implements is very simple and even crash me
-> in some cases, sorry! But I would like to submit it to get more feedback to make sure I am going down
-> the right road. :)
+> diff --git a/include/linux/slab.h b/include/linux/slab.h
+> index bc9f87f..906a015 100644
+> --- a/include/linux/slab.h
+> +++ b/include/linux/slab.h
+> @@ -377,6 +377,8 @@ struct kmem_cache *kmem_cache_create_memcg(struct kmem_cache *cachep,
+>       char *name);
+>   void kmem_cache_drop_ref(struct kmem_cache *cachep);
 >
-> Let me introduce it now.
+> +void *kmalloc_no_account(size_t size, gfp_t flags);
+> +
+>   #else /* !CONFIG_CGROUP_MEM_RES_CTLR_KMEM || !CONFIG_SLAB */
 >
-> 1. Setup project quota on XFS(enabled pquota) firstly.
-> For example, the "project100" is configured on "/xfs/quota_test" directory.
+>   #define MAX_KMEM_CACHE_TYPES 0
+> @@ -392,6 +394,12 @@ static inline void
+>   kmem_cache_drop_ref(struct kmem_cache *cachep)
+>   {
+>   }
+> +
+> +static inline void *kmalloc_no_account(size_t size, gfp_t flags)
+> +{
+> +	return kmalloc(size, flags);
+> +}
+> +
+>   #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM&&  CONFIG_SLAB */
 >
-> $ cat /etc/projects
-> 100:/xfs/quota_test
+>   #endif	/* _LINUX_SLAB_H */
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index a5593cf..72e83af 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5824,7 +5824,7 @@ memcg_create_cache_enqueue(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+>   	if (!css_tryget(&memcg->css))
+>   		return;
 >
-> $ cat /etc/projid
-> project100:100
+> -	cw = kmalloc(sizeof(struct create_work), GFP_NOWAIT);
+> +	cw = kmalloc_no_account(sizeof(struct create_work), GFP_NOWAIT);
+>   	if (cw == NULL) {
+>   		css_put(&memcg->css);
+>   		return;
+> diff --git a/mm/slab.c b/mm/slab.c
+> index 95b024c..7af7384 100644
+> --- a/mm/slab.c
+> +++ b/mm/slab.c
+> @@ -1623,8 +1623,8 @@ void __init kmem_cache_init(void)
+>   			sizes->cs_cachep = kmem_cache_create(names->name,
+>   					sizes->cs_size,
+>   					ARCH_KMALLOC_MINALIGN,
+> -					ARCH_KMALLOC_FLAGS|SLAB_PANIC,
+> -					NULL);
+> +					ARCH_KMALLOC_FLAGS | SLAB_PANIC |
+> +					SLAB_MEMCG_ACCT, NULL);
+>   		}
+>   #ifdef CONFIG_ZONE_DMA
+>   		sizes->cs_dmacachep = kmem_cache_create(
+> @@ -3936,11 +3936,16 @@ static __always_inline void *
+>   __do_kmalloc_node(size_t size, gfp_t flags, int node, void *caller)
+>   {
+>   	struct kmem_cache *cachep;
+> +	void *ret;
 >
-> $ sudo xfs_quota -x -c 'report -p'
-> Project quota on /xfs (/dev/sda7)
->                                 Blocks
-> Project ID       Used       Soft       Hard    Warn/Grace
-> ---------- --------------------------------------------------
-> project100          0          0          0     00 [--------]
+>   	cachep = kmem_find_general_cachep(size, flags);
+>   	if (unlikely(ZERO_OR_NULL_PTR(cachep)))
+>   		return cachep;
+> -	return kmem_cache_alloc_node_trace(size, cachep, flags, node);
+> +	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
+> +	ret = kmem_cache_alloc_node_trace(size, cachep, flags, node);
+> +	mem_cgroup_put_kmem_cache(cachep);
+> +
+> +	return ret;
+>   }
 >
-> 2. Mount cgroup on /cgroup.
-> cgroup on /cgroup type cgroup (rw)
+>   #if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_TRACING)
+> @@ -3986,14 +3991,31 @@ static __always_inline void *__do_kmalloc(size_t size, gfp_t flags,
+>   	cachep = __find_general_cachep(size, flags);
+>   	if (unlikely(ZERO_OR_NULL_PTR(cachep)))
+>   		return cachep;
+> +	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
+>   	ret = __cache_alloc(cachep, flags, caller);
 >
-> After that, there will have a couple of quota.XXXX files presented at /cgroup.
-> $ ls -l /cgroup/quota.*
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.activate
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.add_project
-> -r--r--r-- 1 root root 0 Mar  9 18:27 /cgroup/quota.all
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.block_limit_in_bytes
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.deactivate
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.inode_limit
-> -r--r--r-- 1 root root 0 Mar  9 18:27 /cgroup/quota.projects
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.remove_project
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.reset_block_limit_in_bytes
-> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.reset_inode_limit
+>   	trace_kmalloc((unsigned long) caller, ret,
+>   		      size, cachep->buffer_size, flags);
+> +	mem_cgroup_put_kmem_cache(cachep);
 >
-> 3. To assign a project ID to container, just echo it to quota.add_project as:
-> echo "project100:100">  /cgroup/quota.add_project
+>   	return ret;
+>   }
 >
-> To get a short list of the current projects assigned to container, user can check quota.projects,
-> # cat /cgroup/quota.projects
-> Project ID (project100:100)	status: off
+> +static __always_inline void *
+> +__do_kmalloc_no_account(size_t size, gfp_t flags, void *caller)
+> +{
+> +	struct kmem_cache *cachep;
+> +	void *ret;
+> +
+> +	cachep = __find_general_cachep(size, flags);
+> +	if (unlikely(ZERO_OR_NULL_PTR(cachep)))
+> +		return cachep;
+> +	ret = __cache_alloc(cachep, flags, caller);
+> +	trace_kmalloc((unsigned long)caller, ret, size, cachep->buffer_size,
+> +	    flags);
+> +
+> +	return ret;
+> +}
 >
-> The totally quota info can be check against quota.all, it will show something like below:
-> # cat /cgroup/quota.all
-> Project ID (project100:100)	status: off
->    block_soft_limit	9223372036854775807
->    block_hard_limit	9223372036854775807
->    block_max_usage	0
->    block_usage	0
->    inode_soft_limit	9223372036854775807
->    inode_hard_limit	9223372036854775807
->    inode_max_usage	0
->    inode_usage	0
->
-> Note that about "status: off", by default, a new assigned project will in OFF state, user could
-> turn it on by echo the project ID to quota.activate as below:
-> # echo 100>  /cgroup/quota.activate
-> # cat /cgroup/quota.all
-> Project ID (project100:100)	status: on	 *now  status changed.*
->    block_soft_limit	9223372036854775807
->    block_hard_limit	9223372036854775807
->    block_max_usage	0
->    block_usage	0
->    inode_soft_limit	9223372036854775807
->    inode_hard_limit	9223372036854775807
->    inode_max_usage	0
->    inode_usage	0
->
-> But it will do nothing since without quota setup.
->
-> 4. To configure quota via cgroup, user need to interact with quota.inode_limit and quota.block_limit_in_bytes.
-> For now, I only add a simple inode quota check to XFS, it looks something like below:
->
-> # echo "100 2:4">>  /cgroup/quota.inode_limit
-> # cat /cgroup/quota.all
-> Project ID (project100:100)	status: on
->    block_soft_limit	9223372036854775807
->    block_hard_limit	9223372036854775807
->    block_max_usage	0
->    block_usage	0
->    inode_soft_limit	2
->    inode_hard_limit	4
->    inode_max_usage	0
->    inode_usage	0
->
-> # for ((i=0; i<  6; i++)); do touch xfs/quota_test/test.$i; done
->
-> Project ID (project100:100)	status: on
->    block_soft_limit	9223372036854775807
->    block_hard_limit	9223372036854775807
->    block_max_usage	0
->    block_usage	0
->    inode_soft_limit	2
->    inode_hard_limit	4
->    inode_max_usage	4
->    inode_usage	4
->
-> Sorry again, above steps crashed me sometimes for now, it works just for demo purpose. :)
->
-> Any criticism and suggestions are welcome!
->
-When I started reading through this, I had one question in mind:
+>   #if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_TRACING)
+>   void *__kmalloc(size_t size, gfp_t flags)
+> @@ -4008,12 +4030,26 @@ void *__kmalloc_track_caller(size_t size, gfp_t flags, unsigned long caller)
+>   }
+>   EXPORT_SYMBOL(__kmalloc_track_caller);
+Isn't this the one that is used in skbuffs?  We'd need them as noaccount 
+as well, right?
 
-"Why cgroups?"
+>
+> +void *
+> +kmalloc_no_account(size_t size, gfp_t flags)
+> +{
+> +	return __do_kmalloc_no_account(size, flags,
+> +	    __builtin_return_address(0));
+> +}
+> +EXPORT_SYMBOL(kmalloc_no_account);
+>   #else
+>   void *__kmalloc(size_t size, gfp_t flags)
+>   {
+>   	return __do_kmalloc(size, flags, NULL);
+>   }
+>   EXPORT_SYMBOL(__kmalloc);
+> +
+> +void *
+> +kmalloc_no_account(size_t size, gfp_t flags)
+> +{
+> +	return __do_kmalloc_no_account(size, flags, NULL);
+> +}
+> +EXPORT_SYMBOL(kmalloc_no_account);
+>   #endif
+>
+>   /**
 
-After I read it, I have one question in mind:
-
-"Why cgroups?"
-
-It really seems like the wrong interface for that. Specially since you 
-doesn't seem to be doing anything really clever to divide the charges, 
-etc. You are basically using cgroups as an interface to configure 
-quotas. And I see no reason whatsoever to do it. Quotas already have a 
-very well-defined interface.
-
-In summary, I don't see how creating a new cgroup will do us any good 
-here, specially if we're doing it just for the configuration interface.
-
-There are two pieces of the puzzle for container-quota: An outer quota, 
-that the box admin applies to that container as a whole, and a container 
-quota, that the container admin can apply to its user.
-
-The outer quota does not need any relation with cgroups at all!
-As a matter of fact, we already have this feature, you just don't 
-realize it: if you assume you have project quota, we just need to 
-configure the project to start at the subtree the container starts.
-
-so, for instance, if you have:
-/root/lxc-root/
-
-Then you create a project quota ontop of it, and you're done.
-
-What we really need here, is a way to have a privileged user inside a 
-container to create normal quotas (user, group) that he can configure, 
-and have this quota be always smaller than, say, a project quota defined 
-for the container from the outside. But cgroups is hardly the interface, 
-or place, for that: Usually, the processes inside the container won't 
-have access to their cgroups. They will contain the limits they are 
-entitled to, and we don't won't the processes to change that at will. So 
-tying it to cgroups does not solve the fundamental problem, which is how 
-we have the container admin to set up quotas...
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
