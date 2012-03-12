@@ -1,22 +1,25 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [RFC] cgroup: removing css reference drain wait during cgroup removal
-Date: Mon, 12 Mar 2012 14:31:55 -0700
-Message-ID: <20120312213155.GE23255@google.com>
+Subject: [RFC REPOST] cgroup: removing css reference drain wait during
+	cgroup removal
+Date: Mon, 12 Mar 2012 14:33:43 -0700
+Message-ID: <20120312213343.GF23255@google.com>
+References: <20120312213155.GE23255@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=yMMI/OroBO+JzJS+BFGmhpKXvflnG2TbDNxPbrRoYeo=;
-	b=vJoY3kAB4P4y42MN7F+1Xu4Z+VVEiBjoMiyOF3szcK9LAZa02BRfn8JRZEzYe1XmXn
-	mWWN2AKeNhm1OhnaiyHPdlJ7McYw+TqLXnMHJ7jKlDqNmILkgJ5KwxJtIWztlKTgmlHY
-	q52p33Zp31jJXNSIrBaCAM543eanvuD5VqxL3S+7Fs8kypTyEf7PCIG4ffhJDpAxxDbu
-	b3n1ogpY44VEcQW5Tbj8IwZ2+iSj1Cjq7l9JG3TWWHRytwShsO7SzaS4TawiYHjYChfF
-	BrcnECEBb5w4hW332kSULy1pY3f4NmVEc0dCUYsDp4LjUpQ0DQVfT/6FI8yPg69pG1hs
-	WNkg==
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=a9ie0rOq7hYGVfqa1fO4+E360yTh5rQL0WELuwfWHc8=;
+	b=GYga8mLh30RPHlHCbr/QLOiiXlBFkWrHAVNiLuii8aC6WxI/C7iunD+5L1At9OKSyP
+	uNr7gCh506y0FG9lRs/OarcM4wr6yngGpjGhbAph7OnWWnbuxlms2JdspaYQSUOJ6B4q
+	f3gGq5tB+/ZylrUXjzjTYXHQ8UI7lrMfoq0Wu8I89BaCdEYxzwQr8YBJEntebXtJHEUN
+	pYGqCpYQdlRmg7ifINYzD6SxAITFe9rb6HTy1Md3QVBDZW24b/cJCJuobsUdxtuuFslh
+	GdI445nDmCObiquBAjBJ7EgbrE4yMFfkiy675XThFhs+4NLJqTDJo70suNlrTLL/SfI/
+	+kKQ==
 Content-Disposition: inline
+In-Reply-To: <20120312213155.GE23255-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -28,7 +31,9 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+(wrong mailing list addresses, reposing. sorry guys)
 
 Hello, guys.
 
