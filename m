@@ -1,64 +1,48 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
-Subject: Re: [RFC][PATCH] cgroup: fix race between fork and cgroup freezing
-Date: Mon, 12 Mar 2012 17:02:04 +0800
-Message-ID: <4F5DBB8C.6090904@cn.fujitsu.com>
-References: <4F587199.6050404@cn.fujitsu.com> <20120308182622.GC25508@google.com> <4F59A27D.9080705@cn.fujitsu.com> <20120309165313.GA24890@google.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC PATCH v1 0/4] cgroup quota
+Date: Mon, 12 Mar 2012 13:36:22 +0400
+Message-ID: <4F5DC396.60701@parallels.com>
+References: <4F59E78A.7060903@oracle.com> <4F5C933F.3000409@parallels.com> <4F5C90DF.8070605@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120309165313.GA24890@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <4F5C90DF.8070605@oracle.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, =?UTF-8?B?57yqIOWLsA==?= <miaox@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: jeff.liu@oracle.com
+Cc: jack@suse.cz, Lezcano <daniel.lezcano@free.fr>, Christopher Jones <christopher.jones@oracle.com>, Li Zefan <lizf@cn.fujitsu.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, tj@kernel.org, Ben Myers <bpm@sgi.com>, Daniel@oss.sgi.com, lxc-devel@lists.sourceforge.net, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, cgroups@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, tytso@MIT.EDU
 
-Tejun Heo wrote:
-> Hello, Li.
-> 
-> On Fri, Mar 09, 2012 at 02:26:05PM +0800, Li Zefan wrote:
->> The problem is, forks can happen at any time, so there's no way to prevent
->> forks from happening while iterating tasks in a cgroup, so controllers
->> have to deal with it. In fact freezer is somewhat aware of this issue,
->> that's why it provides the ->fork callback, but there's race.
->>
->> This patch is not too bad (needs a bit modification). cgroup core will detect
->> (via seqcount) if something's happened to a cgroup and the tasks in it, and
->> then cgroup will notify controllers to check if newly-forked tasks should
->> be adjusted accordingly, so they will have consistent status with other tasks
->> in the same cgroup.
-> 
-> But why can't we just do what every sane subsystem would do - link
-> first and then invoke notification callback?  I mean, we're now
-> essentially trying to do the following.
-> 
-> 1. Take some action.
-> 2. Trigger notification.
-> 3. Link the result of the action to list.
-> 
-> So, of course, if someone tries to traverse the "results", there's a
-> race window between #2 and #3.  Your fix seems to change the traverser
-> to,
-> 
-> 1. Traverse the list.
-> 2. If something happened inbetween, take another look.
-> 
-> But, the right thing to do would be changing the fork path to
-> 
-> 1. Take some action.
-> 2. Link the result of the action to list.
-> 3. Trigger notification.
-> 
+On 03/11/2012 03:47 PM, Jeff Liu wrote:
+> And also, if there has already a project quota limits enforced outsides
+> to a directly, but the user can still setup a smaller quota limit s
+> through cgroup ,those limits just mixed up, but the smaller quota only
+> be effected for those processes running at container.
+>
+>> >
+>> >  What we really need here, is a way to have a privileged user inside a
+>> >  container to create normal quotas (user, group) that he can configure,
+>> >  and have this quota be always smaller than, say, a project quota defined
+>> >  for the container from the outside. But cgroups is hardly the interface,
+>> >  or place, for that: Usually, the processes inside the container won't
+>> >  have access to their cgroups. They will contain the limits they are
+>> >  entitled to, and we don't won't the processes to change that at will. So
+>> >  tying it to cgroups does not solve the fundamental problem, which is how
+>> >  we have the container admin to set up quotas...
+> Sigh, exactly, I need some time to understand your opinions.  Thanks again.
+>
+>
 
-The reasons are
+My take on this is that you should stick to the quota interface. It 
+seems to works well enough for people out there. This means, how quotas 
+are configured, viewed, etc, should work with standard tools.
 
-- We still need some kind of locking to syncronize fork and the traverser.
-fork side is protected by tasklist_lock, while the traverser takes
-css_set_lock.
+Now, we need some of those quotas to be tied to a particular mnt 
+namespace (I believe namespaces to be the right isolation abstraction 
+here, not cgroups), in the sense that they can only be active inside 
+that mnt namespace. And then when you bill an inode, block, or anything 
+else that quota limits, you bill it to any quota structure that is 
+possibly interested in it. Right now the code bills it to one quota 
+structure, the one that matches your UID, GID, etc (XFS may be a bit 
+more skilled already here, I don't know)
 
-- After linking the new task to css set list, the task is visible and thus
-can be moved to another cgroup, which makes things more complicated and
-the subsystem callbacks may have to acquire cgroup_mutex.
-
-- The task_counter subsystem wants to get notified before the new task
-is linked, so it's able to abort the fork.
