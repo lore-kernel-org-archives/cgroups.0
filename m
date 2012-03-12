@@ -1,66 +1,60 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 02/13] memcg: Kernel memory accounting infrastructure.
-Date: Mon, 12 Mar 2012 16:38:26 +0400
-Message-ID: <4F5DEE42.6050607@parallels.com>
-References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org> <1331325556-16447-3-git-send-email-ssouhlal@FreeBSD.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC][PATCH] cgroup: fix race between fork and cgroup freezing
+Date: Mon, 12 Mar 2012 09:10:40 -0700
+Message-ID: <20120312161040.GA23255@google.com>
+References: <4F587199.6050404@cn.fujitsu.com>
+ <20120308182622.GC25508@google.com>
+ <4F59A27D.9080705@cn.fujitsu.com>
+ <20120309165313.GA24890@google.com>
+ <4F5DBB8C.6090904@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1331325556-16447-3-git-send-email-ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=CEyDxkkX5s9kS4o0TJfu+uzJu3SoXV2HoRHEoBuZ940=;
+        b=sgHyGjiyeIGnGN0NS1iQm3LBA9rqv2cr+5tGcyLDih8SrCcxkEm5YPJvICrABrWhMu
+         COWiimVG6W4IEdZO71qsXbE/2ngiLaF8mSpkczsYk2s+zRfwoVf2wYLabb2SlS2RZZA0
+         L252mJPH4An1C3cjP8lbnsXTzVajbmzAyP6pT0+qNWxpLhtXiFMcXDwxb5x0llzeoPYY
+         VziRsdq2I06Dmf17ltttADQr/H00cfTDvAKseFglgM0E1hipaCFMsw6ATTCJ+b1KlSSe
+         U6gUha9kssRbgJQ1f7BHBp+D12gu79fRutxYA8M968Y+Ff9FHIWFqgR8eyUOT100CsxR
+         HEIQ==
+Content-Disposition: inline
+In-Reply-To: <4F5DBB8C.6090904-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?utf-8?B?57yqIOWLsA==?= <miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On 03/10/2012 12:39 AM, Suleiman Souhlal wrote:
-> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-> +int
-> +memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, long long delta)
-> +{
-> +	struct res_counter *fail_res;
-> +	struct mem_cgroup *_memcg;
-> +	int may_oom, ret;
-> +
-> +	may_oom = (gfp&  __GFP_WAIT)&&  (gfp&  __GFP_FS)&&
-> +	    !(gfp&  __GFP_NORETRY);
-> +
-> +	ret = 0;
-> +
-> +	_memcg = memcg;
-> +	if (memcg&&  !mem_cgroup_test_flag(memcg,
-> +	    MEMCG_INDEPENDENT_KMEM_LIMIT)) {
-> +		ret = __mem_cgroup_try_charge(NULL, gfp, delta / PAGE_SIZE,
-> +		&_memcg, may_oom);
-> +		if (ret == -ENOMEM)
-> +			return ret;
-> +	}
-> +
-> +	if (memcg&&  _memcg == memcg)
-> +		ret = res_counter_charge(&memcg->kmem, delta,&fail_res);
-> +
-> +	return ret;
-> +}
-> +
-> +void
-Ok.
+Hello,
 
-So I've spent most of the day today trying to come up with a way not to 
-kill the whole performance we gain from consume_stock() by this 
-res_counter_charge() to kmem afterwards...
+On Mon, Mar 12, 2012 at 05:02:04PM +0800, Li Zefan wrote:
+> - We still need some kind of locking to syncronize fork and the traverser.
+> fork side is protected by tasklist_lock, while the traverser takes
+> css_set_lock.
 
-You mentioned you want to still be able to bill to memcg->kmem mostly 
-for debugging/display purposes. So we're surely not using all of the 
-res_counter infrastructure (limiting, soft limits, etc)
+Can't we do both after tasklist_lock is released under css_set_lock?
 
-I was thinking: Can't we have a percpu_counter that we use for this 
-purpose when !kmem_independent ?
+> - After linking the new task to css set list, the task is visible and thus
+> can be moved to another cgroup, which makes things more complicated and
+> the subsystem callbacks may have to acquire cgroup_mutex.
 
-we may not even need to bloat the struct, since we can fold it into a 
-union with struct res_counter kmem (which is bigger than a percpu 
-counter anyway).
+Hmmm... freezer currently doesn't allow migrating in and out of frozen
+cgroup and even when it does callbacks in the migration path should
+synchronize against freezer->lock.  I *think* that should be enough
+and can't see why this will be simpler or more complex depending on
+when fork callback is called.
 
-We just need to be a bit more careful not to allow kmem_independent to 
-change when we already have charges to any of them (but we need to do it 
-anyway)
+> - The task_counter subsystem wants to get notified before the new task
+> is linked, so it's able to abort the fork.
 
+This one maybe but for this cgroup_fork_callbacks() is already too
+late, isn't it?  We better have pre-fork callbacks instead, no?
+
+Thanks.
+
+-- 
+tejun
