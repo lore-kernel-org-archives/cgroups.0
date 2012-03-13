@@ -1,54 +1,82 @@
-From: C Anthony Risinger <anthony-iwZaZ8Eb++w@public.gmane.org>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Tue, 13 Mar 2012 11:30:46 -0500
-Message-ID: <CAGAVQTG_jUi3PffWQHc9jR6wA9gsEUXMMvb4LiimbpUZaxdGcw@mail.gmail.com>
-References: <20120221211938.GE12236@google.com>
-	<20120312221050.GG23255@google.com>
-	<1331590938.18960.57.camel@twins> <20120312222817.GI23255@google.com>
-	<1331591568.18960.61.camel@twins> <20120312223944.GJ23255@google.com>
-	<1331592241.18960.64.camel@twins> <20120312230416.GM23255@google.com>
-	<20120313141032.GD29169@redhat.com>
-	<CAGAVQTGus7LUWV3AdhAFy--gr=uJRWtSGjuP69-EckBiXy0qVg@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC REPOST] cgroup: removing css reference drain wait during
+ cgroup removal
+Date: Tue, 13 Mar 2012 09:39:14 -0700
+Message-ID: <20120313163914.GD7349@google.com>
+References: <20120312213155.GE23255@google.com>
+ <20120312213343.GF23255@google.com>
+ <20120313151148.f8004a00.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=UVhubnif2dpW5PThuoS4996u+6j24kMdqK2DJ7thXv4=;
+        b=hTptZii6/oUin5sBEFCQkG1HWKc4wNIaAQxxmt+mEWXBxjjPnhFw9CiKT1QJhOYkDj
+         HvT+slILn5Wo+wcIu0KK4nm/OnU5wcv6OrqVPXqUCKI4//2w6e2v22+o2m7qM/TqB0ru
+         hk4viVaM3uSbya0Zox01L9LLYO96LmcD9MvURhHIEx+h2v76RiMjqQ9D5yAJpRrbQqQB
+         OyAjub7R9tUHEz2CNOI0cI7LW1UnzYevoLWy2n7bDNgD8q26j2GFtdmCR51CFTOXQRGR
+         V2PrSlbdV/8dK0az1BcJu3QxGoqx63bopadnNbg+JQ0i/Y2Q8yMYQ1sUNDyCGB+NmVY5
+         xNOw==
+Content-Disposition: inline
+In-Reply-To: <20120313151148.f8004a00.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xtfx.me; s=google;
-	h=mime-version:x-originating-ip:in-reply-to:references:from:date
-	:message-id:subject:to:cc:content-type;
-	bh=35eamu94xVq6wmqvYH9+lIslT5hPy7Rv7/oW5BUH7Ic=;
-	b=K4IAzS6dSCe0sxgz+xXP3/k2E+KJrO3LNODFvXQhex6K7ZP7CNBhNNNtmxoqYEnhC9
-	bymonlYbPddGX8OqojbbJqNpnIyiM9mi7TCM84I/PdCWLa4U5UNtWBp8LXmzGlBFrshc
-	P6lPAVeFfYNIZO8oy/5caxMAEWE/Cl+fReS2s=
-In-Reply-To: <CAGAVQTGus7LUWV3AdhAFy--gr=uJRWtSGjuP69-EckBiXy0qVg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Mar 13, 2012 at 11:11 AM, C Anthony Risinger <anthony-iwZaZ8Eb++w@public.gmane.org> wrote:
->
-> # what controllers are available for this process?
-> $ cat /proc/self/tags/TYPE
-^^^^^ should list of controllers either assigned to TYPE or not masked by MASK
+Hello, KAMEZAWA.
 
-> # explicit assign `users` 50 shares
-> $ echo 50 > /proc/self/tags/admin.cpuacct.cpu.shares
-                                               ^^^^^ s,admin,users,
+On Tue, Mar 13, 2012 at 03:11:48PM +0900, KAMEZAWA Hiroyuki wrote:
+> The trouble for pre_destroy() is _not_ refcount, Memory cgroup has its own refcnt
+> and use it internally. The problem is 'charges'. It's not related to refcnt.
 
-> # `name`'s priority relative to sibling `name` groups (like shares)
-> $ echo 100 > /proc/self/tags/admin.cpuacct.cpu.PRIORITY
-^^^^^ maybe redundant, my original reasoning for it escapes me, but
-could be useful for controllers that accept multiple `name`s
+Hmmm.... yeah, I'm not familiar with memcg internals at all.  For
+blkcg, refcnt matters but if it doesn't for memcg, great.
+
+> Cgroup is designed to exists with 'tasks'. But memory may not be related to any
+> task...just related to a cgroup.
+> 
+> But ok, pre_destory() & rmdir() is complicated, I agree.
+> 
+> Now, we prevent rmdir() if we can't move charges to its parent. If pre_destory()
+> shouldn't fail, I can think of some alternatives.
+> 
+>  * move all charges to the parent and if it fails...move all charges to
+>    root cgroup.
+>    (drop_from_memory may not work well in swapless system.)
+
+I think this one is better and this shouldn't fail if hierarchical
+mode is in use, right?
+
+> I think.. if pre_destory() never fails, we don't need pre_destroy().
+
+For memcg maybe, blkcg still needs it.
+
+> >   The last one seems more tricky.  On destruction of cgroup, the
+> >   charges are transferred to its parent and the parent may not have
+> >   enough room for that.  Greg told me that this should only be a
+> >   problem for !hierarchical case.  I think this can be dealt with by
+> >   dumping what's left over to root cgroup with a warning message.
+> 
+> I don't like warning ;) 
+
+I agree this isn't perfect but then again failing rmdir isn't perfect
+either and given that the condition can be wholly avoided in
+hierarchical mode, which should be the default anyway (is there any
+reason to keep flat mode except for backward compatibility?), I don't
+think the trade off is too bad.
+
+> I think we can do all in 'destroy()'.
+
+That would be even better.  I tried myself but that was a lot of code
+I didn't have much idea about.  If someone more familiar with memcg
+can write up such patch, I owe a beer. :)
+
+Thank you.
 
 -- 
-
-C Anthony
+tejun
