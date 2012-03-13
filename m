@@ -1,46 +1,27 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH -V3 2/8] memcg: Add HugeTLB extension
-Date: Tue, 13 Mar 2012 14:33:16 -0700
-Message-ID: <20120313143316.0ef74d0e.akpm@linux-foundation.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH -V3 3/8] hugetlb: add charge/uncharge calls for HugeTLB
+ alloc/free
+Date: Tue, 13 Mar 2012 14:36:54 -0700
+Message-ID: <20120313143654.5dd1243d.akpm@linux-foundation.org>
 References: <1331622432-24683-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<1331622432-24683-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+	<1331622432-24683-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1331622432-24683-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1331622432-24683-4-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 13 Mar 2012 12:37:06 +0530
-"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
+On Tue, 13 Mar 2012 12:37:07 +0530
+"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
 
-> +static int mem_cgroup_hugetlb_usage(struct mem_cgroup *memcg)
-> +{
-> +	int idx;
-> +	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
-> +		if (memcg->hugepage[idx].usage > 0)
-> +			return memcg->hugepage[idx].usage;
-> +	}
-> +	return 0;
-> +}
+> +		return ERR_PTR(-VM_FAULT_SIGBUS);
 
-Please document the function?  Had you done this, I might have been
-able to work out why the function bales out on the first used hugepage
-size, but I can't :(
+whee, so we have (ab)used the err.h infrastructure to carry
+VM_FAULT_foo codes, thus creating a secret requirement that the
+VM_FAULT_foo values not exceed MAX_ERRNO.
 
-This could have used for_each_hstate(), had that macro been better
-designed (or updated).
-
-Upon return this function coerces an unsigned long long into an "int". 
-We decided last week that more than 2^32 hugepages was not
-inconceivable, so I guess that's a bug.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+What a hack, whodidthat?
