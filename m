@@ -1,73 +1,53 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm, memcg: do not allow tasks to be attached with zero
- limit
-Date: Tue, 13 Mar 2012 17:51:18 +0100
-Message-ID: <20120313165117.GA1708@cmpxchg.org>
-References: <alpine.DEB.2.00.1203071914150.15244@chino.kir.corp.google.com>
- <20120308122951.2988ec4e.akpm@linux-foundation.org>
- <20120309102255.bbf94164.kamezawa.hiroyu@jp.fujitsu.com>
- <20120308173818.ae5f621b.akpm@linux-foundation.org>
- <20120309105706.4001646a.kamezawa.hiroyu@jp.fujitsu.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH v2 02/13] memcg: Kernel memory accounting infrastructure.
+Date: Tue, 13 Mar 2012 10:00:58 -0700
+Message-ID: <xr93d38g77w5.fsf@gthelen.mtv.corp.google.com>
+References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org>
+	<1331325556-16447-3-git-send-email-ssouhlal@FreeBSD.org>
+	<4F5C5E54.2020408@parallels.com>
+	<20120313152446.28b0d696.kamezawa.hiroyu@jp.fujitsu.com>
+	<4F5F236A.1070609@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120309105706.4001646a.kamezawa.hiroyu@jp.fujitsu.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version:content-type;
+        bh=XHHB83yI/FbBFLMYhyPa4RhISx3Mf5B/hyOZ45cTYFw=;
+        b=lsCPX6nVCl4mt9IHDJEArWVHr8gtNmxJXXxWcZLfA9caOBImyIE8MNPKmCSuxjNP5v
+         dnnIxV9S0exhG+MmaP2csNc6yafWU4uasDQj4izludozYAsYe9IYuD1+nI1/oPZMtVFB
+         JH7iPBBkQQAUimneXOnpI5FFx4I4A9htw0Ar89qIcrU3o9+ZcVnQmW+SWws/9mrj4QR6
+         fg5Xi6ZHgZkaUQ5iqeBX045neLQCe235Ck9i8FateXq2ThV74oIuwUNEBkYupdEfKZDn
+         js+NLt3vdStqg6AqwmRjVZMuPZPfG7ZFrNcbIjVZcJaSCQcX/nHkgK+200zaeP5Glfod
+         Q9GQ==
+In-Reply-To: <4F5F236A.1070609@parallels.com> (Glauber Costa's message of
+	"Tue, 13 Mar 2012 14:37:30 +0400")
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <ssouhlal@FreeBSD.org>, cgroups@vger.kernel.org, suleiman@google.com, penberg@kernel.org, cl@linux.com, yinghan@google.com, hughd@google.com, peterz@infradead.org, dan.magenheimer@oracle.com, hannes@cmpxchg.org, mgorman@suse.de, James.Bottomley@HansenPartnership.com, linux-mm@kvack.org, devel@openvz.org, linux-kernel@vger.kernel.org, rientjes@google.com
 
-On Fri, Mar 09, 2012 at 10:57:06AM +0900, KAMEZAWA Hiroyuki wrote:
-> On Thu, 8 Mar 2012 17:38:18 -0800
-> Andrew Morton <akpm@linux-foundation.org> wrote:
-> 
-> > On Fri, 9 Mar 2012 10:22:55 +0900 KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> > 
-> > > On Thu, 8 Mar 2012 12:29:51 -0800
-> > > Andrew Morton <akpm@linux-foundation.org> wrote:
-> > > 
-> > > > On Wed, 7 Mar 2012 19:14:49 -0800 (PST)
-> > > > David Rientjes <rientjes@google.com> wrote:
-> > > > 
-> > > > > This patch prevents tasks from being attached to a memcg if there is a
-> > > > > hard limit of zero.
-> > > > 
-> > > > We're talking about the memcg's limit_in_bytes here, yes?
-> > > > 
-> > > > > Additionally, the hard limit may not be changed to
-> > > > > zero if there are tasks attached.
-> > > > 
-> > > > hm, well...  why?  That would be user error, wouldn't it?  What is
-> > > > special about limit_in_bytes=0?  The memcg will also be unviable if
-> > > > limit_in_bytes=1, but we permit that.
-> > > > 
-> > > > IOW, confused.
-> > > > 
-> > > Ah, yes. limit_in_bytes < some small size can cause the same trouble.
-> > > Hmm... should we have configurable min_limit_in_bytes as sysctl or root memcg's
-> > > attaribute.. ?
-> > 
-> > Why do *anything*?  If the operator chose an irrational configuration
-> > then things won't work correctly and the operator will then fix the
-> > configuration?
-> > 
-> 
-> Because the result of 'error operaton' is SIGKILL to a task, which may be
-> owned by very importang customer of hosting service.
-> 
-> Isn't this severe punishment for error operation ?
-> 
-> Considering again, I have 2 thoughts.
-> 
-> - it should be guarded by MiddleWare, it's not kernel job !
-> - memcg should be more easy-to-use, friendly to users.
-> 
-> If the result is just an error as EINVAL or EBUSY, I may not be nervous....
+Glauber Costa <glommer@parallels.com> writes:
+> 2) For the kernel itself, we are mostly concerned that a malicious container may
+> pin into memory big amounts of kernel memory which is, ultimately,
+> unreclaimable. In particular, with overcommit allowed scenarios, you can fill
+> the whole physical memory (or at least a significant part) with those objects,
+> well beyond your softlimit allowance, making the creation of further containers
+> impossible.
+> With user memory, you can reclaim the cgroup back to its place. With kernel
+> memory, you can't.
 
-You can still disable the OOM killer.  If you don't, you can always
-get killed, so I'm not convinced by this patch or a sysctl, either.
+In overcommit situations the page allocator starts failing even though
+memcg page can charge pages.  When page allocations fail the oom killer
+plays a role.  Page allocations can fail even without malicious usage of
+kernel memory (e.g. lots of mlock or anon without swap can fill a
+machine).  I assume that the kernel memory pinned the malicious
+containers will be freed or at least become reclaimable once the
+processes in malicious containers are killed (oom or otherwise).  We
+have been making use of the oom killer to save a system from
+irreconcilable overcommit situations.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
