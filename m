@@ -1,49 +1,34 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [RFD] cgroup: about multiple hierarchies
-Date: Tue, 13 Mar 2012 18:31:58 +0100
-Message-ID: <1331659918.18960.87.camel@twins>
-References: <20120221211938.GE12236@google.com>
-	<20120312221050.GG23255@google.com> <1331590938.18960.57.camel@twins>
-	<20120312222817.GI23255@google.com> <1331591568.18960.61.camel@twins>
-	<20120312223944.GJ23255@google.com> <1331592241.18960.64.camel@twins>
-	<20120312230416.GM23255@google.com> <20120313141032.GD29169@redhat.com>
-	<1331659537.18960.84.camel@twins>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 02/13] memcg: Kernel memory accounting infrastructure.
+Date: Tue, 13 Mar 2012 21:31:40 +0400
+Message-ID: <4F5F847C.3060505@parallels.com>
+References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org> <1331325556-16447-3-git-send-email-ssouhlal@FreeBSD.org> <4F5C5E54.2020408@parallels.com> <20120313152446.28b0d696.kamezawa.hiroyu@jp.fujitsu.com> <4F5F236A.1070609@parallels.com> <xr93d38g77w5.fsf@gthelen.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1331659537.18960.84.camel@twins>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <xr93d38g77w5.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Tue, 2012-03-13 at 18:25 +0100, Peter Zijlstra wrote:
-> On Tue, 2012-03-13 at 10:10 -0400, Vivek Goyal wrote:
-> > Implementing hierarchy is a pain and is expensive at run time. 
-> 
-> Yeah, suck it up :-)
-> 
-> I would really rather we mandate one implementation standard for
-> controllers for the sake of consistency and uniformity. A direct result
-> of doing away with the multiple hierarchy crap is that all controllers
-> are co-mounted. Allowing differences like this just doesn't make any
-> sense.
-> 
-> So either we drop full hierarchy support from all controllers or we
-> deprecate and remove all non-hierarchical controllers.
-> 
-> I'm fine with either, but I'm not fine with with the half-arsed
-> solutions proposed here.
+On 03/13/2012 09:00 PM, Greg Thelen wrote:
+> Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  writes:
+>> 2) For the kernel itself, we are mostly concerned that a malicious container may
+>> pin into memory big amounts of kernel memory which is, ultimately,
+>> unreclaimable. In particular, with overcommit allowed scenarios, you can fill
+>> the whole physical memory (or at least a significant part) with those objects,
+>> well beyond your softlimit allowance, making the creation of further containers
+>> impossible.
+>> With user memory, you can reclaim the cgroup back to its place. With kernel
+>> memory, you can't.
+>
+> In overcommit situations the page allocator starts failing even though
+> memcg page can charge pages.
+If you overcommit mem+swap, yes. If you overcommit mem, no: reclaim 
+happens first. And we don't have that option with pinned kernel memory.
 
-Note that before this whole discussion I was under the impressions it
-was mandated for a controller to be fully hierarchical. I'm very much
-surprised people were allowed to merge incomplete controllers like that.
+Of course you *can* run your system without swap, but the whole thing 
+exists exactly because there is a large enough # of ppl who wants to be 
+able to overcommit their physical memory, without failing allocations.
