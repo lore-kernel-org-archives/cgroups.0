@@ -1,71 +1,66 @@
-From: Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC] cgroup: removing css reference drain wait during cgroup
- removal
-Date: Tue, 13 Mar 2012 14:45:26 -0700
-Message-ID: <20120313214526.GG19584@count0.beaverton.ibm.com>
-References: <20120312213155.GE23255@google.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH -V3 7/8] memcg: move HugeTLB resource count to parent
+ cgroup on memcg removal
+Date: Tue, 13 Mar 2012 14:47:05 -0700
+Message-ID: <20120313144705.020b6dde.akpm@linux-foundation.org>
+References: <1331622432-24683-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+	<1331622432-24683-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120312213155.GE23255-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1331622432-24683-8-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Mar 12, 2012 at 02:31:55PM -0700, Tejun Heo wrote:
-> Hello, guys.
-> 
-> While working on blkcg, I learned that cgroup removal path tries to
-> drain all internal references synchronously before proceeding with
-> removal, and may be aborted by by pre_destroy() failing.
-> 
-> I find both quite unusual.  While there are some occassions where we
-> try to drain reference counts synchronously, the norm is deactivating
-> the target and then releasing it when the reference count hits zero
-> and exposing this synchronous behavior directly to userland makes it
-> worse.  This also requires allowing rmdir to be aborted from userland.
-> 
-> pre_destroy() being allowed to veto rmdir might be okay if there's
-> only one subsystem using it or it implemented proper
-> prepare-commit/cancel transaction, but as it currently stands,
-> pre_destroy() operations are not reversible and even within memcg
-> itself the state wouldn't be consistent after failure (some moved to
-> parent while the rest on child).  Note that abort from userland also
-> has the same problem.
-> 
-> It also complicates and adds even more subtleties to cgroup code.  A
-> lot of it was just me being dumb but making sense of
-> cgroup_exclude_rmdir() and cgroup_release_and_wakeup_rmdir() usages in
-> memcontrol took me quite some time even with Hugh's help.
-> 
-> In general, IMHO, it's a bad idea to expose purely internal
-> implementation details to userland directly.  Internal ref counts can
-> be kept around for whatever reason (e.g. blkcg does it for lookup
-> caching), such details shouldn't be visible to userland.  Midlayers
-> like cgroup which sit between userland and mechanism implementations
-> should provide isolation between the two so that each mechanism
-> implementation doesn't have to worry about things like that.
-> 
-> It seems cgroup is going through a lot of the same growing pains that
-> sysfs went through years ago and would probably benefit from using
-> sysfs for userland interfacing rather than trying to replicate
-> features that sysfs already provides.  Well, that's another long term
-> thing, I guess.  For now, I'd like to make cgroup rmdir path more
-> conventional so that rmdir behaves like the following.
+On Tue, 13 Mar 2012 12:37:11 +0530
+"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
 
-If you want to spend your time doing archaeology there are some old threads
-that touch on this idea (roughly around 2003-2005). One point against the
-idea that I distinctly recall:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> This add support for memcg removal with HugeTLB resource usage.
+> 
+> ...
+>
+> +int hugetlb_force_memcg_empty(struct cgroup *cgroup)
 
-Somewhat like configfs, object lifetimes in cgroups are determined
-primarily by the user whereas sysfs object lifetimes are primarily
-determined by the kernel. I think the closest we come to user-determined
-objects in sysfs occur through debugfs, and module loading/unloading.
-However those involve mount/umount and modprobe/rmmod rather than
-mkdir/rmdir to create and remove the objects.
+It's useful to document things, you know.  For a major function like
+this, a nice little description of why it exists, what its role is,
+etc.  Programming is not just an act of telling a computer what to do:
+it is also an act of telling other programmers what you wished the
+computer to do.  Both are important, and the latter deserves care.
 
-Cheers,
-	-Matt Helsley
+> +{
+> +	struct hstate *h;
+> +	struct page *page;
+> +	int ret = 0, idx = 0;
+> +
+> +	do {
+> +		if (cgroup_task_count(cgroup) || !list_empty(&cgroup->children))
+> +			goto out;
+> +		if (signal_pending(current)) {
+> +			ret = -EINTR;
+> +			goto out;
+> +		}
+
+Why is its behaviour altered by signal_pending()?  This seems broken.
+
+> +		for_each_hstate(h) {
+> +			spin_lock(&hugetlb_lock);
+> +			list_for_each_entry(page, &h->hugepage_activelist, lru) {
+> +				ret = mem_cgroup_move_hugetlb_parent(idx, cgroup, page);
+> +				if (ret) {
+> +					spin_unlock(&hugetlb_lock);
+> +					goto out;
+> +				}
+> +			}
+> +			spin_unlock(&hugetlb_lock);
+> +			idx++;
+> +		}
+> +		cond_resched();
+> +	} while (mem_cgroup_hugetlb_usage(cgroup) > 0);
+> +out:
+> +	return ret;
+> +}
