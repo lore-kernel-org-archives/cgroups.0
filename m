@@ -1,42 +1,46 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH -V3 2/8] memcg: Add HugeTLB extension
-Date: Tue, 13 Mar 2012 17:42:36 +0400
-Message-ID: <4F5F4ECC.6030509@parallels.com>
-References: <1331622432-24683-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331622432-24683-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F5F4B69.806@parallels.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Tue, 13 Mar 2012 09:49:22 -0400
+Message-ID: <20120313134922.GB29169@redhat.com>
+References: <20120221211938.GE12236@google.com>
+	<20120312221050.GG23255@google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F5F4B69.806@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120312221050.GG23255-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On 03/13/2012 05:28 PM, Glauber Costa wrote:
-> On 03/13/2012 11:07 AM, Aneesh Kumar K.V wrote:
->> @@ -4951,6 +5083,12 @@ static int mem_cgroup_pre_destroy(struct
->> cgroup_subsys *ss,
->> struct cgroup *cont)
->> {
->> struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
->> + /*
->> + * Don't allow memcg removal if we have HugeTLB resource
->> + * usage.
->> + */
->> + if (mem_cgroup_hugetlb_usage(memcg)> 0)
->> + return -EBUSY;
->>
->> return mem_cgroup_force_empty(memcg, false);
->
-> Why can't you move the charges like everyone else?
->
+On Mon, Mar 12, 2012 at 03:10:50PM -0700, Tejun Heo wrote:
+> Hello, guys.
+> 
+> Thanks a lot for the discussion and here are my take aways:
+> 
+> * At least to me, nobody seems to have strong enough justification for
+>   orthogonal multiple hierarchies, so, yeah, unless something else
+>   happens, I'm scheduling multiple hierarchy support for the chopping
+>   block.  This is a long term thing (think years), so no need to panic
+>   right now and as is life plans may change and fail to materialize,
+>   but I intend to at least move away from it.
 
-Nevermind, just saw your last patch.
+So everything will be under single hierarchy? How will we control that
+what controllers are active on what cgroups? Or all controllers are going
+to be active on all cgroups on that hierarchy. 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+That would be bad for IO cgroups where a better way to use it to isolate
+the trouble making workload and run rest in root or a common cgroup.
+
+Thanks
+Vivek
