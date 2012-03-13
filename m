@@ -1,57 +1,43 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH v2 02/13] memcg: Kernel memory accounting infrastructure.
-Date: Tue, 13 Mar 2012 10:00:58 -0700
-Message-ID: <xr93d38g77w5.fsf@gthelen.mtv.corp.google.com>
-References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org>
-	<1331325556-16447-3-git-send-email-ssouhlal@FreeBSD.org>
-	<4F5C5E54.2020408@parallels.com>
-	<20120313152446.28b0d696.kamezawa.hiroyu@jp.fujitsu.com>
-	<4F5F236A.1070609@parallels.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Tue, 13 Mar 2012 18:25:37 +0100
+Message-ID: <1331659537.18960.84.camel@twins>
+References: <20120221211938.GE12236@google.com>
+	<20120312221050.GG23255@google.com> <1331590938.18960.57.camel@twins>
+	<20120312222817.GI23255@google.com> <1331591568.18960.61.camel@twins>
+	<20120312223944.GJ23255@google.com> <1331592241.18960.64.camel@twins>
+	<20120312230416.GM23255@google.com> <20120313141032.GD29169@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:references:date:in-reply-to:message-id
-         :user-agent:mime-version:content-type;
-        bh=XHHB83yI/FbBFLMYhyPa4RhISx3Mf5B/hyOZ45cTYFw=;
-        b=lsCPX6nVCl4mt9IHDJEArWVHr8gtNmxJXXxWcZLfA9caOBImyIE8MNPKmCSuxjNP5v
-         dnnIxV9S0exhG+MmaP2csNc6yafWU4uasDQj4izludozYAsYe9IYuD1+nI1/oPZMtVFB
-         JH7iPBBkQQAUimneXOnpI5FFx4I4A9htw0Ar89qIcrU3o9+ZcVnQmW+SWws/9mrj4QR6
-         fg5Xi6ZHgZkaUQ5iqeBX045neLQCe235Ck9i8FateXq2ThV74oIuwUNEBkYupdEfKZDn
-         js+NLt3vdStqg6AqwmRjVZMuPZPfG7ZFrNcbIjVZcJaSCQcX/nHkgK+200zaeP5Glfod
-         Q9GQ==
-In-Reply-To: <4F5F236A.1070609@parallels.com> (Glauber Costa's message of
-	"Tue, 13 Mar 2012 14:37:30 +0400")
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <ssouhlal@FreeBSD.org>, cgroups@vger.kernel.org, suleiman@google.com, penberg@kernel.org, cl@linux.com, yinghan@google.com, hughd@google.com, peterz@infradead.org, dan.magenheimer@oracle.com, hannes@cmpxchg.org, mgorman@suse.de, James.Bottomley@HansenPartnership.com, linux-mm@kvack.org, devel@openvz.org, linux-kernel@vger.kernel.org, rientjes@google.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20120313141032.GD29169-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Glauber Costa <glommer@parallels.com> writes:
-> 2) For the kernel itself, we are mostly concerned that a malicious container may
-> pin into memory big amounts of kernel memory which is, ultimately,
-> unreclaimable. In particular, with overcommit allowed scenarios, you can fill
-> the whole physical memory (or at least a significant part) with those objects,
-> well beyond your softlimit allowance, making the creation of further containers
-> impossible.
-> With user memory, you can reclaim the cgroup back to its place. With kernel
-> memory, you can't.
+On Tue, 2012-03-13 at 10:10 -0400, Vivek Goyal wrote:
+> Implementing hierarchy is a pain and is expensive at run time. 
 
-In overcommit situations the page allocator starts failing even though
-memcg page can charge pages.  When page allocations fail the oom killer
-plays a role.  Page allocations can fail even without malicious usage of
-kernel memory (e.g. lots of mlock or anon without swap can fill a
-machine).  I assume that the kernel memory pinned the malicious
-containers will be freed or at least become reclaimable once the
-processes in malicious containers are killed (oom or otherwise).  We
-have been making use of the oom killer to save a system from
-irreconcilable overcommit situations.
+Yeah, suck it up :-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I would really rather we mandate one implementation standard for
+controllers for the sake of consistency and uniformity. A direct result
+of doing away with the multiple hierarchy crap is that all controllers
+are co-mounted. Allowing differences like this just doesn't make any
+sense.
+
+So either we drop full hierarchy support from all controllers or we
+deprecate and remove all non-hierarchical controllers.
+
+I'm fine with either, but I'm not fine with with the half-arsed
+solutions proposed here.
