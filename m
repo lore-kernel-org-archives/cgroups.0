@@ -1,88 +1,71 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH -V3 5/8] hugetlbfs: Add memcg control files for
- hugetlbfs
-Date: Tue, 13 Mar 2012 14:42:33 -0700
-Message-ID: <20120313144233.49026e6a.akpm@linux-foundation.org>
-References: <1331622432-24683-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<1331622432-24683-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] cgroup: removing css reference drain wait during cgroup
+ removal
+Date: Tue, 13 Mar 2012 14:45:26 -0700
+Message-ID: <20120313214526.GG19584@count0.beaverton.ibm.com>
+References: <20120312213155.GE23255@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1331622432-24683-6-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120312213155.GE23255-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 13 Mar 2012 12:37:09 +0530
-"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
-
-> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+On Mon, Mar 12, 2012 at 02:31:55PM -0700, Tejun Heo wrote:
+> Hello, guys.
 > 
-> This add control files for hugetlbfs in memcg
+> While working on blkcg, I learned that cgroup removal path tries to
+> drain all internal references synchronously before proceeding with
+> removal, and may be aborted by by pre_destroy() failing.
 > 
-> ...
->
-> --- a/include/linux/hugetlb.h
-> +++ b/include/linux/hugetlb.h
-> @@ -220,6 +221,10 @@ struct hstate {
->  	unsigned int nr_huge_pages_node[MAX_NUMNODES];
->  	unsigned int free_huge_pages_node[MAX_NUMNODES];
->  	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
-> +	/* cgroup control files */
-> +	struct cftype cgroup_limit_file;
-> +	struct cftype cgroup_usage_file;
-> +	struct cftype cgroup_max_usage_file;
->  	char name[HSTATE_NAME_LEN];
->  };
+> I find both quite unusual.  While there are some occassions where we
+> try to drain reference counts synchronously, the norm is deactivating
+> the target and then releasing it when the reference count hits zero
+> and exposing this synchronous behavior directly to userland makes it
+> worse.  This also requires allowing rmdir to be aborted from userland.
+> 
+> pre_destroy() being allowed to veto rmdir might be okay if there's
+> only one subsystem using it or it implemented proper
+> prepare-commit/cancel transaction, but as it currently stands,
+> pre_destroy() operations are not reversible and even within memcg
+> itself the state wouldn't be consistent after failure (some moved to
+> parent while the rest on child).  Note that abort from userland also
+> has the same problem.
+> 
+> It also complicates and adds even more subtleties to cgroup code.  A
+> lot of it was just me being dumb but making sense of
+> cgroup_exclude_rmdir() and cgroup_release_and_wakeup_rmdir() usages in
+> memcontrol took me quite some time even with Hugh's help.
+> 
+> In general, IMHO, it's a bad idea to expose purely internal
+> implementation details to userland directly.  Internal ref counts can
+> be kept around for whatever reason (e.g. blkcg does it for lookup
+> caching), such details shouldn't be visible to userland.  Midlayers
+> like cgroup which sit between userland and mechanism implementations
+> should provide isolation between the two so that each mechanism
+> implementation doesn't have to worry about things like that.
+> 
+> It seems cgroup is going through a lot of the same growing pains that
+> sysfs went through years ago and would probably benefit from using
+> sysfs for userland interfacing rather than trying to replicate
+> features that sysfs already provides.  Well, that's another long term
+> thing, I guess.  For now, I'd like to make cgroup rmdir path more
+> conventional so that rmdir behaves like the following.
 
-We don't need all these in here if, for example, cgroups is disabled?
+If you want to spend your time doing archaeology there are some old threads
+that touch on this idea (roughly around 2003-2005). One point against the
+idea that I distinctly recall:
 
-> ...
->
-> --- a/mm/hugetlb.c
-> +++ b/mm/hugetlb.c
-> @@ -1817,6 +1817,36 @@ static int __init hugetlb_init(void)
->  }
->  module_init(hugetlb_init);
->  
-> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
-> +int register_hugetlb_memcg_files(struct cgroup *cgroup,
-> +				 struct cgroup_subsys *ss)
-> +{
-> +	int ret = 0;
-> +	struct hstate *h;
-> +
-> +	for_each_hstate(h) {
-> +		ret = cgroup_add_file(cgroup, ss, &h->cgroup_limit_file);
-> +		if (ret)
-> +			return ret;
-> +		ret = cgroup_add_file(cgroup, ss, &h->cgroup_usage_file);
-> +		if (ret)
-> +			return ret;
-> +		ret = cgroup_add_file(cgroup, ss, &h->cgroup_max_usage_file);
-> +		if (ret)
-> +			return ret;
-> +
-> +	}
-> +	return ret;
-> +}
-> +/* mm/memcontrol.c because mem_cgroup_read/write is not availabel outside */
+Somewhat like configfs, object lifetimes in cgroups are determined
+primarily by the user whereas sysfs object lifetimes are primarily
+determined by the kernel. I think the closest we come to user-determined
+objects in sysfs occur through debugfs, and module loading/unloading.
+However those involve mount/umount and modprobe/rmmod rather than
+mkdir/rmdir to create and remove the objects.
 
-Comment has a spelling mistake.
-
-> +int mem_cgroup_hugetlb_file_init(struct hstate *h, int idx);
-
-
-No, please put it in a header file.  Always.  Where both callers and
-the implementation see the same propotype.
-
-> +#else
-> +static int mem_cgroup_hugetlb_file_init(struct hstate *h, int idx)
-> +{
-> +	return 0;
-> +}
-> +#endif
-
-So this will go into the same header file.
+Cheers,
+	-Matt Helsley
