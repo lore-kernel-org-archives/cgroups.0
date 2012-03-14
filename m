@@ -1,283 +1,42 @@
 From: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 07/13] memcg: Slab accounting.
-Date: Wed, 14 Mar 2012 15:04:33 -0700
-Message-ID: <CABCjUKCWaXTzsVaFHG57ELWV4Yk15vt=Ei8tvbsxpQKnxTmksg@mail.gmail.com>
+Subject: Re: [PATCH v2 06/13] slab: Add kmem_cache_gfp_flags() helper function.
+Date: Wed, 14 Mar 2012 15:08:13 -0700
+Message-ID: <CABCjUKCktPzzZDXMRejDXGXtta=pH5LGHRGU-SjJPuYNkxjH0g@mail.gmail.com>
 References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org>
-	<1331325556-16447-8-git-send-email-ssouhlal@FreeBSD.org>
-	<4F5C7D82.7030904@parallels.com>
-	<CABCjUKDsYyg4ONGTEeh1oen-L=OuBrP53qRdpHAT8AYYQ-JqWA@mail.gmail.com>
-	<4F60775F.20709@parallels.com>
+	<1331325556-16447-7-git-send-email-ssouhlal@FreeBSD.org>
+	<4F5C8414.5090800@parallels.com>
+	<CABCjUKCioWO-F7k=hVs_18B3uyL4zG3-krPFDh++YAnmejKKdg@mail.gmail.com>
+	<4F608579.5090109@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=dq9m0IF6WkwqOTqr3cMYCKhhla+D54FPVGODS5xIKPI=;
-        b=ZUTTWohI6Octp7lQyllkU15aoc+7ju8Nxx8PA3nVHHorGy66Wj1tuSGUQRFUkCE5Jh
-         M4sUmvbyvl/Vqm5hqH0YlDmvPwZ8Hv2EXDAmBb86Dp8FG6QtYyeTfWtvrrlPOvIQu+u7
-         ALi/3knqCXdS+Psc+k1CkwrBf2G+CK731ER8yxMOIEF+o+FVYwM+CPqK4C8iMT6gzkb3
-         61VM9LY/qEUCbeGyzcd/Gz38c3ZuaD6lBDD6a2ewSa2QYLmM6558ZSUc1PwAP27eA6Ig
-         ZUBX4+NoC8+vPK0kMqgvii1MPAaENxaF4HxwHDm+QNtG8PFxQUtYnVgZFz4pzAAzEkuj
-         IxOg==
-In-Reply-To: <4F60775F.20709-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+         :cc:content-type:x-system-of-record;
+        bh=i1sOSFuLOqfKoClngFqZ7/EV3JWZSMZQrTB/cKYy3/U=;
+        b=DF8eWdVT/Yx6br/nR0Js4DrSJfeAJEnR2ZtR4pxcdyohUkQeKaL39EbGEqCezIRL/R
+         hIuLj8niJ2NeYBjF72DG1xWUfdbxH186yERqH0b4EK9MDdunT4fGQ+Lrkb39buMDdMZ6
+         jjhGnd5GSb2rrV7L4OVB9iM05d5x2xSCtG2hQMj6ZBywQuH3IA72pInhRFJOHo7fUy7p
+         +Og5WtwFbV4dRXgd7Kp8H6DzxXwVMLEUb3Gvm708B8t6P8i9DjhC5VBSR3DJ/AiD85KP
+         2RABdqLoenDJ/4ZXT17DVT9WfHCcDwT17X2epyfSzOp04C/Gx9yQ0nfVJHci5esyjQgD
+         9BGg==
+In-Reply-To: <4F608579.5090109-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Mar 14, 2012 at 3:47 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> =
-wrote:
-> On 03/14/2012 02:50 AM, Suleiman Souhlal wrote:
->>
->> On Sun, Mar 11, 2012 at 3:25 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org=
->
->> =A0wrote:
->>>
->>> On 03/10/2012 12:39 AM, Suleiman Souhlal wrote:
->>>>
->>>> +static inline void
->>>> +mem_cgroup_kmem_cache_prepare_sleep(struct kmem_cache *cachep)
->>>> +{
->>>> + =A0 =A0 =A0 /*
->>>> + =A0 =A0 =A0 =A0* Make sure the cache doesn't get freed while we =
-have
->>>> interrupts
->>>> + =A0 =A0 =A0 =A0* enabled.
->>>> + =A0 =A0 =A0 =A0*/
->>>> + =A0 =A0 =A0 kmem_cache_get_ref(cachep);
->>>> + =A0 =A0 =A0 rcu_read_unlock();
->>>> +}
->>>
->>>
->>>
->>> Is this really needed ? After this function call in slab.c, the sla=
-b code
->>> itself accesses cachep a thousand times. If it could be freed, it w=
-ould
->>> already explode today for other reasons?
->>> Am I missing something here?
->>
->>
->> We need this because once we drop the rcu_read_lock and go to sleep,
->> the memcg could get deleted, which could lead to the cachep from
->> getting deleted as well.
->>
->> So, we need to grab a reference to the cache, to make sure that the
->> cache doesn't disappear from under us.
->
->
-> Don't we grab a memcg reference when we fire the cache creation?
-> (I did that for slub, can't really recall from the top of my head if
-> you are doing it as well)
->
-> That would prevent the memcg to go away, while relieving us from the
-> need to take a temporary reference for every page while sleeping.
+On Wed, Mar 14, 2012 at 4:48 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> So what?
+> That function is only called from slab.c anyway. Let slab call it
+> mem_cgroup_get_kmem_cache(cachep, flags | cachep->allocflags);
+> and slub
+> mem_cgroup_get_kmem_cache(cachep, flags | cachep->gfpflags);
 
-The problem isn't the memcg going away, but the cache going away.
-
->>>> +static struct kmem_cache *
->>>> +memcg_create_kmem_cache(struct mem_cgroup *memcg, struct kmem_cac=
-he
->>>> *cachep)
->>>> +{
->>>> + =A0 =A0 =A0 struct kmem_cache *new_cachep;
->>>> + =A0 =A0 =A0 struct dentry *dentry;
->>>> + =A0 =A0 =A0 char *name;
->>>> + =A0 =A0 =A0 int idx;
->>>> +
->>>> + =A0 =A0 =A0 idx =3D cachep->memcg_params.id;
->>>> +
->>>> + =A0 =A0 =A0 dentry =3D memcg->css.cgroup->dentry;
->>>> + =A0 =A0 =A0 BUG_ON(dentry =3D=3D NULL);
->>>> +
->>>> + =A0 =A0 =A0 /* Preallocate the space for "dead" at the end */
->>>> + =A0 =A0 =A0 name =3D kasprintf(GFP_KERNEL, "%s(%d:%s)dead",
->>>> + =A0 =A0 =A0 =A0 =A0 cachep->name, css_id(&memcg->css), dentry->d=
-_name.name);
->>>> + =A0 =A0 =A0 if (name =3D=3D NULL)
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return cachep;
->>>> + =A0 =A0 =A0 /* Remove "dead" */
->>>> + =A0 =A0 =A0 name[strlen(name) - 4] =3D '\0';
->>>> +
->>>> + =A0 =A0 =A0 new_cachep =3D kmem_cache_create_memcg(cachep, name)=
-;
->>>> +
->>>> + =A0 =A0 =A0 /*
->>>> + =A0 =A0 =A0 =A0* Another CPU is creating the same cache?
->>>> + =A0 =A0 =A0 =A0* We'll use it next time.
->>>> + =A0 =A0 =A0 =A0*/
->>>
->>>
->>> This comment is a bit misleading. Is it really the only reason
->>> it can fail?
->>>
->>> The impression I got is that it can also fail under the normal cond=
-itions
->>> in
->>> which kmem_cache_create() fails.
->>
->>
->> kmem_cache_create() isn't expected to fail often.
->> I wasn't making an exhaustive lists of why this condition can happen=
-,
->> just what I think is the most common one is.
->
->
-> Keep in mind that our notion of "fail often" may start to change when
-> we start limiting the amount of kernel memory =3Dp.
->
-> Specially in nested cgroups limited by its parent.
->
-> So apart from the comment issue, the problem here to me seems to be t=
-hat:
->
-> yes, kmem_cache_create failing is rare. But the circumstances in whic=
-h it
-> can happen all involve memory pressure. And in this case, we'll leave
-> memcg->slabs[idx] as NULL, which means we'll keep trying to create th=
-e cache
-> in further allocations.
->
-> This seems at best a tricky way to escape the memcg constraint...
->
-> I am not sure this is the behavior we want. Have to think a little bi=
-t.
-
-Keep in mind that this function is only called in workqueue context.
-(In the earlier revision of the patchset this function was called in
-the process context, but kmem_cache_create() would ignore memory
-limits, because of __GFP_NOACCOUNT.)
-
->>>> @@ -1756,17 +1765,23 @@ static void *kmem_getpages(struct kmem_cac=
-he
->>>> *cachep, gfp_t flags, int nodeid)
->>>> =A0 =A0 =A0 =A0if (cachep->flags& =A0 =A0SLAB_RECLAIM_ACCOUNT)
->>>>
->>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0flags |=3D __GFP_RECLAIMABLE;
->>>>
->>>> + =A0 =A0 =A0 nr_pages =3D (1<< =A0 =A0cachep->gfporder);
->>>> + =A0 =A0 =A0 if (!mem_cgroup_charge_slab(cachep, flags, nr_pages =
-*
->>>> PAGE_SIZE))
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return NULL;
->>>> +
->>>> =A0 =A0 =A0 =A0page =3D alloc_pages_exact_node(nodeid, flags | __G=
-=46P_NOTRACK,
->>>> cachep->gfporder);
->>>> - =A0 =A0 =A0 if (!page)
->>>> + =A0 =A0 =A0 if (!page) {
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mem_cgroup_uncharge_slab(cachep, nr_=
-pages * PAGE_SIZE);
->>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return NULL;
->>>> + =A0 =A0 =A0 }
->>>
->>>
->>>
->>>
->>> Can't the following happen:
->>>
->>> =A0*) mem_cgroup_charge_slab() is the first one to touch the slab.
->>> =A0 =A0Therefore, this first one is billed to root.
->>> =A0*) A slab is queued for creation.
->>> =A0*) alloc_pages sleep.
->>> =A0*) our workers run, and create the cache, therefore filling
->>> =A0 =A0cachep->memcg_param.memcg
->>> =A0*) alloc_pages still can't allocate.
->>> =A0*) uncharge tries to uncharge from cachep->memcg_param.memcg,
->>> =A0 =A0which doesn't have any charges...
->>>
->>> Unless you have a strong oposition to this, to avoid this kind of
->>> corner cases, we could do what I was doing in the slub:
->>> Allocate the page first, and then account it.
->>> (freeing the page if it fails).
->>>
->>> I know it is not the way it is done for the user pages, but I belie=
-ve it
->>> to
->>> be better suited for the slab.
->>
->>
->> I don't think the situation you're describing can happen, because th=
-e
->> memcg caches get created and selected at the beginning of the slab
->> allocation, in mem_cgroup_get_kmem_cache() and not in
->> mem_cgroup_charge_slab(), which is much later.
->>
->> Once we are in mem_cgroup_charge_slab() we know that the allocation
->> will be charged to the cgroup.
->
->
-> That's not how I read it. Since there is no completion guarantees com=
-ing
-> from the workqueue, I really don't see how we can be sure that the da=
-ta in
-> cachep->memcg_param.memcg won't change.
->
-> You are right that touching the slab actually happens in
-> mem_cgroup_get_kmem_cache(). That is called in kmem_cache_aloc(). And=
- the
-> first object is likely to be billed to the parent cgroup (or root)
->
-> Now imagine that cache being full, so we need a new page for it.
-> This will quickly lead us to cache_grow(), and all the other steps ar=
-e
-> therefore the same.
->
-> So how can we guarantee that the memcg pointer is stable between allo=
-c and
-> free?
-
-When mem_cgroup_get_kmem_cache() returns a memcg cache, that cache has
-already been created.
-
-The memcg pointer is not stable between alloc and free: It can become
-NULL when the cgroup gets deleted, at which point the accounting has
-been "moved to root" (uncharged from the cgroup it was charged in).
-When that has happened, we don't want to uncharge it again.
-I think the current code already handles this situation.
-
->>>> @@ -2703,12 +2787,74 @@ void kmem_cache_destroy(struct kmem_cache
->>>> *cachep)
->>>> =A0 =A0 =A0 =A0if (unlikely(cachep->flags& =A0 =A0SLAB_DESTROY_BY_=
-RCU))
->>>>
->>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rcu_barrier();
->>>>
->>>> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
->>>> + =A0 =A0 =A0 /* Not a memcg cache */
->>>> + =A0 =A0 =A0 if (cachep->memcg_params.id !=3D -1) {
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 __clear_bit(cachep->memcg_params.id,=
- cache_types);
->>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mem_cgroup_flush_cache_create_queue(=
-);
->>>> + =A0 =A0 =A0 }
->>>> +#endif
->>>
->>>
->>>
->>> This will clear the id when a leaf cache is destroyed. It seems it =
-is not
->>> what we want, right? We want this id to be cleared only when
->>> the parent cache is gone.
->>
->>
->> id !=3D -1, for parent caches (that's what the comment is trying to =
-point
->> out).
->> I will improve the comment.
->
->
-> /me goes check all the code again...
->
-> Does that mean that when two memcg's are creating the same cache they=
- will
-> end up with different ids??
-
-No, only parent caches have an id that is not -1. memcg caches always
-have an id of -1.
-Sorry if that wasn't clear. I will try to document it better.
+Ok, I will do that.
+I felt like it was better to do it in a single place, instead of doing
+it at all the callers.
 
 -- Suleiman
