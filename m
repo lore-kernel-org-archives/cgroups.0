@@ -1,30 +1,54 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [RFC REPOST] cgroup: removing css reference drain wait during
- cgroup removal
-Date: Wed, 14 Mar 2012 13:46:28 +0400
-Message-ID: <4F6068F4.4090909@parallels.com>
-References: <20120312213155.GE23255@google.com> <20120312213343.GF23255@google.com> <20120313151148.f8004a00.kamezawa.hiroyu@jp.fujitsu.com> <20120313163914.GD7349@google.com> <20120314092828.3321731c.kamezawa.hiroyu@jp.fujitsu.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V3 2/8] memcg: Add HugeTLB extension
+Date: Wed, 14 Mar 2012 15:51:50 +0530
+Message-ID: <87zkbj8ou9.fsf@linux.vnet.ibm.com>
+References: <1331622432-24683-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331622432-24683-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120313143316.0ef74d0e.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120314092828.3321731c.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120313143316.0ef74d0e.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On 03/14/2012 04:28 AM, KAMEZAWA Hiroyuki wrote:
-> IIUC, in general, even in the processes are in a tree, in major case
-> of servers, their workloads are independent.
-> I think FLAT mode is the dafault. 'heararchical' is a crazy thing which
-> cannot be managed.
+On Tue, 13 Mar 2012 14:33:16 -0700, Andrew Morton <akpm@linux-foundation.org> wrote:
+> On Tue, 13 Mar 2012 12:37:06 +0530
+> "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
+> 
+> > +static int mem_cgroup_hugetlb_usage(struct mem_cgroup *memcg)
+> > +{
+> > +	int idx;
+> > +	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
+> > +		if (memcg->hugepage[idx].usage > 0)
+> > +			return memcg->hugepage[idx].usage;
+> > +	}
+> > +	return 0;
+> > +}
+> 
+> Please document the function?  Had you done this, I might have been
+> able to work out why the function bales out on the first used hugepage
+> size, but I can't :(
 
-Better pay attention to the current overall cgroups discussions being 
-held by Tejun then. ([RFD] cgroup: about multiple hierarchies)
+I guess the function is named wrongly. I will rename it to
+mem_cgroup_have_hugetlb_usage() in the next iteration ? The function
+will return (bool) 1 if it has any hugetlb resource usage.
 
-The topic of whether of adapting all cgroups to be hierarchical by 
-deafult is a recurring one.
+> 
+> This could have used for_each_hstate(), had that macro been better
+> designed (or updated).
+> 
 
-I personally think that it is not unachievable to make res_counters 
-cheaper, therefore making this less of a problem.
+Can you explain this ?. for_each_hstate allows to iterate over
+different hstates. But here we need to look at different hugepage
+rescounter in memcg. I can still use for_each_hstate() and find the
+hstate index (h - hstates) and use that to index memcg rescounter
+array. But that would make it more complex ?
+
+> Upon return this function coerces an unsigned long long into an "int". 
+> We decided last week that more than 2^32 hugepages was not
+> inconceivable, so I guess that's a bug.
+> 
+
+-aneesh
