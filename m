@@ -1,91 +1,30 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch] mm, memcg: do not allow tasks to be attached with zero
- limit
-Date: Wed, 14 Mar 2012 10:42:55 +0100
-Message-ID: <20120314094255.GA4434@tiehlicka.suse.cz>
-References: <alpine.DEB.2.00.1203071914150.15244@chino.kir.corp.google.com>
- <20120308122951.2988ec4e.akpm@linux-foundation.org>
- <20120309102255.bbf94164.kamezawa.hiroyu@jp.fujitsu.com>
- <20120308173818.ae5f621b.akpm@linux-foundation.org>
- <20120309105706.4001646a.kamezawa.hiroyu@jp.fujitsu.com>
- <20120313165117.GA1708@cmpxchg.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [RFC REPOST] cgroup: removing css reference drain wait during
+ cgroup removal
+Date: Wed, 14 Mar 2012 13:46:28 +0400
+Message-ID: <4F6068F4.4090909@parallels.com>
+References: <20120312213155.GE23255@google.com> <20120312213343.GF23255@google.com> <20120313151148.f8004a00.kamezawa.hiroyu@jp.fujitsu.com> <20120313163914.GD7349@google.com> <20120314092828.3321731c.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120313165117.GA1708@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120314092828.3321731c.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 
-On Tue 13-03-12 17:51:18, Johannes Weiner wrote:
-> On Fri, Mar 09, 2012 at 10:57:06AM +0900, KAMEZAWA Hiroyuki wrote:
-> > On Thu, 8 Mar 2012 17:38:18 -0800
-> > Andrew Morton <akpm@linux-foundation.org> wrote:
-> > 
-> > > On Fri, 9 Mar 2012 10:22:55 +0900 KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> > > 
-> > > > On Thu, 8 Mar 2012 12:29:51 -0800
-> > > > Andrew Morton <akpm@linux-foundation.org> wrote:
-> > > > 
-> > > > > On Wed, 7 Mar 2012 19:14:49 -0800 (PST)
-> > > > > David Rientjes <rientjes@google.com> wrote:
-> > > > > 
-> > > > > > This patch prevents tasks from being attached to a memcg if there is a
-> > > > > > hard limit of zero.
-> > > > > 
-> > > > > We're talking about the memcg's limit_in_bytes here, yes?
-> > > > > 
-> > > > > > Additionally, the hard limit may not be changed to
-> > > > > > zero if there are tasks attached.
-> > > > > 
-> > > > > hm, well...  why?  That would be user error, wouldn't it?  What is
-> > > > > special about limit_in_bytes=0?  The memcg will also be unviable if
-> > > > > limit_in_bytes=1, but we permit that.
-> > > > > 
-> > > > > IOW, confused.
-> > > > > 
-> > > > Ah, yes. limit_in_bytes < some small size can cause the same trouble.
-> > > > Hmm... should we have configurable min_limit_in_bytes as sysctl or root memcg's
-> > > > attaribute.. ?
-> > > 
-> > > Why do *anything*?  If the operator chose an irrational configuration
-> > > then things won't work correctly and the operator will then fix the
-> > > configuration?
-> > > 
-> > 
-> > Because the result of 'error operaton' is SIGKILL to a task, which may be
-> > owned by very importang customer of hosting service.
-> > 
-> > Isn't this severe punishment for error operation ?
-> > 
-> > Considering again, I have 2 thoughts.
-> > 
-> > - it should be guarded by MiddleWare, it's not kernel job !
-> > - memcg should be more easy-to-use, friendly to users.
-> > 
-> > If the result is just an error as EINVAL or EBUSY, I may not be nervous....
-> 
-> You can still disable the OOM killer.  If you don't, you can always
-> get killed, so I'm not convinced by this patch or a sysctl, either.
+On 03/14/2012 04:28 AM, KAMEZAWA Hiroyuki wrote:
+> IIUC, in general, even in the processes are in a tree, in major case
+> of servers, their workloads are independent.
+> I think FLAT mode is the dafault. 'heararchical' is a crazy thing which
+> cannot be managed.
 
-Agreed, kernel usually doesn't care about insane settings and it does
-what it is told to do (why to safe somebody from shooting its own
-foot?).
+Better pay attention to the current overall cgroups discussions being 
+held by Tejun then. ([RFD] cgroup: about multiple hierarchies)
 
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+The topic of whether of adapting all cgroups to be hierarchical by 
+deafult is a recurring one.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I personally think that it is not unachievable to make res_counters 
+cheaper, therefore making this less of a problem.
