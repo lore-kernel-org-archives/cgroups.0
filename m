@@ -1,58 +1,84 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH -V3 2/8] memcg: Add HugeTLB extension
-Date: Wed, 14 Mar 2012 16:43:34 -0700
-Message-ID: <20120314164334.5e35f3b6.akpm@linux-foundation.org>
-References: <1331622432-24683-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<1331622432-24683-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<20120313143316.0ef74d0e.akpm@linux-foundation.org>
-	<87zkbj8ou9.fsf@linux.vnet.ibm.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFC REPOST] cgroup: removing css reference drain wait during
+ cgroup removal
+Date: Thu, 15 Mar 2012 09:16:33 +0900
+Message-ID: <4F6134E1.5090601@jp.fujitsu.com>
+References: <20120312213155.GE23255@google.com> <20120312213343.GF23255@google.com> <20120313151148.f8004a00.kamezawa.hiroyu@jp.fujitsu.com> <20120313163914.GD7349@google.com> <20120314092828.3321731c.kamezawa.hiroyu@jp.fujitsu.com> <4F6068F4.4090909@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <87zkbj8ou9.fsf-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <4F6068F4.4090909-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 
-On Wed, 14 Mar 2012 15:51:50 +0530
-"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+(2012/03/14 18:46), Glauber Costa wrote:
 
-> On Tue, 13 Mar 2012 14:33:16 -0700, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> > On Tue, 13 Mar 2012 12:37:06 +0530
-> > "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
-> > 
-> > > +static int mem_cgroup_hugetlb_usage(struct mem_cgroup *memcg)
-> > > +{
-> > > +	int idx;
-> > > +	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
-> > > +		if (memcg->hugepage[idx].usage > 0)
-> > > +			return memcg->hugepage[idx].usage;
-> > > +	}
-> > > +	return 0;
-> > > +}
-> > 
-> > Please document the function?  Had you done this, I might have been
-> > able to work out why the function bales out on the first used hugepage
-> > size, but I can't :(
+> On 03/14/2012 04:28 AM, KAMEZAWA Hiroyuki wrote:
+>> IIUC, in general, even in the processes are in a tree, in major case
+>> of servers, their workloads are independent.
+>> I think FLAT mode is the dafault. 'heararchical' is a crazy thing which
+>> cannot be managed.
 > 
-> I guess the function is named wrongly. I will rename it to
-> mem_cgroup_have_hugetlb_usage() in the next iteration ? The function
-> will return (bool) 1 if it has any hugetlb resource usage.
+> Better pay attention to the current overall cgroups discussions being 
+> held by Tejun then. ([RFD] cgroup: about multiple hierarchies)
 > 
-> > 
-> > This could have used for_each_hstate(), had that macro been better
-> > designed (or updated).
-> > 
+> The topic of whether of adapting all cgroups to be hierarchical by 
+> deafult is a recurring one.
 > 
-> Can you explain this ?. for_each_hstate allows to iterate over
-> different hstates. But here we need to look at different hugepage
-> rescounter in memcg. I can still use for_each_hstate() and find the
-> hstate index (h - hstates) and use that to index memcg rescounter
-> array. But that would make it more complex ?
+> I personally think that it is not unachievable to make res_counters 
+> cheaper, therefore making this less of a problem.
+> 
 
-If the for_each_hstate() macro took an additional arg which holds the
-base address of the array, that macro could have been used here.
 
-Or perhaps not - I didn't look too closely ;)  It isn't important.
+I thought of this a little yesterday. Current my idea is applying following
+rule for res_counter.
+
+1. All res_counter is hierarchical. But behavior should be optimized.
+
+2. If parent res_counter has UNLIMITED limit, 'usage' will not be propagated
+   to its parent at _charge_.
+
+3. If a res_counter has UNLIMITED limit, at reading usage, it must visit
+   all children and returns a sum of them.
+
+Then,
+	/cgroup/
+		memory/                       (unlimited)
+			libivirt/             (unlimited)
+				 qeumu/       (unlimited)
+				        guest/(limited)
+
+All dir can show hierarchical usage and the guest will not have
+any lock contention at runtime.
+
+
+By this
+ 1. no runtime overhead if the parent has unlimited limit.
+ 2. All res_counter can show aggregate resource usage of children.
+
+To do this
+ 1. res_coutner should have children list by itself.
+
+Implementation problem
+ - What should happens when a user set new limit to a res_counter which have
+   childrens ? Shouldn't we allow it ? Or take all locks of children and
+   update in atomic ?
+ - memory.use_hierarchy should be obsolete ?
+
+Other problem I'm not sure at all
+ - blkcg doesn't support hierarchy at all.
+
+Hmm. 
+
+Thanks,
+-Kame
+
+
+
+
+
+
+
