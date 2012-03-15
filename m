@@ -1,120 +1,58 @@
-From: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: What's the progress of per cgroup background reclaim?
-Date: Thu, 15 Mar 2012 09:31:38 -0700
-Message-ID: <CALWz4iwO+eGFW23qVwjy=MKufRtiVck08pJphSij226pjTQiBw@mail.gmail.com>
-References: <CAC8teKW9Yry114+B06XiFbOtamwS6fNLzrKYo8PZazjEzMCiNQ@mail.gmail.com>
-	<CALWz4iyqyQD3g27J=wLvQ=WN0enXLB3rmHDAb51UJaLPJDz5BA@mail.gmail.com>
-	<CAC8teKUrJ_ufkhtVAnsv-gzHfYmp8agY_bncOYS7mEdiqD+YZA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: deprecate remount option changes and "name="
+ mount option
+Date: Thu, 15 Mar 2012 09:54:02 -0700
+Message-ID: <20120315165402.GC32137@google.com>
+References: <20120314215228.GI7349@google.com>
+ <20120314232925.GA16973@tango.0pointer.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=atV364cRzLfJev55mIA8Kciu6XMc+4GmEgstaqdlM2I=;
-        b=ZqN6Uxnk2mWctXCLut3KPYo1zpRLn2MX2r1mB3OYVcAG5fWzQmL2tIlLCvhYsrjMPF
-         UlTrvqtVd5CSsWWdBSgZ2Iftz7HipTFB1C7kSck67+kLOwL5qlK68AWwrC0fgvW3gmYx
-         6oIb7GZs2HA6putIPX7iH+RDN26qZw1R2Q2mSieIDbv/I2QTG7f+uxqyv3uQ+7nHW/WK
-         EeiiHvDFBhn2/+JMxx7wYuOGHwLlCt61PGqx9y/oXmCUp1BxperEEzffWbcGDvpHjzx4
-         YPYeFaUAAIibR8Lo+pD6rCozgcf0CG0Gu5Rx/K97JalImQmbFlRqxt1zSv1GTDdV5+DR
-         7vtw==
-In-Reply-To: <CAC8teKUrJ_ufkhtVAnsv-gzHfYmp8agY_bncOYS7mEdiqD+YZA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=7bhY4d7WG48FvqVN5zlDvBXZyqu11GztXj/7FT1WRNg=;
+        b=v7ZzKTYugfcI02ebX+eOngZo2RCXZVPeS5Kz+Jk6mOzWa4rr/dH80sEatt0jRbiQRK
+         vrJSSEMV9CTJ465Rk2/uz+QhdaoY5ss6IDgJOinBIM1R05+cb9Lh95FSLZBhWMy65HR8
+         GWiOu9SLd2MUqfjTftLiWF7oaSmzA3wXZcjz+1W44TibRglwVGuagRtxjXd0q4oWX2lC
+         iMFVKBt+VPYX8er1zho1Sy73LFzQ6k789Uf4yP3RHKTywUf7KIc4NP3ibbKTcnnoexpo
+         DZIEFC3z2DEtQDcAthd4djm8vtk9zAfdZUsCVeIXoo3bHayGc0Je4KO5+Yz8S5RU0lUk
+         QBEg==
+Content-Disposition: inline
+In-Reply-To: <20120314232925.GA16973-kS5D54t9nk0aINubkmmoJbNAH6kLmebB@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-9"
-To: Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed, Mar 14, 2012 at 8:12 PM, Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrot=
-e:
-> 2012/3/15 Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>:
->> On Wed, Mar 14, 2012 at 12:53 AM, Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> =
-wrote:
->>> Hi all,
->>> Just a quick question, could you please tell me what's the current
->>> status of the development of per cgroup background reclaim? This to=
-pic
->>> seems to be silent after Han Ying's patchset V7
->>> (http://lwn.net/Articles/440073/) and Kame's async reclaim patchset=
- V3
->>> (https://lkml.org/lkml/2011/5/26/20), and I can't find it in
->>> memcg-devel tree either.
->>> Is anyone still working on this?
->>
->> There were some discussions on going w/ per-memcg kswapd thread or
->> workqueue by that time. And now I think we agree to go w/ the
->> per-memcg thread model. =A0I haven't done much work since then, and =
-one
->> of questions is to demonstrate the need of this feature.
->>
->> I am glad you are asking, do you have workload showing problems w/o =
-it?
->
-> Yes, the background is we have a cluster of about 3k-4k servers, all
-> running JVMs. Because the load of each Java application is small, we
-> gave each of them a small GC heap, which was 1.5GB or so. Then to tak=
-e
-> full use of the huge memory of the servers, we setup several XEN base=
-d
-> virtual machines on each physical box, each XEN VM had one single JVM
-> running in it.
-> Now we are trying to switch to a LXC/cgroup based solution, =A0at the
-> first step we have built a small experimental cluster online, the
-> containers equipped with memcg are sizing to the same size with the
-> XEN VMs (we haven't enabled other controllers since the major need fo=
-r
-> resources came from the memory, while the pressure against CPU and IO
-> usually is smaller). As soon as they are online, we noticed that the
-> latency recorded in the client side had periodic peaks. We also
-> noticed that the memory.failcnt counter periodic increased. By
-> enabling kmem:mm_directreclaim_reclaimall,
-> kmem:mm_vmscan_direct_reclaim_begin, kmem:mm_vmscan_direct_reclaim_en=
-d
-> in trace events, we can see that kmem:mm_directreclaim_reclaimall cam=
-e
-> out regularly, without =A0kmem:mm_vmscan_direct_reclaim_begin/end see=
-n.
-> That means the caller of do_try_to_free_pages is
-> try_to_free_mem_cgroup_pages, not the global caller try_to_free_pages=
-=2E
-> To make load balance in the cluster wide, we tend to dispatch the Jav=
-a
-> apps average over the containers on different physical boxes, that's
-> to say unless the cluster is to be filled up, the number of active
-> containers on each box won't be large. I think under such scenario th=
-e
-> global pressure can never be high, so kswapd keep sleeping most of th=
-e
-> time, however the local pressure within one single cgroup maybe very
-> high, which results to frequent direct reclaim.
-> The kernel we are using is a custom RHEL6U2 kernel. We have a kernel
-> team here so it's fine to backport the upstream solution if there is
-> any.
+Hello,
 
+On Thu, Mar 15, 2012 at 12:29:25AM +0100, Lennart Poettering wrote:
+> Hmm, this is not clear to me. Are you intending to remove the name=
+> mount option entirely, or just intend to remove that you can change it
+> in remounts?
+> 
+> systemd uses name=systemd to get its own private cgroup tree, that has
+> no controller bound, hence we kinda need this option. Or are you
+> suggesting there was an other way to get a private cgroup tree that
+> systemd can use for grouping and labelling things?
 
-Thank you for the information.
+Eh, you're right.  I want to remove support for duplicate mounting by
+name or subsys as it just isn't necessary, so what I want is,
 
-Sounds like that is exactly what the per-memcg kswapd was designed
-for. Two things I am interested to looking into now:
+* "mount -t cgroupfs -o SUBSYS" will fail if SUBSYS is already mounted
+  somewhere else.
 
-1. why the per-memcg direct reclaim introduce such noticeable latency
-spike, what workload that can reproduce that?
+* "mount -t cgroupfs -o none" will always create a new cgroup
+  hierarchy w/o any controller attached.
 
-2. we can quickly patch the last version of per-memcg kswapd (V6) on
-your environment and see what difference it makes. Maybe I can help on
-that.
+I didn't realize that the mount code didn't allow none w/o name and
+now I don't see a non-intrusive way to remove the name option. :( Eh
+well, I'll drop that part.
 
-Thanks
+Thanks.
 
---Ying
-
-> --
-> Thanks,
-> Zhu Yanhai
->
->> --Ying
->>
->>>
->>> Thanks,
->>> Zhu Yanhai
+-- 
+tejun
