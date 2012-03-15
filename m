@@ -1,85 +1,120 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 07/13] memcg: Slab accounting.
-Date: Thu, 15 Mar 2012 15:40:07 +0400
-Message-ID: <4F61D517.7000307@parallels.com>
-References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org> <1331325556-16447-8-git-send-email-ssouhlal@FreeBSD.org> <4F5C7D82.7030904@parallels.com> <CABCjUKDsYyg4ONGTEeh1oen-L=OuBrP53qRdpHAT8AYYQ-JqWA@mail.gmail.com> <4F60775F.20709@parallels.com> <CABCjUKCWaXTzsVaFHG57ELWV4Yk15vt=Ei8tvbsxpQKnxTmksg@mail.gmail.com>
+From: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: What's the progress of per cgroup background reclaim?
+Date: Thu, 15 Mar 2012 09:31:38 -0700
+Message-ID: <CALWz4iwO+eGFW23qVwjy=MKufRtiVck08pJphSij226pjTQiBw@mail.gmail.com>
+References: <CAC8teKW9Yry114+B06XiFbOtamwS6fNLzrKYo8PZazjEzMCiNQ@mail.gmail.com>
+	<CALWz4iyqyQD3g27J=wLvQ=WN0enXLB3rmHDAb51UJaLPJDz5BA@mail.gmail.com>
+	<CAC8teKUrJ_ufkhtVAnsv-gzHfYmp8agY_bncOYS7mEdiqD+YZA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CABCjUKCWaXTzsVaFHG57ELWV4Yk15vt=Ei8tvbsxpQKnxTmksg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=atV364cRzLfJev55mIA8Kciu6XMc+4GmEgstaqdlM2I=;
+        b=ZqN6Uxnk2mWctXCLut3KPYo1zpRLn2MX2r1mB3OYVcAG5fWzQmL2tIlLCvhYsrjMPF
+         UlTrvqtVd5CSsWWdBSgZ2Iftz7HipTFB1C7kSck67+kLOwL5qlK68AWwrC0fgvW3gmYx
+         6oIb7GZs2HA6putIPX7iH+RDN26qZw1R2Q2mSieIDbv/I2QTG7f+uxqyv3uQ+7nHW/WK
+         EeiiHvDFBhn2/+JMxx7wYuOGHwLlCt61PGqx9y/oXmCUp1BxperEEzffWbcGDvpHjzx4
+         YPYeFaUAAIibR8Lo+pD6rCozgcf0CG0Gu5Rx/K97JalImQmbFlRqxt1zSv1GTDdV5+DR
+         7vtw==
+In-Reply-To: <CAC8teKUrJ_ufkhtVAnsv-gzHfYmp8agY_bncOYS7mEdiqD+YZA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-9"
+To: Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On 03/15/2012 02:04 AM, Suleiman Souhlal wrote:
-> On Wed, Mar 14, 2012 at 3:47 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->> On 03/14/2012 02:50 AM, Suleiman Souhlal wrote:
->>>
->>> On Sun, Mar 11, 2012 at 3:25 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->>>   wrote:
->>>>
->>>> On 03/10/2012 12:39 AM, Suleiman Souhlal wrote:
->>>>>
->>>>> +static inline void
->>>>> +mem_cgroup_kmem_cache_prepare_sleep(struct kmem_cache *cachep)
->>>>> +{
->>>>> +       /*
->>>>> +        * Make sure the cache doesn't get freed while we have
->>>>> interrupts
->>>>> +        * enabled.
->>>>> +        */
->>>>> +       kmem_cache_get_ref(cachep);
->>>>> +       rcu_read_unlock();
->>>>> +}
->>>>
->>>>
->>>>
->>>> Is this really needed ? After this function call in slab.c, the slab code
->>>> itself accesses cachep a thousand times. If it could be freed, it would
->>>> already explode today for other reasons?
->>>> Am I missing something here?
->>>
->>>
->>> We need this because once we drop the rcu_read_lock and go to sleep,
->>> the memcg could get deleted, which could lead to the cachep from
->>> getting deleted as well.
->>>
->>> So, we need to grab a reference to the cache, to make sure that the
->>> cache doesn't disappear from under us.
+On Wed, Mar 14, 2012 at 8:12 PM, Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrot=
+e:
+> 2012/3/15 Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>:
+>> On Wed, Mar 14, 2012 at 12:53 AM, Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> =
+wrote:
+>>> Hi all,
+>>> Just a quick question, could you please tell me what's the current
+>>> status of the development of per cgroup background reclaim? This to=
+pic
+>>> seems to be silent after Han Ying's patchset V7
+>>> (http://lwn.net/Articles/440073/) and Kame's async reclaim patchset=
+ V3
+>>> (https://lkml.org/lkml/2011/5/26/20), and I can't find it in
+>>> memcg-devel tree either.
+>>> Is anyone still working on this?
 >>
+>> There were some discussions on going w/ per-memcg kswapd thread or
+>> workqueue by that time. And now I think we agree to go w/ the
+>> per-memcg thread model. =A0I haven't done much work since then, and =
+one
+>> of questions is to demonstrate the need of this feature.
 >>
->> Don't we grab a memcg reference when we fire the cache creation?
->> (I did that for slub, can't really recall from the top of my head if
->> you are doing it as well)
+>> I am glad you are asking, do you have workload showing problems w/o =
+it?
+>
+> Yes, the background is we have a cluster of about 3k-4k servers, all
+> running JVMs. Because the load of each Java application is small, we
+> gave each of them a small GC heap, which was 1.5GB or so. Then to tak=
+e
+> full use of the huge memory of the servers, we setup several XEN base=
+d
+> virtual machines on each physical box, each XEN VM had one single JVM
+> running in it.
+> Now we are trying to switch to a LXC/cgroup based solution, =A0at the
+> first step we have built a small experimental cluster online, the
+> containers equipped with memcg are sizing to the same size with the
+> XEN VMs (we haven't enabled other controllers since the major need fo=
+r
+> resources came from the memory, while the pressure against CPU and IO
+> usually is smaller). As soon as they are online, we noticed that the
+> latency recorded in the client side had periodic peaks. We also
+> noticed that the memory.failcnt counter periodic increased. By
+> enabling kmem:mm_directreclaim_reclaimall,
+> kmem:mm_vmscan_direct_reclaim_begin, kmem:mm_vmscan_direct_reclaim_en=
+d
+> in trace events, we can see that kmem:mm_directreclaim_reclaimall cam=
+e
+> out regularly, without =A0kmem:mm_vmscan_direct_reclaim_begin/end see=
+n.
+> That means the caller of do_try_to_free_pages is
+> try_to_free_mem_cgroup_pages, not the global caller try_to_free_pages=
+=2E
+> To make load balance in the cluster wide, we tend to dispatch the Jav=
+a
+> apps average over the containers on different physical boxes, that's
+> to say unless the cluster is to be filled up, the number of active
+> containers on each box won't be large. I think under such scenario th=
+e
+> global pressure can never be high, so kswapd keep sleeping most of th=
+e
+> time, however the local pressure within one single cgroup maybe very
+> high, which results to frequent direct reclaim.
+> The kernel we are using is a custom RHEL6U2 kernel. We have a kernel
+> team here so it's fine to backport the upstream solution if there is
+> any.
+
+
+Thank you for the information.
+
+Sounds like that is exactly what the per-memcg kswapd was designed
+for. Two things I am interested to looking into now:
+
+1. why the per-memcg direct reclaim introduce such noticeable latency
+spike, what workload that can reproduce that?
+
+2. we can quickly patch the last version of per-memcg kswapd (V6) on
+your environment and see what difference it makes. Maybe I can help on
+that.
+
+Thanks
+
+--Ying
+
+> --
+> Thanks,
+> Zhu Yanhai
+>
+>> --Ying
 >>
->> That would prevent the memcg to go away, while relieving us from the
->> need to take a temporary reference for every page while sleeping.
->
-> The problem isn't the memcg going away, but the cache going away.
->
-I see the problem.
-
-I still think there are ways to avoid getting a reference at every page,
-but it might not be worth the complication...
-
-> Keep in mind that this function is only called in workqueue context.
-> (In the earlier revision of the patchset this function was called in
-> the process context, but kmem_cache_create() would ignore memory
-> limits, because of __GFP_NOACCOUNT.)
-
-ok, fair.
-
->
-> When mem_cgroup_get_kmem_cache() returns a memcg cache, that cache has
-> already been created.
- >
-> The memcg pointer is not stable between alloc and free: It can become
-> NULL when the cgroup gets deleted, at which point the accounting has
-> been "moved to root" (uncharged from the cgroup it was charged in).
-> When that has happened, we don't want to uncharge it again.
-> I think the current code already handles this situation.
->
-
-Okay, convinced.
+>>>
+>>> Thanks,
+>>> Zhu Yanhai
