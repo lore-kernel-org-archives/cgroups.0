@@ -1,111 +1,85 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [RFC REPOST] cgroup: removing css reference drain wait during
-	cgroup removal
-Date: Thu, 15 Mar 2012 15:24:23 +0400
-Message-ID: <4F61D167.4000402@parallels.com>
-References: <20120312213155.GE23255@google.com>
-	<20120312213343.GF23255@google.com>
-	<20120313151148.f8004a00.kamezawa.hiroyu@jp.fujitsu.com>
-	<20120313163914.GD7349@google.com>
-	<20120314092828.3321731c.kamezawa.hiroyu@jp.fujitsu.com>
-	<4F6068F4.4090909@parallels.com> <4F6134E1.5090601@jp.fujitsu.com>
+Subject: Re: [PATCH v2 07/13] memcg: Slab accounting.
+Date: Thu, 15 Mar 2012 15:40:07 +0400
+Message-ID: <4F61D517.7000307@parallels.com>
+References: <1331325556-16447-1-git-send-email-ssouhlal@FreeBSD.org> <1331325556-16447-8-git-send-email-ssouhlal@FreeBSD.org> <4F5C7D82.7030904@parallels.com> <CABCjUKDsYyg4ONGTEeh1oen-L=OuBrP53qRdpHAT8AYYQ-JqWA@mail.gmail.com> <4F60775F.20709@parallels.com> <CABCjUKCWaXTzsVaFHG57ELWV4Yk15vt=Ei8tvbsxpQKnxTmksg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <4F6134E1.5090601-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CABCjUKCWaXTzsVaFHG57ELWV4Yk15vt=Ei8tvbsxpQKnxTmksg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Suleiman Souhlal <ssouhlal-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 03/15/2012 04:16 AM, KAMEZAWA Hiroyuki wrote:
-> (2012/03/14 18:46), Glauber Costa wrote:
->
->> On 03/14/2012 04:28 AM, KAMEZAWA Hiroyuki wrote:
->>> IIUC, in general, even in the processes are in a tree, in major case
->>> of servers, their workloads are independent.
->>> I think FLAT mode is the dafault. 'heararchical' is a crazy thing which
->>> cannot be managed.
+On 03/15/2012 02:04 AM, Suleiman Souhlal wrote:
+> On Wed, Mar 14, 2012 at 3:47 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
+>> On 03/14/2012 02:50 AM, Suleiman Souhlal wrote:
+>>>
+>>> On Sun, Mar 11, 2012 at 3:25 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>>>   wrote:
+>>>>
+>>>> On 03/10/2012 12:39 AM, Suleiman Souhlal wrote:
+>>>>>
+>>>>> +static inline void
+>>>>> +mem_cgroup_kmem_cache_prepare_sleep(struct kmem_cache *cachep)
+>>>>> +{
+>>>>> +       /*
+>>>>> +        * Make sure the cache doesn't get freed while we have
+>>>>> interrupts
+>>>>> +        * enabled.
+>>>>> +        */
+>>>>> +       kmem_cache_get_ref(cachep);
+>>>>> +       rcu_read_unlock();
+>>>>> +}
+>>>>
+>>>>
+>>>>
+>>>> Is this really needed ? After this function call in slab.c, the slab code
+>>>> itself accesses cachep a thousand times. If it could be freed, it would
+>>>> already explode today for other reasons?
+>>>> Am I missing something here?
+>>>
+>>>
+>>> We need this because once we drop the rcu_read_lock and go to sleep,
+>>> the memcg could get deleted, which could lead to the cachep from
+>>> getting deleted as well.
+>>>
+>>> So, we need to grab a reference to the cache, to make sure that the
+>>> cache doesn't disappear from under us.
 >>
->> Better pay attention to the current overall cgroups discussions being
->> held by Tejun then. ([RFD] cgroup: about multiple hierarchies)
 >>
->> The topic of whether of adapting all cgroups to be hierarchical by
->> deafult is a recurring one.
+>> Don't we grab a memcg reference when we fire the cache creation?
+>> (I did that for slub, can't really recall from the top of my head if
+>> you are doing it as well)
 >>
->> I personally think that it is not unachievable to make res_counters
->> cheaper, therefore making this less of a problem.
->>
+>> That would prevent the memcg to go away, while relieving us from the
+>> need to take a temporary reference for every page while sleeping.
 >
+> The problem isn't the memcg going away, but the cache going away.
 >
-> I thought of this a little yesterday. Current my idea is applying following
-> rule for res_counter.
+I see the problem.
+
+I still think there are ways to avoid getting a reference at every page,
+but it might not be worth the complication...
+
+> Keep in mind that this function is only called in workqueue context.
+> (In the earlier revision of the patchset this function was called in
+> the process context, but kmem_cache_create() would ignore memory
+> limits, because of __GFP_NOACCOUNT.)
+
+ok, fair.
+
 >
-> 1. All res_counter is hierarchical. But behavior should be optimized.
+> When mem_cgroup_get_kmem_cache() returns a memcg cache, that cache has
+> already been created.
+ >
+> The memcg pointer is not stable between alloc and free: It can become
+> NULL when the cgroup gets deleted, at which point the accounting has
+> been "moved to root" (uncharged from the cgroup it was charged in).
+> When that has happened, we don't want to uncharge it again.
+> I think the current code already handles this situation.
 >
-> 2. If parent res_counter has UNLIMITED limit, 'usage' will not be propagated
->    to its parent at _charge_.
 
-That doesn't seem to make much sense. If you are unlimited, but your 
-parent is limited,
-he has a lot more interest to know about the charge than you do. So the 
-logic should rather be the opposite: Don't go around getting locks and 
-all that if you are unlimited. Your parent might, though.
-
-I am trying to experiment a bit with billing to percpu counters for 
-unlimited res_counters. But their inexact nature is giving me quite a 
-headache.
-
-> 3. If a res_counter has UNLIMITED limit, at reading usage, it must visit
->     all children and returns a sum of them.
->
-> Then,
-> 	/cgroup/
-> 		memory/                       (unlimited)
-> 			libivirt/             (unlimited)
-> 				 qeumu/       (unlimited)
-> 				        guest/(limited)
->
-> All dir can show hierarchical usage and the guest will not have
-> any lock contention at runtime.
-
-If we are okay with summing it up at read time, we may as well
-keep everything in percpu counters at all times.
->
-> By this
->   1. no runtime overhead if the parent has unlimited limit.
->   2. All res_counter can show aggregate resource usage of children.
->
-> To do this
->   1. res_coutner should have children list by itself.
->
-> Implementation problem
->   - What should happens when a user set new limit to a res_counter which have
->     childrens ? Shouldn't we allow it ? Or take all locks of children and
->     update in atomic ?
-Well, increasing the limit should be always possible.
-
-As for the kids, how about:
-
-- ) Take their locks
-- ) scan through them seeing if their usage is bellow the new allowance
-     -) if it is, then ok
-     -) if it is not, then try to reclaim (*). Fail if it is not possible.
-
-(*) May be hard to implement, because we already have the res_counter 
-lock taken, and the code may get nasty. So maybe it is better just fail 
-if any of your kids usage is over the new allowance...
-
-
-
->   - memory.use_hierarchy should be obsolete ?
-If we're going fully hierarchical, yes.
+Okay, convinced.
