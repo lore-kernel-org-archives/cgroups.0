@@ -1,99 +1,58 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V4 10/10] memcg: Add memory controller documentation for hugetlb management
-Date: Fri, 16 Mar 2012 23:09:30 +0530
-Message-ID: <1331919570-2264-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [RFD] cgroup: about multiple hierarchies
+Date: Fri, 16 Mar 2012 23:14:39 +0000
+Message-ID: <1331939679.2858.56.camel@dabdike>
+References: <20120221211938.GE12236@google.com>
+	 <20120312221050.GG23255@google.com> <1331590938.18960.57.camel@twins>
+	 <20120312222817.GI23255@google.com> <20120313140345.GC29169@redhat.com>
+	 <20120313155955.GB7349@google.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120313155955.GB7349-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Schmidt <mschmidt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+On Tue, 2012-03-13 at 08:59 -0700, Tejun Heo wrote:
+> Hey, Vivek.
+> 
+> On Tue, Mar 13, 2012 at 10:03:45AM -0400, Vivek Goyal wrote:
+> > > With root being treated specially, probably as just being a equal
+> > > group as other groups, I'm not fully determined about that yet.
+> > 
+> > So what wrong with flattening the whole hierarchy and all groups being active
+> > in the path? It is not worse then second option?
+> > 
+> >              root
+> >        /   |  |  |  \
+> >       G1  G2  G3 G31 G32
+> 
+> It is worse because while there isn't much need for orthogonal
+> hierarchies, people often need to apply different limits at different
+> levels of the hierarchy for different controllers.  ie. it often
+> happens that the distinction between G31 and G32 matters for one
+> controller but not for others.  The problem with flattening like you
+> suggested above is that it isn't a hierarchy at all - membership isn't
+> recursive.
+> 
+> Imposing limits at single level is an additional restriction and may
+> cause some config complexity but it'll be at least explicit and can
+> co-exist with full hierarchy in meaningful way.
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
----
- Documentation/cgroups/memory.txt |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
+Isn't there a simple fix for this?  Each controller can decide whether
+to pay attention to its cgroup parent in calculating the resource limits
+or counting usage.  If the controller elects not to pay attention to its
+parents when counting resources and enforcing limits, it effectively
+gives you a flat hierarchy from the point of view of the controller.
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index 4c95c00..d99c41b 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -43,6 +43,7 @@ Features:
-  - usage threshold notifier
-  - oom-killer disable knob and oom-notifier
-  - Root cgroup has no limit controls.
-+ - resource accounting for HugeTLB pages
- 
-  Kernel memory support is work in progress, and the current version provides
-  basically functionality. (See Section 2.7)
-@@ -75,6 +76,12 @@ Brief summary of control files.
-  memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
-  memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
- 
-+
-+ memory.hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
-+ memory.hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
-+ memory.hugetlb.<hugepagesize>.usage_in_bytes     # show current res_counter usage for "hugepagesize" hugetlb
-+						  # see 5.7 for details
-+
- 1. History
- 
- The memory controller has a long history. A request for comments for the memory
-@@ -279,6 +286,15 @@ per cgroup, instead of globally.
- 
- * tcp memory pressure: sockets memory pressure for the tcp protocol.
- 
-+2.8 HugeTLB extension
-+
-+This extension allows to limit the HugeTLB usage per control group and
-+enforces the controller limit during page fault. Since HugeTLB doesn't
-+support page reclaim, enforcing the limit at page fault time implies that,
-+the application will get SIGBUS signal if it tries to access HugeTLB pages
-+beyond its limit. This requires the application to know beforehand how much
-+HugeTLB pages it would require for its use.
-+
- 3. User Interface
- 
- 0. Configuration
-@@ -287,6 +303,7 @@ a. Enable CONFIG_CGROUPS
- b. Enable CONFIG_RESOURCE_COUNTERS
- c. Enable CONFIG_CGROUP_MEM_RES_CTLR
- d. Enable CONFIG_CGROUP_MEM_RES_CTLR_SWAP (to use swap extension)
-+f. Enable CONFIG_MEM_RES_CTLR_HUGETLB (to use HugeTLB extension)
- 
- 1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
- # mount -t tmpfs none /sys/fs/cgroup
-@@ -510,6 +527,18 @@ unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
- 
- And we have total = file + anon + unevictable.
- 
-+5.7 HugeTLB resource control files
-+For a system supporting two hugepage size (16M and 16G) the control
-+files include:
-+
-+ memory.hugetlb.16GB.limit_in_bytes
-+ memory.hugetlb.16GB.max_usage_in_bytes
-+ memory.hugetlb.16GB.usage_in_bytes
-+ memory.hugetlb.16MB.limit_in_bytes
-+ memory.hugetlb.16MB.max_usage_in_bytes
-+ memory.hugetlb.16MB.usage_in_bytes
-+
-+
- 6. Hierarchy support
- 
- The memory controller supports a deep hierarchy and hierarchical accounting.
--- 
-1.7.9
+What actually happens depends on how the controller calculates the
+limits: if it's a global fraction, then it's completely flat, if it's
+just an absolute limit, then it wouldn't pay attention to the parent
+anyway, if it's a proportion, then the controller has to decide how to
+divide up the parent's allocation.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+James
+
