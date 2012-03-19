@@ -1,87 +1,38 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH -V4 04/10] memcg: Add HugeTLB extension
-Date: Mon, 19 Mar 2012 21:07:01 +0900
-Message-ID: <4F672165.4050506@jp.fujitsu.com>
-References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F669C2E.1010502@jp.fujitsu.com> <874ntlkrp6.fsf@linux.vnet.ibm.com> <4F66D993.2080100@jp.fujitsu.com> <4F671AE6.5020204@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFC][PATCH 1/3] memcg: add methods to access pc->mem_cgroup
+Date: Mon, 19 Mar 2012 21:11:07 +0900
+Message-ID: <4F67225B.9010002@jp.fujitsu.com>
+References: <4F66E6A5.10804@jp.fujitsu.com> <4F66E773.4000807@jp.fujitsu.com> <4F671138.3000508@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F671AE6.5020204@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F671138.3000508-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org, khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-(2012/03/19 20:39), Glauber Costa wrote:
+(2012/03/19 19:58), Glauber Costa wrote:
 
-> On 03/19/2012 11:00 AM, KAMEZAWA Hiroyuki wrote:
->> (2012/03/19 15:52), Aneesh Kumar K.V wrote:
+> On 03/19/2012 11:59 AM, KAMEZAWA Hiroyuki wrote:
+>> In order to encode pc->mem_cgroup and pc->flags to be in a word,
+>> access function to pc->mem_cgroup is required.
 >>
->>> On Mon, 19 Mar 2012 11:38:38 +0900, KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  wrote:
->>>> (2012/03/17 2:39), Aneesh Kumar K.V wrote:
->>>>
->>>>> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
->>>>>
->>>>> This patch implements a memcg extension that allows us to control
->>>>> HugeTLB allocations via memory controller.
->>>>>
->>>>
->>>>
->>>> If you write some details here, it will be helpful for review and
->>>> seeing log after merge.
->>>
->>> Will add more info.
->>>
->>>>
->>>>
->>>>> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
->>>>> ---
->>>>>   include/linux/hugetlb.h    |    1 +
->>>>>   include/linux/memcontrol.h |   42 +++++++++++++
->>>>>   init/Kconfig               |    8 +++
->>>>>   mm/hugetlb.c               |    2 +-
->>>>>   mm/memcontrol.c            |  138 ++++++++++++++++++++++++++++++++++++++++++++
->>>>>   5 files changed, 190 insertions(+), 1 deletions(-)
->>>
->>> ....
->>>
->>>>> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
->>>>> +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
->>>>> +{
->>>>> +	int idx;
->>>>> +	for (idx = 0; idx<  hugetlb_max_hstate; idx++) {
->>>>> +		if (memcg->hugepage[idx].usage>  0)
->>>>> +			return 1;
->>>>> +	}
->>>>> +	return 0;
->>>>> +}
->>>>
->>>>
->>>> Please use res_counter_read_u64() rather than reading the value directly.
->>>>
->>>
->>> The open-coded variant is mostly derived from mem_cgroup_force_empty. I
->>> have updated the patch to use res_counter_read_u64.
->>>
+>> This patch replaces access to pc->mem_cgroup with
+>>   pc_to_mem_cgroup(pc)          : pc->mem_cgroup
+>>   pc_set_mem_cgroup(pc, memcg)  : pc->mem_cgroup = memcg
 >>
->> Ah, ok. it's(maybe) my bad. I'll schedule a fix.
+>> Following patch will remove pc->mem_cgroup.
 >>
+>> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > Kame,
 > 
-> I actually have it ready here. I can submit it if you want.
+> I can't see a reason not to merge this patch right now, regardless of
+> the other ones.
 > 
 
-
-That's good :) please post.
-(But I'm sorry I'll be absent tomorrow.)
+Ok, if names of functions seems good, I'll post again.
 
 Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-Kame 
