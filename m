@@ -1,102 +1,48 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 06/10] cgroup: convert memcg controller to the new cftype
-	interface
-Date: Mon, 19 Mar 2012 13:26:02 +0900
-Message-ID: <4F66B55A.8020307@jp.fujitsu.com>
-References: <1331940963-15756-1-git-send-email-tj@kernel.org>
-	<1331940963-15756-7-git-send-email-tj@kernel.org>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V4 02/10] hugetlbfs: don't use ERR_PTR with VM_FAULT* values
+Date: Mon, 19 Mar 2012 12:07:47 +0530
+Message-ID: <877gyhksec.fsf@linux.vnet.ibm.com>
+References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F6695EC.2060208@jp.fujitsu.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4F6695EC.2060208@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1331940963-15756-7-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-(2012/03/17 8:35), Tejun Heo wrote:
+On Mon, 19 Mar 2012 11:11:56 +0900, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
+> (2012/03/17 2:39), Aneesh Kumar K.V wrote:
+> 
+> > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> > 
+> > Using VM_FAULT_* codes with ERR_PTR will require us to make sure
+> > VM_FAULT_* values will not exceed MAX_ERRNO value.
+> > 
+> > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> 
+> 
+> Is this a bug fix ?
 
-> Convert memcg to use the new cftype based interface. memcg is rather
-> special in that
+No. Currently the values of VM_FAULT_* codes are all below MAX_ERRNO. The
+changes in the patch are done based on the suggestion from Andrew. 
+
+http://article.gmane.org/gmane.linux.kernel.cgroups/1160
+
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 > 
-> * memsw_cgroup_files creation is dependent on do_swap_account.
-> 
-> * ->populate() is abused for mem_cgroup_sockets_init().
-> 
-> memsw_cgroup_files is converted to use CGROUP_SUBSYS_CFTYPES_COND(),
-> where the condition is really_do_swap_account.
-> 
-> ->populate() is preserved for register_kmem_files() invocation but I
-> strongly urge moving the initialization to the tail of ->create().  If
-> there's something which can't be done from ->create(), which isn't
-> clear from the comment, please let me know.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 > 
 
-Okay, then, cgroup files are created in kernel/cgroup.c and memcg just
-registers entries.
-
-
-
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c           |   31 ++++++-------------------------
->  net/ipv4/tcp_memcontrol.c |    8 ++++----
->  2 files changed, 10 insertions(+), 29 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ae2f0a8..f2221ce 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4665,7 +4665,9 @@ static struct cftype mem_cgroup_files[] = {
->  		.mode = S_IRUGO,
->  	},
->  #endif
-> +	{ },	/* terminate */
->  };
-> +CGROUP_SUBSYS_CFTYPES(mem_cgroup_subsys, mem_cgroup_files);
->  
->  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
->  static struct cftype memsw_cgroup_files[] = {
-> @@ -4694,20 +4696,10 @@ static struct cftype memsw_cgroup_files[] = {
->  		.trigger = mem_cgroup_reset,
->  		.read_u64 = mem_cgroup_read,
->  	},
-> +	{ }	/* terminate */
->  };
-> -
-> -static int register_memsw_files(struct cgroup *cont, struct cgroup_subsys *ss)
-> -{
-> -	if (!do_swap_account)
-> -		return 0;
-> -	return cgroup_add_files(cont, ss, memsw_cgroup_files,
-> -				ARRAY_SIZE(memsw_cgroup_files));
-> -};
-> -#else
-> -static int register_memsw_files(struct cgroup *cont, struct cgroup_subsys *ss)
-> -{
-> -	return 0;
-> -}
-> +CGROUP_SUBSYS_CFTYPES_COND(mem_cgroup_subsys, memsw_cgroup_files,
-> +			   really_do_swap_account);
-
-
-I'm sorry but why you use really_do_swap_account instead of do_swap_account ?
-
-Thanks,
--Kame
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
