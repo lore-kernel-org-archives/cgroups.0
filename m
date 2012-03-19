@@ -1,172 +1,34 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 10/10] cgroup: implement cgroup_rm_cftypes()
-Date: Fri, 16 Mar 2012 16:36:03 -0700
-Message-ID: <1331940963-15756-11-git-send-email-tj@kernel.org>
-References: <1331940963-15756-1-git-send-email-tj@kernel.org>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH -V4 01/10] hugetlb: rename max_hstate to hugetlb_max_hstate
+Date: Mon, 19 Mar 2012 11:07:00 +0900
+Message-ID: <4F6694C4.2090800@jp.fujitsu.com>
+References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=W1ACw+kuVbib5jnQl9XSED/vYiuVz4Y2eehHGMyR1mI=;
-	b=qq3woiv89cuOt0HpU5mdmyW5rQziV/zCv0Avg3fguUfIUHvP6wBGSmUow4BLfnH3uO
-	QuqPSa03IRORttqct58rigaEGMkskb1xhxX3vgak2xe2xslLKzXJyF1Sqsgfi0BMIwO1
-	hyo89KjG111fs9bYXConsLr3EN147JnDYyT27kTtyosW+eGKBrlZHo9AofUBIl5GIKNn
-	EbK25BtTQO/NmflXe9fgE0mwEzjTeK8aXRRqqodUNlFBk/ugGBBYcGmI9mmj5v7D1qDi
-	9LKEGem1t+wtGaCur2ujU3Y6s/x2HnSmnMLaFub9zG9LGZE/tJgwLYc7yuBKzseKtgYt
-	4/Ug==
-In-Reply-To: <1331940963-15756-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1331919570-2264-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Implement cgroup_rm_cftypes() which removes an array of cftypes from a
-subsystem.  It can be called whether the target subsys is attached or
-not.  cgroup core will remove the specified file from all existing
-cgroups.
+(2012/03/17 2:39), Aneesh Kumar K.V wrote:
 
-This will be used to improve sub-subsys modularity and will be helpful
-for unified hierarchy.
+> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> 
+> We will be using this from other subsystems like memcg
+> in later patches.
+> 
+> Acked-by: Hillf Danton <dhillf@gmail.com>
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/cgroup.h |    1 +
- kernel/cgroup.c        |   54 +++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 45 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index caeaafc..4f3a68b 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -415,6 +415,7 @@ struct cgroup_scanner {
- };
- 
- int cgroup_add_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts);
-+int cgroup_rm_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts);
- 
- int cgroup_is_removed(const struct cgroup *cgrp);
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index c0c61b9..cf7b298 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2698,17 +2698,20 @@ out:
- 	return error;
- }
- 
--static int cgroup_add_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
--			    const struct cftype cfts[])
-+static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
-+			      const struct cftype cfts[], bool is_add)
- {
- 	const struct cftype *cft;
- 	int err, ret = 0;
- 
- 	for (cft = cfts; cft->name[0] != '\0'; cft++) {
--		err = cgroup_add_file(cgrp, subsys, cft);
-+		if (is_add)
-+			err = cgroup_add_file(cgrp, subsys, cft);
-+		else
-+			err = cgroup_rm_file(cgrp, cft);
- 		if (err) {
--			pr_warning("cgroup_add_files: failed to create %s, err=%d\n",
--				   cft->name, err);
-+			pr_warning("cgroup_addrm_files: failed to %s %s, err=%d\n",
-+				   is_add ? "add" : "remove", cft->name, err);
- 			ret = err;
- 		}
- 	}
-@@ -2732,7 +2735,7 @@ static void cgroup_cfts_prepare(void)
- }
- 
- static void cgroup_cfts_commit(struct cgroup_subsys *ss,
--			       const struct cftype *cfts)
-+			       const struct cftype *cfts, bool is_add)
- 	__releases(&cgroup_mutex) __releases(&cgroup_cft_mutex)
- {
- 	LIST_HEAD(pending);
-@@ -2758,7 +2761,7 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
- 		mutex_lock(&inode->i_mutex);
- 		mutex_lock(&cgroup_mutex);
- 		if (!cgroup_is_removed(cgrp))
--			cgroup_add_files(cgrp, ss, cfts);
-+			cgroup_addrm_files(cgrp, ss, cfts, is_add);
- 		mutex_unlock(&cgroup_mutex);
- 		mutex_unlock(&inode->i_mutex);
- 
-@@ -2796,13 +2799,44 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts)
- 
- 	cgroup_cfts_prepare();
- 	list_add_tail(&set->node, &ss->cftsets);
--	cgroup_cfts_commit(ss, cfts);
-+	cgroup_cfts_commit(ss, cfts, true);
- 
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
- 
- /**
-+ * cgroup_rm_cftypes - remove an array of cftypes from a subsystem
-+ * @ss: target cgroup subsystem
-+ * @cfts: zero-length name terminated array of cftypes
-+ *
-+ * Unregister @cfts from @ss.  Files described by @cfts are removed from
-+ * all existing cgroups to which @ss is attached and all future cgroups
-+ * won't have them either.  This function can be called anytime after
-+ * subsys_initcall whether @ss is attached or not.
-+ *
-+ * Returns 0 on successful unregistration, -ENOENT if @cfts is not
-+ * registered with @ss.
-+ */
-+int cgroup_rm_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts)
-+{
-+	struct cftype_set *set;
-+
-+	cgroup_cfts_prepare();
-+
-+	list_for_each_entry(set, &ss->cftsets, node) {
-+		if (set->cfts == cfts) {
-+			list_del_init(&set->node);
-+			cgroup_cfts_commit(ss, cfts, false);
-+			return 0;
-+		}
-+	}
-+
-+	cgroup_cfts_commit(ss, NULL, false);
-+	return -ENOENT;
-+}
-+
-+/**
-  * cgroup_task_count - count the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-  *
-@@ -3794,7 +3828,7 @@ static int cgroup_populate_dir(struct cgroup *cgrp)
- 	int err;
- 	struct cgroup_subsys *ss;
- 
--	err = cgroup_add_files(cgrp, NULL, files);
-+	err = cgroup_addrm_files(cgrp, NULL, files, true);
- 	if (err < 0)
- 		return err;
- 
-@@ -3806,7 +3840,7 @@ static int cgroup_populate_dir(struct cgroup *cgrp)
- 			return err;
- 
- 		list_for_each_entry(set, &ss->cftsets, node)
--			cgroup_add_files(cgrp, ss, set->cfts);
-+			cgroup_addrm_files(cgrp, ss, set->cfts, true);
- 	}
- 
- 	/* This cgroup is ready now */
--- 
-1.7.7.3
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
