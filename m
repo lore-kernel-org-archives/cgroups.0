@@ -1,37 +1,37 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 06/10] cgroup: convert memcg controller to the new cftype
- interface
-Date: Mon, 19 Mar 2012 14:43:14 +0400
-Message-ID: <4F670DC2.1030904@parallels.com>
-References: <1331940963-15756-1-git-send-email-tj@kernel.org> <1331940963-15756-7-git-send-email-tj@kernel.org> <4F66B55A.8020307@jp.fujitsu.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC][PATCH 1/3] memcg: add methods to access pc->mem_cgroup
+Date: Mon, 19 Mar 2012 14:58:00 +0400
+Message-ID: <4F671138.3000508@parallels.com>
+References: <4F66E6A5.10804@jp.fujitsu.com> <4F66E773.4000807@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F66B55A.8020307-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4F66E773.4000807@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, suleiman@google.com, n-horiguchi@ah.jp.nec.com, khlebnikov@openvz.org, Tejun Heo <tj@kernel.org>
 
-On 03/19/2012 08:26 AM, KAMEZAWA Hiroyuki wrote:
->> ->populate() is preserved for register_kmem_files() invocation but I
->> >  strongly urge moving the initialization to the tail of ->create().  If
->> >  there's something which can't be done from ->create(), which isn't
->> >  clear from the comment, please let me know.
->> >  
-> Okay, then, cgroup files are created in kernel/cgroup.c and memcg just
-> registers entries.
+On 03/19/2012 11:59 AM, KAMEZAWA Hiroyuki wrote:
+> In order to encode pc->mem_cgroup and pc->flags to be in a word,
+> access function to pc->mem_cgroup is required.
 > 
+> This patch replaces access to pc->mem_cgroup with
+>   pc_to_mem_cgroup(pc)          : pc->mem_cgroup
+>   pc_set_mem_cgroup(pc, memcg)  : pc->mem_cgroup = memcg
 > 
+> Following patch will remove pc->mem_cgroup.
 > 
-I am still in the middle of the review. Is it possible to dynamically
-register entries? (right now, I mean)
+> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
+Kame,
 
-If yes - which seems to be a bit of the point of the exercise, so it
-should be totally okay from my PoV. I have that call in populate because
-which files will be created depends on which protocols you have registered.
+I can't see a reason not to merge this patch right now, regardless of
+the other ones.
 
-The trick here, is that doesn't need to happen at all cgroup creations.
-But it can't happen at root's either, because this is quite fragile:
-some protocols may only be registered after root memcg is created.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
