@@ -1,11 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/10] cgroup: convert memcg controller to the new
-	cftype interface
-Date: Mon, 19 Mar 2012 09:15:07 -0700
-Message-ID: <20120319161507.GD11069@google.com>
+Subject: Re: [PATCHSET] cgroup: cftype based file interface
+Date: Mon, 19 Mar 2012 09:15:56 -0700
+Message-ID: <20120319161556.GE11069@google.com>
 References: <1331940963-15756-1-git-send-email-tj@kernel.org>
-	<1331940963-15756-7-git-send-email-tj@kernel.org>
-	<4F66B55A.8020307@jp.fujitsu.com> <4F670DC2.1030904@parallels.com>
+	<4F6708F4.4000604@parallels.com>
+	<20120319160532.GB11069@google.com> <4F675B01.70901@parallels.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -13,15 +12,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=yuyyToV7zRtu8MOHrBKfXHNleB+Ylh8vXBYMAsaktQ4=;
-	b=r3M/J7QbbTJJIcCsWtU3A7KqeEe2r3a7W/QUZGidqA6YCUkw3pqiBGIbhNW6WiNmdO
-	1UB0u0wIdDBwF/eR2m3mbpC0q4V69Psoxl4G7fKG7IGSY6B8jt/+/5TXXBL0MFISSY1l
-	VAZBDN+6wafDTJvF/PQax2OBF1z3dzBXJUY5iMrRd25bQoZ5eUVedglmyOSuCKij1SPq
-	D2P1OBJh4x0zif/7ygl2iEJybkd1oHvKIX7WAbpFsU8MnednzRZlyUnjsMwv9eQ1FYaL
-	TbnETuMbCCFxmvaydqtesCKQpm16k31WnkKJOa6LZWsilTKlxrvAvxWTFDTWUrErH37e
-	lx9g==
+	bh=iqI1mZPSj3/RzSoSXlhvn3/ndl3oxCkVFqAkJ13VJro=;
+	b=c3XByYwbXDFHFUGUQZQMvDREp/w1/hkwAY9bRzS32Up/oe1+9lr9t6w2WeBeUToJdy
+	cRePswUpAqsyClXLocg7e9litipJYvWAe1E1osvC9BwjREFbciz8CHRHI55H88ZwgXWi
+	QWCxWEAoA08HYH8XrUHdV0UqiBvxTMlbrR+xtjSER/dbNKfakzMxbs/j2PIllRXNYJoR
+	ibz4XlGwLJ4BautER/PhvS4mGV2V/3RbA5ncGKPwCKTDzHpiQJpxEsHikkh2+++fufGd
+	IoR9fML+A9pIiFciebkxqn2PTzGezyMBDUlAHQfcz/vQV1Dp1wQUa1H96NCusaGXyEC7
+	Uo3Q==
 Content-Disposition: inline
-In-Reply-To: <4F670DC2.1030904-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <4F675B01.70901-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -33,31 +32,16 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hey,
+On Mon, Mar 19, 2012 at 08:12:49PM +0400, Glauber Costa wrote:
+> On 03/19/2012 08:05 PM, Tejun Heo wrote:
+> >Hello, Glauber.
+> >
+> >On Mon, Mar 19, 2012 at 02:22:44PM +0400, Glauber
+> Hello, Tejun! =)
 
-On Mon, Mar 19, 2012 at 02:43:14PM +0400, Glauber Costa wrote:
-> I am still in the middle of the review. Is it possible to dynamically
-> register entries? (right now, I mean)
-
-Before the patchset, no.  After the patchset, yes.
-
-> If yes - which seems to be a bit of the point of the exercise, so it
-> should be totally okay from my PoV. I have that call in populate because
-> which files will be created depends on which protocols you have registered.
-> 
-> The trick here, is that doesn't need to happen at all cgroup creations.
-> But it can't happen at root's either, because this is quite fragile:
-> some protocols may only be registered after root memcg is created.
-
-Yeah, it can happen anytime but it shouldn't be called from ->create()
-or other callbacks which are invoked under cgroup_mutex.  We can
-provide an alternative interface or other locking trickery to avoid
-this, but I don't think I'll take that path unless there are very
-strong rationale.
-
-Thanks.
+Heh, =)
 
 -- 
 tejun
