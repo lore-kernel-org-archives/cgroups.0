@@ -1,33 +1,76 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [RFC][PATCH 1/3] memcg: add methods to access pc->mem_cgroup
-Date: Mon, 19 Mar 2012 14:58:00 +0400
-Message-ID: <4F671138.3000508@parallels.com>
-References: <4F66E6A5.10804@jp.fujitsu.com> <4F66E773.4000807@jp.fujitsu.com>
+Subject: Re: [PATCH -V4 04/10] memcg: Add HugeTLB extension
+Date: Mon, 19 Mar 2012 15:39:18 +0400
+Message-ID: <4F671AE6.5020204@parallels.com>
+References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F669C2E.1010502@jp.fujitsu.com> <874ntlkrp6.fsf@linux.vnet.ibm.com> <4F66D993.2080100@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F66E773.4000807@jp.fujitsu.com>
+In-Reply-To: <4F66D993.2080100@jp.fujitsu.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, suleiman@google.com, n-horiguchi@ah.jp.nec.com, khlebnikov@openvz.org, Tejun Heo <tj@kernel.org>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On 03/19/2012 11:59 AM, KAMEZAWA Hiroyuki wrote:
-> In order to encode pc->mem_cgroup and pc->flags to be in a word,
-> access function to pc->mem_cgroup is required.
-> 
-> This patch replaces access to pc->mem_cgroup with
->   pc_to_mem_cgroup(pc)          : pc->mem_cgroup
->   pc_set_mem_cgroup(pc, memcg)  : pc->mem_cgroup = memcg
-> 
-> Following patch will remove pc->mem_cgroup.
-> 
-> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
+On 03/19/2012 11:00 AM, KAMEZAWA Hiroyuki wrote:
+> (2012/03/19 15:52), Aneesh Kumar K.V wrote:
+>
+>> On Mon, 19 Mar 2012 11:38:38 +0900, KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  wrote:
+>>> (2012/03/17 2:39), Aneesh Kumar K.V wrote:
+>>>
+>>>> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
+>>>>
+>>>> This patch implements a memcg extension that allows us to control
+>>>> HugeTLB allocations via memory controller.
+>>>>
+>>>
+>>>
+>>> If you write some details here, it will be helpful for review and
+>>> seeing log after merge.
+>>
+>> Will add more info.
+>>
+>>>
+>>>
+>>>> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
+>>>> ---
+>>>>   include/linux/hugetlb.h    |    1 +
+>>>>   include/linux/memcontrol.h |   42 +++++++++++++
+>>>>   init/Kconfig               |    8 +++
+>>>>   mm/hugetlb.c               |    2 +-
+>>>>   mm/memcontrol.c            |  138 ++++++++++++++++++++++++++++++++++++++++++++
+>>>>   5 files changed, 190 insertions(+), 1 deletions(-)
+>>
+>> ....
+>>
+>>>> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+>>>> +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
+>>>> +{
+>>>> +	int idx;
+>>>> +	for (idx = 0; idx<  hugetlb_max_hstate; idx++) {
+>>>> +		if (memcg->hugepage[idx].usage>  0)
+>>>> +			return 1;
+>>>> +	}
+>>>> +	return 0;
+>>>> +}
+>>>
+>>>
+>>> Please use res_counter_read_u64() rather than reading the value directly.
+>>>
+>>
+>> The open-coded variant is mostly derived from mem_cgroup_force_empty. I
+>> have updated the patch to use res_counter_read_u64.
+>>
+>
+> Ah, ok. it's(maybe) my bad. I'll schedule a fix.
+>
 Kame,
 
-I can't see a reason not to merge this patch right now, regardless of
-the other ones.
+I actually have it ready here. I can submit it if you want.
+
+This one has bitten me as well when I was trying to experiment with the 
+res_counter performance...
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
