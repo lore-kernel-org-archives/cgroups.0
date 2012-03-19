@@ -1,48 +1,117 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V4 02/10] hugetlbfs: don't use ERR_PTR with VM_FAULT* values
-Date: Mon, 19 Mar 2012 12:07:47 +0530
-Message-ID: <877gyhksec.fsf@linux.vnet.ibm.com>
-References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F6695EC.2060208@jp.fujitsu.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH -V4 04/10] memcg: Add HugeTLB extension
+Date: Mon, 19 Mar 2012 12:22:53 +0530
+Message-ID: <874ntlkrp6.fsf@linux.vnet.ibm.com>
+References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F669C2E.1010502@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F6695EC.2060208@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F669C2E.1010502-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, 19 Mar 2012 11:11:56 +0900, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
+On Mon, 19 Mar 2012 11:38:38 +0900, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
 > (2012/03/17 2:39), Aneesh Kumar K.V wrote:
 > 
-> > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> > From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > > 
-> > Using VM_FAULT_* codes with ERR_PTR will require us to make sure
-> > VM_FAULT_* values will not exceed MAX_ERRNO value.
+> > This patch implements a memcg extension that allows us to control
+> > HugeTLB allocations via memory controller.
 > > 
-> > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 > 
 > 
-> Is this a bug fix ?
+> If you write some details here, it will be helpful for review and
+> seeing log after merge.
 
-No. Currently the values of VM_FAULT_* codes are all below MAX_ERRNO. The
-changes in the patch are done based on the suggestion from Andrew. 
+Will add more info.
 
-http://article.gmane.org/gmane.linux.kernel.cgroups/1160
-
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> > ---
+> >  include/linux/hugetlb.h    |    1 +
+> >  include/linux/memcontrol.h |   42 +++++++++++++
+> >  init/Kconfig               |    8 +++
+> >  mm/hugetlb.c               |    2 +-
+> >  mm/memcontrol.c            |  138 ++++++++++++++++++++++++++++++++++++++++++++
+> >  5 files changed, 190 insertions(+), 1 deletions(-)
+
+....
+
+> > +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+> > +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
+> > +{
+> > +	int idx;
+> > +	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
+> > +		if (memcg->hugepage[idx].usage > 0)
+> > +			return 1;
+> > +	}
+> > +	return 0;
+> > +}
+> 
+> 
+> Please use res_counter_read_u64() rather than reading the value directly.
 > 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The open-coded variant is mostly derived from mem_cgroup_force_empty. I
+have updated the patch to use res_counter_read_u64. 
+
+> 
+> > +
+> > +int mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+> > +				   struct mem_cgroup **ptr)
+> > +{
+> > +	int ret = 0;
+> > +	struct mem_cgroup *memcg;
+> > +	struct res_counter *fail_res;
+> > +	unsigned long csize = nr_pages * PAGE_SIZE;
+> > +
+> > +	if (mem_cgroup_disabled())
+> > +		return 0;
+> > +again:
+> > +	rcu_read_lock();
+> > +	memcg = mem_cgroup_from_task(current);
+> > +	if (!memcg)
+> > +		memcg = root_mem_cgroup;
+> > +	if (mem_cgroup_is_root(memcg)) {
+> > +		rcu_read_unlock();
+> > +		goto done;
+> > +	}
+> 
+> 
+> One concern is.... Now, yes, memory cgroup doesn't account root cgroup
+> and doesn't update res->usage to avoid updating shared counter overheads
+> when memcg is not mounted. But memory.usage_in_bytes files works
+> for root memcg with reading percpu statistics.
+> 
+> So, how about counting usage for root cgroup even if it cannot be limited ?
+> Considering hugetlb fs usage, updating res_counter here doesn't have
+> performance problem of false sharing..
+> Then, you can remove root_mem_cgroup() checks inserted several places.
+> 
+
+Yes. That is a good idea. Will update the patch.
+
+
+> <snip>
+> 
+> >  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+> > +	/*
+> > +	 * Don't allow memcg removal if we have HugeTLB resource
+> > +	 * usage.
+> > +	 */
+> > +	if (mem_cgroup_have_hugetlb_usage(memcg))
+> > +		return -EBUSY;
+> >  
+> >  	return mem_cgroup_force_empty(memcg, false);
+> >  }
+> 
+> 
+> Is this fixed by patch 8+9 ?
+
+Yes. 
+
+-aneesh
