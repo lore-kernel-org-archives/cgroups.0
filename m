@@ -1,220 +1,69 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 2/4] pass struct mem_cgroup instead of struct cgroup to socket memcg
-Date: Tue, 20 Mar 2012 20:50:54 +0400
-Message-ID: <1332262256-13407-3-git-send-email-glommer@parallels.com>
-References: <1332262256-13407-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1332262256-13407-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Subject: Re: [PATCH 09/10] cgroup: introduce struct cfent
+Date: Tue, 20 Mar 2012 20:51:28 +0400
+Message-ID: <4F68B590.7090204@parallels.com>
+References: <1331940963-15756-1-git-send-email-tj@kernel.org>
+	<1331940963-15756-10-git-send-email-tj@kernel.org>
+	<4F688EA9.8050905@parallels.com> <20120320160228.GD5684@google.com>
+	<4F68AA37.80604@parallels.com> <20120320164915.GF5684@google.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20120320164915.GF5684-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The only reason cgroup was used, was to be consistent with the populate()
-interface. Now that we're getting rid of it, not only we no longer need
-it, but we also *can't* call it this way.
-
-Since we will no longer rely on populate(), this will be called from
-create(). During create, the association between struct mem_cgroup
-and struct cgroup does not yet exist, since cgroup internals hasn't
-yet initialized its bookkeeping. This means we would not be able
-to draw the memcg pointer from the cgroup pointer in these
-functions, which is highly undesirable.
-
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/net/sock.h        |   12 ++++++------
- mm/memcontrol.c           |   24 +++++++++---------------
- net/core/sock.c           |   10 +++++-----
- net/ipv4/tcp_memcontrol.c |    9 ++++-----
- 4 files changed, 24 insertions(+), 31 deletions(-)
-
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 705d1ad..e476277 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -67,16 +67,16 @@
- struct cgroup;
- struct cgroup_subsys;
- #ifdef CONFIG_NET
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp);
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss);
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg);
- #else
- static inline
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
- }
- static inline
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -867,9 +867,9 @@ struct proto {
- 	 * This function has to setup any files the protocol want to
- 	 * appear in the kmem cgroup filesystem.
- 	 */
--	int			(*init_cgroup)(struct cgroup *cgrp,
-+	int			(*init_cgroup)(struct mem_cgroup *memcg,
- 					       struct cgroup_subsys *ss);
--	void			(*destroy_cgroup)(struct cgroup *cgrp);
-+	void			(*destroy_cgroup)(struct mem_cgroup *memcg);
- 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
- #endif
- };
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f2221ce..f7c6727 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4568,29 +4568,22 @@ static int mem_control_numa_stat_open(struct inode *unused, struct file *file)
- #endif /* CONFIG_NUMA */
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-+static int register_kmem_files(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
--	/*
--	 * Part of this would be better living in a separate allocation
--	 * function, leaving us with just the cgroup tree population work.
--	 * We, however, depend on state such as network's proto_list that
--	 * is only initialized after cgroup creation. I found the less
--	 * cumbersome way to deal with it to defer it all to populate time
--	 */
--	return mem_cgroup_sockets_init(cont, ss);
-+	return mem_cgroup_sockets_init(memcg, ss);
- };
- 
--static void kmem_cgroup_destroy(struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- {
--	mem_cgroup_sockets_destroy(cont);
-+	mem_cgroup_sockets_destroy(memcg);
- }
- #else
--static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-+static int register_kmem_files(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
- }
- 
--static void kmem_cgroup_destroy(struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -4947,7 +4940,7 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 
--	kmem_cgroup_destroy(cont);
-+	kmem_cgroup_destroy(memcg);
- 
- 	mem_cgroup_put(memcg);
- }
-@@ -4955,7 +4948,8 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- static int mem_cgroup_populate(struct cgroup_subsys *ss,
- 				struct cgroup *cont)
- {
--	return register_kmem_files(cont, ss);
-+	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-+	return register_kmem_files(memcg, ss);
- }
- 
- #ifdef CONFIG_MMU
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 688037c..443a404 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -141,7 +141,7 @@ static DEFINE_MUTEX(proto_list_mutex);
- static LIST_HEAD(proto_list);
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	struct proto *proto;
- 	int ret = 0;
-@@ -149,7 +149,7 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry(proto, &proto_list, node) {
- 		if (proto->init_cgroup) {
--			ret = proto->init_cgroup(cgrp, ss);
-+			ret = proto->init_cgroup(memcg, ss);
- 			if (ret)
- 				goto out;
- 		}
-@@ -160,19 +160,19 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- out:
- 	list_for_each_entry_continue_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp);
-+			proto->destroy_cgroup(memcg);
- 	mutex_unlock(&proto_list_mutex);
- 	return ret;
- }
- 
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg)
- {
- 	struct proto *proto;
- 
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp);
-+			proto->destroy_cgroup(memcg);
- 	mutex_unlock(&proto_list_mutex);
- }
- #endif
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index 21f48f3..94f32ce 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -51,7 +51,7 @@ static void memcg_tcp_enter_memory_pressure(struct sock *sk)
- }
- EXPORT_SYMBOL(memcg_tcp_enter_memory_pressure);
- 
--int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int tcp_init_cgroup(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	/*
- 	 * The root cgroup does not use res_counters, but rather,
-@@ -61,8 +61,7 @@ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	struct res_counter *res_parent = NULL;
- 	struct cg_proto *cg_proto, *parent_cg;
- 	struct tcp_memcontrol *tcp;
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
--	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
-+	struct mem_cgroup *parent;
- 	struct net *net = current->nsproxy->net_ns;
- 
- 	cg_proto = tcp_prot.proto_cgroup(memcg);
-@@ -76,6 +75,7 @@ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	tcp->tcp_prot_mem[2] = net->ipv4.sysctl_tcp_mem[2];
- 	tcp->tcp_memory_pressure = 0;
- 
-+	parent = parent_mem_cgroup(memcg);
- 	parent_cg = tcp_prot.proto_cgroup(parent);
- 	if (parent_cg)
- 		res_parent = parent_cg->memory_allocated;
-@@ -94,9 +94,8 @@ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- }
- EXPORT_SYMBOL(tcp_init_cgroup);
- 
--void tcp_destroy_cgroup(struct cgroup *cgrp)
-+void tcp_destroy_cgroup(struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
- 	struct cg_proto *cg_proto;
- 	struct tcp_memcontrol *tcp;
- 	u64 val;
--- 
-1.7.7.6
+On 03/20/2012 08:49 PM, Tejun Heo wrote:
+> On Tue, Mar 20, 2012 at 08:03:03PM +0400, Glauber Costa wrote:
+>>  From 04604201411ab0a14fa1447072cd1b273d0774ed Mon Sep 17 00:00:00 2001
+>> From: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> Date: Tue, 20 Mar 2012 18:12:55 +0400
+>> Subject: [PATCH] don't trigger warning when d_subdirs is not empty.
+>>
+>> It is never empty at this point, because of the self references.
+>> a better test is to see if any of them gets d_inode set.
+>>
+>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> Signed-off-by: Tejun Heo<tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>> ---
+>>   kernel/cgroup.c |    8 +++++++-
+>>   1 files changed, 7 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+>> index cf7b298..b45a653 100644
+>> --- a/kernel/cgroup.c
+>> +++ b/kernel/cgroup.c
+>> @@ -947,10 +947,16 @@ static int cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+>>   static void cgroup_clear_directory(struct dentry *dir)
+>>   {
+>>   	struct cgroup *cgrp = __d_cgrp(dir);
+>> +	struct list_head *child;
+>>
+>>   	while (!list_empty(&cgrp->files))
+>>   		cgroup_rm_file(cgrp, NULL);
+>> -	WARN_ON_ONCE(!list_empty(&dir->d_subdirs));
+>> +
+>> +	list_for_each(child,&dir->d_subdirs) {
+>> +		struct dentry *d;
+>> +		d = list_entry(child, struct dentry, d_u.d_child);
+>> +		WARN_ON_ONCE(d->d_inode);
+>> +	}
+>
+> This seems correct and I'll apply this but I still can't reproduce the
+> warning at will before the patch.  How do I a get negative dentry on
+> the d_subdirs when d_delete always returns 1?  Glauber, can you
+> trigger the warning at will?
+>
+> Thanks.
+Yes, everytime I reboot the machine.
