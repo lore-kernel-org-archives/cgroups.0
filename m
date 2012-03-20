@@ -1,248 +1,71 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH UPDATED 09/10] cgroup: introduce struct cfent
-Date: Tue, 20 Mar 2012 11:06:35 -0700
-Message-ID: <20120320180635.GA20832@google.com>
-References: <1331940963-15756-1-git-send-email-tj@kernel.org>
-	<1331940963-15756-10-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 4/4] get rid of populate for memcg
+Date: Tue, 20 Mar 2012 11:31:49 -0700
+Message-ID: <20120320183149.GB20832@google.com>
+References: <1332262256-13407-1-git-send-email-glommer@parallels.com>
+ <1332262256-13407-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=FqZVjaLioTuYPu2FzEUQRFh51pi3gT/nGiT7lHOUdAI=;
+        b=ZIbRHJaiCHu48QR8l2UqxZlo6ngikxwDDSX7OH82go4pa0u4LbfsDdfdTOymKGskkJ
+         Nb6kka+E6mN1Uxx94WdgSJti1X01bPlkl1PQ+pxrzKpaxypLWp50weJrCK04xcrkCC6s
+         PS4BOepSBWQ8GIV/p0rae9HdS1eTnlcGR5gIimh4t4nqu5GDn7qsc6muuR1RRyYrqKOY
+         T2nXOFulTquth3MhAHMgi/2SXqInnrZoEim/77bdLdYxZLQnyW5boMR+F1LQZwfoGZmg
+         n3NKOJruXEIIvNOIBoBdVeAaUFT4hFSFwDXHVgC628JcXMs7Ep2615s9J4AXvsB4bNVB
+         HQVA==
+Content-Disposition: inline
+In-Reply-To: <1332262256-13407-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=js2tWEJ7iUgUgCS2EASMdkLDbZp+hP2/iMACgf/ocDc=;
-	b=c5IdLWRt7fArHqeCEhNWit97NksyryjGd+sUNsGpkmZwhuId6fhpuEOVsUDc5lXZcY
-	LwxZIz7y5NamJIrBB4A7Zz2CcY143f/mrgpx+jb068q2KKgWNdoSHyIUaS6FvZ6hSkgo
-	Jf2PQ6WsyKPamzk8bEQYaFobcZSlIR/nE6AzidVxFeCrTWmO3JanQGPs8GCq25F/tK3D
-	7dlxJO8fWB+DSVc+7NBiljWa/pHMLQqN8P5idg/K9w3wYRGfVMA04dAwAT/fOrkgD5E0
-	D0mISqKaCZ9itgAdW9x+Bet31fh4+qfjf8JXg+Edwc3Q46CRfpLM+FMtuhuqGAYwkN1c
-	ZLEg==
-Content-Disposition: inline
-In-Reply-To: <1331940963-15756-10-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-This patch adds cfent (cgroup file entry) which is the association
-between a cgroup and a file.  This is in-cgroup representation of
-files under a cgroup directory.  This simplifies walking walking
-cgroup files and thus cgroup_clear_directory(), which is now
-implemented in two parts - cgroup_rm_file() and a loop around it.
+Hello, Glauber.
 
-cgroup_rm_file() will be used to implement cftype removal and cfent is
-scheduled to serve cgroup specific per-file data (e.g. for sysfs-like
-"sever" semantics).
+On Tue, Mar 20, 2012 at 08:50:56PM +0400, Glauber Costa wrote:
+> @@ -4929,7 +4929,9 @@ mem_cgroup_create(struct cgroup *cont)
+>  	atomic_set(&memcg->refcnt, 1);
+>  	memcg->move_charge_at_immigrate = 0;
+>  	mutex_init(&memcg->thresholds_lock);
+> -	return &memcg->css;
+> +
+> +	if (!register_kmem_files(memcg, &mem_cgroup_subsys))
+> +		return &memcg->css;
 
-v2: - cfe was freed from cgroup_rm_file() which led to use-after-free
-      if the file had openers at the time of removal.  Moved to
-      cgroup_diput().
+After the change, I think register_kmem_files() is a quite misleading
+name.
 
-    - cgroup_clear_directory() triggered WARN_ON_ONCE() if d_subdirs
-      wasn't empty after removing all files.  This triggered
-      spuriously if some files were open during directory clearing.
-      Removed.
+> @@ -2484,6 +2484,11 @@ int proto_register(struct proto *prot, int alloc_slab)
+>  		}
+>  	}
+>  
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +	if (prot->init_cgroup)
+> +		prot->init_cgroup(NULL, NULL);
+> +#endif
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
----
-Glauber, we may have positive child dentries for open files so your
-fix isn't enough.  I just removed the WARN_ON_ONCE().
+So, init_cgroup() is overloaded to do two things - one load time init
+and per-cgroup init, depending on the args.
+
+> @@ -37,7 +37,6 @@ static struct cftype tcp_files[] = {
+>  	},
+>  	{ }	/* terminate */
+>  };
+> -CGROUP_SUBSYS_CFTYPES(mem_cgroup_subsys, tcp_files);
+
+What I don't get is why you can't just keep this.  Is it because the
+files might appear before the protocol is registered?  Wouldn't it be
+much better to add ipv4_tcp_init_cgroup() or whatever call to
+inet_init() instead of overloading init_cgroup() with mostly unrelated
+stuff?
 
 Thanks.
 
- include/linux/cgroup.h |    1 
- kernel/cgroup.c        |  107 +++++++++++++++++++++++++++++++++----------------
- 2 files changed, 74 insertions(+), 34 deletions(-)
-
-Index: work/include/linux/cgroup.h
-===================================================================
---- work.orig/include/linux/cgroup.h
-+++ work/include/linux/cgroup.h
-@@ -175,6 +175,7 @@ struct cgroup {
- 	 */
- 	struct list_head sibling;	/* my parent's children */
- 	struct list_head children;	/* my children */
-+	struct list_head files;		/* my files */
- 
- 	struct cgroup *parent;		/* my parent */
- 	struct dentry __rcu *dentry;	/* cgroup fs entry, RCU protected */
-Index: work/kernel/cgroup.c
-===================================================================
---- work.orig/kernel/cgroup.c
-+++ work/kernel/cgroup.c
-@@ -158,6 +158,15 @@ struct cftype_set {
- };
- 
- /*
-+ * cgroupfs file entry, pointed to from leaf dentry->d_fsdata.
-+ */
-+struct cfent {
-+	struct list_head		node;
-+	struct dentry			*dentry;
-+	struct cftype			*type;
-+};
-+
-+/*
-  * CSS ID -- ID per subsys's Cgroup Subsys State(CSS). used only when
-  * cgroup_subsys->use_id != 0.
-  */
-@@ -297,11 +306,16 @@ static inline struct cgroup *__d_cgrp(st
- 	return dentry->d_fsdata;
- }
- 
--static inline struct cftype *__d_cft(struct dentry *dentry)
-+static inline struct cfent *__d_cfe(struct dentry *dentry)
- {
- 	return dentry->d_fsdata;
- }
- 
-+static inline struct cftype *__d_cft(struct dentry *dentry)
-+{
-+	return __d_cfe(dentry)->type;
-+}
-+
- /* the list of cgroups eligible for automatic release. Protected by
-  * release_list_lock */
- static LIST_HEAD(release_list);
-@@ -887,6 +901,12 @@ static void cgroup_diput(struct dentry *
- 		BUG_ON(!list_empty(&cgrp->pidlists));
- 
- 		kfree_rcu(cgrp, rcu_head);
-+	} else {
-+		struct cfent *cfe = __d_cfe(dentry);
-+
-+		WARN_ONCE(!list_empty(&cfe->node),
-+			  "cfe still linked for %s\n", cfe->type->name);
-+		kfree(cfe);
- 	}
- 	iput(inode);
- }
-@@ -905,34 +925,36 @@ static void remove_dir(struct dentry *d)
- 	dput(parent);
- }
- 
--static void cgroup_clear_directory(struct dentry *dentry)
-+static int cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
- {
--	struct list_head *node;
-+	struct cfent *cfe;
-+
-+	lockdep_assert_held(&cgrp->dentry->d_inode->i_mutex);
-+	lockdep_assert_held(&cgroup_mutex);
-+
-+	list_for_each_entry(cfe, &cgrp->files, node) {
-+		struct dentry *d = cfe->dentry;
- 
--	BUG_ON(!mutex_is_locked(&dentry->d_inode->i_mutex));
--	spin_lock(&dentry->d_lock);
--	node = dentry->d_subdirs.next;
--	while (node != &dentry->d_subdirs) {
--		struct dentry *d = list_entry(node, struct dentry, d_u.d_child);
--
--		spin_lock_nested(&d->d_lock, DENTRY_D_LOCK_NESTED);
--		list_del_init(node);
--		if (d->d_inode) {
--			/* This should never be called on a cgroup
--			 * directory with child cgroups */
--			BUG_ON(d->d_inode->i_mode & S_IFDIR);
--			dget_dlock(d);
--			spin_unlock(&d->d_lock);
--			spin_unlock(&dentry->d_lock);
--			d_delete(d);
--			simple_unlink(dentry->d_inode, d);
--			dput(d);
--			spin_lock(&dentry->d_lock);
--		} else
--			spin_unlock(&d->d_lock);
--		node = dentry->d_subdirs.next;
-+		if (cft && cfe->type != cft)
-+			continue;
-+
-+		dget(d);
-+		d_delete(d);
-+		simple_unlink(d->d_inode, d);
-+		list_del_init(&cfe->node);
-+		dput(d);
-+
-+		return 0;
- 	}
--	spin_unlock(&dentry->d_lock);
-+	return -ENOENT;
-+}
-+
-+static void cgroup_clear_directory(struct dentry *dir)
-+{
-+	struct cgroup *cgrp = __d_cgrp(dir);
-+
-+	while (!list_empty(&cgrp->files))
-+		cgroup_rm_file(cgrp, NULL);
- }
- 
- /*
-@@ -1362,6 +1384,7 @@ static void init_cgroup_housekeeping(str
- {
- 	INIT_LIST_HEAD(&cgrp->sibling);
- 	INIT_LIST_HEAD(&cgrp->children);
-+	INIT_LIST_HEAD(&cgrp->files);
- 	INIT_LIST_HEAD(&cgrp->css_sets);
- 	INIT_LIST_HEAD(&cgrp->release_list);
- 	INIT_LIST_HEAD(&cgrp->pidlists);
-@@ -2633,7 +2656,9 @@ static int cgroup_add_file(struct cgroup
- 			   const struct cftype *cft)
- {
- 	struct dentry *dir = cgrp->dentry;
-+	struct cgroup *parent = __d_cgrp(dir);
- 	struct dentry *dentry;
-+	struct cfent *cfe;
- 	int error;
- 	umode_t mode;
- 	char name[MAX_CGROUP_TYPE_NAMELEN + MAX_CFTYPE_NAME + 2] = { 0 };
-@@ -2649,17 +2674,31 @@ static int cgroup_add_file(struct cgroup
- 		strcat(name, ".");
- 	}
- 	strcat(name, cft->name);
-+
- 	BUG_ON(!mutex_is_locked(&dir->d_inode->i_mutex));
-+
-+	cfe = kzalloc(sizeof(*cfe), GFP_KERNEL);
-+	if (!cfe)
-+		return -ENOMEM;
-+
- 	dentry = lookup_one_len(name, dir, strlen(name));
--	if (!IS_ERR(dentry)) {
--		mode = cgroup_file_mode(cft);
--		error = cgroup_create_file(dentry, mode | S_IFREG,
--						cgrp->root->sb);
--		if (!error)
--			dentry->d_fsdata = (void *)cft;
--		dput(dentry);
--	} else
-+	if (IS_ERR(dentry)) {
- 		error = PTR_ERR(dentry);
-+		goto out;
-+	}
-+
-+	mode = cgroup_file_mode(cft);
-+	error = cgroup_create_file(dentry, mode | S_IFREG, cgrp->root->sb);
-+	if (!error) {
-+		cfe->type = (void *)cft;
-+		cfe->dentry = dentry;
-+		dentry->d_fsdata = cfe;
-+		list_add_tail(&cfe->node, &parent->files);
-+		cfe = NULL;
-+	}
-+	dput(dentry);
-+out:
-+	kfree(cfe);
- 	return error;
- }
+-- 
+tejun
