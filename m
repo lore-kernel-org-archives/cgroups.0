@@ -1,51 +1,49 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 09/10] cgroup: introduce struct cfent
-Date: Tue, 20 Mar 2012 09:02:28 -0700
-Message-ID: <20120320160228.GD5684@google.com>
+Subject: Re: [PATCH 03/10] cgroup: implement cgroup_add_cftypes() and friends
+Date: Tue, 20 Mar 2012 09:03:47 -0700
+Message-ID: <20120320160347.GE5684@google.com>
 References: <1331940963-15756-1-git-send-email-tj@kernel.org>
- <1331940963-15756-10-git-send-email-tj@kernel.org>
- <4F688EA9.8050905@parallels.com>
+	<1331940963-15756-4-git-send-email-tj@kernel.org>
+	<877gyfu025.fsf@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=b70B1nqgrLejGIibwI8W34y3OYUUAwQTmkn3zYS0x7U=;
-        b=SOrungKHEzmumwBVdYzw7skNTO9WslTqMPNB9nVxD+95/G+BsT0xqwQI+JGiWSrbi2
-         nxjecvA1WFbxo6JEY6X+0iikVNvkTVzQpmZlC9Y4QlKS5uEomlCVmr3JYsqBTDExn1bK
-         qKEEj1L+x+L0wTJElBIorvauR+qcc4qhp9DS+IjNZDKH4WBmQPSzHL97ET4jdijHqOMK
-         zOOwym1ezxoZO68XAu3rHvHwpXtS2W6LnD+lPVpCsyZLj0KqotN9CH11xeImf5s2VUNr
-         zYotwNOug4NLBdsCMvWxvr3tKFPcIhiLi3F0NCfSLizMSZMc6ufvaSIOTHWW3mquR584
-         hcIw==
-Content-Disposition: inline
-In-Reply-To: <4F688EA9.8050905-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=lHAhF//p+FRyHtYt/GD3bUAQ4o1jLHEcvziThtU+svY=;
+	b=liShHmDAeN4eWJMEIWTaQ81PTqTrPyCwOrSksktUCTV4yG1ux4q9Evxa8TJG106+05
+	nlJW4gcEE55j7kns05XCoUYBB5toSlbR+XKEtECamP19ClnfMYB8maXAKKrXAh6/7c3x
+	KyL9vREgKCRxiOQfHkPLcffhs569ReGifAoij/ekimSRYsTmMjTR4bzCeDUqtYzC3Q28
+	UMI+lPW7OOvamz1MRYUfdkC6L9NJYTd4OaUOUHUQk9Vci1WpMK2CBui7fpHG093X05+s
+	BciLYCjDJcr+q0JWhw1OnF8ARSu36hFBsNNBcNKjGh/3fCr2/R82HwQUPybsk2EuR/S0
+	jzVA==
+Content-Disposition: inline
+In-Reply-To: <877gyfu025.fsf-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Mar 20, 2012 at 06:05:29PM +0400, Glauber Costa wrote:
-> On 03/17/2012 03:36 AM, Tejun Heo wrote:
-> >+static void cgroup_clear_directory(struct dentry *dir)
-> >+{
-> >+	struct cgroup *cgrp = __d_cgrp(dir);
-> >+
-> >+	while (!list_empty(&cgrp->files))
-> >+		cgroup_rm_file(cgrp, NULL);
-> >+	WARN_ON_ONCE(!list_empty(&dir->d_subdirs));
-> >  }
-> 
-> 
-> I am hitting this warning here under pretty much normal conditions.
-> You forgot to account for trivial directories like "."
-> 
-> I'll send a patch ontop of what you have.
+Hello, Aneesh.
 
-Heh, yeah, I hit that yesterday too and was gonna look into that
-today.  Is the patch coming? :)
+On Tue, Mar 20, 2012 at 02:22:02PM +0530, Aneesh Kumar K.V wrote:
+> Instead of using CGROUP_SUBSYS_CFTYPES_COND, are you ok if other
+> subsystem called cgroup_add_cftypes ?. I am looking at how this will
+> impact http://article.gmane.org/gmane.linux.kernel.mm/75470 . With
+> HugeTLB we cannot do the above. 
+
+Yeah, sure.  Allowing dyanmic additions and removals of cftypes is the
+whole point of the patchset.
 
 Thanks.
 
