@@ -1,42 +1,39 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V4 07/10] hugetlbfs: Add memcg control files for hugetlbfs
-Date: Tue, 20 Mar 2012 14:52:20 +0530
-Message-ID: <874ntjtynn.fsf@linux.vnet.ibm.com>
-References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F66A059.20801@jp.fujitsu.com> <87wr6hjc58.fsf@linux.vnet.ibm.com> <4F66E169.5000909@jp.fujitsu.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 09/10] cgroup: introduce struct cfent
+Date: Tue, 20 Mar 2012 18:05:29 +0400
+Message-ID: <4F688EA9.8050905@parallels.com>
+References: <1331940963-15756-1-git-send-email-tj@kernel.org>
+	<1331940963-15756-10-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F66E169.5000909@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1331940963-15756-10-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> writes:
+On 03/17/2012 03:36 AM, Tejun Heo wrote:
+> +static void cgroup_clear_directory(struct dentry *dir)
+> +{
+> +	struct cgroup *cgrp = __d_cgrp(dir);
+> +
+> +	while (!list_empty(&cgrp->files))
+> +		cgroup_rm_file(cgrp, NULL);
+> +	WARN_ON_ONCE(!list_empty(&dir->d_subdirs));
+>   }
 
->
-> O.K. BTW, please read Tejun's recent post..
->
-> https://lkml.org/lkml/2012/3/16/522
->
-> Can you use his methods ?
->
-> I guess you can write...
->
-> CGROUP_SUBSYS_CFTYLES_COND(mem_cgroup_subsys,
-> 			hugetlb_cgroup_files,
-> 			if XXXXMB hugetlb is allowed);
->
 
-I may not be able to do CGROUP_SUBSYS_CFTYPES_COND(). But as long as we
-are able to dynamically add new control files, we should be ok.
+I am hitting this warning here under pretty much normal conditions.
+You forgot to account for trivial directories like "."
 
--aneesh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I'll send a patch ontop of what you have.
