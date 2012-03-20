@@ -1,76 +1,90 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/4] provide a function to register more cftype files
- into memcg
-Date: Tue, 20 Mar 2012 11:32:33 -0700
-Message-ID: <20120320183233.GC20832@google.com>
-References: <1332262256-13407-1-git-send-email-glommer@parallels.com>
- <1332262256-13407-4-git-send-email-glommer@parallels.com>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
+Date: Tue, 20 Mar 2012 20:34:14 +0100
+Message-ID: <20120320193414.GA21277@redhat.com>
+References: <20120106182535.GJ9511@google.com> <20120111160730.GA24556@redhat.com> <20120112003102.GB9511@google.com> <20120112170728.GA25717@redhat.com> <20120112175725.GD9511@google.com> <20120113152010.GA19215@redhat.com> <20120113182750.GD18166@google.com> <20120114173648.GA32543@redhat.com> <20120118231742.GS18166@google.com> <20120119154522.GA14058@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=rMLmPP5GLerZd1R6rCyEouxGs8fmTxOjsEUMeUSLQr0=;
-        b=n+qgmHWy4Gp35fq1TJvIuT6OuI+rly/vTL+YAphtc41PSbGGYC+nNwljaHpvOPb8sw
-         338RmIA4deN5F4kxLQPlh7pU8OrdsrzFanxLoWfnZTOJxJEeuubkHDhIdDK+DNk5DiNE
-         9VwW6cMiZEDLL0INM6KZu2h+NRvuAU3V9L9+dbPq7XQpjEcFUgazgDGAOYZ+Pcn31Zgg
-         qJHJ5Zbi5civ/NEGnIHVIBr00Ywtf1w3ppZjgpLSsjK4WI095ikpWL7A9mO8u0ek77Qr
-         MHNs9vVoBXoocBQYZS2lW19wPAfoJAkuIsQfUOIzaoiR9/lNHsyvcIAfE993QINIT4CW
-         HSdA==
 Content-Disposition: inline
-In-Reply-To: <1332262256-13407-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20120119154522.GA14058-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Hey,
+OK, finally we should do something with this problem ;)
 
-On Tue, Mar 20, 2012 at 08:50:55PM +0400, Glauber Costa wrote:
-> The function mem_cgroup_register_cftype() is provided here, so
-> an optional memcg subsystem that needs to register files at
-> a time later than memcg initialization can do it.
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> CC: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> ---
->  include/linux/memcontrol.h |    1 +
->  mm/memcontrol.c            |    6 ++++++
->  2 files changed, 7 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 4d34356..bcf8de3 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -141,6 +141,7 @@ static inline bool mem_cgroup_disabled(void)
->  	return false;
->  }
->  
-> +int mem_cgroup_register_cftype(const struct cftype *cfts);
->  void mem_cgroup_update_page_stat(struct page *page,
->  				 enum mem_cgroup_page_stat_item idx,
->  				 int val);
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index f7c6727..bd91a46 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -444,6 +444,12 @@ struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg)
->  	return &memcg->css;
->  }
->  
-> +int mem_cgroup_register_cftype(const struct cftype *cfts)
-> +{
-> +	return WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys, cfts));
-> +}
-> +EXPORT_SYMBOL(mem_cgroup_register_cftype);
+On 01/19, Oleg Nesterov wrote:
+>
+> I'll try to investigate if we can remove
+>
+> 	leader->group_leader = tsk;
+>
+> from de_thread(). In fact I already thought about this change a long
+> ago without any connection to while_each_thread(). This assignment
+> looks "assymetrical" compared to other threads we kill. But we did
+> have a reason (reasons?). Hopefully, the only really important reason
+> was already removed by 087806b1.
 
-Why not just export mem_cgroup_subsys?
+On the second thought, I think we should not do this.
 
-Thanks.
+For example, do_prlimit() assumes that tsk->group_leader is correct
+under tasklist_lock.
 
--- 
-tejun
+OK, lets return to the thread_group_leader() check. To ensure we do
+not visit the same thread twice we can check 'g', not 't'.
+
+This is what I am going to send, after I re-check once again...
+
+I have the problem with the changelog ;) Somehow it should explain
+that while_each_thread_rcu(g, t) can't race with do_group_exit().
+I think it can't, list_del_rcu(leader->thread_group) happens when
+this entry is already "empty", it should be the last thread in group.
+If the non-leader thread goes away from the least, we still have
+the "path" to reach the leader. But this is not easy to explain.
+
+As for the barrier. If de_thread() changes the leader it drops
+and re-acquires tasklist_lock (this implies mb) after it changes
+old_leader->exit_signal (used in thread_group_leader) and before
+__unhash_process() which does list_del_rcu().
+
+This means that if while_each_thread() sees the result of
+list_del_rcu(old_leader) it must also see that
+thread_group_leader(old_leader) != T.
+
+What do you think? Do you see any problems?
+
+Oleg.
+---
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 7d379a6..f169bfd 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -2323,9 +2323,24 @@ extern bool current_is_single_threaded(void);
+ #define do_each_thread(g, t) \
+ 	for (g = t = &init_task ; (g = t = next_task(g)) != &init_task ; ) do
+ 
++/*
++ * needs tasklist_lock or ->siglock, or rcu if the caller ensures
++ * that 'g' can't exit or exec.
++ */
+ #define while_each_thread(g, t) \
+ 	while ((t = next_thread(t)) != g)
+ 
++/*
++ * rcu-safe, but should start at ->group_leader.
++ * thread_group_leader(g) protects against the race with exec which
++ * removes the leader from list.
++ * smp_rmb() pairs with implicit mb() implied by unlock + lock in
++ * de_thread()->release_task() path.
++ */
++#define while_each_thread_rcu(g, t)				\
++	while ((t = next_thread(t)) != g &&			\
++		({ smp_rmb(); thread_group_leader(g); }))
++
+ static inline int get_nr_threads(struct task_struct *tsk)
+ {
+ 	return tsk->signal->nr_threads;
