@@ -1,83 +1,91 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 4/4] get rid of populate for memcg
-Date: Wed, 21 Mar 2012 11:36:19 +0400
-Message-ID: <4F6984F3.2010009@parallels.com>
-References: <1332262256-13407-1-git-send-email-glommer@parallels.com> <1332262256-13407-5-git-send-email-glommer@parallels.com> <20120320183149.GB20832@google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: memcg-devel updated for v3.3
+Date: Wed, 21 Mar 2012 10:45:45 +0100
+Message-ID: <20120321094545.GA10450@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120320183149.GB20832-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On 03/20/2012 10:31 PM, Tejun Heo wrote:
-> Hello, Glauber.
->
-> On Tue, Mar 20, 2012 at 08:50:56PM +0400, Glauber Costa wrote:
->> @@ -4929,7 +4929,9 @@ mem_cgroup_create(struct cgroup *cont)
->>   	atomic_set(&memcg->refcnt, 1);
->>   	memcg->move_charge_at_immigrate = 0;
->>   	mutex_init(&memcg->thresholds_lock);
->> -	return&memcg->css;
->> +
->> +	if (!register_kmem_files(memcg,&mem_cgroup_subsys))
->> +		return&memcg->css;
->
-> After the change, I think register_kmem_files() is a quite misleading
-> name.
+[sorry for few days delay]
 
-how about init_kmem() ?
+Hi,
+The memcg-devel tree hosted at github[*] has been updated to 3.3. Like
+with the previous releases the current patch queue is sitting in the
+since-3.3 branch based on v3.3 linus tree.
 
-Remember the slab bits will are likely to end up here as well in the end.
+We are currently at 37 patches comparing to 74 in the previous cycle
+which looks like a quite nice reduction.
 
->> @@ -2484,6 +2484,11 @@ int proto_register(struct proto *prot, int alloc_slab)
->>   		}
->>   	}
->>
->> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
->> +	if (prot->init_cgroup)
->> +		prot->init_cgroup(NULL, NULL);
->> +#endif
->
-> So, init_cgroup() is overloaded to do two things - one load time init
-> and per-cgroup init, depending on the args.
+Andrew Morton (7):
+      memcg-clear-pc-mem_cgorup-if-necessary-fix
+      memcg-clear-pc-mem_cgorup-if-necessary-fix-2-fix
+      memcg-remove-pcg_cache-page_cgroup-flag-checkpatch-fixes
+      memcg-simplify-move_account-check-fix
+      memcg-use-new-logic-for-page-stat-accounting-fix
+      memcg-fix-performance-of-mem_cgroup_begin_update_page_stat-fix
+      mm/memcontrol.c: s/stealed/stolen/
 
-Yes. I don't love it, but there is quite a bunch of precedents for this.
-Like the shrinkers in vmscan, for instance.
+Anton Vorontsov (1):
+      mm/memcontrol.c: remove redundant BUG_ON() in mem_cgroup_usage_unregister_event()
 
-a NULL argument is a probe, a valid argument should have action taken.
+Hugh Dickins (15):
+      memcg-clear-pc-mem_cgorup-if-necessary-fix-2
+      memcg-clear-pc-mem_cgorup-if-necessary fix 3
+      memcg: fix page migration to reset_owner
+      memcg: replace MEM_CONT by MEM_RES_CTLR
+      memcg: replace mem and mem_cont stragglers
+      memcg: lru_size instead of MEM_CGROUP_ZSTAT
+      memcg: enum lru_list lru
+      memcg: remove redundant returns
+      idr: make idr_get_next() good for rcu_read_lock()
+      cgroup: revert ss_id_lock to spinlock
+      memcg: let css_get_next() rely upon rcu_read_lock()
+      memcg: remove PCG_CACHE page_cgroup flag fix
+      memcg: remove PCG_CACHE page_cgroup flag fix2
+      memcg: remove PCG_FILE_MAPPED fix cosmetic fix
+      memcg: fix GPF when cgroup removal races with last exit
 
->> @@ -37,7 +37,6 @@ static struct cftype tcp_files[] = {
->>   	},
->>   	{ }	/* terminate */
->>   };
->> -CGROUP_SUBSYS_CFTYPES(mem_cgroup_subsys, tcp_files);
->
-> What I don't get is why you can't just keep this.  Is it because the
-> files might appear before the protocol is registered?  Wouldn't it be
-> much better to add ipv4_tcp_init_cgroup() or whatever call to
-> inet_init() instead of overloading init_cgroup() with mostly unrelated
-> stuff?
->
+Jeff Liu (1):
+      mm/memcontrol.c: remove unnecessary 'break' in mem_cgroup_read()
 
-The reason is that this has to be kept generic for protocols that may 
-want to implement this in the future - since the pressure controls 
-themselves are generic, the per-cgroup versions should be as well.
+Johannes Weiner (1):
+      memcg-clear-pc-mem_cgorup-if-necessary-comments
 
-And in general, a protocol can live in a module, or not be registered
-despite being compiled in.
+KAMEZAWA Hiroyuki (10):
+      memcg: clear pc->mem_cgorup if necessary.
+      memcg: remove unnecessary thp check in page stat accounting
+      memcg: remove PCG_CACHE page_cgroup flag
+      memcg: remove EXPORT_SYMBOL(mem_cgroup_update_page_stat)
+      memcg: simplify move_account() check
+      memcg: remove PCG_MOVE_LOCK flag from page_cgroup
+      memcg: use new logic for page stat accounting
+      memcg: remove PCG_FILE_MAPPED
+      memcg-remove-pcg_file_mapped-fix
+      memcg: fix performance of mem_cgroup_begin_update_page_stat()
 
-When the root memcg is created, prot_register() is usually not yet 
-called, at least for tcp.
+Konstantin Khlebnikov (1):
+      memcg: kill dead prev_priority stubs
 
-Now, what we do with the files, are our decision in the end. If you 
-want, we can use CGROUP_SUBSYS_CFTYPES(mem_cgroup_subsys, tcp_files)
-as you suggested. tcp itself is always available if it is compiled in.
-Then in the future, if anyone cares about adding support for a protocol 
-that may differ in that aspect, we can put the files nevertheless, and
-use ENOTSUPP as kame suggested for the swap accounting.
+Li Zefan (1):
+      cgroup: remove cgroup_subsys argument from callbacks
 
-What's your take ?
+
+Happy hacking and have a lot of fun.
+
+Let me know if I missed any patches.
+
+---
+[*] git://github.com/mstsxfx/memcg-devel.git
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
