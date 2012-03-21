@@ -1,64 +1,83 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/3] page cgroup diet
-Date: Wed, 21 Mar 2012 15:30:22 +0900
-Message-ID: <4F69757E.5030103@jp.fujitsu.com>
-References: <4F66E6A5.10804@jp.fujitsu.com> <4F679039.6070609@openvz.org> <4F692895.8020908@jp.fujitsu.com> <4F69718E.8010603@openvz.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 4/4] get rid of populate for memcg
+Date: Wed, 21 Mar 2012 11:36:19 +0400
+Message-ID: <4F6984F3.2010009@parallels.com>
+References: <1332262256-13407-1-git-send-email-glommer@parallels.com> <1332262256-13407-5-git-send-email-glommer@parallels.com> <20120320183149.GB20832@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F69718E.8010603-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20120320183149.GB20832-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org" <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-(2012/03/21 15:13), Konstantin Khlebnikov wrote:
+On 03/20/2012 10:31 PM, Tejun Heo wrote:
+> Hello, Glauber.
+>
+> On Tue, Mar 20, 2012 at 08:50:56PM +0400, Glauber Costa wrote:
+>> @@ -4929,7 +4929,9 @@ mem_cgroup_create(struct cgroup *cont)
+>>   	atomic_set(&memcg->refcnt, 1);
+>>   	memcg->move_charge_at_immigrate = 0;
+>>   	mutex_init(&memcg->thresholds_lock);
+>> -	return&memcg->css;
+>> +
+>> +	if (!register_kmem_files(memcg,&mem_cgroup_subsys))
+>> +		return&memcg->css;
+>
+> After the change, I think register_kmem_files() is a quite misleading
+> name.
 
-> KAMEZAWA Hiroyuki wrote:
->> (2012/03/20 4:59), Konstantin Khlebnikov wrote:
+how about init_kmem() ?
+
+Remember the slab bits will are likely to end up here as well in the end.
+
+>> @@ -2484,6 +2484,11 @@ int proto_register(struct proto *prot, int alloc_slab)
+>>   		}
+>>   	}
 >>
->>> KAMEZAWA Hiroyuki wrote:
->>>> This is just an RFC...test is not enough yet.
->>>>
->>>> I know it's merge window..this post is just for sharing idea.
->>>>
->>>> This patch merges pc->flags and pc->mem_cgroup into a word. Then,
->>>> memcg's overhead will be 8bytes per page(4096bytes?).
->>>>
->>>> Because this patch will affect all memory cgroup developers, I'd like to
->>>> show patches before MM Summit. I think we can agree the direction to
->>>> reduce size of page_cgroup..and finally integrate into 'struct page'
->>>> (and remove cgroup_disable= boot option...)
->>>>
->>>> Patch 1/3 - introduce pc_to_mem_cgroup and hide pc->mem_cgroup
->>>> Patch 2/3 - remove pc->mem_cgroup
->>>> Patch 3/3 - remove memory barriers.
->>>>
->>>> I'm now wondering when this change should be merged....
->>>>
->>>
->>> This is cool, but maybe we should skip this temporary step and merge all this stuff into page->flags.
->>
->>
->> Why we should skip and delay reduction of size of page_cgroup
->> which is considered as very big problem ?
-> 
-> I think it would be better to solve problem completely and kill page_cgroup in one step.
-> 
+>> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+>> +	if (prot->init_cgroup)
+>> +		prot->init_cgroup(NULL, NULL);
+>> +#endif
+>
+> So, init_cgroup() is overloaded to do two things - one load time init
+> and per-cgroup init, depending on the args.
 
+Yes. I don't love it, but there is quite a bunch of precedents for this.
+Like the shrinkers in vmscan, for instance.
 
-I like step-by-step rather than a big step. I devided this page_cgroup diet patch set
-into 3 steps (2012-Jan, 2012-Feb, and the next one is the last.)
+a NULL argument is a probe, a valid argument should have action taken.
 
-This change may introduce new races as step1 and step2 did (Thanks to Hugh Dickins!).
+>> @@ -37,7 +37,6 @@ static struct cftype tcp_files[] = {
+>>   	},
+>>   	{ }	/* terminate */
+>>   };
+>> -CGROUP_SUBSYS_CFTYPES(mem_cgroup_subsys, tcp_files);
+>
+> What I don't get is why you can't just keep this.  Is it because the
+> files might appear before the protocol is registered?  Wouldn't it be
+> much better to add ipv4_tcp_init_cgroup() or whatever call to
+> inet_init() instead of overloading init_cgroup() with mostly unrelated
+> stuff?
+>
 
-Finally, IIUC, 'struct page' has 8bytes of padding now. I think we can use that space
-if we can be agreed.
+The reason is that this has to be kept generic for protocols that may 
+want to implement this in the future - since the pressure controls 
+themselves are generic, the per-cgroup versions should be as well.
 
-Hm. BTW, using lruvec in page->flags implies you add a dynamic table lookup in
-free_page() and you need to reset page->flags to point a valid
-lruvec at page allocation. Please take care of performance.
+And in general, a protocol can live in a module, or not be registered
+despite being compiled in.
 
-Thanks,
--Kame
+When the root memcg is created, prot_register() is usually not yet 
+called, at least for tcp.
+
+Now, what we do with the files, are our decision in the end. If you 
+want, we can use CGROUP_SUBSYS_CFTYPES(mem_cgroup_subsys, tcp_files)
+as you suggested. tcp itself is always available if it is compiled in.
+Then in the future, if anyone cares about adding support for a protocol 
+that may differ in that aspect, we can put the files nevertheless, and
+use ENOTSUPP as kame suggested for the swap accounting.
+
+What's your take ?
