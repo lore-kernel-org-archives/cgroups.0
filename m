@@ -1,218 +1,66 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 1/2] cgroup: pass struct mem_cgroup instead of struct cgroup to socket memcg
-Date: Thu, 22 Mar 2012 22:19:22 +0400
-Message-ID: <1332440363-2754-2-git-send-email-glommer@parallels.com>
-References: <1332440363-2754-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1332440363-2754-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] memcg: change behavior of moving charges at task move
+Date: Thu, 22 Mar 2012 14:29:41 -0700
+Message-ID: <20120322142941.01e601c0.akpm@linux-foundation.org>
+References: <4F69A4C4.4080602@jp.fujitsu.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4F69A4C4.4080602@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Hugh Dickins <hughd@google.com>, "n-horiguchi@ah.jp.nec.com" <n-horiguchi@ah.jp.nec.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>
 
-The only reason cgroup was used, was to be consistent with the populate()
-interface. Now that we're getting rid of it, not only we no longer need
-it, but we also *can't* call it this way.
+On Wed, 21 Mar 2012 18:52:04 +0900
+KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
 
-Since we will no longer rely on populate(), this will be called from
-create(). During create, the association between struct mem_cgroup
-and struct cgroup does not yet exist, since cgroup internals hasn't
-yet initialized its bookkeeping. This means we would not be able
-to draw the memcg pointer from the cgroup pointer in these
-functions, which is highly undesirable.
+> As discussed before, I post this to fix the spec and implementation of task moving.
+> Then, do you think what target kernel version should be ? 3.4/3.5 ?
+> but yes, it may be late for 3.4....
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/net/sock.h           |   12 ++++++------
- include/net/tcp_memcontrol.h |    4 ++--
- mm/memcontrol.c              |   24 +++++++++---------------
- net/core/sock.c              |   10 +++++-----
- net/ipv4/tcp_memcontrol.c    |    5 ++---
- 5 files changed, 24 insertions(+), 31 deletions(-)
+Well, the key information here is "what effect does the bug have upon
+users".
 
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 705d1ad..e476277 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -67,16 +67,16 @@
- struct cgroup;
- struct cgroup_subsys;
- #ifdef CONFIG_NET
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp);
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss);
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg);
- #else
- static inline
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
- }
- static inline
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -867,9 +867,9 @@ struct proto {
- 	 * This function has to setup any files the protocol want to
- 	 * appear in the kmem cgroup filesystem.
- 	 */
--	int			(*init_cgroup)(struct cgroup *cgrp,
-+	int			(*init_cgroup)(struct mem_cgroup *memcg,
- 					       struct cgroup_subsys *ss);
--	void			(*destroy_cgroup)(struct cgroup *cgrp);
-+	void			(*destroy_cgroup)(struct mem_cgroup *memcg);
- 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
- #endif
- };
-diff --git a/include/net/tcp_memcontrol.h b/include/net/tcp_memcontrol.h
-index 48410ff..7df18bc 100644
---- a/include/net/tcp_memcontrol.h
-+++ b/include/net/tcp_memcontrol.h
-@@ -12,8 +12,8 @@ struct tcp_memcontrol {
- };
- 
- struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg);
--int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void tcp_destroy_cgroup(struct cgroup *cgrp);
-+int tcp_init_cgroup(struct mem_cgroup *memcg, struct cgroup_subsys *ss);
-+void tcp_destroy_cgroup(struct mem_cgroup *memcg);
- unsigned long long tcp_max_memory(const struct mem_cgroup *memcg);
- void tcp_prot_mem(struct mem_cgroup *memcg, long val, int idx);
- #endif /* _TCP_MEMCG_H */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a3eb82f..d43bfa0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4584,29 +4584,22 @@ static int mem_control_numa_stat_open(struct inode *unused, struct file *file)
- #endif /* CONFIG_NUMA */
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-+static int register_kmem_files(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
--	/*
--	 * Part of this would be better living in a separate allocation
--	 * function, leaving us with just the cgroup tree population work.
--	 * We, however, depend on state such as network's proto_list that
--	 * is only initialized after cgroup creation. I found the less
--	 * cumbersome way to deal with it to defer it all to populate time
--	 */
--	return mem_cgroup_sockets_init(cont, ss);
-+	return mem_cgroup_sockets_init(memcg, ss);
- };
- 
--static void kmem_cgroup_destroy(struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- {
--	mem_cgroup_sockets_destroy(cont);
-+	mem_cgroup_sockets_destroy(memcg);
- }
- #else
--static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-+static int register_kmem_files(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
- }
- 
--static void kmem_cgroup_destroy(struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -4956,7 +4949,7 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 
--	kmem_cgroup_destroy(cont);
-+	kmem_cgroup_destroy(memcg);
- 
- 	mem_cgroup_put(memcg);
- }
-@@ -4964,7 +4957,8 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- static int mem_cgroup_populate(struct cgroup_subsys *ss,
- 				struct cgroup *cont)
- {
--	return register_kmem_files(cont, ss);
-+	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-+	return register_kmem_files(memcg, ss);
- }
- 
- #ifdef CONFIG_MMU
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 688037c..443a404 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -141,7 +141,7 @@ static DEFINE_MUTEX(proto_list_mutex);
- static LIST_HEAD(proto_list);
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	struct proto *proto;
- 	int ret = 0;
-@@ -149,7 +149,7 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry(proto, &proto_list, node) {
- 		if (proto->init_cgroup) {
--			ret = proto->init_cgroup(cgrp, ss);
-+			ret = proto->init_cgroup(memcg, ss);
- 			if (ret)
- 				goto out;
- 		}
-@@ -160,19 +160,19 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- out:
- 	list_for_each_entry_continue_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp);
-+			proto->destroy_cgroup(memcg);
- 	mutex_unlock(&proto_list_mutex);
- 	return ret;
- }
- 
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg)
- {
- 	struct proto *proto;
- 
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp);
-+			proto->destroy_cgroup(memcg);
- 	mutex_unlock(&proto_list_mutex);
- }
- #endif
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index 73ba5fd..734e57b 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -18,7 +18,7 @@ static void memcg_tcp_enter_memory_pressure(struct sock *sk)
- }
- EXPORT_SYMBOL(memcg_tcp_enter_memory_pressure);
- 
--int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int tcp_init_cgroup(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	/*
- 	 * The root cgroup does not use res_counters, but rather,
-@@ -61,9 +61,8 @@ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- }
- EXPORT_SYMBOL(tcp_init_cgroup);
- 
--void tcp_destroy_cgroup(struct cgroup *cgrp)
-+void tcp_destroy_cgroup(struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
- 	struct cg_proto *cg_proto;
- 	struct tcp_memcontrol *tcp;
- 	u64 val;
--- 
-1.7.7.6
+> In documentation, it's said that 'shared anon are not moved'.
+> But in implementation, the check was wrong.
+> 
+>   if (!move_anon() || page_mapcount(page) > 2)
+> 
+> Ah, memcg has been moving shared anon pages for a long time.
+> 
+> Then, here is a discussion about handling of shared anon pages.
+> 
+>  - It's complex
+>  - Now, shared file caches are moved in force.
+>  - It adds unclear check as page_mapcount(). To do correct check,
+>    we should check swap users, etc.
+>  - No one notice this implementation behavior. So, no one get benefit
+>    from the design.
+>  - In general, once task is moved to a cgroup for running, it will not
+>    be moved....
+>  - Finally, we have control knob as memory.move_charge_at_immigrate.
+> 
+> Here is a patch to allow moving shared pages, completely. This makes
+> memcg simpler and fix current broken code.
+> 
+> Note:
+>  IIUC, libcgroup's cgroup daemon moves tasks after exec().
+>  So, it's not affected.
+>  libcgroup's command "cgexec" does move itsef to a memcg and call exec()
+>  without fork(). it's not affected.
+> 
+> Changelog:
+>  - fixed PageAnon() check.
+>  - remove call of lookup_swap_cache()
+>  - fixed Documentation.
+
+But you forgot to tell us :(
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
