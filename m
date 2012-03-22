@@ -1,66 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [PATCH] memcg: change behavior of moving charges at task move
-Date: Thu, 22 Mar 2012 14:29:41 -0700
-Message-ID: <20120322142941.01e601c0.akpm@linux-foundation.org>
+Date: Thu, 22 Mar 2012 14:36:10 -0700
+Message-ID: <20120322143610.e4df49c9.akpm@linux-foundation.org>
 References: <4F69A4C4.4080602@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F69A4C4.4080602@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F69A4C4.4080602-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Hugh Dickins <hughd@google.com>, "n-horiguchi@ah.jp.nec.com" <n-horiguchi@ah.jp.nec.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org" <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
 On Wed, 21 Mar 2012 18:52:04 +0900
-KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
+KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
 
-> As discussed before, I post this to fix the spec and implementation of task moving.
-> Then, do you think what target kernel version should be ? 3.4/3.5 ?
-> but yes, it may be late for 3.4....
+>  static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
+>  			unsigned long addr, pte_t ptent, swp_entry_t *entry)
+>  {
+> -	int usage_count;
+>  	struct page *page = NULL;
+>  	swp_entry_t ent = pte_to_swp_entry(ptent);
+>  
+>  	if (!move_anon() || non_swap_entry(ent))
+>  		return NULL;
+> -	usage_count = mem_cgroup_count_swap_user(ent, &page);
+> -	if (usage_count > 1) { /* we don't move shared anon */
+> -		if (page)
+> -			put_page(page);
+> -		return NULL;
+> -	}
+> +#ifdef CONFIG_SWAP
+> +	/*
+> +	 * Avoid lookup_swap_cache() not to update statistics.
+> +	 */
 
-Well, the key information here is "what effect does the bug have upon
-users".
+I don't understand this comment - what is it trying to tell us?
 
-> In documentation, it's said that 'shared anon are not moved'.
-> But in implementation, the check was wrong.
-> 
->   if (!move_anon() || page_mapcount(page) > 2)
-> 
-> Ah, memcg has been moving shared anon pages for a long time.
-> 
-> Then, here is a discussion about handling of shared anon pages.
-> 
->  - It's complex
->  - Now, shared file caches are moved in force.
->  - It adds unclear check as page_mapcount(). To do correct check,
->    we should check swap users, etc.
->  - No one notice this implementation behavior. So, no one get benefit
->    from the design.
->  - In general, once task is moved to a cgroup for running, it will not
->    be moved....
->  - Finally, we have control knob as memory.move_charge_at_immigrate.
-> 
-> Here is a patch to allow moving shared pages, completely. This makes
-> memcg simpler and fix current broken code.
-> 
-> Note:
->  IIUC, libcgroup's cgroup daemon moves tasks after exec().
->  So, it's not affected.
->  libcgroup's command "cgexec" does move itsef to a memcg and call exec()
->  without fork(). it's not affected.
-> 
-> Changelog:
->  - fixed PageAnon() check.
->  - remove call of lookup_swap_cache()
->  - fixed Documentation.
+> +	page = find_get_page(&swapper_space, ent.val);
 
-But you forgot to tell us :(
+The code won't even compile if CONFIG_SWAP=n?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> +#endif
+>  	if (do_swap_account)
+>  		entry->val = ent.val;
+>  
