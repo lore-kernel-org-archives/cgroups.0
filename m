@@ -1,91 +1,66 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [RFC][PATCH 3/3] memcg: atomic update of memcg pointer and other
- bits.
-Date: Thu, 22 Mar 2012 14:38:20 +0100
-Message-ID: <20120322133820.GE18665@tiehlicka.suse.cz>
-References: <4F66E6A5.10804@jp.fujitsu.com>
- <4F66E85E.6030000@jp.fujitsu.com>
-Mime-Version: 1.0
+From: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
+Subject: Re: [PATCH] memcg: change behavior of moving charges at task move
+Date: Thu, 22 Mar 2012 11:17:20 -0400
+Message-ID: <1332429440-7167-1-git-send-email-n-horiguchi@ah.jp.nec.com>
+References: <4F69A4C4.4080602@jp.fujitsu.com>
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <4F66E85E.6030000@jp.fujitsu.com>
+In-Reply-To: <4F69A4C4.4080602@jp.fujitsu.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Han Ying <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, suleiman@google.com, n-horiguchi@ah.jp.nec.com, khlebnikov@openvz.org, Tejun Heo <tj@kernel.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Hugh Dickins <hughd@google.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon 19-03-12 17:03:42, KAMEZAWA Hiroyuki wrote:
-[...]
-> @@ -1237,8 +1237,6 @@ mem_cgroup_get_reclaim_stat_from_page(struct page *page)
->  	pc = lookup_page_cgroup(page);
->  	if (!PageCgroupUsed(pc))
->  		return NULL;
-> -	/* Ensure pc's mem_cgroup is visible after reading PCG_USED. */
-> -	smp_rmb();
->  	mz = page_cgroup_zoneinfo(pc_to_mem_cgroup(pc), page);
->  	return &mz->reclaim_stat;
->  }
-> @@ -2491,16 +2489,7 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
->  		}
->  	}
->  
-> -	pc_set_mem_cgroup(pc, memcg);
-> -	/*
-> -	 * We access a page_cgroup asynchronously without lock_page_cgroup().
-> -	 * Especially when a page_cgroup is taken from a page, pc's mem_cgroup
-> -	 * is accessed after testing USED bit. To make pc's mem_cgroup visible
-> -	 * before USED bit, we need memory barrier here.
-> -	 * See mem_cgroup_add_lru_list(), etc.
-> - 	 */
-> -	smp_wmb();
-> -	SetPageCgroupUsed(pc);
-> +	pc_set_mem_cgroup(pc, memcg, BIT(PCG_USED) | BIT(PCG_LOCK));
+On Wed, Mar 21, 2012 at 06:52:04PM +0900, KAMEZAWA Hiroyuki wrote:
+> As discussed before, I post this to fix the spec and implementation of task moving.
+> Then, do you think what target kernel version should be ? 3.4/3.5 ?
+> but yes, it may be late for 3.4....
+> 
+> ==
+> In documentation, it's said that 'shared anon are not moved'.
+> But in implementation, the check was wrong.
+> 
+>   if (!move_anon() || page_mapcount(page) > 2)
+> 
+> Ah, memcg has been moving shared anon pages for a long time.
+> 
+> Then, here is a discussion about handling of shared anon pages.
+> 
+>  - It's complex
+>  - Now, shared file caches are moved in force.
+>  - It adds unclear check as page_mapcount(). To do correct check,
+>    we should check swap users, etc.
+>  - No one notice this implementation behavior. So, no one get benefit
+>    from the design.
+>  - In general, once task is moved to a cgroup for running, it will not
+>    be moved....
+>  - Finally, we have control knob as memory.move_charge_at_immigrate.
+> 
+> Here is a patch to allow moving shared pages, completely. This makes
+> memcg simpler and fix current broken code.
+> 
+> Note:
+>  IIUC, libcgroup's cgroup daemon moves tasks after exec().
+>  So, it's not affected.
+>  libcgroup's command "cgexec" does move itsef to a memcg and call exec()
+>  without fork(). it's not affected.
+> 
+> Changelog:
+>  - fixed PageAnon() check.
+>  - remove call of lookup_swap_cache()
+>  - fixed Documentation.
+> 
+> Suggested-by: Hugh Dickins <hughd@google.com>
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-This is not nice. Maybe we need two variants (pc_set_mem_cgroup[_flags])?
+It looks good to me.
 
->  	if (lrucare) {
->  		if (was_on_lru) {
-> @@ -2529,7 +2518,6 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->  
-> -#define PCGF_NOCOPY_AT_SPLIT ((1 << PCG_LOCK) | (1 << PCG_MIGRATION))
->  /*
->   * Because tail pages are not marked as "used", set it. We're under
->   * zone->lru_lock, 'splitting on pmd' and compound_lock.
-> @@ -2547,9 +2535,7 @@ void mem_cgroup_split_huge_fixup(struct page *head)
->  		return;
->  	for (i = 1; i < HPAGE_PMD_NR; i++) {
->  		pc = head_pc + i;
-> -		pc_set_mem_cgroup(pc, memcg);
-> -		smp_wmb();/* see __commit_charge() */
-> -		pc->flags = head_pc->flags & ~PCGF_NOCOPY_AT_SPLIT;
-> +		pc_set_mem_cgroup(pc, memcg, BIT(PCG_USED));
+Reviewed-by: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
 
-Maybe it would be cleaner to remove PCGF_NOCOPY_AT_SPLIT in a separate patch with 
-VM_BUG_ON(!head_pc->flags & BIT(PCG_USED))?
-
->  	}
->  }
->  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-> @@ -2616,7 +2602,7 @@ static int mem_cgroup_move_account(struct page *page,
->  		__mem_cgroup_cancel_charge(from, nr_pages);
->  
->  	/* caller should have done css_get */
-> -	pc_set_mem_cgroup(pc, to);
-> +	pc_set_mem_cgroup(pc, to, BIT(PCG_USED) | BIT(PCG_LOCK));
-
-Same here.
-
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Thanks,
+Naoya
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
