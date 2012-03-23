@@ -1,130 +1,55 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: change behavior of moving charges at task move
-Date: Fri, 23 Mar 2012 10:45:57 +0100
-Message-ID: <20120323094557.GA5123@tiehlicka.suse.cz>
-References: <4F69A4C4.4080602@jp.fujitsu.com>
- <20120322143610.e4df49c9.akpm@linux-foundation.org>
- <4F6BC166.80407@jp.fujitsu.com>
- <20120322173000.f078a43f.akpm@linux-foundation.org>
- <4F6BC94C.80301@jp.fujitsu.com>
- <20120323085301.GA1739@cmpxchg.org>
- <4F6C3BB2.6090108@jp.fujitsu.com>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Q: cgroup: Questions about possible issues in cgroup locking
+Date: Fri, 23 Mar 2012 18:51:57 +0100
+Message-ID: <20120323175157.GA20675@redhat.com>
+References: <20120112003102.GB9511@google.com> <20120112170728.GA25717@redhat.com> <20120112175725.GD9511@google.com> <20120113152010.GA19215@redhat.com> <20120113182750.GD18166@google.com> <20120114173648.GA32543@redhat.com> <20120118231742.GS18166@google.com> <20120119154522.GA14058@redhat.com> <20120320193414.GA21277@redhat.com> <20120321185955.GK27051@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4F6C3BB2.6090108-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <20120321185955.GK27051-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org" <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-On Fri 23-03-12 18:00:34, KAMEZAWA Hiroyuki wrote:
-> (2012/03/23 17:53), Johannes Weiner wrote:
-> 
-> > On Fri, Mar 23, 2012 at 09:52:28AM +0900, KAMEZAWA Hiroyuki wrote:
-> >> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> >> index b2ee6df..ca8b3a1 100644
-> >> --- a/mm/memcontrol.c
-> >> +++ b/mm/memcontrol.c
-> >> @@ -5147,7 +5147,7 @@ static struct page *mc_handle_present_pte(struct vm_area_struct *vma,
-> >>  		return NULL;
-> >>  	if (PageAnon(page)) {
-> >>  		/* we don't move shared anon */
-> >> -		if (!move_anon() || page_mapcount(page) > 2)
-> >> +		if (!move_anon())
-> >>  			return NULL;
-> >>  	} else if (!move_file())
-> >>  		/* we ignore mapcount for file pages */
-> >> @@ -5158,26 +5158,32 @@ static struct page *mc_handle_present_pte(struct vm_area_struct *vma,
-> >>  	return page;
-> >>  }
-> >>  
-> >> +#ifdef CONFFIG_SWAP
-> > 
-> > That will probably disable it for good :)
-> > 
-> 
-> 
-> Thank you for your good eyes.. I feel I can't trust my eyes ;(
-> 
-> 
-> ==
-> From d7ed385bad22d352bb28aeb9380591b72ec5bec5 Mon Sep 17 00:00:00 2001
-> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Date: Wed, 21 Mar 2012 19:03:40 +0900
-> Subject: [PATCH] memcg: fix/change behavior of shared anon at moving task.
-> 
-> This patch changes memcg's behavior at task_move().
-> 
-> At task_move(), the kernel scans a task's page table and move
-> the changes for mapped pages from source cgroup to target cgroup.
+On 03/21, Mandeep Singh Baines wrote:
+>
+> Oleg Nesterov (oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org) wrote:
+> > +/*
+> > + * rcu-safe, but should start at ->group_leader.
+> > + * thread_group_leader(g) protects against the race with exec which
+> > + * removes the leader from list.
+> > + * smp_rmb() pairs with implicit mb() implied by unlock + lock in
+> > + * de_thread()->release_task() path.
+> > + */
+> > +#define while_each_thread_rcu(g, t)				\
+> > +	while ((t = next_thread(t)) != g &&			\
+> > +		({ smp_rmb(); thread_group_leader(g); }))
+> > +
+>
+> Couldn't you miss the exec_thread if:
+>
+> t = exec_thread && !thread_group_leader(g)
 
-charges?
+Yes, we already discussed this, iirc.
 
-> There has been a bug at handling shared anonymous pages for a long time.
-> 
-> Before patch:
->   - The spec says 'shared anonymous pages are not moved.'
->   - The implementation was 'shared anonymoys pages may be moved'.
->     If page_mapcount <=2, shared anonymous pages's charge were moved.
-> 
-> After patch:
->   - The spec says 'all anonymous pages are moved'.
->   - The implementation is 'all anonymous pages are moved'.
-> 
-> Considering usage of memcg, this will not affect user's experience.
-> 'shared anonymous' pages only exists between a tree of processes
-> which don't do exec(). Moving one of process without exec() seems
-> not sane. 
+I was going to write that this is fine, but then I changed my mind.
+Indeed, it is not good while_each_thread_rcu() can miss the new leader.
 
-Why it wouldn't be sane?
+> Could we change do_prlimit()? Especially since its slow path.
 
-> For example, libcgroup will not be affected by this change.
-> (Anyway, no one noticed the implementation for a long time...)
-> 
-> Below is a discussion log:
-> 
->  - current spec/implementation are complex
->  - Now, shared file caches are moved
->  - It adds unclear check as page_mapcount(). To do correct check,
->    we should check swap users, etc.
->  - No one notice this implementation behavior. So, no one get benefit
->    from the design.
->  - In general, once task is moved to a cgroup for running, it will not
->    be moved....
->  - Finally, we have control knob as memory.move_charge_at_immigrate.
-> 
-> Here is a patch to allow moving shared pages, completely. This makes
-> memcg simpler and fix current broken code.
-> 
-> Changelog:
->   - fixed CONFFIG_SWAP...
-> Changelog:
->   - fixed comment around find_get_page()
->   - changed CONFIG_SWAP handling
->   - updated patch description
+But do_prlimit() is correct. It sees the unhashed task under tasklist,
+task->group_leader should be correct.
 
-Anyway the patch looks good to me and I agree that we should make anon
-moving easier.
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> I really like you're earlier solution (ignoring barrier):
+>
+> #define while_each_thread(g, t) \
+> 	while (t->group_leader == g->group_leader && (t = next_thread(t)) != g)
 
-> 
-> Suggested-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> ---
->  Documentation/cgroups/memory.txt |    9 ++++-----
->  include/linux/swap.h             |    9 ---------
->  mm/memcontrol.c                  |   22 ++++++++++++++--------
->  mm/swapfile.c                    |   31 -------------------------------
->  4 files changed, 18 insertions(+), 53 deletions(-)
-> 
-[...]
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+The problem is "ignoring barrier and races".
+
+OK, I'll try to think again.
+
+Oleg.
