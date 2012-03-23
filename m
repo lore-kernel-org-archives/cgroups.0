@@ -1,103 +1,38 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC][PATCH 3/3] memcg: atomic update of memcg pointer and other
- bits.
-Date: Fri, 23 Mar 2012 10:03:13 +0900
-Message-ID: <4F6BCBD1.1030602@jp.fujitsu.com>
-References: <4F66E6A5.10804@jp.fujitsu.com> <4F66E85E.6030000@jp.fujitsu.com> <20120322133820.GE18665@tiehlicka.suse.cz>
+From: Nikiforov Alex <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: [RFC] event about group change
+Date: Fri, 23 Mar 2012 10:02:41 +0400
+Message-ID: <4F6C1201.9030300@samsung.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120322133820.GE18665@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Han Ying <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, suleiman@google.com, n-horiguchi@ah.jp.nec.com, khlebnikov@openvz.org, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
 
-(2012/03/22 22:38), Michal Hocko wrote:
+Hello, guys,
 
-> On Mon 19-03-12 17:03:42, KAMEZAWA Hiroyuki wrote:
-> [...]
->> @@ -1237,8 +1237,6 @@ mem_cgroup_get_reclaim_stat_from_page(struct page *page)
->>  	pc = lookup_page_cgroup(page);
->>  	if (!PageCgroupUsed(pc))
->>  		return NULL;
->> -	/* Ensure pc's mem_cgroup is visible after reading PCG_USED. */
->> -	smp_rmb();
->>  	mz = page_cgroup_zoneinfo(pc_to_mem_cgroup(pc), page);
->>  	return &mz->reclaim_stat;
->>  }
->> @@ -2491,16 +2489,7 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
->>  		}
->>  	}
->>  
->> -	pc_set_mem_cgroup(pc, memcg);
->> -	/*
->> -	 * We access a page_cgroup asynchronously without lock_page_cgroup().
->> -	 * Especially when a page_cgroup is taken from a page, pc's mem_cgroup
->> -	 * is accessed after testing USED bit. To make pc's mem_cgroup visible
->> -	 * before USED bit, we need memory barrier here.
->> -	 * See mem_cgroup_add_lru_list(), etc.
->> - 	 */
->> -	smp_wmb();
->> -	SetPageCgroupUsed(pc);
->> +	pc_set_mem_cgroup(pc, memcg, BIT(PCG_USED) | BIT(PCG_LOCK));
-> 
-> This is not nice. Maybe we need two variants (pc_set_mem_cgroup[_flags])?
-> 
+During our work we face to problem - get events about processes die in 
+user space (not all but some of them). In the past we had special module 
+which solve this problem.
 
+But now I think that this task is quite native for cgroups subsystem. 
+Move interesting PIDs into special group and set event handler. We 
+investigate how events made in the memcg and implement proof of concepts 
+patch against mainline (maybe little bit old, but it's just RFC message) 
+with the same approach to "tasks" file.
 
-Sure. I'll add that.
+So, I see several possible use cases for others with this patch.
+1) replace wait4() for processes where we dont need for return status as 
+well as we want just know about changing status of some group of processes
+2) As extension of 1, implementing some balancing mechanism in the user 
+space between several groups. For example if some process in one group 
+consume much system resources, processes in other groups will be 
+protected from slowdown.
+3) Extremely useful in the libcgroup (in my mind), because now it's 
+unprotected against changing state with hands.
 
+Need you opinion about this.
 
->>  	if (lrucare) {
->>  		if (was_on_lru) {
->> @@ -2529,7 +2518,6 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
->>  
->>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->>  
->> -#define PCGF_NOCOPY_AT_SPLIT ((1 << PCG_LOCK) | (1 << PCG_MIGRATION))
->>  /*
->>   * Because tail pages are not marked as "used", set it. We're under
->>   * zone->lru_lock, 'splitting on pmd' and compound_lock.
->> @@ -2547,9 +2535,7 @@ void mem_cgroup_split_huge_fixup(struct page *head)
->>  		return;
->>  	for (i = 1; i < HPAGE_PMD_NR; i++) {
->>  		pc = head_pc + i;
->> -		pc_set_mem_cgroup(pc, memcg);
->> -		smp_wmb();/* see __commit_charge() */
->> -		pc->flags = head_pc->flags & ~PCGF_NOCOPY_AT_SPLIT;
->> +		pc_set_mem_cgroup(pc, memcg, BIT(PCG_USED));
-> 
-> Maybe it would be cleaner to remove PCGF_NOCOPY_AT_SPLIT in a separate patch with 
-> VM_BUG_ON(!head_pc->flags & BIT(PCG_USED))?
-> 
-
-
-Hm, ok. I'll divide this patch.
-
->>  	}
->>  }
->>  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
->> @@ -2616,7 +2602,7 @@ static int mem_cgroup_move_account(struct page *page,
->>  		__mem_cgroup_cancel_charge(from, nr_pages);
->>  
->>  	/* caller should have done css_get */
->> -	pc_set_mem_cgroup(pc, to);
->> +	pc_set_mem_cgroup(pc, to, BIT(PCG_USED) | BIT(PCG_LOCK));
-> 
-> Same here.
-> 
-
-
-pc_set_mem_cgroup_flags() ?
-
-Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thank you.
