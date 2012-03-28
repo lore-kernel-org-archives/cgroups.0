@@ -1,83 +1,105 @@
-From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-Subject: cgroups commit 61d1d219c4 breaks systemd
-Date: Thu, 29 Mar 2012 00:01:26 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1203282354440.25526@pobox.suse.cz>
-Mime-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] block: modularize blkcg config and stat file handling
+Date: Wed, 28 Mar 2012 15:51:10 -0700
+Message-ID: <1332975091-10950-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=OMbECYzU0jT5MdMfgBbbYf7Vh+OAoRjvYGTawiF+wLk=;
+        b=PS4AkIXav3Dm0r/kiG9KUxTossHZ7m9tmFVnU1WdtAdIp0BkdEDXar+/TzgeSkv8QE
+         OCfcQitpL7eYi02wsJdNJteWdF7b04aj855a7t7B4hgZiM9IfQIm3WBkQSyVSXfQ7vMK
+         R4bIoQeBISRaQzNxt/FR5gMxJePQKHstj7PbnqKkREqa2R+ZoAz0YCT03ts6QB2aIF+5
+         Si+UkdSqI+CDhW54UOr+0QaNJqjGoATPu6Ba2GErgFcHtuQhb8HP3ZhZyACqPfmcaveZ
+         zicvtBd2rPWmYW9xGeNbzL8689N158AyXakYDZIW6Nzc5wqmr3k2ebqSKi3nkvVohQJ+
+         5tag==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hi,
+Hello,
 
-I am not able to boot current Linus' tree on system which is using 
-systemd. In the early boot phase I get
+The way configuration and statistics are handled in block cgroup is
+rather depressing.  Every configuration and stat counter are defined
+in blkcg core and specific policy implementations should go through
+some blkcg interface to access and manipulate them and be notified of
+the changes.
 
-	Failed to create root cgroup hierarchy: No such process
-	Failed to allocate manager object: No such process
+By doing things this way, it achieves both complexity and
+inflexibility - the code paths are unnecessarily complex while not
+achieving any layering or modularity.  A configuration or statistics
+counter cannot be added to policies without modifying multiple places
+in blkcg core code.  Wanna implement a new policy?  Good luck.  The
+implementation details are sad too.  Stuff goes through needless
+layers of functions with hard coded cases on specific counters and
+configurations and fields specific to policies are thrown into common
+area with some shared and others unused.
 
-and that's it, the system is completely unusable afterwards (not having 
-any console spawned, no networking, etc).
+This patchset is an attempt at bringing some sanity to blkcg config
+and stat file handling.  It makes use of the pending dynamic cgroup
+file type addition / removal support [1], which will be merged into
+cgroup/for-3.5 once 3.4-rc1 is released.
 
-Bisection pointed to
+All conf and stat file handling is moved into the policy
+implementaiton the files belong to and blkcg supplies helpers to ease
+file handling in policy implementations without requiring full
+knowledge of all configurations and statistic counters.
 
-	commit 61d1d219c4c0761059236a46867bc49943c4d29d
-	Author: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-	Date:   Mon Jan 30 12:51:56 2012 -0800
+This patchset sheds >500 lines of code while maintaining the same
+features and with more comments and much more modular design.  Yeah,
+it was just wrong.
 
-	    cgroup: remove extra calls to find_existing_css_set
+This patchset contains the following 21 patches
 
-and I have verified that reverting this single commit on top of current 
-Linus' tree makes the problem go away and the system boots properly.
+ 0001-blkcg-remove-unused-pol-and-plid-parameters.patch
+ 0002-blkcg-BLKIO_STAT_CPU_SECTORS-doesn-t-have-subcounter.patch
+ 0003-blkcg-introduce-blkg_stat-and-blkg_rwstat.patch
+ 0004-blkcg-restructure-statistics-printing.patch
+ 0005-blkcg-drop-blkiocg_file_write_u64.patch
+ 0006-blkcg-restructure-configuration-printing.patch
+ 0007-blkcg-restructure-blkio_group-configruation-setting.patch
+ 0008-blkcg-blkg_conf_prep.patch
+ 0009-blkcg-export-conf-stat-helpers-to-prepare-for-reorga.patch
+ 0010-blkcg-implement-blkio_policy_type-cftypes.patch
+ 0011-blkcg-move-conf-stat-file-handling-code-to-policies.patch
+ 0012-cfq-collapse-cfq.h-into-cfq-iosched.c.patch
+ 0013-blkcg-move-statistics-update-code-to-policies.patch
+ 0014-blkcg-cfq-doesn-t-need-per-cpu-dispatch-stats.patch
+ 0015-blkcg-add-blkio_policy_ops-operations-for-exit-and-s.patch
+ 0016-blkcg-move-blkio_group_stats-to-cfq-iosched.c.patch
+ 0017-blkcg-move-blkio_group_stats_cpu-and-friends-to-blk-.patch
+ 0018-blkcg-move-blkio_group_conf-weight-to-cfq.patch
+ 0019-blkcg-move-blkio_group_conf-iops-and-bps-to-blk-thro.patch
+ 0020-blkcg-pass-around-pd-pdata-instead-of-pd-itself-in-p.patch
+ 0021-blkcg-drop-BLKCG_STAT_-PRIV-POL-OFF-macros.patch
 
-strace output shows that with 61d1d219c applied, systemd is failing while 
-trying to add itself to the systemd cgroup:
+and is on top of
 
-mkdir("/sys", 0755)                     = -1 EEXIST (File exists)
-mkdir("/sys/fs", 0755)                  = -1 EEXIST (File exists)
-mkdir("/sys/fs/cgroup", 0755)           = -1 EEXIST (File exists)
-mkdir("/sys/fs/cgroup/systemd", 0755)   = -1 EEXIST (File exists)
-mkdir("/sys/fs/cgroup/systemd/system", 0755) = 0
-open("/sys/fs/cgroup/systemd/system/tasks", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 6
-fstat(6, {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f60c4ecb000
-write(6, "357\n", 4)                    = -1 ESRCH (No such process)
-close(6)                                = 0
-munmap(0x7f60c4ecb000, 4096)            = 0
-writev(3, [{"<27>", 4}, {"systemd", 7}, {"[357]: ", 7}, {"Failed to create root cgroup hierarchy: No such process", 55}, {"\n", 1}], 5) = 74
-open("/sys/fs/cgroup/systemd/system/tasks", O_RDONLY|O_CLOEXEC) = 6
-fstat(6, {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f60c4ecb000
-read(6, "357\n", 4096)                  = 4
-open("/sys/fs/cgroup/systemd/tasks", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 7
-fstat(7, {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f60c4eca000
-write(7, "357\n", 4)                    = -1 ESRCH (No such process)
-close(7)                                = 0
-munmap(0x7f60c4eca000, 4096)            = 0
-read(6, "", 4096)                       = 0
-close(6)                                = 0
-munmap(0x7f60c4ecb000, 4096)            = 0
-open("/sys/fs/cgroup/systemd/system/tasks", O_RDONLY|O_CLOEXEC) = 6
-fstat(6, {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f60c4ecb000
-read(6, "", 4096)                       = 0
-close(6)                                = 0
-munmap(0x7f60c4ecb000, 4096)            = 0
-open("/sys/fs/cgroup/systemd/system", O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC) = 6
-getdents(6, /* 7 entries */, 32768)     = 240
-getdents(6, /* 0 entries */, 32768)     = 0
-lstat("/sys/fs/cgroup/systemd/system/tasks", {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
-rmdir("/sys/fs/cgroup/systemd/system")  = 0
-close(6)                                = 0
-close(4)                                = 0
-close(5)                                = 0
-close(0)                                = 0
-writev(3, [{"<27>", 4}, {"systemd", 7}, {"[357]: ", 7}, {"Failed to allocate manager object: No such process", 50}, {"\n", 1}], 5) = 69
+  block/for-3.5/core eb7d8c07f9 "cfq: fix cfqg ref handling..."
++ [1] cgroup-cftypes d954ca6469 "cgroup: implement cgroup_rm_cftypes()"
 
--- 
-Jiri Kosina
-SUSE Labs
+Note that the cgroup branch is temporary and the merge between the two
+branches aren't trivial.  I'll prepare a proper merged branch once the
+cgroup/for-3.5 branch is settled.
+
+This patchset is also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blkcg-files
+
+diffstat follows.
+
+ block/blk-cgroup.c   | 1343 ++++++---------------------------------------------
+ block/blk-cgroup.h   |  414 ++++++---------
+ block/blk-throttle.c |  318 ++++++++++--
+ block/cfq-iosched.c  |  567 +++++++++++++++++++--
+ block/cfq.h          |  118 ----
+ 5 files changed, 1102 insertions(+), 1658 deletions(-)
+
+--
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.kernel.containers/22623
