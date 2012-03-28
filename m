@@ -1,105 +1,152 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] block: modularize blkcg config and stat file handling
-Date: Wed, 28 Mar 2012 15:51:10 -0700
-Message-ID: <1332975091-10950-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 01/21] blkcg: remove unused @pol and @plid parameters
+Date: Wed, 28 Mar 2012 15:51:11 -0700
+Message-ID: <1332975091-10950-2-git-send-email-tj@kernel.org>
+References: <1332975091-10950-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer;
-        bh=OMbECYzU0jT5MdMfgBbbYf7Vh+OAoRjvYGTawiF+wLk=;
-        b=PS4AkIXav3Dm0r/kiG9KUxTossHZ7m9tmFVnU1WdtAdIp0BkdEDXar+/TzgeSkv8QE
-         OCfcQitpL7eYi02wsJdNJteWdF7b04aj855a7t7B4hgZiM9IfQIm3WBkQSyVSXfQ7vMK
-         R4bIoQeBISRaQzNxt/FR5gMxJePQKHstj7PbnqKkREqa2R+ZoAz0YCT03ts6QB2aIF+5
-         Si+UkdSqI+CDhW54UOr+0QaNJqjGoATPu6Ba2GErgFcHtuQhb8HP3ZhZyACqPfmcaveZ
-         zicvtBd2rPWmYW9xGeNbzL8689N158AyXakYDZIW6Nzc5wqmr3k2ebqSKi3nkvVohQJ+
-         5tag==
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=rH2eKdbwAVUqT6RfF6DRRgLQ/xXkvIQ003p9ZFGPfMQ=;
+        b=dlSiLM5c7AG1E7A+1DOGgct7Uw5jphl/AGXouyXvTvOIDTjUesLKBEwB8cynjsdKOA
+         Q+DXB2qoT9kcLaTLbi+yYAAY3qaBGCVNavok0472fgyAel08090wl69m2hHQ7QgeW5MV
+         dEB7lUHwJMu8DqC4AfOOdEuvme4Snw7I6SKgQaJ/1RbjJxqZmKwslNinsHkCb2BhR9km
+         qYMYO+JPitVjJuc3vsoRYc8UrYAjRIMGNGoPlGtfWKYRsMguW8v23yPCf96Kjr8JwvGK
+         NWP/G2bZjlCs4XxKBPBpERfuHWWo2Z4vpdOrXkT3I4a+cN4Mc7tN/fkH0xmZqj55ybFF
+         92eg==
+In-Reply-To: <1332975091-10950-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello,
+@pol to blkg_to_pdata() and @plid to blkg_lookup_create() are no
+longer necessary.  Drop them.
 
-The way configuration and statistics are handled in block cgroup is
-rather depressing.  Every configuration and stat counter are defined
-in blkcg core and specific policy implementations should go through
-some blkcg interface to access and manipulate them and be notified of
-the changes.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ block/blk-cgroup.c   |    3 +--
+ block/blk-cgroup.h   |    8 ++------
+ block/blk-throttle.c |    7 +++----
+ block/cfq-iosched.c  |    7 +++----
+ 4 files changed, 9 insertions(+), 16 deletions(-)
 
-By doing things this way, it achieves both complexity and
-inflexibility - the code paths are unnecessarily complex while not
-achieving any layering or modularity.  A configuration or statistics
-counter cannot be added to policies without modifying multiple places
-in blkcg core code.  Wanna implement a new policy?  Good luck.  The
-implementation details are sad too.  Stuff goes through needless
-layers of functions with hard coded cases on specific counters and
-configurations and fields specific to policies are thrown into common
-area with some shared and others unused.
-
-This patchset is an attempt at bringing some sanity to blkcg config
-and stat file handling.  It makes use of the pending dynamic cgroup
-file type addition / removal support [1], which will be merged into
-cgroup/for-3.5 once 3.4-rc1 is released.
-
-All conf and stat file handling is moved into the policy
-implementaiton the files belong to and blkcg supplies helpers to ease
-file handling in policy implementations without requiring full
-knowledge of all configurations and statistic counters.
-
-This patchset sheds >500 lines of code while maintaining the same
-features and with more comments and much more modular design.  Yeah,
-it was just wrong.
-
-This patchset contains the following 21 patches
-
- 0001-blkcg-remove-unused-pol-and-plid-parameters.patch
- 0002-blkcg-BLKIO_STAT_CPU_SECTORS-doesn-t-have-subcounter.patch
- 0003-blkcg-introduce-blkg_stat-and-blkg_rwstat.patch
- 0004-blkcg-restructure-statistics-printing.patch
- 0005-blkcg-drop-blkiocg_file_write_u64.patch
- 0006-blkcg-restructure-configuration-printing.patch
- 0007-blkcg-restructure-blkio_group-configruation-setting.patch
- 0008-blkcg-blkg_conf_prep.patch
- 0009-blkcg-export-conf-stat-helpers-to-prepare-for-reorga.patch
- 0010-blkcg-implement-blkio_policy_type-cftypes.patch
- 0011-blkcg-move-conf-stat-file-handling-code-to-policies.patch
- 0012-cfq-collapse-cfq.h-into-cfq-iosched.c.patch
- 0013-blkcg-move-statistics-update-code-to-policies.patch
- 0014-blkcg-cfq-doesn-t-need-per-cpu-dispatch-stats.patch
- 0015-blkcg-add-blkio_policy_ops-operations-for-exit-and-s.patch
- 0016-blkcg-move-blkio_group_stats-to-cfq-iosched.c.patch
- 0017-blkcg-move-blkio_group_stats_cpu-and-friends-to-blk-.patch
- 0018-blkcg-move-blkio_group_conf-weight-to-cfq.patch
- 0019-blkcg-move-blkio_group_conf-iops-and-bps-to-blk-thro.patch
- 0020-blkcg-pass-around-pd-pdata-instead-of-pd-itself-in-p.patch
- 0021-blkcg-drop-BLKCG_STAT_-PRIV-POL-OFF-macros.patch
-
-and is on top of
-
-  block/for-3.5/core eb7d8c07f9 "cfq: fix cfqg ref handling..."
-+ [1] cgroup-cftypes d954ca6469 "cgroup: implement cgroup_rm_cftypes()"
-
-Note that the cgroup branch is temporary and the merge between the two
-branches aren't trivial.  I'll prepare a proper merged branch once the
-cgroup/for-3.5 branch is settled.
-
-This patchset is also available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blkcg-files
-
-diffstat follows.
-
- block/blk-cgroup.c   | 1343 ++++++---------------------------------------------
- block/blk-cgroup.h   |  414 ++++++---------
- block/blk-throttle.c |  318 ++++++++++--
- block/cfq-iosched.c  |  567 +++++++++++++++++++--
- block/cfq.h          |  118 ----
- 5 files changed, 1102 insertions(+), 1658 deletions(-)
-
---
-tejun
-
-[1] http://thread.gmane.org/gmane.linux.kernel.containers/22623
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 7947e17..d4cf77d 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -568,7 +568,6 @@ static struct blkio_group *blkg_alloc(struct blkio_cgroup *blkcg,
+ 
+ struct blkio_group *blkg_lookup_create(struct blkio_cgroup *blkcg,
+ 				       struct request_queue *q,
+-				       enum blkio_policy_id plid,
+ 				       bool for_root)
+ 	__releases(q->queue_lock) __acquires(q->queue_lock)
+ {
+@@ -1027,7 +1026,7 @@ static int blkio_policy_parse_and_set(char *buf, enum blkio_policy_id plid,
+ 	rcu_read_lock();
+ 
+ 	spin_lock_irq(disk->queue->queue_lock);
+-	blkg = blkg_lookup_create(blkcg, disk->queue, plid, false);
++	blkg = blkg_lookup_create(blkcg, disk->queue, false);
+ 	spin_unlock_irq(disk->queue->queue_lock);
+ 
+ 	if (IS_ERR(blkg)) {
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 1cb8f76..1add3dc 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -266,13 +266,10 @@ static inline void *blkg_to_pdata(struct blkio_group *blkg,
+ /**
+  * pdata_to_blkg - get blkg associated with policy private data
+  * @pdata: policy private data of interest
+- * @pol: policy @pdata is for
+  *
+- * @pdata is policy private data for @pol.  Determine the blkg it's
+- * associated with.
++ * @pdata is policy private data.  Determine the blkg it's associated with.
+  */
+-static inline struct blkio_group *pdata_to_blkg(void *pdata,
+-						struct blkio_policy_type *pol)
++static inline struct blkio_group *pdata_to_blkg(void *pdata)
+ {
+ 	if (pdata) {
+ 		struct blkg_policy_data *pd =
+@@ -402,7 +399,6 @@ extern struct blkio_group *blkg_lookup(struct blkio_cgroup *blkcg,
+ 				       struct request_queue *q);
+ struct blkio_group *blkg_lookup_create(struct blkio_cgroup *blkcg,
+ 				       struct request_queue *q,
+-				       enum blkio_policy_id plid,
+ 				       bool for_root);
+ void blkiocg_update_timeslice_used(struct blkio_group *blkg,
+ 				   struct blkio_policy_type *pol,
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 4ba1418..1cc6c23d 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -107,7 +107,7 @@ static inline struct throtl_grp *blkg_to_tg(struct blkio_group *blkg)
+ 
+ static inline struct blkio_group *tg_to_blkg(struct throtl_grp *tg)
+ {
+-	return pdata_to_blkg(tg, &blkio_policy_throtl);
++	return pdata_to_blkg(tg);
+ }
+ 
+ enum tg_state_flags {
+@@ -185,7 +185,7 @@ static struct throtl_grp *throtl_lookup_create_tg(struct throtl_data *td,
+ 	} else {
+ 		struct blkio_group *blkg;
+ 
+-		blkg = blkg_lookup_create(blkcg, q, BLKIO_POLICY_THROTL, false);
++		blkg = blkg_lookup_create(blkcg, q, false);
+ 
+ 		/* if %NULL and @q is alive, fall back to root_tg */
+ 		if (!IS_ERR(blkg))
+@@ -1033,8 +1033,7 @@ int blk_throtl_init(struct request_queue *q)
+ 	rcu_read_lock();
+ 	spin_lock_irq(q->queue_lock);
+ 
+-	blkg = blkg_lookup_create(&blkio_root_cgroup, q, BLKIO_POLICY_THROTL,
+-				  true);
++	blkg = blkg_lookup_create(&blkio_root_cgroup, q, true);
+ 	if (!IS_ERR(blkg))
+ 		td->root_tg = blkg_to_tg(blkg);
+ 
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 39c4330..8cca6161 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -374,7 +374,7 @@ static inline struct cfq_group *blkg_to_cfqg(struct blkio_group *blkg)
+ 
+ static inline struct blkio_group *cfqg_to_blkg(struct cfq_group *cfqg)
+ {
+-	return pdata_to_blkg(cfqg, &blkio_policy_cfq);
++	return pdata_to_blkg(cfqg);
+ }
+ 
+ static inline void cfqg_get(struct cfq_group *cfqg)
+@@ -1092,7 +1092,7 @@ static struct cfq_group *cfq_lookup_create_cfqg(struct cfq_data *cfqd,
+ 	} else {
+ 		struct blkio_group *blkg;
+ 
+-		blkg = blkg_lookup_create(blkcg, q, BLKIO_POLICY_PROP, false);
++		blkg = blkg_lookup_create(blkcg, q, false);
+ 		if (!IS_ERR(blkg))
+ 			cfqg = blkg_to_cfqg(blkg);
+ 	}
+@@ -3523,8 +3523,7 @@ static int cfq_init_queue(struct request_queue *q)
+ 	rcu_read_lock();
+ 	spin_lock_irq(q->queue_lock);
+ 
+-	blkg = blkg_lookup_create(&blkio_root_cgroup, q, BLKIO_POLICY_PROP,
+-				  true);
++	blkg = blkg_lookup_create(&blkio_root_cgroup, q, true);
+ 	if (!IS_ERR(blkg))
+ 		cfqd->root_group = blkg_to_cfqg(blkg);
+ 
+-- 
+1.7.7.3
