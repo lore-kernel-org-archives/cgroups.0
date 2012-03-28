@@ -1,71 +1,104 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH -V4 08/10] hugetlbfs: Add a list for tracking in-use
- HugeTLB pages
-Date: Wed, 28 Mar 2012 15:58:46 +0200
-Message-ID: <20120328135845.GH20949@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -V4 09/10] memcg: move HugeTLB resource count to parent
+ cgroup on memcg removal
+Date: Wed, 28 Mar 2012 16:07:33 +0200
+Message-ID: <20120328140733.GI20949@tiehlicka.suse.cz>
 References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <1331919570-2264-9-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1331919570-2264-10-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1331919570-2264-9-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1331919570-2264-10-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 16-03-12 23:09:28, Aneesh Kumar K.V wrote:
-> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+On Fri 16-03-12 23:09:29, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> hugepage_activelist will be used to track currently used HugeTLB pages.
-> We need to find the in-use HugeTLB pages to support memcg removal.
-> On memcg removal we update the page's memory cgroup to point to
-> parent cgroup.
+> This add support for memcg removal with HugeTLB resource usage.
 > 
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > ---
->  include/linux/hugetlb.h |    1 +
->  mm/hugetlb.c            |   23 ++++++++++++++++++-----
->  2 files changed, 19 insertions(+), 5 deletions(-)
+>  include/linux/hugetlb.h    |    6 ++++
+>  include/linux/memcontrol.h |   15 +++++++++-
+>  mm/hugetlb.c               |   41 ++++++++++++++++++++++++++
+>  mm/memcontrol.c            |   68 +++++++++++++++++++++++++++++++++++++------
+>  4 files changed, 119 insertions(+), 11 deletions(-)
 > 
-> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-> index cbd8dc5..6919100 100644
-> --- a/include/linux/hugetlb.h
-> +++ b/include/linux/hugetlb.h
 [...]
-> @@ -2319,14 +2322,24 @@ void __unmap_hugepage_range(struct vm_area_struct *vma, unsigned long start,
->  		page = pte_page(pte);
->  		if (pte_dirty(pte))
->  			set_page_dirty(page);
-> -		list_add(&page->lru, &page_list);
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index 8fd465d..685f0d5 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+[...]
+> @@ -3285,10 +3287,57 @@ void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+>  		res_counter_uncharge(&memcg->hugepage[idx], csize);
+>  	return;
+>  }
+> -#else
+> -static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
 > +
-> +		spin_lock(&hugetlb_lock);
-> +		list_move(&page->lru, &page_list);
-> +		spin_unlock(&hugetlb_lock);
+> +int mem_cgroup_move_hugetlb_parent(int idx, struct cgroup *cgroup,
+> +				   struct page *page)
+>  {
+> -	return 0;
+> +	struct page_cgroup *pc;
+> +	int csize,  ret = 0;
+> +	struct res_counter *fail_res;
+> +	struct cgroup *pcgrp = cgroup->parent;
+> +	struct mem_cgroup *parent = mem_cgroup_from_cont(pcgrp);
+> +	struct mem_cgroup *memcg  = mem_cgroup_from_cont(cgroup);
+> +
+> +	if (!get_page_unless_zero(page))
+> +		goto out;
+> +
+> +	pc = lookup_page_cgroup(page);
+> +	lock_page_cgroup(pc);
+> +	if (!PageCgroupUsed(pc) || pc->mem_cgroup != memcg)
+> +		goto err_out;
+> +
+> +	csize = PAGE_SIZE << compound_order(page);
+> +	/*
+> +	 * uncharge from child and charge the parent. If we have
+> +	 * use_hierarchy set, we can never fail here. In-order to make
+> +	 * sure we don't get -ENOMEM on parent charge, we first uncharge
+> +	 * the child and then charge the parent.
+> +	 */
+> +	if (parent->use_hierarchy) {
+> +		res_counter_uncharge(&memcg->hugepage[idx], csize);
+> +		if (!mem_cgroup_is_root(parent))
+> +			ret = res_counter_charge(&parent->hugepage[idx],
+> +						 csize, &fail_res);
 
-Why do we really need the spinlock here?
+You can still race with other hugetlb charge which would make this fail.
 
->  	}
->  	spin_unlock(&mm->page_table_lock);
->  	flush_tlb_range(vma, start, end);
->  	mmu_notifier_invalidate_range_end(mm, start, end);
->  	list_for_each_entry_safe(page, tmp, &page_list, lru) {
->  		page_remove_rmap(page);
-> -		list_del(&page->lru);
-> +		/*
-> +		 * We need to move it back huge page active list. If we are
-> +		 * holding the last reference, below put_page will move it
-> +		 * back to free list.
-> +		 */
-> +		spin_lock(&hugetlb_lock);
-> +		list_move(&page->lru, &h->hugepage_activelist);
-> +		spin_unlock(&hugetlb_lock);
-
-This spinlock usage doesn't look nice but I guess we do not have many
-other options.
-
+> +	} else {
+> +		if (!mem_cgroup_is_root(parent)) {
+> +			ret = res_counter_charge(&parent->hugepage[idx],
+> +						 csize, &fail_res);
+> +			if (ret) {
+> +				ret = -EBUSY;
+> +				goto err_out;
+> +			}
+> +		}
+> +		res_counter_uncharge(&memcg->hugepage[idx], csize);
+> +	}
+> +	/*
+> +	 * caller should have done css_get
+> +	 */
+> +	pc->mem_cgroup = parent;
+> +err_out:
+> +	unlock_page_cgroup(pc);
+> +	put_page(page);
+> +out:
+> +	return ret;
+>  }
+>  #endif /* CONFIG_MEM_RES_CTLR_HUGETLB */
+[...]
 -- 
 Michal Hocko
 SUSE Labs
@@ -73,10 +106,3 @@ SUSE LINUX s.r.o.
 Lihovarska 1060/12
 190 00 Praha 9    
 Czech Republic
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
