@@ -1,38 +1,48 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCHSET] block: modularize blkcg config and stat file handling
-Date: Thu, 29 Mar 2012 10:18:53 +0200
-Message-ID: <4F741AED.6090901@kernel.dk>
-References: <1332975091-10950-1-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: update MAINTAINERS entry
+Date: Thu, 29 Mar 2012 08:53:03 -0700
+Message-ID: <20120329155303.GA28941@google.com>
+References: <4F73CF7F.8090309@huawei.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=qSfvRSxdiNjh5tMCcUs5w7gIUY1dyiD0Z4IADbSOZno=;
+        b=D+sZK75twCIZCH/X9aYXXBQwA3995ozXxt9IWv21vlU1oO0+7x3ZLs77dXVCIy2CG8
+         foI7jsJI7ec4nNRXdi7Q0LETvUc4ahNORtrpuOFABCSDTM658qAO/Dzp0hbTwFwV/mx4
+         csx4i8em95bfxjCN+/YnE6YL3PrXtyg9bB8keV+xTJ7rjphJp+qaq6ALiIYEnG987zsE
+         M/Hdg6MPWAHYr6ZDZyBFtICLqfYj52dK9E4lUQxGfJxzUXb9CfbGh9UHcmgoBFwU9vX+
+         mkOEdGTe44ahAX5xQwQgLxBViPmkyFmuOWGjBqvxqRn2wdWBUJYNIEQPgjyNlWy048Ru
+         zz9Q==
+Content-Disposition: inline
+In-Reply-To: <4F73CF7F.8090309-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1332975091-10950-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On 03/29/2012 12:51 AM, Tejun Heo wrote:
-> and is on top of
+On Thu, Mar 29, 2012 at 10:57:03AM +0800, Li Zefan wrote:
+> Update my email address.
 > 
->   block/for-3.5/core eb7d8c07f9 "cfq: fix cfqg ref handling..."
-> + [1] cgroup-cftypes d954ca6469 "cgroup: implement cgroup_rm_cftypes()"
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > 
-> Note that the cgroup branch is temporary and the merge between the two
-> branches aren't trivial.  I'll prepare a proper merged branch once the
-> cgroup/for-3.5 branch is settled.
+> --- linux-kernel.orig/MAINTAINERS	2012-03-28 22:52:37.000000000 -0400
+> +++ linux-kernel/MAINTAINERS	2012-03-28 22:52:01.000000000 -0400
+> @@ -1939,7 +1939,7 @@ F:	drivers/connector/
+>  
+>  CONTROL GROUPS (CGROUPS)
+>  M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> -M:	Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> +M:	Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>  L:	containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+>  L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
 
-The diffstat is very tasty... I'll leave this on out until the cgroup
-merge mess is settled, though.
+Welcome back!  Queueing the patch in cgroup/for-3.4-fixes.
 
 -- 
-Jens Axboe
+tejun
