@@ -1,74 +1,38 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH -V4 08/10] hugetlbfs: Add a list for tracking in-use
- HugeTLB pages
-Date: Thu, 29 Mar 2012 10:11:57 +0200
-Message-ID: <20120329081157.GD30465@tiehlicka.suse.cz>
-References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <1331919570-2264-9-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <20120328135845.GH20949@tiehlicka.suse.cz>
- <87vclo1v8l.fsf@skywalker.in.ibm.com>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCHSET] block: modularize blkcg config and stat file handling
+Date: Thu, 29 Mar 2012 10:18:53 +0200
+Message-ID: <4F741AED.6090901@kernel.dk>
+References: <1332975091-10950-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <87vclo1v8l.fsf@skywalker.in.ibm.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1332975091-10950-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Wed 28-03-12 23:08:34, Aneesh Kumar K.V wrote:
-> Michal Hocko <mhocko@suse.cz> writes:
+On 03/29/2012 12:51 AM, Tejun Heo wrote:
+> and is on top of
 > 
-> > On Fri 16-03-12 23:09:28, Aneesh Kumar K.V wrote:
-> >> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-> >> 
-> >> hugepage_activelist will be used to track currently used HugeTLB pages.
-> >> We need to find the in-use HugeTLB pages to support memcg removal.
-> >> On memcg removal we update the page's memory cgroup to point to
-> >> parent cgroup.
-> >> 
-> >> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> >> ---
-> >>  include/linux/hugetlb.h |    1 +
-> >>  mm/hugetlb.c            |   23 ++++++++++++++++++-----
-> >>  2 files changed, 19 insertions(+), 5 deletions(-)
-> >> 
-> >> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-> >> index cbd8dc5..6919100 100644
-> >> --- a/include/linux/hugetlb.h
-> >> +++ b/include/linux/hugetlb.h
-> > [...]
-> >> @@ -2319,14 +2322,24 @@ void __unmap_hugepage_range(struct vm_area_struct *vma, unsigned long start,
-> >>  		page = pte_page(pte);
-> >>  		if (pte_dirty(pte))
-> >>  			set_page_dirty(page);
-> >> -		list_add(&page->lru, &page_list);
-> >> +
-> >> +		spin_lock(&hugetlb_lock);
-> >> +		list_move(&page->lru, &page_list);
-> >> +		spin_unlock(&hugetlb_lock);
-> >
-> > Why do we really need the spinlock here?
+>   block/for-3.5/core eb7d8c07f9 "cfq: fix cfqg ref handling..."
+> + [1] cgroup-cftypes d954ca6469 "cgroup: implement cgroup_rm_cftypes()"
 > 
-> 
-> It does a list_del from hugepage_activelist.
+> Note that the cgroup branch is temporary and the merge between the two
+> branches aren't trivial.  I'll prepare a proper merged branch once the
+> cgroup/for-3.5 branch is settled.
 
-right you are.
-sorry
+The diffstat is very tasty... I'll leave this on out until the cgroup
+merge mess is settled, though.
 
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Jens Axboe
