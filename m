@@ -1,39 +1,86 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 08/21] blkcg: blkg_conf_prep()
-Date: Wed, 28 Mar 2012 15:53:56 -0700
-Message-ID: <20120328225356.GA11059@google.com>
-References: <1332975091-10950-1-git-send-email-tj@kernel.org>
-	<1332975091-10950-9-git-send-email-tj@kernel.org>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH -V4 04/10] memcg: Add HugeTLB extension
+Date: Thu, 29 Mar 2012 09:18:39 +0900
+Message-ID: <4F73AA5F.5050604@jp.fujitsu.com>
+References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120328134020.GG20949@tiehlicka.suse.cz>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu) <87y5qk1vat.fsf@skywalker.in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=sy7dONj3BSxKtZdiYenrsZIrgHLs0NNDtbu8k73UJW0=;
-	b=VAuBBMulXmWYtAy3SUPC2axQ3DheZ2jAduIdMh8WeeS17kS/gsizdxrPBC8J0NSe9r
-	t8NyUT6RGmw7D2rgYSVIquvCJlrXqrbXaZZnzQe38vDuWZguflYMBTU6/jnChtxYDbEL
-	LGvw3dRn/gWAjYDiVQXIaj/Dfs/7D/PulNx+isTU2iNb0x3Qa7rlJR9OWClrdOvv9ZvI
-	TIIzwVlUqyrFiiOgsPmvAK3jtEvNUPLEmj4pbRdVEGB3nt512rxJNf5KWnSy6b4FCaTa
-	IbqdYlSbXcIIo19SEOor7eTZwy0ZoHtvp58FDOKayawabyR6Lz5YLxyqGBH1R4gsD6jF
-	qnwQ==
-Content-Disposition: inline
-In-Reply-To: <1332975091-10950-9-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <87y5qk1vat.fsf-6yE53ggjAfyqSkle7U1LjlaTQe2KTcn/@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Oops, $SUBJ should have been "simplify blkg_conf_prep()".
+(2012/03/29 2:37), Aneesh Kumar K.V wrote:
 
--- 
-tejun
+> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+> 
+>> On Fri 16-03-12 23:09:24, Aneesh Kumar K.V wrote:
+>> [...]
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 6728a7a..4b36c5e 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>> [...]
+>>> @@ -4887,6 +5013,7 @@ err_cleanup:
+>>>  static struct cgroup_subsys_state * __ref
+>>>  mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
+>>>  {
+>>> +	int idx;
+>>>  	struct mem_cgroup *memcg, *parent;
+>>>  	long error = -ENOMEM;
+>>>  	int node;
+>>> @@ -4929,9 +5056,14 @@ mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
+>>>  		 * mem_cgroup(see mem_cgroup_put).
+>>>  		 */
+>>>  		mem_cgroup_get(parent);
+>>> +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+>>> +			res_counter_init(&memcg->hugepage[idx],
+>>> +					 &parent->hugepage[idx]);
+>>
+>> Hmm, I do not think we want to make groups deeper in the hierarchy
+>> unlimited as we cannot reclaim. Shouldn't we copy the limit from the parent?
+>> Still not ideal but slightly more expected behavior IMO.
+> 
+> But we should be limiting the child group based on parent's limit only
+> when hierarchy is set right ?
+> 
+>>
+>> The hierarchy setups are still interesting and the limitations should be
+>> described in the documentation...
+>>
+> 
+> It should behave similar to memcg. ie, if hierarchy is set, then we limit
+> using MIN(parent's limit, child's limit). May be I am missing some of
+> the details of memcg use_hierarchy config. My goal was to keep it
+> similar to memcg. Can you explain why do you think the patch would
+> make it any different ?
+> 
+
+
+Maybe this is a different story but....
+
+Tejun(Cgroup Maintainer) asked us to remove 'use_hierarchy' settings because
+most of other cgroups are hierarchical(*). I answered that improvement in res_counter 
+latency is required. And now, we have some idea to improve res_counter.
+(I'd like to try this after page_cgroup diet series..)
+
+If we change and drop use_hierarchy, the usage similar to current use_hierarchy=0
+will be..
+
+	/cgroup/memory/			       = unlimited
+			level1		       = unlimited
+				level2	       = unlimited
+					level3 = limit
+
+To do this, after improvement of res_counter, we entry use_hierarchy into
+feature-removal-list and wait for 2 versions..So, this will not affect
+your developments, anyway.
+ 
+Thanks,
+-Kame
+
+(*) AFAIK, blkio cgroup needs tons of work to be hierarchical...
+
