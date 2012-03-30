@@ -1,90 +1,79 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup: urgent fix for 3.4-rc1 merge window
-Date: Thu, 29 Mar 2012 22:26:12 -0700
-Message-ID: <20120330052612.GA13855@dhcp-172-17-108-109.mtv.corp.google.com>
-Mime-Version: 1.0
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [RFC 0/7] Initial proposal for faster res_counter updates
+Date: Fri, 30 Mar 2012 10:04:38 +0200
+Message-ID: <1333094685-5507-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=65dCo8F4NNAtp6PYm9xQ2WE1nZGrAQsoU9IEEfFuYJg=;
-	b=0hiFtQdLqxp/keBsdzv8IO5EuKcUWgwZqo3o8Nq28U0kHZ5Cja6t9wiCmw41OhkMpr
-	TcxioAGk+QAACG5u7yfsVipcfnCBg2QL6+322ZAWa1nzoJStSXLbKUAHx33160ZXDSns
-	f+IxDvdI4ZxpPsClzlNnvW7Xk7gG8pQTYI8hD8SHgaUWFSMxVjWyP28AXyBpMSZChpGR
-	FYSjPlFZM+XR+WvCbbbtritNfDRHRIkqyAd90OJWI8ky5H7mVC2PRISg8IQiY3rFqj/x
-	iZprFbRtBT2ttv6OeVJwNqnBMjKRkf6DSSzocyH81F4BX+DIwcNN+OikMm8rC4MsEjKg
-	K14w==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Hello, Linus.
+Hi,
 
-61d1d219c4 "cgroup: remove extra calls to find_existing_css_set" which
-was part of the rc1 cgroup pull request made writes to cgroup "tasks"
-file return uninitialized retval on success which can cause boot
-failures with systemd.  The change stayed in linux-next for quite some
-time but gcc interestingly failed to emit warning about using
-uninitialized variable and the problem seems to materialize only for
-certain build combinations (probably depends on register allocation).
+Here is my take about how we can make res_counter updates faster.
+Keep in mind this is a bit of a hack intended as a proof of concept.
 
-It's just missing local variable initialization and the fix is trivial
-& safe.  As the problem is critical when it materializes, I'm
-fast-tracking it.  Also included is Li's email address change in
-MAINTAINERS.
+The pros I see with this:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.4-fixes
+* free updates in non-constrained paths. non-constrained paths includes
+  unlimited scenarios, but also ones in which we are far from the limit.
 
-Li Zefan (1):
-      cgroup: update MAINTAINERS entry
+* No need to have a special cache mechanism in memcg. The problem with
+  the caching is my opinion, is that we will forward-account pages, meaning
+  that we'll consider accounted pages we never used. I am not sure
+  anyone actually ran into this, but in theory, this can fire events
+  much earlier than it should.
 
-Tejun Heo (1):
-      cgroup: cgroup_attach_task() could return -errno after success
+But the cons:
 
-Thanks.
----
- MAINTAINERS     |    2 +-
- kernel/cgroup.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+* percpu counters have signed quantities, so this would limit us 4G.
+  We can add a shift and then count pages instead of bytes, but we
+  are still in the 16T area here. Maybe we really need more than that.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f9faade..3dbf4d1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1940,7 +1940,7 @@ F:	drivers/connector/
- 
- CONTROL GROUPS (CGROUPS)
- M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
--M:	Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-+M:	Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
- L:	containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
- L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index f4ea4b6..ed64cca 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1883,7 +1883,7 @@ static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
-  */
- int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
- {
--	int retval;
-+	int retval = 0;
- 	struct cgroup_subsys *ss, *failed_ss = NULL;
- 	struct cgroup *oldcgrp;
- 	struct cgroupfs_root *root = cgrp->root;
+* some of the additions here may slow down the percpu_counters for
+  users that don't care about our usage. Things about min/max tracking
+  enter in this category.
 
---
-tejun
+* growth of the percpu memory.
+
+It is still not clear for me if we should use percpu_counters as this
+patch implies, or if we should just replicate its functionality.
+
+I need to go through at least one more full round of auditing before
+making sure the locking is safe, specially my use of synchronize_rcu().
+
+As for measurements, the cache we have in memcg kind of distort things.
+I need to either disable it, or find the cases in which it is likely
+to lose and benchmark them, such as deep hierarchy concurrent updates
+with common parents.
+
+I also included a possible optimization that can be done when we
+are close to the limit to avoid the initial tests altogether, but
+it needs to be extended to avoid scanning the percpu areas as well.
+
+In summary, if this is to be carried forward, it definitely needs
+some love. It should be, however, more than enough to make the
+proposal clear.
+
+Comments are appreciated.
+
+Glauber Costa (7):
+  split percpu_counter_sum
+  consolidate all res_counter manipulation
+  bundle a percpu counter into res_counters and use its lock
+  move res_counter_set limit to res_counter.c
+  use percpu_counters for res_counter usage
+  Add min and max statistics to percpu_counter
+  Global optimization
+
+ include/linux/percpu_counter.h |    3 +
+ include/linux/res_counter.h    |   63 ++++++-----------
+ kernel/res_counter.c           |  151 +++++++++++++++++++++++++++++-----------
+ lib/percpu_counter.c           |   16 ++++-
+ 4 files changed, 151 insertions(+), 82 deletions(-)
+
+-- 
+1.7.4.1
