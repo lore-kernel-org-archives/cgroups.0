@@ -1,91 +1,131 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [RFC 7/7] Global optimization
-Date: Fri, 30 Mar 2012 10:04:45 +0200
-Message-ID: <1333094685-5507-8-git-send-email-glommer@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [RFC 0/7] Initial proposal for faster res_counter updates
+Date: Fri, 30 Mar 2012 17:32:06 +0900
+Message-ID: <4F756F86.8030906@jp.fujitsu.com>
 References: <1333094685-5507-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1333094685-5507-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1333094685-5507-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Linux MM <linux-mm@kvack.org>, Pavel Emelyanov <xemul@parallels.com>
 
-When we are close to the limit, doing percpu_counter_add and its
-equivalent tests is a waste of time.
+(2012/03/30 17:04), Glauber Costa wrote:
 
-This patch introduce a "global" state flag to the res_counter.
-When we are close to the limit, this flag is set and we skip directly
-to the locked part. The flag is unset when we are far enough away from
-the limit.
+> Hi,
+> 
+> Here is my take about how we can make res_counter updates faster.
+> Keep in mind this is a bit of a hack intended as a proof of concept.
+> 
+> The pros I see with this:
+> 
+> * free updates in non-constrained paths. non-constrained paths includes
+>   unlimited scenarios, but also ones in which we are far from the limit.
+> 
+> * No need to have a special cache mechanism in memcg. The problem with
+>   the caching is my opinion, is that we will forward-account pages, meaning
+>   that we'll consider accounted pages we never used. I am not sure
+>   anyone actually ran into this, but in theory, this can fire events
+>   much earlier than it should.
+> 
 
-In this mode, we function very much like the original resource counter
 
-The main difference right now is that we still scan all the cpus.
-This should however be very easy to avoid, with a flusher function
-that empties the per-cpu areas, and then updating usage_pcp directly.
+Note: Assume a big system which has many cpus, and user wants to devide
+the system into containers. Current memcg's percpu caching is done
+only when a task in memcg is on the cpu, running. So, it's not so dangerous
+as it looks.
 
-This should be doable because once we get the global flag, we know
-no one else would be adding to the percpu areas any longer.
+But yes, if we can drop memcg's code, it's good. Then, we can remove some
+amount of codes.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
----
- include/linux/res_counter.h |    1 +
- kernel/res_counter.c        |   18 ++++++++++++++++++
- 2 files changed, 19 insertions(+), 0 deletions(-)
+> But the cons:
+> 
+> * percpu counters have signed quantities, so this would limit us 4G.
+>   We can add a shift and then count pages instead of bytes, but we
+>   are still in the 16T area here. Maybe we really need more than that.
+> 
 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index 3527827..a8e4646 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -30,6 +30,7 @@ struct res_counter {
- 	 * the limit that usage cannot exceed
- 	 */
- 	unsigned long long limit;
-+	bool global;
- 	/*
- 	 * the limit that usage can be exceed
- 	 */
-diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-index 7b05208..859a27d 100644
---- a/kernel/res_counter.c
-+++ b/kernel/res_counter.c
-@@ -29,6 +29,8 @@ int __res_counter_add(struct res_counter *c, long val, bool fail)
- 	u64 usage;
+....
+struct percpu_counter {
+        raw_spinlock_t lock;
+        s64 count;
+
+s64 limtes us 4G ?
+
+
+> * some of the additions here may slow down the percpu_counters for
+>   users that don't care about our usage. Things about min/max tracking
+>   enter in this category.
+> 
+
+
+I think it's not very good to increase size of percpu counter. It's already
+very big...Hm. How about
+
+	struct percpu_counter_lazy {
+		struct percpu_counter pcp;
+		extra information
+		s64 margin;
+	}
+?
+
+> * growth of the percpu memory.
+>
+
+
+This may be a concern.
+
+I'll look into patches.
+
+Thanks,
+-Kame
+
  
- 	rcu_read_lock();
-+	if (c->global)
-+		goto global;
- 
- 	if (val < 0) {
- 		percpu_counter_add(&c->usage_pcp, val);
-@@ -45,9 +47,25 @@ int __res_counter_add(struct res_counter *c, long val, bool fail)
- 		return 0;
- 	}
- 
-+global:
- 	rcu_read_unlock();
- 
- 	raw_spin_lock(&c->usage_pcp.lock);
-+	usage = __percpu_counter_sum_locked(&c->usage_pcp);
-+
-+	/* everyone that could update global is under lock
-+	 * reader could miss a transition, but that is not a problem,
-+	 * since we are always using percpu_counter_sum anyway
-+	 */
-+
-+	if (!c->global && val > 0 && usage + val >
-+	    (c->limit + num_online_cpus() * percpu_counter_batch))
-+		c->global = true;
-+
-+	if (c->global && val < 0 && usage + val <
-+	    (c->limit + num_online_cpus() * percpu_counter_batch))
-+		c->global = false;
-+
- 
- 	usage = __percpu_counter_sum_locked(&c->usage_pcp);
- 
--- 
-1.7.4.1
+> It is still not clear for me if we should use percpu_counters as this
+> patch implies, or if we should just replicate its functionality.
+> 
+> I need to go through at least one more full round of auditing before
+> making sure the locking is safe, specially my use of synchronize_rcu().
+> 
+> As for measurements, the cache we have in memcg kind of distort things.
+> I need to either disable it, or find the cases in which it is likely
+> to lose and benchmark them, such as deep hierarchy concurrent updates
+> with common parents.
+> 
+> I also included a possible optimization that can be done when we
+> are close to the limit to avoid the initial tests altogether, but
+> it needs to be extended to avoid scanning the percpu areas as well.
+> 
+> In summary, if this is to be carried forward, it definitely needs
+> some love. It should be, however, more than enough to make the
+> proposal clear.
+> 
+> Comments are appreciated.
+> 
+> Glauber Costa (7):
+>   split percpu_counter_sum
+>   consolidate all res_counter manipulation
+>   bundle a percpu counter into res_counters and use its lock
+>   move res_counter_set limit to res_counter.c
+>   use percpu_counters for res_counter usage
+>   Add min and max statistics to percpu_counter
+>   Global optimization
+> 
+>  include/linux/percpu_counter.h |    3 +
+>  include/linux/res_counter.h    |   63 ++++++-----------
+>  kernel/res_counter.c           |  151 +++++++++++++++++++++++++++++-----------
+>  lib/percpu_counter.c           |   16 ++++-
+>  4 files changed, 151 insertions(+), 82 deletions(-)
+> 
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
