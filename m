@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [RFC 1/7] split percpu_counter_sum
-Date: Fri, 30 Mar 2012 10:04:39 +0200
-Message-ID: <1333094685-5507-2-git-send-email-glommer@parallels.com>
+Subject: [RFC 2/7] consolidate all res_counter manipulation
+Date: Fri, 30 Mar 2012 10:04:40 +0200
+Message-ID: <1333094685-5507-3-git-send-email-glommer@parallels.com>
 References: <1333094685-5507-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1333094685-5507-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,58 +13,124 @@ Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Split the locked part so we can do other operations with the counter
-in other call sites.
+This patch moves all the locked updates done to res_counter to
+__res_counter_add(). It gets flags for the special cases like nofail(),
+and a negative value of the increment means uncharge.
+
+This will be useful later when we start doing percpu_counter updates.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 ---
- include/linux/percpu_counter.h |    1 +
- lib/percpu_counter.c           |   12 ++++++++++--
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ kernel/res_counter.c |   59 +++++++++++++++++++++++--------------------------
+ 1 files changed, 28 insertions(+), 31 deletions(-)
 
-diff --git a/include/linux/percpu_counter.h b/include/linux/percpu_counter.h
-index b9df9ed..8310548 100644
---- a/include/linux/percpu_counter.h
-+++ b/include/linux/percpu_counter.h
-@@ -40,6 +40,7 @@ void percpu_counter_destroy(struct percpu_counter *fbc);
- void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
- void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch);
- s64 __percpu_counter_sum(struct percpu_counter *fbc);
-+s64 __percpu_counter_sum_locked(struct percpu_counter *fbc);
- int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs);
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index b8a3d6a..ecb4aad 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -22,17 +22,32 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent)
+ 	counter->parent = parent;
+ }
  
- static inline void percpu_counter_add(struct percpu_counter *fbc, s64 amount)
-diff --git a/lib/percpu_counter.c b/lib/percpu_counter.c
-index f8a3f1a..0b6a672 100644
---- a/lib/percpu_counter.c
-+++ b/lib/percpu_counter.c
-@@ -93,17 +93,25 @@ EXPORT_SYMBOL(__percpu_counter_add);
-  * Add up all the per-cpu counts, return the result.  This is a more accurate
-  * but much slower version of percpu_counter_read_positive()
-  */
--s64 __percpu_counter_sum(struct percpu_counter *fbc)
-+s64 __percpu_counter_sum_locked(struct percpu_counter *fbc)
+-int res_counter_charge_locked(struct res_counter *counter, unsigned long val)
++int __res_counter_add(struct res_counter *c, long val, bool fail)
  {
- 	s64 ret;
- 	int cpu;
- 
--	raw_spin_lock(&fbc->lock);
- 	ret = fbc->count;
- 	for_each_online_cpu(cpu) {
- 		s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
- 		ret += *pcount;
- 	}
-+	return ret;
-+}
-+EXPORT_SYMBOL(__percpu_counter_sum_locked);
+-	if (counter->usage + val > counter->limit) {
+-		counter->failcnt++;
+-		return -ENOMEM;
++	int ret = 0;
++	u64 usage;
 +
-+s64 __percpu_counter_sum(struct percpu_counter *fbc)
-+{
-+	s64 ret;
-+	raw_spin_lock(&fbc->lock);
-+	ret = __percpu_counter_sum_locked(fbc);
- 	raw_spin_unlock(&fbc->lock);
++	spin_lock(&c->lock);
++
++	usage = c->usage;
++
++	if (usage + val > c->limit) {
++		c->failcnt++;
++		ret = -ENOMEM;
++		if (fail)
++			goto out;
+ 	}
+ 
+-	counter->usage += val;
+-	if (counter->usage > counter->max_usage)
+-		counter->max_usage = counter->usage;
+-	return 0;
++	usage += val;
++
++	c->usage = usage;
++	if (usage > c->max_usage)
++		c->max_usage = usage;
++
++out:
++	spin_unlock(&c->lock);
++	return ret;
++
+ }
+ 
+ int res_counter_charge(struct res_counter *counter, unsigned long val,
+@@ -45,9 +60,7 @@ int res_counter_charge(struct res_counter *counter, unsigned long val,
+ 	*limit_fail_at = NULL;
+ 	local_irq_save(flags);
+ 	for (c = counter; c != NULL; c = c->parent) {
+-		spin_lock(&c->lock);
+-		ret = res_counter_charge_locked(c, val);
+-		spin_unlock(&c->lock);
++		ret = __res_counter_add(c, val, true);
+ 		if (ret < 0) {
+ 			*limit_fail_at = c;
+ 			goto undo;
+@@ -57,9 +70,7 @@ int res_counter_charge(struct res_counter *counter, unsigned long val,
+ 	goto done;
+ undo:
+ 	for (u = counter; u != c; u = u->parent) {
+-		spin_lock(&u->lock);
+-		res_counter_uncharge_locked(u, val);
+-		spin_unlock(&u->lock);
++		__res_counter_add(u, -val, false);
+ 	}
+ done:
+ 	local_irq_restore(flags);
+@@ -77,11 +88,7 @@ int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
+ 	*limit_fail_at = NULL;
+ 	local_irq_save(flags);
+ 	for (c = counter; c != NULL; c = c->parent) {
+-		spin_lock(&c->lock);
+-		r = res_counter_charge_locked(c, val);
+-		if (r)
+-			c->usage += val;
+-		spin_unlock(&c->lock);
++		r = __res_counter_add(c, val, false);
+ 		if (r < 0 && ret == 0) {
+ 			*limit_fail_at = c;
+ 			ret = r;
+@@ -91,13 +98,6 @@ int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
+ 
  	return ret;
  }
+-void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
+-{
+-	if (WARN_ON(counter->usage < val))
+-		val = counter->usage;
+-
+-	counter->usage -= val;
+-}
+ 
+ void res_counter_uncharge(struct res_counter *counter, unsigned long val)
+ {
+@@ -105,11 +105,8 @@ void res_counter_uncharge(struct res_counter *counter, unsigned long val)
+ 	struct res_counter *c;
+ 
+ 	local_irq_save(flags);
+-	for (c = counter; c != NULL; c = c->parent) {
+-		spin_lock(&c->lock);
+-		res_counter_uncharge_locked(c, val);
+-		spin_unlock(&c->lock);
+-	}
++	for (c = counter; c != NULL; c = c->parent)
++		__res_counter_add(c, -val, false);
+ 	local_irq_restore(flags);
+ }
+ 
 -- 
 1.7.4.1
