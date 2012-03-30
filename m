@@ -1,56 +1,98 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V4 05/10] hugetlb: add charge/uncharge calls for HugeTLB alloc/free
-Date: Fri, 30 Mar 2012 16:10:00 +0530
-Message-ID: <871uoamkxr.fsf@skywalker.in.ibm.com>
-References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1331919570-2264-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120328131706.GF20949@tiehlicka.suse.cz> <87sjgs1v6x.fsf@skywalker.in.ibm.com> <20120329081003.GC30465@tiehlicka.suse.cz>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET] cgroup: cftype based file interface, take #2
+Date: Fri, 30 Mar 2012 20:42:07 +0800
+Message-ID: <4F75AA1F.9020007@huawei.com>
+References: <1332368265-21586-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120329081003.GC30465@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <1332368265-21586-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-Michal Hocko <mhocko@suse.cz> writes:
+Tejun Heo wrote:
 
-> On Wed 28-03-12 23:09:34, Aneesh Kumar K.V wrote:
->> Michal Hocko <mhocko@suse.cz> writes:
->> 
->> > On Fri 16-03-12 23:09:25, Aneesh Kumar K.V wrote:
->> >> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
->> >> 
->> >> This adds necessary charge/uncharge calls in the HugeTLB code
->> >
->> > This begs for more description...
->> > Other than that it looks correct.
->> >
->> 
->> Updated as below
->> 
->>     hugetlb: add charge/uncharge calls for HugeTLB alloc/free
->>     
->>     This adds necessary charge/uncharge calls in the HugeTLB code. We do
->>     memcg charge in page alloc and uncharge in compound page destructor.
->>     We also need to ignore HugeTLB pages in __mem_cgroup_uncharge_common
->>     because that get called from delete_from_page_cache
->
-> and from mem_cgroup_end_migration used during soft_offline_page.
->
-> Btw., while looking at mem_cgroup_end_migration, I have noticed that you
-> need to take care of mem_cgroup_prepare_migration as well otherwise the
-> page would get charged as a normal (shmem) page.
->
+> Hello,
+> 
+> This is the second take at improving cgroup file addition/removal
+> interface.  Changes from the last take[L] are,
+> 
+> * CGROUP_SUBSYS_CFTYPES[_COND]() dropped and
+>   cgroup_subsys->base_cftypes is added instead.  This works better for
+>   subsystems implemented as module.  tcp_memcontrol now uses an
+>   explicit __initcall() to register its cftypes.
+> 
+> * 0005-cgroup-relocate-cftype-and-cgroup_subsys-definitions.patch
+>   added as cleanup.
+> 
+> * 0007-memcg-always-create-memsw-files-if-CONFIG_CGROUP_MEM.patch
+>   added so that memsw files are always created if enabled in config as
+>   suggested by KAMEZAWA.
+> 
+> This patch replaces cgroup file interface with cftype based one which
+> allows dynamic additions and removals of cftype arrays whether the
+> target subsystem is attached or not.  This can be used to make subsys
+> rebinding via remount work properly but I intentionally avoided doing
+> that at the moment.
+> 
 
-Won't we skip HugeTLB pages in migrate ? check_range do check for
-is_vm_hugetlb_page.
 
--aneesh
+What's the problem with remount? and is it important enough that it
+should be fixed even the feature is marked as deprecated?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> This makes cgroup population simpler for controllers and will be used
+> to allow controllers to be more dynamic.  e.g. blkio subsys has
+> sub-policies which may come and go while blkio subsys is attached and
+> it currently uses fixed set of files which stays blank if not in use.
+
+
+Dynamic cgroup files was mentioned before. The scenario in mind was blkio
+control files can be added/removed automatically as devices come and ago.
+
+So this time blkio subsystem is really going to be made more dynamic
+soon?
+
+> This will also be useful for implementing unified hierarchy.
+> 
+
+> This patchset contains the following patches.
+
+> 
+
+
+I'll look into the patches tomorrow.
+
+>  0001-cgroup-move-cgroup_clear_directory-call-out-of-cgrou.patch
+>  0002-cgroup-build-list-of-all-cgroups-under-a-given-cgrou.patch
+>  0003-cgroup-implement-cgroup_add_cftypes-and-friends.patch
+>  0004-cgroup-merge-cft_release_agent-cftype-array-into-the.patch
+>  0005-cgroup-relocate-cftype-and-cgroup_subsys-definitions.patch
+>  0006-cgroup-convert-all-non-memcg-controllers-to-the-new-.patch
+>  0007-memcg-always-create-memsw-files-if-CONFIG_CGROUP_MEM.patch
+>  0008-cgroup-convert-memcg-controller-to-the-new-cftype-in.patch
+>  0009-cgroup-remove-cgroup_add_file-s.patch
+>  0010-cgroup-relocate-__d_cgrp-and-__d_cft.patch
+>  0011-cgroup-introduce-struct-cfent.patch
+>  0012-cgroup-implement-cgroup_rm_cftypes.patch
+> 
+> and is on top of
+> 
+>   cgroup/for-3.4 3ce3230a0cff484e5130153f244d4fb8a56b3a8b
+> + [1] cgroup: deprecate remount option changes mount option
+> 
+> and is also available in the following git branch.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git cgroup-cftype
+> 
+> Glauber, I think the cftypes registration for tcp_memcontrol is fine
+> as is in this patchset and we just need to move the init to the tail
+> of ->create().  Let's worry about memcg for module-loadable protocols
+> whey they are added.  Can you please send a patch to move init to
+> ->create()?
+> 
+> If nobody objects && after Li comes back and acks the changes, I'll
+> route these through cgroup/for-3.5.
+
