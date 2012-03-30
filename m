@@ -1,81 +1,69 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [RFC 0/7] Initial proposal for faster res_counter updates
-Date: Fri, 30 Mar 2012 12:46:17 +0200
-Message-ID: <4F758EF9.5030008@parallels.com>
-References: <1333094685-5507-1-git-send-email-glommer@parallels.com> <4F756F86.8030906@jp.fujitsu.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -V4 05/10] hugetlb: add charge/uncharge calls for HugeTLB
+ alloc/free
+Date: Fri, 30 Mar 2012 12:46:50 +0200
+Message-ID: <20120330104650.GB15375@tiehlicka.suse.cz>
+References: <1331919570-2264-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1331919570-2264-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <20120328131706.GF20949@tiehlicka.suse.cz>
+ <87sjgs1v6x.fsf@skywalker.in.ibm.com>
+ <20120329081003.GC30465@tiehlicka.suse.cz>
+ <871uoamkxr.fsf@skywalker.in.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F756F86.8030906@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <871uoamkxr.fsf-6yE53ggjAfyqSkle7U1LjlaTQe2KTcn/@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Linux MM <linux-mm@kvack.org>, Pavel Emelyanov <xemul@parallels.com>
+Content-Transfer-Encoding: 7bit
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
- > Note: Assume a big system which has many cpus, and user wants to devide
-> the system into containers. Current memcg's percpu caching is done
-> only when a task in memcg is on the cpu, running. So, it's not so dangerous
-> as it looks.
+On Fri 30-03-12 16:10:00, Aneesh Kumar K.V wrote:
+> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+> 
+> > On Wed 28-03-12 23:09:34, Aneesh Kumar K.V wrote:
+> >> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+> >> 
+> >> > On Fri 16-03-12 23:09:25, Aneesh Kumar K.V wrote:
+> >> >> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> >> >> 
+> >> >> This adds necessary charge/uncharge calls in the HugeTLB code
+> >> >
+> >> > This begs for more description...
+> >> > Other than that it looks correct.
+> >> >
+> >> 
+> >> Updated as below
+> >> 
+> >>     hugetlb: add charge/uncharge calls for HugeTLB alloc/free
+> >>     
+> >>     This adds necessary charge/uncharge calls in the HugeTLB code. We do
+> >>     memcg charge in page alloc and uncharge in compound page destructor.
+> >>     We also need to ignore HugeTLB pages in __mem_cgroup_uncharge_common
+> >>     because that get called from delete_from_page_cache
+> >
+> > and from mem_cgroup_end_migration used during soft_offline_page.
+> >
+> > Btw., while looking at mem_cgroup_end_migration, I have noticed that you
+> > need to take care of mem_cgroup_prepare_migration as well otherwise the
+> > page would get charged as a normal (shmem) page.
+> >
+> 
+> Won't we skip HugeTLB pages in migrate ?
 
-Agree. I actually think it is pretty
-> But yes, if we can drop memcg's code, it's good. Then, we can remove some
-> amount of codes.
-> 
->> But the cons:
->>
->> * percpu counters have signed quantities, so this would limit us 4G.
->>    We can add a shift and then count pages instead of bytes, but we
->>    are still in the 16T area here. Maybe we really need more than that.
->>
-> 
-> ....
-> struct percpu_counter {
->          raw_spinlock_t lock;
->          s64 count;
-> 
-> s64 limtes us 4G ?
->
-Yes, I actually explicitly mentioned that. We can go to 16T if we track
-pages
-instead of bytes (I considered having the res_counter initialization code to
-specify a shift, so we could be generic).
+Yes but we still migrate for memory failure (see soft_offline_page).
 
-But I believe that if we go this route, we'll need to either:
-1) Have our own internal implementation of what percpu counters does
-2) create u64 acessors that would cast that to u64 in the operations.
-Since it
-     is a 64 bit field anyway it should be doable. But being doable
-doesn't mean we
-     should do it....
-3) Have a different percpu_counter structure, something like struct
-percpu_positive_counter.
+> check_range do check for is_vm_hugetlb_page.
+> 
+> -aneesh
+> 
 
-> 
->> * some of the additions here may slow down the percpu_counters for
->>    users that don't care about our usage. Things about min/max tracking
->>    enter in this category.
->>
-> 
-> 
-> I think it's not very good to increase size of percpu counter. It's already
-> very big...Hm. How about
-> 
-> 	struct percpu_counter_lazy {
-> 		struct percpu_counter pcp;
-> 		extra information
-> 		s64 margin;
-> 	}
-> ?
-
-Can work, but we need something that also solves the signedness problem.
-Maybe we can use a union for that, and then stuff things in the end of a
-different
-structure just for the users that want it.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
