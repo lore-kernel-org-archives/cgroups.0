@@ -1,41 +1,90 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH for-3.4-fixes] cgroup: cgroup_attach_task() could return
- -errno after success
-Date: Fri, 30 Mar 2012 08:37:05 +0800
-Message-ID: <4F750031.3090903@huawei.com>
-References: <alpine.LNX.2.00.1203282354440.25526@pobox.suse.cz>
- <20120329160433.GC28941@google.com> <20120329162620.GD28941@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup: urgent fix for 3.4-rc1 merge window
+Date: Thu, 29 Mar 2012 22:26:12 -0700
+Message-ID: <20120330052612.GA13855@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20120329162620.GD28941-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=65dCo8F4NNAtp6PYm9xQ2WE1nZGrAQsoU9IEEfFuYJg=;
+	b=0hiFtQdLqxp/keBsdzv8IO5EuKcUWgwZqo3o8Nq28U0kHZ5Cja6t9wiCmw41OhkMpr
+	TcxioAGk+QAACG5u7yfsVipcfnCBg2QL6+322ZAWa1nzoJStSXLbKUAHx33160ZXDSns
+	f+IxDvdI4ZxpPsClzlNnvW7Xk7gG8pQTYI8hD8SHgaUWFSMxVjWyP28AXyBpMSZChpGR
+	FYSjPlFZM+XR+WvCbbbtritNfDRHRIkqyAd90OJWI8ky5H7mVC2PRISg8IQiY3rFqj/x
+	iZprFbRtBT2ttv6OeVJwNqnBMjKRkf6DSSzocyH81F4BX+DIwcNN+OikMm8rC4MsEjKg
+	K14w==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Tejun Heo wrote:
+Hello, Linus.
 
-> 61d1d219c4 "cgroup: remove extra calls to find_existing_css_set" made
-> cgroup_task_migrate() return void.  An unfortunate side effect was
-> that cgroup_attach_task() was depending on that function's return
-> value to clear its @retval on the success path.  On cgroup mounts
-> without any subsystem with ->can_attach() callback,
-> cgroup_attach_task() ended up returning @retval without initializing
-> it on success.
-> 
-> For some reason, gcc failed to warn about it and it didn't cause
-> cgroup_attach_task() to return non-zero value in many cases, probably
-> due to difference in register allocation.  When the problem
-> materializes, systemd fails to populate /systemd cgroup mount and
-> fails to boot.
-> 
-> Fix it by initializing @retval to zero on declaration.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-> LKML-Reference: <alpine.LNX.2.00.1203282354440.25526-ztGlSCb7Y1iN3ZZ/Hiejyg@public.gmane.org>
+61d1d219c4 "cgroup: remove extra calls to find_existing_css_set" which
+was part of the rc1 cgroup pull request made writes to cgroup "tasks"
+file return uninitialized retval on success which can cause boot
+failures with systemd.  The change stayed in linux-next for quite some
+time but gcc interestingly failed to emit warning about using
+uninitialized variable and the problem seems to materialize only for
+certain build combinations (probably depends on register allocation).
 
+It's just missing local variable initialization and the fix is trivial
+& safe.  As the problem is critical when it materializes, I'm
+fast-tracking it.  Also included is Li's email address change in
+MAINTAINERS.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.4-fixes
+
+Li Zefan (1):
+      cgroup: update MAINTAINERS entry
+
+Tejun Heo (1):
+      cgroup: cgroup_attach_task() could return -errno after success
+
+Thanks.
+---
+ MAINTAINERS     |    2 +-
+ kernel/cgroup.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f9faade..3dbf4d1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1940,7 +1940,7 @@ F:	drivers/connector/
+ 
+ CONTROL GROUPS (CGROUPS)
+ M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+-M:	Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
++M:	Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+ L:	containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+ L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index f4ea4b6..ed64cca 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1883,7 +1883,7 @@ static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
+  */
+ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
+ {
+-	int retval;
++	int retval = 0;
+ 	struct cgroup_subsys *ss, *failed_ss = NULL;
+ 	struct cgroup *oldcgrp;
+ 	struct cgroupfs_root *root = cgrp->root;
+
+--
+tejun
