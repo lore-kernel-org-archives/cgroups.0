@@ -1,131 +1,47 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC 0/7] Initial proposal for faster res_counter updates
-Date: Fri, 30 Mar 2012 17:32:06 +0900
-Message-ID: <4F756F86.8030906@jp.fujitsu.com>
-References: <1333094685-5507-1-git-send-email-glommer@parallels.com>
+From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for-3.4-fixes] cgroup: cgroup_attach_task() could return
+ -errno after success
+Date: Fri, 30 Mar 2012 10:38:01 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1203301037380.25526@pobox.suse.cz>
+References: <alpine.LNX.2.00.1203282354440.25526@pobox.suse.cz> <20120329160433.GC28941@google.com> <20120329162620.GD28941@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1333094685-5507-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120329162620.GD28941-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Linux MM <linux-mm@kvack.org>, Pavel Emelyanov <xemul@parallels.com>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
 
-(2012/03/30 17:04), Glauber Costa wrote:
+On Thu, 29 Mar 2012, Tejun Heo wrote:
 
-> Hi,
+> 61d1d219c4 "cgroup: remove extra calls to find_existing_css_set" made
+> cgroup_task_migrate() return void.  An unfortunate side effect was
+> that cgroup_attach_task() was depending on that function's return
+> value to clear its @retval on the success path.  On cgroup mounts
+> without any subsystem with ->can_attach() callback,
+> cgroup_attach_task() ended up returning @retval without initializing
+> it on success.
 > 
-> Here is my take about how we can make res_counter updates faster.
-> Keep in mind this is a bit of a hack intended as a proof of concept.
+> For some reason, gcc failed to warn about it and it didn't cause
+> cgroup_attach_task() to return non-zero value in many cases, probably
+> due to difference in register allocation.  When the problem
+> materializes, systemd fails to populate /systemd cgroup mount and
+> fails to boot.
 > 
-> The pros I see with this:
+> Fix it by initializing @retval to zero on declaration.
 > 
-> * free updates in non-constrained paths. non-constrained paths includes
->   unlimited scenarios, but also ones in which we are far from the limit.
-> 
-> * No need to have a special cache mechanism in memcg. The problem with
->   the caching is my opinion, is that we will forward-account pages, meaning
->   that we'll consider accounted pages we never used. I am not sure
->   anyone actually ran into this, but in theory, this can fire events
->   much earlier than it should.
-> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
+> LKML-Reference: <alpine.LNX.2.00.1203282354440.25526-ztGlSCb7Y1iN3ZZ/Hiejyg@public.gmane.org>
+> ---
+> Jiri, can you please confirm the fix?
 
+Thanks Tejun, it works here.
 
-Note: Assume a big system which has many cpus, and user wants to devide
-the system into containers. Current memcg's percpu caching is done
-only when a task in memcg is on the cpu, running. So, it's not so dangerous
-as it looks.
+Tested-by: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
 
-But yes, if we can drop memcg's code, it's good. Then, we can remove some
-amount of codes.
-
-> But the cons:
-> 
-> * percpu counters have signed quantities, so this would limit us 4G.
->   We can add a shift and then count pages instead of bytes, but we
->   are still in the 16T area here. Maybe we really need more than that.
-> 
-
-....
-struct percpu_counter {
-        raw_spinlock_t lock;
-        s64 count;
-
-s64 limtes us 4G ?
-
-
-> * some of the additions here may slow down the percpu_counters for
->   users that don't care about our usage. Things about min/max tracking
->   enter in this category.
-> 
-
-
-I think it's not very good to increase size of percpu counter. It's already
-very big...Hm. How about
-
-	struct percpu_counter_lazy {
-		struct percpu_counter pcp;
-		extra information
-		s64 margin;
-	}
-?
-
-> * growth of the percpu memory.
->
-
-
-This may be a concern.
-
-I'll look into patches.
-
-Thanks,
--Kame
-
- 
-> It is still not clear for me if we should use percpu_counters as this
-> patch implies, or if we should just replicate its functionality.
-> 
-> I need to go through at least one more full round of auditing before
-> making sure the locking is safe, specially my use of synchronize_rcu().
-> 
-> As for measurements, the cache we have in memcg kind of distort things.
-> I need to either disable it, or find the cases in which it is likely
-> to lose and benchmark them, such as deep hierarchy concurrent updates
-> with common parents.
-> 
-> I also included a possible optimization that can be done when we
-> are close to the limit to avoid the initial tests altogether, but
-> it needs to be extended to avoid scanning the percpu areas as well.
-> 
-> In summary, if this is to be carried forward, it definitely needs
-> some love. It should be, however, more than enough to make the
-> proposal clear.
-> 
-> Comments are appreciated.
-> 
-> Glauber Costa (7):
->   split percpu_counter_sum
->   consolidate all res_counter manipulation
->   bundle a percpu counter into res_counters and use its lock
->   move res_counter_set limit to res_counter.c
->   use percpu_counters for res_counter usage
->   Add min and max statistics to percpu_counter
->   Global optimization
-> 
->  include/linux/percpu_counter.h |    3 +
->  include/linux/res_counter.h    |   63 ++++++-----------
->  kernel/res_counter.c           |  151 +++++++++++++++++++++++++++++-----------
->  lib/percpu_counter.c           |   16 ++++-
->  4 files changed, 151 insertions(+), 82 deletions(-)
-> 
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Jiri Kosina
+SUSE Labs
