@@ -1,92 +1,49 @@
-From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [RFC] patch
-Date: Mon, 02 Apr 2012 14:17:23 +0400
-Message-ID: <4F797CB3.7070100@samsung.com>
-References: <4F7928BE.8000502@samsung.com> <4F792976.4090503@samsung.com>
- <20120402102931.GA5885@shutemov.name>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET] block: modularize blkcg config and stat file
+ handling
+Date: Mon, 2 Apr 2012 13:02:33 -0700
+Message-ID: <20120402200233.GB17175@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <1332975091-10950-1-git-send-email-tj@kernel.org>
+ <4F741AED.6090901@kernel.dk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20120402102931.GA5885-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Wv91NWIyNXdqVrz/CkqmKUsW4ANEGiVNVI7XJH2jaJc=;
+        b=x8hqjPnYbRvGGiqikBghrhWa5HJgQHsHWHgKzydCZoweaOYSZBb3lsVTC60bquG4d2
+         jJW0H1qze1bnGpEmKPYOT92ZSJRsyQG3c1opk/GnxSvJuci6Y4djUM6DikKWI9sA2m2P
+         9CBzw8imH5Saq+zPIb78EIgoqSLQW4l76D/cwY66f9CCzQQKDYfVtzdmRWON3+fFH8Os
+         tRf+uL6NhbDrQK0NmMpUGKKUvlNsgYkJf0ZXIXQp2GlQFg//3iGb75JFp1WI6XonRtxC
+         4fQYnNwBrfXTwUzrPmQO/J9YdIbpt/aT+ZiDW1YdC3CdaIVq+jIuQYK9MuOC7jOOyG1l
+         264w==
+Content-Disposition: inline
+In-Reply-To: <4F741AED.6090901-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hi Kirill, thanks for your reply
+Hey, Jens.
 
-On 04/02/2012 02:29 PM, Kirill A. Shutemov wrote:
-> On Mon, Apr 02, 2012 at 08:22:14AM +0400, Alexander Nikiforov wrote:
->
-> I think it should be part of task counter css, not core.
-> CC list updated.
-Maybe, I need time to think about your suggestion.
->> @@ -4558,6 +4594,22 @@ void cgroup_fork(struct task_struct *child)
->>   	child->cgroups = current->cgroups;
->>   	get_css_set(child->cgroups);
->>   	INIT_LIST_HEAD(&child->cg_list);
->> +
->> +	struct cgroupfs_root *root;
->> +
->> +	/* send event to the userspace */
->> +	mutex_lock(&cgroup_mutex);
->> +	for_each_active_root(root) {
->> +		struct cgroup *cgrp;
->> +		struct fe_eventfd_list *ev;
->> +
->> +		cgrp = task_cgroup_from_root(child, root);
->> +
->> +		list_for_each_entry(ev,&cgrp->fe_notify, list) {
->> +			eventfd_signal(ev->eventfd, 1);
->> +		}
->> +	}
->> +	mutex_unlock(&cgroup_mutex);
->>   }
-> How does it affect performance?
-One cycle with active roots, one inside task_cgroup_from_root() through 
-cg_links and through events. I don't think what this is significant, 
-maybe I wrong.
->
->>
->>   /**
->> @@ -4653,6 +4705,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
->>   {
->>   	struct css_set *cg;
->>   	int i;
->> +	struct cgroupfs_root *root;
->>
->>   	/*
->>   	 * Unlink from the css_set task list if necessary.
->> @@ -4666,6 +4719,20 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
->>   		write_unlock(&css_set_lock);
->>   	}
->>
->> +	/* send event to the userspace */
->> +	mutex_lock(&cgroup_mutex);
->> +	for_each_active_root(root) {
->> +		struct cgroup *cgrp;
->> +		struct fe_eventfd_list *ev;
->> +
->> +		cgrp = task_cgroup_from_root(tsk, root);
->> +
->> +		list_for_each_entry(ev,&cgrp->fe_notify, list) {
->> +			eventfd_signal(ev->eventfd, 1);
->> +		}
->> +	}
->> +	mutex_unlock(&cgroup_mutex);
->> +
-> I think it's racy. You need to notify userspace after reassigning the
-> task, not before.
-You are right.
->>   	/* Reassign the task to the init_css_set. */
->>   	task_lock(tsk);
->>   	cg = tsk->cgroups;
->
+On Thu, Mar 29, 2012 at 10:18:53AM +0200, Jens Axboe wrote:
+> The diffstat is very tasty... I'll leave this on out until the cgroup
+> merge mess is settled, though.
 
+The following branch contains this patchset on top of the current
+block/for-3.5/core 959d851caa "Merge branch 'for-3.5' of ../cgroup
+into block/for-3.5/core-merged".
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blkcg-files
+
+Other than $SUBJ update on the eigth patch from "blkcg:
+blkg_conf_prep()" to "blkcg: simplify blkg_conf_prep()", the patchset
+can be applied as-is on top of the current block/for-3.5/core.
+
+Thanks.
 
 -- 
-Best regards,
-      Alex Nikiforov,
-      Mobile SW, Advanced Software Group,
-      Moscow R&D center, Samsung Electronics
+tejun
