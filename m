@@ -1,41 +1,59 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [RFC] writeback and cgroup
-Date: Wed, 4 Apr 2012 14:35:29 -0400
-Message-ID: <20120404183528.GJ12676@redhat.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404175124.GA8931@localhost>
+From: Tao Ma <tm-d1IQDZat3X0@public.gmane.org>
+Subject: Re: IOPS based scheduler (Was: Re: [PATCH 18/21] blkcg: move blkio_group_conf->weight
+ to cfq)
+Date: Thu, 05 Apr 2012 02:36:38 +0800
+Message-ID: <4F7C94B6.9080900@tao.ma>
+References: <4F7A2B21.5000907@tao.ma> <20120403153736.GI5913@redhat.com> <4F7B2708.6080504@tao.ma> <20120403164959.GJ5913@redhat.com> <4F7B32AE.7050900@tao.ma> <CANejiEU1qAsvogozY3MjZnpcrbYZO4CkRE8s73WGPc_R5LKV9g@mail.gmail.com> <20120404133705.GB12676@redhat.com> <4F7C7A91.8040707@tao.ma> <20120404165048.GF12676@redhat.com> <4F7C824D.2050308@tao.ma> <20120404182238.GI12676@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120404175124.GA8931@localhost>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=tao.ma; s=default;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Subject:CC:To:MIME-Version:From:Date:Message-ID; bh=+d/zzsN7OphYyuFLT0DSkXcecG8bgLqnbPFlPqUS+oI=;
+	b=tVMESKyadV2BfUt1bO1rvCM0COJO46B9TvCVHB3qDv67MUeNAEUu3eftHb6AM4anYopFrQx1Fnuj4zYR6wcCOejWsJTKXWEa3OJmHdUu6xs8TzyRVXQkei5V2/4XxpR4;
+In-Reply-To: <20120404182238.GI12676-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Wed, Apr 04, 2012 at 10:51:24AM -0700, Fengguang Wu wrote:
-
-[..]
-> The sweet split point would be for balance_dirty_pages() to do cgroup
-> aware buffered write throttling and leave other IOs to the current
-> blkcg. For this to work well as a total solution for end users, I hope
-> we can cooperate and figure out ways for the two throttling entities
-> to work well with each other.
-
-Throttling read + direct IO, higher up has few issues too. Users will
-not like that a task got blocked as it tried to submit a read from a
-throttled group. Current async behavior works well where we queue up the
-bio from the task in throttled group and let task do other things. Same
-is true for AIO where we would not like to block in bio submission.
+On 04/05/2012 02:22 AM, Vivek Goyal wrote:
+> On Thu, Apr 05, 2012 at 01:18:05AM +0800, Tao Ma wrote:
+> 
+> [..]
+>>> I think a large chunk of that iops scheduler code will be borrowed from
+>>> CFQ code. All the cgroup logic, queue creation logic, group scheduling
+>>> logic etc. And that's the reason I was still exploring the possibility 
+>>> of having common code base.
+>> Yeah, actually I was thinking of abstracting a generic logic, but it
+>> seems a lot bit hard. Maybe we can try to unify the code later?
+> 
+> I think if we change the cfqq scheduling logic to something similar to
+> group scheduling logic, it will help a lot.
+> 
+> - Current virtual time based logic does not care whether you are operating
+>   in time mode or iops mode. Switching cfqq logic to similar logic will
+>   help moving to iops mode quickly.
+> 
+> - Keeping track of vtime will help that we will get rid of all the
+>   residual time logic. If some queue was preempted, and did not use full
+>   slice, we will automaticlally charge it less and give smaller vtime.
+> 
+> - Keeping both the scheduling logic will enable us the smoother
+>   integration of both cfqq and group logic once we support hierarchical
+>   cgroups.
+> 
+> - It will also enable easier integration of iops related logic.
+Maybe, I will check all of these after my travel. Also I will try your
+patch at that time.
+> 
+> So I am in favor of cleaning up CFQ code and change it to deal with both
+> time as well iops. Seriously, implmenting time or iops is not hard. It is
+> about rest of the logic like trees, groups which contributes towards bulk
+> of the code and I am really not convinced that iops scheduler is going to
+> be different enough that it needs new io scheduler.
+Sure, I also want to make my problem perfect resolved while maitaining
+things simple.
 
 Thanks
-Vivek
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Tao
