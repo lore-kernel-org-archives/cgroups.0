@@ -1,51 +1,62 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: IOPS based scheduler (Was: Re: [PATCH 18/21] blkcg: move
- blkio_group_conf->weight to cfq)
-Date: Wed, 4 Apr 2012 11:10:14 -0400
-Message-ID: <20120404151014.GD12676@redhat.com>
-References: <4F7A261A.9000200@tao.ma>
- <20120402222504.GA2672@redhat.com>
- <4F7A2B21.5000907@tao.ma>
- <20120403153736.GI5913@redhat.com>
- <4F7B2708.6080504@tao.ma>
- <20120403164959.GJ5913@redhat.com>
- <4F7B32AE.7050900@tao.ma>
- <CANejiEU1qAsvogozY3MjZnpcrbYZO4CkRE8s73WGPc_R5LKV9g@mail.gmail.com>
- <20120404133705.GB12676@redhat.com>
- <CANejiEVD6nFVqX8Jf_hmRHg8YyBvPxbTVjgEif3mO1aa925KkQ@mail.gmail.com>
+From: Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Lsf] [RFC] writeback and cgroup
+Date: Wed, 4 Apr 2012 10:36:04 -0500
+Message-ID: <CAH2r5mtwQa0Uu=_Yd2JywVJXA=OMGV43X_OUfziC-yeVy9BGtQ@mail.gmail.com>
+References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
+	<20120404145134.GC12676@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CANejiEVD6nFVqX8Jf_hmRHg8YyBvPxbTVjgEif3mO1aa925KkQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=C5NL1GnoPhUUVzxalbx0VmC8cIF8MHBeBdMQUjeCpmE=;
+        b=LoJA2SxH9pj5oWVSKX6tAUE7Wi06lhOdPdB6vaTNWJ61dl6hWlMwexSbhjC4bmH4v8
+         1HXaFmJEBFi/bIAhzgKZy49GJIPEGAFQRFUIQ/9BWc5k5gY8e2owcLH2V73XfOxdiyaf
+         K8wczu96c8W02d0inTW96hUSmYp05VJh55t4El/xtjjQN/yhpAFe0P+0x//IfO/E7Ff8
+         2Z9gGwl2LPU+mM2ta24a3RLJeuVgWb7Iy00ozybbrhpeoQ02i1zeeRQMs7lKprzrDIgC
+         IXpHeCzanAR5znArVTmA1UzuxXulj2+QLkFw3LVXkEJqTqbLBSs5V8IsjU666voBOYIn
+         R+fQ==
+In-Reply-To: <20120404145134.GC12676-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tao Ma <tm-d1IQDZat3X0@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Apr 04, 2012 at 07:52:24AM -0700, Shaohua Li wrote:
+On Wed, Apr 4, 2012 at 9:51 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> On Tue, Apr 03, 2012 at 11:36:55AM -0700, Tejun Heo wrote:
+>
+> Hi Tejun,
+>
+> Thanks for the RFC and looking into this issue. Few thoughts inline.
+>
+> [..]
+>> IIUC, without cgroup, the current writeback code works more or less
+>> like this. =A0Throwing in cgroup doesn't really change the fundament=
+al
+>> design. =A0Instead of a single pipe going down, we just have multipl=
+e
+>> pipes to the same device, each of which should be treated separately=
+=2E
+>> Of course, a spinning disk can't be divided that easily and their
+>> performance characteristics will be inter-dependent, but the place t=
+o
+>> solve that problem is where the problem is, the block layer.
+>
+> How do you take care of thorottling IO to NFS case in this model? Cur=
+rent
+> throttling logic is tied to block device and in case of NFS, there is=
+ no
+> block device.
 
-[..]
-> Agreed, we can tweak cfq to make it support iops fairness because the two
-> are conceptually the same. The problem is if this is a mess. CFQ is quite
-> complicated already. In iops mode, a lot of code isn't required, like idle,
-> queue merging, thinktime/seek detection and so on, as the scheduler
-> will be only for ssd. With recent iocontext cleanup, the iops scheduler
-> code is quite short actually.
+Similarly smb2 gets congestion info (number of "credits") returned from
+the server on every response - but not sure why congestion
+control is tied to the block device when this would create
+problems for network file systems
 
-Ok, this is somewhat a better reason to have a separate scheduler. I guess
-we need to look that actual iops code and that can help decide whether
-to keep it as a separate scheduler.
+--=20
+Thanks,
 
-One question is still unanswered though. What real workload benefits
-from it? If you are not doing idling in iops based scheduler, I doubt
-you are doing to see much service differentiation on fast SSDs. As for
-service differentiation IO queues have to be continuously backlogged and
-total IOPS needed by applications need to be more than what disk can
-offer. It becomes very hard to produe continuously backlogged queues
-because real applications tend to read some data, proces data and then
-generate more IO. 
-
-Thanks
-Vivek
+Steve
