@@ -1,62 +1,97 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Wed, 4 Apr 2012 16:02:37 -0700
-Message-ID: <20120404230237.GA2173@dhcp-172-17-108-109.mtv.corp.google.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404145134.GC12676@redhat.com>
- <20120404184909.GB29686@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404203239.GM12676@redhat.com>
+From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [RFC] patch
+Date: Thu, 05 Apr 2012 07:38:21 +0400
+Message-ID: <4F7D13AD.3030309@samsung.com>
+References: <4F7928BE.8000502@samsung.com> <4F792976.4090503@samsung.com>
+ <20120402102931.GA5885@shutemov.name>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jvHbC89Hi1qTkOK+5NsePnGwJAAr/+4RRIDSNJ/TzSQ=;
-        b=wuYPM1hjPhKz22EtmWUSxhQxG4EcTNKCsYJfAcfS4bF4xyXJMdUug7lIb18XBZfVMQ
-         qYI5KT1amNTFARLG9iuF2r/gs3B0m4jG+kf21sOsr5BXuCvy/GIxlLlrePPa86NaPEXZ
-         w6K6dl6Qc8Syx0uM7FyPrbhsxMXCL2VT42bK2n6NAiMnN9wG0FbWnOXZ30YI0uoatmN5
-         GDSwbCh89dJdSpipNwwQkEMJ5jYG4yulr8C8IcDn1CempZzraLQ/NlKNed9knSph2iTi
-         WuYw4UmnUiZV3H9yS3A+k11DacoWBur3j19JNm/sGw5T9lDqV5uu/I5yT/lY9bUEJOOO
-         wJ+w==
-Content-Disposition: inline
-In-Reply-To: <20120404203239.GM12676-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-reply-to: <20120402102931.GA5885-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Hello, Vivek.
+Hi guys, I investigate
 
-On Wed, Apr 04, 2012 at 04:32:39PM -0400, Vivek Goyal wrote:
-> > Let's say we have iops/bps limitation applied on top of proportional IO
-> > distribution
-> 
-> We already do that. First IO is subjected to throttling limit and only 
-> then it is passed to the elevator to do the proportional IO. So throttling
-> is already stacked on top of proportional IO. The only question is 
-> should it be pushed to even higher layers or not.
+http://lwn.net/Articles/453642/
 
-Yeah, I know we already can do that.  I was trying to give an example
-of non-trivial IO limit configuration.
+seems that this really fit my proposal and I can make move this 
+functionality from core to this css. But, unfortunately, Frederic git is 
+not available on kernel.org and current Linux kernel doesn't have this 
+patches. Could you be so kind to provide link to the kernel with this 
+patches.
 
-> So split model is definitely confusing. Anyway, block layer will not
-> apply the limits again as flusher IO will go in root cgroup which 
-> generally goes to root which is unthrottled generally. Or flusher
-> could mark the bios with a flag saying "do not throttle" bios again as
-> these have been throttled already. So throttling again is probably not
-> an issue. 
-> 
-> In summary, agreed that split is confusing and it fills a gap existing
-> today.
+On 04/02/2012 02:29 PM, Kirill A. Shutemov wrote:
+> On Mon, Apr 02, 2012 at 08:22:14AM +0400, Alexander Nikiforov wrote:
+>
+> I think it should be part of task counter css, not core.
+> CC list updated.
+>
+>> @@ -4558,6 +4594,22 @@ void cgroup_fork(struct task_struct *child)
+>>   	child->cgroups = current->cgroups;
+>>   	get_css_set(child->cgroups);
+>>   	INIT_LIST_HEAD(&child->cg_list);
+>> +
+>> +	struct cgroupfs_root *root;
+>> +
+>> +	/* send event to the userspace */
+>> +	mutex_lock(&cgroup_mutex);
+>> +	for_each_active_root(root) {
+>> +		struct cgroup *cgrp;
+>> +		struct fe_eventfd_list *ev;
+>> +
+>> +		cgrp = task_cgroup_from_root(child, root);
+>> +
+>> +		list_for_each_entry(ev,&cgrp->fe_notify, list) {
+>> +			eventfd_signal(ev->eventfd, 1);
+>> +		}
+>> +	}
+>> +	mutex_unlock(&cgroup_mutex);
+>>   }
+> How does it affect performance?
+>
+>>
+>>   /**
+>> @@ -4653,6 +4705,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+>>   {
+>>   	struct css_set *cg;
+>>   	int i;
+>> +	struct cgroupfs_root *root;
+>>
+>>   	/*
+>>   	 * Unlink from the css_set task list if necessary.
+>> @@ -4666,6 +4719,20 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+>>   		write_unlock(&css_set_lock);
+>>   	}
+>>
+>> +	/* send event to the userspace */
+>> +	mutex_lock(&cgroup_mutex);
+>> +	for_each_active_root(root) {
+>> +		struct cgroup *cgrp;
+>> +		struct fe_eventfd_list *ev;
+>> +
+>> +		cgrp = task_cgroup_from_root(tsk, root);
+>> +
+>> +		list_for_each_entry(ev,&cgrp->fe_notify, list) {
+>> +			eventfd_signal(ev->eventfd, 1);
+>> +		}
+>> +	}
+>> +	mutex_unlock(&cgroup_mutex);
+>> +
+> I think it's racy. You need to notify userspace after reassigning the
+> task, not before.
+>
+>>   	/* Reassign the task to the init_css_set. */
+>>   	task_lock(tsk);
+>>   	cg = tsk->cgroups;
+>
 
-It's not only confusing.  It's broken.  So, what you're saying is that
-there's no provision to orchestrate between buffered writes and other
-types of IOs.  So, it would essentially work as if there are two
-separate controls controlling each of two heavily interacting parts
-with no designed provision between them.  What the....
 
 -- 
-tejun
+Best regards,
+      Alex Nikiforov,
+      Mobile SW, Advanced Software Group,
+      Moscow R&D center, Samsung Electronics
