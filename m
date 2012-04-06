@@ -1,62 +1,101 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: Re: [PATCH] memcg: revise the position of threshold index while unregistering
- event
-Date: Fri, 06 Apr 2012 11:59:49 +0800
-Message-ID: <4F7E6A35.10901@gmail.com>
-References: <1331035943-7456-1-git-send-email-handai.szj@taobao.com>	<20120405163530.a1a9c9f9.akpm@linux-foundation.org> <20120405163758.b2ef6c45.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RESEND, PATCH] memcg: make threshold index in the right position
+Date: Fri,  6 Apr 2012 12:04:12 +0800
+Message-ID: <1333685052-4614-1-git-send-email-handai.szj@taobao.com>
+References: <20120405163758.b2ef6c45.akpm@linux-foundation.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=sFIVoe9mx0WFeuDHCln3GQBCKiYM/DkmtzkBp8AmMao=;
-        b=US7p7MqinnN20pCrJ7Nt5ecPNNtFivjcC0tAVzdD2wc1nX3xsUgydP8GKc1Po2M2Ly
-         /ExLZQZ23WTH913+fbkz6DVAmdO0LjrDNakdYWETWwlwZ6ml9sEFBtoDBcbDYRgbYn1H
-         7fNnbmdmH3PU2KcN57AoJQ+4GDEK53Gad1BqAF2+rZs11AkaQNZRRoqfbrTHl81CLiGZ
-         ZjZHMlaAG/1vfBCTdE04NH7aLfCgXgEuTjH2ADoz8KSrUG57XcjvpEFoU1SbjyEuyQtP
-         4eqUt/soPHtR0muI1Wb1pdCOh9RQVV8RMD1cSTPfpGjsYU+O5dLHnOCDvSMTGT16OeZq
-         UXtQ==
-In-Reply-To: <20120405163758.b2ef6c45.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
+        bh=L8kv+W1izzP9imIexonZhGE7AcH9HbKls/HNLyZdBqQ=;
+        b=EBdyxFMfm91xqGTDxHZPGizLBbBdB35ya9qEBsXhkbaOfxiyKipTC9jgcjeZc+AJf5
+         YNpKczmAD2LqbXoRcVEVyBJ4+kIHAVbbAxUnI90n8cr/QeZF3V3/IOmzK1k5qJXYDP+m
+         lYfQqrZ4NW5UmF0JBW9+3W4pKqrPhexr3jOVVdEgcjJVAELH3H+8SrTV8UkJ5fHouBB/
+         zwzg0lpJM2lsX9JZkZTzpt2nlwhVX8EQhUUzCpYJmgP4Duz3SiWPvS5vPHowCYyDjjZd
+         i3euVBWer8+ctU4R/iGa/wce64McMBVQ5rJ2Gz+qYxIzFYFG0KuLkhGx3WSD5dcl1OON
+         AvWA==
+In-Reply-To: <20120405163758.b2ef6c45.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, kirill@shutemov.name, Sha Zhengju <handai.szj@taobao.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On 04/06/2012 07:37 AM, Andrew Morton wrote:
-> On Thu, 5 Apr 2012 16:35:30 -0700
-> Andrew Morton<akpm@linux-foundation.org>  wrote:
->
->> On Tue,  6 Mar 2012 20:12:23 +0800
->> Sha Zhengju<handai.szj@gmail.com>  wrote:
->>
->>> From: Sha Zhengju<handai.szj@taobao.com>
->>>
->>> Index current_threshold should point to threshold just below or equal to usage.
->>> See below:
->>> http://www.spinics.net/lists/cgroups/msg00844.html
->> I have a bad feeling that I looked at a version of this patch
->> yesterday, but I can't find it.
-> Found it!  Below.
->
-> I think we might as well fold "memcg: revise the position of threshold
-> index while unregistering event" into the below "memcg: make threshold
-> index in the right position" as a single patch?
->
+From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Yeah, actually I've already sent a folded one before(maybe I should
-mark it as V2):
-http://www.spinics.net/lists/cgroups/msg01133.html
+Index current_threshold may point to threshold that just equal to
+usage after last call of __mem_cgroup_threshold. But after registering
+or unregistering a new event, it will change (pointing to threshold 
+just below usage). So make it consistent here.
 
-Thanks,
-Sha
+For example:
+now:
+        threshold array:  3  [5]  7  9   (usage = 6, [index] = 5)
 
+next turn (after calling __mem_cgroup_threshold):
+        threshold array:  3   5  [7]  9   (usage = 7, [index] = 7)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+after registering a new event (threshold = 10):
+        threshold array:  3  [5]  7  9  10 (usage = 7, [index] = 5)
+
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Reviewed-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+
+---
+ mm/memcontrol.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 22d94f5..34737b7 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -183,7 +183,7 @@ struct mem_cgroup_threshold {
+ 
+ /* For threshold */
+ struct mem_cgroup_threshold_ary {
+-	/* An array index points to threshold just below usage. */
++	/* An array index points to threshold just below or equal to usage. */
+ 	int current_threshold;
+ 	/* Size of entries[] */
+ 	unsigned int size;
+@@ -4193,7 +4193,7 @@ static void __mem_cgroup_threshold(struct mem_cgroup *memcg, bool swap)
+ 	usage = mem_cgroup_usage(memcg, swap);
+ 
+ 	/*
+-	 * current_threshold points to threshold just below usage.
++	 * current_threshold points to threshold just below or equal to usage.
+ 	 * If it's not true, a threshold was crossed after last
+ 	 * call of __mem_cgroup_threshold().
+ 	 */
+@@ -4319,14 +4319,15 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+ 	/* Find current threshold */
+ 	new->current_threshold = -1;
+ 	for (i = 0; i < size; i++) {
+-		if (new->entries[i].threshold < usage) {
++		if (new->entries[i].threshold <= usage) {
+ 			/*
+ 			 * new->current_threshold will not be used until
+ 			 * rcu_assign_pointer(), so it's safe to increment
+ 			 * it here.
+ 			 */
+ 			++new->current_threshold;
+-		}
++		} else
++			break;
+ 	}
+ 
+ 	/* Free old spare buffer and save old primary buffer as spare */
+@@ -4398,7 +4399,7 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
+ 			continue;
+ 
+ 		new->entries[j] = thresholds->primary->entries[i];
+-		if (new->entries[j].threshold < usage) {
++		if (new->entries[j].threshold <= usage) {
+ 			/*
+ 			 * new->current_threshold will not be used
+ 			 * until rcu_assign_pointer(), so it's safe to increment
+-- 
+1.7.4.1
