@@ -1,227 +1,63 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 1/2] cgroup: pass struct mem_cgroup instead of struct cgroup to socket memcg
-Date: Fri,  6 Apr 2012 20:04:09 +0400
-Message-ID: <1333728250-14248-2-git-send-email-glommer@parallels.com>
-References: <1333728250-14248-1-git-send-email-glommer@parallels.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH -V5 00/14] memcg: Add memcg extension to control HugeTLB allocation
+Date: Sat,  7 Apr 2012 00:20:46 +0530
+Message-ID: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1333728250-14248-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The only reason cgroup was used, was to be consistent with the populate()
-interface. Now that we're getting rid of it, not only we no longer need
-it, but we also *can't* call it this way.
+Hi,
 
-Since we will no longer rely on populate(), this will be called from
-create(). During create, the association between struct mem_cgroup
-and struct cgroup does not yet exist, since cgroup internals hasn't
-yet initialized its bookkeeping. This means we would not be able
-to draw the memcg pointer from the cgroup pointer in these
-functions, which is highly undesirable.
+This patchset implements a memory controller extension to control
+HugeTLB allocations. The extension allows to limit the HugeTLB
+usage per control group and enforces the controller limit during
+page fault. Since HugeTLB doesn't support page reclaim, enforcing
+the limit at page fault time implies that, the application will get
+SIGBUS signal if it tries to access HugeTLB pages beyond its limit.
+This requires the application to know beforehand how much HugeTLB
+pages it would require for its use.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/net/sock.h           |   12 ++++++------
- include/net/tcp_memcontrol.h |    4 ++--
- mm/memcontrol.c              |   24 +++++++++---------------
- net/core/sock.c              |   10 +++++-----
- net/ipv4/tcp_memcontrol.c    |    6 ++----
- 5 files changed, 24 insertions(+), 32 deletions(-)
+The goal is to control how many HugeTLB pages a group of task can
+allocate. It can be looked at as an extension of the existing quota
+interface which limits the number of HugeTLB pages per hugetlbfs
+superblock. HPC job scheduler requires jobs to specify their resource
+requirements in the job file. Once their requirements can be met,
+job schedulers like (SLURM) will schedule the job. We need to make sure
+that the jobs won't consume more resources than requested. If they do
+we should either error out or kill the application.
 
-diff --git a/include/net/sock.h b/include/net/sock.h
-index a6ba1f8..b3ebe6b 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -70,16 +70,16 @@
- struct cgroup;
- struct cgroup_subsys;
- #ifdef CONFIG_NET
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp);
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss);
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg);
- #else
- static inline
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
- }
- static inline
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -900,9 +900,9 @@ struct proto {
- 	 * This function has to setup any files the protocol want to
- 	 * appear in the kmem cgroup filesystem.
- 	 */
--	int			(*init_cgroup)(struct cgroup *cgrp,
-+	int			(*init_cgroup)(struct mem_cgroup *memcg,
- 					       struct cgroup_subsys *ss);
--	void			(*destroy_cgroup)(struct cgroup *cgrp);
-+	void			(*destroy_cgroup)(struct mem_cgroup *memcg);
- 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
- #endif
- };
-diff --git a/include/net/tcp_memcontrol.h b/include/net/tcp_memcontrol.h
-index 48410ff..7df18bc 100644
---- a/include/net/tcp_memcontrol.h
-+++ b/include/net/tcp_memcontrol.h
-@@ -12,8 +12,8 @@ struct tcp_memcontrol {
- };
- 
- struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg);
--int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss);
--void tcp_destroy_cgroup(struct cgroup *cgrp);
-+int tcp_init_cgroup(struct mem_cgroup *memcg, struct cgroup_subsys *ss);
-+void tcp_destroy_cgroup(struct mem_cgroup *memcg);
- unsigned long long tcp_max_memory(const struct mem_cgroup *memcg);
- void tcp_prot_mem(struct mem_cgroup *memcg, long val, int idx);
- #endif /* _TCP_MEMCG_H */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bef1142..704054d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4640,29 +4640,22 @@ static int mem_control_numa_stat_open(struct inode *unused, struct file *file)
- #endif /* CONFIG_NUMA */
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-+static int register_kmem_files(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
--	/*
--	 * Part of this would be better living in a separate allocation
--	 * function, leaving us with just the cgroup tree population work.
--	 * We, however, depend on state such as network's proto_list that
--	 * is only initialized after cgroup creation. I found the less
--	 * cumbersome way to deal with it to defer it all to populate time
--	 */
--	return mem_cgroup_sockets_init(cont, ss);
-+	return mem_cgroup_sockets_init(memcg, ss);
- };
- 
--static void kmem_cgroup_destroy(struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- {
--	mem_cgroup_sockets_destroy(cont);
-+	mem_cgroup_sockets_destroy(memcg);
- }
- #else
--static int register_kmem_files(struct cgroup *cont, struct cgroup_subsys *ss)
-+static int register_kmem_files(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
- }
- 
--static void kmem_cgroup_destroy(struct cgroup *cont)
-+static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -5034,7 +5027,7 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 
--	kmem_cgroup_destroy(cont);
-+	kmem_cgroup_destroy(memcg);
- 
- 	mem_cgroup_put(memcg);
- }
-@@ -5042,7 +5035,8 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- static int mem_cgroup_populate(struct cgroup_subsys *ss,
- 				struct cgroup *cont)
- {
--	return register_kmem_files(cont, ss);
-+	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-+	return register_kmem_files(memcg, ss);
- }
- 
- #ifdef CONFIG_MMU
-diff --git a/net/core/sock.c b/net/core/sock.c
-index b2e14c0..878f744 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -140,7 +140,7 @@ static DEFINE_MUTEX(proto_list_mutex);
- static LIST_HEAD(proto_list);
- 
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
--int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int mem_cgroup_sockets_init(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	struct proto *proto;
- 	int ret = 0;
-@@ -148,7 +148,7 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry(proto, &proto_list, node) {
- 		if (proto->init_cgroup) {
--			ret = proto->init_cgroup(cgrp, ss);
-+			ret = proto->init_cgroup(memcg, ss);
- 			if (ret)
- 				goto out;
- 		}
-@@ -159,19 +159,19 @@ int mem_cgroup_sockets_init(struct cgroup *cgrp, struct cgroup_subsys *ss)
- out:
- 	list_for_each_entry_continue_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp);
-+			proto->destroy_cgroup(memcg);
- 	mutex_unlock(&proto_list_mutex);
- 	return ret;
- }
- 
--void mem_cgroup_sockets_destroy(struct cgroup *cgrp)
-+void mem_cgroup_sockets_destroy(struct mem_cgroup *memcg)
- {
- 	struct proto *proto;
- 
- 	mutex_lock(&proto_list_mutex);
- 	list_for_each_entry_reverse(proto, &proto_list, node)
- 		if (proto->destroy_cgroup)
--			proto->destroy_cgroup(cgrp);
-+			proto->destroy_cgroup(memcg);
- 	mutex_unlock(&proto_list_mutex);
- }
- #endif
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index 8f1753d..1517037 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -18,7 +18,7 @@ static void memcg_tcp_enter_memory_pressure(struct sock *sk)
- }
- EXPORT_SYMBOL(memcg_tcp_enter_memory_pressure);
- 
--int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
-+int tcp_init_cgroup(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	/*
- 	 * The root cgroup does not use res_counters, but rather,
-@@ -28,7 +28,6 @@ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 	struct res_counter *res_parent = NULL;
- 	struct cg_proto *cg_proto, *parent_cg;
- 	struct tcp_memcontrol *tcp;
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
- 	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
- 	struct net *net = current->nsproxy->net_ns;
- 
-@@ -61,9 +60,8 @@ int tcp_init_cgroup(struct cgroup *cgrp, struct cgroup_subsys *ss)
- }
- EXPORT_SYMBOL(tcp_init_cgroup);
- 
--void tcp_destroy_cgroup(struct cgroup *cgrp)
-+void tcp_destroy_cgroup(struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
- 	struct cg_proto *cg_proto;
- 	struct tcp_memcontrol *tcp;
- 	u64 val;
--- 
-1.7.7.6
+Patches are on top of
+git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
+
+Changes from V4:
+ * Add support for charge/uncharge during page migration
+ * Drop the usage of page->lru in unmap_hugepage_range.
+
+Changes from v3:
+ * Address review feedback.
+ * Fix a bug in cgroup removal related parent charging with use_hierarchy set
+
+Changes from V2:
+* Changed the implementation to limit the HugeTLB usage during page
+  fault time. This simplifies the extension and keep it closer to
+  memcg design. This also allows to support cgroup removal with less
+  complexity. Only caveat is the application should ensure its HugeTLB
+  usage doesn't cross the cgroup limit.
+
+Changes from V1:
+* Changed the implementation as a memcg extension. We still use
+  the same logic to track the cgroup and range.
+
+Changes from RFC post:
+* Added support for HugeTLB cgroup hierarchy
+* Added support for task migration
+* Added documentation patch
+* Other bug fixes
+
+-aneesh
+
