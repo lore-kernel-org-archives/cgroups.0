@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V5 11/14] hugetlbfs: Add a list for tracking in-use HugeTLB pages
-Date: Sat,  7 Apr 2012 00:20:57 +0530
-Message-ID: <1333738260-1329-12-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V5 13/14] hugetlb: migrate memcg info from oldpage to new page during migration
+Date: Sat,  7 Apr 2012 00:20:59 +0530
+Message-ID: <1333738260-1329-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,107 +15,99 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-hugepage_activelist will be used to track currently used HugeTLB pages.
-We need to find the in-use HugeTLB pages to support memcg removal.
-On memcg removal we update the page's memory cgroup to point to
-parent cgroup.
+With HugeTLB pages, memcg is uncharged in compound page destructor.
+Since we are holding a hugepage reference, we can be sure that old
+page won't get uncharged till the last put_page(). On successful
+migrate, we can move the memcg information to new page's page_cgroup
+and mark the old page's page_cgroup unused.
 
-Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- include/linux/hugetlb.h |    1 +
- mm/hugetlb.c            |   12 +++++++-----
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h |    8 ++++++++
+ mm/memcontrol.c            |   28 ++++++++++++++++++++++++++++
+ mm/migrate.c               |    4 ++++
+ 3 files changed, 40 insertions(+)
 
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index d008342..6bf6afc 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -200,6 +200,7 @@ struct hstate {
- 	unsigned long resv_huge_pages;
- 	unsigned long surplus_huge_pages;
- 	unsigned long nr_overcommit_huge_pages;
-+	struct list_head hugepage_activelist;
- 	struct list_head hugepage_freelists[MAX_NUMNODES];
- 	unsigned int nr_huge_pages_node[MAX_NUMNODES];
- 	unsigned int free_huge_pages_node[MAX_NUMNODES];
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 340e575..8a520b5 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -512,7 +512,7 @@ void copy_huge_page(struct page *dst, struct page *src)
- static void enqueue_huge_page(struct hstate *h, struct page *page)
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 70317e5..6f2d392 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -464,6 +464,8 @@ extern int mem_cgroup_move_hugetlb_parent(int idx, struct cgroup *cgroup,
+ 					  struct page *page);
+ extern bool mem_cgroup_have_hugetlb_usage(struct cgroup *cgroup);
+ 
++extern void  mem_cgroup_hugetlb_migrate(struct page *oldhpage,
++					struct page *newhpage);
+ #else
+ static inline int
+ mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+@@ -510,6 +512,12 @@ static inline bool mem_cgroup_have_hugetlb_usage(struct cgroup *cgroup)
  {
- 	int nid = page_to_nid(page);
--	list_add(&page->lru, &h->hugepage_freelists[nid]);
-+	list_move(&page->lru, &h->hugepage_freelists[nid]);
- 	h->free_huge_pages++;
- 	h->free_huge_pages_node[nid]++;
+ 	return 0;
  }
-@@ -524,7 +524,7 @@ static struct page *dequeue_huge_page_node(struct hstate *h, int nid)
- 	if (list_empty(&h->hugepage_freelists[nid]))
- 		return NULL;
- 	page = list_entry(h->hugepage_freelists[nid].next, struct page, lru);
--	list_del(&page->lru);
-+	list_move(&page->lru, &h->hugepage_activelist);
- 	set_page_refcounted(page);
- 	h->free_huge_pages--;
- 	h->free_huge_pages_node[nid]--;
-@@ -628,12 +628,13 @@ static void free_huge_page(struct page *page)
- 	page->mapping = NULL;
- 	BUG_ON(page_count(page));
- 	BUG_ON(page_mapcount(page));
--	INIT_LIST_HEAD(&page->lru);
++
++static inline  void  mem_cgroup_hugetlb_migrate(struct page *oldhpage,
++						struct page *newhpage)
++{
++	return;
++}
+ #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
+ #endif /* _LINUX_MEMCONTROL_H */
  
- 	mem_cgroup_hugetlb_uncharge_page(hstate_index(h),
- 					 pages_per_huge_page(h), page);
- 	spin_lock(&hugetlb_lock);
- 	if (h->surplus_huge_pages_node[nid] && huge_page_order(h) < MAX_ORDER) {
-+		/* remove the page from active list */
-+		list_del(&page->lru);
- 		update_and_free_page(h, page);
- 		h->surplus_huge_pages--;
- 		h->surplus_huge_pages_node[nid]--;
-@@ -646,6 +647,7 @@ static void free_huge_page(struct page *page)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7b6e79a..7b373a2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3382,6 +3382,34 @@ err_out:
+ out:
+ 	return ret;
+ }
++
++void  mem_cgroup_hugetlb_migrate(struct page *oldhpage, struct page *newhpage)
++{
++	struct mem_cgroup *memcg;
++	struct page_cgroup *pc;
++
++	VM_BUG_ON(!PageHuge(oldhpage));
++
++	if (mem_cgroup_disabled())
++		return;
++
++	pc = lookup_page_cgroup(oldhpage);
++	lock_page_cgroup(pc);
++	memcg = pc->mem_cgroup;
++	pc->mem_cgroup = root_mem_cgroup;
++	ClearPageCgroupUsed(pc);
++	cgroup_exclude_rmdir(&memcg->css);
++	unlock_page_cgroup(pc);
++
++	/* move the mem_cg details to new cgroup */
++	pc = lookup_page_cgroup(newhpage);
++	lock_page_cgroup(pc);
++	pc->mem_cgroup = memcg;
++	SetPageCgroupUsed(pc);
++	unlock_page_cgroup(pc);
++	cgroup_release_and_wakeup_rmdir(&memcg->css);
++	return;
++}
+ #endif /* CONFIG_MEM_RES_CTLR_HUGETLB */
  
- static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
- {
-+	INIT_LIST_HEAD(&page->lru);
- 	set_compound_page_dtor(page, free_huge_page);
- 	spin_lock(&hugetlb_lock);
- 	h->nr_huge_pages++;
-@@ -894,6 +896,7 @@ static struct page *alloc_buddy_huge_page(struct hstate *h, int nid)
+ /*
+diff --git a/mm/migrate.c b/mm/migrate.c
+index d7eb82d..2b931e5 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -928,6 +928,10 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
  
- 	spin_lock(&hugetlb_lock);
- 	if (page) {
-+		INIT_LIST_HEAD(&page->lru);
- 		r_nid = page_to_nid(page);
- 		set_compound_page_dtor(page, free_huge_page);
- 		/*
-@@ -998,7 +1001,6 @@ retry:
- 	list_for_each_entry_safe(page, tmp, &surplus_list, lru) {
- 		if ((--needed) < 0)
- 			break;
--		list_del(&page->lru);
- 		/*
- 		 * This page is now managed by the hugetlb allocator and has
- 		 * no users -- drop the buddy allocator's reference.
-@@ -1013,7 +1015,6 @@ free:
- 	/* Free unnecessary surplus pages to the buddy allocator */
- 	if (!list_empty(&surplus_list)) {
- 		list_for_each_entry_safe(page, tmp, &surplus_list, lru) {
--			list_del(&page->lru);
- 			put_page(page);
- 		}
- 	}
-@@ -1927,6 +1928,7 @@ void __init hugetlb_add_hstate(unsigned order)
- 	h->free_huge_pages = 0;
- 	for (i = 0; i < MAX_NUMNODES; ++i)
- 		INIT_LIST_HEAD(&h->hugepage_freelists[i]);
-+	INIT_LIST_HEAD(&h->hugepage_activelist);
- 	h->next_nid_to_alloc = first_node(node_states[N_HIGH_MEMORY]);
- 	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
- 	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
+ 	if (anon_vma)
+ 		put_anon_vma(anon_vma);
++
++	if (!rc)
++		mem_cgroup_hugetlb_migrate(hpage, new_hpage);
++
+ 	unlock_page(hpage);
+ out:
+ 	put_page(new_hpage);
 -- 
 1.7.10.rc3.3.g19a6c
 
