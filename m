@@ -1,287 +1,143 @@
-From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Fri, 6 Apr 2012 02:59:34 -0700
-Message-ID: <20120406095934.GA10465@localhost>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404175124.GA8931@localhost>
- <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC] patch
+Date: Fri, 6 Apr 2012 17:43:54 +0200
+Message-ID: <CAFTL4hw6JpEAXaJE+8f--F=zo6habHRMS8UxpLyfrfVe=16QEQ@mail.gmail.com>
+References: <4F7928BE.8000502@samsung.com>
+	<4F792976.4090503@samsung.com>
+	<20120402102931.GA5885@shutemov.name>
+	<4F7D13AD.3030309@samsung.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120404193355.GD29686-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=Do6KcLKpiDDYey5AH4veC8YIPN/5ViaOmsEgkwl7GRU=;
+        b=VZ42lj0u724Gfi41W+MKH29hShZkFozjDLKLJ9NVZL8UZt6nqfphDC5fk8ikJFgmNc
+         w72Zc5mLNAPxYFHNiK+5ga1KGHefVOQWh2v/UWF9XSaIT4lJFvublA0SB3+D/qkB86+v
+         1h50fr00N0s+7bFDxljwwnYewdaPl57CBZHmDjSlIXMOknVYkr4m+IIbI78j3P5oWFVh
+         fU2axBJsl8WmR6qQRuJaBhXEZwFQmNfLoE1ovc0WkwAKSwzuH6fhKhMDT4zUEH8Epjlc
+         EVVdHZ8XlFocjNQKBgD1Rz4/W93lWRqyyIesR59gWj411bRh+UITaZqq7RM8OR/XIWes
+         beFA==
+In-Reply-To: <4F7D13AD.3030309-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Hi Tejun,
+2012/4/5 Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>:
+> Hi guys, I investigate
+>
+> http://lwn.net/Articles/453642/
+>
+> seems that this really fit my proposal and I can make move this
+> functionality from core to this css. But, unfortunately, Frederic git=
+ is not
+> available on kernel.org and current Linux kernel doesn't have this pa=
+tches.
+> Could you be so kind to provide link to the kernel with this patches.
 
-On Wed, Apr 04, 2012 at 12:33:55PM -0700, Tejun Heo wrote:
-> Hey, Fengguang.
-> 
-> On Wed, Apr 04, 2012 at 10:51:24AM -0700, Fengguang Wu wrote:
-> > Yeah it should be trivial to apply the balance_dirty_pages()
-> > throttling algorithm to the read/direct IOs. However up to now I don't
-> > see much added value to *duplicate* the current block IO controller
-> > functionalities, assuming the current users and developers are happy
-> > with it.
-> 
-> Heh, trust me.  It's half broken and people ain't happy.  I get that
+Hi,
 
-Yeah, although the balance_dirty_pages() IO controller for buffered
-writes looks perfect in itself, it's not enough to meet user demands.
+Last version was https://lkml.org/lkml/2012/1/31/489
 
-The user expectation should be: hey, please throttle *all* IOs from
-this cgroup to this amount, either in absolute bps/iops limits or in
-some proportional weight value (or both, whatever the lower takes
-effect).  And if necessary, he may request further limits/weights for
-each type of IO inside the cgroup.
+I'm going to repost a new version around next week because I expect a
+few conflicts
+with the latest selftests changes after the last merge window.
 
-Now the blkio cgroup supports direct IO and the balance_dirty_pages()
-IO controller supports buffered writes. They are providing
-limits/weights for either direct IO or buffered writes, which is fine
-if it's pure direct IO or pure buffered write. For the common mixed
-IO workloads, it's obviously not enough.
+Will Cc you!
 
-Fortunately, the above gap can be easily filled judging from the
-block/cfq IO controller code. By adding some direct IO accounting
-and changing several lines of my patches to make use of the collected
-stats, the semantics of the blkio.throttle.write_bps interfaces can be
-changed from "limit for direct IO" to "limit for direct+buffered IOs".
-Ditto for blkio.weight and blkio.write_iops, as long as some
-iops/device time stats are made available to balance_dirty_pages().
+Thanks.
 
-It would be a fairly *easy* change. :-) It's merely adding some
-accounting code and there is no need to change the block IO
-controlling algorithm at all. I'll do the work of accounting (which
-is basically independent of the IO controlling) and use the new stats
-in balance_dirty_pages().
-
-The only problem I can see now, is that balance_dirty_pages() works
-per-bdi and blkcg works per-device. So the two ends may not match
-nicely if the user configures lv0 on sda+sdb and lv1 on sdb+sdc where
-sdb is shared by lv0 and lv1. However it should be rare situations and
-be much more acceptable than the problems arise from the "push back"
-approach which impacts everyone.
-
-> your algorithm can be updatd to consider all IOs and I believe that
-> but what I don't get is how would such information get to writeback
-> and in turn how writeback would enforce the result on reads and direct
-> IOs.  Through what path?  Will all reads and direct IOs travel through
-> balance_dirty_pages() even direct IOs on raw block devices?  Or would
-> the writeback algorithm take the configuration from cfq, apply the
-> algorithm and give back the limits to enforce to cfq?  If the latter,
-> isn't that at least somewhat messed up?
-
-cfq is working well and don't need any modifications. Let's just make
-balance_dirty_pages() cgroup aware and fill the gap of the current
-block IO controller.
-
-If the balance_dirty_pages() throttling algorithms will ever be
-applied to read and direct IOs, it would be for NFS, CIFS etc. Even
-for them, there may be better throttling choices. For example, Trond
-mentioned the RPC layer to me during the summit.
-
-> > I did the buffered write IO controller mainly to fill the gap.  If I
-> > happen to stand in your way, sorry that's not my initial intention.
-> 
-> No, no, it's not about standing in my way.  As Vivek said in the other
-> reply, it's that the "gap" that you filled was created *because*
-> writeback wasn't cgroup aware and now you're in turn filling that gap
-> by making writeback work around that "gap".  I mean, my mind boggles.
-> Doesn't yours?  I strongly believe everyone's should.
-
-Heh. It's a hard problem indeed. I felt great pains in the IO-less
-dirty throttling work. I did a lot reasoning about it, and have in
-fact kept cgroup IO controller in mind since its early days. Now I'd
-say it's hands down for it to adapt to the gap between the total IO
-limit and what's carried out by the block IO controller.
-
-> > It's a pity and surprise that Google as a big user does not buy in
-> > this simple solution. You may prefer more comprehensive controls which
-> > may not be easily achievable with the simple scheme. However the
-> > complexities and overheads involved in throttling the flusher IOs
-> > really upsets me. 
-> 
-> Heh, believe it or not, I'm not really wearing google hat on this
-> subject and google's writeback people may have completely different
-> opinions on the subject than mine.  In fact, I'm not even sure how
-> much "work" time I'll be able to assign to this.  :(
-
-OK, understand.
-
-> > The sweet split point would be for balance_dirty_pages() to do cgroup
-> > aware buffered write throttling and leave other IOs to the current
-> > blkcg. For this to work well as a total solution for end users, I hope
-> > we can cooperate and figure out ways for the two throttling entities
-> > to work well with each other.
-> 
-> There's where I'm confused.  How is the said split supposed to work?
-> They aren't independent.  I mean, who gets to decide what and where
-> are those decisions enforced?
-
-Yeah it's not independent. It's about
-
-- keep block IO cgroup untouched (in its current algorithm, for
-  throttling direct IO)
-
-- let balance_dirty_pages() adapt to the throttling target
-  
-        buffered_write_limit = total_limit - direct_IOs
-
-> > What I'm interested is, what's Google and other users' use schemes in
-> > practice. What's their desired interfaces. Whether and how the
-> > combined bdp+blkcg throttling can fulfill the goals.
-> 
-> I'm not too privy of mm and writeback in google and even if so I
-> probably shouldn't talk too much about it.  Confidentiality and all.
-> That said, I have the general feeling that goog already figured out
-> how to at least work around the existing implementation and would be
-> able to continue no matter how upstream development fans out.
-> 
-> That said, wearing the cgroup maintainer and general kernel
-> contributor hat, I'd really like to avoid another design mess up.
-
-To me it looks a pretty clean split and find it to be an easy
-solution (after sorting it out the hard way). I'll show the code and
-test results after some time.
-
-> > > Let's please keep the layering clear.  IO limitations will be applied
-> > > at the block layer and pressure will be formed there and then
-> > > propagated upwards eventually to the originator.  Sure, exposing the
-> > > whole information might result in better behavior for certain
-> > > workloads, but down the road, say, in three or five years, devices
-> > > which can be shared without worrying too much about seeks might be
-> > > commonplace and we could be swearing at a disgusting structural mess,
-> > > and sadly various cgroup support seems to be a prominent source of
-> > > such design failures.
-> > 
-> > Super fast storages are coming which will make us regret to make the
-> > IO path over complex.  Spinning disks are not going away anytime soon.
-> > I doubt Google is willing to afford the disk seek costs on its
-> > millions of disks and has the patience to wait until switching all of
-> > the spin disks to SSD years later (if it will ever happen).
-> 
-> This is new.  Let's keep the damn employer out of the discussion.
-> While the area I work on is affected by my employment (writeback isn't
-> even my area BTW), I'm not gonna do something adverse to upstream even
-> if it's beneficial to google and I'm much more likely to do something
-> which may hurt google a bit if it's gonna benefit upstream.
-> 
-> As for the faster / newer storage argument, that is *exactly* why we
-> want to keep the layering proper.  Writeback works from the pressure
-> from the IO stack.  If IO technology changes, we update the IO stack
-> and writeback still works from the pressure.  It may need to be
-> adjusted but the principles don't change.
-
-To me, balance_dirty_pages() is *the* proper layer for buffered writes.
-It's always there doing 1:1 proportional throttling. Then you try to
-kick in to add *double* throttling in block/cfq layer. Now the low
-layer may enforce 10:1 throttling and push balance_dirty_pages() away
-from its balanced state, leading to large fluctuations and program
-stalls.  This can be avoided by telling balance_dirty_pages(): "your
-balance goal is no longer 1:1, but 10:1". With this information
-balance_dirty_pages() will behave right. Then there is the question:
-if balance_dirty_pages() will work just well provided the information,
-why bother doing the throttling at low layer and "push back" the
-pressure all the way up?
-
-> > It's obvious that your below proposal involves a lot of complexities,
-> > overheads, and will hurt performance. It basically involves
-> 
-> Hmmm... that's not the impression I got from the discussion.
-> According to Jan, applying the current writeback logic to cgroup'fied
-> bdi shouldn't be too complex, no?
-
-In the sense of "avoidable" complexity :-)
-
-> > - running concurrent flusher threads for cgroups, which adds back the
-> >   disk seeks and lock contentions. And still has problems with sync
-> >   and shared inodes.
-> 
-> I agree this is an actual concern but if the user wants to split one
-> spindle to multiple resource domains, there's gonna be considerable
-> amount of overhead no matter what.  If you want to improve how block
-> layer handles the split, you're welcome to dive into the block layer,
-> where the split is made, and improve it.
-> 
-> > - splitting device queue for cgroups, possibly scaling up the pool of
-> >   writeback pages (and locked pages in the case of stable pages) which
-> >   could stall random processes in the system
-> 
-> Sure, it'll take up more buffering and memory but that's the overhead
-> of the cgroup business.  I want it to be less intrusive at the cost of
-> somewhat more resource consumption.  ie. I don't want writeback logic
-> itself deeply involved in block IO cgroup enforcement even if that
-> means somewhat less efficient resource usage.
-
-The balance_dirty_pages() is already deeply involved in dirty throttling.
-As you can see from this patchset, the same algorithms can be extended
-trivially to work with cgroup IO limits.
-
-buffered write IO controller in balance_dirty_pages()
-https://lkml.org/lkml/2012/3/28/275
-
-It does not require forking off the flusher threads and splitting up
-the IO queue at all.
-
-> > - the mess of metadata handling
-> 
-> Does throttling from writeback actually solve this problem?  What
-> about fsync()?  Does that already go through balance_dirty_pages()?
-
-balance_dirty_pages() does throttling at safe points outside of fs
-transactions/locks.
-
-fsync() only submits IO for already dirtied pages and won't be
-throttled by balance_dirty_pages(). Throttling happens at earlier
-times when the task is dirtying the pages.
-
-> > - unnecessarily coupled with memcg, in order to take advantage of the
-> >   per-memcg dirty limits for balance_dirty_pages() to actually convert
-> >   the "pushed back" dirty pages pressure into lowered dirty rate. Why
-> >   the hell the users *have to* setup memcg (suffering from all the
-> >   inconvenience and overheads) in order to do IO throttling?  Please,
-> >   this is really ugly! And the "back pressure" may constantly push the
-> >   memcg dirty pages to the limits. I'm not going to support *miss use*
-> >   of per-memcg dirty limits like this!
-> 
-> Writeback sits between blkcg and memcg and it indeed can be hairy to
-> consider both sides especially given the current sorry complex state
-> of cgroup and I can see why it would seem tempting to add a separate
-> controller or at least knobs to support that.  That said, I *think*
-> given that memcg controls all other memory parameters it probably
-> would make most sense giving that parameter to memcg too.  I don't
-> think this is really relevant to this discussion tho.  Who owns
-> dirty_limits is a separate issue.
-
-In the "back pressure" scheme, memcg is a must because only it has all
-the infrastructure to track dirty pages upon which you can apply some
-dirty_limits. Don't tell me you want to account dirty pages in blkcg...
-
-> > I cannot believe you would keep overlooking all the problems without
-> > good reasons. Please do tell us the reasons that matter.
-> 
-> Well, I tried and I hope some of it got through.  I also wrote a lot
-> of questions, mainly regarding how what you have in mind is supposed
-> to work through what path.  Maybe I'm just not seeing what you're
-> seeing but I just can't see where all the IOs would go through and
-> come together.  Can you please elaborate more on that?
-
-What I can see is, it looks pretty simple and nature to let
-balance_dirty_pages() fill the gap towards a total solution :-)
-
-- add direct IO accounting in some convenient point of the IO path
-  IO submission or completion point, either is fine.
-
-- change several lines of the buffered write IO controller to
-  integrate the direct IO rate into the formula to fit the "total
-  IO" limit
-
-- in future, add more accounting as well as feedback control to make
-  balance_dirty_pages() work with IOPS and disk time
-
-Thanks,
-Fengguang
+>
+>
+> On 04/02/2012 02:29 PM, Kirill A. Shutemov wrote:
+>>
+>> On Mon, Apr 02, 2012 at 08:22:14AM +0400, Alexander Nikiforov wrote:
+>>
+>> I think it should be part of task counter css, not core.
+>> CC list updated.
+>>
+>>> @@ -4558,6 +4594,22 @@ void cgroup_fork(struct task_struct *child)
+>>> =A0 =A0 =A0 =A0child->cgroups =3D current->cgroups;
+>>> =A0 =A0 =A0 =A0get_css_set(child->cgroups);
+>>> =A0 =A0 =A0 =A0INIT_LIST_HEAD(&child->cg_list);
+>>> +
+>>> + =A0 =A0 =A0 struct cgroupfs_root *root;
+>>> +
+>>> + =A0 =A0 =A0 /* send event to the userspace */
+>>> + =A0 =A0 =A0 mutex_lock(&cgroup_mutex);
+>>> + =A0 =A0 =A0 for_each_active_root(root) {
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct cgroup *cgrp;
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct fe_eventfd_list *ev;
+>>> +
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 cgrp =3D task_cgroup_from_root(child,=
+ root);
+>>> +
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_for_each_entry(ev,&cgrp->fe_noti=
+fy, list) {
+>>>
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 eventfd_signal(ev->ev=
+entfd, 1);
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+>>> + =A0 =A0 =A0 }
+>>> + =A0 =A0 =A0 mutex_unlock(&cgroup_mutex);
+>>> =A0}
+>>
+>> How does it affect performance?
+>>
+>>>
+>>> =A0/**
+>>> @@ -4653,6 +4705,7 @@ void cgroup_exit(struct task_struct *tsk, int
+>>> run_callbacks)
+>>> =A0{
+>>> =A0 =A0 =A0 =A0struct css_set *cg;
+>>> =A0 =A0 =A0 =A0int i;
+>>> + =A0 =A0 =A0 struct cgroupfs_root *root;
+>>>
+>>> =A0 =A0 =A0 =A0/*
+>>> =A0 =A0 =A0 =A0 * Unlink from the css_set task list if necessary.
+>>> @@ -4666,6 +4719,20 @@ void cgroup_exit(struct task_struct *tsk, in=
+t
+>>> run_callbacks)
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0write_unlock(&css_set_lock);
+>>> =A0 =A0 =A0 =A0}
+>>>
+>>> + =A0 =A0 =A0 /* send event to the userspace */
+>>> + =A0 =A0 =A0 mutex_lock(&cgroup_mutex);
+>>> + =A0 =A0 =A0 for_each_active_root(root) {
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct cgroup *cgrp;
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct fe_eventfd_list *ev;
+>>> +
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 cgrp =3D task_cgroup_from_root(tsk, r=
+oot);
+>>> +
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_for_each_entry(ev,&cgrp->fe_noti=
+fy, list) {
+>>>
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 eventfd_signal(ev->ev=
+entfd, 1);
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+>>> + =A0 =A0 =A0 }
+>>> + =A0 =A0 =A0 mutex_unlock(&cgroup_mutex);
+>>> +
+>>
+>> I think it's racy. You need to notify userspace after reassigning th=
+e
+>> task, not before.
+>>
+>>> =A0 =A0 =A0 =A0/* Reassign the task to the init_css_set. */
+>>> =A0 =A0 =A0 =A0task_lock(tsk);
+>>> =A0 =A0 =A0 =A0cg =3D tsk->cgroups;
+>>
+>>
+>
+>
+> --
+> Best regards,
+> =A0 =A0 Alex Nikiforov,
+> =A0 =A0 Mobile SW, Advanced Software Group,
+> =A0 =A0 Moscow R&D center, Samsung Electronics
+>
