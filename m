@@ -1,52 +1,37 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [RFC 5/7] use percpu_counters for res_counter usage
-Date: Mon, 09 Apr 2012 10:48:42 +0900
-Message-ID: <4F823FFA.8000401@jp.fujitsu.com>
-References: <1333094685-5507-1-git-send-email-glommer@parallels.com> <1333094685-5507-6-git-send-email-glommer@parallels.com> <4F757DEB.4030006@jp.fujitsu.com> <4F7583AB.3070304@jp.fujitsu.com> <4F75BACC.7050704@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH -V5 04/14] hugetlb: Use mmu_gather instead of a temporary
+ linked list for accumulating pages
+Date: Mon, 09 Apr 2012 14:36:12 +0900
+Message-ID: <4F82754C.3060407@jp.fujitsu.com>
+References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F75BACC.7050704-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1333738260-1329-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-(2012/03/30 22:53), Glauber Costa wrote:
+(2012/04/07 3:50), Aneesh Kumar K.V wrote:
 
-> On 03/30/2012 11:58 AM, KAMEZAWA Hiroyuki wrote:
->> ==
->>
->> Now, we do consume 'reserved' usage, we can avoid css_get(), an heavy atomic
->> ops. You may need to move this code as
->>
->> 	rcu_read_lock()
->> 	....
->> 	res_counter_charge()
->> 	if (failure) {
->> 		css_tryget()
->> 		rcu_read_unlock()
->> 	} else {
->> 		rcu_read_unlock()
->> 		return success;
->> 	}
->>
->> to compare performance. This css_get() affects performance very very much.
+> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 > 
-> thanks for the tip.
+> Use mmu_gather instead of temporary linked list for accumulating pages when
+> we unmap a hugepage range. This also allows us to get rid of i_mmap_mutex
+> unmap_hugepage_range in the following patch.
 > 
-> But one thing:
-> 
-> To be sure: it effectively mean that we are drawing from a dead memcg
-> (because we pre-allocated, right?
-
-Cached stock is consumed by the current task. It blocks removal of memcg.
-It's not dead.
-
-Thanks,
--Kame
-
- 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 
 
+seems nice to me.
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
