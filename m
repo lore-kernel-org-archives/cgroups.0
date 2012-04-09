@@ -1,156 +1,35 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V5 12/14] memcg: move HugeTLB resource count to parent cgroup on memcg removal
-Date: Mon, 09 Apr 2012 15:30:42 +0530
-Message-ID: <87ty0tcjhx.fsf@skywalker.in.ibm.com>
-References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-13-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F827EAD.9080300@jp.fujitsu.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: bind() call in cgroup's css structure
+Date: Mon, 9 Apr 2012 10:59:56 -0300
+Message-ID: <4F82EB5C.7090003@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F827EAD.9080300@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> writes:
+Hello Tejun,
 
-> (2012/04/07 3:50), Aneesh Kumar K.V wrote:
->
->> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
->> 
->> This add support for memcg removal with HugeTLB resource usage.
->> 
->> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
->
->
-> Hmm 
->
->
+During your cgroup refactor, I was wondering if you have any plans to 
+get rid of the bind() callback that is called when hierarchies are moved?
 
-....
-...
+At least in tree, there seems to be no users for that.
+I actually planned to use it myself, to start or remove a jump label
+when cpuacct and cpu cgroups were comounted.
 
->> +	csize = PAGE_SIZE << compound_order(page);
->> +	/*
->> +	 * uncharge from child and charge the parent. If we have
->> +	 * use_hierarchy set, we can never fail here. In-order to make
->> +	 * sure we don't get -ENOMEM on parent charge, we first uncharge
->> +	 * the child and then charge the parent.
->> +	 */
->> +	if (parent->use_hierarchy) {
->
->
->> +		res_counter_uncharge(&memcg->hugepage[idx], csize);
->> +		if (!mem_cgroup_is_root(parent))
->> +			ret = res_counter_charge(&parent->hugepage[idx],
->> +						 csize, &fail_res);
->
->
-> Ah, why is !mem_cgroup_is_root() checked ? no res_counter update for
-> root cgroup ?
+Problem is, because we have some calls in the cpuset cgroup from inside 
+the cpu hotplug handler, we end up taking the almighty cgroup_mutex from 
+inside the cpu_hotplug.lock.
 
-My mistake. Earlier version of the patch series didn't charge/uncharge the root
-cgroup during different operations. Later as per your review I updated
-the charge/uncharge path to charge root cgroup. I missed to update this code.
+jump labels take it in most arches through the get_online_cpus() 
+function call. This means we effectively can't apply jump labels with 
+the cgroup_mutex held, which is the case throughout the whole bind() call.
 
->
-> I think it's better to have res_counter_move_parent()...to do ops in atomic.
-> (I'll post a patch for that for my purpose). OR, just ignore res->usage if
-> parent->use_hierarchy == 1.
->
-> uncharge->charge will have a race.
+All that explained, I figured I might as well ask before I attempted a 
+solution to that myself: as much as populate(), bind seems to be one of 
+the overly complicated callbacks, designed for a scenario in which 
+everything can come and go at will, which is something we're trying to fix.
 
-
-
-How about the below
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7b6e79a..5b4bc98 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3351,24 +3351,24 @@ int mem_cgroup_move_hugetlb_parent(int idx, struct cgroup *cgroup,
- 
- 	csize = PAGE_SIZE << compound_order(page);
- 	/*
--	 * uncharge from child and charge the parent. If we have
--	 * use_hierarchy set, we can never fail here. In-order to make
--	 * sure we don't get -ENOMEM on parent charge, we first uncharge
--	 * the child and then charge the parent.
-+	 * If we have use_hierarchy set we can never fail here. So instead of
-+	 * using res_counter_uncharge use the open-coded variant which just
-+	 * uncharge the child res_counter. The parent will retain the charge.
- 	 */
- 	if (parent->use_hierarchy) {
--		res_counter_uncharge(&memcg->hugepage[idx], csize);
--		if (!mem_cgroup_is_root(parent))
--			ret = res_counter_charge(&parent->hugepage[idx],
--						 csize, &fail_res);
-+		unsigned long flags;
-+		struct res_counter *counter;
-+
-+		counter = &memcg->hugepage[idx];
-+		spin_lock_irqsave(&counter->lock, flags);
-+		res_counter_uncharge_locked(counter, csize);
-+		spin_unlock_irqrestore(&counter->lock, flags);
- 	} else {
--		if (!mem_cgroup_is_root(parent)) {
--			ret = res_counter_charge(&parent->hugepage[idx],
--						 csize, &fail_res);
--			if (ret) {
--				ret = -EBUSY;
--				goto err_out;
--			}
-+		ret = res_counter_charge(&parent->hugepage[idx],
-+					 csize, &fail_res);
-+		if (ret) {
-+			ret = -EBUSY;
-+			goto err_out;
- 		}
- 		res_counter_uncharge(&memcg->hugepage[idx], csize);
- 	}
-
-
->
->> +	} else {
->> +		if (!mem_cgroup_is_root(parent)) {
->> +			ret = res_counter_charge(&parent->hugepage[idx],
->> +						 csize, &fail_res);
->> +			if (ret) {
->> +				ret = -EBUSY;
->> +				goto err_out;
->> +			}
->> +		}
->> +		res_counter_uncharge(&memcg->hugepage[idx], csize);
->> +	}
->
->
-> Just a notice. Recently, Tejun changed failure of pre_destory() to show WARNING.
-> Then, I'd like to move the usage to the root cgroup if use_hierarchy=0.
-> Will it work for you ?
-
-That should work.
-
-
->
->> +	/*
->> +	 * caller should have done css_get
->> +	 */
->
->
-> Could you explain meaning of this comment ?
->
-
-inherited from mem_cgroup_move_account. I guess it means css cannot go
-away at this point. We have done a css_get on the child. For a generic
-move_account function may be the comment is needed. I guess in our case
-the comment is redundant ?
-
--aneesh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+thanks in advance for your answer!
