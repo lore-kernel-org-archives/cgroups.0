@@ -1,105 +1,50 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V5 06/14] hugetlb: Simplify migrate_huge_page
-Date: Mon, 09 Apr 2012 14:06:33 +0530
-Message-ID: <87398de1yl.fsf@skywalker.in.ibm.com>
-References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-7-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F8277ED.8040904@jp.fujitsu.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH -V5 07/14] memcg: Add HugeTLB extension
+Date: Mon, 09 Apr 2012 14:13:45 +0530
+Message-ID: <87zkalcn26.fsf@skywalker.in.ibm.com>
+References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F827BF9.2090205@jp.fujitsu.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F8277ED.8040904@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F827BF9.2090205-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> writes:
+KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> writes:
 
 > (2012/04/07 3:50), Aneesh Kumar K.V wrote:
 >
->> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+>> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >> 
->> Since we migrate only one hugepage don't use linked list for passing
->> the page around. Directly pass page that need to be migrated as argument.
->> This also remove the usage page->lru in migrate path.
+>> This patch implements a memcg extension that allows us to control HugeTLB
+>> allocations via memory controller. The extension allows to limit the
+>> HugeTLB usage per control group and enforces the controller limit during
+>> page fault. Since HugeTLB doesn't support page reclaim, enforcing the limit
+>> at page fault time implies that, the application will get SIGBUS signal if it
+>> tries to access HugeTLB pages beyond its limit. This requires the application
+>> to know beforehand how much HugeTLB pages it would require for its use.
 >> 
->> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+>> The charge/uncharge calls will be added to HugeTLB code in later patch.
+>> 
+>> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >
 >
-> seems good to me. I have one question below.
+> Hmm, seems ok to me. please explain 'this patch doesn't include updates
+> for memcg destroying, it will be in patch 12/14' or some...
+>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 >
 >
->> ---
+> BTW, you don't put res_counter for hugeltb under CONFIG_MEM_RES_CTLR_HUGETLB...
+> do you think we need the config ?
 
-...... snip ......
 
+That results in more #ifdef CONFIG_MEM_RES_CTLR_HUGETLB in the
+memcg code (mem_cgroup_create/mem_cgroup_read/write etc). I was not
+sure we want to do that. Let me know if you think we really need to do this.
 
->> -	list_add(&hpage->lru, &pagelist);
->> -	ret = migrate_huge_pages(&pagelist, new_page, MPOL_MF_MOVE_ALL, 0,
->> -				true);
->> +	ret = migrate_huge_page(page, new_page, MPOL_MF_MOVE_ALL, 0, true);
->> +	put_page(page);
->>  	if (ret) {
->> -		struct page *page1, *page2;
->> -		list_for_each_entry_safe(page1, page2, &pagelist, lru)
->> -			put_page(page1);
->> -
->>  		pr_info("soft offline: %#lx: migration failed %d, type %lx\n",
->>  			pfn, ret, page->flags);
->> -		if (ret > 0)
->> -			ret = -EIO;   <---------------------------- here
->>  		return ret;
->>  	}
->>  done:
->> diff --git a/mm/migrate.c b/mm/migrate.c
->> index 51c08a0..d7eb82d 100644
->> --- a/mm/migrate.c
->> +++ b/mm/migrate.c
->> @@ -929,15 +929,8 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
->>  	if (anon_vma)
->>  		put_anon_vma(anon_vma);
->>  	unlock_page(hpage);
-
-.... snip .....
-
->> -
->> -			rc = unmap_and_move_huge_page(get_new_page,
->> -					private, page, pass > 2, offlining,
->> -					mode);
->> -
->> -			switch(rc) {
->> -			case -ENOMEM:
->> -				goto out;
->> -			case -EAGAIN:
->> -				retry++;
->> -				break;
->> -			case 0:
->> -				break;
->> -			default:
->> -				/* Permanent failure */
->> -				nr_failed++;
->> -				break;
->> -			}
->> +			break;
->> +		case 0:
->> +			goto out;
->> +		default:
->> +			rc = -EIO;
->> +			goto out;
->
->
-> why -EIO ? Isn't this BUG() ??
-
-I am not sure doing a BUG() for migrate is a good idea. We may want to
-return error and let the higher layer handle this. Also as you see in
-the two hunks I listed above, default is mapped to -EIO in the current
-code. I didn't want to change that.
 
 -aneesh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
