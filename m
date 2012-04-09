@@ -1,60 +1,156 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH -V5 07/14] memcg: Add HugeTLB extension
-Date: Mon, 09 Apr 2012 18:00:00 +0900
-Message-ID: <4F82A510.5030004@jp.fujitsu.com>
-References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F827BF9.2090205@jp.fujitsu.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu) <87zkalcn26.fsf@skywalker.in.ibm.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V5 12/14] memcg: move HugeTLB resource count to parent cgroup on memcg removal
+Date: Mon, 09 Apr 2012 15:30:42 +0530
+Message-ID: <87ty0tcjhx.fsf@skywalker.in.ibm.com>
+References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-13-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4F827EAD.9080300@jp.fujitsu.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <87zkalcn26.fsf-6yE53ggjAfyqSkle7U1LjlaTQe2KTcn/@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4F827EAD.9080300@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-(2012/04/09 17:43), Aneesh Kumar K.V wrote:
+KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> writes:
 
-> KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> writes:
-> 
->> (2012/04/07 3:50), Aneesh Kumar K.V wrote:
->>
->>> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->>>
->>> This patch implements a memcg extension that allows us to control HugeTLB
->>> allocations via memory controller. The extension allows to limit the
->>> HugeTLB usage per control group and enforces the controller limit during
->>> page fault. Since HugeTLB doesn't support page reclaim, enforcing the limit
->>> at page fault time implies that, the application will get SIGBUS signal if it
->>> tries to access HugeTLB pages beyond its limit. This requires the application
->>> to know beforehand how much HugeTLB pages it would require for its use.
->>>
->>> The charge/uncharge calls will be added to HugeTLB code in later patch.
->>>
->>> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->>
->>
->> Hmm, seems ok to me. please explain 'this patch doesn't include updates
->> for memcg destroying, it will be in patch 12/14' or some...
->>
->> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->>
->>
->> BTW, you don't put res_counter for hugeltb under CONFIG_MEM_RES_CTLR_HUGETLB...
->> do you think we need the config ?
-> 
-> 
-> That results in more #ifdef CONFIG_MEM_RES_CTLR_HUGETLB in the
-> memcg code (mem_cgroup_create/mem_cgroup_read/write etc). I was not
-> sure we want to do that. Let me know if you think we really need to do this.
-> 
+> (2012/04/07 3:50), Aneesh Kumar K.V wrote:
+>
+>> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+>> 
+>> This add support for memcg removal with HugeTLB resource usage.
+>> 
+>> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+>
+>
+> Hmm 
+>
+>
+
+....
+...
+
+>> +	csize = PAGE_SIZE << compound_order(page);
+>> +	/*
+>> +	 * uncharge from child and charge the parent. If we have
+>> +	 * use_hierarchy set, we can never fail here. In-order to make
+>> +	 * sure we don't get -ENOMEM on parent charge, we first uncharge
+>> +	 * the child and then charge the parent.
+>> +	 */
+>> +	if (parent->use_hierarchy) {
+>
+>
+>> +		res_counter_uncharge(&memcg->hugepage[idx], csize);
+>> +		if (!mem_cgroup_is_root(parent))
+>> +			ret = res_counter_charge(&parent->hugepage[idx],
+>> +						 csize, &fail_res);
+>
+>
+> Ah, why is !mem_cgroup_is_root() checked ? no res_counter update for
+> root cgroup ?
+
+My mistake. Earlier version of the patch series didn't charge/uncharge the root
+cgroup during different operations. Later as per your review I updated
+the charge/uncharge path to charge root cgroup. I missed to update this code.
+
+>
+> I think it's better to have res_counter_move_parent()...to do ops in atomic.
+> (I'll post a patch for that for my purpose). OR, just ignore res->usage if
+> parent->use_hierarchy == 1.
+>
+> uncharge->charge will have a race.
 
 
-Hm. ok. BTW, how about removing all CONFIG_MEM_RES_CTLR_HUGETLB and makes 
-all codes just depends on CONFIG_CGROUP_MEM_RES_CTLR && CONFIG_HUGETLB ?
 
-How other guys thinks ? (Anyway we can do it later....)
+How about the below
 
-Thanks,
--Kame
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7b6e79a..5b4bc98 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3351,24 +3351,24 @@ int mem_cgroup_move_hugetlb_parent(int idx, struct cgroup *cgroup,
+ 
+ 	csize = PAGE_SIZE << compound_order(page);
+ 	/*
+-	 * uncharge from child and charge the parent. If we have
+-	 * use_hierarchy set, we can never fail here. In-order to make
+-	 * sure we don't get -ENOMEM on parent charge, we first uncharge
+-	 * the child and then charge the parent.
++	 * If we have use_hierarchy set we can never fail here. So instead of
++	 * using res_counter_uncharge use the open-coded variant which just
++	 * uncharge the child res_counter. The parent will retain the charge.
+ 	 */
+ 	if (parent->use_hierarchy) {
+-		res_counter_uncharge(&memcg->hugepage[idx], csize);
+-		if (!mem_cgroup_is_root(parent))
+-			ret = res_counter_charge(&parent->hugepage[idx],
+-						 csize, &fail_res);
++		unsigned long flags;
++		struct res_counter *counter;
++
++		counter = &memcg->hugepage[idx];
++		spin_lock_irqsave(&counter->lock, flags);
++		res_counter_uncharge_locked(counter, csize);
++		spin_unlock_irqrestore(&counter->lock, flags);
+ 	} else {
+-		if (!mem_cgroup_is_root(parent)) {
+-			ret = res_counter_charge(&parent->hugepage[idx],
+-						 csize, &fail_res);
+-			if (ret) {
+-				ret = -EBUSY;
+-				goto err_out;
+-			}
++		ret = res_counter_charge(&parent->hugepage[idx],
++					 csize, &fail_res);
++		if (ret) {
++			ret = -EBUSY;
++			goto err_out;
+ 		}
+ 		res_counter_uncharge(&memcg->hugepage[idx], csize);
+ 	}
 
+
+>
+>> +	} else {
+>> +		if (!mem_cgroup_is_root(parent)) {
+>> +			ret = res_counter_charge(&parent->hugepage[idx],
+>> +						 csize, &fail_res);
+>> +			if (ret) {
+>> +				ret = -EBUSY;
+>> +				goto err_out;
+>> +			}
+>> +		}
+>> +		res_counter_uncharge(&memcg->hugepage[idx], csize);
+>> +	}
+>
+>
+> Just a notice. Recently, Tejun changed failure of pre_destory() to show WARNING.
+> Then, I'd like to move the usage to the root cgroup if use_hierarchy=0.
+> Will it work for you ?
+
+That should work.
+
+
+>
+>> +	/*
+>> +	 * caller should have done css_get
+>> +	 */
+>
+>
+> Could you explain meaning of this comment ?
+>
+
+inherited from mem_cgroup_move_account. I guess it means css cannot go
+away at this point. We have done a css_get on the child. For a generic
+move_account function may be the comment is needed. I guess in our case
+the comment is redundant ?
+
+-aneesh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
