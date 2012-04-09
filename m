@@ -1,171 +1,326 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH -V5 10/14] hugetlbfs: Add memcg control files for hugetlbfs
-Date: Mon, 09 Apr 2012 15:00:24 +0900
-Message-ID: <4F827AF8.9070204@jp.fujitsu.com>
-References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH -V5 07/14] memcg: Add HugeTLB extension
+Date: Mon, 09 Apr 2012 15:04:41 +0900
+Message-ID: <4F827BF9.2090205@jp.fujitsu.com>
+References: <1333738260-1329-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1333738260-1329-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1333738260-1329-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1333738260-1329-8-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 (2012/04/07 3:50), Aneesh Kumar K.V wrote:
 
-> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> This add control files for hugetlbfs in memcg
+> This patch implements a memcg extension that allows us to control HugeTLB
+> allocations via memory controller. The extension allows to limit the
+> HugeTLB usage per control group and enforces the controller limit during
+> page fault. Since HugeTLB doesn't support page reclaim, enforcing the limit
+> at page fault time implies that, the application will get SIGBUS signal if it
+> tries to access HugeTLB pages beyond its limit. This requires the application
+> to know beforehand how much HugeTLB pages it would require for its use.
 > 
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> The charge/uncharge calls will be added to HugeTLB code in later patch.
+> 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
 
-seems ok. This uses Tejun's new interface...right ?
+Hmm, seems ok to me. please explain 'this patch doesn't include updates
+for memcg destroying, it will be in patch 12/14' or some...
 
-It might be better to explain "this patch depends on "cgroup: implement
-cgroup_add_cftypes() and friends" patch via cgroup development tree.
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Anyway,
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+
+BTW, you don't put res_counter for hugeltb under CONFIG_MEM_RES_CTLR_HUGETLB...
+do you think we need the config ?
+
+
 
 > ---
->  include/linux/hugetlb.h    |    5 +++++
->  include/linux/memcontrol.h |    7 ++++++
+>  include/linux/hugetlb.h    |    1 +
+>  include/linux/memcontrol.h |   42 ++++++++++++++
+>  init/Kconfig               |    8 +++
 >  mm/hugetlb.c               |    2 +-
->  mm/memcontrol.c            |   51 ++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 64 insertions(+), 1 deletion(-)
+>  mm/memcontrol.c            |  132 ++++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 184 insertions(+), 1 deletion(-)
 > 
 > diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-> index 995c238..d008342 100644
+> index 46c6cbd..995c238 100644
 > --- a/include/linux/hugetlb.h
 > +++ b/include/linux/hugetlb.h
-> @@ -4,6 +4,7 @@
->  #include <linux/mm_types.h>
->  #include <linux/fs.h>
->  #include <linux/hugetlb_inline.h>
-> +#include <linux/cgroup.h>
+> @@ -226,6 +226,7 @@ struct hstate *size_to_hstate(unsigned long size);
+>  #define HUGE_MAX_HSTATE 1
+>  #endif
 >  
->  struct ctl_table;
->  struct user_struct;
-> @@ -203,6 +204,10 @@ struct hstate {
->  	unsigned int nr_huge_pages_node[MAX_NUMNODES];
->  	unsigned int free_huge_pages_node[MAX_NUMNODES];
->  	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
-> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
-> +	/* mem cgroup control files */
-> +	struct cftype mem_cgroup_files[4];
-> +#endif
->  	char name[HSTATE_NAME_LEN];
->  };
+> +extern int hugetlb_max_hstate;
+>  extern struct hstate hstates[HUGE_MAX_HSTATE];
+>  extern unsigned int default_hstate_idx;
 >  
 > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 1d07e14..4f17574 100644
+> index f94efd2..1d07e14 100644
 > --- a/include/linux/memcontrol.h
 > +++ b/include/linux/memcontrol.h
-> @@ -459,6 +459,7 @@ extern void mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
->  					     struct page *page);
->  extern void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
->  					      struct mem_cgroup *memcg);
-> +extern int mem_cgroup_hugetlb_file_init(int idx) __init;
->  
->  #else
->  static inline int
-> @@ -489,6 +490,12 @@ mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+> @@ -448,5 +448,47 @@ static inline void sock_release_memcg(struct sock *sk)
 >  {
->  	return;
 >  }
+>  #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
 > +
-> +static inline int mem_cgroup_hugetlb_file_init(int idx)
+> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+> +extern int mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+> +					  struct mem_cgroup **ptr);
+> +extern void mem_cgroup_hugetlb_commit_charge(int idx, unsigned long nr_pages,
+> +					     struct mem_cgroup *memcg,
+> +					     struct page *page);
+> +extern void mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
+> +					     struct page *page);
+> +extern void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+> +					      struct mem_cgroup *memcg);
+> +
+> +#else
+> +static inline int
+> +mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+> +						 struct mem_cgroup **ptr)
 > +{
 > +	return 0;
 > +}
 > +
->  #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
+> +static inline void
+> +mem_cgroup_hugetlb_commit_charge(int idx, unsigned long nr_pages,
+> +				 struct mem_cgroup *memcg,
+> +				 struct page *page)
+> +{
+> +	return;
+> +}
+> +
+> +static inline void
+> +mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
+> +				 struct page *page)
+> +{
+> +	return;
+> +}
+> +
+> +static inline void
+> +mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+> +				  struct mem_cgroup *memcg)
+> +{
+> +	return;
+> +}
+> +#endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
 >  #endif /* _LINUX_MEMCONTROL_H */
 >  
+> diff --git a/init/Kconfig b/init/Kconfig
+> index 72f33fa..a3b5665 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -716,6 +716,14 @@ config CGROUP_PERF
+>  
+>  	  Say N if unsure.
+>  
+> +config MEM_RES_CTLR_HUGETLB
+> +	bool "Memory Resource Controller HugeTLB Extension (EXPERIMENTAL)"
+> +	depends on CGROUP_MEM_RES_CTLR && HUGETLB_PAGE && EXPERIMENTAL
+> +	default n
+> +	help
+> +	  Add HugeTLB management to memory resource controller. When you
+> +	  enable this, you can put a per cgroup limit on HugeTLB usage.
+> +
+>  menuconfig CGROUP_SCHED
+>  	bool "Group CPU scheduler"
+>  	default n
 > diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index dd00087..340e575 100644
+> index a3ac624..8cd89b4 100644
 > --- a/mm/hugetlb.c
 > +++ b/mm/hugetlb.c
-> @@ -1931,7 +1931,7 @@ void __init hugetlb_add_hstate(unsigned order)
->  	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
->  	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
->  					huge_page_size(h)/1024);
-> -
-> +	mem_cgroup_hugetlb_file_init(hugetlb_max_hstate - 1);
->  	parsed_hstate = h;
->  }
+> @@ -35,7 +35,7 @@ const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
+>  static gfp_t htlb_alloc_mask = GFP_HIGHUSER;
+>  unsigned long hugepages_treat_as_movable;
+>  
+> -static int hugetlb_max_hstate;
+> +int hugetlb_max_hstate;
+>  unsigned int default_hstate_idx;
+>  struct hstate hstates[HUGE_MAX_HSTATE];
 >  
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 3bb3b42..7d3330e 100644
+> index d28359c..1a2e041 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -5191,6 +5191,57 @@ static void mem_cgroup_destroy(struct cgroup *cont)
->  	mem_cgroup_put(memcg);
+> @@ -252,6 +252,10 @@ struct mem_cgroup {
+>  	};
+>  
+>  	/*
+> +	 * the counter to account for hugepages from hugetlb.
+> +	 */
+> +	struct res_counter hugepage[HUGE_MAX_HSTATE];
+> +	/*
+>  	 * Per cgroup active and inactive list, similar to the
+>  	 * per zone LRU lists.
+>  	 */
+> @@ -3213,6 +3217,114 @@ static inline int mem_cgroup_move_swap_account(swp_entry_t entry,
 >  }
+>  #endif
 >  
 > +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
-> +static char *mem_fmt(char *buf, unsigned long n)
+> +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
 > +{
-> +	if (n >= (1UL << 30))
-> +		sprintf(buf, "%luGB", n >> 30);
-> +	else if (n >= (1UL << 20))
-> +		sprintf(buf, "%luMB", n >> 20);
-> +	else
-> +		sprintf(buf, "%luKB", n >> 10);
-> +	return buf;
-> +}
-> +
-> +int __init mem_cgroup_hugetlb_file_init(int idx)
-> +{
-> +	char buf[32];
-> +	struct cftype *cft;
-> +	struct hstate *h = &hstates[idx];
-> +
-> +	/* format the size */
-> +	mem_fmt(buf, huge_page_size(h));
-> +
-> +	/* Add the limit file */
-> +	cft = &h->mem_cgroup_files[0];
-> +	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.limit_in_bytes", buf);
-> +	cft->private = __MEMFILE_PRIVATE(idx, _MEMHUGETLB, RES_LIMIT);
-> +	cft->read = mem_cgroup_read;
-> +	cft->write_string = mem_cgroup_write;
-> +
-> +	/* Add the usage file */
-> +	cft = &h->mem_cgroup_files[1];
-> +	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.usage_in_bytes", buf);
-> +	cft->private  = __MEMFILE_PRIVATE(idx, _MEMHUGETLB, RES_USAGE);
-> +	cft->read = mem_cgroup_read;
-> +
-> +	/* Add the MAX usage file */
-> +	cft = &h->mem_cgroup_files[2];
-> +	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.max_usage_in_bytes", buf);
-> +	cft->private  = __MEMFILE_PRIVATE(idx, _MEMHUGETLB, RES_MAX_USAGE);
-> +	cft->trigger  = mem_cgroup_reset;
-> +	cft->read = mem_cgroup_read;
-> +
-> +	/* NULL terminate the last cft */
-> +	cft = &h->mem_cgroup_files[3];
-> +	memset(cft, 0, sizeof(*cft));
-> +
-> +	WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys, h->mem_cgroup_files));
-> +
+> +	int idx;
+> +	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
+> +		if ((res_counter_read_u64(&memcg->hugepage[idx], RES_USAGE)) > 0)
+> +			return 1;
+> +	}
 > +	return 0;
 > +}
-> +#endif
 > +
->  static int mem_cgroup_populate(struct cgroup_subsys *ss,
->  				struct cgroup *cont)
+> +int mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+> +				   struct mem_cgroup **ptr)
+> +{
+> +	int ret = 0;
+> +	struct mem_cgroup *memcg = NULL;
+> +	struct res_counter *fail_res;
+> +	unsigned long csize = nr_pages * PAGE_SIZE;
+> +
+> +	if (mem_cgroup_disabled())
+> +		goto done;
+> +again:
+> +	rcu_read_lock();
+> +	memcg = mem_cgroup_from_task(current);
+> +	if (!memcg)
+> +		memcg = root_mem_cgroup;
+> +
+> +	if (!css_tryget(&memcg->css)) {
+> +		rcu_read_unlock();
+> +		goto again;
+> +	}
+> +	rcu_read_unlock();
+> +
+> +	ret = res_counter_charge(&memcg->hugepage[idx], csize, &fail_res);
+> +	css_put(&memcg->css);
+> +done:
+> +	*ptr = memcg;
+> +	return ret;
+> +}
+> +
+> +void mem_cgroup_hugetlb_commit_charge(int idx, unsigned long nr_pages,
+> +				      struct mem_cgroup *memcg,
+> +				      struct page *page)
+> +{
+> +	struct page_cgroup *pc;
+> +
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+> +	pc = lookup_page_cgroup(page);
+> +	lock_page_cgroup(pc);
+> +	if (unlikely(PageCgroupUsed(pc))) {
+> +		unlock_page_cgroup(pc);
+> +		mem_cgroup_hugetlb_uncharge_memcg(idx, nr_pages, memcg);
+> +		return;
+> +	}
+> +	pc->mem_cgroup = memcg;
+> +	SetPageCgroupUsed(pc);
+> +	unlock_page_cgroup(pc);
+> +	return;
+> +}
+> +
+> +void mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
+> +				      struct page *page)
+> +{
+> +	struct page_cgroup *pc;
+> +	struct mem_cgroup *memcg;
+> +	unsigned long csize = nr_pages * PAGE_SIZE;
+> +
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+> +	pc = lookup_page_cgroup(page);
+> +	if (unlikely(!PageCgroupUsed(pc)))
+> +		return;
+> +
+> +	lock_page_cgroup(pc);
+> +	if (!PageCgroupUsed(pc)) {
+> +		unlock_page_cgroup(pc);
+> +		return;
+> +	}
+> +	memcg = pc->mem_cgroup;
+> +	pc->mem_cgroup = root_mem_cgroup;
+> +	ClearPageCgroupUsed(pc);
+> +	unlock_page_cgroup(pc);
+> +
+> +	res_counter_uncharge(&memcg->hugepage[idx], csize);
+> +	return;
+> +}
+> +
+> +void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+> +				       struct mem_cgroup *memcg)
+> +{
+> +	unsigned long csize = nr_pages * PAGE_SIZE;
+> +
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+> +	res_counter_uncharge(&memcg->hugepage[idx], csize);
+> +	return;
+> +}
+> +#else
+> +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
+> +{
+> +	return 0;
+> +}
+> +#endif /* CONFIG_MEM_RES_CTLR_HUGETLB */
+> +
+>  /*
+>   * Before starting migration, account PAGE_SIZE to mem_cgroup that the old
+>   * page belongs to.
+> @@ -4962,6 +5074,7 @@ err_cleanup:
+>  static struct cgroup_subsys_state * __ref
+>  mem_cgroup_create(struct cgroup *cont)
 >  {
+> +	int idx;
+>  	struct mem_cgroup *memcg, *parent;
+>  	long error = -ENOMEM;
+>  	int node;
+> @@ -5004,9 +5117,22 @@ mem_cgroup_create(struct cgroup *cont)
+>  		 * mem_cgroup(see mem_cgroup_put).
+>  		 */
+>  		mem_cgroup_get(parent);
+> +		/*
+> +		 * We could get called before hugetlb init is called.
+> +		 * Use HUGE_MAX_HSTATE as the max index.
+> +		 */
+> +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+> +			res_counter_init(&memcg->hugepage[idx],
+> +					 &parent->hugepage[idx]);
+>  	} else {
+>  		res_counter_init(&memcg->res, NULL);
+>  		res_counter_init(&memcg->memsw, NULL);
+> +		/*
+> +		 * We could get called before hugetlb init is called.
+> +		 * Use HUGE_MAX_HSTATE as the max index.
+> +		 */
+> +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+> +			res_counter_init(&memcg->hugepage[idx], NULL);
+>  	}
+>  	memcg->last_scanned_node = MAX_NUMNODES;
+>  	INIT_LIST_HEAD(&memcg->oom_notify);
+> @@ -5026,6 +5152,12 @@ free_out:
+>  static int mem_cgroup_pre_destroy(struct cgroup *cont)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+> +	/*
+> +	 * Don't allow memcg removal if we have HugeTLB resource
+> +	 * usage.
+> +	 */
+> +	if (mem_cgroup_have_hugetlb_usage(memcg))
+> +		return -EBUSY;
+>  
 
 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>  	return mem_cgroup_force_empty(memcg, false);
+>  }
+
+
