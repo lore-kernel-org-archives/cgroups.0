@@ -1,48 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 2/2] cgroup: get rid of populate for memcg
-Date: Mon, 9 Apr 2012 15:42:46 -0700
-Message-ID: <20120409224246.GA11614@dhcp-172-17-108-109.mtv.corp.google.com>
-References: <1334010994-23301-1-git-send-email-glommer@parallels.com>
- <1334010994-23301-3-git-send-email-glommer@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: bind() call in cgroup's css structure
+Date: Tue, 10 Apr 2012 08:59:33 +0800
+Message-ID: <4F8385F5.1020901@huawei.com>
+References: <4F82EB5C.7090003@parallels.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ttiEeSoBXywly+qeB7pfXjS9UFCpa8iaQyyTSzSRrA8=;
-        b=xft1Qs1h5DY0Ac8LcJKI6NNr5TWOjhR1eljpG45jD9D8scHhDrzQ0L78pWNV2S4NBy
-         jZMhWgwLFpoYcvzNYHj9Y1IFq4S6Vrm/I052tIhNhfGvy20HVSpsKuYl5m0BBl8N4fNB
-         8L+cPC/nuEOhE6gtfBoEJzbv3uGesd0MHxO+ZaCVa2xpV01X0CJmDXksUwgtgKoSYemq
-         jm4Z0bCInjsWs0n/U2qq9Rt4oNRdu8oJrQliQ61CW3oeBNHAJ3vyQMI+bLH5xJUYLKgd
-         GGDIijzurPZ+ovCrjQBS7jbMYD1zWqY6h3Hjrwsjax9eRQhCX3D0Lixd9g5kGHxc0i9w
-         aOwA==
-Content-Disposition: inline
-In-Reply-To: <1334010994-23301-3-git-send-email-glommer@parallels.com>
-Sender: netdev-owner@vger.kernel.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <4F82EB5C.7090003-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Apr 09, 2012 at 07:36:34PM -0300, Glauber Costa wrote:
-> The last man standing justifying the need for populate() is the
-> sock memcg initialization functions. Now that we are able to pass
-> a struct mem_cgroup instead of a struct cgroup to the socket
-> initialization, there is nothing that stops us from initializing
-> everything in create().
+Glauber Costa wrote:
+
+> Hello Tejun,
 > 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Tejun Heo <tj@kernel.org>
-> CC: Li Zefan <lizefan@huawei.com>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Michal Hocko <mhocko@suse.cz>
+> During your cgroup refactor, I was wondering if you have any plans to get rid of the bind() callback that is called when hierarchies are moved?
 
-Will apply once memcg maintainers ack.
 
-Thanks.
+I planned to remove it long ago, and Paul M agreed. But after some time, I was
+trying to make use of it in a patchset, which was used to fix the problem that
+remount with different subsys bits will fail for !root cgroups.
 
--- 
-tejun
+> 
+> At least in tree, there seems to be no users for that.
+> I actually planned to use it myself, to start or remove a jump label
+> when cpuacct and cpu cgroups were comounted.
+> 
+> Problem is, because we have some calls in the cpuset cgroup from inside the cpu hotplug handler, we end up taking the almighty cgroup_mutex from inside the cpu_hotplug.lock.
+> 
+> jump labels take it in most arches through the get_online_cpus() function call. This means we effectively can't apply jump labels with the cgroup_mutex held, which is the case throughout the whole bind() call.
+> 
+> All that explained, I figured I might as well ask before I attempted a solution to that myself: as much as populate(), bind seems to be one of the overly complicated callbacks, designed for a scenario in which everything can come and go at will, which is something we're trying to fix.
+> 
+
+
+As we aim for single hierarchy, it defenitely should be removed.
