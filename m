@@ -1,61 +1,87 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH for-3.5] cgroup: remove cgroup_subsys->populate()
-Date: Tue, 10 Apr 2012 10:16:36 -0700
-Message-ID: <20120410171636.GB21311@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [RFC] writeback and cgroup
+Date: Tue, 10 Apr 2012 14:06:53 -0400
+Message-ID: <20120410180653.GJ21801@redhat.com>
+References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
+ <20120404145134.GC12676@redhat.com>
+ <20120407080027.GA2584@quack.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=DJN9hSJWyf3+GIUVSUlkRiuecnI8KSUS8R5loElGp90=;
-        b=EGWtiz3ULhSz4TjhUaCEKe2TwXxyqp08PiDS7JwzNWOKAkySX9xi2kVqDUqGYfp4Xm
-         23DovLVbMOv/w469F58ua9dy5jkS9M9fKEmLUL2TGyVYGFpSyQs337br+pyCibnTmMrH
-         heoGRD4rafYtW3QigJnCLlwsUBVnQ526+4Au1YdgY9ubhf24/RD/zEcTqj+lcN54pIL3
-         musGB5CifPaDOSjS3itjyxVKxWTWRHRzsKRNKrcUd7EiYYv5/Fstup0t3DmEClM2AG7F
-         WszjJ1JXLpsD5/ddQDaVd5Fvdu115znOPkpXuCy/xPLTppaBwrfZe08ervON7eDy+bf4
-         znxQ==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20120407080027.GA2584@quack.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jan Kara <jack@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
 
-With memcg converted, cgroup_subsys->populate() doesn't have any user
-left.  Remove it.
+On Sat, Apr 07, 2012 at 10:00:27AM +0200, Jan Kara wrote:
+Hi Jan,
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Li, can you please ack this?  Thanks.
+[..]
+> > In general, the core of the issue is that filesystems are not cgroup aware
+> > and if you do throttling below filesystems, then invariably one or other
+> > serialization issue will come up and I am concerned that we will be constantly
+> > fixing those serialization issues. Or the desgin point could be so central
+> > to filesystem design that it can't be changed.
+>   We talked about this at LSF and Dave Chinner had the idea that we could
+> make processes wait at the time when a transaction is started. At that time
+> we don't hold any global locks so process can be throttled without
+> serializing other processes. This effectively builds some cgroup awareness
+> into filesystems but pretty simple one so it should be doable.
 
- include/linux/cgroup.h |    1 -
- kernel/cgroup.c        |    3 ---
- 2 files changed, 4 deletions(-)
+Ok. So what is the meaning of "make process wait" here? What it will be
+dependent on? I am thinking of a case where a process has 100MB of dirty
+data, has 10MB/s write limit and it issues fsync. So before that process
+is able to open a transaction, one needs to wait atleast 10seconds
+(assuming other processes are not doing IO in same cgroup). 
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 565c803..d3f5fba 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -472,7 +472,6 @@ struct cgroup_subsys {
- 	void (*fork)(struct task_struct *task);
- 	void (*exit)(struct cgroup *cgrp, struct cgroup *old_cgrp,
- 		     struct task_struct *task);
--	int (*populate)(struct cgroup_subsys *ss, struct cgroup *cgrp);
- 	void (*post_clone)(struct cgroup *cgrp);
- 	void (*bind)(struct cgroup *root);
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 2905977..b2f203f 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3842,9 +3842,6 @@ static int cgroup_populate_dir(struct cgroup *cgrp)
- 	for_each_subsys(cgrp->root, ss) {
- 		struct cftype_set *set;
- 
--		if (ss->populate && (err = ss->populate(ss, cgrp)) < 0)
--			return err;
--
- 		list_for_each_entry(set, &ss->cftsets, node)
- 			cgroup_addrm_files(cgrp, ss, set->cfts, true);
- 	}
+If this wait is based on making sure all dirty data has been written back
+before opening transaction, then it will work without any interaction with
+block layer and sounds more feasible.
+
+> 
+> > In general, if you do throttling deeper in the stakc and build back
+> > pressure, then all the layers sitting above should be cgroup aware
+> > to avoid problems. Two layers identified so far are writeback and
+> > filesystems. Is it really worth the complexity. How about doing 
+> > throttling in higher layers when IO is entering the kernel and
+> > keep proportional IO logic at the lowest level and current mechanism
+> > of building pressure continues to work?
+>   I would like to keep single throttling mechanism for different limitting
+> methods - i.e. handle proportional IO the same way as IO hard limits. So we
+> cannot really rely on the fact that throttling is work preserving.
+> 
+> The advantage of throttling at IO layer is that we can keep all the details
+> inside it and only export pretty minimal information (like is bdi congested
+> for given cgroup) to upper layers. If we wanted to do throttling at upper
+> layers (such as Fengguang's buffered write throttling), we need to export
+> the internal details to allow effective throttling...
+
+For absolute throttling we really don't have to expose any details. In
+fact in my implementation of throttling buffered writes, I just had exported
+a single function to be called in bdi dirty rate limit. The caller will
+simply sleep long enough depending on the size of IO it is doing and
+how many other processes are doing IO in same cgroup.
+
+So implementation was still in block layer and only a single function
+was exposed to higher layers.
+
+One more factor makes absolute throttling interesting and that is global
+throttling and not per device throttling. For example in case of btrfs,
+there is no single stacked device on which to put total throttling
+limits.
+
+So if filesystems can handle serialization issue, then back pressure
+method looks more clean (thought complex).
+
+Thanks
+Vivek
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
