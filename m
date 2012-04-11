@@ -1,42 +1,46 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [RFD] Merge task counter into memcg
-Date: Wed, 11 Apr 2012 16:21:42 -0300
-Message-ID: <4F85D9C6.5000202@parallels.com>
-References: <20120411185715.GA4317@somewhere.redhat.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] remove BUG() in possible but rare condition
+Date: Wed, 11 Apr 2012 21:25:54 +0200
+Message-ID: <20120411192554.GC24831@tiehlicka.suse.cz>
+References: <1334167824-19142-1-git-send-email-glommer@parallels.com>
+ <20120411184845.GA24831@tiehlicka.suse.cz>
+ <CA+55aFx1GMWGgh0sTAzvvVSzPQsQ_4NKeaNv1zpKrP4fg1dG+Q@mail.gmail.com>
+ <4F85D53B.1070806@parallels.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4F85D53B.1070806-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20120411185715.GA4317-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On 04/11/2012 03:57 PM, Frederic Weisbecker wrote:
-> So if we choose the second solution, this overhead will be added unconditionally
-> to memcg.
-> But I don't expect every users of memcg will need the task counter. So perhaps
-> the overhead should be kept in its own separate subsystem.
+On Wed 11-04-12 16:02:19, Glauber Costa wrote:
+> On 04/11/2012 03:57 PM, Linus Torvalds wrote:
+> >On Wed, Apr 11, 2012 at 11:48 AM, Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>  wrote:
+> >>
+> >>I am not familiar with the code much but a trivial call chain walk up to
+> >>write_dev_supers (in btrfs) shows that we do not check for the return value
+> >>from __getblk so we would nullptr and there might be more.
+> >>I guess these need some treat before the BUG might be removed, right?
+> >
+> >Well, realistically, isn't BUG() as bad as a NULL pointer dereference?
+> >
+> >Do you care about the exact message on the screen when your machine dies?
+> Not particular, but I don't see why (I might be wrong) it would
+> necessarily lead to a NULL pointer dereference.
 
-What we're usually doing with kmem paths, like the upcoming slab 
-tracking, is do not account if it is not limited. So if you are not
-limited in a particular cgroup, you jut don't bother with accounting.
+Ahh, OK scratch that. I have misread __getblk_slow which returns NULL
+only if grow_buffers returned with < 0 which doesn't happen for the
+allocation failure.
 
-If this suits your need, you can probably do the same, and then
-pay the price just for the users that are interested on it.
-
-Now, whether or not this should be considered memory, is a different 
-story. You can say it is memory yes, but I bet you can very well find a 
-bunch of arguments to consider it "cpu" as well.
-
-Against the memcg, consider this: Your counter would probably be the 
-first non-page based data in memcg. At least raises a flag.
+Sorry about noise
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
