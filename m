@@ -1,43 +1,59 @@
-From: Udayan Bapat <uvbapat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: cgroup monitoring support tool
-Date: Wed, 11 Apr 2012 14:10:34 -0400
-Message-ID: <CAJ7NSKr6pKned8JqGu=RAJHj_s2_UZp9Cei+WD-jGJaJYZCqBg@mail.gmail.com>
-Mime-Version: 1.0
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH] remove BUG() in possible but rare condition
+Date: Wed, 11 Apr 2012 15:10:24 -0300
+Message-ID: <1334167824-19142-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:date:message-id:subject:from:to:content-type;
-        bh=5ksPLMRwjTEy6kZP5nsYK3pWEtHnaTpgjs60lIeoYEI=;
-        b=rVuS/vifHReP+II+EHmUpK3XivX6sysdPF2oVZ9+7ajdOkbIRmlZlIi1msZ+u3fIw7
-         rgoJRt/FEP8lnLnVVHB2Iu0zLYPvMrx4aUhlLNvPAEH4eCMT1rEL5S3CPEjX4IOqYnci
-         Riv8CJTVq0oxHdCb6l3bst7mi6eoigvB9VNuMqFfFtl4JHnqjiWRvdl3Ooyzw8w4FguD
-         2ETsPkhx5HsE6/9wAdCPNx7OcWKAeaqUywNIz+dqeqs5Q8+StDvlCqMz/OcbkdepS0UV
-         t7uyfpp28cJmMJ+yEzv2YdbYdNBe/gFFzYJt25KwBVQdiwh0TPAgMw3XLzLZPW51a4GD
-         NaNA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi all,
+While stressing the kernel with with failing allocations today,
+I hit the following chain of events:
 
-We are making some design choices based on the CPU % guarantees
-provided by use of cgroups. I was wondering is a kernel patch or user
-land tool exists to provide a meaningful representation of existing
-CPU slices?
+alloc_page_buffers():
 
-e.g. I have two cgroups in system with 1024 shares, I would expect
-both of them running at 50% on an average. So I would like to know if
-by running this 'utility' I get the list of cgroups in system with
-their execution quantum in the last say 5 mins. I understand this
-information can be extracted out from CPU accounting files from each
-cgroup, but wanted to check if such patch/tool already exists before I
-start writing one.
+	bh = alloc_buffer_head(GFP_NOFS);
+	if (!bh)
+		goto no_grow; <= path taken
 
-This will provide good debugging insight if a performance issues are
-to be seen later.
+grow_dev_page():
+        bh = alloc_page_buffers(page, size, 0);
+        if (!bh)
+                goto failed;  <= taken, consequence of the above
 
-Thanks in advance!
+and then the failed path BUG()s the kernel.
 
-Udayan Bapat
+The failure is inserted a litte bit artificially, but even then,
+I see no reason why it should be deemed impossible in a real box.
+
+Even though this is not a condition that we expect to see
+around every time, failed allocations are expected to be handled,
+and BUG() sounds just too much. As a matter of fact, grow_dev_page()
+can return NULL just fine in other circumstances, so I propose we just
+remove it, then.
+
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+ fs/buffer.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 36d6665..351e18e 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -985,7 +985,6 @@ grow_dev_page(struct block_device *bdev, sector_t block,
+ 	return page;
+ 
+ failed:
+-	BUG();
+ 	unlock_page(page);
+ 	page_cache_release(page);
+ 	return NULL;
+-- 
+1.7.7.6
