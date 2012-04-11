@@ -1,57 +1,52 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [RFC] writeback and cgroup
-Date: Wed, 11 Apr 2012 11:45:31 -0400
-Message-ID: <20120411154531.GE16692@redhat.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404145134.GC12676@redhat.com>
- <20120407080027.GA2584@quack.suse.cz>
- <20120410180653.GJ21801@redhat.com>
- <20120410210505.GE4936@quack.suse.cz>
- <20120410212041.GP21801@redhat.com>
- <20120410222425.GF4936@quack.suse.cz>
- <20120411154005.GD16692@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH for-3.5] cgroup: remove cgroup_subsys->populate()
+Date: Wed, 11 Apr 2012 09:16:06 -0700
+Message-ID: <20120411161606.GA12887@google.com>
+References: <20120410171636.GB21311@dhcp-172-17-108-109.mtv.corp.google.com>
+ <4F84D2FB.4050001@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=736nKtAJXVttEGxF7q+/ldKkYvZNzCcq1vqO+5SUZLU=;
+        b=kJ6L8JwLffekb911Ed+zujYfrTMWgKzi9h4U4bbQrh8XuHLBRXmsstzYsOxPVUDVvr
+         FkSfgNMeVbXszK3ozuFaNkTiwvSf5soMy1EzlN6rGbZy6dxtOOrLgmYQ4UXdbaKVDaO4
+         G32tk37aYmEjHVSBu6MzNUxiLNiow3bC/yyoGVITP71Uu25WZUlOanfRUfuskDopXRjM
+         eno6He9POpjHrstf++fT875MreSTp8xKh+wPV3mOO0E7aHK2PX8lGrYc2ZBYBcVaffgt
+         hZga9HvpyWGsXSaAKc6FohZ8xoIc0WHd2HuWfaRaVzt4N2WqgcxiMBwQ08w57z6vjoi1
+         rpoQ==
 Content-Disposition: inline
-In-Reply-To: <20120411154005.GD16692@redhat.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <4F84D2FB.4050001-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Apr 11, 2012 at 11:40:05AM -0400, Vivek Goyal wrote:
-> On Wed, Apr 11, 2012 at 12:24:25AM +0200, Jan Kara wrote:
+On Wed, Apr 11, 2012 at 08:40:27AM +0800, Li Zefan wrote:
+> Tejun Heo wrote:
 > 
-> [..]
-> > > I have implemented and posted patches for per bdi per cgroup congestion
-> > > flag. The only problem I see with that is that a group might be congested
-> > > for a long time because of lots of other IO happening (say direct IO) and
-> > > if you keep on backing off and never submit the metadata IO (transaction),
-> > > you get starved. And if you go ahead and submit IO in a congested group,
-> > > we are back to serialization issue.
-> >   Clearly, we mustn't throttle metadata IO once it gets to the block layer.
-> > That's why we discuss throttling of processes at transaction start after
-> > all. But I agree starvation is an issue - I originally thought blk-throttle
-> > throttles synchronously which wouldn't have starvation issues.
+> > With memcg converted, cgroup_subsys->populate() doesn't have any user
+> > left.  Remove it.
+> > 
+> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > ---
+> > Li, can you please ack this?  Thanks.
+> 
+> 
+> You forgot to update Documentation/cgroups/cgroups.txt. ;)
 
-Current bio throttling is asynchrounous. Process can submit the bio
-and go back and wait for bio to finish. That bio will be queued at device
-queue in a per cgroup queue and will be dispatched to device according
-to configured IO rate for cgroup.
+Yeah, the doc is getting out of sync (->cftypes update is missing
+too).  I'll get to it later.
 
-The additional feature for buffered throttle (which never went upstream),
-was synchronous in nature. That is we were actively putting writer to
-sleep on a per cgroup wait queue in the request queue and wake it up when
-it can do further IO based on cgroup limits.
+> And with that:
+> 
+> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Thanks
-Vivek
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
