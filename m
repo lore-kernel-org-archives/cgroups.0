@@ -1,118 +1,149 @@
-From: Frederic Weisbecker <fweisbec@gmail.com>
-Subject: Re: [PATCH 1/7] res_counter: add a function res_counter_move_parent().
-Date: Thu, 12 Apr 2012 16:30:50 +0200
-Message-ID: <CAFTL4hyKOkoTv=717MkYx4QB0j3B6xA0ZPp1jg6HkrtTkAu7nQ@mail.gmail.com>
-References: <4F86B9BE.8000105@jp.fujitsu.com>
-	<4F86BA66.2010503@jp.fujitsu.com>
-	<4F86D733.50809@parallels.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFD] Merge task counter into memcg
+Date: Thu, 12 Apr 2012 16:55:13 +0200
+Message-ID: <20120412145507.GC11455@somewhere.redhat.com>
+References: <20120411185715.GA4317@somewhere.redhat.com>
+	<20120412010745.GE1787@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding;
-        bh=6Ts5R3OwsmBY3sdW243vL41PAab1fSArujvz2DzcD+Q=;
-        b=NA7HyKQUSkP9F2rHDzRXrhxvD96Phl0u+tuWGp+AZhR2ZqLbS+r6761jqVbzpO5SKk
-         EOED7mAX9Yfw20dSsVLPsFhv6rZqOXXv3yTZTkNXgDjy/ddkNLmVbESd1LuHjrbtkO3v
-         v3wXCCXQN86/EwSTxZob3Le4Qvic3o38ybF9GFfKYZIVoKX2ViQnFASVYCCtig25Hz6e
-         m7KZ8P10OhH/uV1pMtaebxv8OPtrLYOGQW6/8Z/1SgxTanIuvuBrWU3FCa9gLYu7Ha8W
-         U1LE50GTgK/jdYe83mUIKxbDClIB6Fh0IvI85BAvJQR167EV/tBbI36aRs6DZ71w7Hpk
-         w5Aw==
-In-Reply-To: <4F86D733.50809@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer@parallels.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=ghnTbjjOaJCe1aU0lwvAUFk3YWdg3xj9enxnjelNexg=;
+	b=yfMC08XDK8dyZcvQyS881itW/LByWMccirGacpvGNj41tbvd88dFpqzLWBB41icReE
+	FOB5UiTKCeWocYDRbFuKUhKbxIll2xZON+z/MrBBxM6iDhhOUrUT+0L8bnDbFPR3w+9n
+	MUVsrKSxaxjMa46QcezrfCrfxHdLscYruCj98DcXfkca+cPp9sJDA4f8tZkkKSqAV9Wu
+	3P93M0lKSIKZXMC0+5OVsuLnyLaWZv0P/k6NAZz/CWyTJCsTs6A9uDYp7xDvZmcNyxKc
+	24k1xox21O7/N0mhDiP0JTBw6FDFwYi9ts5uLLvnwoPMS/7vU49B6lmQMo2foLjzQck6
+	zP4A==
+Content-Disposition: inline
+In-Reply-To: <20120412010745.GE1787-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-2012/4/12 Glauber Costa <glommer@parallels.com>:
-> On 04/12/2012 08:20 AM, KAMEZAWA Hiroyuki wrote:
->>
->> This function is used for moving accounting information to its
->> parent in the hierarchy of res_counter.
->>
->> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->
-> Frederic has a patch in his fork cgroup series, that allows you to
-> uncharge a counter until you reach a specific ancestor.
-> You pass the parent as a parameter, and then only you gets uncharged.
+On Thu, Apr 12, 2012 at 03:07:45AM +0200, Johannes Weiner wrote:
+> On Wed, Apr 11, 2012 at 08:57:20PM +0200, Frederic Weisbecker wrote:
+> > Hi,
+> > 
+> > While talking with Tejun about targetting the cgroup task counter subsystem
+> > for the next merge window, he suggested to check if this could be merged into
+> > the memcg subsystem rather than creating a new one cgroup subsystem just
+> > for task count limit purpose.
+> > 
+> > So I'm pinging you guys to seek your insight.
+> 
+> I'm sorry you are given a runaround like this with that code.
 
-I'm missing the referring patchset from Kamezawa. Ok I'm going to
-subscribe to the
-cgroup mailing list. Meanwhile perhaps would it be nice to keep Cc
-LKML for cgroup patches?
+Nevermind, as long as I end up with something with most people are fine
+with.
 
-Some comments below:
+> 
+> > I assume not everybody in the Cc list knows what the task counter subsystem
+> > is all about. So here is a summary: this is a cgroup subsystem (latest version
+> > in https://lwn.net/Articles/478631/) that keeps track of the number of tasks
+> > present in a cgroup. Hooks are set in task fork/exit and cgroup migration to
+> > maintain this accounting visible to a special tasks.usage file. The user can
+> > set a limit on the number of tasks by writing on the tasks.limit file.
+> > Further forks or cgroup migration are then rejected if the limit is exceeded.
+> > 
+> > This feature is especially useful to protect against forkbombs in containers.
+> > Or more generally to limit the resources on the number of tasks on a cgroup
+> > as it involves some kernel memory allocation.
+> 
+> You could also twist this around and argue the same for cpu usage and
+> make it part of the cpu cgroup, but it doesn't really fit in either
+> subsystem, IMO.
 
->
-> I think that is a much better interface than this you are proposing.
-> We should probably merge that patch and use it.
->
->> ---
->> =A0 include/linux/res_counter.h | =A0 =A03 +++
->> =A0 kernel/res_counter.c =A0 =A0 =A0 =A0| =A0 13 +++++++++++++
->> =A0 2 files changed, 16 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
->> index da81af0..8919d3c 100644
->> --- a/include/linux/res_counter.h
->> +++ b/include/linux/res_counter.h
->> @@ -135,6 +135,9 @@ int __must_check res_counter_charge_nofail(struct re=
-s_counter *counter,
->> =A0 void res_counter_uncharge_locked(struct res_counter *counter, unsign=
-ed long val);
->> =A0 void res_counter_uncharge(struct res_counter *counter, unsigned long=
- val);
->>
->> +/* move resource to parent counter...i.e. just forget accounting in a c=
-hild */
->> +void res_counter_move_parent(struct res_counter *counter, unsigned long=
- val);
->> +
->> =A0 /**
->> =A0 =A0* res_counter_margin - calculate chargeable space of a counter
->> =A0 =A0* @cnt: the counter
->> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
->> index d508363..fafebf0 100644
->> --- a/kernel/res_counter.c
->> +++ b/kernel/res_counter.c
->> @@ -113,6 +113,19 @@ void res_counter_uncharge(struct res_counter *count=
-er, unsigned long val)
->> =A0 =A0 =A0 local_irq_restore(flags);
->> =A0 }
->>
->> +/*
->> + * In hierarchical accounting, child's usage is accounted into ancestor=
-s.
->> + * To move local usage to its parent, just forget current level usage.
+Ok.
 
-The way I understand this comment and the changelog matches the opposite
-of what the below function is doing.
+> 
+> > Now the dilemna is how to implement it?
+> > 
+> > 1) As a standalone subsystem, as it stands currently (https://lwn.net/Articles/478631/)
+> 
+> What was wrong with that again?
 
-The function charges a child and ignore all its parents. The comments says =
-it
-charges the parents but not the child.
+Nothing. Tejun and I just wanted to do a last check to see if we are not
+missing an existing interface/subsys where it would potentially fit.
 
->> + */
->> +void res_counter_move_parent(struct res_counter *counter, unsigned long=
- val)
->> +{
->> + =A0 =A0 unsigned long flags;
->> +
->> + =A0 =A0 BUG_ON(!counter->parent);
->> + =A0 =A0 spin_lock_irqsave(&counter->lock, flags);
->> + =A0 =A0 res_counter_uncharge_locked(counter, val);
->> + =A0 =A0 spin_unlock_irqrestore(&counter->lock, flags);
->> +}
->>
->> =A0 static inline unsigned long long *
->> =A0 res_counter_member(struct res_counter *counter, int member)
->
+> 
+> > 2) As a feature in memcg, part of the memory.kmem.* files. This makes sense
+> > because this is about kernel memory allocation limitation. We could have a
+> > memory.kmem.tasks.count
+> > 
+> > My personal opinion is that the task counter brings some overhead: a charge
+> > across the whole hierarchy at every fork, and the mirrored uncharge on task exit.
+> > And this overhead happens even in the off-case (when the task counter susbsystem
+> > is mounted but the limit is the default: ULLONG_MAX).
+> 
+> 3) Make it an integral part of cgroups, because keeping track of tasks
+> in them already is, so it would be a more natural approach than
+> bolting it onto the memory controller.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+(Adding Kosaki in Cc because he proposed me the same at the collab
+summit).
+
+Yeah. But keeping track of tasks is not unconditional in cgroups. It
+triggers only after the first call to cgroup_iter_start(). It seems
+we've tried hard to keep the check for this lockless. The end result
+is that we account new tasks in cgroup_post_fork(): after the task is
+added on the tasklist.
+
+If we want to use the task tracking for counting purpose on top of
+which we can cancel a fork, we need to move it before the task is added
+to the tasklist. Because afterward it can't be cancelled anymore.
+
+Doing this means that we can't do the task tracking conditionally
+anymore.
+
+That said, this lockless off-case is an issue on some other areas.
+Like this race in the cgroup freezer: https://lkml.org/lkml/2012/3/8/69
+
+So for now doing this in the cgroup core involves a real overhead even
+in the off-case.
+
+> 
+> But this has the same overhead.  And even if this would end up being a
+> better idea, we could still do this after merging it as a separate
+> controller as long as we maintain the interface.
+
+Yeah indeed.
+
+> 
+> > So if we choose the second solution, this overhead will be added unconditionally
+> > to memcg.
+> > But I don't expect every users of memcg will need the task counter. So perhaps
+> > the overhead should be kept in its own separate subsystem.
+> > 
+> > OTOH memory.kmem.* interface would have be a good fit.
+> > 
+> > What do you think?
+> 
+> Instead of integrating it task-wise, could the problem be solved by
+> accounting the kernel stack to kmem?  And then have a kmem limit,
+> which we already want anway?
+
+I don't know how the kernel stack is allocated for tasks. Do you mean
+that we allocate a chunck of it for each new task and we could rely
+on that?
+
+> After all, we would only restrict the number of tasks for the
+> resources they require
+
+It depends if the kernel stack can have other kind of "consumer".
+
+>, not to only allow an arbitrary number of tasks
+> (unless one wants to sell Windows 7 Starter style containers, in which
+> case one can go play with oneself out of tree as far as I'm concerned)
