@@ -1,49 +1,54 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: [PATCH v1 0/7] memcg remove pre_destroy
-Date: Thu, 12 Apr 2012 20:17:18 +0900
-Message-ID: <4F86B9BE.8000105@jp.fujitsu.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFD] Merge task counter into memcg
+Date: Thu, 12 Apr 2012 13:19:28 +0200
+Message-ID: <20120412111925.GA11455@somewhere.redhat.com>
+References: <20120411185715.GA4317@somewhere.redhat.com>
+ <4F85D9C6.5000202@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=MQ9aftVY4n/Ux4NYuUQi+34lRKTxYqFlilsyvLHxmlI=;
+        b=vg2M+LVxcUZaBBFAdksNYRnNMqu68PSoVxo0u+PxfeYn5OWAFz2KZZpzHObKQkCeOS
+         5nqEDCILsH2PJdlbX/FYIZ2Y0gPTs1gJ4BFne9jnSrCN00MJxAmWzARsEs/furrBmlSv
+         G5moXGuvLaCjtzyXQ591jdIzcgJk2b4LCL/hLCpdTzaTl/SA+FOawcwDzMlELWt50u4v
+         0qraBL9FjUtIjCQCt3akxufC+Bhd2RZzF4DwkThzr2QpeZldjdM+eeGrPd/i4RXWrTvm
+         wIZjdtloOkVVp9hJ+dDB2Lp7s8F7sOn7ZethCjNTLWPL3P6Lym/zKc2CufTM4y7159NK
+         LS4w==
+Content-Disposition: inline
+In-Reply-To: <4F85D9C6.5000202-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "linux-mm@kvack.org" <linux-mm@kvack.org>
-Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-In recent discussion, Tejun Heo, cgroup maintainer, has a plan to remove
-->pre_destroy(). And now, in cgroup tree, pre_destroy() failure cause WARNING.
+On Wed, Apr 11, 2012 at 04:21:42PM -0300, Glauber Costa wrote:
+> On 04/11/2012 03:57 PM, Frederic Weisbecker wrote:
+> >So if we choose the second solution, this overhead will be added unconditionally
+> >to memcg.
+> >But I don't expect every users of memcg will need the task counter. So perhaps
+> >the overhead should be kept in its own separate subsystem.
+> 
+> What we're usually doing with kmem paths, like the upcoming slab
+> tracking, is do not account if it is not limited. So if you are not
+> limited in a particular cgroup, you jut don't bother with accounting.
 
-By pre_destroy(), rmdir of cgroup can return -EBUSY or some error.
-It makes cgroup complicated and unstable. I said O.K. to remove it and
-this patch is modification for memcg.
+So that's a good point. I can start accounting tasks and apply limits
+once we write to the file only.
 
-One of problem in current implementation is that memcg moves all charges to
-parent in pre_destroy(). At doing so, if use_hierarchy=0, pre_destroy() may
-hit parent's limit and may return -EBUSY. To fix this problem, this patch
-changes behavior of rmdir() as
+> 
+> If this suits your need, you can probably do the same, and then
+> pay the price just for the users that are interested on it.
+> 
+> Now, whether or not this should be considered memory, is a different
+> story. You can say it is memory yes, but I bet you can very well
+> find a bunch of arguments to consider it "cpu" as well.
+> 
+> Against the memcg, consider this: Your counter would probably be the
+> first non-page based data in memcg. At least raises a flag.
 
- - if use_hierarchy=0, all remaining charges will go to root cgroup.
- - if use_hierarchy=1, all remaining charges will go to the parent.
-
-By this, rmdir failure will not be caused by parent's limitation. And
-I think this meets meaning of use_hierarchy.
-
-This series does
-  - add above change of behavior
-  - use workqueue to move all pages to parent
-  - remove unnecessary codes.
-
-I'm sorry if my reply is delayed, I'm not sure I can have enough time in
-this weekend. Any comments are welcomed.
-
-Thanks,
--Kame
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Good points.
