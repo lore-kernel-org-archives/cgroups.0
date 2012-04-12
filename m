@@ -1,8 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/8] blkcg: kill blkio_list and replace blkio_list_lock with a
-	mutex
-Date: Thu, 12 Apr 2012 16:29:33 -0700
-Message-ID: <1334273380-30233-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/8] blkcg: use @pol instead of @plid in update_root_blkg_pd()
+	and blkcg_print_blkgs()
+Date: Thu, 12 Apr 2012 16:29:34 -0700
+Message-ID: <1334273380-30233-3-git-send-email-tj@kernel.org>
 References: <1334273380-30233-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=GlNBSuJApQhrYz79Z7EfmcCWDzeED/K/fnwNiPbIYFU=;
-	b=d+W6e+9SwZJ4asYA6tDW4iw4t83C4WAw15jUY3Vzdp/eDsUmwf2PQysZ5lSawXHrTv
-	VZcmuQdIxtD6YHoHwA6DXWe1z6HojF8YTkk9/n4cUR6yMRy0QohL3giyfQxJaDPsYVeg
-	RdMm90HkHXjwn1ouYvSvS5jxOJFt8GcKIzMnnLM0vtkBZBQDs7Zk5oIrHKRvnqMK24K+
-	tTFXmgum7AxWNlNKSvrrqyPULB8HIcUvNQ8qyb7Lg7cU3gX6ev9jAbYLKTnWqwEqVIrj
-	jNb5DVBt4HKNET91CJKf4xffOhjrwQB1qi3wfd602j3g/TUbyoyOQzgsUYzJJvWMhUVf
-	E0fQ==
+	:references; bh=Z4Rs/0+u12BZ00SSp54lP4EXr4S7BTodvRK8EUgnZLs=;
+	b=ZWEkhKKm92w6pQypd0ILXCSyCr6OtudKOwuhQlkBn4+oJAkfRU39jH4qFcq56bmEfn
+	TZNAlpnFwDoOVDgo1RPz7FVlFFW/UmmpI3pXpcVjZlBr706DLedSkkVer9wvsC3W73JI
+	PnEAx8rZTROx+Z03u2hMabnDq5x6sda+NJv4ja9plfu1Q4Drl/8l7fof1RiYxs6pWcgC
+	mIUMMuzPFq0yAyMp2vDvPsTrPJMrpk2qyrl1YkRiUmJU/vohNtKocPM3WjWOka9eoDrE
+	v8xLp5qKFKKP7FY1oseUtfAa4Pk8jLuTAGN/6iI3IlAS4I+Qo+3Qz1+N8Vc/1n1ViXFi
+	RWFA==
 In-Reply-To: <1334273380-30233-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -31,10 +31,8 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-With blkio_policy[], blkio_list is redundant and hinders with
-per-queue policy activation.  Remove it.  Also, replace
-blkio_list_lock with a mutex blkcg_pol_mutex and let it protect the
-whole [un]registration.
+The two functions were taking "enum blkio_policy_id plid".  Make them
+take "const struct blkio_policy_type *pol" instead.
 
 This is to prepare for per-queue policy activation and doesn't cause
 any functional difference.
@@ -42,118 +40,193 @@ any functional difference.
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-cgroup.c |   32 +++++++++++++++++---------------
- block/blk-cgroup.h |    1 -
- 2 files changed, 17 insertions(+), 16 deletions(-)
+ block/blk-cgroup.c   |   21 +++++++++++----------
+ block/blk-cgroup.h   |    7 ++++---
+ block/blk-throttle.c |    6 +++---
+ block/cfq-iosched.c  |   10 +++++-----
+ 4 files changed, 23 insertions(+), 21 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 9449c38..af665fe 100644
+index af665fe..b123152 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -24,9 +24,7 @@
+@@ -226,17 +226,17 @@ static void blkg_destroy(struct blkio_group *blkg)
+  * aren't shot down.  This broken and racy implementation is temporary.
+  * Eventually, blkg shoot down will be replaced by proper in-place update.
+  */
+-void update_root_blkg_pd(struct request_queue *q, enum blkio_policy_id plid)
++void update_root_blkg_pd(struct request_queue *q,
++			 const struct blkio_policy_type *pol)
+ {
+-	struct blkio_policy_type *pol = blkio_policy[plid];
+ 	struct blkio_group *blkg = blkg_lookup(&blkio_root_cgroup, q);
+ 	struct blkg_policy_data *pd;
  
- #define MAX_KEY_LEN 100
+ 	if (!blkg)
+ 		return;
  
--static DEFINE_SPINLOCK(blkio_list_lock);
--static LIST_HEAD(blkio_list);
--
-+static DEFINE_MUTEX(blkcg_pol_mutex);
- static DEFINE_MUTEX(all_q_mutex);
- static LIST_HEAD(all_q_list);
+-	kfree(blkg->pd[plid]);
+-	blkg->pd[plid] = NULL;
++	kfree(blkg->pd[pol->plid]);
++	blkg->pd[pol->plid] = NULL;
  
-@@ -311,8 +309,9 @@ blkiocg_reset_stats(struct cgroup *cgroup, struct cftype *cftype, u64 val)
- 	struct blkio_cgroup *blkcg = cgroup_to_blkio_cgroup(cgroup);
+ 	if (!pol)
+ 		return;
+@@ -244,7 +244,7 @@ void update_root_blkg_pd(struct request_queue *q, enum blkio_policy_id plid)
+ 	pd = kzalloc(sizeof(*pd) + pol->pdata_size, GFP_KERNEL);
+ 	WARN_ON_ONCE(!pd);
+ 
+-	blkg->pd[plid] = pd;
++	blkg->pd[pol->plid] = pd;
+ 	pd->blkg = blkg;
+ 	pol->ops.blkio_init_group_fn(blkg);
+ }
+@@ -360,7 +360,8 @@ static const char *blkg_dev_name(struct blkio_group *blkg)
+  */
+ void blkcg_print_blkgs(struct seq_file *sf, struct blkio_cgroup *blkcg,
+ 		       u64 (*prfill)(struct seq_file *, void *, int),
+-		       int pol, int data, bool show_total)
++		       const struct blkio_policy_type *pol, int data,
++		       bool show_total)
+ {
  	struct blkio_group *blkg;
  	struct hlist_node *n;
-+	int i;
+@@ -368,8 +369,8 @@ void blkcg_print_blkgs(struct seq_file *sf, struct blkio_cgroup *blkcg,
  
--	spin_lock(&blkio_list_lock);
-+	mutex_lock(&blkcg_pol_mutex);
  	spin_lock_irq(&blkcg->lock);
- 
- 	/*
-@@ -321,15 +320,16 @@ blkiocg_reset_stats(struct cgroup *cgroup, struct cftype *cftype, u64 val)
- 	 * anyway.  If you get hit by a race, retry.
- 	 */
- 	hlist_for_each_entry(blkg, n, &blkcg->blkg_list, blkcg_node) {
--		struct blkio_policy_type *pol;
-+		for (i = 0; i < BLKIO_NR_POLICIES; i++) {
-+			struct blkio_policy_type *pol = blkio_policy[i];
- 
--		list_for_each_entry(pol, &blkio_list, list)
--			if (pol->ops.blkio_reset_group_stats_fn)
-+			if (pol && pol->ops.blkio_reset_group_stats_fn)
- 				pol->ops.blkio_reset_group_stats_fn(blkg);
-+		}
- 	}
- 
+ 	hlist_for_each_entry(blkg, n, &blkcg->blkg_list, blkcg_node)
+-		if (blkg->pd[pol])
+-			total += prfill(sf, blkg->pd[pol]->pdata, data);
++		if (blkg->pd[pol->plid])
++			total += prfill(sf, blkg->pd[pol->plid]->pdata, data);
  	spin_unlock_irq(&blkcg->lock);
--	spin_unlock(&blkio_list_lock);
-+	mutex_unlock(&blkcg_pol_mutex);
+ 
+ 	if (show_total)
+@@ -739,7 +740,7 @@ void blkio_policy_register(struct blkio_policy_type *blkiop)
+ 	BUG_ON(blkio_policy[blkiop->plid]);
+ 	blkio_policy[blkiop->plid] = blkiop;
+ 	list_for_each_entry(q, &all_q_list, all_q_node)
+-		update_root_blkg_pd(q, blkiop->plid);
++		update_root_blkg_pd(q, blkiop);
+ 
+ 	blkcg_bypass_end();
+ 
+@@ -765,7 +766,7 @@ void blkio_policy_unregister(struct blkio_policy_type *blkiop)
+ 	blkio_policy[blkiop->plid] = NULL;
+ 
+ 	list_for_each_entry(q, &all_q_list, all_q_node)
+-		update_root_blkg_pd(q, blkiop->plid);
++		update_root_blkg_pd(q, blkiop);
+ 	blkcg_bypass_end();
+ 
+ 	mutex_unlock(&blkcg_pol_mutex);
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index f2ede76..49116d3 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -117,11 +117,12 @@ extern void blkio_policy_register(struct blkio_policy_type *);
+ extern void blkio_policy_unregister(struct blkio_policy_type *);
+ extern void blkg_destroy_all(struct request_queue *q, bool destroy_root);
+ extern void update_root_blkg_pd(struct request_queue *q,
+-				enum blkio_policy_id plid);
++				const struct blkio_policy_type *pol);
+ 
+ void blkcg_print_blkgs(struct seq_file *sf, struct blkio_cgroup *blkcg,
+ 		       u64 (*prfill)(struct seq_file *, void *, int),
+-		       int pol, int data, bool show_total);
++		       const struct blkio_policy_type *pol, int data,
++		       bool show_total);
+ u64 __blkg_prfill_u64(struct seq_file *sf, void *pdata, u64 v);
+ u64 __blkg_prfill_rwstat(struct seq_file *sf, void *pdata,
+ 			 const struct blkg_rwstat *rwstat);
+@@ -333,7 +334,7 @@ static inline void blkio_policy_unregister(struct blkio_policy_type *blkiop) { }
+ static inline void blkg_destroy_all(struct request_queue *q,
+ 				    bool destory_root) { }
+ static inline void update_root_blkg_pd(struct request_queue *q,
+-				       enum blkio_policy_id plid) { }
++				       const struct blkio_policy_type *pol) { }
+ 
+ static inline void *blkg_to_pdata(struct blkio_group *blkg,
+ 				struct blkio_policy_type *pol) { return NULL; }
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 6024014..07c17c2 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -946,7 +946,7 @@ static int tg_print_cpu_rwstat(struct cgroup *cgrp, struct cftype *cft,
+ {
+ 	struct blkio_cgroup *blkcg = cgroup_to_blkio_cgroup(cgrp);
+ 
+-	blkcg_print_blkgs(sf, blkcg, tg_prfill_cpu_rwstat, BLKIO_POLICY_THROTL,
++	blkcg_print_blkgs(sf, blkcg, tg_prfill_cpu_rwstat, &blkio_policy_throtl,
+ 			  cft->private, true);
+ 	return 0;
+ }
+@@ -973,7 +973,7 @@ static int tg_print_conf_u64(struct cgroup *cgrp, struct cftype *cft,
+ 			     struct seq_file *sf)
+ {
+ 	blkcg_print_blkgs(sf, cgroup_to_blkio_cgroup(cgrp), tg_prfill_conf_u64,
+-			  BLKIO_POLICY_THROTL, cft->private, false);
++			  &blkio_policy_throtl, cft->private, false);
  	return 0;
  }
  
-@@ -732,20 +732,21 @@ void blkio_policy_register(struct blkio_policy_type *blkiop)
+@@ -981,7 +981,7 @@ static int tg_print_conf_uint(struct cgroup *cgrp, struct cftype *cft,
+ 			      struct seq_file *sf)
  {
- 	struct request_queue *q;
- 
-+	mutex_lock(&blkcg_pol_mutex);
-+
- 	blkcg_bypass_start();
--	spin_lock(&blkio_list_lock);
- 
- 	BUG_ON(blkio_policy[blkiop->plid]);
- 	blkio_policy[blkiop->plid] = blkiop;
--	list_add_tail(&blkiop->list, &blkio_list);
--
--	spin_unlock(&blkio_list_lock);
- 	list_for_each_entry(q, &all_q_list, all_q_node)
- 		update_root_blkg_pd(q, blkiop->plid);
-+
- 	blkcg_bypass_end();
- 
- 	if (blkiop->cftypes)
- 		WARN_ON(cgroup_add_cftypes(&blkio_subsys, blkiop->cftypes));
-+
-+	mutex_unlock(&blkcg_pol_mutex);
+ 	blkcg_print_blkgs(sf, cgroup_to_blkio_cgroup(cgrp), tg_prfill_conf_uint,
+-			  BLKIO_POLICY_THROTL, cft->private, false);
++			  &blkio_policy_throtl, cft->private, false);
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(blkio_policy_register);
  
-@@ -753,19 +754,20 @@ void blkio_policy_unregister(struct blkio_policy_type *blkiop)
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index cff8b5b..7980173 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1381,7 +1381,7 @@ static int cfqg_print_weight_device(struct cgroup *cgrp, struct cftype *cft,
+ 				    struct seq_file *sf)
  {
- 	struct request_queue *q;
- 
-+	mutex_lock(&blkcg_pol_mutex);
-+
- 	if (blkiop->cftypes)
- 		cgroup_rm_cftypes(&blkio_subsys, blkiop->cftypes);
- 
- 	blkcg_bypass_start();
--	spin_lock(&blkio_list_lock);
- 
- 	BUG_ON(blkio_policy[blkiop->plid] != blkiop);
- 	blkio_policy[blkiop->plid] = NULL;
--	list_del_init(&blkiop->list);
- 
--	spin_unlock(&blkio_list_lock);
- 	list_for_each_entry(q, &all_q_list, all_q_node)
- 		update_root_blkg_pd(q, blkiop->plid);
- 	blkcg_bypass_end();
-+
-+	mutex_unlock(&blkcg_pol_mutex);
+ 	blkcg_print_blkgs(sf, cgroup_to_blkio_cgroup(cgrp),
+-			  cfqg_prfill_weight_device, BLKIO_POLICY_PROP, 0,
++			  cfqg_prfill_weight_device, &blkio_policy_cfq, 0,
+ 			  false);
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(blkio_policy_unregister);
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index ca0ff7c..f2ede76 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -102,7 +102,6 @@ struct blkio_policy_ops {
- };
+@@ -1446,7 +1446,7 @@ static int cfqg_print_stat(struct cgroup *cgrp, struct cftype *cft,
+ {
+ 	struct blkio_cgroup *blkcg = cgroup_to_blkio_cgroup(cgrp);
  
- struct blkio_policy_type {
--	struct list_head list;
- 	struct blkio_policy_ops ops;
- 	enum blkio_policy_id plid;
- 	size_t pdata_size;		/* policy specific private data size */
+-	blkcg_print_blkgs(sf, blkcg, blkg_prfill_stat, BLKIO_POLICY_PROP,
++	blkcg_print_blkgs(sf, blkcg, blkg_prfill_stat, &blkio_policy_cfq,
+ 			  cft->private, false);
+ 	return 0;
+ }
+@@ -1456,7 +1456,7 @@ static int cfqg_print_rwstat(struct cgroup *cgrp, struct cftype *cft,
+ {
+ 	struct blkio_cgroup *blkcg = cgroup_to_blkio_cgroup(cgrp);
+ 
+-	blkcg_print_blkgs(sf, blkcg, blkg_prfill_rwstat, BLKIO_POLICY_PROP,
++	blkcg_print_blkgs(sf, blkcg, blkg_prfill_rwstat, &blkio_policy_cfq,
+ 			  cft->private, true);
+ 	return 0;
+ }
+@@ -1483,7 +1483,7 @@ static int cfqg_print_avg_queue_size(struct cgroup *cgrp, struct cftype *cft,
+ 	struct blkio_cgroup *blkcg = cgroup_to_blkio_cgroup(cgrp);
+ 
+ 	blkcg_print_blkgs(sf, blkcg, cfqg_prfill_avg_queue_size,
+-			  BLKIO_POLICY_PROP, 0, false);
++			  &blkio_policy_cfq, 0, false);
+ 	return 0;
+ }
+ #endif	/* CONFIG_DEBUG_BLK_CGROUP */
+@@ -3939,7 +3939,7 @@ static void cfq_exit_queue(struct elevator_queue *e)
+ #ifndef CONFIG_CFQ_GROUP_IOSCHED
+ 	kfree(cfqd->root_group);
+ #endif
+-	update_root_blkg_pd(q, BLKIO_POLICY_PROP);
++	update_root_blkg_pd(q, &blkio_policy_cfq);
+ 	kfree(cfqd);
+ }
+ 
 -- 
 1.7.7.3
