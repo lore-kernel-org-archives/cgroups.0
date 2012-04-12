@@ -1,82 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Thu, 12 Apr 2012 13:51:48 -0700
-Message-ID: <20120412205148.GA24056@google.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404145134.GC12676@redhat.com>
- <20120407080027.GA2584@quack.suse.cz>
- <20120410180653.GJ21801@redhat.com>
- <20120410210505.GE4936@quack.suse.cz>
- <20120410212041.GP21801@redhat.com>
- <20120410222425.GF4936@quack.suse.cz>
- <20120411154005.GD16692@redhat.com>
- <20120411192231.GF16008@quack.suse.cz>
- <20120412203719.GL2207@redhat.com>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] block: per-queue policy activation
+Date: Thu, 12 Apr 2012 16:29:32 -0700
+Message-ID: <1334273380-30233-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=7ajfANGdqh0Kk2oj7DuMnSAHP2OLi7gBoSTZLxcOduA=;
-        b=DngompzZb/tAnzIht5l5tpqV787LDR+C3STRMkMVJF7Z04aCJWvxbWiaxy7vVmNdLP
-         VFjjD/bbeatvYKcx7IryydxwaLJBNCNRnqr7yXnfrG0wMVTuqYTfN9di7YfD3Y69/gFg
-         6ED0Eqzkj8XvUrz/99bKqoaC+WQtI+3fx4HWuyuRv1Zdi85f83Jh2iNrOV3pAFXQtDHJ
-         MXAzLIT2P+GXe0qx61M8bGCxKuMr3o7/7ezf2/UrMl33Hp+Dof+l9gSWu1+IImYrEtv4
-         sxweeqXjm5BZYWq+bkMe3H8eNObF4+CXnIDjjcYDWZseQib4uLu7EVDcac+q2KB0Doyx
-         FHVw==
-Content-Disposition: inline
-In-Reply-To: <20120412203719.GL2207@redhat.com>
-Sender: owner-linux-mm@kvack.org
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=YL8gPcjYrUDPoaPJwdhT+hge0eiUx8a0BxQUz2czgtk=;
+        b=wIN+HpdPRUX2lH9fRUoLD0PirtlbldRIcDb9AsgYJkR6jUX2EoqDeLQikLlM4uMhzA
+         mZ353ue+eTrFFI3HNQiGa1UYFgyHQBbkDFttcqm6tg5x71GtA9Y0jAMjxXLbDHLy7X+v
+         tLWrl6fLAW7nWcSxDstGZyo1oC097EFW/lZHGrvAi+8M0iB3KHadw0Cl2ZAPkW3pV0as
+         SKkjMZKGVyMba4wuEbsozcb22TehIlza5yc+7e5KYSiP5dsYdFpVwC1jTuX82P1Aq7oA
+         omlRSMljnoNRy5EOO3yoCnWJp7IbczGPz84uiOobp1y6Druevg2JSpePT8nNYIXUj6+P
+         5Gcw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Fengguang Wu <fengguang.wu@intel.com>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hello, Vivek.
+Hello,
 
-On Thu, Apr 12, 2012 at 04:37:19PM -0400, Vivek Goyal wrote:
-> I mean how are we supposed to put cgroup throttling rules using cgroup
-> interface for network filesystems and for btrfs global bdi. Using "dev_t"
-> associated with bdi? I see that all the bdi's are showing up in
-> /sys/class/bdi, but how do I know which one I am intereste in or which
-> one belongs to filesystem I am interestd in putting throttling rule on.
-> 
-> For block devices, we simply use "major:min limit" format to write to
-> a cgroup file and this configuration will sit in one of the per queue
-> per cgroup data structure.
-> 
-> I am assuming that when you say throttling should happen at bdi, you
-> are thinking of maintaining per cgroup per bdi data structures and user
-> is somehow supposed to pass "bdi_maj:bdi_min  limit" through cgroup files?
-> If yes, how does one map a filesystem's bdi we want to put rules on?
+It seems that we're *finally* nearing the end of the long blkcg API
+cleanup.  With all the previous updates, blkcg code is now clean &
+modular enough to implement per-queue policy activation.
 
-I think you're worrying way too much.  One of the biggest reasons we
-have layers and abstractions is to avoid worrying about everything
-from everywhere.  Let block device implement per-device limits.  Let
-writeback work from the backpressure it gets from the relevant IO
-channel, bdi-cgroup combination in this case.
+Upto now, blkcg assumed that all policies are active on all queues
+which simply isn't true - cfq policy is only applicable to queues
+which are using cfq as the elevator.  Also, for transition purposes,
+the current implementation clears all !root blkgs blkgs across
+elevator switch and policy [de]registration in racy manner.
 
-For stacked or combined devices, let the combining layer deal with
-piping the congestion information.  If it's per-file split, the
-combined bdi can simply forward information from the matching
-underlying device.  If the file is striped / duplicated somehow, the
-*only* layer which knows what to do is and should be the layer
-performing the striping and duplication.  There's no need to worry
-about it from blkcg and if you get the layering correct it isn't
-difficult to slice such logic inbetween.  In fact, most of it
-(backpressure propagation) would just happen as part of the usual
-buffering between layers.
+This patchset implements per-queue policy activation.  Static policy
+ID is replaced with dynamic registration and each policy should be
+activated and deactivated explicitly on each queue.  On activation,
+the matching policy data are created on all existing blkgs.  On
+deactivation, the matching policy data are removed from all existing
+blkgs.  blkg printing skips blkg-policy combination which is disabled
+and trying to configure a policy on a blkg which doesn't have the
+policy enabled would return -EINVAL instead of creating an unused
+dummy configuration.
+
+ 0001-blkcg-kill-blkio_list-and-replace-blkio_list_lock-wi.patch
+ 0002-blkcg-use-pol-instead-of-plid-in-update_root_blkg_pd.patch
+ 0003-blkcg-remove-static-policy-ID-enums.patch
+ 0004-blkcg-make-blkg_conf_prep-take-pol-and-return-with-q.patch
+ 0005-blkcg-make-sure-blkg_lookup-returns-NULL-if-q-is-byp.patch
+ 0006-blkcg-add-request_queue-root_blkg.patch
+ 0007-blkcg-implement-per-queue-policy-activation.patch
+ 0008-blkcg-drop-stuff-unused-after-per-queue-policy-activ.patch
+
+0001-0003 removes static policy IDs.
+
+0004-0006 are prep patches.
+
+0007 implements per-queue policy activation.
+
+0008 drops unnecessary stuff.
+
+This patchset is on top of the current block/for-3.5/core 5bc4afb1ec
+"blkcg: drop BLKCG_STAT_{PRIV|POL|OFF} macros" and also available in
+the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blkcg-pols
+
+diffstat follows.
+
+ block/blk-cgroup.c     |  424 ++++++++++++++++++++++++++++++-------------------
+ block/blk-cgroup.h     |   43 ++--
+ block/blk-core.c       |    4 
+ block/blk-throttle.c   |   78 +++------
+ block/cfq-iosched.c    |   71 ++++----
+ block/elevator.c       |    2 
+ include/linux/blkdev.h |   10 +
+ 7 files changed, 367 insertions(+), 265 deletions(-)
 
 Thanks.
 
--- 
-tejun
-
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
