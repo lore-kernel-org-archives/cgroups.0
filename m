@@ -1,165 +1,100 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH 6/7] memcg: remove pre_destroy()
-Date: Thu, 12 Apr 2012 20:30:22 +0900
-Message-ID: <4F86BCCE.5050802@jp.fujitsu.com>
-References: <4F86B9BE.8000105@jp.fujitsu.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFD] Merge task counter into memcg
+Date: Thu, 12 Apr 2012 13:32:19 +0200
+Message-ID: <20120412113217.GB11455@somewhere.redhat.com>
+References: <20120411185715.GA4317@somewhere.redhat.com>
+	<4F862851.3040208@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F86B9BE.8000105-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=O5+CO2A7eVhoS2KCG5gvbcZKrOYAgWKu0dOIVYTDFWc=;
+	b=YQ4XX1HYA2y3tDXNw77POkAwNfzISdI2ST9wsZcBemJK/AESVomI9sR/7RJZ1EHnkL
+	UsM1mgQfEM7kCMrkmcP8juBJKPTRg8qmhfUO2YQB0EbHX1VI7JThuZLOTcHuXrdHqH4+
+	E1b3UPobnMFonRGRGXpjHeMKVZSLbbKDYCktHOZgxNho/xPfMQEzWMKYDqcN5UuVbTLx
+	jGKt61ukb3sQjFisdjAmrlCi03TRJvSGSqrZ9cssrG0N67Sw7+8TPpDrM0fjcJbU6MKo
+	5j3ZO64+xsoY81oxUGNmuN23MdMejshsw6rP5R3QLKGz4EaoJu31Q3wpZKai01UrSoAq
+	HSdQ==
+Content-Disposition: inline
+In-Reply-To: <4F862851.3040208-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Tejun Heo, cgroup maintainer, tries to remove ->pre_destroy() to
-prevent rmdir() from failure of EBUSY or some.
+On Thu, Apr 12, 2012 at 09:56:49AM +0900, KAMEZAWA Hiroyuki wrote:
+> (2012/04/12 3:57), Frederic Weisbecker wrote:
+> 
+> > Hi,
+> > 
+> > While talking with Tejun about targetting the cgroup task counter subsystem
+> > for the next merge window, he suggested to check if this could be merged into
+> > the memcg subsystem rather than creating a new one cgroup subsystem just
+> > for task count limit purpose.
+> > 
+> > So I'm pinging you guys to seek your insight.
+> > 
+> > I assume not everybody in the Cc list knows what the task counter subsystem
+> > is all about. So here is a summary: this is a cgroup subsystem (latest version
+> > in https://lwn.net/Articles/478631/) that keeps track of the number of tasks
+> > present in a cgroup. Hooks are set in task fork/exit and cgroup migration to
+> > maintain this accounting visible to a special tasks.usage file. The user can
+> > set a limit on the number of tasks by writing on the tasks.limit file.
+> > Further forks or cgroup migration are then rejected if the limit is exceeded.
+> > 
+> > This feature is especially useful to protect against forkbombs in containers.
+> > Or more generally to limit the resources on the number of tasks on a cgroup
+> > as it involves some kernel memory allocation.
+> > 
+> > Now the dilemna is how to implement it?
+> > 
+> > 1) As a standalone subsystem, as it stands currently (https://lwn.net/Articles/478631/)
+> > 
+> > 2) As a feature in memcg, part of the memory.kmem.* files. This makes sense
+> > because this is about kernel memory allocation limitation. We could have a
+> > memory.kmem.tasks.count
+> > 
+> > My personal opinion is that the task counter brings some overhead: a charge
+> > across the whole hierarchy at every fork, and the mirrored uncharge on task exit.
+> > And this overhead happens even in the off-case (when the task counter susbsystem
+> > is mounted but the limit is the default: ULLONG_MAX).
+> > 
+> > So if we choose the second solution, this overhead will be added unconditionally
+> > to memcg.
+> > But I don't expect every users of memcg will need the task counter. So perhaps
+> > the overhead should be kept in its own separate subsystem.
+> > 
+> > OTOH memory.kmem.* interface would have be a good fit.
+> > 
+> > What do you think?
+> 
+> 
+> Sounds interesting to me. Hm, does your 'overhead' of task accounting is
+> enough large to be visible to users ? How performance regression is big ?
 
-This patch removes pre_destroy() in memcg. All remaining charges
-will be moved to other cgroup, without any failure,  ->destroy()
-just schedule a work and it will destroy the memcg.
-Then, rmdir will never fail. The kernel will take care of remaining
-resources in the cgroup to be accounted correctly.
+I haven't measured. But on every fork, we do a res_counter_charge() that
+walks through css_set and all its css_set ancestors, take a spinlock and
+increment something to every level. In terms of cache trashing and algorithm
+complexity, I believe the issue is real.
 
-After this patch, memcg will be destroyed by workqueue in asynchrnous way.
-Then, we can modify 'moving' logic to work asynchrnously, i.e,
-we don't force users to wait for the end of rmdir(), now. We don't
-need to use heavy synchronous calls. This patch modifies logics as
+> BTW, now, all memcg's limit interfaces use 'bytes' as an unit of accounting.
+> It's a small concern to me to have mixture of bytes and numbers of objects
+> for accounting.
 
- - Use mem_cgroup_drain_stock_async rather tan drain_stock_sync.
- - lru_add_drain_all() will be called only when necessary, in a lazy way.
+Indeed, this can be confusing for users.
 
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- mm/memcontrol.c |   52 ++++++++++++++++++++++------------------------------
- 1 files changed, 22 insertions(+), 30 deletions(-)
+> But I think increasing number of subsystem is not very good....
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 22c8faa..e466809 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -315,6 +315,8 @@ struct mem_cgroup {
- #ifdef CONFIG_INET
- 	struct tcp_memcontrol tcp_mem;
- #endif
-+
-+	struct work_struct work_destroy;
- };
- 
- /* Stuffs for move charges at task migration. */
-@@ -2105,7 +2107,6 @@ static void drain_all_stock_async(struct mem_cgroup *root_memcg)
- 	mutex_unlock(&percpu_charge_mutex);
- }
- 
--/* This is a synchronous drain interface. */
- static void drain_all_stock_sync(struct mem_cgroup *root_memcg)
- {
- 	/* called when force_empty is called */
-@@ -3661,10 +3662,9 @@ static int mem_cgroup_recharge_lru(struct mem_cgroup *memcg,
- 		pc = lookup_page_cgroup(page);
- 
- 		ret = mem_cgroup_move_parent(page, pc, memcg, GFP_KERNEL);
--		if (ret == -EINTR)
--			break;
- 
--		if (ret == -EBUSY || ret == -EINVAL) {
-+		VM_BUG_ON(ret != 0 && ret != -EBUSY);
-+		if (ret) {
- 			/* found lock contention or "pc" is obsolete. */
- 			busy = page;
- 			cond_resched();
-@@ -3677,22 +3677,19 @@ static int mem_cgroup_recharge_lru(struct mem_cgroup *memcg,
- 	return ret;
- }
- 
--
--static int mem_cgroup_recharge(struct mem_cgroup *memcg)
-+/*
-+ * This function is called after ->destroy(). So, we cannot access cgroup
-+ * of this memcg.
-+ */
-+static void mem_cgroup_recharge(struct work_struct *work)
- {
-+	struct mem_cgroup *memcg;
- 	int ret, node, zid;
--	struct cgroup *cgrp = memcg->css.cgroup;
- 
-+	memcg = container_of(work, struct mem_cgroup, work_destroy);
-+	/* No task points this memcg. call this only once */
-+	drain_all_stock_async(memcg);
- 	do {
--		ret = -EBUSY;
--		if (cgroup_task_count(cgrp) || !list_empty(&cgrp->children))
--			goto out;
--		ret = -EINTR;
--		if (signal_pending(current))
--			goto out;
--		/* This is for making all *used* pages to be on LRU. */
--		lru_add_drain_all();
--		drain_all_stock_sync(memcg);
- 		ret = 0;
- 		mem_cgroup_start_move(memcg);
- 		for_each_node_state(node, N_HIGH_MEMORY) {
-@@ -3710,13 +3707,14 @@ static int mem_cgroup_recharge(struct mem_cgroup *memcg)
- 		}
- 		mem_cgroup_end_move(memcg);
- 		cond_resched();
--	/* "ret" should also be checked to ensure all lists are empty. */
--	} while (memcg->res.usage > 0 || ret);
--out:
--	return ret;
-+		/* drain LRU only when we canoot find pages on LRU */
-+		if (res_counter_read_u64(&memcg->res, RES_USAGE) &&
-+		    !mem_cgroup_nr_lru_pages(memcg, LRU_ALL))
-+			lru_add_drain_all();
-+	} while (res_counter_read_u64(&memcg->res, RES_USAGE) || ret);
-+	mem_cgroup_put(memcg);
- }
- 
--
- /*
-  * make mem_cgroup's charge to be 0 if there is no task. This is only called
-  * by memory.force_empty file, an user request.
-@@ -4803,6 +4801,7 @@ static void vfree_work(struct work_struct *work)
- 	memcg = container_of(work, struct mem_cgroup, work_freeing);
- 	vfree(memcg);
- }
-+
- static void vfree_rcu(struct rcu_head *rcu_head)
- {
- 	struct mem_cgroup *memcg;
-@@ -4982,20 +4981,14 @@ free_out:
- 	return ERR_PTR(error);
- }
- 
--static int mem_cgroup_pre_destroy(struct cgroup *cont)
--{
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
--
--	return mem_cgroup_recharge(memcg);
--}
--
- static void mem_cgroup_destroy(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 
- 	kmem_cgroup_destroy(cont);
- 
--	mem_cgroup_put(memcg);
-+	INIT_WORK(&memcg->work_destroy, mem_cgroup_recharge);
-+	schedule_work(&memcg->work_destroy);
- }
- 
- static int mem_cgroup_populate(struct cgroup_subsys *ss,
-@@ -5589,7 +5582,6 @@ struct cgroup_subsys mem_cgroup_subsys = {
- 	.name = "memory",
- 	.subsys_id = mem_cgroup_subsys_id,
- 	.create = mem_cgroup_create,
--	.pre_destroy = mem_cgroup_pre_destroy,
- 	.destroy = mem_cgroup_destroy,
- 	.populate = mem_cgroup_populate,
- 	.can_attach = mem_cgroup_can_attach,
--- 
-1.7.4.1
-
+If the result is a better granularity on the overhead, I believe this
+can be a good thing.
