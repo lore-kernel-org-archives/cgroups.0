@@ -1,100 +1,73 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFD] Merge task counter into memcg
-Date: Thu, 12 Apr 2012 13:32:19 +0200
-Message-ID: <20120412113217.GB11455@somewhere.redhat.com>
-References: <20120411185715.GA4317@somewhere.redhat.com>
-	<4F862851.3040208@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH 7/7] memcg: remove drain_all_stock_sync.
+Date: Thu, 12 Apr 2012 20:31:36 +0900
+Message-ID: <4F86BD18.4010505@jp.fujitsu.com>
+References: <4F86B9BE.8000105@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=O5+CO2A7eVhoS2KCG5gvbcZKrOYAgWKu0dOIVYTDFWc=;
-	b=YQ4XX1HYA2y3tDXNw77POkAwNfzISdI2ST9wsZcBemJK/AESVomI9sR/7RJZ1EHnkL
-	UsM1mgQfEM7kCMrkmcP8juBJKPTRg8qmhfUO2YQB0EbHX1VI7JThuZLOTcHuXrdHqH4+
-	E1b3UPobnMFonRGRGXpjHeMKVZSLbbKDYCktHOZgxNho/xPfMQEzWMKYDqcN5UuVbTLx
-	jGKt61ukb3sQjFisdjAmrlCi03TRJvSGSqrZ9cssrG0N67Sw7+8TPpDrM0fjcJbU6MKo
-	5j3ZO64+xsoY81oxUGNmuN23MdMejshsw6rP5R3QLKGz4EaoJu31Q3wpZKai01UrSoAq
-	HSdQ==
-Content-Disposition: inline
-In-Reply-To: <4F862851.3040208-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F86B9BE.8000105-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Thu, Apr 12, 2012 at 09:56:49AM +0900, KAMEZAWA Hiroyuki wrote:
-> (2012/04/12 3:57), Frederic Weisbecker wrote:
-> 
-> > Hi,
-> > 
-> > While talking with Tejun about targetting the cgroup task counter subsystem
-> > for the next merge window, he suggested to check if this could be merged into
-> > the memcg subsystem rather than creating a new one cgroup subsystem just
-> > for task count limit purpose.
-> > 
-> > So I'm pinging you guys to seek your insight.
-> > 
-> > I assume not everybody in the Cc list knows what the task counter subsystem
-> > is all about. So here is a summary: this is a cgroup subsystem (latest version
-> > in https://lwn.net/Articles/478631/) that keeps track of the number of tasks
-> > present in a cgroup. Hooks are set in task fork/exit and cgroup migration to
-> > maintain this accounting visible to a special tasks.usage file. The user can
-> > set a limit on the number of tasks by writing on the tasks.limit file.
-> > Further forks or cgroup migration are then rejected if the limit is exceeded.
-> > 
-> > This feature is especially useful to protect against forkbombs in containers.
-> > Or more generally to limit the resources on the number of tasks on a cgroup
-> > as it involves some kernel memory allocation.
-> > 
-> > Now the dilemna is how to implement it?
-> > 
-> > 1) As a standalone subsystem, as it stands currently (https://lwn.net/Articles/478631/)
-> > 
-> > 2) As a feature in memcg, part of the memory.kmem.* files. This makes sense
-> > because this is about kernel memory allocation limitation. We could have a
-> > memory.kmem.tasks.count
-> > 
-> > My personal opinion is that the task counter brings some overhead: a charge
-> > across the whole hierarchy at every fork, and the mirrored uncharge on task exit.
-> > And this overhead happens even in the off-case (when the task counter susbsystem
-> > is mounted but the limit is the default: ULLONG_MAX).
-> > 
-> > So if we choose the second solution, this overhead will be added unconditionally
-> > to memcg.
-> > But I don't expect every users of memcg will need the task counter. So perhaps
-> > the overhead should be kept in its own separate subsystem.
-> > 
-> > OTOH memory.kmem.* interface would have be a good fit.
-> > 
-> > What do you think?
-> 
-> 
-> Sounds interesting to me. Hm, does your 'overhead' of task accounting is
-> enough large to be visible to users ? How performance regression is big ?
+Because a function moving pages to ancestor works asynchronously now,
+drain_all_stock_sync() is unnecessary.
 
-I haven't measured. But on every fork, we do a res_counter_charge() that
-walks through css_set and all its css_set ancestors, take a spinlock and
-increment something to every level. In terms of cache trashing and algorithm
-complexity, I believe the issue is real.
+Signed-off-by: KAMEAZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+ mm/memcontrol.c |   22 ++--------------------
+ 1 files changed, 2 insertions(+), 20 deletions(-)
 
-> BTW, now, all memcg's limit interfaces use 'bytes' as an unit of accounting.
-> It's a small concern to me to have mixture of bytes and numbers of objects
-> for accounting.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e466809..d42811b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2053,7 +2053,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+  * of the hierarchy under it. sync flag says whether we should block
+  * until the work is done.
+  */
+-static void drain_all_stock(struct mem_cgroup *root_memcg, bool sync)
++static void drain_all_stock(struct mem_cgroup *root_memcg)
+ {
+ 	int cpu, curcpu;
+ 
+@@ -2077,16 +2077,6 @@ static void drain_all_stock(struct mem_cgroup *root_memcg, bool sync)
+ 		}
+ 	}
+ 	put_cpu();
+-
+-	if (!sync)
+-		goto out;
+-
+-	for_each_online_cpu(cpu) {
+-		struct memcg_stock_pcp *stock = &per_cpu(memcg_stock, cpu);
+-		if (test_bit(FLUSHING_CACHED_CHARGE, &stock->flags))
+-			flush_work(&stock->work);
+-	}
+-out:
+  	put_online_cpus();
+ }
+ 
+@@ -2103,15 +2093,7 @@ static void drain_all_stock_async(struct mem_cgroup *root_memcg)
+ 	 */
+ 	if (!mutex_trylock(&percpu_charge_mutex))
+ 		return;
+-	drain_all_stock(root_memcg, false);
+-	mutex_unlock(&percpu_charge_mutex);
+-}
+-
+-static void drain_all_stock_sync(struct mem_cgroup *root_memcg)
+-{
+-	/* called when force_empty is called */
+-	mutex_lock(&percpu_charge_mutex);
+-	drain_all_stock(root_memcg, true);
++	drain_all_stock(root_memcg);
+ 	mutex_unlock(&percpu_charge_mutex);
+ }
+ 
+-- 
+1.7.4.1
 
-Indeed, this can be confusing for users.
-
-> But I think increasing number of subsystem is not very good....
-
-If the result is a better granularity on the overhead, I believe this
-can be a good thing.
