@@ -1,87 +1,49 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] remove BUG() in possible but rare condition
-Date: Thu, 12 Apr 2012 11:24:15 +0200
-Message-ID: <20120412092415.GB32489@tiehlicka.suse.cz>
-References: <1334167824-19142-1-git-send-email-glommer@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: [PATCH v1 0/7] memcg remove pre_destroy
+Date: Thu, 12 Apr 2012 20:17:18 +0900
+Message-ID: <4F86B9BE.8000105@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1334167824-19142-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Wed 11-04-12 15:10:24, Glauber Costa wrote:
-> While stressing the kernel with with failing allocations today,
-> I hit the following chain of events:
-> 
-> alloc_page_buffers():
-> 
-> 	bh = alloc_buffer_head(GFP_NOFS);
-> 	if (!bh)
-> 		goto no_grow; <= path taken
-> 
-> grow_dev_page():
->         bh = alloc_page_buffers(page, size, 0);
->         if (!bh)
->                 goto failed;  <= taken, consequence of the above
-> 
-> and then the failed path BUG()s the kernel.
-> 
-> The failure is inserted a litte bit artificially, but even then,
-> I see no reason why it should be deemed impossible in a real box.
-> 
-> Even though this is not a condition that we expect to see
-> around every time, failed allocations are expected to be handled,
-> and BUG() sounds just too much. As a matter of fact, grow_dev_page()
-> can return NULL just fine in other circumstances, so I propose we just
-> remove it, then.
+In recent discussion, Tejun Heo, cgroup maintainer, has a plan to remove
+->pre_destroy(). And now, in cgroup tree, pre_destroy() failure cause WARNING.
 
-I had to be blind yesterday. I have double checked the call chain and
-this is safe already because __getblk_slow tries to free some memory and
-then retry the allocation if it gets allocation failure from
-grow_buffers (grow_dev_page).
+By pre_destroy(), rmdir of cgroup can return -EBUSY or some error.
+It makes cgroup complicated and unstable. I said O.K. to remove it and
+this patch is modification for memcg.
 
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+One of problem in current implementation is that memcg moves all charges to
+parent in pre_destroy(). At doing so, if use_hierarchy=0, pre_destroy() may
+hit parent's limit and may return -EBUSY. To fix this problem, this patch
+changes behavior of rmdir() as
 
-Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+ - if use_hierarchy=0, all remaining charges will go to root cgroup.
+ - if use_hierarchy=1, all remaining charges will go to the parent.
 
-> ---
->  fs/buffer.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 36d6665..351e18e 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -985,7 +985,6 @@ grow_dev_page(struct block_device *bdev, sector_t block,
->  	return page;
->  
->  failed:
-> -	BUG();
->  	unlock_page(page);
->  	page_cache_release(page);
->  	return NULL;
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+By this, rmdir failure will not be caused by parent's limitation. And
+I think this meets meaning of use_hierarchy.
 
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+This series does
+  - add above change of behavior
+  - use workqueue to move all pages to parent
+  - remove unnecessary codes.
+
+I'm sorry if my reply is delayed, I'm not sure I can have enough time in
+this weekend. Any comments are welcomed.
+
+Thanks,
+-Kame
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
