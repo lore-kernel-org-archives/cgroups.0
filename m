@@ -1,32 +1,73 @@
-From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] remove BUG() in possible but rare condition
-Date: Wed, 11 Apr 2012 23:33:07 +0200 (CEST)
-Message-ID: <alpine.LRH.2.00.1204112331290.1415@twin.jikos.cz>
-References: <1334167824-19142-1-git-send-email-glommer@parallels.com> <20120411184845.GA24831@tiehlicka.suse.cz> <CA+55aFx1GMWGgh0sTAzvvVSzPQsQ_4NKeaNv1zpKrP4fg1dG+Q@mail.gmail.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFD] Merge task counter into memcg
+Date: Thu, 12 Apr 2012 09:56:49 +0900
+Message-ID: <4F862851.3040208@jp.fujitsu.com>
+References: <20120411185715.GA4317@somewhere.redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CA+55aFx1GMWGgh0sTAzvvVSzPQsQ_4NKeaNv1zpKrP4fg1dG+Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20120411185715.GA4317-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-On Wed, 11 Apr 2012, Linus Torvalds wrote:
+(2012/04/12 3:57), Frederic Weisbecker wrote:
 
-> > I am not familiar with the code much but a trivial call chain walk up to
-> > write_dev_supers (in btrfs) shows that we do not check for the return value
-> > from __getblk so we would nullptr and there might be more.
-> > I guess these need some treat before the BUG might be removed, right?
+> Hi,
 > 
-> Well, realistically, isn't BUG() as bad as a NULL pointer dereference?
+> While talking with Tejun about targetting the cgroup task counter subsystem
+> for the next merge window, he suggested to check if this could be merged into
+> the memcg subsystem rather than creating a new one cgroup subsystem just
+> for task count limit purpose.
+> 
+> So I'm pinging you guys to seek your insight.
+> 
+> I assume not everybody in the Cc list knows what the task counter subsystem
+> is all about. So here is a summary: this is a cgroup subsystem (latest version
+> in https://lwn.net/Articles/478631/) that keeps track of the number of tasks
+> present in a cgroup. Hooks are set in task fork/exit and cgroup migration to
+> maintain this accounting visible to a special tasks.usage file. The user can
+> set a limit on the number of tasks by writing on the tasks.limit file.
+> Further forks or cgroup migration are then rejected if the limit is exceeded.
+> 
+> This feature is especially useful to protect against forkbombs in containers.
+> Or more generally to limit the resources on the number of tasks on a cgroup
+> as it involves some kernel memory allocation.
+> 
+> Now the dilemna is how to implement it?
+> 
+> 1) As a standalone subsystem, as it stands currently (https://lwn.net/Articles/478631/)
+> 
+> 2) As a feature in memcg, part of the memory.kmem.* files. This makes sense
+> because this is about kernel memory allocation limitation. We could have a
+> memory.kmem.tasks.count
+> 
+> My personal opinion is that the task counter brings some overhead: a charge
+> across the whole hierarchy at every fork, and the mirrored uncharge on task exit.
+> And this overhead happens even in the off-case (when the task counter susbsystem
+> is mounted but the limit is the default: ULLONG_MAX).
+> 
+> So if we choose the second solution, this overhead will be added unconditionally
+> to memcg.
+> But I don't expect every users of memcg will need the task counter. So perhaps
+> the overhead should be kept in its own separate subsystem.
+> 
+> OTOH memory.kmem.* interface would have be a good fit.
+> 
+> What do you think?
 
-Well, there still could be weirdos out there not setting 
-sys.vm.mmap_min_addr to something sane. For those, NULL pointer 
-dereference could have worse consequences than BUG (unlikely in this 
-particular case, yes).
 
--- 
-Jiri Kosina
-SUSE Labs
+Sounds interesting to me. Hm, does your 'overhead' of task accounting is
+enough large to be visible to users ? How performance regression is big ?
+
+BTW, now, all memcg's limit interfaces use 'bytes' as an unit of accounting.
+It's a small concern to me to have mixture of bytes and numbers of objects
+for accounting. But I think increasing number of subsystem is not very good....
+ 
+Regards,
+-Kame
+
+
+
