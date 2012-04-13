@@ -1,104 +1,140 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 01/11] cfq: fix build breakage & warnings
-Date: Fri, 13 Apr 2012 13:11:25 -0700
-Message-ID: <1334347895-6268-2-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 05/11] blkcg: make blkg_conf_prep() take @pol and return with queue lock held
+Date: Fri, 13 Apr 2012 13:11:29 -0700
+Message-ID: <1334347895-6268-6-git-send-email-tj@kernel.org>
 References: <1334347895-6268-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=Kk2/6TR7vlUTpn8vMrNRbS0xIKpB2o/Gm+73wTk9DJU=;
+        b=PWdPwSzIH5MkPWLNKbXx7q/oY3ad7V6khTXq6zs/vGOGugaTUFsXTEB79obMeIYpXr
+         T/ea3j9Cskjd+paj4qtuUM7KxICaap9xwqCueW+xdCM61PKSB97S/GqqMABfXQv+Zzys
+         PFS/Xpr7DztsRPJBS9itYxAl2VJ1FWNNWtoWcJoN2iWidzbQtZ6gV+vb4hSssoolZ553
+         zuVux3Dr8t+3lvnx+M4vcOiFOudBTjwJV7a16Ub9Cp8/MkinZ8p0W1XuY7fpMFltwNwl
+         DQHo+Qz8cJe0mw3mjpez4De3Mu6WOVBzeo5xVR/xI/n7z5m1vdCx4yjONXV1XboWfO10
+         aC5w==
+In-Reply-To: <1334347895-6268-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=JXspHHyhMh1ITfI5/n3u64dJsZaTUeg+7EB1oXNZUYM=;
-	b=mpCZ4atnpyUVkl9hPX0HICsS3gnT/Ji7N9E9hbh+ELsaVN+YRKt2bPi01OO7awFudu
-	VPFJ4lgckvMIXPjfbn3vlaQF0VJwcxonFpJlGcAGTq1Rw3qctVEFDvCkTh8Ib2N9v88Q
-	Hs6n2t35tckPC/N8pz6cdokwoM0y20ujQkR6pTZ62NaYBnrkVQltPxf2sx/azVbw/wd1
-	U9stHQt+jO94A6okAmFrZ3lDzwh0DeCFFE6x2vSZfdeKdtSxhN8dZ4Eru9V9QZSRy0yG
-	OI+GbD4UwSzbpDmKC437wDdWNRVlAhwdcO17ZgKmMEnJTlZC19ufokWdGbGwkEciGNBJ
-	7Caw==
-In-Reply-To: <1334347895-6268-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: axboe@kernel.dk
+Cc: vgoyal@redhat.com, ctalbott@google.com, rni@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-* CFQ_WEIGHT_* defined inside CONFIG_BLK_CGROUP causes cfq-iosched.c
-  compile failure when the config is disabled.  Move it outside the
-  ifdef block.
+Add @pol to blkg_conf_prep() and let it return with queue lock held
+(to be released by blkg_conf_finish()).  Note that @pol isn't used
+yet.
 
-* Dummy cfqg_stats_*() definitions were lacking inline modifiers
-  causing unused functions warning if !CONFIG_CFQ_GROUP_IOSCHED.  Add
-  them.
+This is to prepare for per-queue policy activation and doesn't cause
+any visible difference.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- block/blk-cgroup.h  |    4 ++--
- block/cfq-iosched.c |   17 ++++++++---------
- 2 files changed, 10 insertions(+), 11 deletions(-)
+ block/blk-cgroup.c   |   17 ++++++++++-------
+ block/blk-cgroup.h   |    3 ++-
+ block/blk-throttle.c |    2 +-
+ block/cfq-iosched.c  |    2 +-
+ 4 files changed, 14 insertions(+), 10 deletions(-)
 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 2d4d7d6..f6581a0 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -464,17 +464,19 @@ EXPORT_SYMBOL_GPL(blkg_prfill_rwstat);
+ /**
+  * blkg_conf_prep - parse and prepare for per-blkg config update
+  * @blkcg: target block cgroup
++ * @pol: target policy
+  * @input: input string
+  * @ctx: blkg_conf_ctx to be filled
+  *
+  * Parse per-blkg config update from @input and initialize @ctx with the
+  * result.  @ctx->blkg points to the blkg to be updated and @ctx->v the new
+- * value.  This function returns with RCU read locked and must be paired
+- * with blkg_conf_finish().
++ * value.  This function returns with RCU read lock and queue lock held and
++ * must be paired with blkg_conf_finish().
+  */
+-int blkg_conf_prep(struct blkio_cgroup *blkcg, const char *input,
++int blkg_conf_prep(struct blkio_cgroup *blkcg,
++		   const struct blkio_policy_type *pol, const char *input,
+ 		   struct blkg_conf_ctx *ctx)
+-	__acquires(rcu)
++	__acquires(rcu) __acquires(disk->queue->queue_lock)
+ {
+ 	struct gendisk *disk;
+ 	struct blkio_group *blkg;
+@@ -490,14 +492,14 @@ int blkg_conf_prep(struct blkio_cgroup *blkcg, const char *input,
+ 		return -EINVAL;
+ 
+ 	rcu_read_lock();
+-
+ 	spin_lock_irq(disk->queue->queue_lock);
++
+ 	blkg = blkg_lookup_create(blkcg, disk->queue, false);
+-	spin_unlock_irq(disk->queue->queue_lock);
+ 
+ 	if (IS_ERR(blkg)) {
+ 		ret = PTR_ERR(blkg);
+ 		rcu_read_unlock();
++		spin_unlock_irq(disk->queue->queue_lock);
+ 		put_disk(disk);
+ 		/*
+ 		 * If queue was bypassing, we should retry.  Do so after a
+@@ -527,8 +529,9 @@ EXPORT_SYMBOL_GPL(blkg_conf_prep);
+  * with blkg_conf_prep().
+  */
+ void blkg_conf_finish(struct blkg_conf_ctx *ctx)
+-	__releases(rcu)
++	__releases(ctx->disk->queue->queue_lock) __releases(rcu)
+ {
++	spin_unlock_irq(ctx->disk->queue->queue_lock);
+ 	rcu_read_unlock();
+ 	put_disk(ctx->disk);
+ }
 diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index ca0ff7c..64392ac 100644
+index be80d6e..df1c7b2 100644
 --- a/block/blk-cgroup.h
 +++ b/block/blk-cgroup.h
-@@ -27,13 +27,13 @@ enum blkio_policy_id {
- /* Max limits for throttle policy */
- #define THROTL_IOPS_MAX		UINT_MAX
+@@ -128,7 +128,8 @@ struct blkg_conf_ctx {
+ 	u64			v;
+ };
  
--#ifdef CONFIG_BLK_CGROUP
--
- /* CFQ specific, out here for blkcg->cfq_weight */
- #define CFQ_WEIGHT_MIN		10
- #define CFQ_WEIGHT_MAX		1000
- #define CFQ_WEIGHT_DEFAULT	500
+-int blkg_conf_prep(struct blkio_cgroup *blkcg, const char *input,
++int blkg_conf_prep(struct blkio_cgroup *blkcg,
++		   const struct blkio_policy_type *pol, const char *input,
+ 		   struct blkg_conf_ctx *ctx);
+ void blkg_conf_finish(struct blkg_conf_ctx *ctx);
  
-+#ifdef CONFIG_BLK_CGROUP
-+
- enum blkg_rwstat_type {
- 	BLKG_RWSTAT_READ,
- 	BLKG_RWSTAT_WRITE,
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 0dc4645..6f1bfdf 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -993,7 +993,7 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	struct throtl_grp *tg;
+ 	int ret;
+ 
+-	ret = blkg_conf_prep(blkcg, buf, &ctx);
++	ret = blkg_conf_prep(blkcg, &blkio_policy_throtl, buf, &ctx);
+ 	if (ret)
+ 		return ret;
+ 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index cff8b5b..7a8c3e0 100644
+index 08db2fc..de95f9a 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -17,7 +17,7 @@
- #include "blk.h"
- #include "blk-cgroup.h"
+@@ -1400,7 +1400,7 @@ static int cfqg_set_weight_device(struct cgroup *cgrp, struct cftype *cft,
+ 	struct cfq_group *cfqg;
+ 	int ret;
  
--static struct blkio_policy_type blkio_policy_cfq;
-+static struct blkio_policy_type blkio_policy_cfq __maybe_unused;
- 
- /*
-  * tunables
-@@ -541,14 +541,13 @@ static void cfqg_stats_update_avg_queue_size(struct cfq_group *cfqg)
- 
- #else	/* CONFIG_CFQ_GROUP_IOSCHED && CONFIG_DEBUG_BLK_CGROUP */
- 
--static void cfqg_stats_set_start_group_wait_time(struct cfq_group *cfqg,
--						 struct cfq_group *curr_cfqg) { }
--static void cfqg_stats_end_empty_time(struct cfqg_stats *stats) { }
--static void cfqg_stats_update_dequeue(struct cfq_group *cfqg) { }
--static void cfqg_stats_set_start_empty_time(struct cfq_group *cfqg) { }
--static void cfqg_stats_update_idle_time(struct cfq_group *cfqg) { }
--static void cfqg_stats_set_start_idle_time(struct cfq_group *cfqg) { }
--static void cfqg_stats_update_avg_queue_size(struct cfq_group *cfqg) { }
-+static inline void cfqg_stats_set_start_group_wait_time(struct cfq_group *cfqg, struct cfq_group *curr_cfqg) { }
-+static inline void cfqg_stats_end_empty_time(struct cfqg_stats *stats) { }
-+static inline void cfqg_stats_update_dequeue(struct cfq_group *cfqg) { }
-+static inline void cfqg_stats_set_start_empty_time(struct cfq_group *cfqg) { }
-+static inline void cfqg_stats_update_idle_time(struct cfq_group *cfqg) { }
-+static inline void cfqg_stats_set_start_idle_time(struct cfq_group *cfqg) { }
-+static inline void cfqg_stats_update_avg_queue_size(struct cfq_group *cfqg) { }
- 
- #endif	/* CONFIG_CFQ_GROUP_IOSCHED && CONFIG_DEBUG_BLK_CGROUP */
+-	ret = blkg_conf_prep(blkcg, buf, &ctx);
++	ret = blkg_conf_prep(blkcg, &blkio_policy_cfq, buf, &ctx);
+ 	if (ret)
+ 		return ret;
  
 -- 
 1.7.7.3
