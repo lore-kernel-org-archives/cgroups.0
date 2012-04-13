@@ -1,38 +1,111 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 4/7] memcg: remove 'uncharge' argument from mem_cgroup_move_account()
-Date: Fri, 13 Apr 2012 10:01:13 +0900
-Message-ID: <4F877AD9.6040504@jp.fujitsu.com>
-References: <4F86B9BE.8000105@jp.fujitsu.com> <4F86BB5E.6080509@jp.fujitsu.com> <4F86D84C.1050508@parallels.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 1/7] res_counter: add a function
+ res_counter_move_parent().
+Date: Fri, 13 Apr 2012 03:04:45 +0200
+Message-ID: <20120413010443.GD12484@somewhere.redhat.com>
+References: <4F86B9BE.8000105@jp.fujitsu.com>
+ <4F86BA66.2010503@jp.fujitsu.com>
+ <4F86D733.50809@parallels.com>
+ <CAFTL4hyKOkoTv=717MkYx4QB0j3B6xA0ZPp1jg6HkrtTkAu7nQ@mail.gmail.com>
+ <4F8779DF.3080307@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F86D84C.1050508@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=WMvtyUjBXXGpIOLukJ+8QQaUgdjP4SAjMYeVbqkujzI=;
+        b=EjSjyJQ0h8l+T/hn2L1jFKbto+qHsKM/y/ulDb5TS76+Up+DeT0+Y9nJ4+yv9OY3B5
+         3a1gGZs1PdmpRFV3UprknodSv9jyIrJbnS6Js8lzHDcowCxwmlPE9XmR4UASuR6aBw19
+         zbgvTJ/212AJOoFnHSG5uQJftERFUesJgxUx/T1KUZXGaeo7i1qnFu+j78GBdcI4gvvm
+         VY7sAVGKznluCvTw7E6q9uUWVZ9QuyTHnKJfzJ3iRUOLdkTMhbZPdL1V5CItgia+jVuC
+         jc3z2xxQeLxZOffevJ2glH94LiIpmXNYty3ZW30z0Q6F1ApvVbWexIT6jcidLgvYpj4e
+         hRyg==
+Content-Disposition: inline
+In-Reply-To: <4F8779DF.3080307-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-(2012/04/12 22:27), Glauber Costa wrote:
-
-> On 04/12/2012 08:24 AM, KAMEZAWA Hiroyuki wrote:
->> Only one call passes 'true'. remove it and handle it in caller.
->>
->> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
-> I like the change. I won't ack the patch itself, though, because it has
-> a dependency with the "need_cancel" thing you introduced in your last
-> patch - that I need to think a bit more.
+On Fri, Apr 13, 2012 at 09:57:03AM +0900, KAMEZAWA Hiroyuki wrote:
+> (2012/04/12 23:30), Frederic Weisbecker wrote:
 > 
+> > 2012/4/12 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
+> >> On 04/12/2012 08:20 AM, KAMEZAWA Hiroyuki wrote:
+> >>>
+> >>> This function is used for moving accounting information to its
+> >>> parent in the hierarchy of res_counter.
+> >>>
+> >>> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> >>
+> >> Frederic has a patch in his fork cgroup series, that allows you to
+> >> uncharge a counter until you reach a specific ancestor.
+> >> You pass the parent as a parameter, and then only you gets uncharged.
+> > 
+> > I'm missing the referring patchset from Kamezawa. Ok I'm going to
+> > subscribe to the
+> > cgroup mailing list. Meanwhile perhaps would it be nice to keep Cc
+> > LKML for cgroup patches?
+> > 
+> 
+> Ah, sorry. I will do next time.
+> 
+> > Some comments below:
+> > 
+> >>
+> >> I think that is a much better interface than this you are proposing.
+> >> We should probably merge that patch and use it.
+> >>
+> >>> ---
+> >>>   include/linux/res_counter.h |    3 +++
+> >>>   kernel/res_counter.c        |   13 +++++++++++++
+> >>>   2 files changed, 16 insertions(+), 0 deletions(-)
+> >>>
+> >>> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+> >>> index da81af0..8919d3c 100644
+> >>> --- a/include/linux/res_counter.h
+> >>> +++ b/include/linux/res_counter.h
+> >>> @@ -135,6 +135,9 @@ int __must_check res_counter_charge_nofail(struct res_counter *counter,
+> >>>   void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+> >>>   void res_counter_uncharge(struct res_counter *counter, unsigned long val);
+> >>>
+> >>> +/* move resource to parent counter...i.e. just forget accounting in a child */
+> >>> +void res_counter_move_parent(struct res_counter *counter, unsigned long val);
+> >>> +
+> >>>   /**
+> >>>    * res_counter_margin - calculate chargeable space of a counter
+> >>>    * @cnt: the counter
+> >>> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+> >>> index d508363..fafebf0 100644
+> >>> --- a/kernel/res_counter.c
+> >>> +++ b/kernel/res_counter.c
+> >>> @@ -113,6 +113,19 @@ void res_counter_uncharge(struct res_counter *counter, unsigned long val)
+> >>>       local_irq_restore(flags);
+> >>>   }
+> >>>
+> >>> +/*
+> >>> + * In hierarchical accounting, child's usage is accounted into ancestors.
+> >>> + * To move local usage to its parent, just forget current level usage.
+> > 
+> > The way I understand this comment and the changelog matches the opposite
+> > of what the below function is doing.
+> > 
+> > The function charges a child and ignore all its parents. The comments says it
+> > charges the parents but not the child.
+> > 
+> 
+> 
+> Sure, I'll fix...and look into your code first.
+> "uncharge a counter until you reach a specific ancestor"...
+> Is it in linux-next ?
 
+No, it's part of the task counter so it's still out of tree.
+You were Cc'ed but if you can't find it in your inbox I can
+resend it:
 
-I'll check the logic again. Firstly, maybe name of the variable is wrong..
+http://thread.gmane.org/gmane.linux.kernel.containers/22378
 
-Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
