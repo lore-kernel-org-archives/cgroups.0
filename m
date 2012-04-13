@@ -1,179 +1,98 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH UPDATED 06/11] blkcg: make sure blkg_lookup() returns %NULL
- if @q is bypassing
-Date: Fri, 13 Apr 2012 14:50:53 -0700
-Message-ID: <20120413215053.GK12233@google.com>
-References: <1334347895-6268-1-git-send-email-tj@kernel.org>
- <1334347895-6268-7-git-send-email-tj@kernel.org>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH v1 0/7] memcg remove pre_destroy
+Date: Sat, 14 Apr 2012 03:49:15 +0530
+Message-ID: <87vcl3gtr0.fsf@skywalker.in.ibm.com>
+References: <4F86B9BE.8000105@jp.fujitsu.com> <20120412160642.GA13069@google.com> <877gxksrq1.fsf@skywalker.in.ibm.com> <4F876C70.7060600@jp.fujitsu.com> <20120413085014.GA9205@tiehlicka.suse.cz>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=BraVGM4fybf+5ogxZLffIcaljfcstgYIiYjVm73CsXw=;
-        b=RTXcd/2G8qgZfIzHHb5FU12tdq8r3nTpC9yVoTufWnxuKdM1+N45QLh3GQiIv6gJDU
-         VPdlX2NAHzwu+TKsE9/GdlV5ac0ZVHP+0lv6j+dlV83oc4DSwFT5rpKFQ5b50v/H+4uD
-         AGCGRC5mxTdRreG5p/XPUt0n0xPxgi1eKo4HY9Yu8UGjEB9jScPe5HMJGnVWPL47ivBf
-         ys2r/7ED4KzaltszrLQPQf7jD8oNSpMrbHaN+LggRA3sQN7b0pzwJ11R39IFxcNYPgGN
-         fV1/3+DrPWZA/CTG2Hc7WKwXC/HAvRT3Qi6kXO1Rwa1/MG79e1FMCfs/onx6Iileuacr
-         aDxg==
-Content-Disposition: inline
-In-Reply-To: <1334347895-6268-7-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20120413085014.GA9205-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mm@kvack.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups@vger.kernel.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Currently, blkg_lookup() doesn't check @q bypass state.  This patch
-updates blk_queue_bypass_start() to do synchronize_rcu() before
-returning and updates blkg_lookup() to check blk_queue_bypass() and
-return %NULL if bypassing.  This ensures blkg_lookup() returns %NULL
-if @q is bypassing.
+Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
 
-This is to guarantee that nobody is accessing policy data while @q is
-bypassing, which is necessary to allow replacing blkio_cgroup->pd[] in
-place on policy [de]activation.
+> On Fri 13-04-12 08:59:44, KAMEZAWA Hiroyuki wrote:
+>> (2012/04/13 3:57), Aneesh Kumar K.V wrote:
+>> 
+>> > Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+>> > 
+>> >> Hello, KAMEZAWA.
+>> >>
+>> >> Thanks a lot for doing this.
+>> >>
+>> >> On Thu, Apr 12, 2012 at 08:17:18PM +0900, KAMEZAWA Hiroyuki wrote:
+>> >>> In recent discussion, Tejun Heo, cgroup maintainer, has a plan to remove
+>> >>> ->pre_destroy(). And now, in cgroup tree, pre_destroy() failure cause WARNING.
+>> >>
+>> >> Just to clarify, I'm not intending to ->pre_destroy() per-se but the
+>> >> retry behavior of it, so ->pre_destroy() will be converted to return
+>> >> void and called once on rmdir and rmdir will proceed no matter what.
+>> >> Also, with the deprecated behavior flag set, pre_destroy() doesn't
+>> >> trigger the warning message.
+>> >>
+>> >> Other than that, if memcg people are fine with the change, I'll be
+>> >> happy to route the changes through cgroup/for-3.5 and stack rmdir
+>> >> simplification patches on top.
+>> >>
+>> > 
+>> > Any suggestion on how to take HugeTLB memcg extension patches [1]
+>> > upstream. Current patch series I have is on top of cgroup/for-3.5
+>> > because I need cgroup_add_files equivalent and cgroup/for-3.5 have
+>> > changes around that. So if these memcg patches can also go on top of
+>> > cgroup/for-3.5 then I can continue to work on top of cgroup/for-3.5 ?
+>
+> I would suggest working on top of memcg-devel tree or on top linux-next.
+> Just pull the required patch-es from cgroup/for-3.5 tree before your
+> work (I can include that into memcg-devel tree for you if you want).
 
-v2: Added more comments explaining bypass guarantees as suggested by
-    Vivek.
+I am expecting to have no conflicts with pending memcg changes. But I do
+have conflicts with cgroup/for-3.5. That is the reason I decided to
+rebase on top of cgroup/for-3.5. 
 
-v3: Added more comments explaining why there's no synchronize_rcu() in
-    blk_cleanup_queue() as suggested by Vivek.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
-This update only adds some comments.  It does cause some offset
-warnings for the following patches but nothing patch(1) can't handle.
-The git branch has been updated accordingly.
+>
+> Do you think this is a 3.5 material? I would rather wait some more. I
+> didn't have time to look over it yet and there are still some unresolved
+> issues so it sounds like too early for merging.
 
-Thanks.
 
- block/blk-cgroup.c |   50 +++++++++++++++++++++++++++++++++-----------------
- block/blk-core.c   |   15 +++++++++++++--
- 2 files changed, 46 insertions(+), 19 deletions(-)
+I would really like to get it merged for 3.5. I am ready to post V6 that
+address all review feedback from V5 post. 
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index f6581a0..d6e4555 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -137,6 +137,38 @@ static struct blkio_group *blkg_alloc(struct blkio_cgroup *blkcg,
- 	return blkg;
- }
- 
-+static struct blkio_group *__blkg_lookup(struct blkio_cgroup *blkcg,
-+					 struct request_queue *q)
-+{
-+	struct blkio_group *blkg;
-+	struct hlist_node *n;
-+
-+	hlist_for_each_entry_rcu(blkg, n, &blkcg->blkg_list, blkcg_node)
-+		if (blkg->q == q)
-+			return blkg;
-+	return NULL;
-+}
-+
-+/**
-+ * blkg_lookup - lookup blkg for the specified blkcg - q pair
-+ * @blkcg: blkcg of interest
-+ * @q: request_queue of interest
-+ *
-+ * Lookup blkg for the @blkcg - @q pair.  This function should be called
-+ * under RCU read lock and is guaranteed to return %NULL if @q is bypassing
-+ * - see blk_queue_bypass_start() for details.
-+ */
-+struct blkio_group *blkg_lookup(struct blkio_cgroup *blkcg,
-+				struct request_queue *q)
-+{
-+	WARN_ON_ONCE(!rcu_read_lock_held());
-+
-+	if (unlikely(blk_queue_bypass(q)))
-+		return NULL;
-+	return __blkg_lookup(blkcg, q);
-+}
-+EXPORT_SYMBOL_GPL(blkg_lookup);
-+
- struct blkio_group *blkg_lookup_create(struct blkio_cgroup *blkcg,
- 				       struct request_queue *q,
- 				       bool for_root)
-@@ -150,13 +182,11 @@ struct blkio_group *blkg_lookup_create(struct blkio_cgroup *blkcg,
- 	/*
- 	 * This could be the first entry point of blkcg implementation and
- 	 * we shouldn't allow anything to go through for a bypassing queue.
--	 * The following can be removed if blkg lookup is guaranteed to
--	 * fail on a bypassing queue.
- 	 */
- 	if (unlikely(blk_queue_bypass(q)) && !for_root)
- 		return ERR_PTR(blk_queue_dead(q) ? -EINVAL : -EBUSY);
- 
--	blkg = blkg_lookup(blkcg, q);
-+	blkg = __blkg_lookup(blkcg, q);
- 	if (blkg)
- 		return blkg;
- 
-@@ -185,20 +215,6 @@ out:
- }
- EXPORT_SYMBOL_GPL(blkg_lookup_create);
- 
--/* called under rcu_read_lock(). */
--struct blkio_group *blkg_lookup(struct blkio_cgroup *blkcg,
--				struct request_queue *q)
--{
--	struct blkio_group *blkg;
--	struct hlist_node *n;
--
--	hlist_for_each_entry_rcu(blkg, n, &blkcg->blkg_list, blkcg_node)
--		if (blkg->q == q)
--			return blkg;
--	return NULL;
--}
--EXPORT_SYMBOL_GPL(blkg_lookup);
--
- static void blkg_destroy(struct blkio_group *blkg)
- {
- 	struct request_queue *q = blkg->q;
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 991c1d6..f2db628 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -416,7 +416,8 @@ void blk_drain_queue(struct request_queue *q, bool drain_all)
-  * In bypass mode, only the dispatch FIFO queue of @q is used.  This
-  * function makes @q enter bypass mode and drains all requests which were
-  * throttled or issued before.  On return, it's guaranteed that no request
-- * is being throttled or has ELVPRIV set.
-+ * is being throttled or has ELVPRIV set and blk_queue_bypass() %true
-+ * inside queue or RCU read lock.
-  */
- void blk_queue_bypass_start(struct request_queue *q)
- {
-@@ -426,6 +427,8 @@ void blk_queue_bypass_start(struct request_queue *q)
- 	spin_unlock_irq(q->queue_lock);
- 
- 	blk_drain_queue(q, false);
-+	/* ensure blk_queue_bypass() is %true inside RCU read lock */
-+	synchronize_rcu();
- }
- EXPORT_SYMBOL_GPL(blk_queue_bypass_start);
- 
-@@ -462,7 +465,15 @@ void blk_cleanup_queue(struct request_queue *q)
- 
- 	spin_lock_irq(lock);
- 
--	/* dead queue is permanently in bypass mode till released */
-+	/*
-+	 * Dead queue is permanently in bypass mode till released.  Note
-+	 * that, unlike blk_queue_bypass_start(), we aren't performing
-+	 * synchronize_rcu() after entering bypass mode to avoid the delay
-+	 * as some drivers create and destroy a lot of queues while
-+	 * probing.  This is still safe because blk_release_queue() will be
-+	 * called only after the queue refcnt drops to zero and nothing,
-+	 * RCU or not, would be traversing the queue by then.
-+	 */
- 	q->bypass_depth++;
- 	queue_flag_set(QUEUE_FLAG_BYPASS, q);
- 
--- 
-1.7.7.3
+
+>
+>> > Can HugeTLB memcg extension patches also go via this tree ? It
+>> > should actually got via -mm. But then how do we take care of these
+>> > dependencies ?
+>
+> You are not changing anything generic from cgroup so definitely go via
+> Andrew.
+>
+
+agreed.
+
+
+>> I'm not in hurry. To be honest, I cannot update patches until the next Wednesday.
+>> So, If changes of cgroup tree you required are included in linux-next. Please post
+>> your updated ones. I thought your latest version was near to be merged....
+>> 
+>> How do you think, Michal ?
+>> Please post (and ask Andrew to pull it.) I'll review when I can.
+>
+> I would wait with pulling the patch after the review.
+>
+
+agreed. So I will do a v6 post and if we all agree with the changes it
+can be pulled via -mm ?
+
+
+>> I know yours and mine has some conflicts. I think my this series will
+>> be onto your series. To do that, I hope your series are merged to
+>> linux-next, 1st.
+>> 
+
+-aneesh
