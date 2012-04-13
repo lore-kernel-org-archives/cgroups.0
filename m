@@ -1,45 +1,50 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: question about memsw of memory cgroup-subsystem
-Date: Fri, 13 Apr 2012 16:49:54 +0200
-Message-ID: <20120413144954.GA9227@tiehlicka.suse.cz>
-References: <op.wco7ekvhn27o5l@gaoqiang-d1.corp.qihoo.net>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 7/8] blkcg: implement per-queue policy activation
+Date: Fri, 13 Apr 2012 11:21:23 -0400
+Message-ID: <20120413152122.GC26383@redhat.com>
+References: <1334273380-30233-1-git-send-email-tj@kernel.org>
+ <1334273380-30233-8-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <op.wco7ekvhn27o5l-4p38iKlbJMyYoDLmhA0N64eABQC+30qQrE5yTffgRl4@public.gmane.org>
+In-Reply-To: <1334273380-30233-8-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gaoqiang <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-[CC linux-mm]
+On Thu, Apr 12, 2012 at 04:29:39PM -0700, Tejun Heo wrote:
 
-Hi,
+[..]
+> @@ -111,12 +122,11 @@ static struct blkio_group *blkg_alloc(struct blkio_cgroup *blkcg,
+>  		struct blkio_policy_type *pol = blkio_policy[i];
+>  		struct blkg_policy_data *pd;
+>  
+> -		if (!pol)
+> +		if (!blkcg_policy_enabled(q, pol))
+>  			continue;
+>  
+>  		/* alloc per-policy data and attach it to blkg */
+> -		pd = kzalloc_node(sizeof(*pd) + pol->pdata_size, GFP_ATOMIC,
+> -				  q->node);
+> +		pd = kzalloc_node(blkg_pd_size(pol), GFP_ATOMIC, q->node);
+>  		if (!pd) {
+>  			blkg_free(blkg);
+>  			return NULL;
+> @@ -130,7 +140,7 @@ static struct blkio_group *blkg_alloc(struct blkio_cgroup *blkcg,
+>  	for (i = 0; i < BLKCG_MAX_POLS; i++) {
+>  		struct blkio_policy_type *pol = blkio_policy[i];
+>  
+> -		if (pol)
+> +		if (blkcg_policy_enabled(blkg->q, pol))
+>  			pol->ops.blkio_init_group_fn(blkg);
+>  	}
 
-On Fri 13-04-12 18:00:10, gaoqiang wrote:
-> 
-> 
-> I put a single process into a cgroup and set memory.limit_in_bytes
-> to 100M,and memory.memsw.limit_in_bytes to 1G.
-> 
-> howevery,the process was oom-killed before mem+swap hit 1G. I tried
-> many times,and it was killed randomly when memory+swap
-> 
-> exceed 100M but less than 1G.  what is the matter ?
+May be pol->ops.blkio_init_group_fn() can be called in the loop above
+where you are allocating the group. So you don't end up looping through
+policies twice and don't have to call blkcg_policy_enabled() twice.
 
-could you be more specific about your kernel version, workload and could
-you provide us with GROUP/memory.stat snapshots taken during your test?
-
-One reason for oom might be that you are hitting the hard limit (you
-cannot get over even if memsw limit says more) and you cannot swap out
-any pages (e.g. they are mlocked or under writeback).
-
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Thanks
+Vivek
