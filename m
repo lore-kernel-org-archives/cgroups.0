@@ -1,106 +1,62 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 1/7] res_counter: add a function res_counter_move_parent().
-Date: Fri, 13 Apr 2012 10:05:41 +0900
-Message-ID: <4F877BE5.7080208@jp.fujitsu.com>
-References: <4F86B9BE.8000105@jp.fujitsu.com> <4F86BA66.2010503@jp.fujitsu.com> <4F86D733.50809@parallels.com> <CAFTL4hyKOkoTv=717MkYx4QB0j3B6xA0ZPp1jg6HkrtTkAu7nQ@mail.gmail.com> <4F8779DF.3080307@jp.fujitsu.com> <20120413010443.GD12484@somewhere.redhat.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [RFD] Merge task counter into memcg
+Date: Fri, 13 Apr 2012 10:42:24 +0900
+Message-ID: <4F878480.60505@jp.fujitsu.com>
+References: <20120411185715.GA4317@somewhere.redhat.com> <4F862851.3040208@jp.fujitsu.com> <20120412113217.GB11455@somewhere.redhat.com> <4F86BFC6.2050400@parallels.com> <20120412123256.GI1787@cmpxchg.org> <4F86D4BD.1040305@parallels.com> <20120412153055.GL1787@cmpxchg.org> <20120412163825.GB13069@google.com> <20120412172309.GM1787@cmpxchg.org> <20120412174155.GC13069@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120413010443.GD12484@somewhere.redhat.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120412174155.GC13069-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Glauber Costa <glommer@parallels.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-(2012/04/13 10:04), Frederic Weisbecker wrote:
+(2012/04/13 2:41), Tejun Heo wrote:
 
-> On Fri, Apr 13, 2012 at 09:57:03AM +0900, KAMEZAWA Hiroyuki wrote:
->> (2012/04/12 23:30), Frederic Weisbecker wrote:
->>
->>> 2012/4/12 Glauber Costa <glommer@parallels.com>:
->>>> On 04/12/2012 08:20 AM, KAMEZAWA Hiroyuki wrote:
->>>>>
->>>>> This function is used for moving accounting information to its
->>>>> parent in the hierarchy of res_counter.
->>>>>
->>>>> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->>>>
->>>> Frederic has a patch in his fork cgroup series, that allows you to
->>>> uncharge a counter until you reach a specific ancestor.
->>>> You pass the parent as a parameter, and then only you gets uncharged.
->>>
->>> I'm missing the referring patchset from Kamezawa. Ok I'm going to
->>> subscribe to the
->>> cgroup mailing list. Meanwhile perhaps would it be nice to keep Cc
->>> LKML for cgroup patches?
->>>
->>
->> Ah, sorry. I will do next time.
->>
->>> Some comments below:
->>>
->>>>
->>>> I think that is a much better interface than this you are proposing.
->>>> We should probably merge that patch and use it.
->>>>
->>>>> ---
->>>>>   include/linux/res_counter.h |    3 +++
->>>>>   kernel/res_counter.c        |   13 +++++++++++++
->>>>>   2 files changed, 16 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
->>>>> index da81af0..8919d3c 100644
->>>>> --- a/include/linux/res_counter.h
->>>>> +++ b/include/linux/res_counter.h
->>>>> @@ -135,6 +135,9 @@ int __must_check res_counter_charge_nofail(struct res_counter *counter,
->>>>>   void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
->>>>>   void res_counter_uncharge(struct res_counter *counter, unsigned long val);
->>>>>
->>>>> +/* move resource to parent counter...i.e. just forget accounting in a child */
->>>>> +void res_counter_move_parent(struct res_counter *counter, unsigned long val);
->>>>> +
->>>>>   /**
->>>>>    * res_counter_margin - calculate chargeable space of a counter
->>>>>    * @cnt: the counter
->>>>> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
->>>>> index d508363..fafebf0 100644
->>>>> --- a/kernel/res_counter.c
->>>>> +++ b/kernel/res_counter.c
->>>>> @@ -113,6 +113,19 @@ void res_counter_uncharge(struct res_counter *counter, unsigned long val)
->>>>>       local_irq_restore(flags);
->>>>>   }
->>>>>
->>>>> +/*
->>>>> + * In hierarchical accounting, child's usage is accounted into ancestors.
->>>>> + * To move local usage to its parent, just forget current level usage.
->>>
->>> The way I understand this comment and the changelog matches the opposite
->>> of what the below function is doing.
->>>
->>> The function charges a child and ignore all its parents. The comments says it
->>> charges the parents but not the child.
->>>
->>
->>
->> Sure, I'll fix...and look into your code first.
->> "uncharge a counter until you reach a specific ancestor"...
->> Is it in linux-next ?
+> Hello, Johannes.
+
+> I'm still split on the issue.
 > 
-> No, it's part of the task counter so it's still out of tree.
-> You were Cc'ed but if you can't find it in your inbox I can
-> resend it:
+> * #tasks as unit of accounting / limiting is well understood (or at
+>   least known).  I think this holds the same to #open files, to a
+>   lesser extent.  It means there are and will continue to be people
+>   wanting them.  So, they have some value in familiarity - "but... I
+>   want to limit the resources consumed by tasks cuz that's what I
+>   know!" factor.
 > 
-> http://thread.gmane.org/gmane.linux.kernel.containers/22378
+> * People could want counting and limiting #tasks or #open files
+>   without the overhead of tracking all memory resources.  This stems
+>   from the same reason #tasks was used for this sort of things in the
+>   first place.  Counting tasks or open files tends to be easier and
+>   cheaper than tracking all memory allocations.
+> 
+> So, there's spectrum of solutions between merging task counter and
+> just directing everyone to kmem without distinguishing task resource
+> at all, and at the moment voices in my head are succeeding at making
+> cases for both directions.  What do you guys think about the above two
+> issues?
 > 
 
 
-Ah, ok. I found it. Thank you!.
+To be honest, I doubt that task counter is unnecessary...memcg can catch
+oom situation well. I often test 'make -j' under memcg.
+
+To the questions
+*   It sounds like a 'ulimit' cgroup. How about overwriting
+    ulimit values via cgroup ? (sounds joke?) Then, overhead will be small but
+    I'm not sure it can be hierarchical and doesn't break userland.
+
+    If people wants to limit the number of tasks, I think interface should provide it
+    in the unit of objects. Then, I'm ok to have other subsystem for counting something.
+    fork-bomb's memory overhead can be prevent by memcg. What memcg cannot handle
+    is ulimit. If forkbomb exhausts all ulimit/tasks, the user cannot login.
+    So, having task-limit cgroup subsys for a sandbox will make sense in some situation.
+
+In short, I don't think it's better to have task-counting and fd-counting in memcg.
+It's kmem, but it's more than that, I think.
+Please provide subsys like ulimit.
+
+Thanks,
 -Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
