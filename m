@@ -1,72 +1,95 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [RFD] Merge task counter into memcg
-Date: Fri, 13 Apr 2012 11:48:28 +0900
-Message-ID: <4F8793FC.5030209@jp.fujitsu.com>
-References: <20120411185715.GA4317@somewhere.redhat.com> <4F862851.3040208@jp.fujitsu.com> <20120412113217.GB11455@somewhere.redhat.com> <4F86BFC6.2050400@parallels.com> <20120412123256.GI1787@cmpxchg.org> <4F86D4BD.1040305@parallels.com> <20120412153055.GL1787@cmpxchg.org> <20120412163825.GB13069@google.com> <20120412172309.GM1787@cmpxchg.org> <20120412174155.GC13069@google.com> <4F878480.60505@jp.fujitsu.com> <4F87865F.5060701@parallels.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v1 0/7] memcg remove pre_destroy
+Date: Fri, 13 Apr 2012 10:50:14 +0200
+Message-ID: <20120413085014.GA9205@tiehlicka.suse.cz>
+References: <4F86B9BE.8000105@jp.fujitsu.com>
+ <20120412160642.GA13069@google.com>
+ <877gxksrq1.fsf@skywalker.in.ibm.com>
+ <4F876C70.7060600@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F87865F.5060701-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4F876C70.7060600-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-(2012/04/13 10:50), Glauber Costa wrote:
-
-> On 04/12/2012 10:42 PM, KAMEZAWA Hiroyuki wrote:
->> To be honest, I doubt that task counter is unnecessary...memcg can catch
->> oom situation well. I often test 'make -j' under memcg.
->>
->> To the questions
->> *   It sounds like a 'ulimit' cgroup. How about overwriting
->>      ulimit values via cgroup ? (sounds joke?) Then, overhead will be small but
->>      I'm not sure it can be hierarchical and doesn't break userland.
->>
->>      If people wants to limit the number of tasks, I think interface should provide it
->>      in the unit of objects. Then, I'm ok to have other subsystem for counting something.
->>      fork-bomb's memory overhead can be prevent by memcg. What memcg cannot handle
->>      is ulimit. If forkbomb exhausts all ulimit/tasks, the user cannot login.
->>      So, having task-limit cgroup subsys for a sandbox will make sense in some situation.
->>
->> In short, I don't think it's better to have task-counting and fd-counting in memcg.
->> It's kmem, but it's more than that, I think.
->> Please provide subsys like ulimit.
->>
-> Kame,
+On Fri 13-04-12 08:59:44, KAMEZAWA Hiroyuki wrote:
+> (2012/04/13 3:57), Aneesh Kumar K.V wrote:
 > 
-> You're talking about the memcg that is in the kernel today.
-> I think the discussion is orbiting around how it is going to be once we
-> start tracking kernel memory like the slab (for task_struct), or kernel 
-> stack pages.
+> > Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+> > 
+> >> Hello, KAMEZAWA.
+> >>
+> >> Thanks a lot for doing this.
+> >>
+> >> On Thu, Apr 12, 2012 at 08:17:18PM +0900, KAMEZAWA Hiroyuki wrote:
+> >>> In recent discussion, Tejun Heo, cgroup maintainer, has a plan to remove
+> >>> ->pre_destroy(). And now, in cgroup tree, pre_destroy() failure cause WARNING.
+> >>
+> >> Just to clarify, I'm not intending to ->pre_destroy() per-se but the
+> >> retry behavior of it, so ->pre_destroy() will be converted to return
+> >> void and called once on rmdir and rmdir will proceed no matter what.
+> >> Also, with the deprecated behavior flag set, pre_destroy() doesn't
+> >> trigger the warning message.
+> >>
+> >> Other than that, if memcg people are fine with the change, I'll be
+> >> happy to route the changes through cgroup/for-3.5 and stack rmdir
+> >> simplification patches on top.
+> >>
+> > 
+> > Any suggestion on how to take HugeTLB memcg extension patches [1]
+> > upstream. Current patch series I have is on top of cgroup/for-3.5
+> > because I need cgroup_add_files equivalent and cgroup/for-3.5 have
+> > changes around that. So if these memcg patches can also go on top of
+> > cgroup/for-3.5 then I can continue to work on top of cgroup/for-3.5 ?
+
+I would suggest working on top of memcg-devel tree or on top linux-next.
+Just pull the required patch-es from cgroup/for-3.5 tree before your
+work (I can include that into memcg-devel tree for you if you want).
+
+Do you think this is a 3.5 material? I would rather wait some more. I
+didn't have time to look over it yet and there are still some unresolved
+issues so it sounds like too early for merging.
+
+> > Can HugeTLB memcg extension patches also go via this tree ? It
+> > should actually got via -mm. But then how do we take care of these
+> > dependencies ?
+
+You are not changing anything generic from cgroup so definitely go via
+Andrew.
+
+> I'm not in hurry. To be honest, I cannot update patches until the next Wednesday.
+> So, If changes of cgroup tree you required are included in linux-next. Please post
+> your updated ones. I thought your latest version was near to be merged....
 > 
-> In those scenarios, a fork bomb will be stopped anyway, because it will 
-> need kernel memory it can't grab.
+> How do you think, Michal ?
+> Please post (and ask Andrew to pull it.) I'll review when I can.
+
+I would wait with pulling the patch after the review.
+
+> I know yours and mine has some conflicts. I think my this series will
+> be onto your series. To do that, I hope your series are merged to
+> linux-next, 1st.
 > 
+> 
+> Thanks,
+> -Kame
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
 
-
-
-fork-bomb can be caught by some method.
-
-
-I just consider about 'task' cgroup. You can know the number of tasks by reading
-tasks file even if we don't have task cgroup. Because of this, using
-task cgroup for accounting the number of tasks doesn't make sense to me.
-But, here, Tejun? mentioned accounting the number of 'fd'. 
-
-Hearing that, I think of ulimit.
-
-We do resource accounting based on cgroup. But there are another limiting
-feature as ulimit, sysctl, etc...This makes total view of resource accounting in Linux
-complicated. So, I wonder whether cgroup can be a unified control feature and have
-subsys for ulimit or ipc, by overriding other control stuffs.
-
-But  resources which doesn't belong to 'thread' ...as memory may add something
-messy to cgroup, it's accounting resources based on threads.
-
-Thanks,
--Kame
-
-
-
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
