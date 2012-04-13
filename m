@@ -1,70 +1,108 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v1 0/7] memcg remove pre_destroy
-Date: Fri, 13 Apr 2012 08:59:44 +0900
-Message-ID: <4F876C70.7060600@jp.fujitsu.com>
-References: <4F86B9BE.8000105@jp.fujitsu.com> <20120412160642.GA13069@google.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu) <877gxksrq1.fsf@skywalker.in.ibm.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 1/7] res_counter: add a function res_counter_move_parent().
+Date: Fri, 13 Apr 2012 09:57:03 +0900
+Message-ID: <4F8779DF.3080307@jp.fujitsu.com>
+References: <4F86B9BE.8000105@jp.fujitsu.com> <4F86BA66.2010503@jp.fujitsu.com> <4F86D733.50809@parallels.com> <CAFTL4hyKOkoTv=717MkYx4QB0j3B6xA0ZPp1jg6HkrtTkAu7nQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <877gxksrq1.fsf@skywalker.in.ibm.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAFTL4hyKOkoTv=717MkYx4QB0j3B6xA0ZPp1jg6HkrtTkAu7nQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: Tejun Heo <tj@kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Glauber Costa <glommer@parallels.com>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-(2012/04/13 3:57), Aneesh Kumar K.V wrote:
+(2012/04/12 23:30), Frederic Weisbecker wrote:
 
-> Tejun Heo <tj@kernel.org> writes:
+> 2012/4/12 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
+>> On 04/12/2012 08:20 AM, KAMEZAWA Hiroyuki wrote:
+>>>
+>>> This function is used for moving accounting information to its
+>>> parent in the hierarchy of res_counter.
+>>>
+>>> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>>
+>> Frederic has a patch in his fork cgroup series, that allows you to
+>> uncharge a counter until you reach a specific ancestor.
+>> You pass the parent as a parameter, and then only you gets uncharged.
 > 
->> Hello, KAMEZAWA.
->>
->> Thanks a lot for doing this.
->>
->> On Thu, Apr 12, 2012 at 08:17:18PM +0900, KAMEZAWA Hiroyuki wrote:
->>> In recent discussion, Tejun Heo, cgroup maintainer, has a plan to remove
->>> ->pre_destroy(). And now, in cgroup tree, pre_destroy() failure cause WARNING.
->>
->> Just to clarify, I'm not intending to ->pre_destroy() per-se but the
->> retry behavior of it, so ->pre_destroy() will be converted to return
->> void and called once on rmdir and rmdir will proceed no matter what.
->> Also, with the deprecated behavior flag set, pre_destroy() doesn't
->> trigger the warning message.
->>
->> Other than that, if memcg people are fine with the change, I'll be
->> happy to route the changes through cgroup/for-3.5 and stack rmdir
->> simplification patches on top.
->>
-> 
-> Any suggestion on how to take HugeTLB memcg extension patches [1]
-> upstream. Current patch series I have is on top of cgroup/for-3.5
-> because I need cgroup_add_files equivalent and cgroup/for-3.5 have
-> changes around that. So if these memcg patches can also go on top of
-> cgroup/for-3.5 then I can continue to work on top of cgroup/for-3.5 ?
-> 
-> Can HugeTLB memcg extension patches also go via this tree ? It
-> should actually got via -mm. But then how do we take care of these
-> dependencies ?
+> I'm missing the referring patchset from Kamezawa. Ok I'm going to
+> subscribe to the
+> cgroup mailing list. Meanwhile perhaps would it be nice to keep Cc
+> LKML for cgroup patches?
 > 
 
+Ah, sorry. I will do next time.
 
-I'm not in hurry. To be honest, I cannot update patches until the next Wednesday.
-So, If changes of cgroup tree you required are included in linux-next. Please post
-your updated ones. I thought your latest version was near to be merged....
+> Some comments below:
+> 
+>>
+>> I think that is a much better interface than this you are proposing.
+>> We should probably merge that patch and use it.
+>>
+>>> ---
+>>>   include/linux/res_counter.h |    3 +++
+>>>   kernel/res_counter.c        |   13 +++++++++++++
+>>>   2 files changed, 16 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+>>> index da81af0..8919d3c 100644
+>>> --- a/include/linux/res_counter.h
+>>> +++ b/include/linux/res_counter.h
+>>> @@ -135,6 +135,9 @@ int __must_check res_counter_charge_nofail(struct res_counter *counter,
+>>>   void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+>>>   void res_counter_uncharge(struct res_counter *counter, unsigned long val);
+>>>
+>>> +/* move resource to parent counter...i.e. just forget accounting in a child */
+>>> +void res_counter_move_parent(struct res_counter *counter, unsigned long val);
+>>> +
+>>>   /**
+>>>    * res_counter_margin - calculate chargeable space of a counter
+>>>    * @cnt: the counter
+>>> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+>>> index d508363..fafebf0 100644
+>>> --- a/kernel/res_counter.c
+>>> +++ b/kernel/res_counter.c
+>>> @@ -113,6 +113,19 @@ void res_counter_uncharge(struct res_counter *counter, unsigned long val)
+>>>       local_irq_restore(flags);
+>>>   }
+>>>
+>>> +/*
+>>> + * In hierarchical accounting, child's usage is accounted into ancestors.
+>>> + * To move local usage to its parent, just forget current level usage.
+> 
+> The way I understand this comment and the changelog matches the opposite
+> of what the below function is doing.
+> 
+> The function charges a child and ignore all its parents. The comments says it
+> charges the parents but not the child.
+> 
 
-How do you think, Michal ?
-Please post (and ask Andrew to pull it.) I'll review when I can.
 
-I know yours and mine has some conflicts. I think my this series will
-be onto your series. To do that, I hope your series are merged to linux-next, 1st.
-
+Sure, I'll fix...and look into your code first.
+"uncharge a counter until you reach a specific ancestor"...
+Is it in linux-next ?
 
 Thanks,
 -Kame
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+>>> + */
+>>> +void res_counter_move_parent(struct res_counter *counter, unsigned long val)
+>>> +{
+>>> +     unsigned long flags;
+>>> +
+>>> +     BUG_ON(!counter->parent);
+>>> +     spin_lock_irqsave(&counter->lock, flags);
+>>> +     res_counter_uncharge_locked(counter, val);
+>>> +     spin_unlock_irqrestore(&counter->lock, flags);
+>>> +}
+>>>
+>>>   static inline unsigned long long *
+>>>   res_counter_member(struct res_counter *counter, int member)
+>>
+> 
+> 
+
+
