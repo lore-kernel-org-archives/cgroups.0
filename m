@@ -1,93 +1,67 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V6 01/14] hugetlb: rename max_hstate to hugetlb_max_hstate
-Date: Mon, 16 Apr 2012 16:14:38 +0530
-Message-ID: <1334573091-18602-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH -V6 00/14] memcg: Add memcg extension to control HugeTLB allocation
+Date: Mon, 16 Apr 2012 16:14:37 +0530
+Message-ID: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Hi,
 
-We will be using this from other subsystems like memcg
-in later patches.
+This patchset implements a memory controller extension to control
+HugeTLB allocations. The extension allows to limit the HugeTLB
+usage per control group and enforces the controller limit during
+page fault. Since HugeTLB doesn't support page reclaim, enforcing
+the limit at page fault time implies that, the application will get
+SIGBUS signal if it tries to access HugeTLB pages beyond its limit.
+This requires the application to know beforehand how much HugeTLB
+pages it would require for its use.
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Hillf Danton <dhillf@gmail.com>
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
----
- mm/hugetlb.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+The goal is to control how many HugeTLB pages a group of task can
+allocate. It can be looked at as an extension of the existing quota
+interface which limits the number of HugeTLB pages per hugetlbfs
+superblock. HPC job scheduler requires jobs to specify their resource
+requirements in the job file. Once their requirements can be met,
+job schedulers like (SLURM) will schedule the job. We need to make sure
+that the jobs won't consume more resources than requested. If they do
+we should either error out or kill the application.
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index b8ce6f4..766eb90 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -34,7 +34,7 @@ const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
- static gfp_t htlb_alloc_mask = GFP_HIGHUSER;
- unsigned long hugepages_treat_as_movable;
- 
--static int max_hstate;
-+static int hugetlb_max_hstate;
- unsigned int default_hstate_idx;
- struct hstate hstates[HUGE_MAX_HSTATE];
- 
-@@ -46,7 +46,7 @@ static unsigned long __initdata default_hstate_max_huge_pages;
- static unsigned long __initdata default_hstate_size;
- 
- #define for_each_hstate(h) \
--	for ((h) = hstates; (h) < &hstates[max_hstate]; (h)++)
-+	for ((h) = hstates; (h) < &hstates[hugetlb_max_hstate]; (h)++)
- 
- /*
-  * Protects updates to hugepage_freelists, nr_huge_pages, and free_huge_pages
-@@ -1897,9 +1897,9 @@ void __init hugetlb_add_hstate(unsigned order)
- 		printk(KERN_WARNING "hugepagesz= specified twice, ignoring\n");
- 		return;
- 	}
--	BUG_ON(max_hstate >= HUGE_MAX_HSTATE);
-+	BUG_ON(hugetlb_max_hstate >= HUGE_MAX_HSTATE);
- 	BUG_ON(order == 0);
--	h = &hstates[max_hstate++];
-+	h = &hstates[hugetlb_max_hstate++];
- 	h->order = order;
- 	h->mask = ~((1ULL << (order + PAGE_SHIFT)) - 1);
- 	h->nr_huge_pages = 0;
-@@ -1920,10 +1920,10 @@ static int __init hugetlb_nrpages_setup(char *s)
- 	static unsigned long *last_mhp;
- 
- 	/*
--	 * !max_hstate means we haven't parsed a hugepagesz= parameter yet,
-+	 * !hugetlb_max_hstate means we haven't parsed a hugepagesz= parameter yet,
- 	 * so this hugepages= parameter goes to the "default hstate".
- 	 */
--	if (!max_hstate)
-+	if (!hugetlb_max_hstate)
- 		mhp = &default_hstate_max_huge_pages;
- 	else
- 		mhp = &parsed_hstate->max_huge_pages;
-@@ -1942,7 +1942,7 @@ static int __init hugetlb_nrpages_setup(char *s)
- 	 * But we need to allocate >= MAX_ORDER hstates here early to still
- 	 * use the bootmem allocator.
- 	 */
--	if (max_hstate && parsed_hstate->order >= MAX_ORDER)
-+	if (hugetlb_max_hstate && parsed_hstate->order >= MAX_ORDER)
- 		hugetlb_hstate_alloc_pages(parsed_hstate);
- 
- 	last_mhp = mhp;
--- 
-1.7.10
+Patches are on top of
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
+
+Changes from V5:
+ * Address review feedback.
+
+Changes from V4:
+ * Add support for charge/uncharge during page migration
+ * Drop the usage of page->lru in unmap_hugepage_range.
+
+Changes from v3:
+ * Address review feedback.
+ * Fix a bug in cgroup removal related parent charging with use_hierarchy set
+
+Changes from V2:
+* Changed the implementation to limit the HugeTLB usage during page
+  fault time. This simplifies the extension and keep it closer to
+  memcg design. This also allows to support cgroup removal with less
+  complexity. Only caveat is the application should ensure its HugeTLB
+  usage doesn't cross the cgroup limit.
+
+Changes from V1:
+* Changed the implementation as a memcg extension. We still use
+  the same logic to track the cgroup and range.
+
+Changes from RFC post:
+* Added support for HugeTLB cgroup hierarchy
+* Added support for task migration
+* Added documentation patch
+* Other bug fixes
+
+-aneesh
+
