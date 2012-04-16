@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V6 13/14] hugetlb: migrate memcg info from oldpage to new page during migration
-Date: Mon, 16 Apr 2012 16:14:50 +0530
-Message-ID: <1334573091-18602-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V6 05/14] hugetlb: Avoid taking i_mmap_mutex in unmap_single_vma for hugetlb
+Date: Mon, 16 Apr 2012 16:14:42 +0530
+Message-ID: <1334573091-18602-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,99 +15,44 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-With HugeTLB pages, memcg is uncharged in compound page destructor.
-Since we are holding a hugepage reference, we can be sure that old
-page won't get uncharged till the last put_page(). On successful
-migrate, we can move the memcg information to new page's page_cgroup
-and mark the old page's page_cgroup unused.
+i_mmap_mutex lock was added in unmap_single_vma by 502717f4e112b18d9c37753a32f675bec9f2838b
+But we don't use page->lru in unmap_hugepage_range any more. Also the lock was
+taken higher up in the stack in some code path. That would result in deadlock.
+
+unmap_mapping_range (i_mmap_mutex)
+ -> unmap_mapping_range_tree
+    -> unmap_mapping_range_vma
+       -> zap_page_range_single
+         -> unmap_single_vma
+	      -> unmap_hugepage_range (i_mmap_mutex)
+
+For shared pagetable support for huge pages, since pagetable pages are
+ref counted we don't need any lock during huge_pmd_unshare. We do take
+i_mmap_mutex in huge_pmd_share while walking the vma_prio_tree in mapping.
+( 39dde65c9940c97fcd178a3d2b1c57ed8b7b68aa )
 
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- include/linux/memcontrol.h |    8 ++++++++
- mm/memcontrol.c            |   28 ++++++++++++++++++++++++++++
- mm/migrate.c               |    4 ++++
- 3 files changed, 40 insertions(+)
+ mm/memory.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 70317e5..6f2d392 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -464,6 +464,8 @@ extern int mem_cgroup_move_hugetlb_parent(int idx, struct cgroup *cgroup,
- 					  struct page *page);
- extern bool mem_cgroup_have_hugetlb_usage(struct cgroup *cgroup);
- 
-+extern void  mem_cgroup_hugetlb_migrate(struct page *oldhpage,
-+					struct page *newhpage);
- #else
- static inline int
- mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
-@@ -510,6 +512,12 @@ static inline bool mem_cgroup_have_hugetlb_usage(struct cgroup *cgroup)
- {
- 	return 0;
- }
-+
-+static inline  void  mem_cgroup_hugetlb_migrate(struct page *oldhpage,
-+						struct page *newhpage)
-+{
-+	return;
-+}
- #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
- #endif /* _LINUX_MEMCONTROL_H */
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0b245fb..519d370 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3379,6 +3379,34 @@ err_out:
- out:
- 	return ret;
- }
-+
-+void  mem_cgroup_hugetlb_migrate(struct page *oldhpage, struct page *newhpage)
-+{
-+	struct mem_cgroup *memcg;
-+	struct page_cgroup *pc;
-+
-+	VM_BUG_ON(!PageHuge(oldhpage));
-+
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	pc = lookup_page_cgroup(oldhpage);
-+	lock_page_cgroup(pc);
-+	memcg = pc->mem_cgroup;
-+	pc->mem_cgroup = root_mem_cgroup;
-+	ClearPageCgroupUsed(pc);
-+	cgroup_exclude_rmdir(&memcg->css);
-+	unlock_page_cgroup(pc);
-+
-+	/* move the mem_cg details to new cgroup */
-+	pc = lookup_page_cgroup(newhpage);
-+	lock_page_cgroup(pc);
-+	pc->mem_cgroup = memcg;
-+	SetPageCgroupUsed(pc);
-+	unlock_page_cgroup(pc);
-+	cgroup_release_and_wakeup_rmdir(&memcg->css);
-+	return;
-+}
- #endif /* CONFIG_MEM_RES_CTLR_HUGETLB */
- 
- /*
-diff --git a/mm/migrate.c b/mm/migrate.c
-index d7eb82d..2b931e5 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -928,6 +928,10 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
- 
- 	if (anon_vma)
- 		put_anon_vma(anon_vma);
-+
-+	if (!rc)
-+		mem_cgroup_hugetlb_migrate(hpage, new_hpage);
-+
- 	unlock_page(hpage);
- out:
- 	put_page(new_hpage);
+diff --git a/mm/memory.c b/mm/memory.c
+index 4b11961..d642b3e 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -1326,11 +1326,8 @@ static void unmap_single_vma(struct mmu_gather *tlb,
+ 			 * Since no pte has actually been setup, it is
+ 			 * safe to do nothing in this case.
+ 			 */
+-			if (vma->vm_file) {
+-				mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
++			if (vma->vm_file)
+ 				__unmap_hugepage_range(tlb, vma, start, end, NULL);
+-				mutex_unlock(&vma->vm_file->f_mapping->i_mmap_mutex);
+-			}
+ 		} else
+ 			unmap_page_range(tlb, vma, start, end, details);
+ 	}
 -- 
 1.7.10
 
