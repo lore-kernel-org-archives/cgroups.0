@@ -1,43 +1,55 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: [RFC v0 2/4] net: Do not double rcu_read_lock()
-Date: Mon, 16 Apr 2012 17:35:04 +0200
-Message-ID: <1334590506-19462-3-git-send-email-wagi@monom.org>
-References: <1334590506-19462-1-git-send-email-wagi@monom.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1334590506-19462-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [Lsf] [RFC] writeback and cgroup
+Date: Mon, 16 Apr 2012 11:52:07 -0400
+Message-ID: <20120416155207.GB15437@redhat.com>
+References: <20120404145134.GC12676@redhat.com>
+ <20120407080027.GA2584@quack.suse.cz>
+ <20120410180653.GJ21801@redhat.com>
+ <20120410210505.GE4936@quack.suse.cz>
+ <20120410212041.GP21801@redhat.com>
+ <20120410222425.GF4936@quack.suse.cz>
+ <20120411154005.GD16692@redhat.com>
+ <1334406314.2528.90.camel@twins>
+ <20120416125432.GB12776@redhat.com>
+ <20120416130707.GA10532@localhost>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20120416130707.GA10532@localhost>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, ctalbott@google.com, rni@google.com, andrea@betterlinux.com, containers@lists.linux-foundation.org, linux-kernel@vger.kernel.org, lsf@lists.linux-foundation.org, linux-mm@kvack.org, jmoyer@redhat.com, lizefan@huawei.com, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+On Mon, Apr 16, 2012 at 09:07:07PM +0800, Fengguang Wu wrote:
 
-Inside task_cls_classid(), a rcu_read_lock() is already taken.
+[..]
+> Vivek, I noticed these lines in cfq code
+> 
+>                 sscanf(dev_name(bdi->dev), "%u:%u", &major, &minor);
+> 
+> Why not use bdi->dev->devt?  The problem is that dev_name() will
+> return "btrfs-X" for btrfs rather than "major:minor".
 
-Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-CC: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
-CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- net/core/sock.c |    2 --
- 1 file changed, 2 deletions(-)
+Isn't bdi->dev->devt 0?  I see following code.
 
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 75c4b72..50c9d02 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -1180,9 +1180,7 @@ void sock_update_classid(struct sock *sk)
- {
- 	u32 classid;
- 
--	rcu_read_lock();  /* doing current task, which cannot vanish. */
- 	classid = task_cls_classid(current);
--	rcu_read_unlock();
- 	if (classid && classid != sk->sk_classid)
- 		sk->sk_classid = classid;
- }
--- 
-1.7.10.130.g36e6c
+add_disk()
+   bdi_register_dev()
+      bdi_register()
+         device_create_vargs(MKDEV(0,0))
+	      dev->devt = devt = MKDEV(0,0);
+
+So for normal block devices, I think bdi->dev->devt will be zero, that's
+why probably we don't use it.
+
+Thanks
+Vivek
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
