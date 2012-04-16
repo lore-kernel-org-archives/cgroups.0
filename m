@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V6 14/14] memcg: Add memory controller documentation for hugetlb management
-Date: Mon, 16 Apr 2012 16:14:51 +0530
-Message-ID: <1334573091-18602-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V6 11/14] hugetlbfs: Add a list for tracking in-use HugeTLB pages
+Date: Mon, 16 Apr 2012 16:14:48 +0530
+Message-ID: <1334573091-18602-12-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,79 +15,107 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
+hugepage_activelist will be used to track currently used HugeTLB pages.
+We need to find the in-use HugeTLB pages to support memcg removal.
+On memcg removal we update the page's memory cgroup to point to
+parent cgroup.
+
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- Documentation/cgroups/memory.txt |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ include/linux/hugetlb.h |    1 +
+ mm/hugetlb.c            |   12 +++++++-----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index 4c95c00..d99c41b 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -43,6 +43,7 @@ Features:
-  - usage threshold notifier
-  - oom-killer disable knob and oom-notifier
-  - Root cgroup has no limit controls.
-+ - resource accounting for HugeTLB pages
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index d008342..6bf6afc 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -200,6 +200,7 @@ struct hstate {
+ 	unsigned long resv_huge_pages;
+ 	unsigned long surplus_huge_pages;
+ 	unsigned long nr_overcommit_huge_pages;
++	struct list_head hugepage_activelist;
+ 	struct list_head hugepage_freelists[MAX_NUMNODES];
+ 	unsigned int nr_huge_pages_node[MAX_NUMNODES];
+ 	unsigned int free_huge_pages_node[MAX_NUMNODES];
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 340e575..8a520b5 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -512,7 +512,7 @@ void copy_huge_page(struct page *dst, struct page *src)
+ static void enqueue_huge_page(struct hstate *h, struct page *page)
+ {
+ 	int nid = page_to_nid(page);
+-	list_add(&page->lru, &h->hugepage_freelists[nid]);
++	list_move(&page->lru, &h->hugepage_freelists[nid]);
+ 	h->free_huge_pages++;
+ 	h->free_huge_pages_node[nid]++;
+ }
+@@ -524,7 +524,7 @@ static struct page *dequeue_huge_page_node(struct hstate *h, int nid)
+ 	if (list_empty(&h->hugepage_freelists[nid]))
+ 		return NULL;
+ 	page = list_entry(h->hugepage_freelists[nid].next, struct page, lru);
+-	list_del(&page->lru);
++	list_move(&page->lru, &h->hugepage_activelist);
+ 	set_page_refcounted(page);
+ 	h->free_huge_pages--;
+ 	h->free_huge_pages_node[nid]--;
+@@ -628,12 +628,13 @@ static void free_huge_page(struct page *page)
+ 	page->mapping = NULL;
+ 	BUG_ON(page_count(page));
+ 	BUG_ON(page_mapcount(page));
+-	INIT_LIST_HEAD(&page->lru);
  
-  Kernel memory support is work in progress, and the current version provides
-  basically functionality. (See Section 2.7)
-@@ -75,6 +76,12 @@ Brief summary of control files.
-  memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
-  memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
+ 	mem_cgroup_hugetlb_uncharge_page(hstate_index(h),
+ 					 pages_per_huge_page(h), page);
+ 	spin_lock(&hugetlb_lock);
+ 	if (h->surplus_huge_pages_node[nid] && huge_page_order(h) < MAX_ORDER) {
++		/* remove the page from active list */
++		list_del(&page->lru);
+ 		update_and_free_page(h, page);
+ 		h->surplus_huge_pages--;
+ 		h->surplus_huge_pages_node[nid]--;
+@@ -646,6 +647,7 @@ static void free_huge_page(struct page *page)
  
-+
-+ memory.hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
-+ memory.hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
-+ memory.hugetlb.<hugepagesize>.usage_in_bytes     # show current res_counter usage for "hugepagesize" hugetlb
-+						  # see 5.7 for details
-+
- 1. History
+ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
+ {
++	INIT_LIST_HEAD(&page->lru);
+ 	set_compound_page_dtor(page, free_huge_page);
+ 	spin_lock(&hugetlb_lock);
+ 	h->nr_huge_pages++;
+@@ -894,6 +896,7 @@ static struct page *alloc_buddy_huge_page(struct hstate *h, int nid)
  
- The memory controller has a long history. A request for comments for the memory
-@@ -279,6 +286,15 @@ per cgroup, instead of globally.
- 
- * tcp memory pressure: sockets memory pressure for the tcp protocol.
- 
-+2.8 HugeTLB extension
-+
-+This extension allows to limit the HugeTLB usage per control group and
-+enforces the controller limit during page fault. Since HugeTLB doesn't
-+support page reclaim, enforcing the limit at page fault time implies that,
-+the application will get SIGBUS signal if it tries to access HugeTLB pages
-+beyond its limit. This requires the application to know beforehand how much
-+HugeTLB pages it would require for its use.
-+
- 3. User Interface
- 
- 0. Configuration
-@@ -287,6 +303,7 @@ a. Enable CONFIG_CGROUPS
- b. Enable CONFIG_RESOURCE_COUNTERS
- c. Enable CONFIG_CGROUP_MEM_RES_CTLR
- d. Enable CONFIG_CGROUP_MEM_RES_CTLR_SWAP (to use swap extension)
-+f. Enable CONFIG_MEM_RES_CTLR_HUGETLB (to use HugeTLB extension)
- 
- 1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
- # mount -t tmpfs none /sys/fs/cgroup
-@@ -510,6 +527,18 @@ unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
- 
- And we have total = file + anon + unevictable.
- 
-+5.7 HugeTLB resource control files
-+For a system supporting two hugepage size (16M and 16G) the control
-+files include:
-+
-+ memory.hugetlb.16GB.limit_in_bytes
-+ memory.hugetlb.16GB.max_usage_in_bytes
-+ memory.hugetlb.16GB.usage_in_bytes
-+ memory.hugetlb.16MB.limit_in_bytes
-+ memory.hugetlb.16MB.max_usage_in_bytes
-+ memory.hugetlb.16MB.usage_in_bytes
-+
-+
- 6. Hierarchy support
- 
- The memory controller supports a deep hierarchy and hierarchical accounting.
+ 	spin_lock(&hugetlb_lock);
+ 	if (page) {
++		INIT_LIST_HEAD(&page->lru);
+ 		r_nid = page_to_nid(page);
+ 		set_compound_page_dtor(page, free_huge_page);
+ 		/*
+@@ -998,7 +1001,6 @@ retry:
+ 	list_for_each_entry_safe(page, tmp, &surplus_list, lru) {
+ 		if ((--needed) < 0)
+ 			break;
+-		list_del(&page->lru);
+ 		/*
+ 		 * This page is now managed by the hugetlb allocator and has
+ 		 * no users -- drop the buddy allocator's reference.
+@@ -1013,7 +1015,6 @@ free:
+ 	/* Free unnecessary surplus pages to the buddy allocator */
+ 	if (!list_empty(&surplus_list)) {
+ 		list_for_each_entry_safe(page, tmp, &surplus_list, lru) {
+-			list_del(&page->lru);
+ 			put_page(page);
+ 		}
+ 	}
+@@ -1927,6 +1928,7 @@ void __init hugetlb_add_hstate(unsigned order)
+ 	h->free_huge_pages = 0;
+ 	for (i = 0; i < MAX_NUMNODES; ++i)
+ 		INIT_LIST_HEAD(&h->hugepage_freelists[i]);
++	INIT_LIST_HEAD(&h->hugepage_activelist);
+ 	h->next_nid_to_alloc = first_node(node_states[N_HIGH_MEMORY]);
+ 	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
+ 	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
 -- 
 1.7.10
 
