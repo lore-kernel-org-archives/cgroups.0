@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V6 10/14] hugetlbfs: Add memcg control files for hugetlbfs
-Date: Mon, 16 Apr 2012 16:14:47 +0530
-Message-ID: <1334573091-18602-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V6 14/14] memcg: Add memory controller documentation for hugetlb management
+Date: Mon, 16 Apr 2012 16:14:51 +0530
+Message-ID: <1334573091-18602-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,140 +15,79 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This add control files for hugetlbfs in memcg
-
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- include/linux/hugetlb.h    |    5 +++++
- include/linux/memcontrol.h |    7 ++++++
- mm/hugetlb.c               |    2 +-
- mm/memcontrol.c            |   51 ++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 64 insertions(+), 1 deletion(-)
+ Documentation/cgroups/memory.txt |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index 995c238..d008342 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -4,6 +4,7 @@
- #include <linux/mm_types.h>
- #include <linux/fs.h>
- #include <linux/hugetlb_inline.h>
-+#include <linux/cgroup.h>
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index 4c95c00..d99c41b 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -43,6 +43,7 @@ Features:
+  - usage threshold notifier
+  - oom-killer disable knob and oom-notifier
+  - Root cgroup has no limit controls.
++ - resource accounting for HugeTLB pages
  
- struct ctl_table;
- struct user_struct;
-@@ -203,6 +204,10 @@ struct hstate {
- 	unsigned int nr_huge_pages_node[MAX_NUMNODES];
- 	unsigned int free_huge_pages_node[MAX_NUMNODES];
- 	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
-+#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
-+	/* mem cgroup control files */
-+	struct cftype mem_cgroup_files[4];
-+#endif
- 	char name[HSTATE_NAME_LEN];
- };
+  Kernel memory support is work in progress, and the current version provides
+  basically functionality. (See Section 2.7)
+@@ -75,6 +76,12 @@ Brief summary of control files.
+  memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
+  memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
  
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 1d07e14..4f17574 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -459,6 +459,7 @@ extern void mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
- 					     struct page *page);
- extern void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
- 					      struct mem_cgroup *memcg);
-+extern int mem_cgroup_hugetlb_file_init(int idx) __init;
++
++ memory.hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
++ memory.hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
++ memory.hugetlb.<hugepagesize>.usage_in_bytes     # show current res_counter usage for "hugepagesize" hugetlb
++						  # see 5.7 for details
++
+ 1. History
  
- #else
- static inline int
-@@ -489,6 +490,12 @@ mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
- {
- 	return;
- }
-+
-+static inline int mem_cgroup_hugetlb_file_init(int idx)
-+{
-+	return 0;
-+}
-+
- #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
- #endif /* _LINUX_MEMCONTROL_H */
+ The memory controller has a long history. A request for comments for the memory
+@@ -279,6 +286,15 @@ per cgroup, instead of globally.
  
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index dd00087..340e575 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -1931,7 +1931,7 @@ void __init hugetlb_add_hstate(unsigned order)
- 	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
- 	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
- 					huge_page_size(h)/1024);
--
-+	mem_cgroup_hugetlb_file_init(hugetlb_max_hstate - 1);
- 	parsed_hstate = h;
- }
+ * tcp memory pressure: sockets memory pressure for the tcp protocol.
  
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0f9ec34..93e077a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5195,6 +5195,57 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- 	mem_cgroup_put(memcg);
- }
++2.8 HugeTLB extension
++
++This extension allows to limit the HugeTLB usage per control group and
++enforces the controller limit during page fault. Since HugeTLB doesn't
++support page reclaim, enforcing the limit at page fault time implies that,
++the application will get SIGBUS signal if it tries to access HugeTLB pages
++beyond its limit. This requires the application to know beforehand how much
++HugeTLB pages it would require for its use.
++
+ 3. User Interface
  
-+#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
-+static char *mem_fmt(char *buf, unsigned long n)
-+{
-+	if (n >= (1UL << 30))
-+		sprintf(buf, "%luGB", n >> 30);
-+	else if (n >= (1UL << 20))
-+		sprintf(buf, "%luMB", n >> 20);
-+	else
-+		sprintf(buf, "%luKB", n >> 10);
-+	return buf;
-+}
+ 0. Configuration
+@@ -287,6 +303,7 @@ a. Enable CONFIG_CGROUPS
+ b. Enable CONFIG_RESOURCE_COUNTERS
+ c. Enable CONFIG_CGROUP_MEM_RES_CTLR
+ d. Enable CONFIG_CGROUP_MEM_RES_CTLR_SWAP (to use swap extension)
++f. Enable CONFIG_MEM_RES_CTLR_HUGETLB (to use HugeTLB extension)
+ 
+ 1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
+ # mount -t tmpfs none /sys/fs/cgroup
+@@ -510,6 +527,18 @@ unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
+ 
+ And we have total = file + anon + unevictable.
+ 
++5.7 HugeTLB resource control files
++For a system supporting two hugepage size (16M and 16G) the control
++files include:
 +
-+int __init mem_cgroup_hugetlb_file_init(int idx)
-+{
-+	char buf[32];
-+	struct cftype *cft;
-+	struct hstate *h = &hstates[idx];
++ memory.hugetlb.16GB.limit_in_bytes
++ memory.hugetlb.16GB.max_usage_in_bytes
++ memory.hugetlb.16GB.usage_in_bytes
++ memory.hugetlb.16MB.limit_in_bytes
++ memory.hugetlb.16MB.max_usage_in_bytes
++ memory.hugetlb.16MB.usage_in_bytes
 +
-+	/* format the size */
-+	mem_fmt(buf, huge_page_size(h));
 +
-+	/* Add the limit file */
-+	cft = &h->mem_cgroup_files[0];
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.limit_in_bytes", buf);
-+	cft->private = __MEMFILE_PRIVATE(idx, _MEMHUGETLB, RES_LIMIT);
-+	cft->read = mem_cgroup_read;
-+	cft->write_string = mem_cgroup_write;
-+
-+	/* Add the usage file */
-+	cft = &h->mem_cgroup_files[1];
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.usage_in_bytes", buf);
-+	cft->private  = __MEMFILE_PRIVATE(idx, _MEMHUGETLB, RES_USAGE);
-+	cft->read = mem_cgroup_read;
-+
-+	/* Add the MAX usage file */
-+	cft = &h->mem_cgroup_files[2];
-+	snprintf(cft->name, MAX_CFTYPE_NAME, "hugetlb.%s.max_usage_in_bytes", buf);
-+	cft->private  = __MEMFILE_PRIVATE(idx, _MEMHUGETLB, RES_MAX_USAGE);
-+	cft->trigger  = mem_cgroup_reset;
-+	cft->read = mem_cgroup_read;
-+
-+	/* NULL terminate the last cft */
-+	cft = &h->mem_cgroup_files[3];
-+	memset(cft, 0, sizeof(*cft));
-+
-+	WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys, h->mem_cgroup_files));
-+
-+	return 0;
-+}
-+#endif
-+
- #ifdef CONFIG_MMU
- /* Handlers for move charge at task migration. */
- #define PRECHARGE_COUNT_AT_ONCE	256
+ 6. Hierarchy support
+ 
+ The memory controller supports a deep hierarchy and hierarchical accounting.
 -- 
 1.7.10
 
