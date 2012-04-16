@@ -1,20 +1,22 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] block: cosmetic updates to blkcg API
-Date: Mon, 16 Apr 2012 13:57:21 -0700
-Message-ID: <1334609847-12747-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/6] blkcg: blkg_rwstat_read() was missing inline
+Date: Mon, 16 Apr 2012 13:57:22 -0700
+Message-ID: <1334609847-12747-2-git-send-email-tj@kernel.org>
+References: <1334609847-12747-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer;
-	bh=+8A5Qw4foH18k0YMoysui6qj/V47xlauJCrLGLCZX0I=;
-	b=gGbRjk2i/IvNmhSMM8r6924EM1nlZ5rxeBc256tcCO3/gUspJhnNTvYRRRxmXTjfMN
-	sve2BoHEsCRLGMNMXSmtwABYTClcZWleA2LmwN1LUJH5IljSQYbWy2OWfidgrE99Q3P9
-	un8PrsrJpKFcyLUIvND2AGE6w7op3ySLj21QCmIxnrvd+AVAqqo8RsCCRd6MjJc6FiqA
-	8YSiDKJaN8SabkQ1j6kVJjvevUGlt2RX0Ch6mNf+WZm2qW2vHPspeH+ZtcMb4tz4hId/
-	MxXs+/CDq2o3eESobpN906qICFdVKfcn4nXSFbd+vZfKx7ngmABD/32OzxFV+nY8F3tR
-	VXrA==
+	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+	:references; bh=VxEZ6qMI2ZRKSBtYcA66FU7X/6jmGTVz92GNWmz3tuM=;
+	b=NEPu3/KizpkyJiXPWBfhF/GumgJsgM/VcRF90hwrJrdd7jAL6omGGo8Yw67KznuMPE
+	URz4FEYYP7UaIB7LO2U91MJBnyO7tkqJrsr78Iu/Mjk+B8Cm2P6PROvk6OUn4s7ocubJ
+	C0KZo40HAHAlNVw2EiJDAycaWbRUD+QU5nsZxXcYgK9HrZUHimuLSHc19LKjbSR8FtR8
+	FxvuNqMIfAEpnNGZQ0fKtytG0OSyWrC6kuKo4kyeXrQwEtI6XANrEcHlnauIFTpTcogd
+	i5TAMi0spuPKidKRLkDQ4KngGfU6Sn9oYUhERfwY2iWg13s6W/MtPQozxVbgyEqtEWzf
+	5bbw==
+In-Reply-To: <1334609847-12747-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -26,54 +28,29 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello,
+blkg_rwstat_read() in blk-cgroup.h was missing inline modifier causing
+compile warning depending on configuration.  Add it.
 
-With recent blkcg updates, any out-of-tree change is already way
-broken and it's a good time to clean up blkcg API for more
-consistency.  This patchset makes a series of mostly cosmetic changes
-in an attempt to make the blkcg API easier on the eyes.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ block/blk-cgroup.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This is finally the last patchset of the long blkcg API update effort.
-I think that we now have something which at least is sane & logical
-and can be improved incrementally without having to be turned upside
-down.  My thanks to everyone involved for enduring the boring and
-rather painful process.
-
-This patchset contains the following six patches.
-
-0001-blkcg-blkg_rwstat_read-was-missing-inline.patch
-0002-blkcg-remove-blkio_group-path.patch
-0003-blkcg-style-cleanups-for-blk-cgroup.h.patch
-0004-blkcg-mass-rename-of-blkcg-API.patch
-0005-blkcg-embed-struct-blkg_policy_data-in-policy-specif.patch
-0006-blkcg-collapse-blkcg_policy_ops-into-blkcg_policy.patch
-
-Other than 0002 which removes blkg->path[], none of the patches makes
-any functional difference.
-
-This patchset is on top of
-
-  block/for-3.5/core 5bc4afb1ec "blkcg: drop BLKCG_STAT_{PRIV|POL|OFF} macros"
-+ [1] [PATCHSET] block: per-queue policy activation, take#2
-
-and available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blkcg-rename
-
-diffstat follows.
-
- block/blk-cgroup.c     |  253 ++++++++++++++++++++++++-------------------------
- block/blk-cgroup.h     |  240 ++++++++++++++++++++++++----------------------
- block/blk-throttle.c   |  121 +++++++++++++----------
- block/cfq-iosched.c    |  138 ++++++++++++++------------
- include/linux/blkdev.h |    4 
- 5 files changed, 397 insertions(+), 359 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[1] https://lkml.org/lkml/2012/4/13/380
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 222063d..ef6550a 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -279,7 +279,7 @@ static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
+  * This function can be called without synchronization and takes care of
+  * u64 atomicity.
+  */
+-static struct blkg_rwstat blkg_rwstat_read(struct blkg_rwstat *rwstat)
++static inline struct blkg_rwstat blkg_rwstat_read(struct blkg_rwstat *rwstat)
+ {
+ 	unsigned int start;
+ 	struct blkg_rwstat tmp;
+-- 
+1.7.7.3
