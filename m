@@ -1,67 +1,94 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: [PATCH -V6 00/14] memcg: Add memcg extension to control HugeTLB allocation
-Date: Mon, 16 Apr 2012 16:14:37 +0530
-Message-ID: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V6 02/14] hugetlbfs: don't use ERR_PTR with VM_FAULT* values
+Date: Mon, 16 Apr 2012 16:14:39 +0530
+Message-ID: <1334573091-18602-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-Hi,
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This patchset implements a memory controller extension to control
-HugeTLB allocations. The extension allows to limit the HugeTLB
-usage per control group and enforces the controller limit during
-page fault. Since HugeTLB doesn't support page reclaim, enforcing
-the limit at page fault time implies that, the application will get
-SIGBUS signal if it tries to access HugeTLB pages beyond its limit.
-This requires the application to know beforehand how much HugeTLB
-pages it would require for its use.
+Using VM_FAULT_* codes with ERR_PTR will require us to make sure
+VM_FAULT_* values will not exceed MAX_ERRNO value.
 
-The goal is to control how many HugeTLB pages a group of task can
-allocate. It can be looked at as an extension of the existing quota
-interface which limits the number of HugeTLB pages per hugetlbfs
-superblock. HPC job scheduler requires jobs to specify their resource
-requirements in the job file. Once their requirements can be met,
-job schedulers like (SLURM) will schedule the job. We need to make sure
-that the jobs won't consume more resources than requested. If they do
-we should either error out or kill the application.
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+---
+ mm/hugetlb.c |   18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-Patches are on top of
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 766eb90..5a472a5 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1123,10 +1123,10 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
+ 	 */
+ 	chg = vma_needs_reservation(h, vma, addr);
+ 	if (chg < 0)
+-		return ERR_PTR(-VM_FAULT_OOM);
++		return ERR_PTR(-ENOMEM);
+ 	if (chg)
+ 		if (hugepage_subpool_get_pages(spool, chg))
+-			return ERR_PTR(-VM_FAULT_SIGBUS);
++			return ERR_PTR(-ENOSPC);
+ 
+ 	spin_lock(&hugetlb_lock);
+ 	page = dequeue_huge_page_vma(h, vma, addr, avoid_reserve);
+@@ -1136,7 +1136,7 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
+ 		page = alloc_buddy_huge_page(h, NUMA_NO_NODE);
+ 		if (!page) {
+ 			hugepage_subpool_put_pages(spool, chg);
+-			return ERR_PTR(-VM_FAULT_SIGBUS);
++			return ERR_PTR(-ENOSPC);
+ 		}
+ 	}
+ 
+@@ -2486,6 +2486,7 @@ retry_avoidcopy:
+ 	new_page = alloc_huge_page(vma, address, outside_reserve);
+ 
+ 	if (IS_ERR(new_page)) {
++		int err = PTR_ERR(new_page);
+ 		page_cache_release(old_page);
+ 
+ 		/*
+@@ -2515,7 +2516,10 @@ retry_avoidcopy:
+ 
+ 		/* Caller expects lock to be held */
+ 		spin_lock(&mm->page_table_lock);
+-		return -PTR_ERR(new_page);
++		if (err == -ENOMEM)
++			return VM_FAULT_OOM;
++		else
++			return VM_FAULT_SIGBUS;
+ 	}
+ 
+ 	/*
+@@ -2633,7 +2637,11 @@ retry:
+ 			goto out;
+ 		page = alloc_huge_page(vma, address, 0);
+ 		if (IS_ERR(page)) {
+-			ret = -PTR_ERR(page);
++			ret = PTR_ERR(page);
++			if (ret == -ENOMEM)
++				ret = VM_FAULT_OOM;
++			else
++				ret = VM_FAULT_SIGBUS;
+ 			goto out;
+ 		}
+ 		clear_huge_page(page, address, pages_per_huge_page(h));
+-- 
+1.7.10
 
-git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
-
-Changes from V5:
- * Address review feedback.
-
-Changes from V4:
- * Add support for charge/uncharge during page migration
- * Drop the usage of page->lru in unmap_hugepage_range.
-
-Changes from v3:
- * Address review feedback.
- * Fix a bug in cgroup removal related parent charging with use_hierarchy set
-
-Changes from V2:
-* Changed the implementation to limit the HugeTLB usage during page
-  fault time. This simplifies the extension and keep it closer to
-  memcg design. This also allows to support cgroup removal with less
-  complexity. Only caveat is the application should ensure its HugeTLB
-  usage doesn't cross the cgroup limit.
-
-Changes from V1:
-* Changed the implementation as a memcg extension. We still use
-  the same logic to track the cgroup and range.
-
-Changes from RFC post:
-* Added support for HugeTLB cgroup hierarchy
-* Added support for task migration
-* Added documentation patch
-* Other bug fixes
-
--aneesh
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
