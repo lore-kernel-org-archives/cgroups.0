@@ -1,59 +1,47 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFD] Merge task counter into memcg
-Date: Tue, 17 Apr 2012 08:17:53 -0700
-Message-ID: <20120417151753.GB32402@google.com>
+Date: Tue, 17 Apr 2012 08:23:50 -0700
+Message-ID: <20120417152350.GC32402@google.com>
 References: <20120411185715.GA4317@somewhere.redhat.com>
- <20120412010745.GE1787@cmpxchg.org>
- <20120412145507.GC11455@somewhere.redhat.com>
- <4F87042A.2000902@parallels.com>
- <20120412165922.GA12484@somewhere.redhat.com>
+ <4F86527C.2080507@samsung.com>
+ <20120417010902.GA14646@somewhere.redhat.com>
+ <4F8D1171.1090504@samsung.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=VpCE61KUc7i0QyBvj9bRJ9usU1Uh2eTvY29yTjNrAOI=;
-        b=vwI9/nmap0X73EQcB1FkD2T/HK9wDV8dwMyRW8001MHbTCfI76XU7/Fuxeh/bMJK2J
-         y1ZepsQgB30rNIUN9hM1bFwxDU6wTZuu/mPzK6r1t+stp9FX9UJUP0XWvK+Ifxxb7nrp
-         c6oHjrGB1LfFfJFs3ix6EA6LSKyIgxNjV8egU2+UsncT/AtEZtyt/OoP3AZIsfVhUdl9
-         k3ooPGT46XXbQA287ySdadw+SO+t79kyguswaIAOofjM9J0qspt6rXNLRkMzmo2khvl2
-         ObqAoXQT3b/QHLDsVQrtyijI//Pm4vHX5mUa96nFArQWkmx8g02/vRornhUSUliuTGrH
-         juaA==
+        bh=Hp7gn8bBcq61+HZAXc2q2HV/bMcM+Q5OUYGl0nC2LUA=;
+        b=0kg8Ev1PtynOqCBR3a/M5o8P+Al4Lb7VdTJPwxQ9VE27uqhM2Km91TJBuzvhIRywEA
+         itKK833pfLZGeIt6bZUOh+1xyDVf555lkkG3W9KFWvvaKxthVeaYi6PCs3XAO6SvNSCF
+         vWmU2OOUn5tvN3kBpKLkhtzT3cy46r78AOUXaOVZXAaaTyaAvtbckqBvgq4sPRgi/Wk9
+         QDB2nfdLHcSnMcwbtBgDo0Rd3uZMWFStz5g6vAZzjYQ5+sdX7bFxIEAJCaCNcZJnTmrJ
+         o1GwH8iw8/DivzhSntkssoXEhS5CpmriePvbUjFN4R8coF46VRdTVzbB+speYue8vzRd
+         k0QA==
 Content-Disposition: inline
-In-Reply-To: <20120412165922.GA12484-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
+In-Reply-To: <4F8D1171.1090504-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-Hello, Frederic.
+Hello,
 
-On Thu, Apr 12, 2012 at 06:59:27PM +0200, Frederic Weisbecker wrote:
-> I want:
-> 
-> a) to prevent the forkbomb from going far enough to DDOS the machine
-> b) to be able to kill that forkbomb once detected, in one go without race
-> against concurrent forks.
-> 
-> I think a) can work just fine with kernel stack limiting. I also need
-> to be notified about the fact we reached the limit. And b) should
-> be feasible with the help of the cgroup freezer. 
+On Tue, Apr 17, 2012 at 10:45:05AM +0400, Alexander Nikiforov wrote:
+> between them. Now we have only 1 way to get notification about tasks
+> file - inotify(), but this approach works only if you work from
+> userspace with file (e.g. create struct file, for example with echo
+> $$ /sys/abc/tasks), but when something happens from kernel side
+> (do_fork()/do_exit) we cannot get any event about group of the
+> process (we can scan tasks file and count number of PID, or work
+> with
+> waitpid(), but IMHO this is ugly solutions)
 
-kmem allocation fail after reaching the limit which in turn should
-fail task creation.  Isn't that the same effect as the task_counter as
-implemented?
-
-> > Is there anything for which you need to know exactly the number of
-> > processes?
-> 
-> No that's really about prevent/kill forkbomb as far as I'm concerned.
-
-Hmm... so, accounting overhead aside, if the only purpose is
-preventing the whole machine being brought down by a fork bomb, kmem
-limiting is enough, right?
+Wouldn't simply generating FS_MODIFY event on the tasks file do the
+trick?
 
 Thanks.
 
