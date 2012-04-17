@@ -1,99 +1,104 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: question about memsw of memory cgroup-subsystem
-Date: Tue, 17 Apr 2012 11:25:26 +0800
-Message-ID: <4F8CE2A6.7070004@gmail.com>
-References: <op.wco7ekvhn27o5l@gaoqiang-d1.corp.qihoo.net> <20120413144954.GA9227@tiehlicka.suse.cz> <op.wct9zibjn27o5l@gaoqiang-d1.corp.qihoo.net>
+From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [RFD] Merge task counter into memcg
+Date: Tue, 17 Apr 2012 10:45:05 +0400
+Message-ID: <4F8D1171.1090504@samsung.com>
+References: <20120411185715.GA4317@somewhere.redhat.com>
+ <4F86527C.2080507@samsung.com> <20120417010902.GA14646@somewhere.redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=pkeyzU1hIOAERx4bjJszx1CWzLNcnZi5SwKHky0txRQ=;
-        b=tzjBqXwf/tfDn85DPvf7vwNdfVHyuznb3lcBTLDp24nCk+32vCSl0k7WsUdIgP8Qhp
-         iPe9l+6UWwwxE4zVeavVPfOIKgz+c/lmnWyzek0uSsIdz1sv2e2z2J5KXFHRaKjnvz2T
-         66G9gSpfWwYQ1HO1BlJfnV/RdwwRri+VBMUn7NTwX00ddlrjVChaKJfrTN1Qjp8FifLJ
-         HTDpMM9F6ZndVKOSUDHeFopxKS/k6fUmbeNyuvIZZt7npp6XW6Y6WaYJsl8flCNkTBx0
-         tz7CqQJh6iCLrwXrgwZwteyDfMevSwgj+9O8zZ3/A0vNwjwOwc1QYrD1KR6QEjcQU/Jk
-         DKLA==
-In-Reply-To: <op.wct9zibjn27o5l-4p38iKlbJMyYoDLmhA0N64eABQC+30qQrE5yTffgRl4@public.gmane.org>
+In-reply-to: <20120417010902.GA14646-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: gaoqiang <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-On 04/16/2012 11:43 AM, gaoqiang wrote:
-> =D4=DA Fri, 13 Apr 2012 22:49:54 +0800=A3=ACMichal Hocko <mhocko@suse=
-=2Ecz> =D0=B4=B5=C0:
->
->> [CC linux-mm]
->>
+On 04/17/2012 05:09 AM, Frederic Weisbecker wrote:
+> On Thu, Apr 12, 2012 at 07:56:44AM +0400, Alexander Nikiforov wrote:
+>> On 04/11/2012 10:57 PM, Frederic Weisbecker wrote:
+>>> Hi,
+>>>
+>>> While talking with Tejun about targetting the cgroup task counter subsystem
+>>> for the next merge window, he suggested to check if this could be merged into
+>>> the memcg subsystem rather than creating a new one cgroup subsystem just
+>>> for task count limit purpose.
+>>>
+>>> So I'm pinging you guys to seek your insight.
+>>>
+>>> I assume not everybody in the Cc list knows what the task counter subsystem
+>>> is all about. So here is a summary: this is a cgroup subsystem (latest version
+>>> in https://lwn.net/Articles/478631/) that keeps track of the number of tasks
+>>> present in a cgroup. Hooks are set in task fork/exit and cgroup migration to
+>>> maintain this accounting visible to a special tasks.usage file. The user can
+>>> set a limit on the number of tasks by writing on the tasks.limit file.
+>>> Further forks or cgroup migration are then rejected if the limit is exceeded.
+>>>
+>>> This feature is especially useful to protect against forkbombs in containers.
+>>> Or more generally to limit the resources on the number of tasks on a cgroup
+>>> as it involves some kernel memory allocation.
+>>>
+>>> Now the dilemna is how to implement it?
+>>>
+>>> 1) As a standalone subsystem, as it stands currently (https://lwn.net/Articles/478631/)
+>>>
+>>> 2) As a feature in memcg, part of the memory.kmem.* files. This makes sense
+>>> because this is about kernel memory allocation limitation. We could have a
+>>> memory.kmem.tasks.count
+>>>
+>>> My personal opinion is that the task counter brings some overhead: a charge
+>>> across the whole hierarchy at every fork, and the mirrored uncharge on task exit.
+>>> And this overhead happens even in the off-case (when the task counter susbsystem
+>>> is mounted but the limit is the default: ULLONG_MAX).
+>>>
+>>> So if we choose the second solution, this overhead will be added unconditionally
+>>> to memcg.
+>>> But I don't expect every users of memcg will need the task counter. So perhaps
+>>> the overhead should be kept in its own separate subsystem.
+>>>
+>>> OTOH memory.kmem.* interface would have be a good fit.
+>>>
+>>> What do you think?
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+>>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
 >> Hi,
 >>
->> On Fri 13-04-12 18:00:10, gaoqiang wrote:
->>>
->>>
->>> I put a single process into a cgroup and set memory.limit_in_bytes
->>> to 100M,and memory.memsw.limit_in_bytes to 1G.
->>>
->>> howevery,the process was oom-killed before mem+swap hit 1G. I tried
->>> many times,and it was killed randomly when memory+swap
->>>
->>> exceed 100M but less than 1G. what is the matter ?
+>> I'm agree that this is memory related thing, but I prefer this as a
+>> separate subsystem.
+>> Yes it has some impact on a system, but on the other hand we will
+>> have some very useful tool to track tasks state.
+>> As I wrote before
 >>
->> could you be more specific about your kernel version, workload and c=
-ould
->> you provide us with GROUP/memory.stat snapshots taken during your te=
-st?
+>> http://comments.gmane.org/gmane.linux.kernel.cgroups/1448
 >>
->> One reason for oom might be that you are hitting the hard limit (you
->> cannot get over even if memsw limit says more) and you cannot swap o=
-ut
->> any pages (e.g. they are mlocked or under writeback).
->>
+>> it'll very useful to have event in the userspace about fork/exit
+>> about group of the processes.
+> I need more clarifications about your needs. The task counter susbsytem
+> doesn't inform you about forks or exits unless you reach the limit on
+> the number of tasks.
 >
-> many thanks.
->
->
-> The system is a vmware virtual machine,running centos6.2 with kernel=20
-> 2.6.32-220.7.1.el6.x86_64.
->
-> the attachments are memory.stat, the test program and the=20
-> /var/log/message of the oom.
->
-> the workload is nearly 0,with searal sshd and bash program running.
->
-> I just did the following command when testing:
->
-> ./t
-> # this program will pause at the "getchar()" line and in another=20
-> terminal,run :
->
-> cgclear
-> service cgconfig restart
-> mkdir /cgroup/memory/test
-> cd /cgroup/memory/test
-> echo 100m > memory.limit_in_bytes
-> echo 1G > memory.memsw.limit_in_bytes
-> echo 'pid' > tasks
->
-> # then continue the t command
->
->
-Hi,
+Hi Frederic,
 
-I run your test under RHEL6.1 with 2.6.32-220.7.1.el6.x86_64 (an=20
-internal version but
-no changes in mm/memcg) in a real server and the process is killed with=
-=20
-memsw reaching
-1G. Does your vmware virtual machine have enough swap space?.. I've no=20
-idea whether
-the different behavior come from the physical/virtual environment.
+yup now it doesn't have this functionality, but we can add it. Please 
+look on my prevous post about this feature
 
+http://comments.gmane.org/gmane.linux.kernel.cgroups/1448
 
-Thanks,
-Sha
+Now userspace tools, for example libcgroup, can't catch event when 
+process died/forked (or maybe moved to another group). Shortly when 
+tasks file change.
+According to this userspace tool go to inconsistency state when user 
+manually kill process. Another example we want to balance number of 
+process with several groups and make round-robin
+between them. Now we have only 1 way to get notification about tasks 
+file - inotify(), but this approach works only if you work from 
+userspace with file (e.g. create struct file, for example with echo $$ 
+/sys/abc/tasks), but when something happens from kernel side 
+(do_fork()/do_exit) we cannot get any event about group of the process 
+(we can scan tasks file and count number of PID, or work with
+waitpid(), but IMHO this is ugly solutions)
 
+Thx for your reply
