@@ -1,80 +1,89 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Subject: Re: [RFD] Merge task counter into memcg
-Date: Wed, 18 Apr 2012 10:10:54 +0200
-Message-ID: <CAFTL4hxXT+hXWEnKop84JQ8ieHX4e=otpHnXYxdxaPgsiZYCiw@mail.gmail.com>
-References: <20120411185715.GA4317@somewhere.redhat.com>
-	<20120412010745.GE1787@cmpxchg.org>
-	<20120412145507.GC11455@somewhere.redhat.com>
-	<4F87042A.2000902@parallels.com>
-	<20120412165922.GA12484@somewhere.redhat.com>
-	<20120417151753.GB32402@google.com>
-	<20120418065430.GB25568@somewhere>
+Date: Wed, 18 Apr 2012 17:42:30 +0900
+Message-ID: <4F8E7E76.3020202@jp.fujitsu.com>
+References: <4F862851.3040208@jp.fujitsu.com> <20120412113217.GB11455@somewhere.redhat.com> <4F86BFC6.2050400@parallels.com> <20120412123256.GI1787@cmpxchg.org> <4F86D4BD.1040305@parallels.com> <20120412153055.GL1787@cmpxchg.org> <20120412163825.GB13069@google.com> <20120412172309.GM1787@cmpxchg.org> <20120412174155.GC13069@google.com> <4F878480.60505@jp.fujitsu.com> <20120417154117.GE32402@google.com> <4F8D9FC4.3080800@parallels.com> <4F8E646B.1020807@jp.fujitsu.com> <CAFTL4hw3C4s6VS07pJzdBawv0ugKJJa+Vnb-Q_9FrWEq4=ka9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding;
-        bh=AcxMabGI5BLpt4qiBTjcwPGKHY8Dj+GEo/a6eS/+d6I=;
-        b=YlWpu3kXf+6+FGG+Dy1LFcrzV8w6bXFHH6mHFyB8MdUsV7qqSNlK0+wd43EJey4Kvc
-         s3Iib7C06qv0zfrW49ltFoRYGInACQBRd46+THmDJvF8hhoo50VzJEoFVLRKnME//gzT
-         Yw6B3sZCbP60AI3icOc8OU5wwkmj7LrRPgR1HMIfuwgOotafgztnNNKGLmMc7TewpIwp
-         nHlYi26+Xk5ROJeuB72JQsrymRQF8lLirXrNDNxWjCwgwqvrVUK90Xeh23d77k0gwMU7
-         XXad26i5lDjxgEgdo/Dr5iqKDUp+Pz8BuyM9VowV41SK7SK1RfAMoQ1ZQAZVmmY1xSqs
-         qWhw==
-In-Reply-To: <20120418065430.GB25568@somewhere>
+In-Reply-To: <CAFTL4hw3C4s6VS07pJzdBawv0ugKJJa+Vnb-Q_9FrWEq4=ka9Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-2012/4/18 Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>:
-> On Tue, Apr 17, 2012 at 08:17:53AM -0700, Tejun Heo wrote:
->> Hello, Frederic.
->>
->> On Thu, Apr 12, 2012 at 06:59:27PM +0200, Frederic Weisbecker wrote:
->> > I want:
->> >
->> > a) to prevent the forkbomb from going far enough to DDOS the machi=
-ne
->> > b) to be able to kill that forkbomb once detected, in one go witho=
-ut race
->> > against concurrent forks.
->> >
->> > I think a) can work just fine with kernel stack limiting. I also n=
-eed
->> > to be notified about the fact we reached the limit. And b) should
->> > be feasible with the help of the cgroup freezer.
->>
->> kmem allocation fail after reaching the limit which in turn should
->> fail task creation. =A0Isn't that the same effect as the task_counte=
-r as
->> implemented?
->
-> That's it.
->
->>
->> > > Is there anything for which you need to know exactly the number =
-of
->> > > processes?
->> >
->> > No that's really about prevent/kill forkbomb as far as I'm concern=
-ed.
->>
->> Hmm... so, accounting overhead aside, if the only purpose is
->> preventing the whole machine being brought down by a fork bomb, kmem
->> limiting is enough, right?
->
-> I think so yeah.
+(2012/04/18 16:53), Frederic Weisbecker wrote:
 
-But this needs to be a well defined kind of kmem I think. Relying on
-kernel memory
-alone is too general to just protect against forkbombs. Kernel stack,
-OTOH, should be
-a good criteria.
+> 2012/4/18 KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>:
+>> (2012/04/18 1:52), Glauber Costa wrote:
+>>
+>>>
+>>>>> In short, I don't think it's better to have task-counting and fd-counting in memcg.
+>>>>> It's kmem, but it's more than that, I think.
+>>>>> Please provide subsys like ulimit.
+>>>>
+>>>> So, you think that while kmem would be enough to prevent fork-bombs,
+>>>> it would still make sense to limit in more traditional ways
+>>>> (ie. ulimit style object limits).  Hmmm....
+>>>>
+>>>
+>>> I personally think this is namespaces business, not cgroups.
+>>> If you have a process namespace, an interface that works to limit the
+>>> number of processes should keep working given the constraints you are
+>>> given.
+>>>
+>>> What doesn't make sense, is to create a *new* interface to limit
+>>> something that doesn't really need to be limited, just because you
+>>> limited a similar resource before.
+>>>
+>>
+>>
+>> Ok, limitiing forkbomb is unnecessary. ulimit+namespace should work.
+>> What we need is user-id namespace, isn't it ? If we have that, ulimit
+>> works enough fine, no overheads.
+> 
+> I have considered using NR_PROC rlimit on top of user namespaces to
+> fight forkbombs inside a container.
+> ie: one user namespace per container with its own rlimit.
+> 
+> But it doesn't work because we can have multiuser apps running in a
+> single container.
+> 
 
-But now I'm worrying, do you think this kmem.kernel_stack limitation
-is going to be useful
-for other kind of usecase?
+Ok, then, requirements is different from ulimit. ok, please forget my words.
+
+My concern for using 'kmem' is that size of object can be changed, and set up
+may be more complicated than limiting 'number' of tasks.
+It's very architecture dependent....But hmm... 
+
+If slab accounting can handle task_struct accounting, all you wants can be
+done by it (maybe). And implementation can be duplicated.
+(But another aspect of the problem will be speed of development..)
+
+One idea is (I'm not sure good or bad)...having following control files.
+
+ - memory.kmem.task_struct.limit_in_bytes
+ - memory.kmem.task_struct.usage_in_bytes
+ - memory.kmem.task_struct.size_in_bytes   # size of task struct.
+
+At 1st, implement this by accounting task struct(or some) directly.
+Later, if we can, replace the implementation with slab(kmem) cgroup..
+and unify interfaces.....a long way to go.
+
+2nd idea is
+
+ - memory.object.task.limit_in_number	# limit the number of tasks.
+ - memory.object.task.usage_in_number   # usage
+
+
+If I'm a user, I prefer #2.
+
+Hmm, 
+   global kmem limiting           -> done by bytes.
+   special kernel object limiting -> done by the number of objects.
+
+is...complicated ?
+
+Thanks,
+-Kame
