@@ -1,7 +1,7 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [RFD] Merge task counter into memcg
-Date: Wed, 18 Apr 2012 11:12:34 +0200
-Message-ID: <20120418091231.GA26594@somewhere>
+Date: Wed, 18 Apr 2012 12:39:30 +0200
+Message-ID: <20120418103930.GA1771@cmpxchg.org>
 References: <20120412153055.GL1787@cmpxchg.org>
  <20120412163825.GB13069@google.com>
  <20120412172309.GM1787@cmpxchg.org>
@@ -14,17 +14,6 @@ References: <20120412153055.GL1787@cmpxchg.org>
  <4F8E7E76.3020202@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=O/MwhyCLbPY07vWYMdA7Vv07ELhrXfSisSlffmxZj8A=;
-        b=w8ktNUMWpwdXVdXunlNpzFwpBzTJBwYNLksnV3kUG2TLospv+1f4PjjgcwVQkLIDax
-         u+Yj0kru6JmiWvxHCg7HYAotEAC1U1rMZeIzI9oXJlU0BzKZZoK+b2LkHBvPqfew3Ion
-         MN98R0qPjWWOvv3kJm0R10MzHZdOvQhWN/t7jdk9qrdVs9AcRFOnsNfOaV8G19/LLQ93
-         JBSSQPAQdlQhz9b8MnVL5rB7nGJ1L7W/CyiWIgj/x8uHtTrkptuSrkAxgRkAb2HEiYyD
-         MXl0kGgDTGlfUtTR3d7wyG8S+vmNO9nqXayJyetunHyRtqae430b1SlmeaqdtYZ09vk8
-         Iyxg==
 Content-Disposition: inline
 In-Reply-To: <4F8E7E76.3020202-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -32,7 +21,7 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
 On Wed, Apr 18, 2012 at 05:42:30PM +0900, KAMEZAWA Hiroyuki wrote:
 > (2012/04/18 16:53), Frederic Weisbecker wrote:
@@ -79,15 +68,14 @@ On Wed, Apr 18, 2012 at 05:42:30PM +0900, KAMEZAWA Hiroyuki wrote:
 > may be more complicated than limiting 'number' of tasks.
 > It's very architecture dependent....But hmm... 
 
-Sure. But I believe the user can easily cope with that. One just need
-to create a cgroup, move a task there and look at the accounted kmem.kernel_stack
-to get the size used by one task.
+BECAUSE it is architecture/kernel version/runtime dependent how big a
+task really is, limiting available kernel memory is much more
+meaningful than limiting a container to a number of units of unknown
+and dynamically changing size.
 
-That's less intuitive for the user than a task counter of course. But that
-may be more generally useful than just forkbomb protection. At least I hope
-because I haven't heard about other possible usecases.
+How could this argument ever work IN FAVOR of limiting the number of
+tasks?
 
-> 
 > If slab accounting can handle task_struct accounting, all you wants can be
 > done by it (maybe). And implementation can be duplicated.
 > (But another aspect of the problem will be speed of development..)
@@ -98,11 +86,8 @@ because I haven't heard about other possible usecases.
 >  - memory.kmem.task_struct.usage_in_bytes
 >  - memory.kmem.task_struct.size_in_bytes   # size of task struct.
 
-I'm fine either way. Counting task_struct memory usage is also a way
-to count the tasks for me. But is it going to be more generally useful
-than counting kernel stack?
+A task's memory impact is not just its task_struct.
 
-> 
 > At 1st, implement this by accounting task struct(or some) directly.
 > Later, if we can, replace the implementation with slab(kmem) cgroup..
 > and unify interfaces.....a long way to go.
@@ -112,25 +97,27 @@ than counting kernel stack?
 >  - memory.object.task.limit_in_number	# limit the number of tasks.
 >  - memory.object.task.usage_in_number   # usage
 > 
-> 
 > If I'm a user, I prefer #2.
 
-People seem to object on defining the number of task as a relevant unit of resource.
-It's indeed a semantic resource on top of the more lower level one memory resource
-(could be CPU as well).
+The memory controller is there to partition physical memory.  This is
+usually measured in bytes and that's why the user-visible object size
+in the memory controller is a byte.  When you add other types of
+objects, you force the user to know about them and give them a method
+of knowing the object size in bytes, which in case of a task, can vary
+at runtime.
 
-And if it can be mapped back to memory resource, it might be more generally
-useful to limit at that level.
+I will agree to this interface the moment I can buy RAM whose quantity
+is measured in number of tasks.
 
-At least I hope...
-
-> 
 > Hmm, 
 >    global kmem limiting           -> done by bytes.
 >    special kernel object limiting -> done by the number of objects.
 > 
 > is...complicated ?
-> 
-> Thanks,
-> -Kame
-> 
+
+Yes, and you don't provide any arguments!
+
+What are you trying to do that would make limiting the number of tasks
+a useful mechanism?
+
+Why should some kernel objects be special?
