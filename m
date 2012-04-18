@@ -1,61 +1,130 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 07/11] blkcg: make request_queue bypassing on allocation
-Date: Wed, 18 Apr 2012 14:42:55 -0700
-Message-ID: <20120418214255.GA4772@google.com>
-References: <1334347895-6268-1-git-send-email-tj@kernel.org>
-	<1334347895-6268-8-git-send-email-tj@kernel.org>
-	<20120413203205.GI26383@redhat.com>
-	<20120413203726.GE12233@google.com>
-	<20120413204446.GK26383@redhat.com>
-	<20120413204710.GF12233@google.com>
-	<20120413205501.GL26383@redhat.com>
-	<20120413210548.GG12233@google.com>
-	<20120413211640.GH12233@google.com>
-	<1334664298.3766.62.camel@dabdike>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] memcg: Use scnprintf instead of sprintf
+Date: Wed, 18 Apr 2012 15:36:23 -0700
+Message-ID: <20120418153623.9582dffa.akpm@linux-foundation.org>
+References: <20120416161354.b967790c.akpm@linux-foundation.org>
+	<1334729756-10212-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=9Np/xChgQUH3RI08fZWLcJGvnfekTA7CUUlgZlZWvf0=;
-	b=nztIb6tWJ28kWQHJAGRP69AKt1iBRv6+Ye9vb+/KSIe3K4CJL2PVJA6O7WoskMi7T8
-	G0fVVOCJu1RDBsY2kyY9aEWPHX2ZRf8V7UPTiC4ynrIDkTTy6K+Am018ePAET/rj6w51
-	ZRXuvEyzoB5zUJznsjHUpmLJANrRTCiiLHf7gekgVvmftxR+ZUw3TgWqdiE59sbUqKOO
-	DlKKa9+ixvvUUe97WBu7y4Tr6IriZcvL0jYAUeENbHcL+l1u0KaGOrE3dMM/VMBBs76s
-	C3cSKzyW/29GsygozOwPdH45MPRz74FYd5FHCvVHkAiNGPS6OtTJVHBz7mkarDWLH+Rg
-	o+eQ==
-Content-Disposition: inline
-In-Reply-To: <1334664298.3766.62.camel@dabdike>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1334729756-10212-1-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 
-On Tue, Apr 17, 2012 at 04:04:58PM +0400, James Bottomley wrote:
-> > So, the current code is technically correct although subtle like hell.
-> > We can RCU defer blk_put_queue() from blk_cleanup_queue() using
-> > call_rcu() to make clear that RCU grace period is necessary there.
-> > Any better ideas?
+On Wed, 18 Apr 2012 11:45:56 +0530
+"Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> Not really ... except that perhaps we might redo LUN scanning to use
-> just a single queue, so repurpose the LUN underneath, but not destroy
-> the old queue and setup the new one?  It's a bit counter intuitive, but
-> it shouldn't be impossible.
+> This make sure we don't overflow.
+> 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> ---
+>  mm/memcontrol.c |   14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 519d370..0ccf934 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5269,14 +5269,14 @@ static void mem_cgroup_destroy(struct cgroup *cont)
+>  }
+>  
+>  #ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+> -static char *mem_fmt(char *buf, unsigned long n)
+> +static char *mem_fmt(char *buf, int size, unsigned long hsize)
+>  {
+> -	if (n >= (1UL << 30))
+> -		sprintf(buf, "%luGB", n >> 30);
+> -	else if (n >= (1UL << 20))
+> -		sprintf(buf, "%luMB", n >> 20);
+> +	if (hsize >= (1UL << 30))
+> +		scnprintf(buf, size, "%luGB", hsize >> 30);
+> +	else if (hsize >= (1UL << 20))
+> +		scnprintf(buf, size, "%luMB", hsize >> 20);
+>  	else
+> -		sprintf(buf, "%luKB", n >> 10);
+> +		scnprintf(buf, size, "%luKB", hsize >> 10);
+>  	return buf;
+>  }
 
-I think we're fine as-is with comment explaining that there can't be
-any active dereferencing going on by the time release is reached.
+We could use snprintf() here too but it doesn't seem to matter either
+way.  I guess we _should_ use snprintf as it causes less surprise.
 
-Thanks.
+--- a/mm/memcontrol.c~hugetlbfs-add-memcg-control-files-for-hugetlbfs-use-scnprintf-instead-of-sprintf-fix
++++ a/mm/memcontrol.c
+@@ -4037,7 +4037,7 @@ static ssize_t mem_cgroup_read(struct cg
+ 		BUG();
+ 	}
+ 
+-	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
++	len = snprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
+ 	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
+ }
+ /*
+@@ -5199,11 +5199,11 @@ static void mem_cgroup_destroy(struct cg
+ static char *mem_fmt(char *buf, int size, unsigned long hsize)
+ {
+ 	if (hsize >= (1UL << 30))
+-		scnprintf(buf, size, "%luGB", hsize >> 30);
++		snprintf(buf, size, "%luGB", hsize >> 30);
+ 	else if (hsize >= (1UL << 20))
+-		scnprintf(buf, size, "%luMB", hsize >> 20);
++		snprintf(buf, size, "%luMB", hsize >> 20);
+ 	else
+-		scnprintf(buf, size, "%luKB", hsize >> 10);
++		snprintf(buf, size, "%luKB", hsize >> 10);
+ 	return buf;
+ }
+ 
 
--- 
-tejun
+It is regrettable that your mem_fmt() exists, especially within
+memcontrol.c - it is quite a generic thing.  Can't we use
+lib/string_helpers.c:string_get_size()?  Or if not, modify
+string_get_size() so it is usable here?
+
+Speaking of which,
+
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: lib/string_helpers.c: make arrays static
+
+Moving these arrays into static storage shrinks the kernel a bit:
+
+   text    data     bss     dec     hex filename
+    723     112      64     899     383 lib/string_helpers.o
+    516     272      64     852     354 lib/string_helpers.o
+
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+
+ lib/string_helpers.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff -puN lib/string_helpers.c~lib-string_helpersc-make-arrays-static lib/string_helpers.c
+--- a/lib/string_helpers.c~lib-string_helpersc-make-arrays-static
++++ a/lib/string_helpers.c
+@@ -23,15 +23,15 @@
+ int string_get_size(u64 size, const enum string_size_units units,
+ 		    char *buf, int len)
+ {
+-	const char *units_10[] = { "B", "kB", "MB", "GB", "TB", "PB",
++	static const char *units_10[] = { "B", "kB", "MB", "GB", "TB", "PB",
+ 				   "EB", "ZB", "YB", NULL};
+-	const char *units_2[] = {"B", "KiB", "MiB", "GiB", "TiB", "PiB",
++	static const char *units_2[] = {"B", "KiB", "MiB", "GiB", "TiB", "PiB",
+ 				 "EiB", "ZiB", "YiB", NULL };
+-	const char **units_str[] = {
++	static const char **units_str[] = {
+ 		[STRING_UNITS_10] =  units_10,
+ 		[STRING_UNITS_2] = units_2,
+ 	};
+-	const unsigned int divisor[] = {
++	static const unsigned int divisor[] = {
+ 		[STRING_UNITS_10] = 1000,
+ 		[STRING_UNITS_2] = 1024,
+ 	};
+_
