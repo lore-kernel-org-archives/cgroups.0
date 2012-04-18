@@ -1,27 +1,51 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: [PATCH] memcg: Use scnprintf instead of sprintf
-Date: Wed, 18 Apr 2012 11:45:56 +0530
-Message-ID: <1334729756-10212-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-References: <20120416161354.b967790c.akpm@linux-foundation.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120416161354.b967790c.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V6 10/14] hugetlbfs: Add memcg control files for hugetlbfs
+Date: Wed, 18 Apr 2012 11:46:37 +0530
+Message-ID: <87d375womy.fsf@skywalker.in.ibm.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120416161354.b967790c.akpm@linux-foundation.org>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120416161354.b967790c.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Andrew Morton <akpm@linux-foundation.org> writes:
 
-This make sure we don't overflow.
-
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
----
- mm/memcontrol.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
+> On Mon, 16 Apr 2012 16:14:47 +0530
+> "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
+>
+>> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+>> +static char *mem_fmt(char *buf, unsigned long n)
+>> +{
+>> +	if (n >= (1UL << 30))
+>> +		sprintf(buf, "%luGB", n >> 30);
+>> +	else if (n >= (1UL << 20))
+>> +		sprintf(buf, "%luMB", n >> 20);
+>> +	else
+>> +		sprintf(buf, "%luKB", n >> 10);
+>> +	return buf;
+>> +}
+>> +
+>> +int __init mem_cgroup_hugetlb_file_init(int idx)
+>> +{
+>> +	char buf[32];
+>> +	struct cftype *cft;
+>> +	struct hstate *h = &hstates[idx];
+>> +
+>> +	/* format the size */
+>> +	mem_fmt(buf, huge_page_size(h));
+>
+> The sprintf() into a fixed-sized buffer is a bit ugly.  I didn't check
+> it for possible overflows because 32 looks like "enough".  Actually too
+> much.
+>
+> Oh well, it's hard to avoid.  But using scnprintf() would prevent nasty
+> accidents.
+>
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
 index 519d370..0ccf934 100644
 --- a/mm/memcontrol.c
@@ -56,5 +80,10 @@ index 519d370..0ccf934 100644
  
  	/* Add the limit file */
  	cft = &h->mem_cgroup_files[0];
--- 
-1.7.10
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
