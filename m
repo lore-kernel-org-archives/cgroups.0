@@ -1,183 +1,60 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Tue, 17 Apr 2012 15:38:54 -0700
-Message-ID: <20120417223854.GG19975@google.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404175124.GA8931@localhost>
- <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120406095934.GA10465@localhost>
-Mime-Version: 1.0
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH] memcg: Use scnprintf instead of sprintf
+Date: Wed, 18 Apr 2012 11:45:56 +0530
+Message-ID: <1334729756-10212-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+References: <20120416161354.b967790c.akpm@linux-foundation.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=PTPDkMuJLjX5H93JYmPjWrtIjEtN7YDUDppYNldAUAc=;
-        b=OkNZI5dgvemGeSVZeWRWuewFdkbPJRorHGoCxVUJb8NftdqH02fQwjoizZ4op/cD5x
-         /aVe7S78HtRWtX9QSzfEif0cZZyBknyCWFmSm6uSEzJCEhr0cRh4O1kVWMkl96MpSLHj
-         29Jl/J/+kUbQY+NEBwjhE2K2JDXYjPHz6ZVX0BxHh2lg4cBa5fKI0LVp4fJqGBrIX0Ws
-         knF47ddn8Et5AvR3aaKf2SR+Ed8UbQgL4cfSue7GDT+pCW8eYcGfiFTO9kPkOPAMriM3
-         FpzM9I6wFiY9o9VtqwBGgqxujhUmlBeMvbFNyZKWt6cZpI7NYma1NhC5PjtBNvw0YbkH
-         3lvg==
-Content-Disposition: inline
-In-Reply-To: <20120406095934.GA10465@localhost>
+In-Reply-To: <20120416161354.b967790c.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Hello, Fengguang.
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-On Fri, Apr 06, 2012 at 02:59:34AM -0700, Fengguang Wu wrote:
-> Fortunately, the above gap can be easily filled judging from the
-> block/cfq IO controller code. By adding some direct IO accounting
-> and changing several lines of my patches to make use of the collected
-> stats, the semantics of the blkio.throttle.write_bps interfaces can be
-> changed from "limit for direct IO" to "limit for direct+buffered IOs".
-> Ditto for blkio.weight and blkio.write_iops, as long as some
-> iops/device time stats are made available to balance_dirty_pages().
-> 
-> It would be a fairly *easy* change. :-) It's merely adding some
-> accounting code and there is no need to change the block IO
-> controlling algorithm at all. I'll do the work of accounting (which
-> is basically independent of the IO controlling) and use the new stats
-> in balance_dirty_pages().
+This make sure we don't overflow.
 
-I don't really understand how this can work.  For hard limits, maybe,
-but for proportional IO, you have to know which cgroups have IOs
-before assigning the proportions, so blkcg assigning IO bandwidth
-without knowing async writes simply can't work.
+Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+---
+ mm/memcontrol.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-For example, let's say cgroups A and B have 2:8 split.  If A has IOs
-on queue and B doesn't, blkcg will assign all IO bandwidth to A.  I
-can't wrap my head around how writeback is gonna make use of the
-resulting stats but let's say it decides it needs to put out some IOs
-out for both cgroups.  What happens then?  Do all the async writes go
-through the root cgroup controlled by and affecting the ratio between
-rootcg and cgroup A and B?  Or do they have to be accounted as part of
-cgroups A and B?  If so, what if the added bandwidth goes over the
-limit?  Let's say if we implement overcharge; then, I suppose we'll
-have to communicate that upwards too, right?
-
-This is still easy.  What about hierarchical propio?  What happens
-then?  You can't do hierarchical proportional allocation without
-knowing how much IOs are pending for which group.  How is that
-information gonna be communicated between blkcg and writeback?  Are we
-gonna have two separate hierarchical proportional IO allocators?  How
-is that gonna work at all?  If we're gonna have single allocator in
-block layer, writeback would have to feed the amount of IOs it may
-generate into the allocator, get the resulting allocation and then
-issue IO and then block layer again will have to account these to the
-originating cgroups.  It's just crazy.
-
-> The only problem I can see now, is that balance_dirty_pages() works
-> per-bdi and blkcg works per-device. So the two ends may not match
-> nicely if the user configures lv0 on sda+sdb and lv1 on sdb+sdc where
-> sdb is shared by lv0 and lv1. However it should be rare situations and
-> be much more acceptable than the problems arise from the "push back"
-> approach which impacts everyone.
-
-I don't know.  What problems?  AFAICS, the biggest issue is writeback
-of different inodes getting mixed resulting in poor performance, but
-if you think about it, that's about the frequency of switching cgroups
-and a problem which can and should be dealt with from block layer
-(e.g. use larger time slice if all the pending IOs are async).
-
-Writeback's duty is generating stream of async writes which can be
-served efficiently for the *cgroup* and keeping the buffer filled as
-necessary and chaining the backpressure from there to the actual
-dirtier.  That's what writeback does without cgroup.  Nothing
-fundamental changes with cgroup.  It's just finer grained.
-
-> > No, no, it's not about standing in my way.  As Vivek said in the other
-> > reply, it's that the "gap" that you filled was created *because*
-> > writeback wasn't cgroup aware and now you're in turn filling that gap
-> > by making writeback work around that "gap".  I mean, my mind boggles.
-> > Doesn't yours?  I strongly believe everyone's should.
-> 
-> Heh. It's a hard problem indeed. I felt great pains in the IO-less
-> dirty throttling work. I did a lot reasoning about it, and have in
-> fact kept cgroup IO controller in mind since its early days. Now I'd
-> say it's hands down for it to adapt to the gap between the total IO
-> limit and what's carried out by the block IO controller.
-
-You're not providing any valid counter arguments about the issues
-being raised about the messed up design.  How is anything "hands down"
-here?
-
-> > There's where I'm confused.  How is the said split supposed to work?
-> > They aren't independent.  I mean, who gets to decide what and where
-> > are those decisions enforced?
-> 
-> Yeah it's not independent. It's about
-> 
-> - keep block IO cgroup untouched (in its current algorithm, for
->   throttling direct IO)
-> 
-> - let balance_dirty_pages() adapt to the throttling target
->   
->         buffered_write_limit = total_limit - direct_IOs
-
-Think about proportional allocation.  You don't have a number until
-you know who have pending IOs and how much.
-
-> To me, balance_dirty_pages() is *the* proper layer for buffered writes.
-> It's always there doing 1:1 proportional throttling. Then you try to
-> kick in to add *double* throttling in block/cfq layer. Now the low
-> layer may enforce 10:1 throttling and push balance_dirty_pages() away
-> from its balanced state, leading to large fluctuations and program
-> stalls.
-
-Just do the same 1:1 inside each cgroup.
-
->  This can be avoided by telling balance_dirty_pages(): "your
-> balance goal is no longer 1:1, but 10:1". With this information
-> balance_dirty_pages() will behave right. Then there is the question:
-> if balance_dirty_pages() will work just well provided the information,
-> why bother doing the throttling at low layer and "push back" the
-> pressure all the way up?
-
-Because splitting a resource into two pieces arbitrarily with
-different amount of consumptions on each side and then applying the
-same proportion on both doesn't mean anything?
-
-> The balance_dirty_pages() is already deeply involved in dirty throttling.
-> As you can see from this patchset, the same algorithms can be extended
-> trivially to work with cgroup IO limits.
-> 
-> buffered write IO controller in balance_dirty_pages()
-> https://lkml.org/lkml/2012/3/28/275
-
-It is half broken thing with fundamental design flaws which can't be
-corrected without complete reimplementation.  I don't know what to
-say.
-
-> In the "back pressure" scheme, memcg is a must because only it has all
-> the infrastructure to track dirty pages upon which you can apply some
-> dirty_limits. Don't tell me you want to account dirty pages in blkcg...
-
-For now, per-inode tracking seems good enough.
-
-> What I can see is, it looks pretty simple and nature to let
-> balance_dirty_pages() fill the gap towards a total solution :-)
-> 
-> - add direct IO accounting in some convenient point of the IO path
->   IO submission or completion point, either is fine.
-> 
-> - change several lines of the buffered write IO controller to
->   integrate the direct IO rate into the formula to fit the "total
->   IO" limit
-> 
-> - in future, add more accounting as well as feedback control to make
->   balance_dirty_pages() work with IOPS and disk time
-
-To me, you seem to be not addressing the issues I've been raising at
-all and just repeating the same points again and again.  If I'm
-misunderstanding something, please point out.
-
-Thanks.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 519d370..0ccf934 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5269,14 +5269,14 @@ static void mem_cgroup_destroy(struct cgroup *cont)
+ }
+ 
+ #ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+-static char *mem_fmt(char *buf, unsigned long n)
++static char *mem_fmt(char *buf, int size, unsigned long hsize)
+ {
+-	if (n >= (1UL << 30))
+-		sprintf(buf, "%luGB", n >> 30);
+-	else if (n >= (1UL << 20))
+-		sprintf(buf, "%luMB", n >> 20);
++	if (hsize >= (1UL << 30))
++		scnprintf(buf, size, "%luGB", hsize >> 30);
++	else if (hsize >= (1UL << 20))
++		scnprintf(buf, size, "%luMB", hsize >> 20);
+ 	else
+-		sprintf(buf, "%luKB", n >> 10);
++		scnprintf(buf, size, "%luKB", hsize >> 10);
+ 	return buf;
+ }
+ 
+@@ -5287,7 +5287,7 @@ int __init mem_cgroup_hugetlb_file_init(int idx)
+ 	struct hstate *h = &hstates[idx];
+ 
+ 	/* format the size */
+-	mem_fmt(buf, huge_page_size(h));
++	mem_fmt(buf, 32, huge_page_size(h));
+ 
+ 	/* Add the limit file */
+ 	cft = &h->mem_cgroup_files[0];
 -- 
-tejun
+1.7.10
