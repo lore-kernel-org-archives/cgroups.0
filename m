@@ -1,111 +1,126 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 5/5] expose per-taskgroup schedstats in cgroup
-Date: Thu, 19 Apr 2012 12:00:37 -0300
-Message-ID: <4F902895.3060507@parallels.com>
-References: <1334010315-4453-1-git-send-email-glommer@parallels.com> <1334010315-4453-6-git-send-email-glommer@parallels.com> <CAFj3OHUwF2My5c-+ZCwLNynNTokYwioXP2jTJ4FtKg_=jPed0Q@mail.gmail.com> <4F8EEAC5.7060703@parallels.com> <4F90135C.20203@gmail.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [RFC] writeback and cgroup
+Date: Thu, 19 Apr 2012 14:31:18 -0400
+Message-ID: <20120419183118.GM10216@redhat.com>
+References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
+ <20120404175124.GA8931@localhost>
+ <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
+ <20120406095934.GA10465@localhost>
+ <20120417223854.GG19975@google.com>
+ <20120419142343.GA12684@localhost>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4F90135C.20203-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20120419142343.GA12684@localhost>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
 
-On 04/19/2012 10:30 AM, Sha Zhengju wrote:
-> On 04/19/2012 12:24 AM, Glauber Costa wrote:
->>
->>>
->>> You define the idle time as the sum of task's sleeping time which i
->>> think it needs to
->>> discuss.
->>
->> Where is it done ?
->>
->> Idle time here is measured as the time between enqueue_sleeper() and
->> the group being put back in the rq.
->> But note it is enqueue sleeper for the group, not any tasks.
->>
->
-> Sorry, I still do not catch the point. In enqueue_sleeper(), it sums up
-> the sleep
-> time to se.statistics since dequeue_sleeper(), and then put back to rq.
-Yes.
+On Thu, Apr 19, 2012 at 10:23:43PM +0800, Fengguang Wu wrote:
 
-> Here do
-> you mean idle time is measured as the time between dequeue_sleeper() and
-> enqueue_sleeper()?
+Hi Fengguang,
 
-In general, yes. In practice, when we read the field, a 
-dequeue_sleeper() may not yet have happened. So we need to sum whatever 
-is in the rq at the moment to it.
+[..]
+> > I don't know.  What problems?  AFAICS, the biggest issue is writeback
+> > of different inodes getting mixed resulting in poor performance, but
+> > if you think about it, that's about the frequency of switching cgroups
+> > and a problem which can and should be dealt with from block layer
+> > (e.g. use larger time slice if all the pending IOs are async).
+> 
+> Yeah increasing time slice would help that case. In general it's not
+> merely the frequency of switching cgroup if take hard disk' writeback
+> cache into account.  Think about some inodes with async IO: A1, A2,
+> A3, .., and inodes with sync IO: D1, D2, D3, ..., all from different
+> cgroups. So when the root cgroup holds all async inodes, the cfq may
+> schedule IO interleavely like this
+> 
+>         A1,    A1,    A1,    A2,    A1,    A2,    ...
+>            D1,    D2,    D3,    D4,    D5,    D6, ...
+> 
+> Now it becomes
+> 
+>         A1,    A2,    A3,    A4,    A5,    A6,    ...
+>            D1,    D2,    D3,    D4,    D5,    D6, ...
+> 
+> The difference is that it's now switching the async inodes each time.
+> At cfq level, the seek costs look the same, however the disk's
+> writeback cache may help merge the data chunks from the same inode A1.
+> Well, it may cost some latency for spin disks. But how about SSD? It
+> can run deeper queue and benefit from large writes.
 
-  But it's still the sum of sleeping time of the
-> group's task?
-No.
+Not sure what's the point here. Many things seem to be mixed up.
 
-cfs will walk the hierarchy up calling enqueue_sleeper until it finds a 
-group that is not sleeping. This means that enqueue_sleeper() will be 
-called when no tasks in the group are running. (actually, no subgroups, 
-since it is hierarchical).
+If we start putting async queues in separate groups (in an attempt to
+provide fairness/service differentiation), then how much IO we dispatch
+from one async inode will directly depend on slice time of that
+cgroup/queue. So if you want longer dispatch from same async inode
+increasing slice time will help.
 
-Take a look at sched/core/fair.c
+Also elevator merge logic anyway increses the size of async IO requests
+and big requests are submitted to device.
 
->>> IMHO, idle
->>> time can just
->>> be the true system value. Personally I prefer to your last version in
->>> the way of computing
->>> idle time (http://thread.gmane.org/gmane.linux.kernel/1194838). And
->>> iowait can be
->>> computed in the similar way.
->>
->> No. The idea that idle time can only be true system-wide is wrong. As a
->> matter of fact, that first series of mine is totally wrong wrt that
->> (and then I changed).
->>
->> A cgroup is idle when none of its tasks are in the runqueue. What is
->> the problem that you see with this?
->
-> Actually, both idle and steal are the time when the group don't work.
-The difference is why it doesn't work. If he doesn't want to work, 
-that's idle. If it can't work, that's steal time.
+If you are looking that in every dispatch cycle we continue to dispatch
+request from same inode, yes that's not possible. Too huge a slice length
+in presence of sync IO is also not good. So if you are looking for
+high throughput and sacrificing fairness then you can switch to mode
+where all async queues are put in single root group. (Note: you will have
+to do reasonably fast switch between cgroups so that all the cgroups are
+able to do some writeout in a time window).
 
-> IMO, i'd like to contribute
-> the real cpu idle time to a group's idle, and let the time cpu servicing
-> for other group to be steal time.
+Writeback logic also submits a certain amount of writes from one inode
+and then switches to next inode in an attempt to provide fairness. Same
+thing should be directly controllable by CFQ's notion of time slice. That
+is continue to dispatch async IO from a cgroup/inode for extended durtaion
+before switching. So what's the difference. One can achieve equivalent
+behavior at any layer (writeback/CFQ).
 
-"contribute the real idle time to a group's idle" doesn't make any 
-sense. If all groups are idle, they all passed through 
-enqueue_sleeper(), and that time is already counted as idle. For all of 
-them.
+> 
+> > Writeback's duty is generating stream of async writes which can be
+> > served efficiently for the *cgroup* and keeping the buffer filled as
+> > necessary and chaining the backpressure from there to the actual
+> > dirtier.  That's what writeback does without cgroup.  Nothing
+> > fundamental changes with cgroup.  It's just finer grained.
+> 
+> Believe me, physically partitioning the dirty pages and async IO
+> streams comes at big costs. It won't scale well in many ways.
+> 
+> For one instance, splitting the request queues will give rise to
+> PG_writeback pages.  Those pages have been the biggest source of
+> latency issues in the various parts of the system.
 
-About steal time: That's *exactly* what I am doing! When a group enters 
-the runqueue, it should run. If it doesn't run, that's because someone 
-else is running. Therefore, runqueue time == steal time.
+So PG_writeback pages are one which have been submitted for IO? So even
+now we generate PG_writeback pages across multiple inodes as we submit
+those pages for IO. By keeping the number of request descriptor per
+group low, we can build back pressure early and hence per inode/group
+we will not have too many PG_Writeback pages. IOW, number of PG_Writeback
+pages will be controllable by number of request descriptros. So how
+does situation becomes worse in case of CFQ putting them in separate
+cgroups?
 
-> For example, suppose that 2 tasks(groups) are sharing one cpu and #1
-> keep running while #2 keep sleeping,
-> in your way: #1(idle)=0, #1(steal)=0; #2(idle)=100%, #2(steal)=0;
-> in my way: #1(idle)=0, #1(steal)=0; #2(idle)=0, #2(steal)=100%;
+> It's worth to note that running multiple flusher threads per bdi means
+> not only disk seeks for spin disks, smaller IO size for SSD, but also
+> lock contentions and cache bouncing for metadata heavy workloads and
+> fast storage.
 
-Have you actually tested this?
-It depends on what you mean by "keep sleeping". If you mean sleeping as
-not having any work to do, of course it is idle time.
+But we could still have single flusher per bdi and just check the
+write congestion state of each group and back off if it is congested.
 
-Believing this is steal time just because another group exists in the
-system is just wrong.
+So single thread will still be doing IO submission. Just that it will
+submit IO from multiple inodes/cgroup which can cause additional seeks.
+And that's the tradeoff of fairness. What I am not able to understand
+is that how are you avoiding this tradeoff by implementing things in
+writeback layer. To achieve more fairness among groups, even a flusher
+thread will have to switch faster among cgroups/inodes.
 
-> IMHO, our opinions diverge from the meaning of "idle".
+Thanks
+Vivek
 
-Yes, I believe idle time is the time during which you are idle.
-
-> But both idle and
-> steal can be get from cpuacct
-> in my way without involving in cpu controller.
-
-How so? If you wait for the idle tick to happen, that will mean *ALL* 
-your groups are idle. And that is *not* how you measure idle time.
-
-Idle time of a group of tasks, is the time during which none of the 
-tasks are running.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
