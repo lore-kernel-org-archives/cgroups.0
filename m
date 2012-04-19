@@ -1,69 +1,105 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH RESEND] memcg: Free spare array to avoid memory leak
-Date: Thu, 19 Apr 2012 16:54:50 +0800
-Message-ID: <1334825690-9065-1-git-send-email-handai.szj@taobao.com>
-Return-path: <owner-linux-mm@kvack.org>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 5/5] expose per-taskgroup schedstats in cgroup
+Date: Thu, 19 Apr 2012 21:30:04 +0800
+Message-ID: <4F90135C.20203@gmail.com>
+References: <1334010315-4453-1-git-send-email-glommer@parallels.com> <1334010315-4453-6-git-send-email-glommer@parallels.com> <CAFj3OHUwF2My5c-+ZCwLNynNTokYwioXP2jTJ4FtKg_=jPed0Q@mail.gmail.com> <4F8EEAC5.7060703@parallels.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=XaJHYmZ77mPer3aGPyuycFJDGX8AztIIJqRKc2EdqNE=;
-        b=wk4n1jmH8YhtAA5xW0L86Aa9tjq0kma3dA0hvvl8fAlm5yBH0qQOCm+gtg7Vi5dPrp
-         Dd77f1hzYlP+xtu4KYdqVT4bDO78HqxfsFwTDZa45FtGnSCL8BaRyTvABHPc4Ck21MVM
-         pJ6/bdMBFFfpXjj42gNI6z57EG8y8th/9EcXqVfYOsVXU764Fm8EBeMkXh4CAcPzlXRC
-         CLoNuYOlm1Dk/Yu662sWbRdSB5tF4orfJPugI12DVlmYSBjyZbcRXoW5YDbWAZ0JfvWT
-         YbmmqOmptrPHX5r6vhEjH/2SdYayFnB4MPFVmYIeT2Yfxb4m1UyzKwfbuhgkhf9Dd8Oc
-         PzEA==
-Sender: owner-linux-mm@kvack.org
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=vMRYxSQEH6CBr+7ADmhXiAlWSzpHfyCxIWHJuNnmg0w=;
+        b=B52im6krx7NCu0LHW+KbcF7G1nMdA/09Gj6V/6Zafq0Caz9zdpry/u2+42mcuP0lPQ
+         36o4Mg3j49m+9dYCX+8ebeAKNa8KKEiPUhHMHzr1JEg/25rPhY+cw8OL6hKjiOYzVrj+
+         y6zB9PkbPF6HBjq2NSjhqgN06Dd+G88Oh07kXZ2OEsguJRZKEFruMmX3+KfFQGMpId2A
+         k8SWrSAjDEP4/UYDp5bt0DAZ7h/M0kIXwyAjsvUsWdsXdvMzgvufPDeD9KCo2SR51SUR
+         jgt4lcKi/OE1Ej2rl55SxFB5NdWyZsGAK7l9RIPsEzis7dCh5KqCsay+UPQsQOJ/MG65
+         K6xQ==
+In-Reply-To: <4F8EEAC5.7060703-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
 
-From: Sha Zhengju <handai.szj@taobao.com>
+On 04/19/2012 12:24 AM, Glauber Costa wrote:
+>
+>>
+>> You define the idle time as the sum of task's sleeping time which i
+>> think it needs to
+>> discuss.
+>
+> Where is it done ?
+>
+> Idle time here is measured as the time between enqueue_sleeper() and
+> the group being put back in the rq.
+> But note it is enqueue sleeper for the group, not any tasks.
+>
 
-When the last event is unregistered, there is no need to keep the spare
-array anymore. So free it to avoid memory leak.
+Sorry, I still do not catch the point.  In enqueue_sleeper(), it sums up 
+the sleep
+time to se.statistics since dequeue_sleeper(), and then put back to rq. 
+Here do
+you mean idle time is measured as the time between dequeue_sleeper() and
+enqueue_sleeper()? But it's still the sum of sleeping time of the 
+group's task?
+Not cfs expert. If I've miss something, please feel free to point it 
+out. :-)
 
-Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Reviewed-by: Kirill A. Shutemov <kirill@shutemov.name>
+> cfs will call this callback until it finds anything that is running 
+> (task or not a task).
+>
+> Maybe I made some mistake in the code - and in this case, please point 
+> out - but that's the idea.
+>
+>> IMHO, idle
+>> time can just
+>> be the true system value. Personally I prefer to your last version in
+>> the way of computing
+>> idle time (http://thread.gmane.org/gmane.linux.kernel/1194838). And
+>> iowait can be
+>> computed in the similar way.
+>
+> No. The idea that idle time can only be true system-wide is wrong. As a
+> matter of fact, that first series of mine is totally wrong wrt that 
+> (and then I changed).
+>
+> A cgroup is idle when none of its tasks are in the runqueue. What is 
+> the problem that you see with this?
 
----
-Hi, Andrew
+Actually, both idle and steal are the time when the group don't work. 
+IMO, i'd like to contribute
+the real cpu idle time to a group's idle, and let the time cpu servicing 
+for other group to be steal time.
+For example, suppose that 2 tasks(groups) are sharing one cpu and #1 
+keep running while #2 keep sleeping,
+in your way:  #1(idle)=0, #1(steal)=0; #2(idle)=100%, #2(steal)=0;
+in my way:    #1(idle)=0, #1(steal)=0; #2(idle)=0,        #2(steal)=100%;
+IMHO, our opinions diverge from the meaning of "idle". But both idle and 
+steal can be get from cpuacct
+in my way without involving in cpu controller.
 
-This patch has been reviewed days ago. Do you have any comments about it?
-
-Thanks,
-Sha
- 
- mm/memcontrol.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 22d94f5..3c09a84 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4412,6 +4412,12 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
- swap_buffers:
- 	/* Swap primary and spare array */
- 	thresholds->spare = thresholds->primary;
-+	/* If all events are unregistered, free the spare array */
-+	if (!new) {
-+		kfree(thresholds->spare);
-+		thresholds->spare = NULL;
-+	}
-+
- 	rcu_assign_pointer(thresholds->primary, new);
- 
- 	/* To be sure that nobody uses thresholds */
--- 
-1.7.4.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>
+> As for iowait, that one seemed a bit trickier, so we decided to leave 
+> it out at least for now.
+>
+>>
+>> As to steal time, "Steal time is the percentage of time a virtual CPU
+>> waits for a real
+>> CPU while the hypervisor is servicing another virtual processor".
+>> Speaking from the
+>> point of view of resource controlling(isolation), cgroup is a
+>> lightweight method towards
+>> virtualiztion, so I think obeying its primitive meaning is more
+>> appropriate: the time not
+>> servicing me including time stolen by the tasks of other cgroup.
+>
+> And that's exactly what I've done.
+>
+> Steal time is runqueue time, until you are chosen to run.
+>
+> In a summary: If you are not running, you can be either idle or stolen.
+> if you are in the runqueue, you are stolen.
+> If you are not, you are idle.
