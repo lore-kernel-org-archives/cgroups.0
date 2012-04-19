@@ -1,72 +1,88 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] block: fixes for long standing issues
-Date: Thu, 19 Apr 2012 16:29:20 -0700
-Message-ID: <1334878164-24788-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer;
-        bh=momvZZ21MXzMxX+dy0luo9B2Tu4bhm04Q7PGsvumZPk=;
-        b=U7s2IJY3Vf12V96OF02kx4rF1vpyqIcsTCvUkaPXUY2xKhfPg/3jF9ytM4vOS8N/CG
-         W3I3ybNLwmQdGAw6aQSTIevlc877lS5tUSBO4gVHmU5X5qKUGG6KSGx1l8T7LNE8P/Xt
-         ybbGdNzJFsADhqWQZSTna4OiKzlKvgx375F6zKtefetMJ6364q7z2XmAA//LO5F1lcot
-         +DNFxBR9wZanYo7yzggBgUVKsGlwwQDJfoEE0O3sFpeGChq3F7XyicdiKYt+LPlNFONU
-         TnM3sDeBJ60gOFh37WgmKp29OJDrFCnRwcSLnPhiymncUqnzTQTi3yDr7wOkgkVr72Vc
-         Nkjg==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Subject: [PATCH 3/4] blkcg: fix blkcg->css ref leak in __blkg_lookup_create()
+Date: Thu, 19 Apr 2012 16:29:23 -0700
+Message-ID: <1334878164-24788-4-git-send-email-tj@kernel.org>
+References: <1334878164-24788-1-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+	:references; bh=gWip8WwVDKYMvuR0kgiPzY07opaWvDhtYvyLB9tJ3g8=;
+	b=0mvfxoIOjQ0Z7M5e7h4BvhxD+/5tfq+1LNLhLGGtJxnLq6PZgjBg858uXbu4GaQoT2
+	uTexiODLp8U/ynxOvQkqX/hr5qJQZWWbjiIMzd0Tj+rqHRGNH7CDGkFWVQKyTSK+p0Gp
+	LZihD1SmAK3W0+xiXsDMzXIGrgDM0AOvmgIB7PyedJhoQ2JFHaTToKndcvPWWzzQnxUF
+	VlZZs6MWksDuTU/lILLgIsgEyuAJs3tVTSMncqnuWyDdGspfNwnFADHpy+1TzLKEtv77
+	QUKAsENvhvaPc3/zWC6OBcqD+UfG0l3MoY3cjsSuqTwTcDpJc9bRMs7ZMhER6YLRs8gy
+	CoAA==
+In-Reply-To: <1334878164-24788-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello,
+__blkg_lookup_create() leaked blkcg->css ref if blkg allocation
+failed.  Fix it.
 
-This patchset fixes two long standing issues and one relatively new
-css ref leak.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ block/blk-cgroup.c |   19 +++++++++----------
+ 1 files changed, 9 insertions(+), 10 deletions(-)
 
-a. elvpriv alloc failure, including ioc and icq failures, fails
-   request allocation.  As those aren't mempool backed and may fail
-   indefinitely, this can lead to deadlock under memory pressure.
-
-b. blkgs don't have proper indexing.  With enough number of
-   request_queues and blk-throttle enabled, block layer can spend
-   considerable amount of cpu cycles walking the same list over and
-   over again.
-
-c. __blkg_lookup_create() was leaking a css ref on failure path.
-
-This patchset contains the following four patches.
-
- 0001-block-collapse-blk_alloc_request-into-get_request.patch
- 0002-block-fix-elvpriv-allocation-failure-handling.patch
- 0003-blkcg-fix-blkcg-css-ref-leak-in-__blkg_lookup_create.patch
- 0004-blkcg-use-radix-tree-to-index-blkgs-from-blkcg.patch
-
-0001-0002 fix #a.  0003 fixes #c.  0004 fixes #b.
-
-This patchset is on top of
-
-  block/for-3.5/core 5bc4afb1ec "blkcg: drop BLKCG_STAT_{PRIV|POL|OFF} macros"
-+ [1] [PATCHSET] block: per-queue policy activation, take#2
-+ [2] [PATCHSET] block: cosmetic updates to blkcg API
-
-and available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blk-misc-fixes
-
-diffstat follows.
-
- block/blk-cgroup.c |   71 ++++++++++++++++++++++++++++++++-----------
- block/blk-cgroup.h |    6 +++
- block/blk-core.c   |   87 ++++++++++++++++++++++++++++-------------------------
- 3 files changed, 106 insertions(+), 58 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[1] https://lkml.org/lkml/2012/4/13/380
-[2] http://www.spinics.net/lists/cgroups/msg01748.html
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 8228385..30a7a9c 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -174,6 +174,7 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 	__releases(q->queue_lock) __acquires(q->queue_lock)
+ {
+ 	struct blkcg_gq *blkg;
++	int ret;
+ 
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
+ 	lockdep_assert_held(q->queue_lock);
+@@ -186,24 +187,22 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 	if (!css_tryget(&blkcg->css))
+ 		return ERR_PTR(-EINVAL);
+ 
+-	/*
+-	 * Allocate and initialize.
+-	 */
++	/* allocate */
++	ret = -ENOMEM;
+ 	blkg = blkg_alloc(blkcg, q);
+-
+-	/* did alloc fail? */
+-	if (unlikely(!blkg)) {
+-		blkg = ERR_PTR(-ENOMEM);
+-		goto out;
+-	}
++	if (unlikely(!blkg))
++		goto err_put;
+ 
+ 	/* insert */
+ 	spin_lock(&blkcg->lock);
+ 	hlist_add_head_rcu(&blkg->blkcg_node, &blkcg->blkg_list);
+ 	list_add(&blkg->q_node, &q->blkg_list);
+ 	spin_unlock(&blkcg->lock);
+-out:
+ 	return blkg;
++
++err_put:
++	css_put(&blkcg->css);
++	return ERR_PTR(ret);
+ }
+ 
+ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+-- 
+1.7.7.3
