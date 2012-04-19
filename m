@@ -1,102 +1,47 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Thu, 19 Apr 2012 22:26:35 +0200
-Message-ID: <20120419202635.GA4795@quack.suse.cz>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
-	<20120404175124.GA8931@localhost>
-	<20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
-	<20120406095934.GA10465@localhost>
-	<20120417223854.GG19975@google.com>
-	<20120419142343.GA12684@localhost>
-Mime-Version: 1.0
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH 1/3] don't attach a task to a dead cgroup
+Date: Thu, 19 Apr 2012 19:49:16 -0300
+Message-ID: <1334875758-20939-2-git-send-email-glommer@parallels.com>
+References: <1334875758-20939-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1334875758-20939-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120419142343.GA12684@localhost>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Thu 19-04-12 22:23:43, Wu Fengguang wrote:
-> For one instance, splitting the request queues will give rise to
-> PG_writeback pages.  Those pages have been the biggest source of
-> latency issues in the various parts of the system.
-  Well, if we allow more requests to be in flight in total then yes, number
-of PG_Writeback pages can be higher as well.
+Not all external callers of cgroup_attach_task() test to
+see if the cgroup is still live - the internal callers at
+cgroup.c does.
 
-> It's not uncommon for me to see filesystems sleep on PG_writeback
-> pages during heavy writeback, within some lock or transaction, which in
-> turn stall many tasks that try to do IO or merely dirty some page in
-> memory. Random writes are especially susceptible to such stalls. The
-> stable page feature also vastly increase the chances of stalls by
-> locking the writeback pages. 
-> 
-> Page reclaim may also block on PG_writeback and/or PG_dirty pages. In
-> the case of direct reclaim, it means blocking random tasks that are
-> allocating memory in the system.
-> 
-> PG_writeback pages are much worse than PG_dirty pages in that they are
-> not movable. This makes a big difference for high-order page allocations.
-> To make room for a 2MB huge page, vmscan has the option to migrate
-> PG_dirty pages, but for PG_writeback it has no better choices than to
-> wait for IO completion.
-> 
-> The difficulty of THP allocation goes up *exponentially* with the
-> number of PG_writeback pages. Assume PG_writeback pages are randomly
-> distributed in the physical memory space. Then we have formula
-> 
->         P(reclaimable for THP) = 1 - P(hit PG_writeback)^256
-  Well, this implicitely assumes that PG_Writeback pages are scattered
-across memory uniformly at random. I'm not sure to which extent this is
-true... Also as a nitpick, this isn't really an exponential growth since
-the exponent is fixed (256 - actually it should be 512, right?). It's just
-a polynomial with a big exponent. But sure, growth in number of PG_Writeback
-pages will cause relatively steep drop in the number of available huge
-pages.
+With this test in cgroup_attach_task, we can assure that
+no tasks are ever moved to a cgroup that is past its
+destruction point and was already marked as dead.
 
-...
-> It's worth to note that running multiple flusher threads per bdi means
-> not only disk seeks for spin disks, smaller IO size for SSD, but also
-> lock contentions and cache bouncing for metadata heavy workloads and
-> fast storage.
-  Well, this heavily depends on particular implementation (and chosen
-data structures). But yes, we should have that in mind.
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/cgroup.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-...
-> > > To me, balance_dirty_pages() is *the* proper layer for buffered writes.
-> > > It's always there doing 1:1 proportional throttling. Then you try to
-> > > kick in to add *double* throttling in block/cfq layer. Now the low
-> > > layer may enforce 10:1 throttling and push balance_dirty_pages() away
-> > > from its balanced state, leading to large fluctuations and program
-> > > stalls.
-> > 
-> > Just do the same 1:1 inside each cgroup.
-> 
-> Sure. But the ratio mismatch I'm talking about is inter-cgroup.
-> For example there are only 2 dd tasks doing buffered writes in the
-> system. Now consider the mismatch that cfq is dispatching their IO
-> requests at 10:1 weights, while balance_dirty_pages() is throttling
-> the dd tasks at 1:1 equal split because it's not aware of the cgroup
-> weights.
-> 
-> What will happen in the end? The 1:1 ratio imposed by
-> balance_dirty_pages() will take effect and the dd tasks will progress
-> at the same pace. The cfq weights will be defeated because the async
-> queue for the second dd (and cgroup) constantly runs empty.
-  Yup. This just shows that you have to have per-cgroup dirty limits. Once
-you have those, things start working again.
-
-								Honza
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index b61b938..932c318 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1927,6 +1927,9 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
+ 	struct cgroup_taskset tset = { };
+ 	struct css_set *newcg;
+ 
++	if (cgroup_is_removed(cgrp))
++		return -ENODEV;
++
+ 	/* @tsk either already exited or can't exit until the end */
+ 	if (tsk->flags & PF_EXITING)
+ 		return -ESRCH;
 -- 
-Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-SUSE Labs, CR
+1.7.7.6
