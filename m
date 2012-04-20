@@ -1,152 +1,51 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [RFC] writeback and cgroup
-Date: Fri, 20 Apr 2012 21:34:41 +0800
-Message-ID: <20120420133441.GA7035@localhost>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404175124.GA8931@localhost>
- <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120406095934.GA10465@localhost>
- <20120417223854.GG19975@google.com>
- <20120419142343.GA12684@localhost>
- <20120419202635.GA4795@quack.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 0/3] Fix problem with static_key decrement
+Date: Fri, 20 Apr 2012 12:01:50 -0300
+Message-ID: <4F917A5E.7040803@parallels.com>
+References: <1334875758-20939-1-git-send-email-glommer@parallels.com> <20120419225441.GD10553@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120419202635.GA4795@quack.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>, vgoyal@redhat.com, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org, Mel Gorman <mgorman@suse.de>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120419225441.GD10553-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Thu, Apr 19, 2012 at 10:26:35PM +0200, Jan Kara wrote:
-> On Thu 19-04-12 22:23:43, Wu Fengguang wrote:
-> > For one instance, splitting the request queues will give rise to
-> > PG_writeback pages.  Those pages have been the biggest source of
-> > latency issues in the various parts of the system.
->   Well, if we allow more requests to be in flight in total then yes, number
-> of PG_Writeback pages can be higher as well.
+On 04/19/2012 07:54 PM, Tejun Heo wrote:
+> On Thu, Apr 19, 2012 at 07:49:15PM -0300, Glauber Costa wrote:
+>> Hi,
+>>
+>> This is my proposed fix for the sock memcg static_key
+>> problem raised by Kamezawa. It works for me, but I would
+>> Kame, please confirm.
+>
+> Please detail the problem.  I don't follow what's the purpose here.
+>
 
-Exactly.  
+Ok.
 
-> > It's not uncommon for me to see filesystems sleep on PG_writeback
-> > pages during heavy writeback, within some lock or transaction, which in
-> > turn stall many tasks that try to do IO or merely dirty some page in
-> > memory. Random writes are especially susceptible to such stalls. The
-> > stable page feature also vastly increase the chances of stalls by
-> > locking the writeback pages. 
-> > 
-> > Page reclaim may also block on PG_writeback and/or PG_dirty pages. In
-> > the case of direct reclaim, it means blocking random tasks that are
-> > allocating memory in the system.
-> > 
-> > PG_writeback pages are much worse than PG_dirty pages in that they are
-> > not movable. This makes a big difference for high-order page allocations.
-> > To make room for a 2MB huge page, vmscan has the option to migrate
-> > PG_dirty pages, but for PG_writeback it has no better choices than to
-> > wait for IO completion.
-> > 
-> > The difficulty of THP allocation goes up *exponentially* with the
-> > number of PG_writeback pages. Assume PG_writeback pages are randomly
-> > distributed in the physical memory space. Then we have formula
-> > 
-> >         P(reclaimable for THP) = 1 - P(hit PG_writeback)^256
->   Well, this implicitely assumes that PG_Writeback pages are scattered
-> across memory uniformly at random. I'm not sure to which extent this is
-> true...
+1) Kame found the following bug: we were decrementing the jump label 
+when the socket limit was set back to unlimited. The problem is that the 
+sockets outlive the memcg, so we can only do that when the last 
+reference count is dropped. It is worth mentioning that kmem controller 
+for memcg will have the exact same problem - I am actually updating my 
+series with all the results of this discussion here.
 
-Yeah, when describing the problem I was also thinking about the
-possibilities of optimization (it would be a very good general
-improvements). Or maybe Mel already has some solutions :)
+2) If, however, there are no sockets in flight, mem_cgroup_put() during
+->destroy() will be the last one, and the decrementing will happen there.
 
-> Also as a nitpick, this isn't really an exponential growth since
-> the exponent is fixed (256 - actually it should be 512, right?). It's just
+3) static_key updates cannot happen with the cgroup_mutex held. This is
+because cpusets hold it from within the cpu_hotplug.lock - that 
+static_keys take through get_online_cpus() in its cpu hotplug handler.
 
-Right, 512 4k pages to form one x86_64 2MB huge pages.
+4) Looking at the cpusets code, it really seems necessary, at least by now.
 
-> a polynomial with a big exponent. But sure, growth in number of PG_Writeback
-> pages will cause relatively steep drop in the number of available huge
-> pages.
+5) Deferring all this to worker threads as you suggested in the cpu 
+thread - that has a similar problem - can solve this problem, but in 
+general, will create tons of others, like windows of inconsistent 
+information.
 
-It's exponential indeed, because "1 - p(x)" here means "p(!x)".
-It's exponential for a 10x increase in x resulting in 100x drop of y.
+That's basically it.
 
-> ...
-> > It's worth to note that running multiple flusher threads per bdi means
-> > not only disk seeks for spin disks, smaller IO size for SSD, but also
-> > lock contentions and cache bouncing for metadata heavy workloads and
-> > fast storage.
->   Well, this heavily depends on particular implementation (and chosen
-> data structures). But yes, we should have that in mind.
-
-The lock contentions and cache bouncing actually mainly happen in fs
-code due to concurrent IO submissions. Also when replying Vivek's
-email I realized that the disk seeks and/or smaller IO size are more
-fundamentally tied to the split async queues in cfq which makes it
-switch inodes on every async slice time (typically 40ms).
-
-> ...
-> > > > To me, balance_dirty_pages() is *the* proper layer for buffered writes.
-> > > > It's always there doing 1:1 proportional throttling. Then you try to
-> > > > kick in to add *double* throttling in block/cfq layer. Now the low
-> > > > layer may enforce 10:1 throttling and push balance_dirty_pages() away
-> > > > from its balanced state, leading to large fluctuations and program
-> > > > stalls.
-> > > 
-> > > Just do the same 1:1 inside each cgroup.
-> > 
-> > Sure. But the ratio mismatch I'm talking about is inter-cgroup.
-> > For example there are only 2 dd tasks doing buffered writes in the
-> > system. Now consider the mismatch that cfq is dispatching their IO
-> > requests at 10:1 weights, while balance_dirty_pages() is throttling
-> > the dd tasks at 1:1 equal split because it's not aware of the cgroup
-> > weights.
-> > 
-> > What will happen in the end? The 1:1 ratio imposed by
-> > balance_dirty_pages() will take effect and the dd tasks will progress
-> > at the same pace. The cfq weights will be defeated because the async
-> > queue for the second dd (and cgroup) constantly runs empty.
->   Yup. This just shows that you have to have per-cgroup dirty limits. Once
-> you have those, things start working again.
-
-Right. I think Tejun was more of less aware of this.
-
-I was rather upset by this per-memcg dirty_limit idea indeed. I never
-expect it to work well when used extensively. My plan was to set the
-default memcg dirty_limit high enough, so that it's not hit in normal.
-Then Tejun came and proposed to (mis-)use dirty_limit as the way to
-convert the dirty pages' backpressure into real dirty throttling rate.
-No, that's just crazy idea!
-
-Come on, let's not over-use memcg's dirty_limit. It's there as the
-*last resort* to keep dirty pages under control so as to maintain
-interactive performance inside the cgroup. However if used extensively
-in the system (like dozens of memcgs all hit their dirty limits), the
-limit itself may stall random dirtiers and create interactive
-performance issues!
-
-In the recent days I've come up with the idea of memcg.dirty_setpoint
-for the blkcg backpressure stuff. We can use that instead.
-
-memcg.dirty_setpoint will scale proportionally with blkcg.writeout_rate.
-Imagine bdi_setpoint. It's all the same concepts. Why we need this?
-Because if blkcg A and B does 10:1 weights and are both doing buffered
-writes, their dirty pages should better be maintained around 10:1
-ratio to avoid underrun and hopefully achieve better IO size.
-memcg.dirty_limit cannot guarantee that goal.
-
-But be warned! Partitioning the dirty pages always means more
-fluctuations of dirty rates (and even stalls) that's perceivable by
-the user. Which means another limiting factor for the backpressure
-based IO controller to scale well.
-
-Thanks,
-Fengguang
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
