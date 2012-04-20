@@ -1,102 +1,80 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 01/23] slub: don't create a copy of the name string in kmem_cache_create
-Date: Fri, 20 Apr 2012 18:48:58 -0300
-Message-ID: <1334958560-18076-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH 04/23] memcg: Make it possible to use the stock for more than one page.
+Date: Fri, 20 Apr 2012 18:49:01 -0300
+Message-ID: <1334958560-18076-5-git-send-email-glommer@parallels.com>
 References: <1334958560-18076-1-git-send-email-glommer@parallels.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1334958560-18076-1-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Suleiman Souhlal <ssouhlal@FreeBSD.org>
 
-When creating a cache, slub keeps a copy of the cache name through
-strdup. The slab however, doesn't do that. This means that everyone
-registering caches have to keep a copy themselves anyway, since code
-needs to work on all allocators.
+From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
 
-Having slab create a copy of it as well may very well be the right
-thing to do: but at this point, the callers are already there
-
-My motivation for it comes from the kmem slab cache controller for
-memcg. Because we create duplicate caches, having a more consistent
-behavior here really helps.
-
-I am sending the patch, however, more to probe on your opinion about
-it. If you guys agree, but don't want to merge it - since it is not
-fixing anything, nor improving any situation etc, I am more than happy
-to carry it in my series until it gets merged (fingers crossed).
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Christoph Lameter <cl@linux.com>
-CC: Pekka Enberg <penberg@cs.helsinki.fi>
+Signed-off-by: Suleiman Souhlal <suleiman@google.com>
 ---
- mm/slub.c |   14 ++------------
- 1 files changed, 2 insertions(+), 12 deletions(-)
+ mm/memcontrol.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/mm/slub.c b/mm/slub.c
-index ffe13fd..af8cee9 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -3925,7 +3925,6 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
- 		size_t align, unsigned long flags, void (*ctor)(void *))
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 932a734..4b94b2d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1998,19 +1998,19 @@ static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
+ static DEFINE_MUTEX(percpu_charge_mutex);
+ 
+ /*
+- * Try to consume stocked charge on this cpu. If success, one page is consumed
+- * from local stock and true is returned. If the stock is 0 or charges from a
+- * cgroup which is not current target, returns false. This stock will be
+- * refilled.
++ * Try to consume stocked charge on this cpu. If success, nr_pages pages are
++ * consumed from local stock and true is returned. If the stock is 0 or
++ * charges from a cgroup which is not current target, returns false.
++ * This stock will be refilled.
+  */
+-static bool consume_stock(struct mem_cgroup *memcg)
++static bool consume_stock(struct mem_cgroup *memcg, int nr_pages)
  {
- 	struct kmem_cache *s;
--	char *n;
+ 	struct memcg_stock_pcp *stock;
+ 	bool ret = true;
  
- 	if (WARN_ON(!name))
- 		return NULL;
-@@ -3949,26 +3948,20 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
- 		return s;
- 	}
- 
--	n = kstrdup(name, GFP_KERNEL);
--	if (!n)
--		goto err;
--
- 	s = kmalloc(kmem_size, GFP_KERNEL);
- 	if (s) {
--		if (kmem_cache_open(s, n,
-+		if (kmem_cache_open(s, name,
- 				size, align, flags, ctor)) {
- 			list_add(&s->list, &slab_caches);
- 			up_write(&slub_lock);
- 			if (sysfs_slab_add(s)) {
- 				down_write(&slub_lock);
- 				list_del(&s->list);
--				kfree(n);
- 				kfree(s);
- 				goto err;
- 			}
- 			return s;
+ 	stock = &get_cpu_var(memcg_stock);
+-	if (memcg == stock->cached && stock->nr_pages)
+-		stock->nr_pages--;
++	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
++		stock->nr_pages -= nr_pages;
+ 	else /* need to call res_counter_charge */
+ 		ret = false;
+ 	put_cpu_var(memcg_stock);
+@@ -2309,7 +2309,7 @@ again:
+ 		VM_BUG_ON(css_is_removed(&memcg->css));
+ 		if (mem_cgroup_is_root(memcg))
+ 			goto done;
+-		if (nr_pages == 1 && consume_stock(memcg))
++		if (consume_stock(memcg, nr_pages))
+ 			goto done;
+ 		css_get(&memcg->css);
+ 	} else {
+@@ -2334,7 +2334,7 @@ again:
+ 			rcu_read_unlock();
+ 			goto done;
  		}
--		kfree(n);
- 		kfree(s);
- 	}
- err:
-@@ -5212,7 +5205,6 @@ static void kmem_cache_release(struct kobject *kobj)
- {
- 	struct kmem_cache *s = to_slab(kobj);
- 
--	kfree(s->name);
- 	kfree(s);
- }
- 
-@@ -5318,11 +5310,9 @@ static int sysfs_slab_add(struct kmem_cache *s)
- 		return err;
- 	}
- 	kobject_uevent(&s->kobj, KOBJ_ADD);
--	if (!unmergeable) {
-+	if (!unmergeable)
- 		/* Setup first alias */
- 		sysfs_slab_alias(s, s->name);
--		kfree(name);
--	}
- 	return 0;
- }
- 
+-		if (nr_pages == 1 && consume_stock(memcg)) {
++		if (consume_stock(memcg, nr_pages)) {
+ 			/*
+ 			 * It seems dagerous to access memcg without css_get().
+ 			 * But considering how consume_stok works, it's not
 -- 
 1.7.7.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
