@@ -1,59 +1,42 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [RFC] writeback and cgroup
-Date: Fri, 20 Apr 2012 15:29:30 -0400
-Message-ID: <20120420192930.GR22419@redhat.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120404175124.GA8931@localhost>
- <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120406095934.GA10465@localhost>
- <20120417223854.GG19975@google.com>
- <20120419142343.GA12684@localhost>
- <20120419183118.GM10216@redhat.com>
- <20120420124518.GA7133@localhost>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 3/3] decrement static keys on real destroy time
+Date: Fri, 20 Apr 2012 16:39:00 -0300
+Message-ID: <4F91BB54.8030703@parallels.com>
+References: <1334875758-20939-1-git-send-email-glommer@parallels.com> <1334875758-20939-4-git-send-email-glommer@parallels.com> <4F911289.1050403@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20120420124518.GA7133@localhost>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F911289.1050403-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Fri, Apr 20, 2012 at 08:45:18PM +0800, Fengguang Wu wrote:
+On 04/20/2012 04:38 AM, KAMEZAWA Hiroyuki wrote:
+>>   			mem_cgroup_get(memcg);
+>> >  -			sk->sk_cgrp = sk->sk_prot->proto_cgroup(memcg);
+>> >  +			sk->sk_cgrp = cg_proto;
+>> >    		}
+> 
+> 
+> Is this correct ? cg_proto->active can be true before all jump_labels are
+> patched, then we can loose accounting. That will cause underflow of
+> res_countner.
+> 
+> cg_proto->active should be set after jump_label modification.
+> Then, things will work, I guess.
+> 
+> Thanks,
+> -Kame
+> 
 
-[..]
-> If still keep the global async queue, it can run small 40ms slices
-> without defeating the flusher's 500ms granularity. After each slice
-> it can freely switch to other cgroups with sync IOs, so is free from
-> latency issues. After return, it will continue to serve the same
-> inode. It will basically be working on behalf of one cgroup for 500ms
-> data, working for another cgroup for 500ms data and so on. That
-> behavior does not impact fairness, because it's still using small
-> slices and its weight is computed system wide thus exhibits some kind
-> of smooth/amortize effects over long period of time. It can naturally 
-> serve the same inode after return.
+Kame,
 
-Ok, So tejun did say that we will have a switch where we will allow
-retaining the old behavior of keeping all async writes in root group
-and not in individual group. So throughput sensitive users can make
-use of that and there is no need to push proportional IO logic to
-writeback layer for buffered writes?
+You are right.
 
-I am personally is not too excited about the case of putting async IO
-in separate groups due to the reason that async IO of one group will
-start impacting latencies of sync IO of another group and in practice
-it might not be desirable. But there are others who have use cases for
-separate async IO queue. So as long as switch is there to change the
-behavior, I am not too worried.
+The first update needs to be done after the jump label activation as
+well. I got myself confused with the two flags =(
 
-Thanks
-Vivek
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I will repost with this fixed once I get into agreement with Tejun and
+Li about the lockless ->destroy()
