@@ -1,50 +1,49 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 1/3] don't attach a task to a dead cgroup
-Date: Fri, 20 Apr 2012 12:05:31 -0300
-Message-ID: <4F917B3B.1060704@parallels.com>
-References: <1334875758-20939-1-git-send-email-glommer@parallels.com> <1334875758-20939-2-git-send-email-glommer@parallels.com> <20120419225322.GC10553@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET] block: per-queue policy activation, take#2
+Date: Fri, 20 Apr 2012 10:17:42 -0700
+Message-ID: <20120420171742.GC32324@google.com>
+References: <1334347895-6268-1-git-send-email-tj@kernel.org>
+ <20120420080943.GG7505@kernel.dk>
+ <4F91503D.2060402@kernel.dk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20120419225322.GC10553@google.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=QWwDzg6qRfSMe14GP0MCUS6nOovx/qQROt4mH0UGj3g=;
+        b=IngpYjFiLoiaoojAPCFuyeT2q0cuapZ2om0mwkduj7ttQyELxATMvANqps+NXdbDxS
+         wGszyV+zemgKX7ixWBfO5qZN3+eJZXO0WofzkwAILfxIhkz2kGeCi67FqloBvPZN9PeO
+         JhLxibKyw/37KTklEvD5KBVBUDTN59qgvf4dnrs7418yoJ26WdAp0dob+EOpfEpPXDf+
+         4HnOEoE4FX4+ZTONSPf3Xqhdqbpd91abaz7CP1JGE3K9lHFJ28WAdcM06Ytp9H1FBxp7
+         DemnrT4+N8zYfS4x1s8QL/jnlYwgM64LgNoQNIjhYyzSSM4yryquXQybx3XFMRCDqq+8
+         1k+Q==
+Content-Disposition: inline
+In-Reply-To: <4F91503D.2060402-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, kamezawa.hiroyu@jp.fujitsu.com, David Miller <davem@davemloft.net>, devel@openvz.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On 04/19/2012 07:53 PM, Tejun Heo wrote:
-> On Thu, Apr 19, 2012 at 07:49:16PM -0300, Glauber Costa wrote:
->> Not all external callers of cgroup_attach_task() test to
->> see if the cgroup is still live - the internal callers at
->> cgroup.c does.
->>
->> With this test in cgroup_attach_task, we can assure that
->> no tasks are ever moved to a cgroup that is past its
->> destruction point and was already marked as dead.
->>
->> Signed-off-by: Glauber Costa<glommer@parallels.com>
->> CC: Tejun Heo<tj@kernel.org>
->> CC: Li Zefan<lizefan@huawei.com>
->> CC: Kamezawa Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->> ---
->>   kernel/cgroup.c |    3 +++
->>   1 files changed, 3 insertions(+), 0 deletions(-)
->>
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index b61b938..932c318 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -1927,6 +1927,9 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
->>   	struct cgroup_taskset tset = { };
->>   	struct css_set *newcg;
->>
->> +	if (cgroup_is_removed(cgrp))
->> +		return -ENODEV;
->> +
->
-> Isn't the test in cgroup_lock_live_group() enough?
->
-Yes, when it is done.
+Hello, Jens.
 
-Not all callers take it, specially the external ones.
+On Fri, Apr 20, 2012 at 02:02:05PM +0200, Jens Axboe wrote:
+> Tejun, everything merged in cleanly. A boot test didn't not go so well,
+> I'm afraid. It complains about stuck RCU. Even with extra RCU
+> debugging/info turned on, it doesn't give my any extra info.
+> 
+> Config is attached. I can try and debug this on Monday, for now I've
+> pulled it out of for-next again.
+
+Hmmm... it works fine with the same config here (qemu w/ 4 cpus
+configured).  Doesn't stuck RCU usually come from unbalanced RCU
+lock/unlocking?  That should trigger context or RCU warnings before
+anything else, weird.  Anyways, it would be great if you can provide
+more info on how to reproduce the problem.
+
+Thanks.
+
+-- 
+tejun
