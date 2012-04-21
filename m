@@ -1,100 +1,93 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 00/23] slab+slub accounting for memcg
-Date: Fri, 20 Apr 2012 19:01:33 -0300
-Message-ID: <4F91DCBD.7070005@parallels.com>
-References: <1334958560-18076-1-git-send-email-glommer@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/3] don't take cgroup_mutex in destroy()
+Date: Sat, 21 Apr 2012 14:47:16 +0800
+Message-ID: <4F9257F4.2070505@huawei.com>
+References: <1334875758-20939-1-git-send-email-glommer@parallels.com>
+ <1334875758-20939-3-git-send-email-glommer@parallels.com>
+ <20120419225704.GE10553@google.com> <4F917AEB.7080404@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1334958560-18076-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <4F917AEB.7080404-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 04/20/2012 06:48 PM, Glauber Costa wrote:
-> Hi,
->
-> This is my current attempt at getting the kmem controller
-> into a mergeable state. IMHO, all the important bits are there, and it should't
-> change *that* much from now on. I am, however, expecting at least a couple more
-> interactions before we sort all the edges out.
->
-> This series works for both the slub and the slab. One of my main goals was to
-> make sure that the interfaces we are creating actually makes sense for both
-> allocators.
->
-> I did some adaptations to the slab-specific patches, but the bulk of it
-> comes from Suleiman's patches. I did the best to use his patches
-> as-is where possible so to keep authorship information. When not possible,
-> I tried to be fair and quote it in the commit message.
->
-> In this series, all existing caches are created per-memcg after its first hit.
-> The main reason is, during discussions in the memory summit we came into
-> agreement that the fragmentation problems that could arise from creating all
-> of them are mitigated by the typically small quantity of caches in the system
-> (order of a few megabytes total for sparsely used caches).
-> The lazy creation from Suleiman is kept, although a bit modified. For instance,
-> I now use a locked scheme instead of cmpxcgh to make sure cache creation won't
-> fail due to duplicates, which simplifies things by quite a bit.
->
-> The slub is a bit more complex than what I came up with in my slub-only
-> series. The reason is we did not need to use the cache-selection logic
-> in the allocator itself - it was done by the cache users. But since now
-> we are lazy creating all caches, this is simply no longer doable.
->
-> I am leaving destruction of caches out of the series, although most
-> of the infrastructure for that is here, since we did it in earlier
-> series. This is basically because right now Kame is reworking it for
-> user memcg, and I like the new proposed behavior a lot more. We all seemed
-> to have agreed that reclaim is an interesting problem by itself, and
-> is not included in this already too complicated series. Please note
-> that this is still marked as experimental, so we have so room. A proper
-> shrinker implementation is a hard requirement to take the kmem controller
-> out of the experimental state.
->
-> I am also not including documentation, but it should only be a matter
-> of merging what we already wrote in earlier series plus some additions.
->
-> Glauber Costa (19):
->    slub: don't create a copy of the name string in kmem_cache_create
->    slub: always get the cache from its page in kfree
->    slab: rename gfpflags to allocflags
->    slab: use obj_size field of struct kmem_cache when not debugging
->    change defines to an enum
->    don't force return value checking in res_counter_charge_nofail
->    kmem slab accounting basic infrastructure
->    slab/slub: struct memcg_params
->    slub: consider a memcg parameter in kmem_create_cache
->    slab: pass memcg parameter to kmem_cache_create
->    slub: create duplicate cache
->    slub: provide kmalloc_no_account
->    slab: create duplicate cache
->    slab: provide kmalloc_no_account
->    kmem controller charge/uncharge infrastructure
->    slub: charge allocation to a memcg
->    slab: per-memcg accounting of slab caches
->    memcg: disable kmem code when not in use.
->    slub: create slabinfo file for memcg
->
-> Suleiman Souhlal (4):
->    memcg: Make it possible to use the stock for more than one page.
->    memcg: Reclaim when more than one page needed.
->    memcg: Track all the memcg children of a kmem_cache.
->    memcg: Per-memcg memory.kmem.slabinfo file.
->
-I am sorry.
+Glauber Costa wrote:
 
-My mail server seems to be going crazy in the middle of the submission, 
-and the whole patchset is not going through (and a part of it got 
-duplicated)
+> On 04/19/2012 07:57 PM, Tejun Heo wrote:
+>> On Thu, Apr 19, 2012 at 07:49:17PM -0300, Glauber Costa wrote:
+>>> Most of the destroy functions are only doing very simple things
+>>> like freeing memory.
+>>>
+>>> The ones who goes through lists and such, already use its own
+>>> locking for those.
+>>>
+>>> * The cgroup itself won't go away until we free it, (after destroy)
+>>> * The parent won't go away because we hold a reference count
+>>> * There are no more tasks in the cgroup, and the cgroup is declared
+>>>    dead (cgroup_is_removed() == true)
+>>>
+>>> For the blk-cgroup and the cpusets, I got the impression that the mutex
+>>> is still necessary.
+>>>
+>>> For those, I grabbed it from within the destroy function itself.
+>>>
+>>> If the maintainer for those subsystems consider it safe to remove
+>>> it, we can discuss it separately.
+>>
+>> I really don't like cgroup_lock() usage spreading more.  It's
+>> something which should be contained in cgroup.c proper.  I looked at
+>> the existing users a while ago and they seemed to be compensating
+>> deficencies in API, so, if at all possible, let's not spread the
+>> disease.
+> 
+> Well, I can dig deeper and see if they are really needed. I don't know cpusets and blkcg *that* well, that's why I took them there, hoping that someone could enlighten me, maybe they aren't really needed even now.
+> 
+> I agree with the compensating: As I mentioned, most of them are already taking other kinds of lock to protect their structures, which is the right thing to do.
+> 
+> There were only two or three spots in cpusets and blkcg where I wasn't that sure that we could drop the lock... What do you say about that ?
+> .
 
-I'll post the whole series later, when I figure out what's wrong.
+We can drop cgroup_mutex for cpusets with changes like this:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+(Note: as I'm not able to get the latest code at this momment, this patch is based on 3.0.)
+
+There are several places reading number_of_cpusets, but no one holds cgroup_mutex, except
+the one in generate_sched_domains(). With this patch, both cpuset_create() and
+generate_sched_domains() are still holding cgroup_mutex, so it's safe.
+
+--- linux-kernel/kernel/cpuset.c.orig	2012-04-21 01:55:57.000000000 -0400
++++ linux-kernel/kernel/cpuset.c	2012-04-21 02:30:53.000000000 -0400
+@@ -1876,7 +1876,9 @@ static struct cgroup_subsys_state *cpuse
+ 	cs->relax_domain_level = -1;
+ 
+ 	cs->parent = parent;
++	mutex_lock(&callback_mutex);
+ 	number_of_cpusets++;
++	mutex_unlock(&callback_mutex);
+ 	return &cs->css ;
+ }
+ 
+@@ -1890,10 +1892,18 @@ static void cpuset_destroy(struct cgroup
+ {
+ 	struct cpuset *cs = cgroup_cs(cont);
+ 
+-	if (is_sched_load_balance(cs))
++	if (is_sched_load_balance(cs)) {
++		/*
++		 * This cpuset is under destruction, so no one else can
++		 * modify it, so it's safe to call update_flag() without
++		 * cgroup_lock.
++		 */
+ 		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
++	}
+ 
++	mutex_lock(&callback_mutex);
+ 	number_of_cpusets--;
++	mutex_lock(&callback_mutex);
+ 	free_cpumask_var(cs->cpus_allowed);
+ 	kfree(cs);
+ }
