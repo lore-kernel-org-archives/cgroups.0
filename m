@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 13/23] slub: create duplicate cache
-Date: Sun, 22 Apr 2012 20:53:30 -0300
-Message-ID: <1335138820-26590-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH 14/23] slub: provide kmalloc_no_account
+Date: Sun, 22 Apr 2012 20:53:31 -0300
+Message-ID: <1335138820-26590-3-git-send-email-glommer@parallels.com>
 References: <1334959051-18203-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1334959051-18203-1-git-send-email-glommer@parallels.com>
@@ -13,14 +13,16 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, fweisbec@gmail.com, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-This patch provides kmem_cache_dup(), that duplicates
-a cache for a memcg, preserving its creation properties.
-Object size, alignment and flags are all respected.
+Some allocations need to be accounted to the root memcg regardless
+of their context. One trivial example, is the allocations we do
+during the memcg slab cache creation themselves. Strictly speaking,
+they could go to the parent, but it is way easier to bill them to
+the root cgroup.
 
-When a duplicate cache is created, the parent cache cannot
-be destructed during the child lifetime. To assure this,
-its reference count is increased if the cache creation
-succeeds.
+Only generic kmalloc allocations are allowed to be bypassed.
+
+The function is not exported, because drivers code should always
+be accounted.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
 CC: Christoph Lameter <cl@linux.com>
@@ -30,142 +32,53 @@ CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 CC: Johannes Weiner <hannes@cmpxchg.org>
 CC: Suleiman Souhlal <suleiman@google.com>
 ---
- include/linux/memcontrol.h |    3 +++
- include/linux/slab.h       |    3 +++
- mm/memcontrol.c            |   44 ++++++++++++++++++++++++++++++++++++++++++++
- mm/slub.c                  |   37 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 87 insertions(+), 0 deletions(-)
+ include/linux/slub_def.h |    1 +
+ mm/slub.c                |   21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 99e14b9..493ecdd 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -445,6 +445,9 @@ int memcg_css_id(struct mem_cgroup *memcg);
- void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 				      struct kmem_cache *s);
- void mem_cgroup_release_cache(struct kmem_cache *cachep);
-+extern char *mem_cgroup_cache_name(struct mem_cgroup *memcg,
-+				   struct kmem_cache *cachep);
-+
- #else
- static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 					     struct kmem_cache *s)
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index c7a7e05..909b508 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -323,6 +323,9 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index 5f5e942..9a8000a 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -221,6 +221,7 @@ static __always_inline struct kmem_cache *kmalloc_slab(size_t size)
+ }
  
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
- #define MAX_KMEM_CACHE_TYPES 400
-+extern struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-+					 struct kmem_cache *cachep);
-+void kmem_cache_drop_ref(struct kmem_cache *cachep);
- #else
- #define MAX_KMEM_CACHE_TYPES 0
- #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0015ed0..e881d83 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -467,6 +467,50 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
- EXPORT_SYMBOL(tcp_proto_cgroup);
- #endif /* CONFIG_INET */
+ void *kmem_cache_alloc(struct kmem_cache *, gfp_t);
++void *kmalloc_no_account(size_t size, gfp_t);
+ void *__kmalloc(size_t size, gfp_t flags);
  
-+/*
-+ * This is to prevent races againt the kmalloc cache creations.
-+ * Should never be used outside the core memcg code. Therefore,
-+ * copy it here, instead of letting it in lib/
-+ */
-+static char *kasprintf_no_account(gfp_t gfp, const char *fmt, ...)
-+{
-+	unsigned int len;
-+	char *p = NULL;
-+	va_list ap, aq;
-+
-+	va_start(ap, fmt);
-+	va_copy(aq, ap);
-+	len = vsnprintf(NULL, 0, fmt, aq);
-+	va_end(aq);
-+
-+	p = kmalloc_no_account(len+1, gfp);
-+	if (!p)
-+		goto out;
-+
-+	vsnprintf(p, len+1, fmt, ap);
-+
-+out:
-+	va_end(ap);
-+	return p;
-+}
-+
-+char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
-+{
-+	char *name;
-+	struct dentry *dentry = memcg->css.cgroup->dentry;
-+
-+	BUG_ON(dentry == NULL);
-+
-+	/* Preallocate the space for "dead" at the end */
-+	name = kasprintf_no_account(GFP_KERNEL, "%s(%d:%s)dead",
-+	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
-+
-+	if (name)
-+		/* Remove "dead" */
-+		name[strlen(name) - 4] = '\0';
-+	return name;
-+}
-+
- /* Bitmap used for allocating the cache id numbers. */
- static DECLARE_BITMAP(cache_types, MAX_KMEM_CACHE_TYPES);
- 
+ static __always_inline void *
 diff --git a/mm/slub.c b/mm/slub.c
-index 86e40cc..2285a96 100644
+index 2285a96..d754b06 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -3993,6 +3993,43 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
+@@ -3359,6 +3359,27 @@ void *__kmalloc(size_t size, gfp_t flags)
  }
- EXPORT_SYMBOL(kmem_cache_create);
+ EXPORT_SYMBOL(__kmalloc);
  
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-+				  struct kmem_cache *s)
++void *kmalloc_no_account(size_t size, gfp_t flags)
 +{
-+	char *name;
-+	struct kmem_cache *new;
++	struct kmem_cache *s;
++	void *ret;
 +
-+	name = mem_cgroup_cache_name(memcg, s);
-+	if (!name)
-+		return NULL;
++	if (unlikely(size > SLUB_MAX_SIZE))
++		return kmalloc_large(size, flags);
 +
-+	new = kmem_cache_create_memcg(memcg, name, s->objsize, s->align,
-+				      s->allocflags, s->ctor);
++	s = get_slab(size, flags);
 +
-+	/*
-+	 * We increase the reference counter in the parent cache, to
-+	 * prevent it from being deleted. If kmem_cache_destroy() is
-+	 * called for the root cache before we call it for a child cache,
-+	 * it will be queued for destruction when we finally drop the
-+	 * reference on the child cache.
-+	 */
-+	if (new) {
-+		down_write(&slub_lock);
-+		s->refcount++;
-+		up_write(&slub_lock);
-+	}
++	if (unlikely(ZERO_OR_NULL_PTR(s)))
++		return s;
 +
-+	return new;
++	ret = slab_alloc(s, flags, NUMA_NO_NODE, _RET_IP_);
++
++	trace_kmalloc(_RET_IP_, ret, size, s->size, flags);
++
++	return ret;
 +}
++EXPORT_SYMBOL(kmalloc_no_account);
 +
-+void kmem_cache_drop_ref(struct kmem_cache *s)
-+{
-+	BUG_ON(s->memcg_params.id != -1);
-+	kmem_cache_destroy(s);
-+}
-+#endif
-+
- #ifdef CONFIG_SMP
- /*
-  * Use the cpu notifier to insure that the cpu slabs are flushed when
+ #ifdef CONFIG_NUMA
+ static void *kmalloc_large_node(size_t size, gfp_t flags, int node)
+ {
 -- 
 1.7.7.6
