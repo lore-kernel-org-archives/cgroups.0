@@ -1,72 +1,96 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Mon, 23 Apr 2012 09:04:54 -0700
-Message-ID: <20120423160454.GA5406@google.com>
-References: <20120404175124.GA8931@localhost>
- <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
- <20120406095934.GA10465@localhost>
- <20120417223854.GG19975@google.com>
- <20120419142343.GA12684@localhost>
- <20120419183118.GM10216@redhat.com>
- <20120420124518.GA7133@localhost>
- <20120420192930.GR22419@redhat.com>
- <20120420213301.GA29134@google.com>
- <20120423123011.GA8103@redhat.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 2/3] don't take cgroup_mutex in destroy()
+Date: Mon, 23 Apr 2012 13:36:46 -0300
+Message-ID: <4F95851E.6070505@parallels.com>
+References: <1334875758-20939-1-git-send-email-glommer@parallels.com> <1334875758-20939-3-git-send-email-glommer@parallels.com> <20120419225704.GE10553@google.com> <4F917AEB.7080404@parallels.com> <4F9257F4.2070505@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=rrqizdqDGkGsxqL6ETthpDsYy8md7RYIcx55hOY9+4U=;
-        b=rRNwRhUUiI138SzginuP9iJuC5FPHyZOMhG+L4RW9cZSlUb/HF0bpnEv7qHF0nT7l/
-         y2WL/2LS0wIZOmqa2QLcoir8bEs36xRY6QAJxmvv1BMtSUDhiRE/m/GXspwaTT0S6ZaW
-         d9+Guix0mEL3UikxpkL3lAvZERtxsJuWdPm0g/CqtmItTYejYLLyfvQo7bEE8mLROPsT
-         7dar/bPpB8LDuT2TzcGCkG6IhRolggbub9bYQbD/47tvJ+ts0KTbwY2t61y8a5PDynRN
-         whJ57D+16xOWIsnIkNI7Qr0OOQFZ8tXTuNlnqsWymG3PjHGuEncdQ4oE4YczdxvF3KDt
-         IeRg==
-Content-Disposition: inline
-In-Reply-To: <20120423123011.GA8103@redhat.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F9257F4.2070505-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello, Vivek.
+On 04/21/2012 03:47 AM, Li Zefan wrote:
+> Glauber Costa wrote:
+>
+>> On 04/19/2012 07:57 PM, Tejun Heo wrote:
+>>> On Thu, Apr 19, 2012 at 07:49:17PM -0300, Glauber Costa wrote:
+>>>> Most of the destroy functions are only doing very simple things
+>>>> like freeing memory.
+>>>>
+>>>> The ones who goes through lists and such, already use its own
+>>>> locking for those.
+>>>>
+>>>> * The cgroup itself won't go away until we free it, (after destroy)
+>>>> * The parent won't go away because we hold a reference count
+>>>> * There are no more tasks in the cgroup, and the cgroup is declared
+>>>>     dead (cgroup_is_removed() == true)
+>>>>
+>>>> For the blk-cgroup and the cpusets, I got the impression that the mutex
+>>>> is still necessary.
+>>>>
+>>>> For those, I grabbed it from within the destroy function itself.
+>>>>
+>>>> If the maintainer for those subsystems consider it safe to remove
+>>>> it, we can discuss it separately.
+>>>
+>>> I really don't like cgroup_lock() usage spreading more.  It's
+>>> something which should be contained in cgroup.c proper.  I looked at
+>>> the existing users a while ago and they seemed to be compensating
+>>> deficencies in API, so, if at all possible, let's not spread the
+>>> disease.
+>>
+>> Well, I can dig deeper and see if they are really needed. I don't know cpusets and blkcg *that* well, that's why I took them there, hoping that someone could enlighten me, maybe they aren't really needed even now.
+>>
+>> I agree with the compensating: As I mentioned, most of them are already taking other kinds of lock to protect their structures, which is the right thing to do.
+>>
+>> There were only two or three spots in cpusets and blkcg where I wasn't that sure that we could drop the lock... What do you say about that ?
+>> .
+>
+> We can drop cgroup_mutex for cpusets with changes like this:
+>
+> (Note: as I'm not able to get the latest code at this momment, this patch is based on 3.0.)
+>
+> There are several places reading number_of_cpusets, but no one holds cgroup_mutex, except
+> the one in generate_sched_domains(). With this patch, both cpuset_create() and
+> generate_sched_domains() are still holding cgroup_mutex, so it's safe.
+>
+> --- linux-kernel/kernel/cpuset.c.orig	2012-04-21 01:55:57.000000000 -0400
+> +++ linux-kernel/kernel/cpuset.c	2012-04-21 02:30:53.000000000 -0400
+> @@ -1876,7 +1876,9 @@ static struct cgroup_subsys_state *cpuse
+>   	cs->relax_domain_level = -1;
+>
+>   	cs->parent = parent;
+> +	mutex_lock(&callback_mutex);
+>   	number_of_cpusets++;
+> +	mutex_unlock(&callback_mutex);
+>   	return&cs->css ;
+>   }
+>
+> @@ -1890,10 +1892,18 @@ static void cpuset_destroy(struct cgroup
+>   {
+>   	struct cpuset *cs = cgroup_cs(cont);
+>
+> -	if (is_sched_load_balance(cs))
+> +	if (is_sched_load_balance(cs)) {
+> +		/*
+> +		 * This cpuset is under destruction, so no one else can
+> +		 * modify it, so it's safe to call update_flag() without
+> +		 * cgroup_lock.
+> +		 */
+>   		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+> +	}
+>
+> +	mutex_lock(&callback_mutex);
+>   	number_of_cpusets--;
+> +	mutex_lock(&callback_mutex);
+>   	free_cpumask_var(cs->cpus_allowed);
+>   	kfree(cs);
+>   }
 
-On Mon, Apr 23, 2012 at 08:30:11AM -0400, Vivek Goyal wrote:
-> On Fri, Apr 20, 2012 at 02:33:01PM -0700, Tejun Heo wrote:
-> > On Fri, Apr 20, 2012 at 03:29:30PM -0400, Vivek Goyal wrote:
-> > > I am personally is not too excited about the case of putting async IO
-> > > in separate groups due to the reason that async IO of one group will
-> > > start impacting latencies of sync IO of another group and in practice
-> > > it might not be desirable. But there are others who have use cases for
-> > > separate async IO queue. So as long as switch is there to change the
-> > > behavior, I am not too worried.
-> > 
-> > Why not just fix cfq so that it prefers groups w/ sync IOs?
-> 
-> Yes that could possibly be done but now that's change of requirements. Now
-> we are saying that I want one buffered write to go faster than other
-> buffered write only if there is no sync IO present in any of the groups.
+I'll see if I can work something out.
 
-It's a scheduling decision and the resource split may or may not be
-about latency (the faster part).  We're currently just shoving all
-asyncs into the root group and preferring sync IOs in general.  The
-other end would be keeping them completely siloed and not caring about
-[a]sync across different cgroups.  My point is that managing async IOs
-per cgroup doesn't mean we can't prioritize sync IOs in general.
 
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
