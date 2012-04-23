@@ -1,140 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] writeback and cgroup
-Date: Mon, 23 Apr 2012 09:56:26 -0700
-Message-ID: <20120423165626.GB5406@google.com>
-References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
-	<20120404175124.GA8931@localhost>
-	<20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
-	<20120406095934.GA10465@localhost>
-	<20120417223854.GG19975@google.com>
-	<20120419142343.GA12684@localhost>
-	<20120419202635.GA4795@quack.suse.cz>
-	<20120420133441.GA7035@localhost>
-	<20120420190844.GH32324@google.com>
-	<20120422144649.GA7066@localhost>
-Mime-Version: 1.0
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v2 1/5] don't attach a task to a dead cgroup
+Date: Mon, 23 Apr 2012 16:37:43 -0300
+Message-ID: <1335209867-1831-2-git-send-email-glommer@parallels.com>
+References: <1335209867-1831-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1335209867-1831-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=tJdItfK4zj4cIZtn2HB7bwTIotGy6OzxIRdO+ILoZTw=;
-	b=fJdbSNisKtXwj5/yyo+PW/a005ErLhH2OdqN9aL09FDX16v3d81+CvifswBJC6mNaz
-	g486C9o8rog3LJI9NA2sDKBSRsQ5/oW2BevuUe78veKSsimvuKiiYx8wIcPAhpKTJs4l
-	CGiG7equyrhOALAkmelA2J28C/GLy38RVl3tSIOSl+iM7WmGKh+fNJEWBxuMQPYs61C+
-	9NqKYZjucJNzAyM1Kb7wZX5iDwVEp4sCADU0t39rdtmuoesrIQHRGoA/hsefOku4lBkC
-	UiZJZNUYgk4hgpafxNmLjBTOiWqxKJYmlqvfAgCshmUfjkS2SkcXEhK68htGsnYXaakT
-	8MQw==
-Content-Disposition: inline
-In-Reply-To: <20120422144649.GA7066@localhost>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Hello, Fengguang.
+Not all external callers of cgroup_attach_task() test to
+see if the cgroup is still live - the internal callers at
+cgroup.c does.
 
-On Sun, Apr 22, 2012 at 10:46:49PM +0800, Fengguang Wu wrote:
-> OK. Sorry I should have explained why memcg dirty limit is not the
-> right tool for back pressure based throttling.
+With this test in cgroup_attach_task, we can assure that
+no tasks are ever moved to a cgroup that is past its
+destruction point and was already marked as dead.
 
-I have two questions.  Why do we need memcg for this?  Writeback
-currently works without memcg, right?  Why does that change with blkcg
-aware bdi?
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/cgroup.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-> Basically the more memcgs with dirty limits, the more hard time for
-> the flusher to serve them fairly and knock down their dirty pages in
-> time. Because the flusher works inode by inode, each one may take up
-> to 0.5 second, and there may be many memcgs asking for the flusher's
-> attention. Also the more memcgs, the global dirty pages pool are
-> partitioned into smaller pieces, which means smaller safety margin for
-> each memcg. Adding these two effects up, there may be constantly some
-> memcgs hitting their dirty limits when there are dozens of memcgs.
-
-And how is this different from a machine with smaller memory?  If so,
-why?
-
-> Such cross subsystem coordinations still look natural to me because
-> "weight" is a fundamental and general parameter. It's really a blkcg
-> thing (determined by the blkio.weight user interface) rather than
-> specifically tied to cfq. When another kernel entity (eg. NFS or noop)
-> decides to add support for proportional weight IO control in future,
-> it can make use of the weights calculated by balance_dirty_pages(), too.
-
-It is not fundamental and natural at all and is already made cfq
-specific in the devel branch.  You seem to think "weight" is somehow a
-global concept which everyone can agree on but it is not.  Weight of
-what?  Is it disktime, bandwidth, iops or something else?  cfq deals
-primarily with disktime because that makes sense for spinning drives
-with single head.  For SSDs with smart enough FTLs, the unit should
-probably be iops.  For storage technology bottlenecked on bus speed,
-bw would make sense.
-
-IIUC, writeback is primarily dealing with abstracted bandwidth which
-is applied per-inode, which is fine at that layer as details like
-block allocations isn't and shouldn't be visible there and files (or
-inodes) are the level of abstraction.
-
-However, this doesn't necessarily translate easily into the actual
-underlying IO resource.  For devices with spindle, seek time dominates
-and the same amount of IO may consume vastly different amount of IO
-and the disk time becomes the primary resource, not the iops or
-bandwidth.  Naturally, people want to allocate and limit the primary
-resource, so cfq distributes disk time across different cgroups as
-configured.
-
-Your suggested solution is applying the same a number - the weight -
-to one portion of a mostly arbitrarily split resource using a
-different unit.  I don't even understand what that achieves.
-
-The requirement is to be able to split IO resource according to
-cgroups in configurable way and enforce the limits established by the
-configuration, which we're currently failing to do for async IOs.
-Your proposed solution applies some arbitrary ratio according to some
-arbitrary interpretation of cfq IO time weight way up in the stack
-which, when propagated to the lower layer, would cause significant
-amount of delay and fluctuation which behaves completely independent
-from how (using what unit, in what granularity and in what time scale)
-actual IO resource is handled, split and accounted, which would result
-in something which probably has some semblance of interpreting
-blkcg.weight as vague best-effort priority at its luckiest moments.
-
-So, I don't think your suggested solution is a solution at all.  I'm
-in fact not even sure what it achieves at the cost of the gross
-layering violation and fundamental design braindamage.
-
->         - No more latency
->         - No performance drop
->         - No bumpy progress and stalls
->         - No need to attach memcg to blkcg
->         - Feel free to create 1000+ IO controllers, to heart's content
->           w/o worrying about costs (if any, it would be some existing
->           scalability issues)
-
-I'm not sure why memcg suddenly becomes necessary with blkcg and I
-don't think having per-blkcg writeback and reasonable async
-optimization from iosched would be considerably worse.  It sure will
-add some overhead (e.g. from split buffering) but there will be proper
-working isolation which is what this fuss is all about.  Also, I just
-don't see how creating 1000+ (relatively active, I presume) blkcgs on
-a single spindle would be sane and how is the end result gonna be
-significantly better for your suggested solution, so let's please put
-aside the silly non-use case.
-
-In terms of overhead, I suspect the biggest would be the increased
-buffering coming from split channels but that seems like the cost of
-business to me.
-
-Thanks.
-
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index b61b938..932c318 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1927,6 +1927,9 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
+ 	struct cgroup_taskset tset = { };
+ 	struct css_set *newcg;
+ 
++	if (cgroup_is_removed(cgrp))
++		return -ENODEV;
++
+ 	/* @tsk either already exited or can't exit until the end */
+ 	if (tsk->flags & PF_EXITING)
+ 		return -ESRCH;
 -- 
-tejun
+1.7.7.6
