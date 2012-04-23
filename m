@@ -1,100 +1,104 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 00/23] slab+slub accounting for memcg
-Date: Sun, 22 Apr 2012 20:59:15 -0300
-Message-ID: <4F949B53.5030705@parallels.com>
-References: <1334959051-18203-1-git-send-email-glommer@parallels.com>
+From: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH RFC] memcg: MEMCG_NR_FILE_MAPPED should update _STAT_CACHE as
+ well
+Date: Mon, 23 Apr 2012 01:28:35 -0700
+Message-ID: <20120423082835.GA32359@lizard>
+References: <20120302162753.GA11748@oksana.dev.rtsoft.ru>
+ <20120305091934.588c160b.kamezawa.hiroyu@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1334959051-18203-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120305091934.588c160b.kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, patches-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 
-On 04/20/2012 06:57 PM, Glauber Costa wrote:
-> Hi,
->
-> This is my current attempt at getting the kmem controller
-> into a mergeable state. IMHO, all the important bits are there, and it should't
-> change *that* much from now on. I am, however, expecting at least a couple more
-> interactions before we sort all the edges out.
->
-> This series works for both the slub and the slab. One of my main goals was to
-> make sure that the interfaces we are creating actually makes sense for both
-> allocators.
->
-> I did some adaptations to the slab-specific patches, but the bulk of it
-> comes from Suleiman's patches. I did the best to use his patches
-> as-is where possible so to keep authorship information. When not possible,
-> I tried to be fair and quote it in the commit message.
->
-> In this series, all existing caches are created per-memcg after its first hit.
-> The main reason is, during discussions in the memory summit we came into
-> agreement that the fragmentation problems that could arise from creating all
-> of them are mitigated by the typically small quantity of caches in the system
-> (order of a few megabytes total for sparsely used caches).
-> The lazy creation from Suleiman is kept, although a bit modified. For instance,
-> I now use a locked scheme instead of cmpxcgh to make sure cache creation won't
-> fail due to duplicates, which simplifies things by quite a bit.
->
-> The slub is a bit more complex than what I came up with in my slub-only
-> series. The reason is we did not need to use the cache-selection logic
-> in the allocator itself - it was done by the cache users. But since now
-> we are lazy creating all caches, this is simply no longer doable.
->
-> I am leaving destruction of caches out of the series, although most
-> of the infrastructure for that is here, since we did it in earlier
-> series. This is basically because right now Kame is reworking it for
-> user memcg, and I like the new proposed behavior a lot more. We all seemed
-> to have agreed that reclaim is an interesting problem by itself, and
-> is not included in this already too complicated series. Please note
-> that this is still marked as experimental, so we have so room. A proper
-> shrinker implementation is a hard requirement to take the kmem controller
-> out of the experimental state.
->
-> I am also not including documentation, but it should only be a matter
-> of merging what we already wrote in earlier series plus some additions.
->
-> Glauber Costa (19):
->    slub: don't create a copy of the name string in kmem_cache_create
->    slub: always get the cache from its page in kfree
->    slab: rename gfpflags to allocflags
->    slab: use obj_size field of struct kmem_cache when not debugging
->    change defines to an enum
->    don't force return value checking in res_counter_charge_nofail
->    kmem slab accounting basic infrastructure
->    slab/slub: struct memcg_params
->    slub: consider a memcg parameter in kmem_create_cache
->    slab: pass memcg parameter to kmem_cache_create
->    slub: create duplicate cache
->    slub: provide kmalloc_no_account
->    slab: create duplicate cache
->    slab: provide kmalloc_no_account
->    kmem controller charge/uncharge infrastructure
->    slub: charge allocation to a memcg
->    slab: per-memcg accounting of slab caches
->    memcg: disable kmem code when not in use.
->    slub: create slabinfo file for memcg
->
-> Suleiman Souhlal (4):
->    memcg: Make it possible to use the stock for more than one page.
->    memcg: Reclaim when more than one page needed.
->    memcg: Track all the memcg children of a kmem_cache.
->    memcg: Per-memcg memory.kmem.slabinfo file.
->
->   include/linux/memcontrol.h  |   87 ++++++
->   include/linux/res_counter.h |    2 +-
->   include/linux/slab.h        |   26 ++
->   include/linux/slab_def.h    |   77 ++++++-
->   include/linux/slub_def.h    |   36 +++-
->   init/Kconfig                |    2 +-
->   mm/memcontrol.c             |  607 +++++++++++++++++++++++++++++++++++++++++--
->   mm/slab.c                   |  390 +++++++++++++++++++++++-----
->   mm/slub.c                   |  255 ++++++++++++++++--
->   9 files changed, 1364 insertions(+), 118 deletions(-)
->
-All patches should be there now.
+...otherwise the we're getting the wrong numbers in usage_in_bytes.
 
-Sorry for the trouble.
+On Mon, Mar 05, 2012 at 09:19:34AM +0900, KAMEZAWA Hiroyuki wrote:
+[...]
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 228d646..c8abdc5 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -3812,6 +3812,9 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+> >  
+> >         val = mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_CACHE);
+> >         val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
+> > +       val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
+> > 
+> > 1. Is there any particular reason we don't currently account file mapped
+> >    memory in usage_in_bytes?
+> > 
+> >    To me, MEM_CGROUP_STAT_FILE_MAPPED hunk seems logical even if we
+> >    don't use it for lowmemory notifications.
+> > 
+> >    Plus, it seems that FILE_MAPPED _is_ accounted for the non-root
+> >    cgroups, so I guess it's clearly a bug for the root memcg?
+> 
+> CACHE includes all file caches. Why do you think FILE_MAPPED is not included in CACHE ?
+
+There were tons of changes in the memcg lately, but I believe the issue
+is still there.
+
+For example, looking into this code flow:
+
+-> page_add_file_rmap() (mm/rmap.c)
+ -> mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED) (include/linux/memcontrol.h)
+  -> void mem_cgroup_update_page_stat(page, MEMCG_NR_FILE_MAPPED, 1) (mm/memcontrol.c)
+
+And then:
+
+void mem_cgroup_update_page_stat(struct page *page,
+                                 enum mem_cgroup_page_stat_item idx, int val)
+{
+        ...
+        switch (idx) {
+        case MEMCG_NR_FILE_MAPPED:
+                idx = MEM_CGROUP_STAT_FILE_MAPPED;
+                break;
+        default:
+                BUG();
+        }
+
+        this_cpu_add(memcg->stat->count[idx], val);
+        ...
+}
+
+So, clearly, this function only bothers updating _FILE_MAPPED only,
+leaving _CACHE alone.
+
+If you're saying that _CACHE meant to include _FILE_MAPPED, then
+I guess the patch down below would be a proper fix then... Otherwise
+we need to be consistent on stats reporting, and either fall-back
+to my original fix (in mem_cgroup_usage()), or think about doing it
+some other way...
+
+Signed-off-by: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+---
+
+The patch is against current -next.
+
+Thanks,
+
+ mm/memcontrol.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 884e936..760ecf5 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1958,6 +1958,8 @@ void mem_cgroup_update_page_stat(struct page *page,
+ 
+ 	switch (idx) {
+ 	case MEMCG_NR_FILE_MAPPED:
++		idx = MEM_CGROUP_STAT_CACHE;
++		this_cpu_add(memcg->stat->count[idx], val);
+ 		idx = MEM_CGROUP_STAT_FILE_MAPPED;
+ 		break;
+ 	default:
+-- 
+1.7.9.2
