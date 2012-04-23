@@ -1,120 +1,151 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH RFC] memcg: MEMCG_NR_FILE_MAPPED should update _STAT_CACHE
- as well
-Date: Mon, 23 Apr 2012 17:35:12 +0900
-Message-ID: <4F951440.7040704@jp.fujitsu.com>
-References: <20120302162753.GA11748@oksana.dev.rtsoft.ru> <20120305091934.588c160b.kamezawa.hiroyu@jp.fujitsu.com> <20120423082835.GA32359@lizard>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [RFC] writeback and cgroup
+Date: Mon, 23 Apr 2012 11:14:32 +0200
+Message-ID: <20120423091432.GC6512@quack.suse.cz>
+References: <20120403183655.GA23106@dhcp-172-17-108-109.mtv.corp.google.com>
+	<20120404175124.GA8931@localhost>
+	<20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
+	<20120406095934.GA10465@localhost>
+	<20120417223854.GG19975@google.com>
+	<20120419142343.GA12684@localhost>
+	<20120419202635.GA4795@quack.suse.cz>
+	<20120420133441.GA7035@localhost>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120423082835.GA32359@lizard>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Anton Vorontsov <anton.vorontsov@linaro.org>
-Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, John Stultz <john.stultz@linaro.org>, linaro-kernel@lists.linaro.org, patches@linaro.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120420133441.GA7035@localhost>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 
-(2012/04/23 17:28), Anton Vorontsov wrote:
+On Fri 20-04-12 21:34:41, Wu Fengguang wrote:
+> On Thu, Apr 19, 2012 at 10:26:35PM +0200, Jan Kara wrote:
+> > > It's not uncommon for me to see filesystems sleep on PG_writeback
+> > > pages during heavy writeback, within some lock or transaction, which in
+> > > turn stall many tasks that try to do IO or merely dirty some page in
+> > > memory. Random writes are especially susceptible to such stalls. The
+> > > stable page feature also vastly increase the chances of stalls by
+> > > locking the writeback pages. 
+> > > 
+> > > Page reclaim may also block on PG_writeback and/or PG_dirty pages. In
+> > > the case of direct reclaim, it means blocking random tasks that are
+> > > allocating memory in the system.
+> > > 
+> > > PG_writeback pages are much worse than PG_dirty pages in that they are
+> > > not movable. This makes a big difference for high-order page allocations.
+> > > To make room for a 2MB huge page, vmscan has the option to migrate
+> > > PG_dirty pages, but for PG_writeback it has no better choices than to
+> > > wait for IO completion.
+> > > 
+> > > The difficulty of THP allocation goes up *exponentially* with the
+> > > number of PG_writeback pages. Assume PG_writeback pages are randomly
+> > > distributed in the physical memory space. Then we have formula
+> > > 
+> > >         P(reclaimable for THP) = 1 - P(hit PG_writeback)^256
+> >   Well, this implicitely assumes that PG_Writeback pages are scattered
+> > across memory uniformly at random. I'm not sure to which extent this is
+> > true...
+> 
+> Yeah, when describing the problem I was also thinking about the
+> possibilities of optimization (it would be a very good general
+> improvements). Or maybe Mel already has some solutions :)
+> 
+> > Also as a nitpick, this isn't really an exponential growth since
+> > the exponent is fixed (256 - actually it should be 512, right?). It's just
+> 
+> Right, 512 4k pages to form one x86_64 2MB huge pages.
+> 
+> > a polynomial with a big exponent. But sure, growth in number of PG_Writeback
+> > pages will cause relatively steep drop in the number of available huge
+> > pages.
+> 
+> It's exponential indeed, because "1 - p(x)" here means "p(!x)".
+> It's exponential for a 10x increase in x resulting in 100x drop of y.
+  If 'x' is the probability page has PG_Writeback set, then the probability
+a huge page has a single PG_Writeback page is (as you almost correctly wrote):
+(1-x)^512. This is a polynominal by the definition: It can be
+expressed as $\sum_{i=0}^n a_i*x^i$ for $a_i\in R$ and $n$ finite.
 
-> ...otherwise the we're getting the wrong numbers in usage_in_bytes.
-> 
-> On Mon, Mar 05, 2012 at 09:19:34AM +0900, KAMEZAWA Hiroyuki wrote:
-> [...]
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index 228d646..c8abdc5 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -3812,6 +3812,9 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
->>>  
->>>         val = mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_CACHE);
->>>         val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
->>> +       val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
->>>
->>> 1. Is there any particular reason we don't currently account file mapped
->>>    memory in usage_in_bytes?
->>>
->>>    To me, MEM_CGROUP_STAT_FILE_MAPPED hunk seems logical even if we
->>>    don't use it for lowmemory notifications.
->>>
->>>    Plus, it seems that FILE_MAPPED _is_ accounted for the non-root
->>>    cgroups, so I guess it's clearly a bug for the root memcg?
->>
->> CACHE includes all file caches. Why do you think FILE_MAPPED is not included in CACHE ?
-> 
-> There were tons of changes in the memcg lately, but I believe the issue
-> is still there.
-> 
-> For example, looking into this code flow:
-> 
-> -> page_add_file_rmap() (mm/rmap.c)
->  -> mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED) (include/linux/memcontrol.h)
->   -> void mem_cgroup_update_page_stat(page, MEMCG_NR_FILE_MAPPED, 1) (mm/memcontrol.c)
-> 
-> And then:
-> 
-> void mem_cgroup_update_page_stat(struct page *page,
->                                  enum mem_cgroup_page_stat_item idx, int val)
-> {
->         ...
->         switch (idx) {
->         case MEMCG_NR_FILE_MAPPED:
->                 idx = MEM_CGROUP_STAT_FILE_MAPPED;
->                 break;
->         default:
->                 BUG();
->         }
-> 
->         this_cpu_add(memcg->stat->count[idx], val);
->         ...
-> }
-> 
-> So, clearly, this function only bothers updating _FILE_MAPPED only,
-> leaving _CACHE alone.
-> 
-> If you're saying that _CACHE meant to include _FILE_MAPPED, then
-> I guess the patch down below would be a proper fix then... Otherwise
-> we need to be consistent on stats reporting, and either fall-back
-> to my original fix (in mem_cgroup_usage()), or think about doing it
-> some other way...
-> 
+The expression decreases fast as x approaches to 1, that's for sure, but
+that does not make it exponential. Sorry, my mathematical part could not
+resist this terminology correction.
 
-
-NACK.
-CACHE is updated at charge()/uncharge()...inserting/removing page cache to radix-tree.
-
-Thanks,
--Kame
-
-
-> Signed-off-by: Anton Vorontsov <anton.vorontsov@linaro.org>
-> ---
+> > ...
+> > > > > To me, balance_dirty_pages() is *the* proper layer for buffered writes.
+> > > > > It's always there doing 1:1 proportional throttling. Then you try to
+> > > > > kick in to add *double* throttling in block/cfq layer. Now the low
+> > > > > layer may enforce 10:1 throttling and push balance_dirty_pages() away
+> > > > > from its balanced state, leading to large fluctuations and program
+> > > > > stalls.
+> > > > 
+> > > > Just do the same 1:1 inside each cgroup.
+> > > 
+> > > Sure. But the ratio mismatch I'm talking about is inter-cgroup.
+> > > For example there are only 2 dd tasks doing buffered writes in the
+> > > system. Now consider the mismatch that cfq is dispatching their IO
+> > > requests at 10:1 weights, while balance_dirty_pages() is throttling
+> > > the dd tasks at 1:1 equal split because it's not aware of the cgroup
+> > > weights.
+> > > 
+> > > What will happen in the end? The 1:1 ratio imposed by
+> > > balance_dirty_pages() will take effect and the dd tasks will progress
+> > > at the same pace. The cfq weights will be defeated because the async
+> > > queue for the second dd (and cgroup) constantly runs empty.
+> >   Yup. This just shows that you have to have per-cgroup dirty limits. Once
+> > you have those, things start working again.
 > 
-> The patch is against current -next.
+> Right. I think Tejun was more of less aware of this.
 > 
-> Thanks,
+> I was rather upset by this per-memcg dirty_limit idea indeed. I never
+> expect it to work well when used extensively. My plan was to set the
+> default memcg dirty_limit high enough, so that it's not hit in normal.
+> Then Tejun came and proposed to (mis-)use dirty_limit as the way to
+> convert the dirty pages' backpressure into real dirty throttling rate.
+> No, that's just crazy idea!
 > 
->  mm/memcontrol.c |    2 ++
->  1 file changed, 2 insertions(+)
+> Come on, let's not over-use memcg's dirty_limit. It's there as the
+> *last resort* to keep dirty pages under control so as to maintain
+> interactive performance inside the cgroup. However if used extensively
+> in the system (like dozens of memcgs all hit their dirty limits), the
+> limit itself may stall random dirtiers and create interactive
+> performance issues!
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 884e936..760ecf5 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1958,6 +1958,8 @@ void mem_cgroup_update_page_stat(struct page *page,
->  
->  	switch (idx) {
->  	case MEMCG_NR_FILE_MAPPED:
-> +		idx = MEM_CGROUP_STAT_CACHE;
-> +		this_cpu_add(memcg->stat->count[idx], val);
->  		idx = MEM_CGROUP_STAT_FILE_MAPPED;
->  		break;
->  	default:
+> In the recent days I've come up with the idea of memcg.dirty_setpoint
+> for the blkcg backpressure stuff. We can use that instead.
+> 
+> memcg.dirty_setpoint will scale proportionally with blkcg.writeout_rate.
+> Imagine bdi_setpoint. It's all the same concepts. Why we need this?
+> Because if blkcg A and B does 10:1 weights and are both doing buffered
+> writes, their dirty pages should better be maintained around 10:1
+> ratio to avoid underrun and hopefully achieve better IO size.
+> memcg.dirty_limit cannot guarantee that goal.
+  I agree that to avoid stalls of throttled processes we shouldn't be
+hitting memcg.dirty_limit on a regular basis. When I wrote we need "per
+cgroup dirty limits" I actually imagined something like you write above -
+do complete throttling computations within each memcg - estimate throughput
+available for it, compute appropriate dirty rates for it's processes and
+from its dirty limit estimate appropriate setpoint to balance around.
 
+> But be warned! Partitioning the dirty pages always means more
+> fluctuations of dirty rates (and even stalls) that's perceivable by
+> the user. Which means another limiting factor for the backpressure
+> based IO controller to scale well.
+  Sure, the smaller the memcg gets, the more noticeable these fluctuations
+would be. I would not expect memcg with 200 MB of memory to behave better
+(and also not much worse) than if I have a machine with that much memory...
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+								Honza
+-- 
+Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+SUSE Labs, CR
