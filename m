@@ -1,76 +1,77 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [patch] Documentation: memcg: future proof hierarchical statistics
- documentation
-Date: Tue, 24 Apr 2012 13:08:06 -0700
-Message-ID: <4F970826.8030702@xenotime.net>
-References: <1335296038-29297-1-git-send-email-hannes@cmpxchg.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
+Date: Tue, 24 Apr 2012 13:21:43 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1204241319360.753@chino.kir.corp.google.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=xenotime.net; s=default;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Subject:CC:To:MIME-Version:From:Date:Message-ID; bh=oqeF7mQDJK28NXVSB6Dzov5DLl7/VpdTw3vBJvak3kI=;
-	b=LC3sPOXgDYFMgev4P5J+xLfZjgcGvq0fmh6X6iXrjYJNpnlnFqN+40FbgHj80Dey5zT7oGwuOsO6tUVHSKqYJedJK9eEOGunXxKjH/6nLgumRxXI1mIb8/aIiF551yxm;
-In-Reply-To: <1335296038-29297-1-git-send-email-hannes@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=Af2C11KHH/LLjHtaOXLyixYYnIGpFL13Asv1PPll4tI=;
+        b=Q3fw9hpcoqOK83W0SSbJWpuaFFz6wjYOJDsupyvmo26eJMoQKROhfmRA6c5pVOParq
+         6yaOLKZV2VGgJZ7VVXAzEYKXnIUeDXa6k6Nc0sMYCvn1cIwwX94/LV+8+ybETdC8ZNMm
+         +8VRFouBlSgqUgYYMhEmz1dyYJynXCdgPkhIXNckUZ/RBDtOspvhLtjAEbq4jh6kzerq
+         8UeyjiMrWka4P7Th0cmDjObsxaj9gh8sRZ2TlAHk8+KxM+Y7Qdr+lVLmbAQ0OV+Wvnc8
+         qoMniC4LkYkEQohCgl7IphuRd9AjsReAgFZwP/FwGVUX9GbFdAOtfGJ7mNLEutFzJUaU
+         Ec3Q==
+In-Reply-To: <20120424142232.GC8626@somewhere>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Ying Han <yinghan@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Frederic Weisbecker <fweisbec@gmail.com>
+Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 04/24/2012 12:33 PM, Johannes Weiner wrote:
+On Tue, 24 Apr 2012, Frederic Weisbecker wrote:
 
-> The hierarchical versions of per-memcg counters in memory.stat are all
-> calculated the same way and are all named total_<counter>.
+> > This seems horribly inconsistent with memcg charging of user memory since 
+> > it charges to p->mm->owner and you're charging to p.  So a thread attached 
+> > to a memcg can charge user memory to one memcg while charging slab to 
+> > another memcg?
 > 
-> Documenting the pattern is easier for maintenance than listing each
-> counter twice.
+> Charging to the thread rather than the process seem to me the right behaviour:
+> you can have two threads of a same process attached to different cgroups.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-> Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-> Acked-by: Ying Han <yinghan@google.com>
-> ---
->  Documentation/cgroups/memory.txt |   15 ++++-----------
->  1 files changed, 4 insertions(+), 11 deletions(-)
+> Perhaps it is the user memory memcg that needs to be fixed?
 > 
-> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-> index ab34ae5..6a066a2 100644
-> --- a/Documentation/cgroups/memory.txt
-> +++ b/Documentation/cgroups/memory.txt
-> @@ -432,17 +432,10 @@ hierarchical_memory_limit - # of bytes of memory limit with regard to hierarchy
->  hierarchical_memsw_limit - # of bytes of memory+swap limit with regard to
->  			hierarchy under which memory cgroup is.
->  
-> -total_cache		- sum of all children's "cache"
-> -total_rss		- sum of all children's "rss"
-> -total_mapped_file	- sum of all children's "cache"
-> -total_pgpgin		- sum of all children's "pgpgin"
-> -total_pgpgout		- sum of all children's "pgpgout"
-> -total_swap		- sum of all children's "swap"
-> -total_inactive_anon	- sum of all children's "inactive_anon"
-> -total_active_anon	- sum of all children's "active_anon"
-> -total_inactive_file	- sum of all children's "inactive_file"
-> -total_active_file	- sum of all children's "active_file"
-> -total_unevictable	- sum of all children's "unevictable"
-> +total_<counter>		- # hierarchical version of <counter>, which in
-> +			addition to the cgroup's own value includes the
-> +			sum of all hierarchical children's values of
-> +			<counter>, i.e. total_cache
 
-			           e.g., total_cache
+No, because memory is represented by mm_struct, not task_struct, so you 
+must charge to p->mm->owner to allow for moving threads amongst memcgs 
+later for memory.move_charge_at_immigrate.  You shouldn't be able to 
+charge two different memcgs for memory represented by a single mm.
 
-But how is a user or an admin supposed to know what all of the valid
-total_<counter> names are?  Is the entire list documented anywhere
-else other than here (which is being deleted)?
-
-
->  # The following additional stats are dependent on CONFIG_DEBUG_VM.
->  
-
-
-
--- 
-~Randy
+> > > +
+> > > +	if (!mem_cgroup_kmem_enabled(memcg))
+> > > +		goto out;
+> > > +
+> > > +	mem_cgroup_get(memcg);
+> > > +	ret = memcg_charge_kmem(memcg, gfp, size) == 0;
+> > > +	if (ret)
+> > > +		mem_cgroup_put(memcg);
+> > > +out:
+> > > +	rcu_read_unlock();
+> > > +	return ret;
+> > > +}
+> > > +EXPORT_SYMBOL(__mem_cgroup_charge_kmem);
+> > > +
+> > > +void __mem_cgroup_uncharge_kmem(size_t size)
+> > > +{
+> > > +	struct mem_cgroup *memcg;
+> > > +
+> > > +	rcu_read_lock();
+> > > +	memcg = mem_cgroup_from_task(current);
+> > > +
+> > > +	if (!mem_cgroup_kmem_enabled(memcg))
+> > > +		goto out;
+> > > +
+> > > +	mem_cgroup_put(memcg);
+> > > +	memcg_uncharge_kmem(memcg, size);
+> > > +out:
+> > > +	rcu_read_unlock();
+> > > +}
+> > > +EXPORT_SYMBOL(__mem_cgroup_uncharge_kmem);
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
