@@ -1,65 +1,33 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
-Date: Tue, 24 Apr 2012 15:54:20 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1204241550110.2537@chino.kir.corp.google.com>
-References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere> <4F96BB62.1030900@parallels.com>
- <alpine.DEB.2.00.1204241322390.753@chino.kir.corp.google.com> <4F971CC2.3090109@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch] Documentation: memcg: future proof hierarchical statistics
+ documentation
+Date: Wed, 25 Apr 2012 08:51:02 +0900
+Message-ID: <4F973C66.2090307@jp.fujitsu.com>
+References: <1335296038-29297-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=Qn+39xxaf5VRWYed1IuI9gKoZ2CY+QW3k+9yiMBccFY=;
-        b=UgER8L8iDBKOcCcgb/P/xJcisUun/b6OdSC1NKquWahnD3qFnbzWH+BDPHE4cBQGZb
-         G7sdCctaZSiVJbZzgX6jUlLHpy68Tuv9UduLk7xrrq7x9x+JiAWhn7EgmQRBne97nznY
-         trpfs6YW3Sr3IKbVUp2Losg/5qVM6Gu7ZNiZ587ao+d5k43xsCjxcSu10HBvBWgelfsl
-         qV4yZqfhV7vdKiTOcvvxVSGmfH1ONU3+pzH87AaCHAIJ/LFkox0BbpHD0fi6IdxhU+J/
-         cnsr7ypDerZ7+3ojiaENjcSc8SnyvibKk1QQy2gt7aa+hoQSR2WGSocbWLBz3z4suZ/f
-         o+gQ==
-In-Reply-To: <4F971CC2.3090109@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1335296038-29297-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 24 Apr 2012, Glauber Costa wrote:
+(2012/04/25 4:33), Johannes Weiner wrote:
 
-> > Yes, for user memory, I see charging to p->mm->owner as allowing that
-> > process to eventually move and be charged to a different memcg and there's
-> > no way to do proper accounting if the charge is split amongst different
-> > memcgs because of thread membership to a set of memcgs.  This is
-> > consistent with charges for shared memory being moved when a thread
-> > mapping it moves to a new memcg, as well.
+> The hierarchical versions of per-memcg counters in memory.stat are all
+> calculated the same way and are all named total_<counter>.
 > 
-> But that's the problem.
+> Documenting the pattern is easier for maintenance than listing each
+> counter twice.
 > 
-> When we are dealing with kernel memory, we are allocating a whole slab page.
-> It is essentially impossible to track, given a page, which task allocated
-> which object.
-> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Acked-by: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Right, so you have to make the distinction that slab charges cannot be 
-migrated by memory.move_charge_at_immigrate (and it's not even specified 
-to do anything beyond user pages in Documentation/cgroups/memory.txt), but 
-it would be consistent to charge the same memcg for a process's slab 
-allocations as the process's user allocations.
 
-My response was why we shouldn't be charging user pages to 
-mem_cgroup_from_task(current) rather than 
-mem_cgroup_from_task(current->mm->owner) which is what is currently 
-implemented.
+I'm fine with this.
 
-If that can't be changed so that we can still migrate user memory amongst 
-memcgs for memory.move_charge_at_immigrate, then it seems consistent to 
-have all allocations done by a task to be charged to the same memcg.  
-Hence, I suggested current->mm->owner for slab charging as well.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
