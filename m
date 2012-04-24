@@ -1,71 +1,54 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH -V6 04/14] hugetlb: Use mmu_gather instead of a
- temporary linked list for accumulating pages
-Date: Mon, 23 Apr 2012 16:44:05 -0700
-Message-ID: <20120423164405.4b628580.akpm@linux-foundation.org>
-References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<1334573091-18602-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH v2 1/5] don't attach a task to a dead cgroup
+Date: Tue, 24 Apr 2012 11:20:45 +0900
+Message-ID: <4F960DFD.2080502@jp.fujitsu.com>
+References: <1335209867-1831-1-git-send-email-glommer@parallels.com> <1335209867-1831-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1334573091-18602-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1335209867-1831-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Mon, 16 Apr 2012 16:14:41 +0530
-"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
+(2012/04/24 4:37), Glauber Costa wrote:
 
-> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> Not all external callers of cgroup_attach_task() test to
+> see if the cgroup is still live - the internal callers at
+> cgroup.c does.
 > 
-> Use mmu_gather instead of temporary linked list for accumulating pages when
-> we unmap a hugepage range. This also allows us to get rid of i_mmap_mutex
-> unmap_hugepage_range in the following patch.
+> With this test in cgroup_attach_task, we can assure that
+> no tasks are ever moved to a cgroup that is past its
+> destruction point and was already marked as dead.
 > 
-
-Another warning and a build error, due to inadequate coverage testing.
-
-mm/memory.c: In function 'unmap_single_vma':
-mm/memory.c:1334: error: implicit declaration of function '__unmap_hugepage_range'
-
---- a/include/linux/hugetlb.h~hugetlb-use-mmu_gather-instead-of-a-temporary-linked-list-for-accumulating-pages-fix
-+++ a/include/linux/hugetlb.h
-@@ -41,8 +41,9 @@ int follow_hugetlb_page(struct mm_struct
- 			unsigned long *, int *, int, unsigned int flags);
- void unmap_hugepage_range(struct vm_area_struct *,
- 			  unsigned long, unsigned long, struct page *);
--void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *,
--			    unsigned long, unsigned long, struct page *);
-+void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vms,
-+				unsigned long start, unsigned long end,
-+				struct page *ref_page);
- int hugetlb_prefault(struct address_space *, struct vm_area_struct *);
- void hugetlb_report_meminfo(struct seq_file *);
- int hugetlb_report_node_meminfo(int, char *);
-@@ -119,6 +120,12 @@ static inline void copy_huge_page(struct
- 
- #define hugetlb_change_protection(vma, address, end, newprot)
- 
-+static inline void __unmap_hugepage_range(struct mmu_gather *tlb,
-+			struct vm_area_struct *vma, unsigned long start,
-+			unsigned long end, struct page *ref_page)
-+{
-+}
-+
- #endif /* !CONFIG_HUGETLB_PAGE */
- 
- #define HUGETLB_ANON_FILE "anon_hugepage"
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
 
-I also fixed up that __unmap_hugepage_range() declaration - it's quite
-maddening to work on and review and read code when people have gone and
-left out the names of the arguments.
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+> ---
+>  kernel/cgroup.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index b61b938..932c318 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -1927,6 +1927,9 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
+>  	struct cgroup_taskset tset = { };
+>  	struct css_set *newcg;
+>  
+> +	if (cgroup_is_removed(cgrp))
+> +		return -ENODEV;
+> +
+>  	/* @tsk either already exited or can't exit until the end */
+>  	if (tsk->flags & PF_EXITING)
+>  		return -ESRCH;
+
+
