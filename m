@@ -1,201 +1,130 @@
 From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 13/23] slub: create duplicate cache
-Date: Tue, 24 Apr 2012 16:18:48 +0200
-Message-ID: <20120424141845.GB8626@somewhere>
+Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
+Date: Tue, 24 Apr 2012 16:22:34 +0200
+Message-ID: <20120424142232.GC8626@somewhere>
 References: <1334959051-18203-1-git-send-email-glommer@parallels.com>
- <1335138820-26590-2-git-send-email-glommer@parallels.com>
+ <1335138820-26590-6-git-send-email-glommer@parallels.com>
+ <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=3Owg+AkIlT8z9M4/xAQgTjsBSOSitiyPJCASRt7iPgA=;
-        b=fLIInOfAw78mIFCDvxvma+bf3DBsO+sAtTABEGE47AiufsHHeFF6GiFhcy/WD3+fYO
-         vEvSNk1GSsm4B3SRZ4GsMap6kXJtnfaqqmSGOSwZYFg7FmBdGNhzwEf5LK5r23FUjAlx
-         kRsEzai6Zv53nrhhFRCKQMplpeC6jiQmaj6l/rxpeV2T6Vjp6x1PA3CxeEkDJE09rgsN
-         Q1xVYK7NUEct11YlnWlp2zVdWnfr1QZ4Vvp4mU6zCUPdFqzFeWNT1vaZTF80L5YfOVHO
-         C+BBes/4Cni+Osfw7enge64KhsiDodvReLiuR+MXAl7/hjySYll7k/GSAikssVxBAwM3
-         dlGg==
+        bh=PE4Msp8n/EH83MgFjmmyymU6Ch5sc/NtHvzYPc5rjYE=;
+        b=C683F3kon1fonwdVEmY1aDcyc4qy5vmiNPg5isovR/Z12i4kVtffzWhtf+YmWgFORA
+         +HsAmFstQYgQuUJjO05pNIQiLypvMPR0s/sVgUH3HvuoJxGDrNFdPZ6NyU+zzV8sDB8A
+         amZOI/J23qroU3rxa22dsm//cKdO2AVvGQviGplw3Qp2pOmMMb9olnU3y7CD7zuhKH8c
+         fMtiHWNh/cYCqBao8PQfalayPHJmv4B1c8nGgkgf/K6a5PN19fuhQx2HM6YVDC2iOe+g
+         UPJMl7Ddfh4psq9Eim1jFI2eD7nhGaUqMIMbAbr4zCWlvloW4MPZVsYR3WDcBCkzJDMp
+         Cobw==
 Content-Disposition: inline
-In-Reply-To: <1335138820-26590-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.00.1204231522320.13535-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-On Sun, Apr 22, 2012 at 08:53:30PM -0300, Glauber Costa wrote:
-> This patch provides kmem_cache_dup(), that duplicates
-> a cache for a memcg, preserving its creation properties.
-> Object size, alignment and flags are all respected.
+On Mon, Apr 23, 2012 at 03:25:59PM -0700, David Rientjes wrote:
+> On Sun, 22 Apr 2012, Glauber Costa wrote:
 > 
-> When a duplicate cache is created, the parent cache cannot
-> be destructed during the child lifetime. To assure this,
-> its reference count is increased if the cache creation
-> succeeds.
+> > +/*
+> > + * Return the kmem_cache we're supposed to use for a slab allocation.
+> > + * If we are in interrupt context or otherwise have an allocation that
+> > + * can't fail, we return the original cache.
+> > + * Otherwise, we will try to use the current memcg's version of the cache.
+> > + *
+> > + * If the cache does not exist yet, if we are the first user of it,
+> > + * we either create it immediately, if possible, or create it asynchronously
+> > + * in a workqueue.
+> > + * In the latter case, we will let the current allocation go through with
+> > + * the original cache.
+> > + *
+> > + * This function returns with rcu_read_lock() held.
+> > + */
+> > +struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
+> > +					     gfp_t gfp)
+> > +{
+> > +	struct mem_cgroup *memcg;
+> > +	int idx;
+> > +
+> > +	gfp |=  cachep->allocflags;
+> > +
+> > +	if ((current->mm == NULL))
+> > +		return cachep;
+> > +
+> > +	if (cachep->memcg_params.memcg)
+> > +		return cachep;
+> > +
+> > +	idx = cachep->memcg_params.id;
+> > +	VM_BUG_ON(idx == -1);
+> > +
+> > +	memcg = mem_cgroup_from_task(current);
+> > +	if (!mem_cgroup_kmem_enabled(memcg))
+> > +		return cachep;
+> > +
+> > +	if (rcu_access_pointer(memcg->slabs[idx]) == NULL) {
+> > +		memcg_create_cache_enqueue(memcg, cachep);
+> > +		return cachep;
+> > +	}
+> > +
+> > +	return rcu_dereference(memcg->slabs[idx]);
+> > +}
+> > +EXPORT_SYMBOL(__mem_cgroup_get_kmem_cache);
+> > +
+> > +void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id)
+> > +{
+> > +	rcu_assign_pointer(cachep->memcg_params.memcg->slabs[id], NULL);
+> > +}
+> > +
+> > +bool __mem_cgroup_charge_kmem(gfp_t gfp, size_t size)
+> > +{
+> > +	struct mem_cgroup *memcg;
+> > +	bool ret = true;
+> > +
+> > +	rcu_read_lock();
+> > +	memcg = mem_cgroup_from_task(current);
 > 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  include/linux/memcontrol.h |    3 +++
->  include/linux/slab.h       |    3 +++
->  mm/memcontrol.c            |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  mm/slub.c                  |   37 +++++++++++++++++++++++++++++++++++++
->  4 files changed, 87 insertions(+), 0 deletions(-)
+> This seems horribly inconsistent with memcg charging of user memory since 
+> it charges to p->mm->owner and you're charging to p.  So a thread attached 
+> to a memcg can charge user memory to one memcg while charging slab to 
+> another memcg?
+
+Charging to the thread rather than the process seem to me the right behaviour:
+you can have two threads of a same process attached to different cgroups.
+
+Perhaps it is the user memory memcg that needs to be fixed?
+
 > 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 99e14b9..493ecdd 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -445,6 +445,9 @@ int memcg_css_id(struct mem_cgroup *memcg);
->  void mem_cgroup_register_cache(struct mem_cgroup *memcg,
->  				      struct kmem_cache *s);
->  void mem_cgroup_release_cache(struct kmem_cache *cachep);
-> +extern char *mem_cgroup_cache_name(struct mem_cgroup *memcg,
-> +				   struct kmem_cache *cachep);
-> +
->  #else
->  static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
->  					     struct kmem_cache *s)
-> diff --git a/include/linux/slab.h b/include/linux/slab.h
-> index c7a7e05..909b508 100644
-> --- a/include/linux/slab.h
-> +++ b/include/linux/slab.h
-> @@ -323,6 +323,9 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
->  
->  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
->  #define MAX_KMEM_CACHE_TYPES 400
-> +extern struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-> +					 struct kmem_cache *cachep);
-> +void kmem_cache_drop_ref(struct kmem_cache *cachep);
->  #else
->  #define MAX_KMEM_CACHE_TYPES 0
->  #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 0015ed0..e881d83 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -467,6 +467,50 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
->  EXPORT_SYMBOL(tcp_proto_cgroup);
->  #endif /* CONFIG_INET */
->  
-> +/*
-> + * This is to prevent races againt the kmalloc cache creations.
-> + * Should never be used outside the core memcg code. Therefore,
-> + * copy it here, instead of letting it in lib/
-> + */
-> +static char *kasprintf_no_account(gfp_t gfp, const char *fmt, ...)
-> +{
-> +	unsigned int len;
-> +	char *p = NULL;
-> +	va_list ap, aq;
-> +
-> +	va_start(ap, fmt);
-> +	va_copy(aq, ap);
-> +	len = vsnprintf(NULL, 0, fmt, aq);
-> +	va_end(aq);
-> +
-> +	p = kmalloc_no_account(len+1, gfp);
-
-I can't seem to find kmalloc_no_account() in this patch or may be
-I missed it in a previous one?
-
-> +	if (!p)
-> +		goto out;
-> +
-> +	vsnprintf(p, len+1, fmt, ap);
-> +
-> +out:
-> +	va_end(ap);
-> +	return p;
-> +}
-> +
-> +char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
-> +{
-> +	char *name;
-> +	struct dentry *dentry = memcg->css.cgroup->dentry;
-> +
-> +	BUG_ON(dentry == NULL);
-> +
-> +	/* Preallocate the space for "dead" at the end */
-> +	name = kasprintf_no_account(GFP_KERNEL, "%s(%d:%s)dead",
-> +	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
-> +
-> +	if (name)
-> +		/* Remove "dead" */
-> +		name[strlen(name) - 4] = '\0';
-
-Why this space for "dead" ? I can't seem to find a reference to that in
-the kernel. Is it something I'm missing because of my lack of slab knowledge
-or is it something needed in a further patch? In which case this should be
-explained in the changelog.
-
-> +	return name;
-> +}
-> +
->  /* Bitmap used for allocating the cache id numbers. */
->  static DECLARE_BITMAP(cache_types, MAX_KMEM_CACHE_TYPES);
->  
-> diff --git a/mm/slub.c b/mm/slub.c
-> index 86e40cc..2285a96 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -3993,6 +3993,43 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
->  }
->  EXPORT_SYMBOL(kmem_cache_create);
->  
-> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-> +struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-> +				  struct kmem_cache *s)
-> +{
-> +	char *name;
-> +	struct kmem_cache *new;
-> +
-> +	name = mem_cgroup_cache_name(memcg, s);
-> +	if (!name)
-> +		return NULL;
-> +
-> +	new = kmem_cache_create_memcg(memcg, name, s->objsize, s->align,
-> +				      s->allocflags, s->ctor);
-> +
-> +	/*
-> +	 * We increase the reference counter in the parent cache, to
-> +	 * prevent it from being deleted. If kmem_cache_destroy() is
-> +	 * called for the root cache before we call it for a child cache,
-> +	 * it will be queued for destruction when we finally drop the
-> +	 * reference on the child cache.
-> +	 */
-> +	if (new) {
-> +		down_write(&slub_lock);
-> +		s->refcount++;
-> +		up_write(&slub_lock);
-> +	}
-> +
-> +	return new;
-> +}
-> +
-> +void kmem_cache_drop_ref(struct kmem_cache *s)
-> +{
-> +	BUG_ON(s->memcg_params.id != -1);
-> +	kmem_cache_destroy(s);
-> +}
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  /*
->   * Use the cpu notifier to insure that the cpu slabs are flushed when
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> > +
+> > +	if (!mem_cgroup_kmem_enabled(memcg))
+> > +		goto out;
+> > +
+> > +	mem_cgroup_get(memcg);
+> > +	ret = memcg_charge_kmem(memcg, gfp, size) == 0;
+> > +	if (ret)
+> > +		mem_cgroup_put(memcg);
+> > +out:
+> > +	rcu_read_unlock();
+> > +	return ret;
+> > +}
+> > +EXPORT_SYMBOL(__mem_cgroup_charge_kmem);
+> > +
+> > +void __mem_cgroup_uncharge_kmem(size_t size)
+> > +{
+> > +	struct mem_cgroup *memcg;
+> > +
+> > +	rcu_read_lock();
+> > +	memcg = mem_cgroup_from_task(current);
+> > +
+> > +	if (!mem_cgroup_kmem_enabled(memcg))
+> > +		goto out;
+> > +
+> > +	mem_cgroup_put(memcg);
+> > +	memcg_uncharge_kmem(memcg, size);
+> > +out:
+> > +	rcu_read_unlock();
+> > +}
+> > +EXPORT_SYMBOL(__mem_cgroup_uncharge_kmem);
