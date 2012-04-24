@@ -1,12 +1,12 @@
 From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v2 1/5] don't attach a task to a dead cgroup
-Date: Tue, 24 Apr 2012 11:20:45 +0900
-Message-ID: <4F960DFD.2080502@jp.fujitsu.com>
-References: <1335209867-1831-1-git-send-email-glommer@parallels.com> <1335209867-1831-2-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v2 3/5] change number_of_cpusets to an atomic
+Date: Tue, 24 Apr 2012 11:25:46 +0900
+Message-ID: <4F960F2A.9020304@jp.fujitsu.com>
+References: <1335209867-1831-1-git-send-email-glommer@parallels.com> <1335209867-1831-4-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1335209867-1831-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1335209867-1831-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -15,40 +15,19 @@ Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76
 
 (2012/04/24 4:37), Glauber Costa wrote:
 
-> Not all external callers of cgroup_attach_task() test to
-> see if the cgroup is still live - the internal callers at
-> cgroup.c does.
+> This will allow us to call destroy() without holding the
+> cgroup_mutex(). Other important updates inside update_flags()
+> are protected by the callback_mutex.
 > 
-> With this test in cgroup_attach_task, we can assure that
-> no tasks are ever moved to a cgroup that is past its
-> destruction point and was already marked as dead.
+> We could protect this variable with the callback_mutex as well,
+> as suggested by Li Zefan, but we need to make sure we are protected
+> by that mutex at all times, and some of its updates happen inside the
+> cgroup_mutex - which means we would deadlock.
+> 
+> An atomic variable is not expensive, since it is seldom updated,
+> and protect us well.
 > 
 > Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
 
 Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-
-
-> ---
->  kernel/cgroup.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index b61b938..932c318 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -1927,6 +1927,9 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
->  	struct cgroup_taskset tset = { };
->  	struct css_set *newcg;
->  
-> +	if (cgroup_is_removed(cgrp))
-> +		return -ENODEV;
-> +
->  	/* @tsk either already exited or can't exit until the end */
->  	if (tsk->flags & PF_EXITING)
->  		return -ESRCH;
-
-
