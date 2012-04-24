@@ -1,121 +1,65 @@
-From: Andrew Martin <andrew.s.martin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Cannot set memory.memsw.limit_in_bytes for a particular cgroup
-Date: Tue, 24 Apr 2012 17:47:44 -0500
-Message-ID: <CAE+0DR6yyRHGKYiR-svQAdaV2ZqgaTgPvDMwFFmVs6rJG6w0JA@mail.gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
+Date: Tue, 24 Apr 2012 15:54:20 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1204241550110.2537@chino.kir.corp.google.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere> <4F96BB62.1030900@parallels.com>
+ <alpine.DEB.2.00.1204241322390.753@chino.kir.corp.google.com> <4F971CC2.3090109@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:from:date:message-id:subject:to:content-type;
-        bh=lRTiTy3TcM6jX9IwNQaixoUlhRxykpUGsR061wHKGA0=;
-        b=VuOiWVBpV0QmYzkcjLnQMg2v4BkSnAFnSHKtXz30LddCqAdpkYzeLkqHLKWyYime68
-         ueVwGhmZlikQo/Bj3QZMGdzoUHPKWR1Uw5u6egTAzIH/yOOtb9AUKLC7x3nemQLIx0rO
-         SWdauhU5lLxgHH0CqHq6ABsdn4JlOoWY5nFm22a80os7O+39orvhMFztCpx38HKTzk49
-         3/NR9fgpLn6xWEeEdwrei5Y6heTWopam5IfWc1o+c8k7FNRLHXXFQjEk5oKrZlat1N5Y
-         Zc3PuenJQeNNjmAk67IkfWT+avajE7DS2j01BEeMkJqfdkVF6ovq0VdQEYVEe+7NHWFl
-         UfFw==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=Qn+39xxaf5VRWYed1IuI9gKoZ2CY+QW3k+9yiMBccFY=;
+        b=UgER8L8iDBKOcCcgb/P/xJcisUun/b6OdSC1NKquWahnD3qFnbzWH+BDPHE4cBQGZb
+         G7sdCctaZSiVJbZzgX6jUlLHpy68Tuv9UduLk7xrrq7x9x+JiAWhn7EgmQRBne97nznY
+         trpfs6YW3Sr3IKbVUp2Losg/5qVM6Gu7ZNiZ587ao+d5k43xsCjxcSu10HBvBWgelfsl
+         qV4yZqfhV7vdKiTOcvvxVSGmfH1ONU3+pzH87AaCHAIJ/LFkox0BbpHD0fi6IdxhU+J/
+         cnsr7ypDerZ7+3ojiaENjcSc8SnyvibKk1QQy2gt7aa+hoQSR2WGSocbWLBz3z4suZ/f
+         o+gQ==
+In-Reply-To: <4F971CC2.3090109@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-Hello,
+On Tue, 24 Apr 2012, Glauber Costa wrote:
 
+> > Yes, for user memory, I see charging to p->mm->owner as allowing that
+> > process to eventually move and be charged to a different memcg and there's
+> > no way to do proper accounting if the charge is split amongst different
+> > memcgs because of thread membership to a set of memcgs.  This is
+> > consistent with charges for shared memory being moved when a thread
+> > mapping it moves to a new memcg, as well.
+> 
+> But that's the problem.
+> 
+> When we are dealing with kernel memory, we are allocating a whole slab page.
+> It is essentially impossible to track, given a page, which task allocated
+> which object.
+> 
 
-I am running a VM with Ubuntu Server 10.04 amd64. I have installed and
-configured cgroups to limit the resources available to samba, nfs, and
-apache. My configuration is as follows:
-/etc/cgconfig.conf
-group nfs {
-        memory {
-                memory.limit_in_bytes = 500M;
-                memory.memsw.limit_in_bytes = 1000M;
-        }
-        cpu {
-                cpu.shares = 10;
-        }
-}
+Right, so you have to make the distinction that slab charges cannot be 
+migrated by memory.move_charge_at_immigrate (and it's not even specified 
+to do anything beyond user pages in Documentation/cgroups/memory.txt), but 
+it would be consistent to charge the same memcg for a process's slab 
+allocations as the process's user allocations.
 
-group smb {
-        memory {
-                memory.limit_in_bytes = 1500M;
-                memory.memsw.limit_in_bytes = 2000M;
-        }
-        cpu {
-                cpu.shares = 13;
-        }
-}
+My response was why we shouldn't be charging user pages to 
+mem_cgroup_from_task(current) rather than 
+mem_cgroup_from_task(current->mm->owner) which is what is currently 
+implemented.
 
-group apache {
-        memory {
-                memory.limit_in_bytes = 6G;
-                memory.memsw.limit_in_bytes = 6G;
-                memory.swappiness = 5;
-        }
-        cpu {
-                cpu.shares = 100;
-        }
-}
+If that can't be changed so that we can still migrate user memory amongst 
+memcgs for memory.move_charge_at_immigrate, then it seems consistent to 
+have all allocations done by a task to be charged to the same memcg.  
+Hence, I suggested current->mm->owner for slab charging as well.
 
-
-mount {
-        cpu = /mnt/cgroups/cpu;
-        cpuacct = /mnt/cgroups/cpuacct;
-        memory = /mnt/cgroups/memory;
-        cpuset = /mnt/cgroups/cpuset;
-}
-
-/etc/cgrules.conf
-## Samba Server
-root:/usr/sbin/smbd             cpu,memory      smb/
-root:/usr/sbin/nmbd             cpu,memory      smb/
-
-## NFS Server
-root:/usr/sbin/exportfs         cpu,memory      nfs/
-root:/usr/sbin/rpc.mountd       cpu,memory      nfs/
-root:/usr/sbin/rpc.nfsd         cpu,memory      nfs/
-root:/usr/sbin/rpc.svcgssd      cpu,memory      nfs/
-root:nfsd                       cpu,memory      nfs/
-root:nfsd4                      cpu,memory      nfs/
-
-## Apache Webserver
-root:apache2                    cpu,memory      apache/
-www-data                        cpu,memory      apache/
-
-Both memory.limit_in_bytes and memory.memsw.limit_in_bytes seem to
-work fine for the smb cgroup, but no matter what values I use for the
-apache cgroup I cannot set memory.memsw.limit_in_bytes. My goal is to
-disable apache's ability to swap by setting memory.limit_in_bytes and
-memory.memsw.limit_in_bytes to the same value. After running "service
-cgconfig restart" to restart the cgconfig service, I check the value
-of memory.limit_in_bytes and memory.memsw.limit_in_bytes for the
-apache group:
-# cat /mnt/cgroups/memory/apache/memory.limit_in_bytes
-6442450944
-# cat /mnt/cgroups/memory/apache/memory.memsw.limit_in_bytes
-9223372036854775807
-
-The value for memory.memsw.limit_in_bytes is not being initialized. I
-cannot find any related errors in /var/log. I have tried a number of
-different values for memory.memsw.limit_in_bytes, however it will not
-initialize properly. The only error I can see occurs when I restart
-the cgroups service:
-Stopping cgconfig service: rmdir: failed to remove `./smb': Device or
-resource busy
-sed: couldn't flush stdout: No such process
-rmdir: failed to remove `./sysdefault': Device or resource busy
-sed: couldn't flush stdout: No such process
-rmdir: failed to remove `./sysdefault': Device or resource busy
-sed: couldn't flush stdout: Invalid argument
-rmdir: failed to remove `./sysdefault': Device or resource busy
- *
-Starting cgconfig service:
-
-What else can I try in order to properly initialize
-memory.memsw.limit_in_bytes? I can temporarily echo a value to it, but
-would prefer a permanent solution.
-
-Thanks,
-
-Andrew Martin
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
