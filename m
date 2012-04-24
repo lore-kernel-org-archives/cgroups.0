@@ -1,57 +1,112 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 3/5] change number_of_cpusets to an atomic
-Date: Tue, 24 Apr 2012 13:27:09 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1204241318020.26005@router.home>
-References: <1335209867-1831-1-git-send-email-glommer@parallels.com> <1335209867-1831-4-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204241001050.26005@router.home> <4F96D1A8.6040604@parallels.com> <alpine.DEB.2.00.1204241120130.26005@router.home>
- <4F96D50D.4020804@parallels.com>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch] mm: memcg: move pc lookup point to commit_charge()
+Date: Tue, 24 Apr 2012 21:31:00 +0200
+Message-ID: <1335295860-28919-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1335292031; bh=Py4tmuBT5KobPU2aqEbBBCQv9psIq10w1krQX5spIZk=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=y4pOPEU6rzZKy4ZwmF90PS9OC9XE0YdAr+A2m7bEXKNwSfEQVKs89prnJ1eWOIugcndBKhlIbFYoD5JgxnYi7c4sHjyCAmSeWZvTXrGZp1KKZrLUWVI9Ort+yLQe/riPWAxj1hXsDcfgx8syF5u/7+3e629LnBrHTHeUzdmlan4=
-In-Reply-To: <4F96D50D.4020804-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 24 Apr 2012, Glauber Costa wrote:
+None of the callsites actually need the page_cgroup descriptor
+themselves, so just pass the page and do the look up in there.
 
-> > > It doesn't seem to be the case here.
-> >
-> > How did you figure that? number_of_cpusets was introduced exactly because
-> > the functions are used in places where we do not pay the cost of calling
-> > __cpuset_node_allowed_soft/hardwall. Have a look at these. They may take
-> > locks etc etc in critical allocation paths
-> I am not arguing that.
->
-> You want to avoid the cost of processing a function, that's fair.
-> (Note that by "function call cost" I don't mean the cost of processing a
-> function, but the cost of a (potentially empty) function call.)
-> The real question is: Are you okay with the cost of a branch + a global
-> variable (which is almost read only) fetch?
+We already had two bugs (6568d4a 'mm: memcg: update the correct soft
+limit tree during migration' and 'memcg: fix Bad page state after
+replace_page_cache') where the passed page and pc were not referring
+to the same page frame.
 
-No and that is why the static branching comes in. It takes away the global
-read of the number_of_cpusets variable in the critical paths.
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ mm/memcontrol.c |   17 +++++------------
+ 1 files changed, 5 insertions(+), 12 deletions(-)
 
-> The test of a global variable can - and do as of right now - avoid all the
-> expensive operations like locking, sleeping, etc, and if you don't need to
-> squeeze every nanosecond you can, they are often simpler - and therefore
-> better - than static branching.
-
-Better than static branching? This is in critical VM functions and
-reducing the cache footprint there is good for everyone.
-
-> Just to mention one point I am coming across these days - that initiated all
-> this: static patching holds the cpu_hotplug.lock. So it can't be called if you
-> hold any lock that has been already held under the cpu_hotplug.lock. This will
-> probably mean any lock the cpuset cgroup needs to take, because it is called -
-> and to do a lot of things - from the cpu hotplug handler, that holds the
-> cpu_hotplug.lock.
-
-Transitions from one to two cpusets are rare and are only done when a
-cpuset is created in the /dev/cpuset hierachy). You could move the
-code modification outside of locks or defer action into an event
-thread if there are locks in the way.
-
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 884e936..1a28dd8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2461,10 +2461,10 @@ struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
+ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+ 				       struct page *page,
+ 				       unsigned int nr_pages,
+-				       struct page_cgroup *pc,
+ 				       enum charge_type ctype,
+ 				       bool lrucare)
+ {
++	struct page_cgroup *pc = lookup_page_cgroup(page);
+ 	struct zone *uninitialized_var(zone);
+ 	bool was_on_lru = false;
+ 	bool anon;
+@@ -2701,7 +2701,6 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
+ {
+ 	struct mem_cgroup *memcg = NULL;
+ 	unsigned int nr_pages = 1;
+-	struct page_cgroup *pc;
+ 	bool oom = true;
+ 	int ret;
+ 
+@@ -2715,11 +2714,10 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
+ 		oom = false;
+ 	}
+ 
+-	pc = lookup_page_cgroup(page);
+ 	ret = __mem_cgroup_try_charge(mm, gfp_mask, nr_pages, &memcg, oom);
+ 	if (ret == -ENOMEM)
+ 		return ret;
+-	__mem_cgroup_commit_charge(memcg, page, nr_pages, pc, ctype, false);
++	__mem_cgroup_commit_charge(memcg, page, nr_pages, ctype, false);
+ 	return 0;
+ }
+ 
+@@ -2816,16 +2814,13 @@ static void
+ __mem_cgroup_commit_charge_swapin(struct page *page, struct mem_cgroup *memcg,
+ 					enum charge_type ctype)
+ {
+-	struct page_cgroup *pc;
+-
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 	if (!memcg)
+ 		return;
+ 	cgroup_exclude_rmdir(&memcg->css);
+ 
+-	pc = lookup_page_cgroup(page);
+-	__mem_cgroup_commit_charge(memcg, page, 1, pc, ctype, true);
++	__mem_cgroup_commit_charge(memcg, page, 1, ctype, true);
+ 	/*
+ 	 * Now swap is on-memory. This means this page may be
+ 	 * counted both as mem and swap....double count.
+@@ -3254,14 +3249,13 @@ int mem_cgroup_prepare_migration(struct page *page,
+ 	 * page. In the case new page is migrated but not remapped, new page's
+ 	 * mapcount will be finally 0 and we call uncharge in end_migration().
+ 	 */
+-	pc = lookup_page_cgroup(newpage);
+ 	if (PageAnon(page))
+ 		ctype = MEM_CGROUP_CHARGE_TYPE_MAPPED;
+ 	else if (page_is_file_cache(page))
+ 		ctype = MEM_CGROUP_CHARGE_TYPE_CACHE;
+ 	else
+ 		ctype = MEM_CGROUP_CHARGE_TYPE_SHMEM;
+-	__mem_cgroup_commit_charge(memcg, newpage, 1, pc, ctype, false);
++	__mem_cgroup_commit_charge(memcg, newpage, 1, ctype, false);
+ 	return ret;
+ }
+ 
+@@ -3348,8 +3342,7 @@ void mem_cgroup_replace_page_cache(struct page *oldpage,
+ 	 * the newpage may be on LRU(or pagevec for LRU) already. We lock
+ 	 * LRU while we overwrite pc->mem_cgroup.
+ 	 */
+-	pc = lookup_page_cgroup(newpage);
+-	__mem_cgroup_commit_charge(memcg, newpage, 1, pc, type, true);
++	__mem_cgroup_commit_charge(memcg, newpage, 1, type, true);
+ }
+ 
+ #ifdef CONFIG_DEBUG_VM
+-- 
+1.7.7.6
