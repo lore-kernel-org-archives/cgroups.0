@@ -1,81 +1,45 @@
-From: David Rientjes <rientjes@google.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
-Date: Tue, 24 Apr 2012 13:21:43 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1204241319360.753@chino.kir.corp.google.com>
+Date: Tue, 24 Apr 2012 13:25:57 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1204241322390.753@chino.kir.corp.google.com>
 References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere>
+ <4F96BB62.1030900@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=Af2C11KHH/LLjHtaOXLyixYYnIGpFL13Asv1PPll4tI=;
-        b=Q3fw9hpcoqOK83W0SSbJWpuaFFz6wjYOJDsupyvmo26eJMoQKROhfmRA6c5pVOParq
-         6yaOLKZV2VGgJZ7VVXAzEYKXnIUeDXa6k6Nc0sMYCvn1cIwwX94/LV+8+ybETdC8ZNMm
-         +8VRFouBlSgqUgYYMhEmz1dyYJynXCdgPkhIXNckUZ/RBDtOspvhLtjAEbq4jh6kzerq
-         8UeyjiMrWka4P7Th0cmDjObsxaj9gh8sRZ2TlAHk8+KxM+Y7Qdr+lVLmbAQ0OV+Wvnc8
-         qoMniC4LkYkEQohCgl7IphuRd9AjsReAgFZwP/FwGVUX9GbFdAOtfGJ7mNLEutFzJUaU
-         Ec3Q==
-In-Reply-To: <20120424142232.GC8626@somewhere>
-Sender: owner-linux-mm@kvack.org
+        bh=dwGtISbhTtx0HlFN9osBUsJD9OBDlyEOvIZKIo8dSQg=;
+        b=Hn1bmampbAFf8996FEwvE7WAdp29T4yVar30zisX/k5tdPxmlAXSwfj3u/ZKkagq6u
+         P98Cf2xEo2MFhUWhoai8uTZtgY+DXnai+B0eBYyVL5Rkx8mTiziUgVlGNhKV/ygm5oJX
+         XI5Tgl2Y4HpnasS1qicFUvg4Bdd3h3dYC8qBRkoQGiarvp6bXYuKjob7cNP8RRgwE32z
+         tNKROUNkahG5IBszef+33wF/R+m7ygySCMuwfiNzVp/BQZbtIMUPvWV4TJchNmnNENyJ
+         0ZdPLcgJ80RK162MJCbYXRzXkTOwXg6nvKKu9XfLszOjZdpmq74kCrpjTp0ECy9hdPiP
+         4pmQ==
+In-Reply-To: <4F96BB62.1030900-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-On Tue, 24 Apr 2012, Frederic Weisbecker wrote:
+On Tue, 24 Apr 2012, Glauber Costa wrote:
 
-> > This seems horribly inconsistent with memcg charging of user memory since 
-> > it charges to p->mm->owner and you're charging to p.  So a thread attached 
-> > to a memcg can charge user memory to one memcg while charging slab to 
-> > another memcg?
+> I think memcg is not necessarily wrong. That is because threads in a process
+> share an address space, and you will eventually need to map a page to deliver
+> it to userspace. The mm struct points you to the owner of that.
 > 
-> Charging to the thread rather than the process seem to me the right behaviour:
-> you can have two threads of a same process attached to different cgroups.
+> But that is not necessarily true for things that live in the kernel address
+> space.
 > 
-> Perhaps it is the user memory memcg that needs to be fixed?
+> Do you view this differently ?
 > 
 
-No, because memory is represented by mm_struct, not task_struct, so you 
-must charge to p->mm->owner to allow for moving threads amongst memcgs 
-later for memory.move_charge_at_immigrate.  You shouldn't be able to 
-charge two different memcgs for memory represented by a single mm.
-
-> > > +
-> > > +	if (!mem_cgroup_kmem_enabled(memcg))
-> > > +		goto out;
-> > > +
-> > > +	mem_cgroup_get(memcg);
-> > > +	ret = memcg_charge_kmem(memcg, gfp, size) == 0;
-> > > +	if (ret)
-> > > +		mem_cgroup_put(memcg);
-> > > +out:
-> > > +	rcu_read_unlock();
-> > > +	return ret;
-> > > +}
-> > > +EXPORT_SYMBOL(__mem_cgroup_charge_kmem);
-> > > +
-> > > +void __mem_cgroup_uncharge_kmem(size_t size)
-> > > +{
-> > > +	struct mem_cgroup *memcg;
-> > > +
-> > > +	rcu_read_lock();
-> > > +	memcg = mem_cgroup_from_task(current);
-> > > +
-> > > +	if (!mem_cgroup_kmem_enabled(memcg))
-> > > +		goto out;
-> > > +
-> > > +	mem_cgroup_put(memcg);
-> > > +	memcg_uncharge_kmem(memcg, size);
-> > > +out:
-> > > +	rcu_read_unlock();
-> > > +}
-> > > +EXPORT_SYMBOL(__mem_cgroup_uncharge_kmem);
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Yes, for user memory, I see charging to p->mm->owner as allowing that 
+process to eventually move and be charged to a different memcg and there's 
+no way to do proper accounting if the charge is split amongst different 
+memcgs because of thread membership to a set of memcgs.  This is 
+consistent with charges for shared memory being moved when a thread 
+mapping it moves to a new memcg, as well.
