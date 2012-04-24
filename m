@@ -1,70 +1,44 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] Documentation: memcg: future proof hierarchical
- statistics documentation
-Date: Tue, 24 Apr 2012 23:26:33 +0200
-Message-ID: <20120424212633.GK2536@cmpxchg.org>
-References: <1335296038-29297-1-git-send-email-hannes@cmpxchg.org>
- <4F970826.8030702@xenotime.net>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
+Date: Tue, 24 Apr 2012 18:36:02 -0300
+Message-ID: <4F971CC2.3090109@parallels.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere> <4F96BB62.1030900@parallels.com> <alpine.DEB.2.00.1204241322390.753@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <4F970826.8030702@xenotime.net>
+In-Reply-To: <alpine.DEB.2.00.1204241322390.753@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Ying Han <yinghan@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes@google.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph
+ Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On Tue, Apr 24, 2012 at 01:08:06PM -0700, Randy Dunlap wrote:
-> On 04/24/2012 12:33 PM, Johannes Weiner wrote:
-> 
-> > The hierarchical versions of per-memcg counters in memory.stat are all
-> > calculated the same way and are all named total_<counter>.
-> > 
-> > Documenting the pattern is easier for maintenance than listing each
-> > counter twice.
-> > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > Acked-by: Michal Hocko <mhocko@suse.cz>
-> > Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-> > Acked-by: Ying Han <yinghan@google.com>
-> > ---
-> >  Documentation/cgroups/memory.txt |   15 ++++-----------
-> >  1 files changed, 4 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-> > index ab34ae5..6a066a2 100644
-> > --- a/Documentation/cgroups/memory.txt
-> > +++ b/Documentation/cgroups/memory.txt
-> > @@ -432,17 +432,10 @@ hierarchical_memory_limit - # of bytes of memory limit with regard to hierarchy
-> >  hierarchical_memsw_limit - # of bytes of memory+swap limit with regard to
-> >  			hierarchy under which memory cgroup is.
-> >  
-> > -total_cache		- sum of all children's "cache"
-> > -total_rss		- sum of all children's "rss"
-> > -total_mapped_file	- sum of all children's "cache"
-> > -total_pgpgin		- sum of all children's "pgpgin"
-> > -total_pgpgout		- sum of all children's "pgpgout"
-> > -total_swap		- sum of all children's "swap"
-> > -total_inactive_anon	- sum of all children's "inactive_anon"
-> > -total_active_anon	- sum of all children's "active_anon"
-> > -total_inactive_file	- sum of all children's "inactive_file"
-> > -total_active_file	- sum of all children's "active_file"
-> > -total_unevictable	- sum of all children's "unevictable"
-> > +total_<counter>		- # hierarchical version of <counter>, which in
-> > +			addition to the cgroup's own value includes the
-> > +			sum of all hierarchical children's values of
-> > +			<counter>, i.e. total_cache
-> 
-> 			           e.g., total_cache
-> 
-> But how is a user or an admin supposed to know what all of the valid
-> total_<counter> names are?  Is the entire list documented anywhere
-> else other than here (which is being deleted)?
+On 04/24/2012 05:25 PM, David Rientjes wrote:
+> On Tue, 24 Apr 2012, Glauber Costa wrote:
+>
+>> I think memcg is not necessarily wrong. That is because threads in a process
+>> share an address space, and you will eventually need to map a page to deliver
+>> it to userspace. The mm struct points you to the owner of that.
+>>
+>> But that is not necessarily true for things that live in the kernel address
+>> space.
+>>
+>> Do you view this differently ?
+>>
+>
+> Yes, for user memory, I see charging to p->mm->owner as allowing that
+> process to eventually move and be charged to a different memcg and there's
+> no way to do proper accounting if the charge is split amongst different
+> memcgs because of thread membership to a set of memcgs.  This is
+> consistent with charges for shared memory being moved when a thread
+> mapping it moves to a new memcg, as well.
 
-Yes, right above where the context of this patch ends is the original
-list of counters, documenting cache, rss, mapped_file, etc.
+But that's the problem.
+
+When we are dealing with kernel memory, we are allocating a whole slab 
+page. It is essentially impossible to track, given a page, which task 
+allocated which object.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
