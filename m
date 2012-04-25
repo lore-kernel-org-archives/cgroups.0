@@ -1,111 +1,145 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 4/5] don't take cgroup_mutex in destroy()
-Date: Wed, 25 Apr 2012 16:01:03 +0800
-Message-ID: <4F97AF3F.10101@huawei.com>
-References: <1335209867-1831-1-git-send-email-glommer@parallels.com>
- <1335209867-1831-5-git-send-email-glommer@parallels.com>
- <4F96109A.8000907@jp.fujitsu.com> <4F9691A8.1070106@parallels.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch] mm: memcg: move pc lookup point to commit_charge()
+Date: Wed, 25 Apr 2012 10:21:26 +0200
+Message-ID: <20120425082125.GA11364@tiehlicka.suse.cz>
+References: <1335295860-28919-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <4F9691A8.1070106-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1335295860-28919-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Glauber Costa wrote:
-
-> On 04/23/2012 11:31 PM, KAMEZAWA Hiroyuki wrote:
->> (2012/04/24 4:37), Glauber Costa wrote:
->>
->>> Most of the destroy functions are only doing very simple things
->>> like freeing memory.
->>>
->>> The ones who goes through lists and such, already use its own
->>> locking for those.
->>>
->>> * The cgroup itself won't go away until we free it, (after destroy)
->>> * The parent won't go away because we hold a reference count
->>> * There are no more tasks in the cgroup, and the cgroup is declared
->>>    dead (cgroup_is_removed() == true)
->>>
->>> [v2: don't cgroup_lock the freezer and blkcg ]
->>>
->>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->>> CC: Tejun Heo<tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>> CC: Li Zefan<lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>> CC: Kamezawa Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->>> CC: Vivek Goyal<vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>> ---
->>>   kernel/cgroup.c |    9 ++++-----
->>>   1 files changed, 4 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->>> index 932c318..976d332 100644
->>> --- a/kernel/cgroup.c
->>> +++ b/kernel/cgroup.c
->>> @@ -869,13 +869,13 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
->>>   		 * agent */
->>>   		synchronize_rcu();
->>>
->>> -		mutex_lock(&cgroup_mutex);
->>>   		/*
->>>   		 * Release the subsystem state objects.
->>>   		 */
->>>   		for_each_subsys(cgrp->root, ss)
->>>   			ss->destroy(cgrp);
->>>
->>> +		mutex_lock(&cgroup_mutex);
->>>   		cgrp->root->number_of_cgroups--;
->>>   		mutex_unlock(&cgroup_mutex);
->>>
->>> @@ -3994,13 +3994,12 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
->>>
->>>    err_destroy:
->>>
->>> +	mutex_unlock(&cgroup_mutex);
->>>   	for_each_subsys(root, ss) {
->>>   		if (cgrp->subsys[ss->subsys_id])
->>>   			ss->destroy(cgrp);
->>>   	}
->>>
->>> -	mutex_unlock(&cgroup_mutex);
->>> -
->>>   	/* Release the reference count that we took on the superblock */
->>>   	deactivate_super(sb);
->>>
->>> @@ -4349,9 +4348,9 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
->>>   		int ret = cgroup_init_idr(ss, css);
->>>   		if (ret) {
->>>   			dummytop->subsys[ss->subsys_id] = NULL;
->>> +			mutex_unlock(&cgroup_mutex);
->>>   			ss->destroy(dummytop);
->>>   			subsys[i] = NULL;
->>> -			mutex_unlock(&cgroup_mutex);
->>>   			return ret;
->>>   		}
->>>   	}
->>> @@ -4447,10 +4446,10 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
->>>   	 * pointer to find their state. note that this also takes care of
->>>   	 * freeing the css_id.
->>>   	 */
->>> +	mutex_unlock(&cgroup_mutex);
->>>   	ss->destroy(dummytop);
->>>   	dummytop->subsys[ss->subsys_id] = NULL;
->>>
->>
->> I'm not fully sure but...dummytop->subsys[] update can be done without locking ?
->>
-> I don't see a reason why updates to subsys[] after destruction shouldn't
-> be safe. But maybe I am wrong.
+On Tue 24-04-12 21:31:00, Johannes Weiner wrote:
+> None of the callsites actually need the page_cgroup descriptor
+> themselves, so just pass the page and do the look up in there.
 > 
-> Tejun? Li?
+> We already had two bugs (6568d4a 'mm: memcg: update the correct soft
+> limit tree during migration' and 'memcg: fix Bad page state after
+> replace_page_cache') where the passed page and pc were not referring
+> to the same page frame.
+
+Yes let's get rid of these relics once and for all.
+
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Hugh Dickins <hughd@google.com>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Cc: Michal Hocko <mhocko@suse.cz>
+
+Acked-by: Michal Hocko <mhocko@suse.cz>
+
+Thanks!
+
+> ---
+>  mm/memcontrol.c |   17 +++++------------
+>  1 files changed, 5 insertions(+), 12 deletions(-)
 > 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 884e936..1a28dd8 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2461,10 +2461,10 @@ struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
+>  static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+>  				       struct page *page,
+>  				       unsigned int nr_pages,
+> -				       struct page_cgroup *pc,
+>  				       enum charge_type ctype,
+>  				       bool lrucare)
+>  {
+> +	struct page_cgroup *pc = lookup_page_cgroup(page);
+>  	struct zone *uninitialized_var(zone);
+>  	bool was_on_lru = false;
+>  	bool anon;
+> @@ -2701,7 +2701,6 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
+>  {
+>  	struct mem_cgroup *memcg = NULL;
+>  	unsigned int nr_pages = 1;
+> -	struct page_cgroup *pc;
+>  	bool oom = true;
+>  	int ret;
+>  
+> @@ -2715,11 +2714,10 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
+>  		oom = false;
+>  	}
+>  
+> -	pc = lookup_page_cgroup(page);
+>  	ret = __mem_cgroup_try_charge(mm, gfp_mask, nr_pages, &memcg, oom);
+>  	if (ret == -ENOMEM)
+>  		return ret;
+> -	__mem_cgroup_commit_charge(memcg, page, nr_pages, pc, ctype, false);
+> +	__mem_cgroup_commit_charge(memcg, page, nr_pages, ctype, false);
+>  	return 0;
+>  }
+>  
+> @@ -2816,16 +2814,13 @@ static void
+>  __mem_cgroup_commit_charge_swapin(struct page *page, struct mem_cgroup *memcg,
+>  					enum charge_type ctype)
+>  {
+> -	struct page_cgroup *pc;
+> -
+>  	if (mem_cgroup_disabled())
+>  		return;
+>  	if (!memcg)
+>  		return;
+>  	cgroup_exclude_rmdir(&memcg->css);
+>  
+> -	pc = lookup_page_cgroup(page);
+> -	__mem_cgroup_commit_charge(memcg, page, 1, pc, ctype, true);
+> +	__mem_cgroup_commit_charge(memcg, page, 1, ctype, true);
+>  	/*
+>  	 * Now swap is on-memory. This means this page may be
+>  	 * counted both as mem and swap....double count.
+> @@ -3254,14 +3249,13 @@ int mem_cgroup_prepare_migration(struct page *page,
+>  	 * page. In the case new page is migrated but not remapped, new page's
+>  	 * mapcount will be finally 0 and we call uncharge in end_migration().
+>  	 */
+> -	pc = lookup_page_cgroup(newpage);
+>  	if (PageAnon(page))
+>  		ctype = MEM_CGROUP_CHARGE_TYPE_MAPPED;
+>  	else if (page_is_file_cache(page))
+>  		ctype = MEM_CGROUP_CHARGE_TYPE_CACHE;
+>  	else
+>  		ctype = MEM_CGROUP_CHARGE_TYPE_SHMEM;
+> -	__mem_cgroup_commit_charge(memcg, newpage, 1, pc, ctype, false);
+> +	__mem_cgroup_commit_charge(memcg, newpage, 1, ctype, false);
+>  	return ret;
+>  }
+>  
+> @@ -3348,8 +3342,7 @@ void mem_cgroup_replace_page_cache(struct page *oldpage,
+>  	 * the newpage may be on LRU(or pagevec for LRU) already. We lock
+>  	 * LRU while we overwrite pc->mem_cgroup.
+>  	 */
+> -	pc = lookup_page_cgroup(newpage);
+> -	__mem_cgroup_commit_charge(memcg, newpage, 1, pc, type, true);
+> +	__mem_cgroup_commit_charge(memcg, newpage, 1, type, true);
+>  }
+>  
+>  #ifdef CONFIG_DEBUG_VM
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 
-It's safe for dummpytop->subsys[], but it makes the code a bit subtle.
-
-The worst part is, it's not safe to NULLify subsys[i] without cgroup_mutex. It should be
-ok to do that before calling ->destroy(), but again the code becomes a bit subtler.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
