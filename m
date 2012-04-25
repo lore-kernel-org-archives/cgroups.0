@@ -1,83 +1,117 @@
-From: Andrew Martin <andrew.s.martin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Cannot set memory.memsw.limit_in_bytes for a particular cgroup
-Date: Tue, 24 Apr 2012 20:46:44 -0500
-Message-ID: <CAE+0DR7JrS1rPzoLMZQVTts6p8nq8w=B-zZ4R21XqDjRpK13aw@mail.gmail.com>
-References: <CAE+0DR6yyRHGKYiR-svQAdaV2ZqgaTgPvDMwFFmVs6rJG6w0JA@mail.gmail.com>
- <4F974836.1090000@jp.fujitsu.com> <D5FAE552-76FE-43DB-B803-FD6F595C1518@gmail.com>
- <4F9752ED.9050800@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
+Date: Wed, 25 Apr 2012 10:56:16 +0900
+Message-ID: <4F9759C0.1070805@jp.fujitsu.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type:content-transfer-encoding;
-        bh=OtZhK7efAECITNtXpkTt216ZClKJFn6hboIJHyS/MCY=;
-        b=DAIr7peZWQZGeZ5+bJt8NCb51OptyVrlGH+rGkyySflAWGr6mM3Ah+N5Rtu+h7HTY/
-         zv+MOuDvJ8KQ4xek9jAJVlhWg+ne4L6S0ZRqsU3hPw/GkgEF9R+Uu4+W++dzdbxv7sOv
-         2fKIalOrz3sIaDozCjU9M3vWcu9UbwaE1ucn+/xeilL/EKRNK1Mav3oYCGqxtEVfyppg
-         RRhGsY1TLLkFe/fpDTyNDyU94OeJlaIaV07AUniJfDkP5VIC70VXKriF4eKpEhPZ4zBv
-         rhda6fOJcSaPMrt6nF8FiKFucVSFgY3Y/Cfq1yparGEeKA5p2hqU5ki6IDENytQjIOSV
-         Vc4A==
-In-Reply-To: <4F9752ED.9050800-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120424142232.GC8626@somewhere>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Frederic Weisbecker <fweisbec@gmail.com>
+Cc: David Rientjes <rientjes@google.com>, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-Hi Kame,
+(2012/04/24 23:22), Frederic Weisbecker wrote:
 
-
-On Apr 24, 2012, at 8:27 PM, KAMEZAWA Hiroyuki
-<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
-
-> (2012/04/25 10:00), Andrew Martin wrote:
->
->
->>> Then, Does "echo > ...apache/memory.memsw.limit_in_bytes" works fine ?
->>> If so, kernel works fine.
->>>
->> It appears to work, in that if I cat it after doing so the new value is retained. However, I have not pushed apache hard enough after doing it to see if the limit is really enforced, though I agree it looks like it is being set correctly using this method.
+> On Mon, Apr 23, 2012 at 03:25:59PM -0700, David Rientjes wrote:
+>> On Sun, 22 Apr 2012, Glauber Costa wrote:
 >>
->>> I'm sorry I'm not libcgroup specialist..but..What happens when you write
->>>>       memory {
->>>>               memory.limit_in_bytes = 6000M;
->>>>               memory.memsw.limit_in_bytes = 6000M;
->>>>               memory.swappiness = 5;
->>>>       }
->>>
->> I also tried that as well as specifying the bytes directly, with no improvement. I also tried different values for memory.memsw.limit_in_bytes from 6000 to 6256 in both powers of 2 and 10.
+>>> +/*
+>>> + * Return the kmem_cache we're supposed to use for a slab allocation.
+>>> + * If we are in interrupt context or otherwise have an allocation that
+>>> + * can't fail, we return the original cache.
+>>> + * Otherwise, we will try to use the current memcg's version of the cache.
+>>> + *
+>>> + * If the cache does not exist yet, if we are the first user of it,
+>>> + * we either create it immediately, if possible, or create it asynchronously
+>>> + * in a workqueue.
+>>> + * In the latter case, we will let the current allocation go through with
+>>> + * the original cache.
+>>> + *
+>>> + * This function returns with rcu_read_lock() held.
+>>> + */
+>>> +struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
+>>> +					     gfp_t gfp)
+>>> +{
+>>> +	struct mem_cgroup *memcg;
+>>> +	int idx;
+>>> +
+>>> +	gfp |=  cachep->allocflags;
+>>> +
+>>> +	if ((current->mm == NULL))
+>>> +		return cachep;
+>>> +
+>>> +	if (cachep->memcg_params.memcg)
+>>> +		return cachep;
+>>> +
+>>> +	idx = cachep->memcg_params.id;
+>>> +	VM_BUG_ON(idx == -1);
+>>> +
+>>> +	memcg = mem_cgroup_from_task(current);
+>>> +	if (!mem_cgroup_kmem_enabled(memcg))
+>>> +		return cachep;
+>>> +
+>>> +	if (rcu_access_pointer(memcg->slabs[idx]) == NULL) {
+>>> +		memcg_create_cache_enqueue(memcg, cachep);
+>>> +		return cachep;
+>>> +	}
+>>> +
+>>> +	return rcu_dereference(memcg->slabs[idx]);
+>>> +}
+>>> +EXPORT_SYMBOL(__mem_cgroup_get_kmem_cache);
+>>> +
+>>> +void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id)
+>>> +{
+>>> +	rcu_assign_pointer(cachep->memcg_params.memcg->slabs[id], NULL);
+>>> +}
+>>> +
+>>> +bool __mem_cgroup_charge_kmem(gfp_t gfp, size_t size)
+>>> +{
+>>> +	struct mem_cgroup *memcg;
+>>> +	bool ret = true;
+>>> +
+>>> +	rcu_read_lock();
+>>> +	memcg = mem_cgroup_from_task(current);
 >>
->> Any other ideas?
->>
->
-> ok, I doubt memory.memsw.limit_in_bytes is set before memory.limit_in_bytes...
-> i.e. maybe libcgroup sets values in reverse order.
->
-> How about this ?
->
-> memory {
->    memory.memsw.limit_in_bytes = 6G;
->    memory.limit_in_bytes = 6G;
->    memory.swappiness = 5;
-> }
->
->
-> memory.limit_in_bytes should be less than memory.memsw.limit_in_bytes.
->
-> Thanks,
-> -Kame
->
->
-That's a good idea, but this Red Hat documentation explains that
-memory.limit_in_bytes must occur before memory.memsw.limit_in_bytes
-because of how they are initialized:
-http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/sec-memory.html
+>> This seems horribly inconsistent with memcg charging of user memory since 
+>> it charges to p->mm->owner and you're charging to p.  So a thread attached 
+>> to a memcg can charge user memory to one memcg while charging slab to 
+>> another memcg?
+> 
+> Charging to the thread rather than the process seem to me the right behaviour:
+> you can have two threads of a same process attached to different cgroups.
+> 
+> Perhaps it is the user memory memcg that needs to be fixed?
+> 
 
-I would prefer memory.memsw.limit_in_bytes to be maybe 5-10MB larger
-than memory.limit_in_bytes.
+There is a problem of OOM-Kill.
+To free memory by killing process, 'mm' should be released by kill.
+So, oom-killer just finds a leader of process.
+
+Assume A process X consists of thread A, B and A is thread-group-leader.
+
+Put thread A into cgroup/Gold
+    thread B into cgroup/Silver.
+
+If we do accounting based on threads, we can't do anything at OOM in cgroup/Silver.
+An idea 'Killing thread-A to kill thread-B'..... breaks isolation.
+ 
+As far as resources used by process, I think accounting should be done per process.
+It's not tied to thread.
+
+About kmem, if we count task_struct, page tables, etc...which can be freed by
+OOM-Killer i.e. it's allocated for 'process', should be aware of OOM problem.
+Using mm->owner makes sense to me until someone finds a great idea to handle
+OOM situation rather than task killing.
 
 Thanks,
+-Kame
 
-Andrew
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
