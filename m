@@ -1,117 +1,108 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
-Date: Wed, 25 Apr 2012 10:56:16 +0900
-Message-ID: <4F9759C0.1070805@jp.fujitsu.com>
-References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere>
+From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC] writeback and cgroup
+Date: Wed, 25 Apr 2012 10:42:43 +0800
+Message-ID: <20120425024243.GA6572@localhost>
+References: <20120410222425.GF4936@quack.suse.cz>
+ <20120411154005.GD16692@redhat.com>
+ <20120411192231.GF16008@quack.suse.cz>
+ <20120412203719.GL2207@redhat.com>
+ <20120412205148.GA24056@google.com>
+ <20120414143639.GA31241@localhost>
+ <20120416145744.GA15437@redhat.com>
+ <20120424113340.GA12509@localhost>
+ <20120424145655.GA1474@quack.suse.cz>
+ <20120424155843.GG26708@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120424142232.GC8626@somewhere>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120424155843.GG26708-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: David Rientjes <rientjes@google.com>, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Transfer-Encoding: 7bit
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, sjayaraman-IBi9RG/b67k@public.gmane.org, andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org, jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lsf-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-(2012/04/24 23:22), Frederic Weisbecker wrote:
-
-> On Mon, Apr 23, 2012 at 03:25:59PM -0700, David Rientjes wrote:
->> On Sun, 22 Apr 2012, Glauber Costa wrote:
->>
->>> +/*
->>> + * Return the kmem_cache we're supposed to use for a slab allocation.
->>> + * If we are in interrupt context or otherwise have an allocation that
->>> + * can't fail, we return the original cache.
->>> + * Otherwise, we will try to use the current memcg's version of the cache.
->>> + *
->>> + * If the cache does not exist yet, if we are the first user of it,
->>> + * we either create it immediately, if possible, or create it asynchronously
->>> + * in a workqueue.
->>> + * In the latter case, we will let the current allocation go through with
->>> + * the original cache.
->>> + *
->>> + * This function returns with rcu_read_lock() held.
->>> + */
->>> +struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
->>> +					     gfp_t gfp)
->>> +{
->>> +	struct mem_cgroup *memcg;
->>> +	int idx;
->>> +
->>> +	gfp |=  cachep->allocflags;
->>> +
->>> +	if ((current->mm == NULL))
->>> +		return cachep;
->>> +
->>> +	if (cachep->memcg_params.memcg)
->>> +		return cachep;
->>> +
->>> +	idx = cachep->memcg_params.id;
->>> +	VM_BUG_ON(idx == -1);
->>> +
->>> +	memcg = mem_cgroup_from_task(current);
->>> +	if (!mem_cgroup_kmem_enabled(memcg))
->>> +		return cachep;
->>> +
->>> +	if (rcu_access_pointer(memcg->slabs[idx]) == NULL) {
->>> +		memcg_create_cache_enqueue(memcg, cachep);
->>> +		return cachep;
->>> +	}
->>> +
->>> +	return rcu_dereference(memcg->slabs[idx]);
->>> +}
->>> +EXPORT_SYMBOL(__mem_cgroup_get_kmem_cache);
->>> +
->>> +void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id)
->>> +{
->>> +	rcu_assign_pointer(cachep->memcg_params.memcg->slabs[id], NULL);
->>> +}
->>> +
->>> +bool __mem_cgroup_charge_kmem(gfp_t gfp, size_t size)
->>> +{
->>> +	struct mem_cgroup *memcg;
->>> +	bool ret = true;
->>> +
->>> +	rcu_read_lock();
->>> +	memcg = mem_cgroup_from_task(current);
->>
->> This seems horribly inconsistent with memcg charging of user memory since 
->> it charges to p->mm->owner and you're charging to p.  So a thread attached 
->> to a memcg can charge user memory to one memcg while charging slab to 
->> another memcg?
+On Tue, Apr 24, 2012 at 11:58:43AM -0400, Vivek Goyal wrote:
+> On Tue, Apr 24, 2012 at 04:56:55PM +0200, Jan Kara wrote:
 > 
-> Charging to the thread rather than the process seem to me the right behaviour:
-> you can have two threads of a same process attached to different cgroups.
+> [..]
+> > > > I think having separate weigths for sync IO groups and async IO is not
+> > > > very appealing. There should be one notion of group weight and bandwidth
+> > > > distrubuted among groups according to their weight.
+> > > 
+> > > There have to be some scheme, either explicitly or implicitly. Maybe
+> > > you are baring in mind some "equal split among queues" policy? For
+> > > example, if the cgroup has 9 active sync queues and 1 async queue,
+> > > split the weight equally to the 10 queues?  So the sync IOs get 90%
+> > > share, and the async writes get 10% share.
+> >   Maybe I misunderstand but there doesn't have to be (and in fact isn't)
+> > any split among sync / async IO in CFQ. At each moment, we choose a queue
+> > with the highest score and dispatch a couple of requests from it. Then we
+> > go and choose again. The score of the queue depends on several factors
+> > (like age of requests, whether the queue is sync or async, IO priority,
+> > etc.).
+> > 
+> > Practically, over a longer period system will stabilize on some ratio
+> > but that's dependent on the load so your system should not impose some
+> > artificial direct/buffered split but rather somehow deal with the reality
+> > how IO scheduler decides to dispatch requests...
 > 
-> Perhaps it is the user memory memcg that needs to be fixed?
+> Yes. CFQ does not have the notion of giving a fixed share to async
+> requests. In fact right now it is so biased in favor of sync reqeusts,
+> that in some cases it can starve async writes or introduce long delays
+> resulting in "task hung for 120 second" warnings.
 > 
+> So if there are issues w.r.t how disk is shared between sync/async IO
+> with in a cgroup, that should be handled at IO scheduler level. Writeback
+> code trying to dictate that ratio, sounds odd.
 
-There is a problem of OOM-Kill.
-To free memory by killing process, 'mm' should be released by kill.
-So, oom-killer just finds a leader of process.
+Indeed it sounds odd.. However it does look that there need some
+sync/async ratio to avoid livelock issues, say 80:20 or whatever.
+What's you original plan to deal with this in the IO scheduler?
 
-Assume A process X consists of thread A, B and A is thread-group-leader.
+> > > For dirty throttling w/o cgroup awareness, balance_dirty_pages()
+> > > splits the writeout bandwidth equally among all dirtier tasks. Since
+> > > cfq works with queues, it seems most natural for it to do equal split
+> > > among all queues (inside the cgroup).
+> >   Well, but we also have IO priorities which change which queue should get
+> > preference.
+> > 
+> > > I'm not sure when there are N dd tasks doing direct IO, cfq will
+> > > continuously run N sync queues for them (without many dynamic queue
+> > > deletion and recreations). If that is the case, it should be trivial
+> > > to support the queue based fair split in the global async queue
+> > > scheme. Otherwise I'll have some trouble detecting the N value when
+> > > trying to do the N:1 sync:async weight split.
+> >   And also sync queues for several processes can get merged when CFQ
+> > observes these processes cooperate together on one area of disk and get
+> > split again when processes stop cooperating. I don't think you really want
+> > to second-guess what CFQ does inside...
+> 
+> Agreed. Trying to predict what CFQ will do and then trying to influence
+> sync/async ration based on root cgroup weight does not seem to be the
+> right way. Especially that will also mean either assuming that everything
+> in root group is sync or we shall have to split sync/async weight notion.
 
-Put thread A into cgroup/Gold
-    thread B into cgroup/Silver.
+It seems there is some misunderstanding to the sync/async split.
+No, root cgroup tasks won't be any special wrt the weight split.
+Although in the current patch I does make assumption that no IO
+is happening in the root cgroup.
 
-If we do accounting based on threads, we can't do anything at OOM in cgroup/Silver.
-An idea 'Killing thread-A to kill thread-B'..... breaks isolation.
- 
-As far as resources used by process, I think accounting should be done per process.
-It's not tied to thread.
+To make it look easier, we may as well move the flusher thread to a
+standalone cgroup. Then if the root cgroup has both aggressive
+sync/async IOs, the split will be carried out the same way as other
+cgroups:
 
-About kmem, if we count task_struct, page tables, etc...which can be freed by
-OOM-Killer i.e. it's allocated for 'process', should be aware of OOM problem.
-Using mm->owner makes sense to me until someone finds a great idea to handle
-OOM situation rather than task killing.
+        rootcg->dio_weight = rootcg->weight / 2
+        flushercg->async_weight += rootcg->weight / 2
+
+> sync/async ratio is a IO scheduler thing and is not fixed. So writeback
+> layer making assumptions and changing weigths sounds very awkward to me.
+
+OK the ratio is not fixed, so I'm not going to do the guess work.
+However there is still the question: how are we going to fix the
+sync-starve-async IO problem without some guaranteed ratio?
 
 Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Fengguang
