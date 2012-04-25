@@ -1,109 +1,129 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v2 5/5] decrement static keys on real destroy time
-Date: Wed, 25 Apr 2012 09:22:37 +0900
-Message-ID: <4F9743CD.9030209@jp.fujitsu.com>
-References: <1335209867-1831-1-git-send-email-glommer@parallels.com> <1335209867-1831-6-git-send-email-glommer@parallels.com> <4F9612B9.7050705@jp.fujitsu.com> <4F969176.8010804@parallels.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: Cannot set memory.memsw.limit_in_bytes for a particular cgroup
+Date: Wed, 25 Apr 2012 09:41:26 +0900
+Message-ID: <4F974836.1090000@jp.fujitsu.com>
+References: <CAE+0DR6yyRHGKYiR-svQAdaV2ZqgaTgPvDMwFFmVs6rJG6w0JA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <4F969176.8010804@parallels.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAE+0DR6yyRHGKYiR-svQAdaV2ZqgaTgPvDMwFFmVs6rJG6w0JA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, David Miller <davem@davemloft.net>, devel@openvz.org
+To: Andrew Martin <andrew.s.martin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-(2012/04/24 20:41), Glauber Costa wrote:
+(2012/04/25 7:47), Andrew Martin wrote:
 
-> On 04/23/2012 11:40 PM, KAMEZAWA Hiroyuki wrote:
->> (2012/04/24 4:37), Glauber Costa wrote:
->>
->>> We call the destroy function when a cgroup starts to be removed,
->>> such as by a rmdir event.
->>>
->>> However, because of our reference counters, some objects are still
->>> inflight. Right now, we are decrementing the static_keys at destroy()
->>> time, meaning that if we get rid of the last static_key reference,
->>> some objects will still have charges, but the code to properly
->>> uncharge them won't be run.
->>>
->>> This becomes a problem specially if it is ever enabled again, because
->>> now new charges will be added to the staled charges making keeping
->>> it pretty much impossible.
->>>
->>> We just need to be careful with the static branch activation:
->>> since there is no particular preferred order of their activation,
->>> we need to make sure that we only start using it after all
->>> call sites are active. This is achieved by having a per-memcg
->>> flag that is only updated after static_key_slow_inc() returns.
->>> At this time, we are sure all sites are active.
->>>
->>> This is made per-memcg, not global, for a reason:
->>> it also has the effect of making socket accounting more
->>> consistent. The first memcg to be limited will trigger static_key()
->>> activation, therefore, accounting. But all the others will then be
->>> accounted no matter what. After this patch, only limited memcgs
->>> will have its sockets accounted.
->>>
->>> [v2: changed a tcp limited flag for a generic proto limited flag ]
->>> [v3: update the current active flag only after the static_key update ]
->>>
->>> Signed-off-by: Glauber Costa<glommer@parallels.com>
->>
->>
->> Acked-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->>
->> A small request below.
->>
->> <snip>
->>
->>
->>> +		 * ->activated needs to be written after the static_key update.
->>> +		 *  This is what guarantees that the socket activation function
->>> +		 *  is the last one to run. See sock_update_memcg() for details,
->>> +		 *  and note that we don't mark any socket as belonging to this
->>> +		 *  memcg until that flag is up.
->>> +		 *
->>> +		 *  We need to do this, because static_keys will span multiple
->>> +		 *  sites, but we can't control their order. If we mark a socket
->>> +		 *  as accounted, but the accounting functions are not patched in
->>> +		 *  yet, we'll lose accounting.
->>> +		 *
->>> +		 *  We never race with the readers in sock_update_memcg(), because
->>> +		 *  when this value change, the code to process it is not patched in
->>> +		 *  yet.
->>> +		 */
->>> +		mutex_lock(&tcp_set_limit_mutex);
->>
->>
->> Could you explain for what this mutex is in above comment ?
->>
-> This is explained at the site where the mutex is defined.
-> If you still want me to mention it here, or maybe expand the explanation
-> there, I surely can.
+> Hello,
+> 
+> 
+> I am running a VM with Ubuntu Server 10.04 amd64. I have installed and
+> configured cgroups to limit the resources available to samba, nfs, and
+> apache. My configuration is as follows:
+> /etc/cgconfig.conf
+> group nfs {
+>         memory {
+>                 memory.limit_in_bytes = 500M;
+>                 memory.memsw.limit_in_bytes = 1000M;
+>         }
+>         cpu {
+>                 cpu.shares = 10;
+>         }
+> }
+> 
+> group smb {
+>         memory {
+>                 memory.limit_in_bytes = 1500M;
+>                 memory.memsw.limit_in_bytes = 2000M;
+>         }
+>         cpu {
+>                 cpu.shares = 13;
+>         }
+> }
+> 
+> group apache {
+>         memory {
+>                 memory.limit_in_bytes = 6G;
+>                 memory.memsw.limit_in_bytes = 6G;
+>                 memory.swappiness = 5;
+>         }
+>         cpu {
+>                 cpu.shares = 100;
+>         }
+> }
+> 
+> 
+> mount {
+>         cpu = /mnt/cgroups/cpu;
+>         cpuacct = /mnt/cgroups/cpuacct;
+>         memory = /mnt/cgroups/memory;
+>         cpuset = /mnt/cgroups/cpuset;
+> }
+> 
+> /etc/cgrules.conf
+> ## Samba Server
+> root:/usr/sbin/smbd             cpu,memory      smb/
+> root:/usr/sbin/nmbd             cpu,memory      smb/
+> 
+> ## NFS Server
+> root:/usr/sbin/exportfs         cpu,memory      nfs/
+> root:/usr/sbin/rpc.mountd       cpu,memory      nfs/
+> root:/usr/sbin/rpc.nfsd         cpu,memory      nfs/
+> root:/usr/sbin/rpc.svcgssd      cpu,memory      nfs/
+> root:nfsd                       cpu,memory      nfs/
+> root:nfsd4                      cpu,memory      nfs/
+> 
+> ## Apache Webserver
+> root:apache2                    cpu,memory      apache/
+> www-data                        cpu,memory      apache/
+> 
+> Both memory.limit_in_bytes and memory.memsw.limit_in_bytes seem to
+> work fine for the smb cgroup, but no matter what values I use for the
+> apache cgroup I cannot set memory.memsw.limit_in_bytes. My goal is to
+> disable apache's ability to swap by setting memory.limit_in_bytes and
+> memory.memsw.limit_in_bytes to the same value. After running "service
+> cgconfig restart" to restart the cgconfig service, I check the value
+> of memory.limit_in_bytes and memory.memsw.limit_in_bytes for the
+> apache group:
+> # cat /mnt/cgroups/memory/apache/memory.limit_in_bytes
+> 6442450944
+> # cat /mnt/cgroups/memory/apache/memory.memsw.limit_in_bytes
+> 9223372036854775807
+> 
+> The value for memory.memsw.limit_in_bytes is not being initialized. I
+> cannot find any related errors in /var/log. I have tried a number of
+> different values for memory.memsw.limit_in_bytes, however it will not
+> initialize properly. The only error I can see occurs when I restart
+> the cgroups service:
+> Stopping cgconfig service: rmdir: failed to remove `./smb': Device or
+> resource busy
+> sed: couldn't flush stdout: No such process
+> rmdir: failed to remove `./sysdefault': Device or resource busy
+> sed: couldn't flush stdout: No such process
+> rmdir: failed to remove `./sysdefault': Device or resource busy
+> sed: couldn't flush stdout: Invalid argument
+> rmdir: failed to remove `./sysdefault': Device or resource busy
+>  *
+> Starting cgconfig service:
+> 
+> What else can I try in order to properly initialize
+> memory.memsw.limit_in_bytes? I can temporarily echo a value to it, but
+> would prefer a permanent solution.
 > 
 
-Ah, I think it's better to mention one more complicated race.
-Let me explain. 
 
-Assume we don't have tcp_set_limit_mutex. And jump_label is not activated yet
-i.e. memcg_socket_limit_enabled->count == 0.
+Then, Does "echo > ...apache/memory.memsw.limit_in_bytes" works fine ?
+If so, kernel works fine.
 
-When a user updates limit of 2 cgroups at once, following happens.
+I'm sorry I'm not libcgroup specialist..but..What happens when you write
+>         memory {
+>                 memory.limit_in_bytes = 6000M;
+>                 memory.memsw.limit_in_bytes = 6000M;
+>                 memory.swappiness = 5;
+>         }
 
-	CPU A				CPU B
-
-    if (cg_proto->activated)	   if (cg->proto_activated)
-        static_key_inc()                static_key_inc()
-        => set counter 0->1             => set counter 1->2, return immediately.
-           => hold mutex                => cg_proto->activated = true.  
-              => overwrite jmps.
-
-Then, without mutex, activated/active may be set 'true' before the end
-of jump_label modification.
+?
 
 Thanks,
--Kame
-
-
-
+-kame
