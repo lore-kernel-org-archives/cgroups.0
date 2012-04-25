@@ -1,106 +1,83 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 16/23] slab: provide kmalloc_no_account
-Date: Wed, 25 Apr 2012 10:44:35 +0900
-Message-ID: <4F975703.3080005@jp.fujitsu.com>
-References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-5-git-send-email-glommer@parallels.com>
+From: Andrew Martin <andrew.s.martin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Cannot set memory.memsw.limit_in_bytes for a particular cgroup
+Date: Tue, 24 Apr 2012 20:46:44 -0500
+Message-ID: <CAE+0DR7JrS1rPzoLMZQVTts6p8nq8w=B-zZ4R21XqDjRpK13aw@mail.gmail.com>
+References: <CAE+0DR6yyRHGKYiR-svQAdaV2ZqgaTgPvDMwFFmVs6rJG6w0JA@mail.gmail.com>
+ <4F974836.1090000@jp.fujitsu.com> <D5FAE552-76FE-43DB-B803-FD6F595C1518@gmail.com>
+ <4F9752ED.9050800@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1335138820-26590-5-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding;
+        bh=OtZhK7efAECITNtXpkTt216ZClKJFn6hboIJHyS/MCY=;
+        b=DAIr7peZWQZGeZ5+bJt8NCb51OptyVrlGH+rGkyySflAWGr6mM3Ah+N5Rtu+h7HTY/
+         zv+MOuDvJ8KQ4xek9jAJVlhWg+ne4L6S0ZRqsU3hPw/GkgEF9R+Uu4+W++dzdbxv7sOv
+         2fKIalOrz3sIaDozCjU9M3vWcu9UbwaE1ucn+/xeilL/EKRNK1Mav3oYCGqxtEVfyppg
+         RRhGsY1TLLkFe/fpDTyNDyU94OeJlaIaV07AUniJfDkP5VIC70VXKriF4eKpEhPZ4zBv
+         rhda6fOJcSaPMrt6nF8FiKFucVSFgY3Y/Cfq1yparGEeKA5p2hqU5ki6IDENytQjIOSV
+         Vc4A==
+In-Reply-To: <4F9752ED.9050800-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, fweisbec@gmail.com, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-(2012/04/23 8:53), Glauber Costa wrote:
-
-> Some allocations need to be accounted to the root memcg regardless
-> of their context. One trivial example, is the allocations we do
-> during the memcg slab cache creation themselves. Strictly speaking,
-> they could go to the parent, but it is way easier to bill them to
-> the root cgroup.
-> 
-> Only generic kmalloc allocations are allowed to be bypassed.
-> 
-> The function is not exported, because drivers code should always
-> be accounted.
-> 
-> This code is mosly written by Suleiman Souhlal.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Christoph Lameter <cl@linux.com>
-> CC: Pekka Enberg <penberg@cs.helsinki.fi>
-> CC: Michal Hocko <mhocko@suse.cz>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Suleiman Souhlal <suleiman@google.com>
+Hi Kame,
 
 
-Seems reasonable.
-Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+On Apr 24, 2012, at 8:27 PM, KAMEZAWA Hiroyuki
+<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
 
-Hmm...but can't we find the 'context' in automatic way ?
+> (2012/04/25 10:00), Andrew Martin wrote:
+>
+>
+>>> Then, Does "echo > ...apache/memory.memsw.limit_in_bytes" works fine ?
+>>> If so, kernel works fine.
+>>>
+>> It appears to work, in that if I cat it after doing so the new value is retained. However, I have not pushed apache hard enough after doing it to see if the limit is really enforced, though I agree it looks like it is being set correctly using this method.
+>>
+>>> I'm sorry I'm not libcgroup specialist..but..What happens when you write
+>>>>       memory {
+>>>>               memory.limit_in_bytes = 6000M;
+>>>>               memory.memsw.limit_in_bytes = 6000M;
+>>>>               memory.swappiness = 5;
+>>>>       }
+>>>
+>> I also tried that as well as specifying the bytes directly, with no improvement. I also tried different values for memory.memsw.limit_in_bytes from 6000 to 6256 in both powers of 2 and 10.
+>>
+>> Any other ideas?
+>>
+>
+> ok, I doubt memory.memsw.limit_in_bytes is set before memory.limit_in_bytes...
+> i.e. maybe libcgroup sets values in reverse order.
+>
+> How about this ?
+>
+> memory {
+>    memory.memsw.limit_in_bytes = 6G;
+>    memory.limit_in_bytes = 6G;
+>    memory.swappiness = 5;
+> }
+>
+>
+> memory.limit_in_bytes should be less than memory.memsw.limit_in_bytes.
+>
+> Thanks,
+> -Kame
+>
+>
+That's a good idea, but this Red Hat documentation explains that
+memory.limit_in_bytes must occur before memory.memsw.limit_in_bytes
+because of how they are initialized:
+http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/sec-memory.html
 
--Kame
+I would prefer memory.memsw.limit_in_bytes to be maybe 5-10MB larger
+than memory.limit_in_bytes.
 
-> ---
->  include/linux/slab_def.h |    1 +
->  mm/slab.c                |   23 +++++++++++++++++++++++
->  2 files changed, 24 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-> index 06e4a3e..54d25d7 100644
-> --- a/include/linux/slab_def.h
-> +++ b/include/linux/slab_def.h
-> @@ -114,6 +114,7 @@ extern struct cache_sizes malloc_sizes[];
->  
->  void *kmem_cache_alloc(struct kmem_cache *, gfp_t);
->  void *__kmalloc(size_t size, gfp_t flags);
-> +void *kmalloc_no_account(size_t size, gfp_t flags);
->  
->  #ifdef CONFIG_TRACING
->  extern void *kmem_cache_alloc_trace(size_t size,
-> diff --git a/mm/slab.c b/mm/slab.c
-> index c4ef684..13948c3 100644
-> --- a/mm/slab.c
-> +++ b/mm/slab.c
-> @@ -3960,6 +3960,29 @@ void *__kmalloc(size_t size, gfp_t flags)
->  }
->  EXPORT_SYMBOL(__kmalloc);
->  
-> +static __always_inline void *__do_kmalloc_no_account(size_t size, gfp_t flags,
-> +						     void *caller)
-> +{
-> +	struct kmem_cache *cachep;
-> +	void *ret;
-> +
-> +	cachep = __find_general_cachep(size, flags);
-> +	if (unlikely(ZERO_OR_NULL_PTR(cachep)))
-> +		return cachep;
-> +
-> +	ret = __cache_alloc(cachep, flags, caller);
-> +	trace_kmalloc((unsigned long)caller, ret, size,
-> +		      cachep->buffer_size, flags);
-> +
-> +	return ret;
-> +}
-> +
-> +void *kmalloc_no_account(size_t size, gfp_t flags)
-> +{
-> +	return __do_kmalloc_no_account(size, flags,
-> +				       __builtin_return_address(0));
-> +}
-> +
->  void *__kmalloc_track_caller(size_t size, gfp_t flags, unsigned long caller)
->  {
->  	return __do_kmalloc(size, flags, (void *)caller);
+Thanks,
 
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Andrew
