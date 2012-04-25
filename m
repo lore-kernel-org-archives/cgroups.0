@@ -1,28 +1,135 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
-Date: Wed, 25 Apr 2012 11:44:22 -0300
-Message-ID: <4F980DC6.9020000@parallels.com>
-References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere> <4F9759C0.1070805@jp.fujitsu.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC] writeback and cgroup
+Date: Wed, 25 Apr 2012 08:47:06 -0700
+Message-ID: <20120425154706.GA6370@google.com>
+References: <20120404193355.GD29686@dhcp-172-17-108-109.mtv.corp.google.com>
+ <20120406095934.GA10465@localhost>
+ <20120417223854.GG19975@google.com>
+ <20120419142343.GA12684@localhost>
+ <20120419202635.GA4795@quack.suse.cz>
+ <20120420133441.GA7035@localhost>
+ <20120420190844.GH32324@google.com>
+ <20120422144649.GA7066@localhost>
+ <20120423165626.GB5406@google.com>
+ <20120424075853.GA8391@localhost>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4F9759C0.1070805@jp.fujitsu.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=xAhvltuBaxmnatA4QDbjVIDQL/7YhQNtI5QAW5izXj0=;
+        b=X/b6nPK+cX3lQbU82s95HdwCayXFq8iDNEGpGqqIxnqhHB9lLXm9pwJKBefALkj2TN
+         V5XfLhNeTegFIav9/pCTcdR6+60B3gPDS0x0mI6UNjyLgetXn2Q4mx5KRzfPFcxTnQ+f
+         P/T38mVMB16UOeuxdEtBClVk81t/rj91OdtCSMhz5c/mQaqfqSYntgdC0tabdlnpwi+d
+         b31NvJNlsa1HbF9ZcBOFMJgcJJTwQWUsW+OBItmhGtadfMoc+ya/izB1MJ6kTtKJvYqM
+         fmOk/B22wuLSTYZaan6ap4mNvQeIBxCotSj+zaQ/EXO95dTa6kyAyUMNgNLsuf4QFgu+
+         QyeA==
+Content-Disposition: inline
+In-Reply-To: <20120424075853.GA8391@localhost>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph
- Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Jan Kara <jack@suse.cz>, vgoyal@redhat.com, Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, sjayaraman@suse.com, andrea@betterlinux.com, jmoyer@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, ctalbott@google.com, rni@google.com, lsf@lists.linux-foundation.org, Mel Gorman <mgorman@suse.de>
 
+Hey, Fengguang.
 
->
-> About kmem, if we count task_struct, page tables, etc...which can be freed by
-> OOM-Killer i.e. it's allocated for 'process', should be aware of OOM problem.
-> Using mm->owner makes sense to me until someone finds a great idea to handle
-> OOM situation rather than task killing.
->
+On Tue, Apr 24, 2012 at 03:58:53PM +0800, Fengguang Wu wrote:
+> > I have two questions.  Why do we need memcg for this?  Writeback
+> > currently works without memcg, right?  Why does that change with blkcg
+> > aware bdi?
+> 
+> Yeah currently writeback does not depend on memcg. As for blkcg, it's
+> necessary to keep a number of dirty pages for each blkcg, so that the
+> cfq groups' async IO queue does not go empty and lose its turn to do
+> IO. memcg provides the proper infrastructure to account dirty pages.
+> 
+> In a previous email, we have an example of two 10:1 weight cgroups,
+> each running one dd. They will make two IO pipes, each holding a number
+> of dirty pages. Since cfq honors dd-1 much more IO bandwidth, dd-1's
+> dirty pages are consumed quickly. However balance_dirty_pages(),
+> without knowing about cfq's bandwidth divisions, is throttling the
+> two dd tasks equally. So dd-1 will be producing dirty pages much
+> slower than cfq is consuming them. The flusher thus won't send enough
+> dirty pages down to fill the corresponding async IO queue for dd-1.
+> cfq cannot really give dd-1 more bandwidth share due to lack of data
+> feed. The end result will be: the two cgroups get 1:1 bandwidth share
+> honored by balance_dirty_pages() even though cfq honors 10:1 weights
+> to them.
 
-noted, will update.
+My question is why can't cgroup-bdi pair be handled the same or
+similar way each bdi is handled now?  I haven't looked through the
+code yet but something is determining, even inadvertently, the dirty
+memory usage among different bdi's, right?  What I'm curious about is
+why cgroupfying bdi makes any different to that.  If it's
+indeterministic w/o memcg, let it be that way with blkcg too.  Just
+treat cgroup-bdi as separate bdis.  So, what changes?
+
+> However if it's a large memory machine whose dirty pages get
+> partitioned to 100 cgroups, the flusher will be serving them
+> in round robin fashion.
+
+Just treat cgroup-bdi as a separate bdi.  Run an independent flusher
+on it.  They're separate channels.
+
+> blkio.weight will be the "number" shared and interpreted by all IO
+> controller entities, whether it be cfq, NFS or balance_dirty_pages().
+
+It already isn't.  blk-throttle is an IO controller entity but doesn't
+make use of weight.
+
+> > However, this doesn't necessarily translate easily into the actual
+> > underlying IO resource.  For devices with spindle, seek time dominates
+> > and the same amount of IO may consume vastly different amount of IO
+> > and the disk time becomes the primary resource, not the iops or
+> > bandwidth.  Naturally, people want to allocate and limit the primary
+> > resource, so cfq distributes disk time across different cgroups as
+> > configured.
+> 
+> Right. balance_dirty_pages() is always doing dirty throttling wrt.
+> bandwidth, even in your back pressure scheme, isn't it? In this regard,
+> there are nothing fundamentally different between our proposals. They
+
+If balance_dirty_pages() fails to keep the IO buffer full, it's
+balance_dirty_pages()'s failure (and doing so from time to time could
+be fine given enough benefits), but no matter what writeback does,
+blkcg *should* enforce the configured limits, so they're quite
+different in terms of encapsulation and functionality.
+
+> > Your suggested solution is applying the same a number - the weight -
+> > to one portion of a mostly arbitrarily split resource using a
+> > different unit.  I don't even understand what that achieves.
+> 
+> You seem to miss my stated plan: next step, balance_dirty_pages() will
+> get some feedback information from cfq to adjust its bandwidth targets
+> accordingly. That information will be
+> 
+>         io_cost = charge/sectors
+> 
+> The charge value is exactly the value computed in cfq_group_served(),
+> which is the slice time or IOs dispatched depending the mode cfq is
+> operating in. By dividing ratelimit by the normalized io_cost,
+> balance_dirty_pages() will automatically get the same weight
+> interpretation as cfq. For example, on spin disks, it will be able to
+> allocate lower bandwidth to seeky cgroups due to the larger io_cost
+> reported by cfq.
+
+So, cfq is basing its cost calculation on disk time spent by sync IOs
+which gets fluctuated by uncategorized async IOs and you're gonna
+apply that number to async IOs in some magical way?  What the hell
+does that achieve?
+
+Please take a step back and look at the whole stack and think about
+what each part is supposed to do and how they are supposed to
+interact.  If you still can't see the mess you're trying to make,
+ummm... I don't know.
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
