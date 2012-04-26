@@ -1,63 +1,51 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET] block: per-queue policy activation, take#2
-Date: Wed, 25 Apr 2012 11:19:05 -0700
-Message-ID: <20120425181905.GA8989@google.com>
-References: <1334347895-6268-1-git-send-email-tj@kernel.org>
-	<20120420080943.GG7505@kernel.dk> <4F91503D.2060402@kernel.dk>
-	<20120420171742.GC32324@google.com> <4F91B433.2070209@kernel.dk>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 09/23] kmem slab accounting basic infrastructure
+Date: Thu, 26 Apr 2012 09:08:39 +0900
+Message-ID: <4F989207.5080208@jp.fujitsu.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1334959051-18203-10-git-send-email-glommer@parallels.com> <4F975430.4090107@jp.fujitsu.com> <4F980C81.5060802@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=wc/Nx0wDEfaHIp9Y96zRyU3oEvgvMhx4qrc/E1XrdkQ=;
-	b=e18Pkasc+R9xbdPikYlvQSFKWej729lwlqjjg5hTSYwsdMb28/65mT62aAqrVu+k1P
-	zZRQkRKpYTJ5QDN1U8NOX4RI00kKqb2UswqQeQ0jY1XAc/+MumNwTW9m2a2q2juBGlik
-	u8FwX6ulPGDQY6dibZcwccafrLUAdf0WKE//9A5mpNipwODE2MzRsIDMwobclK/kMXAa
-	7QqsbYzrhz6E/Vx4lXwR+d59g2FHUP0B3Ckbuolo02bDtFsV0pk6iDma6xSNXdHMcave
-	D7Jg3LncVSDM6fs40OzkURVWdPHB/d4GE5NTtmwEEg55wAk321PZtxt9VK1YhGUd0eeu
-	sjQA==
-Content-Disposition: inline
-In-Reply-To: <4F91B433.2070209-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4F980C81.5060802-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Apr 20, 2012 at 09:08:35PM +0200, Jens Axboe wrote:
-> On 2012-04-20 19:17, Tejun Heo wrote:
-> > Hello, Jens.
-> > 
-> > On Fri, Apr 20, 2012 at 02:02:05PM +0200, Jens Axboe wrote:
-> >> Tejun, everything merged in cleanly. A boot test didn't not go so well,
-> >> I'm afraid. It complains about stuck RCU. Even with extra RCU
-> >> debugging/info turned on, it doesn't give my any extra info.
-> >>
-> >> Config is attached. I can try and debug this on Monday, for now I've
-> >> pulled it out of for-next again.
-> > 
-> > Hmmm... it works fine with the same config here (qemu w/ 4 cpus
-> > configured).  Doesn't stuck RCU usually come from unbalanced RCU
-> > lock/unlocking?  That should trigger context or RCU warnings before
-> > anything else, weird.  Anyways, it would be great if you can provide
-> > more info on how to reproduce the problem.
+(2012/04/25 23:38), Glauber Costa wrote:
+
+> On 04/24/2012 10:32 PM, KAMEZAWA Hiroyuki wrote:
+>> (2012/04/21 6:57), Glauber Costa wrote:
+>>
+>>> This patch adds the basic infrastructure for the accounting of the slab
+>>> caches. To control that, the following files are created:
+>>>
+>>>   * memory.kmem.usage_in_bytes
+>>>   * memory.kmem.limit_in_bytes
+>>>   * memory.kmem.failcnt
+>>>   * memory.kmem.max_usage_in_bytes
+>>>
+>>> They have the same meaning of their user memory counterparts. They reflect
+>>> the state of the "kmem" res_counter.
+>>>
+>>> The code is not enabled until a limit is set. This can be tested by the flag
+>>> "kmem_accounted". This means that after the patch is applied, no behavioral
+>>> changes exists for whoever is still using memcg to control their memory usage.
+>>>
+>>
+>> Hmm, res_counter never goes naeative ?
 > 
-> The machine just sat there. I'll get some more info out of it and run a
-> bisect too.
+> Why would it?
+> 
+> This one has more or less the same logic as the sock buffers.
+> 
+> If we are not accounted, the caches don't get created. If the caches
+> don't get created, we don't release them. (this is modulo bugs, of course)
 
-Any progress on this?
+Okay. Please note how the logic works in description or Doc. 
+It's a bit complicated part.
 
-Thanks.
+Thanks,
+-Kame
 
--- 
-tejun
