@@ -1,113 +1,115 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 2/2] decrement static keys on real destroy time
-Date: Thu, 26 Apr 2012 14:39:16 -0700
-Message-ID: <20120426213916.GD27486@google.com>
-References: <1335475463-25167-1-git-send-email-glommer@parallels.com>
- <1335475463-25167-3-git-send-email-glommer@parallels.com>
+Subject: [PATCHSET] block: implement per-blkg request allocation
+Date: Thu, 26 Apr 2012 14:59:10 -0700
+Message-ID: <1335477561-11131-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=7WCiP+Y1ikK5VsHJvFn0dCmcun7iS+ygkz55be11s+g=;
-        b=dztgceky7fYWRBXimom/rx73nL4T4e4++4Y8O28/kUnGEYWBn0mwLEuaJ+HxiSNHv+
-         +N201w2XQjni1vL17g+b253q7WffSI+2gEMBlW3tr9XigmbCrXF4p4mrrPPdsxYjBwvj
-         IyRWozndGRddJGfv1ilETddrouoivgZ1nXVHulxHf9zxvIUxD472p1hsDsGYGaDyIAr4
-         GJ+wqKF5XvpzNZPAV/H1OCfQcEFSmUa+3lg+xkSbXP0fhJsDjI42k5fm6t34mH6+gQ2X
-         nqkxaULF/BebEK+zs97QnYjCsD1472x4pEC1n/3sf67AeZ0eVDVNymL3swbh7HpllKp+
-         BaKQ==
-Content-Disposition: inline
-In-Reply-To: <1335475463-25167-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer;
+	bh=8zZfRq2hKgegMvB2og3xSzn8xeJPCZvC4fgGiPUOBFg=;
+	b=Iuo3P2LX+hFduAk1JxlA6VzbHb+h5GItxEcSvkOUSnhIoi9Faf9bL3TcV/eX0EUIl+
+	R1rUv/yUdfgkfZASjRKhdwskIVzrDWNJwD391G0AXyN4DG53DHsNkoMybc3gCmZmbcaR
+	GKWk9TgTzarPSAoGq4XmyMurT2l8zZDYQAj3sg3v5hWk+CLhTaDYuiDsmW2YBN/eweaM
+	PeaUP1Vx2ecFa8whsP6XXm31PFr/xEsZo50AZE85nJGpoasU6DfC4/lQBfiTu8XNVOTJ
+	0DGiDBMogJXppGTLQVjDPyDYhQkPSvjwSZ8zD842dvPVT8ezY1SvVYKFUab3dEiyj0Wl
+	HK1w==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello, Glauber.
+Hello,
 
-Overall, I like this approach much better.  Just some nits below.
+Currently block layer shares a single request_list (@q->rq) for all
+IOs regardless of their blkcg associations.  This means that once the
+shared pool is exhausted, blkcg limits don't mean much.  Whoever grabs
+the requests being freed the first grabs the next IO slot.
 
-On Thu, Apr 26, 2012 at 06:24:23PM -0300, Glauber Costa wrote:
-> @@ -4836,6 +4851,18 @@ static void free_work(struct work_struct *work)
->  	int size = sizeof(struct mem_cgroup);
->  
->  	memcg = container_of(work, struct mem_cgroup, work_freeing);
-> +	/*
-> +	 * We need to make sure that (at least for now), the jump label
-> +	 * destruction code runs outside of the cgroup lock. It is in theory
-> +	 * possible to call the cgroup destruction function outside of that
-> +	 * lock, but it is not yet done. rate limiting plus the deferred
-> +	 * interface for static_branch destruction guarantees that it will
-> +	 * run through schedule_work(), therefore, not holding any cgroup
-> +	 * related lock (this is, of course, until someone decides to write
-> +	 * a schedule_work cgroup :p )
-> +	 */
+This priority inversion can be easily demonstrated by creating a blkio
+cgroup w/ very low weight, put a program which can issue a lot of
+random direct IOs there and running a sequential IO from a different
+cgroup.  As soon as the request pool is used up, the sequential IO
+bandwidth crashes.
 
-Isn't the above a bit too verbose?  Wouldn't just stating the locking
-dependency be enough?
+This patchset implements per-blkg request allocation so that each
+blkcg-request_queue pair has its own request pool to allocate from.
+This isolates different blkcgs in terms of request allocation.
 
-> +	disarm_static_keys(memcg);
->  	if (size < PAGE_SIZE)
->  		kfree(memcg);
->  	else
-> diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-> index 1517037..7790008 100644
-> --- a/net/ipv4/tcp_memcontrol.c
-> +++ b/net/ipv4/tcp_memcontrol.c
-> @@ -54,6 +54,8 @@ int tcp_init_cgroup(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
->  	cg_proto->sysctl_mem = tcp->tcp_prot_mem;
->  	cg_proto->memory_allocated = &tcp->tcp_memory_allocated;
->  	cg_proto->sockets_allocated = &tcp->tcp_sockets_allocated;
-> +	cg_proto->active = false;
-> +	cg_proto->activated = false;
+Most changes are straight-forward; unfortunately, bdi isn't
+blkcg-aware yet so it currently just propagates the congestion state
+from root blkcg.  As writeback currently is always on the root blkcg,
+this kinda works for write congestion but readahead may behave
+non-optimally under congestion for now.  This needs to be improved but
+the situation is still way better than blkcg completely collapsing.
 
-Isn't the memory zallocd?  I find 0 / NULL / false inits unnecessary
-and even misleading (can the memory be non-zero here?).  Another side
-effect is that it tends to get out of sync as more fields are added.
+ 0001-blkcg-fix-blkg_alloc-failure-path.patch
+ 0002-blkcg-__blkg_lookup_create-doesn-t-have-to-fail-on-r.patch
+ 0003-blkcg-make-root-blkcg-allocation-use-GFP_KERNEL.patch
+ 0004-mempool-add-gfp_mask-to-mempool_create_node.patch
+ 0005-block-drop-custom-queue-draining-used-by-scsi_transp.patch
+ 0006-block-refactor-get_request-_wait.patch
+ 0007-block-allocate-io_context-upfront.patch
+ 0008-blkcg-inline-bio_blkcg-and-friends.patch
+ 0009-block-add-q-nr_rqs-and-move-q-rq.elvpriv-to-q-nr_rqs.patch
+ 0010-block-prepare-for-multiple-request_lists.patch
+ 0011-blkcg-implement-per-blkg-request-allocation.patch
 
-> +/*
-> + * This is to prevent two writes arriving at the same time
-> + * at kmem.tcp.limit_in_bytes.
-> + *
-> + * There is a race at the first time we write to this file:
-> + *
-> + * - cg_proto->activated == false for all writers.
-> + * - They all do a static_key_slow_inc().
-> + * - When we are finally read to decrement the static_keys,
-                            ^
-                            ready
+0001-0003 are assorted fixes / improvements which can be separated
+from this patchset.  Just sending as part of this series for
+convenience.
 
-> + *   we'll do it only once per activated cgroup. So we won't
-> + *   be able to disable it.
-> + *
-> + *   Also, after the first caller increments the static_branch
-> + *   counter, all others will return right away. That does not mean,
-> + *   however, that the update is finished.
-> + *
-> + *   Without this mutex, it would then be possible for a second writer
-> + *   to get to the update site, return 
+0004 adds @gfp_mask to mempool_create_node().  This is necessary
+because blkg allocation is on the IO path and now blkg contains
+mempool for request_list.  Note that blkg allocation failure doesn't
+lead to catastrophic failure.  It just hinders blkcg enforcement.
 
-I kinda don't follow the above sentence.
+0005 drops custom queue draining which I dont't think is necessary and
+hinders with further updates.
 
-> + *   When a user updates limit of 2 cgroups at once, following happens.
-> + *
-> + *   	CPU A				CPU B
-> + *
-> + *	if (cg_proto->activated)	if (cg->proto_activated)
-> + *		static_key_inc()		static_key_inc()
-> + * 		=> set counter 0->1		=> set counter 1->2,
-> + * 						return immediately.
-> + * 		=> hold mutex			=> cg_proto->activated = true. 
-> + * 		=> overwrite jmps.
+0006-0010 are prep patches and 0011 implements per-blkg request
+allocation.
 
-Isn't this something which should be solved from static_keys API?  Why
-is this being worked around from memcg?  Also, I again hope that the
-explanation is slightly more concise.
+This patchset is on top of,
+
+  block/for-3.5/core bd1a68b59c "vmsplice: relax alignement requireme..."
++ [1] blkcg: tg_stats_alloc_lock is an irq lock
+
+and is also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blkcg-rl
+
+Jens, I still can't reproduce the boot failure you were seeing on
+block/for-3.5/core, so am just basing this series on top.  Once we
+figure that one out, we can resequence the patches.
 
 Thanks.
 
--- 
+ block/blk-cgroup.c                  |  147 ++++++++++++++++----------
+ block/blk-cgroup.h                  |  121 +++++++++++++++++++++
+ block/blk-core.c                    |  200 ++++++++++++++++++------------------
+ block/blk-sysfs.c                   |   34 +++---
+ block/blk-throttle.c                |    3 
+ block/blk.h                         |    3 
+ block/bsg-lib.c                     |   53 ---------
+ drivers/scsi/scsi_transport_fc.c    |   38 ------
+ drivers/scsi/scsi_transport_iscsi.c |    2 
+ include/linux/blkdev.h              |   53 +++++----
+ include/linux/bsg-lib.h             |    1 
+ include/linux/mempool.h             |    3 
+ mm/mempool.c                        |   12 +-
+ 13 files changed, 379 insertions(+), 291 deletions(-)
+
+--
 tejun
+
+[1] http://article.gmane.org/gmane.linux.kernel/1288400
