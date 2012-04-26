@@ -1,93 +1,54 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v3 2/2] decrement static keys on real destroy time
-Date: Thu, 26 Apr 2012 19:17:36 -0300
-Message-ID: <4F99C980.3030801@parallels.com>
-References: <1335475463-25167-1-git-send-email-glommer@parallels.com> <1335475463-25167-3-git-send-email-glommer@parallels.com> <20120426213916.GD27486@google.com> <4F99C50D.6070503@parallels.com> <20120426221324.GE27486@google.com>
+Date: Thu, 26 Apr 2012 15:22:33 -0700
+Message-ID: <CAOS58YOKUq7GTTZRcw19dth+HgThoNTEcqBKeNO0ftB4rFJ97A@mail.gmail.com>
+References: <1335475463-25167-1-git-send-email-glommer@parallels.com>
+	<1335475463-25167-3-git-send-email-glommer@parallels.com>
+	<20120426213916.GD27486@google.com>
+	<4F99C50D.6070503@parallels.com>
+	<20120426221324.GE27486@google.com>
+	<4F99C980.3030801@parallels.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="------------090600080104080606040603"
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120426221324.GE27486@google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=5G3270OKWnxMp/dgBpi0lDOhVvVBqlQjh0CGIHPhGX4=;
+        b=gxzKzJzJylrOV3P/fcCa3KEsx2tNUI7vWwFDyYwWRBUWIb4Fdc2DNQniwl5zKjZp73
+         ir4NiBUF/nfPmBbPTsJdIsj59zheQr0gRfbm1l96t5caEnyDHSuPTIlNAL4/5BLPQdFD
+         iTcJ/giN3JWFlHmnvCVehyW9sqyfJTb2GUvr06WWBgwEPfUNJd98uObZkDukr8FI2qMD
+         bcfqxsGFa+JvYc9Rsf6d4bvOj2S0qFZrxTjKEk204h9RJhEBXnYYoTQeUfMaKUvpexdv
+         /QBW9VTNpy/7Ro+0nXKThRgc7IIPB9gwL6zah+GRUGpnARwJ2qFzVvk1sEDzuY6gD0vz
+         l50A==
+In-Reply-To: <4F99C980.3030801-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, netdev@vger.kernel.org, Li Zefan <lizefan@huawei.com>, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, devel@openvz.org
-
---------------090600080104080606040603
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
+Hello,
 
-> No, what I mean is that why can't you do about the same mutexed
-> activated inside static_key API function instead of requiring every
-> user to worry about the function returning asynchronously.
-> ie. synchronize inside static_key API instead of in the callers.
+On Thu, Apr 26, 2012 at 3:17 PM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 >
+>> No, what I mean is that why can't you do about the same mutexed
+>> activated inside static_key API function instead of requiring every
+>> user to worry about the function returning asynchronously.
+>> ie. synchronize inside static_key API instead of in the callers.
+>>
+>
+> Like this?
 
-Like this?
+Yeah, something like that.  If keeping the inc operation a single
+atomic op is important for performance or whatever reasons, you can
+play some trick with large negative bias value while activation is
+going on and use atomic_add_return() to determine both whether it's
+the first incrementer and someone else is in the process of
+activating.
 
+Thanks.
 
-
---------------090600080104080606040603
-Content-Type: text/x-patch; name="jump_label.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="jump_label.patch"
-
-diff --git a/kernel/jump_label.c b/kernel/jump_label.c
-index 4304919..f7cdc18 100644
---- a/kernel/jump_label.c
-+++ b/kernel/jump_label.c
-@@ -57,10 +57,11 @@ static void jump_label_update(struct static_key *key, int enable);
- 
- void static_key_slow_inc(struct static_key *key)
- {
-+	jump_label_lock();
-+
- 	if (atomic_inc_not_zero(&key->enabled))
--		return;
-+		goto out;
- 
--	jump_label_lock();
- 	if (atomic_read(&key->enabled) == 0) {
- 		if (!jump_label_get_branch_default(key))
- 			jump_label_update(key, JUMP_LABEL_ENABLE);
-@@ -68,6 +69,7 @@ void static_key_slow_inc(struct static_key *key)
- 			jump_label_update(key, JUMP_LABEL_DISABLE);
- 	}
- 	atomic_inc(&key->enabled);
-+out:
- 	jump_label_unlock();
- }
- EXPORT_SYMBOL_GPL(static_key_slow_inc);
-@@ -75,10 +77,11 @@ EXPORT_SYMBOL_GPL(static_key_slow_inc);
- static void __static_key_slow_dec(struct static_key *key,
- 		unsigned long rate_limit, struct delayed_work *work)
- {
--	if (!atomic_dec_and_mutex_lock(&key->enabled, &jump_label_mutex)) {
-+	jump_label_lock();
-+	if (atomic_dec_and_test(&key->enabled)) {
- 		WARN(atomic_read(&key->enabled) < 0,
- 		     "jump label: negative count!\n");
--		return;
-+		goto out;
- 	}
- 
- 	if (rate_limit) {
-@@ -90,6 +93,8 @@ static void __static_key_slow_dec(struct static_key *key,
- 		else
- 			jump_label_update(key, JUMP_LABEL_ENABLE);
- 	}
-+
-+out:
- 	jump_label_unlock();
- }
- 
-
---------------090600080104080606040603--
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
