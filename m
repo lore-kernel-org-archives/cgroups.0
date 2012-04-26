@@ -1,192 +1,140 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 06/11] block: refactor get_request[_wait]()
-Date: Thu, 26 Apr 2012 14:59:16 -0700
-Message-ID: <1335477561-11131-7-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 09/11] block: add q->nr_rqs[] and move q->rq.elvpriv to q->nr_rqs_elvpriv
+Date: Thu, 26 Apr 2012 14:59:19 -0700
+Message-ID: <1335477561-11131-10-git-send-email-tj@kernel.org>
 References: <1335477561-11131-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=Xl6MM+qbbE4zxvbBjPvDEQhxcHIKeW8mlJCV62n34J4=;
+        b=snw5FWnarbpn18DGEQ68h25T4TbUdsSAHdGHAiRzW68rxI/2y7My4PeWZsGC0xu4M2
+         Ne+uk/l8Cef9P98WHoM294yoVHeXubO5CawmKJgjHnha3fbvfZLavkXX7F+wiWUO3T/O
+         Spq1EqzW6OUNZhvnnWsxtk3PG6Kd+cLlwTyDs7XzhYX2v3YwDMZbrT6FmW6oKUO5dxpi
+         Z9gz4GHHSq7UkA7ZH7Xm4dQrRDCm81ObqRl3KEBgy5GXyPH3H7RcRPWiy6nqewLvGndW
+         Szlv+NTOfxZtXOgaBCq/dxgyYyfGB88EyTNjYyoWhUs4JleRApCXOPKLZt7yyan6g+yH
+         yCYg==
+In-Reply-To: <1335477561-11131-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=UDOI5gOS2BrckbFpcgDxVxoiKPUp5JO/3FjOtgVxJco=;
-	b=NG7bcLIJMu2ezbVyIuK06q5ND7ClpvtJQrPAHEU+QKdGG7HuJX4KcXiT0mmogz0A2A
-	Er/hFhXQvwlh+J3U5VT4gmDTOrA+DUZbdGlA3rC0GOdq6pwR0p1JiBbFZLt9oEI3SFMR
-	jvUKXYdrDer1XTM+3UoUXar6DPq5SNYvW9X5vo/xk2t7KKMRjTesiXlFZ7DYl3ADK9K6
-	dkvzVeNp3Cq4n0axBA2KMYMxfaT+4ipiJF8voJXKqfs+cd+3zWwtz1eAIRAoqcbpKgOq
-	O92dsVr43Sz80+k/KwERflQWh6N8bYZf/xVveaF2bRwK0THWgoMc3Pq9dMQZgh5tW1Ir
-	F0mA==
-In-Reply-To: <1335477561-11131-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: axboe@kernel.dk
+Cc: vgoyal@redhat.com, ctalbott@google.com, rni@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, fengguang.wu@intel.com, hughd@google.com, akpm@linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-Currently, there are two request allocation functions - get_request()
-and get_request_wait().  The former tries to allocate a request once
-and the latter keeps retrying until it succeeds.  The latter wraps the
-former and keeps retrying until allocation succeeds.
+Add q->nr_rqs[] which currently behaves the same as q->rq.count[] and
+move q->rq.elvpriv to q->nr_rqs_elvpriv.  blk_drain_queue() is updated
+to use q->nr_rqs[] instead of q->rq.count[].
 
-The combination of two functions deliver fallible non-wait allocation,
-fallible wait allocation and unfailing wait allocation.  However,
-given that forward progress is guaranteed, fallible wait allocation
-isn't all that useful and in fact nobody uses it.
+These counters separates queue-wide request statistics from the
+request list and allow implementation of per-queue request allocation.
 
-This patch simplifies the interface as follows.
+While at it, properly indent fields of struct request_list.
 
-* get_request() is renamed to __get_request() and is only used by the
-  wrapper function.
-
-* get_request_wait() is renamed to get_request().  It now takes
-  @gfp_mask and retries iff it contains %__GFP_WAIT.
-
-This patch doesn't introduce any functional change and is to prepare
-for further updates to request allocation path.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-core.c |   74 +++++++++++++++++++++++++----------------------------
- 1 files changed, 35 insertions(+), 39 deletions(-)
+ block/blk-core.c       |   13 +++++++------
+ include/linux/blkdev.h |   11 ++++++-----
+ 2 files changed, 13 insertions(+), 11 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 6a04dcd..02b6cf8 100644
+index 242bf9e..7377eb6 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -824,7 +824,7 @@ static struct io_context *rq_ioc(struct bio *bio)
- }
+@@ -386,7 +386,7 @@ void blk_drain_queue(struct request_queue *q, bool drain_all)
+ 		if (!list_empty(&q->queue_head) && q->request_fn)
+ 			__blk_run_queue(q);
  
- /**
-- * get_request - get a free request
-+ * __get_request - get a free request
-  * @q: request_queue to allocate request from
-  * @rw_flags: RW and SYNC flags
-  * @bio: bio to allocate request for (can be %NULL)
-@@ -837,8 +837,8 @@ static struct io_context *rq_ioc(struct bio *bio)
-  * Returns %NULL on failure, with @q->queue_lock held.
-  * Returns !%NULL on success, with @q->queue_lock *not held*.
-  */
--static struct request *get_request(struct request_queue *q, int rw_flags,
--				   struct bio *bio, gfp_t gfp_mask)
-+static struct request *__get_request(struct request_queue *q, int rw_flags,
-+				     struct bio *bio, gfp_t gfp_mask)
- {
- 	struct request *rq;
+-		drain |= q->rq.elvpriv;
++		drain |= q->nr_rqs_elvpriv;
+ 
+ 		/*
+ 		 * Unfortunately, requests are queued at and tracked from
+@@ -396,7 +396,7 @@ void blk_drain_queue(struct request_queue *q, bool drain_all)
+ 		if (drain_all) {
+ 			drain |= !list_empty(&q->queue_head);
+ 			for (i = 0; i < 2; i++) {
+-				drain |= q->rq.count[i];
++				drain |= q->nr_rqs[i];
+ 				drain |= q->in_flight[i];
+ 				drain |= !list_empty(&q->flush_queue[i]);
+ 			}
+@@ -513,7 +513,6 @@ static int blk_init_free_list(struct request_queue *q)
+ 
+ 	rl->count[BLK_RW_SYNC] = rl->count[BLK_RW_ASYNC] = 0;
+ 	rl->starved[BLK_RW_SYNC] = rl->starved[BLK_RW_ASYNC] = 0;
+-	rl->elvpriv = 0;
+ 	init_waitqueue_head(&rl->wait[BLK_RW_SYNC]);
+ 	init_waitqueue_head(&rl->wait[BLK_RW_ASYNC]);
+ 
+@@ -778,9 +777,10 @@ static void freed_request(struct request_queue *q, unsigned int flags)
  	struct request_list *rl = &q->rq;
-@@ -1016,56 +1016,55 @@ rq_starved:
- }
+ 	int sync = rw_is_sync(flags);
  
- /**
-- * get_request_wait - get a free request with retry
-+ * get_request - get a free request
-  * @q: request_queue to allocate request from
-  * @rw_flags: RW and SYNC flags
-  * @bio: bio to allocate request for (can be %NULL)
-+ * @gfp_mask: allocation mask
-  *
-- * Get a free request from @q.  This function keeps retrying under memory
-- * pressure and fails iff @q is dead.
-+ * Get a free request from @q.  If %__GFP_WAIT is set in @gfp_mask, this
-+ * function keeps retrying under memory pressure and fails iff @q is dead.
-  *
-  * Must be callled with @q->queue_lock held and,
-  * Returns %NULL on failure, with @q->queue_lock held.
-  * Returns !%NULL on success, with @q->queue_lock *not held*.
-  */
--static struct request *get_request_wait(struct request_queue *q, int rw_flags,
--					struct bio *bio)
-+static struct request *get_request(struct request_queue *q, int rw_flags,
-+				   struct bio *bio, gfp_t gfp_mask)
- {
- 	const bool is_sync = rw_is_sync(rw_flags) != 0;
-+	DEFINE_WAIT(wait);
-+	struct request_list *rl = &q->rq;
- 	struct request *rq;
-+retry:
-+	rq = __get_request(q, rw_flags, bio, gfp_mask);
-+	if (rq)
-+		return rq;
++	q->nr_rqs[sync]--;
+ 	rl->count[sync]--;
+ 	if (flags & REQ_ELVPRIV)
+-		rl->elvpriv--;
++		q->nr_rqs_elvpriv--;
  
--	rq = get_request(q, rw_flags, bio, GFP_NOIO);
--	while (!rq) {
--		DEFINE_WAIT(wait);
--		struct request_list *rl = &q->rq;
--
--		if (unlikely(blk_queue_dead(q)))
--			return NULL;
--
--		prepare_to_wait_exclusive(&rl->wait[is_sync], &wait,
--				TASK_UNINTERRUPTIBLE);
-+	if (!(gfp_mask & __GFP_WAIT) || unlikely(blk_queue_dead(q)))
-+		return NULL;
+ 	__freed_request(q, sync);
  
--		trace_block_sleeprq(q, bio, rw_flags & 1);
-+	/* wait on @rl and retry */
-+	prepare_to_wait_exclusive(&rl->wait[is_sync], &wait,
-+				  TASK_UNINTERRUPTIBLE);
+@@ -889,6 +889,7 @@ static struct request *__get_request(struct request_queue *q, int rw_flags,
+ 	if (rl->count[is_sync] >= (3 * q->nr_requests / 2))
+ 		return NULL;
  
--		spin_unlock_irq(q->queue_lock);
--		io_schedule();
-+	trace_block_sleeprq(q, bio, rw_flags & 1);
++	q->nr_rqs[is_sync]++;
+ 	rl->count[is_sync]++;
+ 	rl->starved[is_sync] = 0;
  
--		/*
--		 * After sleeping, we become a "batching" process and
--		 * will be able to allocate at least one request, and
--		 * up to a big batch of them for a small period time.
--		 * See ioc_batching, ioc_set_batching
--		 */
--		create_io_context(GFP_NOIO, q->node);
--		ioc_set_batching(q, current->io_context);
-+	spin_unlock_irq(q->queue_lock);
-+	io_schedule();
- 
--		spin_lock_irq(q->queue_lock);
--		finish_wait(&rl->wait[is_sync], &wait);
-+	/*
-+	 * After sleeping, we become a "batching" process and will be able
-+	 * to allocate at least one request, and up to a big batch of them
-+	 * for a small period time.  See ioc_batching, ioc_set_batching
-+	 */
-+	create_io_context(GFP_NOIO, q->node);
-+	ioc_set_batching(q, current->io_context);
- 
--		rq = get_request(q, rw_flags, bio, GFP_NOIO);
--	};
-+	spin_lock_irq(q->queue_lock);
-+	finish_wait(&rl->wait[is_sync], &wait);
- 
--	return rq;
-+	goto retry;
- }
- 
- struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
-@@ -1075,10 +1074,7 @@ struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
- 	BUG_ON(rw != READ && rw != WRITE);
+@@ -904,7 +905,7 @@ static struct request *__get_request(struct request_queue *q, int rw_flags,
+ 	 */
+ 	if (blk_rq_should_init_elevator(bio) && !blk_queue_bypass(q)) {
+ 		rw_flags |= REQ_ELVPRIV;
+-		rl->elvpriv++;
++		q->nr_rqs_elvpriv++;
+ 		if (et->icq_cache && ioc)
+ 			icq = ioc_lookup_icq(ioc, q);
+ 	}
+@@ -965,7 +966,7 @@ fail_elvpriv:
+ 	rq->elv.icq = NULL;
  
  	spin_lock_irq(q->queue_lock);
--	if (gfp_mask & __GFP_WAIT)
--		rq = get_request_wait(q, rw, NULL);
--	else
--		rq = get_request(q, rw, NULL, gfp_mask);
-+	rq = get_request(q, rw, NULL, gfp_mask);
- 	if (!rq)
- 		spin_unlock_irq(q->queue_lock);
- 	/* q->queue_lock is unlocked at this point */
-@@ -1467,7 +1463,7 @@ get_rq:
- 	 * Grab a free request. This is might sleep but can not fail.
- 	 * Returns with the queue unlocked.
+-	rl->elvpriv--;
++	q->nr_rqs_elvpriv--;
+ 	spin_unlock_irq(q->queue_lock);
+ 	goto out;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index af33fb1..b085be7 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -50,11 +50,10 @@ struct request_list {
+ 	 * count[], starved[], and wait[] are indexed by
+ 	 * BLK_RW_SYNC/BLK_RW_ASYNC
  	 */
--	req = get_request_wait(q, rw_flags, bio);
-+	req = get_request(q, rw_flags, bio, GFP_NOIO);
- 	if (unlikely(!req)) {
- 		bio_endio(bio, -ENODEV);	/* @q is dead */
- 		goto out_unlock;
+-	int count[2];
+-	int starved[2];
+-	int elvpriv;
+-	mempool_t *rq_pool;
+-	wait_queue_head_t wait[2];
++	int			count[2];
++	int			starved[2];
++	mempool_t		*rq_pool;
++	wait_queue_head_t	wait[2];
+ };
+ 
+ /*
+@@ -281,6 +280,8 @@ struct request_queue {
+ 	struct list_head	queue_head;
+ 	struct request		*last_merge;
+ 	struct elevator_queue	*elevator;
++	int			nr_rqs[2];	/* # allocated [a]sync rqs */
++	int			nr_rqs_elvpriv;	/* # allocated rqs w/ elvpriv */
+ 
+ 	/*
+ 	 * the queue request freelist, one for reads and one for writes
 -- 
 1.7.7.3
