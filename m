@@ -1,155 +1,142 @@
-From: Ying Han <yinghan@google.com>
-Subject: Re: [RFC][PATCH 9/9 v2] memcg: never return error at pre_destroy()
-Date: Fri, 27 Apr 2012 14:28:31 -0700
-Message-ID: <CALWz4iyiM-CFgVaHiE1Lgd1ZwJzHwY3tx9XX6HeDPUV_wVPAtQ@mail.gmail.com>
-References: <4F9A327A.6050409@jp.fujitsu.com>
-	<4F9A375D.7@jp.fujitsu.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFD/RFC v2] event about group change
+Date: Fri, 27 Apr 2012 15:34:55 -0700
+Message-ID: <20120427223455.GU26595@google.com>
+References: <4F98E4E5.6020602@samsung.com>
+ <4F98E57E.1040201@samsung.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=M6Fc/V761WNzCWE8UPb54s8219q70XDaA7YN+aWY4AA=;
-        b=Jy+BydOzn51Luddhv1TWvEWBEO+viSzdIuzgp+qv/29Ps/CmlEyehg4o01xtQuLLTs
-         L+dDzsXyiSE+1hI9T3YvOUfHZvObrTgDXsk0WKsrcEsKIHZMIkZOM08UM/VLB+QcP+K8
-         I10QbHPJhitdmfpBunhVXmPF/RYt6EWSsMYBI/m8mn30vIqDAszctNn/1Z14c7XXfr5I
-         lLYbyxaPgzn9lQegl/JO+gEhWGOkWimJ8IQLSQ3PtJwRiUzeWh5Qny5aRAsj/qQFixZz
-         FaCQu1L42M1YRU1KlDU5egagSlSi/9E4cZQ15WaD7gnK/ZQYN4F8B9JxWqv914DVyHrH
-         76OQ==
-In-Reply-To: <4F9A375D.7@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=pGUZDPOefBtjkNsK2EChYEFWzweAo3QvD3FrbHvPTjY=;
+        b=ChSSR7A9pE5Bdqj+g2i7cOSfhlcC9oY0R4QQ15Ny40rKF5zeA30qRRFhyqSU/7/BJR
+         SCbSTW0stdTKQfXuZOPMtbZG+jA2XWx0qGyFhVes2ttUTYoE6ixPby36CanSsyDr45LR
+         UGhnMHaj2THYDQq0+/AtIS7he43e0BHjsUeLXc/mekNlLHOZNvsrMTwZwu9nvz+A7vBt
+         p1FtCL6if3adokds0jorMkvJBV8opr1M0GHzZMGlitgZ99yaFSBVp3tg+4PsKh0opL7w
+         1J/UBJipPR6NMvYOIzACsUF++o6mI7U71qycQlp1YUfiWUtRv83QyiOU/LZxsuJDdAs0
+         cX4A==
+Content-Disposition: inline
+In-Reply-To: <4F98E57E.1040201-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyuki@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 
-On Thu, Apr 26, 2012 at 11:06 PM, KAMEZAWA Hiroyuki
-<kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> When force_empty() called by ->pre_destroy(), no memory reclaim happens
-> and it doesn't take very long time which requires signal_pending() check.
-> And if we return -EINTR from pre_destroy(), cgroup.c show warning.
->
-> This patch removes signal check in force_empty(). By this, ->pre_destroy(=
-)
-> returns success always.
->
-> Note: check for 'cgroup is empty' remains for force_empty interface.
->
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> ---
-> =A0mm/hugetlb.c =A0 =A0| =A0 10 +---------
-> =A0mm/memcontrol.c | =A0 14 +++++---------
-> =A02 files changed, 6 insertions(+), 18 deletions(-)
->
-> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index 4dd6b39..770f1642 100644
-> --- a/mm/hugetlb.c
-> +++ b/mm/hugetlb.c
-> @@ -1922,20 +1922,12 @@ int hugetlb_force_memcg_empty(struct cgroup *cgro=
-up)
-> =A0 =A0 =A0 =A0int ret =3D 0, idx =3D 0;
->
-> =A0 =A0 =A0 =A0do {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* see memcontrol.c::mem_cgroup_force_empty=
-() */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgroup)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|| !list_empty(&cgroup->ch=
-ildren)) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If the task doing the cgroup_rmdir got=
- a signal
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we don't really need to loop till the =
-hugetlb resource
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* usage become zero.
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current)) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0for_each_hstate(h) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock(&hugetlb_lock);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0list_for_each_entry(page, =
-&h->hugepage_activelist, lru) {
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2715223..ee350c5 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3852,8 +3852,6 @@ static int mem_cgroup_force_empty_list(struct mem_c=
-group *memcg,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc =3D lookup_page_cgroup(page);
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_move_parent(page, pc, m=
-emcg, GFP_KERNEL);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM || ret =3D=3D -EINTR=
-)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ret =3D=3D -EBUSY || ret =3D=3D -EINVA=
-L) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* found lock contention o=
-r "pc" is obsolete. */
-> @@ -3863,7 +3861,7 @@ static int mem_cgroup_force_empty_list(struct mem_c=
-group *memcg,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0busy =3D NULL;
-> =A0 =A0 =A0 =A0}
->
-> - =A0 =A0 =A0 if (!ret && !list_empty(list))
-> + =A0 =A0 =A0 if (!loop)
+Hello,
 
-This looks a bit strange to me... why we make the change ?
+I like it generally (well I suggested it so...) but can you please
+post a proper patch with SOB against cgroup/for-3.5 branch?
 
---Ying
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
 
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EBUSY;
-> =A0 =A0 =A0 =A0return ret;
-> =A0}
-> @@ -3893,11 +3891,12 @@ static int mem_cgroup_force_empty(struct mem_cgro=
-up *memcg, bool free_all)
-> =A0move_account:
-> =A0 =A0 =A0 =A0do {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* This never happens when this is called=
- by ->pre_destroy().
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* But we need to take care of force_empt=
-y interface.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgrp) || !list_empty=
-(&cgrp->children))
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current))
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This is for making all *used* pages to =
-be on LRU. */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0lru_add_drain_all();
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0drain_all_stock_sync(memcg);
-> @@ -3918,9 +3917,6 @@ move_account:
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mem_cgroup_end_move(memcg);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0memcg_oom_recover(memcg);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* it seems parent cgroup doesn't have enou=
-gh mem */
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto try_to_free;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cond_resched();
-> =A0 =A0 =A0 =A0/* "ret" should also be checked to ensure all lists are em=
-pty. */
-> =A0 =A0 =A0 =A0} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 =
-|| ret);
-> --
-> 1.7.4.1
->
->
+Also, can you please cc fsnotify people so that they can go over the
+new usage?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> @@ -179,6 +179,8 @@ struct cgroup {
+>  	struct cgroup *parent;		/* my parent */
+>  	struct dentry __rcu *dentry;	/* cgroup fs entry, RCU protected */
+>  
+> +	struct dentry *tasks_dentry;	/* "tasks" dentry */
+
+Urgh... not the prettiest but I suppose it's necessary.  It will
+probably be better to point to cfent instead.
+
+> +static inline void fsnotify_cgroup(struct task_struct *tsk, __u32 mask)
+
+No need to make it inline.
+
+> +{
+> +	struct cgroupfs_root *root;
+> +	struct inode	*d_inode;
+> +	struct cgroup	*cgrp;
+
+What are the locking rules?
+
+> +	for_each_active_root(root) {
+> +		cgrp = task_cgroup_from_root(tsk, root);
+> +		d_inode = cgrp->tasks_dentry->d_inode;
+> +
+> +		fsnotify_parent(NULL, cgrp->tasks_dentry, mask);
+> +		fsnotify(d_inode, mask, d_inode, FSNOTIFY_EVENT_INODE, NULL, 0);
+
+The interface is rather weird.  It's called fsnotify_cgroup() and it
+always generates the requested event on its tasks file?
+
+>  int cgroup_add_file(struct cgroup *cgrp,
+>  		       struct cgroup_subsys *subsys,
+> -		       const struct cftype *cft)
+> +		       const struct cftype *cft,
+> +		       int tasks)
+
+Ugh... this is ugly.
+
+>  {
+>  	struct dentry *dir = cgrp->dentry;
+>  	struct dentry *dentry;
+> @@ -2629,6 +2649,12 @@ int cgroup_add_file(struct cgroup *cgrp,
+>  		dput(dentry);
+>  	} else
+>  		error = PTR_ERR(dentry);
+> +
+> +	if(tasks) {
+
+          ^ missing space
+
+> +		pr_warn("%s(): cft name: %s\n", __func__, name);
+
+Why pr_warn?
+
+> +		cgrp->tasks_dentry = dentry;
+> +	}
+> +
+>  	return error;
+>  }
+>  EXPORT_SYMBOL_GPL(cgroup_add_file);
+> @@ -2640,7 +2666,7 @@ int cgroup_add_files(struct cgroup *cgrp,
+>  {
+>  	int i, err;
+>  	for (i = 0; i < count; i++) {
+> -		err = cgroup_add_file(cgrp, subsys, &cft[i]);
+> +		err = cgroup_add_file(cgrp, subsys, &cft[i], 0);
+>  		if (err)
+>  			return err;
+>  	}
+> @@ -3642,12 +3668,16 @@ static int cgroup_populate_dir(struct cgroup *cgrp)
+>  	/* First clear out any existing files */
+>  	cgroup_clear_directory(cgrp->dentry);
+>  
+> -	err = cgroup_add_files(cgrp, NULL, files, ARRAY_SIZE(files));
+> +	err = cgroup_add_file(cgrp, NULL, files, 1);
+> +	if (err)
+> +		return err;
+> +
+> +	err = cgroup_add_files(cgrp, NULL, files + 1, ARRAY_SIZE(files) - 1);
+>  	if (err < 0)
+>  		return err;
+>  
+>  	if (cgrp == cgrp->top_cgroup) {
+> -		if ((err = cgroup_add_file(cgrp, NULL, &cft_release_agent)) < 0)
+> +		if ((err = cgroup_add_file(cgrp, NULL, &cft_release_agent, 0)) < 0)
+>  			return err;
+>  	}
+
+Wouldn't it be better to make cgroup_add_file() return the created cft
+and let the caller handle the tasks special case?  Also, why use 1/0
+for boolean values instead of true/false?
+
+> @@ -4480,6 +4510,7 @@ static const struct file_operations proc_cgroupstats_operations = {
+>   */
+>  void cgroup_fork(struct task_struct *child)
+>  {
+> +
+
+Why the new line?
+
+Thanks.
+
+-- 
+tejun
