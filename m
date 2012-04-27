@@ -1,90 +1,200 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH UPDATED 02/11] blkcg: __blkg_lookup_create() doesn't need
- radix preload
-Date: Fri, 27 Apr 2012 14:18:27 -0700
-Message-ID: <20120427211827.GQ26595@google.com>
+Subject: [PATCH UPDATED 03/11] blkcg: make root blkcg allocation use
+	%GFP_KERNEL
+Date: Fri, 27 Apr 2012 14:19:22 -0700
+Message-ID: <20120427211922.GR26595@google.com>
 References: <1335477561-11131-1-git-send-email-tj@kernel.org>
- <1335477561-11131-3-git-send-email-tj@kernel.org>
+	<1335477561-11131-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=FCv7L0yrQAB2gdp+1kvROyBY7qxw9bqGfvmr5JtQoL0=;
-        b=Q0ZYA/8zQHdFh4At9UqFrOiZgL5ibF/h558UpCN8cs5ivx0Z6vQTSqJHpxBv/kW4Hg
-         2aTD9Z5YZoeMhoA0KWd7GAiMCc30djQI1UGG0yvdOflQXbKD3Bqht3NM69xWyeLkzJiI
-         KHSdJAfac3Txj1QpvqOktD0JaxKfhNdjkPjmGAf9BUo96EBD0Z3pZw0j3aM63EcEP7TD
-         dC3l7A8drPqp5uy/2vh+lhAbnbGBWQCQvibiMq8/N8bUVVCkVi+5KanBD/uJOt223EI4
-         BPR+7lJOzuHzHfPNsB5WjPIHtgNsNYPwrpG0kXfqSiJgA9BhibHFKis9LzgRZGXbWtm2
-         XRnA==
-Content-Disposition: inline
-In-Reply-To: <1335477561-11131-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=WNv7BigZHHn+eTbiQnJZUAuwc6Kkw5ttvrsko3u4pZQ=;
+	b=0fPIGQZz5ONqzxbX90m4++YfRThCKTbw+8meQN/YfdSeHhngDgsGQc5kNQpKkPnUsY
+	HMKK1jexZiKlaO7tbCUdpyfB2+tnyIr61R8Dosj3AhH+r10BZoKtOiU9uHUylEOdXWvi
+	4o9eIDN5Xv591uIVREniM5MnGLLa7bhbjmq/wKoo5NSAPPJX0mtV7eQVJKa2LlT+H1uG
+	c21GQJS4u2UMBYdUYS9E8GH1tZ1n7F1DfIEUirZZkfktYYvn6TPATr1bC+MCNvxvqytD
+	COp+UEl0t6Xm14ERpUKIOqAsYV4jik6zNYSw+cnqbz0Z+YRRFDlbmYYAPmQsEuCW4LqU
+	eT7g==
+Content-Disposition: inline
+In-Reply-To: <1335477561-11131-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-There's no point in calling radix_tree_preload() if preloading doesn't
-use more permissible GFP mask.  Drop preloading from
-__blkg_lookup_create().
+Currently, blkcg_activate_policy() depends on %GFP_ATOMIC allocation
+from __blkg_lookup_create() for root blkcg creation.  This could make
+policy fail unnecessarily.
 
-While at it, drop sparse locking annotation which no longer applies.
+Make blkg_alloc() take @gfp_mask, __blkg_lookup_create() take an
+optional @new_blkg for preallocated blkg, and blkcg_activate_policy()
+preload radix tree and preallocate blkg with %GFP_KERNEL before trying
+to create the root blkg.
 
-v2: Vivek pointed out the odd preload usage.  Instead of updating,
-    just drop it.
+v2: __blkg_lookup_create() was returning %NULL on blkg alloc failure
+   instead of ERR_PTR() value.  Fixed.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
-We don't need preloading at all.  Just drop it.  git branch updated
-accordingly.  All patches apply as-is.
+Failure path bug fixed.  git branch updated accordingly.  All other patches
+apply as-is.
 
 Thanks.
 
- block/blk-cgroup.c |   10 +---------
- 1 files changed, 1 insertions(+), 9 deletions(-)
+ block/blk-cgroup.c |   59 +++++++++++++++++++++++++++++++++++++--------------
+ 1 files changed, 43 insertions(+), 16 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 4ab7420..af61db0 100644
+index af61db0..cbeeb54 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -177,7 +177,6 @@ EXPORT_SYMBOL_GPL(blkg_lookup);
+@@ -91,16 +91,18 @@ static void blkg_free(struct blkcg_gq *blkg)
+  * blkg_alloc - allocate a blkg
+  * @blkcg: block cgroup the new blkg is associated with
+  * @q: request_queue the new blkg is associated with
++ * @gfp_mask: allocation mask to use
+  *
+  * Allocate a new blkg assocating @blkcg and @q.
+  */
+-static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q)
++static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
++				   gfp_t gfp_mask)
+ {
+ 	struct blkcg_gq *blkg;
+ 	int i;
  
+ 	/* alloc and init base part */
+-	blkg = kzalloc_node(sizeof(*blkg), GFP_ATOMIC, q->node);
++	blkg = kzalloc_node(sizeof(*blkg), gfp_mask, q->node);
+ 	if (!blkg)
+ 		return NULL;
+ 
+@@ -117,7 +119,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q)
+ 			continue;
+ 
+ 		/* alloc per-policy data and attach it to blkg */
+-		pd = kzalloc_node(pol->pd_size, GFP_ATOMIC, q->node);
++		pd = kzalloc_node(pol->pd_size, gfp_mask, q->node);
+ 		if (!pd) {
+ 			blkg_free(blkg);
+ 			return NULL;
+@@ -175,8 +177,13 @@ struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, struct request_queue *q)
+ }
+ EXPORT_SYMBOL_GPL(blkg_lookup);
+ 
++/*
++ * If @new_blkg is %NULL, this function tries to allocate a new one as
++ * necessary using %GFP_ATOMIC.  @new_blkg is always consumed on return.
++ */
  static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 					     struct request_queue *q)
--	__releases(q->queue_lock) __acquires(q->queue_lock)
+-					     struct request_queue *q)
++					     struct request_queue *q,
++					     struct blkcg_gq *new_blkg)
  {
  	struct blkcg_gq *blkg;
  	int ret;
-@@ -203,10 +202,6 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 		goto err_put;
+@@ -188,18 +195,24 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 	blkg = __blkg_lookup(blkcg, q);
+ 	if (blkg) {
+ 		rcu_assign_pointer(blkcg->blkg_hint, blkg);
+-		return blkg;
++		goto out_free;
+ 	}
+ 
+ 	/* blkg holds a reference to blkcg */
+-	if (!css_tryget(&blkcg->css))
+-		return ERR_PTR(-EINVAL);
++	if (!css_tryget(&blkcg->css)) {
++		blkg = ERR_PTR(-EINVAL);
++		goto out_free;
++	}
+ 
+ 	/* allocate */
+-	ret = -ENOMEM;
+-	blkg = blkg_alloc(blkcg, q);
+-	if (unlikely(!blkg))
+-		goto err_put;
++	if (!new_blkg) {
++		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
++		if (unlikely(!new_blkg)) {
++			blkg = ERR_PTR(-ENOMEM);
++			goto out_put;
++		}
++	}
++	blkg = new_blkg;
  
  	/* insert */
--	ret = radix_tree_preload(GFP_ATOMIC);
--	if (ret)
--		goto err_free;
--
  	spin_lock(&blkcg->lock);
- 	ret = radix_tree_insert(&blkcg->blkg_tree, q->id, blkg);
- 	if (likely(!ret)) {
-@@ -215,14 +210,11 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 	}
- 	spin_unlock(&blkcg->lock);
+@@ -212,10 +225,13 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
  
--	radix_tree_preload_end();
--
  	if (!ret)
  		return blkg;
--err_free:
--	blkg_free(blkg);
- err_put:
+-err_put:
++
++	blkg = ERR_PTR(ret);
++out_put:
  	css_put(&blkcg->css);
-+	blkg_free(blkg);
- 	return ERR_PTR(ret);
+-	blkg_free(blkg);
+-	return ERR_PTR(ret);
++out_free:
++	blkg_free(new_blkg);
++	return blkg;
  }
  
+ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+@@ -227,7 +243,7 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 	 */
+ 	if (unlikely(blk_queue_bypass(q)))
+ 		return ERR_PTR(blk_queue_dead(q) ? -EINVAL : -EBUSY);
+-	return __blkg_lookup_create(blkcg, q);
++	return __blkg_lookup_create(blkcg, q, NULL);
+ }
+ EXPORT_SYMBOL_GPL(blkg_lookup_create);
+ 
+@@ -727,19 +743,30 @@ int blkcg_activate_policy(struct request_queue *q,
+ 	struct blkcg_gq *blkg;
+ 	struct blkg_policy_data *pd, *n;
+ 	int cnt = 0, ret;
++	bool preloaded;
+ 
+ 	if (blkcg_policy_enabled(q, pol))
+ 		return 0;
+ 
++	/* preallocations for root blkg */
++	blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
++	if (!blkg)
++		return -ENOMEM;
++
++	preloaded = !radix_tree_preload(GFP_KERNEL);
++
+ 	blk_queue_bypass_start(q);
+ 
+ 	/* make sure the root blkg exists and count the existing blkgs */
+ 	spin_lock_irq(q->queue_lock);
+ 
+ 	rcu_read_lock();
+-	blkg = __blkg_lookup_create(&blkcg_root, q);
++	blkg = __blkg_lookup_create(&blkcg_root, q, blkg);
+ 	rcu_read_unlock();
+ 
++	if (preloaded)
++		radix_tree_preload_end();
++
+ 	if (IS_ERR(blkg)) {
+ 		ret = PTR_ERR(blkg);
+ 		goto out_unlock;
 -- 
 1.7.7.3
