@@ -1,90 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 11/11] blkcg: implement per-blkg request allocation
-Date: Fri, 27 Apr 2012 09:20:12 -0700
-Message-ID: <20120427162012.GP27486@google.com>
-References: <1335477561-11131-1-git-send-email-tj@kernel.org>
-	<1335477561-11131-12-git-send-email-tj@kernel.org>
-	<x49wr51usxi.fsf@segfault.boston.devel.redhat.com>
-	<20120427150217.GK27486@google.com>
-	<20120427154033.GJ10579@redhat.com>
-	<20120427154502.GM27486@google.com>
-	<20120427154841.GA16237@redhat.com>
-	<20120427155140.GN27486@google.com>
-	<20120427155612.GK10579@redhat.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC][PATCH 3/7 v2] res_counter: add res_counter_uncharge_until()
+Date: Fri, 27 Apr 2012 14:08:28 -0300
+Message-ID: <4F9AD28C.60508@parallels.com>
+References: <4F9A327A.6050409@jp.fujitsu.com> <4F9A343F.7020409@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=apVpDyA/2UbocR9M3PLRa66hV8K+cD3ldUHb5uMyTnA=;
-	b=gRxEOdpm2eABpwEqht3Y7lfykUJoft7etFgSO5bOdZK11v254UBGxBwQN6IvTyapJD
-	WDo3g7cpS6jeoI6Mwzss9k4yvMLxs2tHm3dd586rsfnQtQZ07ZsknPj9YcfjTmFjRV69
-	FWEu5IGkKp1C6VJVA4q4MBW9roOT+U6QejiVfDRaPi+6iydR99HripkAePxMLjJHIexo
-	obWwpfsMqLr+y/lhlpBsRioxPXjK8qsLXrlfATavSCnJecjqOQALYp7rG8m+Ib/okF8E
-	P/sd1XHWhz0N9sLqQTDC0Lkc4KyajuD2DCWWNSBDqF/MKCv0YtguZXlFSe9oW2XOPJDS
-	+YnA==
-Content-Disposition: inline
-In-Reply-To: <20120427155612.GK10579-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4F9A343F.7020409@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Tejun Heo <tj@kernel.org>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyuki@gmail.com
 
-Hello,
-
-On Fri, Apr 27, 2012 at 11:56:12AM -0400, Vivek Goyal wrote:
-> > I find allowing unpriv users creating cgroups dumb.  cgroup consumes
-> > kernel memory.  Sans using kmemcg, what prevents them from creating
-> > gazillion cgroups and consuming all memories?  The idea of allowing
-> > cgroups to !priv users is just broken from the get go.
+On 04/27/2012 02:53 AM, KAMEZAWA Hiroyuki wrote:
+>  From bb0168d5c85f62f36434956e4728a67d0cc41e55 Mon Sep 17 00:00:00 2001
+> From: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
+> Date: Thu, 26 Apr 2012 18:48:07 +0900
+> Subject: [PATCH 3/9] memcg: add res_counter_uncharge_until()
 > 
-> Well creating a task consumes memory too but we allow unpriv users to
-> create tasks. :-)
+> At killing res_counter which is a child of other counter,
+> we need to do
+> 	res_counter_uncharge(child, xxx)
+> 	res_counter_charge(parent, xxx)
+> 
+> This is not atomic and wasting cpu. This patch adds
+> res_counter_uncharge_until(). This function's uncharge propagates
+> to ancestors until specified res_counter.
+> 
+> 	res_counter_uncharge_until(child, parent, xxx)
+> 
+> This ops is atomic and more efficient.
+> 
+> Originaly-written-by: Frederic Weisbecker<fweisbec@gmail.com>
+> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
+I have been carrying Frederic's patch itself in my code for a while now.
 
-We have ulimit.
+Why not just use it? What are you doing differently to justify writing a
+patch yourself? It's a bit of credit giving as well
 
-> May be a system wide cgroup limit will make sense?
-
-IMHO, this was one of the larger mistakes cgroup has made.  There are
-two ways when building interface for admin stuff like this, you can
-either implement and expose the core functionality and let userland
-deal with distribution or build things such that the kernel can fully
-virtualize and distribute the control to each process.  Both
-approaches have their pros and cons but I generally think it's better
-to go for the latter for new and extra stuff like cgroup as it is much
-simpler and tends to more flexible and adapts better as use cases
-develop.
-
-The problem with cgroup is that it's neither the former or the latter.
-It's caught somewhere in the middle with its pants down where it does
-half-assed job of providing an interface which looks like it could be
-made to be directly accessible from !priv processes while not really
-being able to handle such usage.
-
-I mean, just think about the case you just raised.  Forget about
-memory usage.  What about weights?  If you allow a random user to
-create arbitrary number of blkcg groups, [s]he gets 500 extra weight
-with each blkcg!  Yeah!
-
-If we support full hierarchy on all controllers, exposing cgroups
-directly to !priv users may start to make more sense but I'd much
-prefer having resource policy controlled and administered centrally in
-userland.  It's a job much better suited for userland.  If such
-mechanism would require certain features, sure we can accomodate that
-but I think trying to allow !priv users directly to cgroup is stupid
-especially at this point, so let's just drop it.
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
