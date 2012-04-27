@@ -1,83 +1,57 @@
 From: Frederic Weisbecker <fweisbec@gmail.com>
-Subject: Re: [RFC][PATCH 7/9 v2] cgroup: avoid attaching task to a cgroup
- under rmdir()
-Date: Fri, 27 Apr 2012 12:39:29 +0200
-Message-ID: <20120427103927.GA3514@somewhere.redhat.com>
-References: <4F9A327A.6050409@jp.fujitsu.com>
- <4F9A366E.9020307@jp.fujitsu.com>
+Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
+Date: Fri, 27 Apr 2012 13:38:45 +0200
+Message-ID: <20120427113841.GB3514@somewhere.redhat.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com>
+ <1335138820-26590-6-git-send-email-glommer@parallels.com>
+ <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com>
+ <20120424142232.GC8626@somewhere>
+ <alpine.DEB.2.00.1204241319360.753@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5tiPaDdahaRWdwCakssQSjrMHFTCP4EhN9Qq5Er59TI=;
-        b=oFHXMnWUptYesUErMA6T2URYUkgBBTs81Wu6n74f+ywC9kyJVBnobOqANQNCaF6oKF
-         AmYvqHkrZHHHY4cvEU/eQhdpMBstQ2Dwch/2zBRLJ7YJbIos4yJB9Qa/6oKHoD83k/zt
-         OD+owJKYV++pX7o4B3Uz4FETIChi+lMqUWvd/EGEEyoqD8luH4nmSd1QytgPz6T9y9+c
-         tMCW+Ql/mo7b7d2XEFC4a1Ox+AVOfh/AGqkYdYiudxVlHIbRNVwfz+O6K1Ux6/aSSMb0
-         8LKb8Op1o3h5jtyzJXf572P5QYajtGA9kgPgKKmvj1bec8QTAeGxrBUFxO9grLpLbBYg
-         GAdw==
+        bh=qB3i+099irScmzF62Gr+BdE7I33oq/g6nwcXsXLLb1c=;
+        b=DsXoRktALais+aZGYwspTJ6pn+ENDJ5ux7EOKcyDnLof6/gE1x8ERR5gWG9ypKhRu3
+         6vTmTuRAteTTpk+YunDr6k2UdLAi1XSNsr/26GzuiQsvb8/v0P4NM7nNNIS+pZhYkb18
+         OAORRiayqlTHvAUeD/S0LOqEK/sUbVQsAYvITtFQtoXdMH74aD7mWrEkyEQ9iCDD7k3/
+         weGvqszYbEg2XY8OVzmrRJ1DN8XVq8441hLs1PZgukojktvPmngFWdAKwG8dz9r5pxhC
+         Hqc0uscSe0x1mAiINDZGzEMSk632sJPojVmSCbD+ga4/20a0Mm6K9rhuvli4f0s4j5ru
+         Cjpg==
 Content-Disposition: inline
-In-Reply-To: <4F9A366E.9020307@jp.fujitsu.com>
+In-Reply-To: <alpine.DEB.2.00.1204241319360.753@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyuki@gmail.com
+To: David Rientjes <rientjes@google.com>
+Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On Fri, Apr 27, 2012 at 03:02:22PM +0900, KAMEZAWA Hiroyuki wrote:
-> attach_task() is done under cgroup_mutex() but ->pre_destroy() callback
-> in rmdir() isn't called under cgroup_mutex().
+On Tue, Apr 24, 2012 at 01:21:43PM -0700, David Rientjes wrote:
+> On Tue, 24 Apr 2012, Frederic Weisbecker wrote:
 > 
-> It's better to avoid attaching a task to a cgroup which
-> is under pre_destroy(). Considering memcg, the attached task may
-> increase resource usage after memcg's pre_destroy() confirms that
-> memcg is empty. This is not good.
+> > > This seems horribly inconsistent with memcg charging of user memory since 
+> > > it charges to p->mm->owner and you're charging to p.  So a thread attached 
+> > > to a memcg can charge user memory to one memcg while charging slab to 
+> > > another memcg?
+> > 
+> > Charging to the thread rather than the process seem to me the right behaviour:
+> > you can have two threads of a same process attached to different cgroups.
+> > 
+> > Perhaps it is the user memory memcg that needs to be fixed?
+> > 
 > 
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> ---
->  kernel/cgroup.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index ad8eae5..7a3076b 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -1953,6 +1953,9 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
->  	if (cgrp == oldcgrp)
->  		return 0;
->  
-> +	if (test_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags))
-> +		return -EBUSY;
-> +
+> No, because memory is represented by mm_struct, not task_struct, so you 
+> must charge to p->mm->owner to allow for moving threads amongst memcgs 
+> later for memory.move_charge_at_immigrate.  You shouldn't be able to 
+> charge two different memcgs for memory represented by a single mm.
 
-You probably need to update cgroup_attach_proc() as well?
-
->  	tset.single.task = tsk;
->  	tset.single.cgrp = oldcgrp;
->  
-> @@ -4181,7 +4184,6 @@ again:
->  		mutex_unlock(&cgroup_mutex);
->  		return -EBUSY;
->  	}
-> -	mutex_unlock(&cgroup_mutex);
->  
->  	/*
->  	 * In general, subsystem has no css->refcnt after pre_destroy(). But
-> @@ -4193,6 +4195,7 @@ again:
->  	 * and css_tryget() and cgroup_wakeup_rmdir_waiter() implementation.
->  	 */
->  	set_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-> +	mutex_unlock(&cgroup_mutex);
->  
->  	/*
->  	 * Call pre_destroy handlers of subsys. Notify subsystems
-> -- 
-> 1.7.4.1
-> 
-> 
+The idea I had was more that only the memcg of the thread that does the allocation
+is charged. But the problem is that this allocation can be later deallocated
+from another thread. So probably charging the owner is indeed the only sane
+way to go with user memory.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
