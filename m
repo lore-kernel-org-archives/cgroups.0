@@ -1,200 +1,155 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH UPDATED 03/11] blkcg: make root blkcg allocation use
-	%GFP_KERNEL
-Date: Fri, 27 Apr 2012 14:19:22 -0700
-Message-ID: <20120427211922.GR26595@google.com>
-References: <1335477561-11131-1-git-send-email-tj@kernel.org>
-	<1335477561-11131-4-git-send-email-tj@kernel.org>
+From: Ying Han <yinghan@google.com>
+Subject: Re: [RFC][PATCH 9/9 v2] memcg: never return error at pre_destroy()
+Date: Fri, 27 Apr 2012 14:28:31 -0700
+Message-ID: <CALWz4iyiM-CFgVaHiE1Lgd1ZwJzHwY3tx9XX6HeDPUV_wVPAtQ@mail.gmail.com>
+References: <4F9A327A.6050409@jp.fujitsu.com>
+	<4F9A375D.7@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=WNv7BigZHHn+eTbiQnJZUAuwc6Kkw5ttvrsko3u4pZQ=;
-	b=0fPIGQZz5ONqzxbX90m4++YfRThCKTbw+8meQN/YfdSeHhngDgsGQc5kNQpKkPnUsY
-	HMKK1jexZiKlaO7tbCUdpyfB2+tnyIr61R8Dosj3AhH+r10BZoKtOiU9uHUylEOdXWvi
-	4o9eIDN5Xv591uIVREniM5MnGLLa7bhbjmq/wKoo5NSAPPJX0mtV7eQVJKa2LlT+H1uG
-	c21GQJS4u2UMBYdUYS9E8GH1tZ1n7F1DfIEUirZZkfktYYvn6TPATr1bC+MCNvxvqytD
-	COp+UEl0t6Xm14ERpUKIOqAsYV4jik6zNYSw+cnqbz0Z+YRRFDlbmYYAPmQsEuCW4LqU
-	eT7g==
-Content-Disposition: inline
-In-Reply-To: <1335477561-11131-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=M6Fc/V761WNzCWE8UPb54s8219q70XDaA7YN+aWY4AA=;
+        b=Jy+BydOzn51Luddhv1TWvEWBEO+viSzdIuzgp+qv/29Ps/CmlEyehg4o01xtQuLLTs
+         L+dDzsXyiSE+1hI9T3YvOUfHZvObrTgDXsk0WKsrcEsKIHZMIkZOM08UM/VLB+QcP+K8
+         I10QbHPJhitdmfpBunhVXmPF/RYt6EWSsMYBI/m8mn30vIqDAszctNn/1Z14c7XXfr5I
+         lLYbyxaPgzn9lQegl/JO+gEhWGOkWimJ8IQLSQ3PtJwRiUzeWh5Qny5aRAsj/qQFixZz
+         FaCQu1L42M1YRU1KlDU5egagSlSi/9E4cZQ15WaD7gnK/ZQYN4F8B9JxWqv914DVyHrH
+         76OQ==
+In-Reply-To: <4F9A375D.7@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyuki@gmail.com
 
-Currently, blkcg_activate_policy() depends on %GFP_ATOMIC allocation
-from __blkg_lookup_create() for root blkcg creation.  This could make
-policy fail unnecessarily.
+On Thu, Apr 26, 2012 at 11:06 PM, KAMEZAWA Hiroyuki
+<kamezawa.hiroyu@jp.fujitsu.com> wrote:
+> When force_empty() called by ->pre_destroy(), no memory reclaim happens
+> and it doesn't take very long time which requires signal_pending() check.
+> And if we return -EINTR from pre_destroy(), cgroup.c show warning.
+>
+> This patch removes signal check in force_empty(). By this, ->pre_destroy(=
+)
+> returns success always.
+>
+> Note: check for 'cgroup is empty' remains for force_empty interface.
+>
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+> =A0mm/hugetlb.c =A0 =A0| =A0 10 +---------
+> =A0mm/memcontrol.c | =A0 14 +++++---------
+> =A02 files changed, 6 insertions(+), 18 deletions(-)
+>
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index 4dd6b39..770f1642 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -1922,20 +1922,12 @@ int hugetlb_force_memcg_empty(struct cgroup *cgro=
+up)
+> =A0 =A0 =A0 =A0int ret =3D 0, idx =3D 0;
+>
+> =A0 =A0 =A0 =A0do {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* see memcontrol.c::mem_cgroup_force_empty=
+() */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgroup)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|| !list_empty(&cgroup->ch=
+ildren)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If the task doing the cgroup_rmdir got=
+ a signal
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we don't really need to loop till the =
+hugetlb resource
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* usage become zero.
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current)) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0for_each_hstate(h) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock(&hugetlb_lock);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0list_for_each_entry(page, =
+&h->hugepage_activelist, lru) {
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2715223..ee350c5 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3852,8 +3852,6 @@ static int mem_cgroup_force_empty_list(struct mem_c=
+group *memcg,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc =3D lookup_page_cgroup(page);
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_move_parent(page, pc, m=
+emcg, GFP_KERNEL);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM || ret =3D=3D -EINTR=
+)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ret =3D=3D -EBUSY || ret =3D=3D -EINVA=
+L) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* found lock contention o=
+r "pc" is obsolete. */
+> @@ -3863,7 +3861,7 @@ static int mem_cgroup_force_empty_list(struct mem_c=
+group *memcg,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0busy =3D NULL;
+> =A0 =A0 =A0 =A0}
+>
+> - =A0 =A0 =A0 if (!ret && !list_empty(list))
+> + =A0 =A0 =A0 if (!loop)
 
-Make blkg_alloc() take @gfp_mask, __blkg_lookup_create() take an
-optional @new_blkg for preallocated blkg, and blkcg_activate_policy()
-preload radix tree and preallocate blkg with %GFP_KERNEL before trying
-to create the root blkg.
+This looks a bit strange to me... why we make the change ?
 
-v2: __blkg_lookup_create() was returning %NULL on blkg alloc failure
-   instead of ERR_PTR() value.  Fixed.
+--Ying
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
-Failure path bug fixed.  git branch updated accordingly.  All other patches
-apply as-is.
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EBUSY;
+> =A0 =A0 =A0 =A0return ret;
+> =A0}
+> @@ -3893,11 +3891,12 @@ static int mem_cgroup_force_empty(struct mem_cgro=
+up *memcg, bool free_all)
+> =A0move_account:
+> =A0 =A0 =A0 =A0do {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* This never happens when this is called=
+ by ->pre_destroy().
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* But we need to take care of force_empt=
+y interface.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgrp) || !list_empty=
+(&cgrp->children))
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current))
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This is for making all *used* pages to =
+be on LRU. */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0lru_add_drain_all();
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0drain_all_stock_sync(memcg);
+> @@ -3918,9 +3917,6 @@ move_account:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mem_cgroup_end_move(memcg);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0memcg_oom_recover(memcg);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* it seems parent cgroup doesn't have enou=
+gh mem */
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto try_to_free;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cond_resched();
+> =A0 =A0 =A0 =A0/* "ret" should also be checked to ensure all lists are em=
+pty. */
+> =A0 =A0 =A0 =A0} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 =
+|| ret);
+> --
+> 1.7.4.1
+>
+>
 
-Thanks.
-
- block/blk-cgroup.c |   59 +++++++++++++++++++++++++++++++++++++--------------
- 1 files changed, 43 insertions(+), 16 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index af61db0..cbeeb54 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -91,16 +91,18 @@ static void blkg_free(struct blkcg_gq *blkg)
-  * blkg_alloc - allocate a blkg
-  * @blkcg: block cgroup the new blkg is associated with
-  * @q: request_queue the new blkg is associated with
-+ * @gfp_mask: allocation mask to use
-  *
-  * Allocate a new blkg assocating @blkcg and @q.
-  */
--static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q)
-+static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
-+				   gfp_t gfp_mask)
- {
- 	struct blkcg_gq *blkg;
- 	int i;
- 
- 	/* alloc and init base part */
--	blkg = kzalloc_node(sizeof(*blkg), GFP_ATOMIC, q->node);
-+	blkg = kzalloc_node(sizeof(*blkg), gfp_mask, q->node);
- 	if (!blkg)
- 		return NULL;
- 
-@@ -117,7 +119,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q)
- 			continue;
- 
- 		/* alloc per-policy data and attach it to blkg */
--		pd = kzalloc_node(pol->pd_size, GFP_ATOMIC, q->node);
-+		pd = kzalloc_node(pol->pd_size, gfp_mask, q->node);
- 		if (!pd) {
- 			blkg_free(blkg);
- 			return NULL;
-@@ -175,8 +177,13 @@ struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, struct request_queue *q)
- }
- EXPORT_SYMBOL_GPL(blkg_lookup);
- 
-+/*
-+ * If @new_blkg is %NULL, this function tries to allocate a new one as
-+ * necessary using %GFP_ATOMIC.  @new_blkg is always consumed on return.
-+ */
- static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
--					     struct request_queue *q)
-+					     struct request_queue *q,
-+					     struct blkcg_gq *new_blkg)
- {
- 	struct blkcg_gq *blkg;
- 	int ret;
-@@ -188,18 +195,24 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 	blkg = __blkg_lookup(blkcg, q);
- 	if (blkg) {
- 		rcu_assign_pointer(blkcg->blkg_hint, blkg);
--		return blkg;
-+		goto out_free;
- 	}
- 
- 	/* blkg holds a reference to blkcg */
--	if (!css_tryget(&blkcg->css))
--		return ERR_PTR(-EINVAL);
-+	if (!css_tryget(&blkcg->css)) {
-+		blkg = ERR_PTR(-EINVAL);
-+		goto out_free;
-+	}
- 
- 	/* allocate */
--	ret = -ENOMEM;
--	blkg = blkg_alloc(blkcg, q);
--	if (unlikely(!blkg))
--		goto err_put;
-+	if (!new_blkg) {
-+		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
-+		if (unlikely(!new_blkg)) {
-+			blkg = ERR_PTR(-ENOMEM);
-+			goto out_put;
-+		}
-+	}
-+	blkg = new_blkg;
- 
- 	/* insert */
- 	spin_lock(&blkcg->lock);
-@@ -212,10 +225,13 @@ static struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 
- 	if (!ret)
- 		return blkg;
--err_put:
-+
-+	blkg = ERR_PTR(ret);
-+out_put:
- 	css_put(&blkcg->css);
--	blkg_free(blkg);
--	return ERR_PTR(ret);
-+out_free:
-+	blkg_free(new_blkg);
-+	return blkg;
- }
- 
- struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
-@@ -227,7 +243,7 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 	 */
- 	if (unlikely(blk_queue_bypass(q)))
- 		return ERR_PTR(blk_queue_dead(q) ? -EINVAL : -EBUSY);
--	return __blkg_lookup_create(blkcg, q);
-+	return __blkg_lookup_create(blkcg, q, NULL);
- }
- EXPORT_SYMBOL_GPL(blkg_lookup_create);
- 
-@@ -727,19 +743,30 @@ int blkcg_activate_policy(struct request_queue *q,
- 	struct blkcg_gq *blkg;
- 	struct blkg_policy_data *pd, *n;
- 	int cnt = 0, ret;
-+	bool preloaded;
- 
- 	if (blkcg_policy_enabled(q, pol))
- 		return 0;
- 
-+	/* preallocations for root blkg */
-+	blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
-+	if (!blkg)
-+		return -ENOMEM;
-+
-+	preloaded = !radix_tree_preload(GFP_KERNEL);
-+
- 	blk_queue_bypass_start(q);
- 
- 	/* make sure the root blkg exists and count the existing blkgs */
- 	spin_lock_irq(q->queue_lock);
- 
- 	rcu_read_lock();
--	blkg = __blkg_lookup_create(&blkcg_root, q);
-+	blkg = __blkg_lookup_create(&blkcg_root, q, blkg);
- 	rcu_read_unlock();
- 
-+	if (preloaded)
-+		radix_tree_preload_end();
-+
- 	if (IS_ERR(blkg)) {
- 		ret = PTR_ERR(blkg);
- 		goto out_unlock;
--- 
-1.7.7.3
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
