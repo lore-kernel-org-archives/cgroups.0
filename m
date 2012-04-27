@@ -1,115 +1,123 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 2/2] mm: memcg: count pte references from every member of
- the reclaimed hierarchy
-Date: Fri, 27 Apr 2012 01:48:19 +0200
-Message-ID: <20120426234819.GB1788@cmpxchg.org>
-References: <1335296144-29381-1-git-send-email-hannes@cmpxchg.org>
- <1335296144-29381-2-git-send-email-hannes@cmpxchg.org>
- <20120426143729.10f672ae.akpm@linux-foundation.org>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v4 1/3] make jump_labels wait while updates are in place
+Date: Thu, 26 Apr 2012 20:43:06 -0400
+Message-ID: <20120427004305.GC23877@home.goodmis.org>
+References: <1335480667-8301-1-git-send-email-glommer@parallels.com>
+ <1335480667-8301-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20120426143729.10f672ae.akpm@linux-foundation.org>
+In-Reply-To: <1335480667-8301-2-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizf@cn.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Ingo Molnar <mingo@elte.hu>, Jason Baron <jbaron@redhat.com>
 
-On Thu, Apr 26, 2012 at 02:37:29PM -0700, Andrew Morton wrote:
-> On Tue, 24 Apr 2012 21:35:44 +0200
-> Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > --- a/include/linux/memcontrol.h
-> > +++ b/include/linux/memcontrol.h
-> > @@ -78,6 +78,7 @@ extern void mem_cgroup_uncharge_cache_page(struct page *page);
-> >  
-> >  extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >  				     int order);
-> > +bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *, struct mem_cgroup *);
+On Thu, Apr 26, 2012 at 07:51:05PM -0300, Glauber Costa wrote:
+> In mem cgroup, we need to guarantee that two concurrent updates
+> of the jump_label interface wait for each other. IOW, we can't have
+> other updates returning while the first one is still patching the
+> kernel around, otherwise we'll race.
+
+But it shouldn't. The code as is should prevent that.
+
 > 
-> I dunno about you guys, but this practice of omitting the names of the
-> arguments in the declaration drives me bats.  It really does throw away
-> a *lot* of information.  It looks OK when one is initially reading the
-> code, but when I actually go in there and do some work on the code, it
-> makes things significantly harder.
-
-Humm, I only look at headers to roughly gauge an API, and jump to the
-definitions anyway when figuring out how to actually use them (because
-of the documentation, and because function names can be deceiving).
-
-But I don't mind adding the names, so I'll try to remember it.
-
-> >  int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg);
-> >  
-> >  extern struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page);
-> > @@ -91,10 +92,13 @@ static inline
-> >  int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
-> >  {
-> >  	struct mem_cgroup *memcg;
-> > +	int match;
-> > +
-> >  	rcu_read_lock();
-> >  	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
-> > +	match = memcg && __mem_cgroup_same_or_subtree(cgroup, memcg);
-> >  	rcu_read_unlock();
-> > -	return cgroup == memcg;
-> > +	return match;
-> >  }
+> I believe this is something that can fit well in the static branch
+> API, without noticeable disadvantages:
 > 
-> mm_match_cgroup() really wants to return a bool type, no?
+> * in the common case, it will be a quite simple lock/unlock operation
+> * Every context that calls static_branch_slow* already expects to be
+>   in sleeping context because it will mutex_lock the unlikely case.
+> * static_key_slow_inc is not expected to be called in any fast path,
+>   otherwise it would be expected to have quite a different name. Therefore
+>   the mutex + atomic combination instead of just an atomic should not kill
+>   us.
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Tejun Heo <tj@kernel.org>
+> CC: Li Zefan <lizefan@huawei.com>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Ingo Molnar <mingo@elte.hu>
+> CC: Jason Baron <jbaron@redhat.com>
+> ---
+>  kernel/jump_label.c |   21 +++++++++++----------
+>  1 files changed, 11 insertions(+), 10 deletions(-)
+> 
+> diff --git a/kernel/jump_label.c b/kernel/jump_label.c
+> index 4304919..5d09cb4 100644
+> --- a/kernel/jump_label.c
+> +++ b/kernel/jump_label.c
+> @@ -57,17 +57,16 @@ static void jump_label_update(struct static_key *key, int enable);
+>  
+>  void static_key_slow_inc(struct static_key *key)
+>  {
+> +	jump_label_lock();
+>  	if (atomic_inc_not_zero(&key->enabled))
+> -		return;
 
----
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch] mm: memcg: clean up mm_match_cgroup() signature
+If key->enabled is not zero, there's nothing to be done. As the jump
+label has already been enabled. Note, the key->enabled doesn't get set
+until after the jump label is updated. Thus, if two tasks were to come
+in, they both would be locked on the jump_label_lock().
 
-It really should return a boolean for match/no match.  And since it
-takes a memcg, not a cgroup, fix that parameter name as well.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/memcontrol.h |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+> +		goto out;
+>  
+> -	jump_label_lock();
+> -	if (atomic_read(&key->enabled) == 0) {
+> -		if (!jump_label_get_branch_default(key))
+> -			jump_label_update(key, JUMP_LABEL_ENABLE);
+> -		else
+> -			jump_label_update(key, JUMP_LABEL_DISABLE);
+> -	}
+> +	if (!jump_label_get_branch_default(key))
+> +		jump_label_update(key, JUMP_LABEL_ENABLE);
+> +	else
+> +		jump_label_update(key, JUMP_LABEL_DISABLE);
+>  	atomic_inc(&key->enabled);
+> +out:
+>  	jump_label_unlock();
+>  }
+>  EXPORT_SYMBOL_GPL(static_key_slow_inc);
+> @@ -75,10 +74,11 @@ EXPORT_SYMBOL_GPL(static_key_slow_inc);
+>  static void __static_key_slow_dec(struct static_key *key,
+>  		unsigned long rate_limit, struct delayed_work *work)
+>  {
+> -	if (!atomic_dec_and_mutex_lock(&key->enabled, &jump_label_mutex)) {
+> +	jump_label_lock();
+> +	if (atomic_dec_and_test(&key->enabled)) {
+>  		WARN(atomic_read(&key->enabled) < 0,
+>  		     "jump label: negative count!\n");
+> -		return;
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 76f9d9b..d3038a9 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -89,14 +89,14 @@ extern struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg);
- extern struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont);
- 
- static inline
--int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
-+bool mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *memcg;
--	int match;
-+	struct mem_cgroup *task_memcg;
-+	bool match;
- 
- 	rcu_read_lock();
--	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
--	match = memcg && __mem_cgroup_same_or_subtree(cgroup, memcg);
-+	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
-+	match = task_memcg && __mem_cgroup_same_or_subtree(memcg, task_memcg);
- 	rcu_read_unlock();
- 	return match;
- }
-@@ -281,10 +281,10 @@ static inline struct mem_cgroup *try_get_mem_cgroup_from_mm(struct mm_struct *mm
- 	return NULL;
- }
- 
--static inline int mm_match_cgroup(struct mm_struct *mm,
-+static inline bool mm_match_cgroup(struct mm_struct *mm,
- 		struct mem_cgroup *memcg)
- {
--	return 1;
-+	return true;
- }
- 
- static inline int task_in_mem_cgroup(struct task_struct *task,
--- 
-1.7.7.6
+Here, it is similar. If enabled is > 1, it wouldn't need to do anything,
+thus it would dec the counter and return. But if it were one, then the
+lock would be taken. and set to zero. There shouldn't be a case where
+two tasks came in to set it less than zero (then something is
+unbalanced).
+
+Are you hitting the WARN_ON?
+
+-- Steve
+
+> +		goto out;
+>  	}
+>  
+>  	if (rate_limit) {
+> @@ -90,6 +90,7 @@ static void __static_key_slow_dec(struct static_key *key,
+>  		else
+>  			jump_label_update(key, JUMP_LABEL_ENABLE);
+>  	}
+> +out:
+>  	jump_label_unlock();
+>  }
+>  
+> -- 
+> 1.7.7.6
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
