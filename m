@@ -1,79 +1,52 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v4 1/3] make jump_labels wait while updates are in place
-Date: Fri, 27 Apr 2012 11:59:37 -0300
-Message-ID: <4F9AB459.5010308@parallels.com>
-References: <1335480667-8301-1-git-send-email-glommer@parallels.com> <1335480667-8301-2-git-send-email-glommer@parallels.com> <20120427004305.GC23877@home.goodmis.org> <20120427135320.GA13762@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 11/11] blkcg: implement per-blkg request allocation
+Date: Fri, 27 Apr 2012 08:02:17 -0700
+Message-ID: <20120427150217.GK27486@google.com>
+References: <1335477561-11131-1-git-send-email-tj@kernel.org>
+ <1335477561-11131-12-git-send-email-tj@kernel.org>
+ <x49wr51usxi.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120427135320.GA13762@redhat.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=VyRzI4HRXw5mf7SCNQv56m9ozfEhHyfrYCiaLMKF2Vw=;
+        b=zAEFZBo9JmtGqge2cT4PwqrW5ZxDGqa8laG0NpjU7DIB1M2TAxbqczD+Q6DmGxNTXU
+         HEyBJ5+YZMGL1SMZf0Etx6vx4CseQHnZAKKLQkLyZHZ+XqmZEsBKC6gBCCjxjZH3ef1L
+         NKOal/NtkySmz3Wx5zyH6VQIEKBlnNYTL+LFDS+BTQzyzfP79v5Hq1ZQOAKkyc9qCY3H
+         ztEGT/x+z0d9r7TnOlxRrzvVIYT2TxUA5YHAiE0l2PTS+c+XNN0pUgCV7lf1TAJ1kf2G
+         VAZRAgvhzdfSoXwaWhc8O+vJFchJvq9mr+Qp8M257ZM8scT++HUzLUG7qxa1bV31yrze
+         Bo7w==
+Content-Disposition: inline
+In-Reply-To: <x49wr51usxi.fsf-RRHT56Q3PSP4kTEheFKJxxDDeQx5vsVwAInAS/Ez/D0@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Jason Baron <jbaron@redhat.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>, cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Ingo Molnar <mingo@elte.hu>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-On 04/27/2012 10:53 AM, Jason Baron wrote:
-> On Thu, Apr 26, 2012 at 08:43:06PM -0400, Steven Rostedt wrote:
->> On Thu, Apr 26, 2012 at 07:51:05PM -0300, Glauber Costa wrote:
->>> In mem cgroup, we need to guarantee that two concurrent updates
->>> of the jump_label interface wait for each other. IOW, we can't have
->>> other updates returning while the first one is still patching the
->>> kernel around, otherwise we'll race.
->>
->> But it shouldn't. The code as is should prevent that.
->>
->>>
->>> I believe this is something that can fit well in the static branch
->>> API, without noticeable disadvantages:
->>>
->>> * in the common case, it will be a quite simple lock/unlock operation
->>> * Every context that calls static_branch_slow* already expects to be
->>>    in sleeping context because it will mutex_lock the unlikely case.
->>> * static_key_slow_inc is not expected to be called in any fast path,
->>>    otherwise it would be expected to have quite a different name. Therefore
->>>    the mutex + atomic combination instead of just an atomic should not kill
->>>    us.
->>>
->>> Signed-off-by: Glauber Costa<glommer@parallels.com>
->>> CC: Tejun Heo<tj@kernel.org>
->>> CC: Li Zefan<lizefan@huawei.com>
->>> CC: Kamezawa Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->>> CC: Johannes Weiner<hannes@cmpxchg.org>
->>> CC: Michal Hocko<mhocko@suse.cz>
->>> CC: Ingo Molnar<mingo@elte.hu>
->>> CC: Jason Baron<jbaron@redhat.com>
->>> ---
->>>   kernel/jump_label.c |   21 +++++++++++----------
->>>   1 files changed, 11 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/kernel/jump_label.c b/kernel/jump_label.c
->>> index 4304919..5d09cb4 100644
->>> --- a/kernel/jump_label.c
->>> +++ b/kernel/jump_label.c
->>> @@ -57,17 +57,16 @@ static void jump_label_update(struct static_key *key, int enable);
->>>
->>>   void static_key_slow_inc(struct static_key *key)
->>>   {
->>> +	jump_label_lock();
->>>   	if (atomic_inc_not_zero(&key->enabled))
->>> -		return;
->>
->> If key->enabled is not zero, there's nothing to be done. As the jump
->> label has already been enabled. Note, the key->enabled doesn't get set
->> until after the jump label is updated. Thus, if two tasks were to come
->> in, they both would be locked on the jump_label_lock().
->>
->
+Hello,
 
-Okay, we seem to have been tricked by the usage of atomic while 
-analyzing this. The fact that the atomic update happens after the code 
-is patched seems enough to guarantee what we need, now that I read it 
-again (and it seems so obvious =p )
+On Fri, Apr 27, 2012 at 10:54:01AM -0400, Jeff Moyer wrote:
+> > This patch implements per-blkg request_list.  Each blkg has its own
+> > request_list and any IO allocates its request from the matching blkg
+> > making blkcgs completely isolated in terms of request allocation.
+> 
+> So, nr_requests is now actually nr_requests * # of blk cgroups.  Is that
+> right?  Are you at all concerned about the amount of memory that can be
+> tied up as the number of cgroups increases?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Yeah, I thought about it and I don't think there's a single good
+solution here.  The other extreme would be splitting nr_requests by
+the number of cgroups but that seems even worse - each cgroup should
+be able to hit maximum throughput.  Given that a lot of workloads tend
+to regulate themselves before hitting nr_requests, I think it's best
+to leave it as-is and treat each cgroup as having separate channel for
+now.  It's a configurable parameter after all.
+
+Thanks.
+
+-- 
+tejun
