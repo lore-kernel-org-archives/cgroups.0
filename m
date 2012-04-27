@@ -1,47 +1,44 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 17/23] kmem controller charge/uncharge infrastructure
-Date: Fri, 27 Apr 2012 11:13:31 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1204271110370.28516@chino.kir.corp.google.com>
-References: <1334959051-18203-1-git-send-email-glommer@parallels.com> <1335138820-26590-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1204231522320.13535@chino.kir.corp.google.com> <20120424142232.GC8626@somewhere>
- <alpine.DEB.2.00.1204241319360.753@chino.kir.corp.google.com> <20120427113841.GB3514@somewhere.redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC][PATCH 0/7 v2] memcg: prevent failure in pre_destroy()
+Date: Fri, 27 Apr 2012 11:16:42 -0700
+Message-ID: <20120427181642.GG26595@google.com>
+References: <4F9A327A.6050409@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=zi1J09xKDX40r/st0E2+Xlt3jqa6/RCNZLepTmw2AK8=;
-        b=SbbwUhGY1Zf7IFvQwsIQ/uoLbebuANu6uW2GLb8114cnBuLAMiZWL4ASO4Ac1n5lEY
-         v33+A+cn33BThFQL8NRMJPNh7mp/YEXesA/uM4Q1zOKIlIJ7kleRYxmfRxW+P6RGS/FO
-         A5DErZrVE67D1qCk+dAlKUUQhapzmQjyvuicZXSike8KN7vqjyedu3416laDMh08QVt3
-         lKclWxt1qM9WG0CDQsELqI8MPOHYSO2h+t1InDfT81X/NZFVJPNSleXoLgXCB2n8U/81
-         U/M3zxYUXVnNTmzKqNlmj9Tp04x+ZQKWk/uFKvta5HGNDl1p1P1uFs64d5/7WrJsXUYY
-         2THg==
-In-Reply-To: <20120427113841.GB3514-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=JzlwyUi7ThudR+T0wi6wZClBGXkAMc4KB6a0hRWnCKA=;
+        b=ElIRBLfCZzzAiN67DsnNPDgy3WwQQ/ciXpNN6TUcJXRjPa8VI+5uGvjNgdtgrpiQEx
+         RqCvIYq0tiOXFZQleADppmPcqUbCu08H7P0pJoIgcgnXTwLnO2fIw5e9V+pBqIR945/V
+         2i+oEZguK62qXNeAYPqwl245ZyFjX+w1nEfuhUNWNNmINt2yXuXwubYfQExErw1ZZcGh
+         einU+qAxA3ysvByE4tyYHCI0gCqjusOsC/HpzKwqCEQBiMpWh4OU6K42NxJ2kWVnQGO8
+         36uMocJGo6Rx+82+PzEh1SHoCu6qWtKBd1IsGHcwn+JwYZSLgfxl2MK911kR46uE7yQ+
+         JFIA==
+Content-Disposition: inline
+In-Reply-To: <4F9A327A.6050409-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Fri, 27 Apr 2012, Frederic Weisbecker wrote:
+Hello,
 
-> > No, because memory is represented by mm_struct, not task_struct, so you 
-> > must charge to p->mm->owner to allow for moving threads amongst memcgs 
-> > later for memory.move_charge_at_immigrate.  You shouldn't be able to 
-> > charge two different memcgs for memory represented by a single mm.
+On Fri, Apr 27, 2012 at 02:45:30PM +0900, KAMEZAWA Hiroyuki wrote:
+> This is a v2 patch for preventing failure in memcg->pre_destroy().
+> With this patch, ->pre_destroy() will never return error code and
+> users will not see warning at rmdir(). And this work will simplify
+> memcg->pre_destroy(), largely.
 > 
-> The idea I had was more that only the memcg of the thread that does the allocation
-> is charged. But the problem is that this allocation can be later deallocated
-> from another thread. So probably charging the owner is indeed the only sane
-> way to go with user memory.
-> 
+> This patch is based on linux-next + hugetlb memory control patches.
 
-It's all really the same concept: if we want to move memory of a process, 
-willingly free memory in the process itself, or free memory of a process 
-by way of the oom killer, we need a way to do that for the entire process 
-so the accounting makes sense afterwards.  And since we have that 
-requirement for user memory, it makes sense that its consistent with slab 
-as well.  I don't think a thread of a process should be able to charge 
-slab to one memcg while its user memory is charged to another memcg.
+Ergh... can you please set up a git branch somewhere for review
+purposes?
+
+Thanks.
+
+-- 
+tejun
