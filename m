@@ -1,67 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC][PATCH 8/9 v2] cgroup: avoid creating new cgroup under a
- cgroup being destroyed
-Date: Sat, 28 Apr 2012 14:31:51 -0700
-Message-ID: <20120428213151.GA4586@mtj.dyndns.org>
-References: <4F9A327A.6050409@jp.fujitsu.com>
- <4F9A36DE.30301@jp.fujitsu.com>
- <20120427204035.GN26595@google.com>
- <CABEgKgrJ68wU-L17zwN4_htX948TNFnLVgts=hFeY7QG3etwCA@mail.gmail.com>
- <20120428020003.GA26573@mtj.dyndns.org>
- <CABEgKgpPXPu3L6oS6+2+dZmcPS=t-ZR7PnCvm0mo8UFeXPHDog@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFD/RFC v2] event about group change
+Date: Sat, 28 Apr 2012 14:41:31 -0700
+Message-ID: <20120428214131.GB4586@mtj.dyndns.org>
+References: <4F98E4E5.6020602@samsung.com>
+ <4F98E57E.1040201@samsung.com>
+ <20120427223455.GU26595@google.com>
+ <4F9B82E1.3070602@samsung.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=MfDQ3OklIrsMnWpYFS7YUNyqBAhCLS3BYzp1QkaO0A0=;
-        b=yxlv0kTQcohm7P1axCUweQ8qsa59urxMN9yB/Qa6IIKNXfbXo4DulqBkryML/MoU+V
-         aByavHatxYzuj2o0upgk4Hs1mfhyvb1ADqwOcpL0mAYzeB4rQGclgOdOBYCa+GZRCQH7
-         xw7Y51hNM/OaB5dzw8B2HFqbcpfn1fK30dcrjEIsi+7zlcim6ezbunRYzH/1p8d69gyM
-         JGNEmSbGRqZQtAljCAOmXIyayQ7YIcPR3fIctnfgdZ+ySHFIIBcCLNjnRrVdLAKq+0/1
-         SYWjy0kx4+tBApwG0vO00VnGfjaqQY200FdDekRxIdkZ+JX8/t5DS/qQsd8566I/pweo
-         fMqQ==
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=io7EzCs4s+YCSa0H4DR2ocx8mfOEHi28Qzwc3BcKaSQ=;
+        b=PQTRoJKOmoypXXw4l1XQltCnTWet7RUJhifBbcxmX1MhHTxZE4hxyQ5LSn3jCImtAn
+         O0G131avTOSPAzFCrSHH/Q80qloLea8Qb0PoQZFHRxLZ5TPL4mF44NYG9muBewR5GTBd
+         gXXmOzz7Q30yiXIl1hywE0HMPy/FpHyGUWCvNLLrrcLXsA41zovyvvEXIar3VdKGk8hI
+         oR/dhzkYtgXwM6vbXo6kvpWaUrmbNv8ohYpYd7gpIU5qnmm9knAymujW5QXNB0iY+wU4
+         mfemHF5zAPR1OSMYu+Ze5EmGWa6yhbFjfwe6S2P4xRkPriWgSlqzsixMj3AUuPoFROGz
+         r8Kg==
 Content-Disposition: inline
-In-Reply-To: <CABEgKgpPXPu3L6oS6+2+dZmcPS=t-ZR7PnCvm0mo8UFeXPHDog@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <4F9B82E1.3070602-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 
-Hello, KAME.
+Hello,
 
-On Sat, Apr 28, 2012 at 06:31:38PM +0900, Hiroyuki Kamezawa wrote:
-> > So, IMHO, just making pre_destroy() clean up its own charges and
-> > always returning 0 is enough. =A0There's no need to fix up old
-> > non-critical race condition at this point in the patch stream. =A0cgr=
-oup
-> > rmdir simplification will make them disappear anyway.
+On Sat, Apr 28, 2012 at 09:40:49AM +0400, Alexander Nikiforov wrote:
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
 >
-> So, hmm, ok. I'll drop patch 7 & 8. memcg may return -EBUSY in very ver=
-y
-> race case but users will not see it in the most case.
-> I'll fix limit, move-charge and use_hierarchy problem first.
+> About for-3.5 - sure. I'll do it. Sorry, but what is SOB? :)
 
-IIUC, memcg can just return 0 when child creation races against
-pre_destroy().  cgroup will retry if child exists after pre_destroy()
-completion.  If child comes and goes before cgroup checks its
-existence, some charges may be lost but that race already exists and
-it will be gone once the retry logic is removed.  Also, returning
--errno will trigger WARN_ON() w/o the legacy behavior flag.
+Signed-off-by tag.  Sorry about the abbreviation.
 
-Thank you very much.
+> >Also, can you please cc fsnotify people so that they can go over the
+> >new usage?
+>
+> Done. But unfortunately mail from my box not reach Li Zefan. Routing loop.
 
---=20
+His new mail address is lizefan-hv44wF8Li92Xj1p+fO2waQ@public.gmane.org
+
+> >>@@ -179,6 +179,8 @@ struct cgroup {
+> >>  	struct cgroup *parent;		/* my parent */
+> >>  	struct dentry __rcu *dentry;	/* cgroup fs entry, RCU protected */
+> >>
+> >>+	struct dentry *tasks_dentry;	/* "tasks" dentry */
+> >Urgh... not the prettiest but I suppose it's necessary.  It will
+> >probably be better to point to cfent instead.
+>
+> Are you talking about struct cftype. If yes, I think for now put
+> tasks_dentry into cgroup better. But if we can take dentry directly
+> from cftype (look on this, for now I have no idea how can I do it)
+> it will be of course better. If we can't take, we will have pointer
+> to every file inside cgroup. Since for memcg we have different event
+> approach, I don't think this proper way.
+
+If you look at cgroup/for-3.5 branch, there's new entry named struct
+cfent representing each instance of the file which has a pointer to
+the matching dentry.
+
+> >>+{
+> >>+	struct cgroupfs_root *root;
+> >>+	struct inode	*d_inode;
+> >>+	struct cgroup	*cgrp;
+> >What are the locking rules?
+>
+> fsnotify_cgroup() called inside cgroup_lock(), is it not sufficient??
+
+I was hoping for lockdep_assert_held() annotation. :)
+
+> >Wouldn't it be better to make cgroup_add_file() return the created cft
+> >and let the caller handle the tasks special case?  Also, why use 1/0
+> >for boolean values instead of true/false?
+>
+> How can I understand that this cft from tasks, only with strcmp with
+> name. Don't think this is the best way, but my way ugly too.
+> About 1/0 try to write on current way, just made it like run_callbacks
+
+I meant separating out "task" cftype entry and creating it separately
+using a function returning the created cfent and storing it.  Instead
+of putting the special logic inside file creation function.
+
+Thanks.
+
+-- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
-.ca/
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
