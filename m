@@ -1,145 +1,93 @@
-From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [RFD/RFC v2] event about group change
-Date: Sat, 28 Apr 2012 09:40:49 +0400
-Message-ID: <4F9B82E1.3070602@samsung.com>
-References: <4F98E4E5.6020602@samsung.com> <4F98E57E.1040201@samsung.com>
- <20120427223455.GU26595@google.com>
+From: Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>
+Subject: Re: [RFC][PATCH 8/9 v2] cgroup: avoid creating new cgroup under a
+ cgroup being destroyed
+Date: Sat, 28 Apr 2012 18:31:38 +0900
+Message-ID: <CABEgKgpPXPu3L6oS6+2+dZmcPS=t-ZR7PnCvm0mo8UFeXPHDog@mail.gmail.com>
+References: <4F9A327A.6050409@jp.fujitsu.com>
+	<4F9A36DE.30301@jp.fujitsu.com>
+	<20120427204035.GN26595@google.com>
+	<CABEgKgrJ68wU-L17zwN4_htX948TNFnLVgts=hFeY7QG3etwCA@mail.gmail.com>
+	<20120428020003.GA26573@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20120427223455.GU26595-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=G0oO4Bqm9sDrhZOTD3M1RswSwuR23FMibhMGDNrwlyU=;
+        b=jVkAdS9QevH5vGHppx9tqGdQm0JoqPYSHGuLAwHa+10yYXXmPGMIF470Y7E9AdC00c
+         0dGAe6Nvpmlz7AbIcfrqigZsBhz/BV6P4icUhK/6vVk8+uBiUvHtl0EWn57mIzE2pQis
+         /kel8Mij/NhShj1TwH9oYW20HAxvIJCjN9NWu4GX7puVAoQ4tbqiMMA+RHqMpc3H/vGt
+         HhQ2XQV0vnzdQ5t6ogE9Ltf9v535148XwFAj+jYd1eDv0hzwybg3H0qOlKIcNbyHjVQF
+         1DsJU7v98ttfM0bdBMBQbWCSRY0vIPxYiyLyq11+x2zTwRXX8zMnPSecdXr2anW2Lkuv
+         Br3Q==
+In-Reply-To: <20120428020003.GA26573@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Tejun Heo <tj@kernel.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Hi,
-
-Tejun thx for your reply. I need to have agreement with 
-cgroup_add_file() and I'll post v3. Comments on your comments below
-
-On 04/28/2012 02:34 AM, Tejun Heo wrote:
-> Hello,
+On Sat, Apr 28, 2012 at 11:00 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hi, KAME.
 >
-> I like it generally (well I suggested it so...) but can you please
-> post a proper patch with SOB against cgroup/for-3.5 branch?
->
->    git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
-About for-3.5 - sure. I'll do it. Sorry, but what is SOB? :)
-> Also, can you please cc fsnotify people so that they can go over the
-> new usage?
-Done. But unfortunately mail from my box not reach Li Zefan. Routing loop.
-
->> @@ -179,6 +179,8 @@ struct cgroup {
->>   	struct cgroup *parent;		/* my parent */
->>   	struct dentry __rcu *dentry;	/* cgroup fs entry, RCU protected */
+> On Sat, Apr 28, 2012 at 09:20:52AM +0900, Hiroyuki Kamezawa wrote:
+>> What I thought was...
+>> Assume a memory cgoup A, with use_hierarchy=3D=3D1.
 >>
->> +	struct dentry *tasks_dentry;	/* "tasks" dentry */
-> Urgh... not the prettiest but I suppose it's necessary.  It will
-> probably be better to point to cfent instead.
-Are you talking about struct cftype. If yes, I think for now put 
-tasks_dentry into cgroup better. But if we can take dentry directly from 
-cftype (look on this, for now I have no idea how can I do it)
-it will be of course better. If we can't take, we will have pointer to 
-every file inside cgroup. Since for memcg we have different event 
-approach, I don't think this proper way.
->> +static inline void fsnotify_cgroup(struct task_struct *tsk, __u32 mask)
-> No need to make it inline.
-Ok
->> +{
->> +	struct cgroupfs_root *root;
->> +	struct inode	*d_inode;
->> +	struct cgroup	*cgrp;
-> What are the locking rules?
-fsnotify_cgroup() called inside cgroup_lock(), is it not sufficient??
->> +	for_each_active_root(root) {
->> +		cgrp = task_cgroup_from_root(tsk, root);
->> +		d_inode = cgrp->tasks_dentry->d_inode;
->> +
->> +		fsnotify_parent(NULL, cgrp->tasks_dentry, mask);
->> +		fsnotify(d_inode, mask, d_inode, FSNOTIFY_EVENT_INODE, NULL, 0);
-> The interface is rather weird.  It's called fsnotify_cgroup() and it
-> always generates the requested event on its tasks file?
->
-yes
->>   int cgroup_add_file(struct cgroup *cgrp,
->>   		       struct cgroup_subsys *subsys,
->> -		       const struct cftype *cft)
->> +		       const struct cftype *cft,
->> +		       int tasks)
-> Ugh... this is ugly.
-yes. I wrote about this. But run_callback in do_exit()->cgroup_exit() 
-works on this way.
->>   {
->>   	struct dentry *dir = cgrp->dentry;
->>   	struct dentry *dentry;
->> @@ -2629,6 +2649,12 @@ int cgroup_add_file(struct cgroup *cgrp,
->>   		dput(dentry);
->>   	} else
->>   		error = PTR_ERR(dentry);
->> +
->> +	if(tasks) {
->            ^ missing space
->
->> +		pr_warn("%s(): cft name: %s\n", __func__, name);
-> Why pr_warn?
-sorry, I sent this patch RFC, forgot to clean up.
->
->> +		cgrp->tasks_dentry = dentry;
->> +	}
->> +
->>   	return error;
->>   }
->>   EXPORT_SYMBOL_GPL(cgroup_add_file);
->> @@ -2640,7 +2666,7 @@ int cgroup_add_files(struct cgroup *cgrp,
->>   {
->>   	int i, err;
->>   	for (i = 0; i<  count; i++) {
->> -		err = cgroup_add_file(cgrp, subsys,&cft[i]);
->> +		err = cgroup_add_file(cgrp, subsys,&cft[i], 0);
->>   		if (err)
->>   			return err;
->>   	}
->> @@ -3642,12 +3668,16 @@ static int cgroup_populate_dir(struct cgroup *cgrp)
->>   	/* First clear out any existing files */
->>   	cgroup_clear_directory(cgrp->dentry);
+>> 1. =A0thread:0 =A0 start calling pre->destroy of cgroup A
+>> 2. =A0thread:0 =A0 it sometimes calls cond_resched or other sleep functi=
+ons.
+>> 3. =A0thread:1 =A0 create a cgroup B under "A"
+>> 4. =A0thread:1 =A0 attach a thread X to cgroup A/B
+>> 5. =A0res_counter of A charged up. but pre_destroy() can't find what hap=
+pens
+>> =A0 =A0 because it scans LRU of A.
 >>
->> -	err = cgroup_add_files(cgrp, NULL, files, ARRAY_SIZE(files));
->> +	err = cgroup_add_file(cgrp, NULL, files, 1);
->> +	if (err)
->> +		return err;
->> +
->> +	err = cgroup_add_files(cgrp, NULL, files + 1, ARRAY_SIZE(files) - 1);
->>   	if (err<  0)
->>   		return err;
+>> So, we have -EBUSY now. I considered some options to fix this.
 >>
->>   	if (cgrp == cgrp->top_cgroup) {
->> -		if ((err = cgroup_add_file(cgrp, NULL,&cft_release_agent))<  0)
->> +		if ((err = cgroup_add_file(cgrp, NULL,&cft_release_agent, 0))<  0)
->>   			return err;
->>   	}
-> Wouldn't it be better to make cgroup_add_file() return the created cft
-> and let the caller handle the tasks special case?  Also, why use 1/0
-> for boolean values instead of true/false?
-How can I understand that this cft from tasks, only with strcmp with 
-name. Don't think this is the best way, but my way ugly too.
-About 1/0 try to write on current way, just made it like run_callbacks
->> @@ -4480,6 +4510,7 @@ static const struct file_operations proc_cgroupstats_operations = {
->>    */
->>   void cgroup_fork(struct task_struct *child)
->>   {
->> +
-> Why the new line?
-Forgot to cleanup
+>> option 1) just return 0 instead of -EBUSY when pre_destroy() finds a
+>> task or a child.
+>>
+>> There is a race....even if we return 0 here and expects cgroup code
+>> can catch it,
+>> the thread or a child we found may be moved to other cgroup before we ch=
+eck it
+>> in cgroup's final check.
+>> In that case, the cgroup will be freed before full-ack of
+>> pre_destory() and the charges
+>> will be lost.
 >
-> Thanks.
+> So, cgroup code won't proceed with rmdir if children are created
+> inbetween and note that the race condition of lost charge you
+> described above existed before this change - ie. new cgroup could be
+> created after pre_destroy() is complete.
 >
+> The current cgroup rmdir code is transitional. =A0It has to support both
+> retrying and non-retrying pre_destroy()s and that means we can't mark
+> the cgroup DEAD before starting invoking pre_destroy(); however, we
+> can do that once memcg's pre_destroy() is converted which will also
+> remove all the WAIT_ON_RMDIR mechanism and the above described race.
+>
+> There really isn't much point in trying to make the current cgroup
+> rmdir behave perfectly when the next step is removing all the fixed up
+> parts.
+>
+> So, IMHO, just making pre_destroy() clean up its own charges and
+> always returning 0 is enough. =A0There's no need to fix up old
+> non-critical race condition at this point in the patch stream. =A0cgroup
+> rmdir simplification will make them disappear anyway.
+>
+So, hmm, ok. I'll drop patch 7 & 8. memcg may return -EBUSY in very very
+race case but users will not see it in the most case.
+I'll fix limit, move-charge and use_hierarchy problem first.
+Thanks,
+-Kame
 
-Thanks.
-
--- 
-Best regards,
-      Alex Nikiforov,
-      Mobile SW, Advanced Software Group,
-      Moscow R&D center, Samsung Electronics
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
