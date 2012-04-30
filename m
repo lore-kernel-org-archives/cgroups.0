@@ -1,11 +1,9 @@
-From: Ying Han <yinghan@google.com>
-Subject: Re: [RFC][PATCH 9/9 v2] memcg: never return error at pre_destroy()
-Date: Mon, 30 Apr 2012 10:02:54 -0700
-Message-ID: <CALWz4ix_rVpgzDme06f2U44EaqWcZKCEb0ueByh1-dSmbaO1jA@mail.gmail.com>
-References: <4F9A327A.6050409@jp.fujitsu.com>
-	<4F9A375D.7@jp.fujitsu.com>
-	<CALWz4iyiM-CFgVaHiE1Lgd1ZwJzHwY3tx9XX6HeDPUV_wVPAtQ@mail.gmail.com>
-	<CABEgKgrXqbF8XBc6vHa2b5KQe9E7_+WODvq3hE0vaT0Eyxo5=w@mail.gmail.com>
+From: Suleiman Souhlal <suleiman@google.com>
+Subject: Re: [PATCH 09/23] kmem slab accounting basic infrastructure
+Date: Mon, 30 Apr 2012 12:33:53 -0700
+Message-ID: <CABCjUKBCqBWXuyzx73y3sekNqAKpYqAhRjQDtSWF5o7qUbC-RA@mail.gmail.com>
+References: <1334959051-18203-1-git-send-email-glommer@parallels.com>
+	<1334959051-18203-10-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
@@ -13,119 +11,172 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=2iXMeZ427EqgjF3KDi8xn/hSF0SjitqrqfJVeB1fy5w=;
-        b=SOgO2R2KfWtYlX/dNzUB6/PtfjiJB0QUJwxRuO9o0DoqakoGGFeQAPVlBcQhOrR6OD
-         64WeJlSg57BqfnuYHVh5BtvKZm/BVE4b7W+Xh/F1CUJR9lIyqRc7E4DmBCux0cHNYRWX
-         +igCW/SSUh35e5CKjWhiKEjl5PSl0CgIw9vfhB0X2YJaTfkUDwXzulMUkCvwEkQ35Pgt
-         ty/BCODlsiSEeUSeu9PDhYbf/intLdJzTMEg5eO9ZRqH6NaqqVRw+RZao5DtzzPmkSIW
-         jeE+J88L8qB8iJRRvNBg7VmnZ4Gj75ICNbdk6RctOGXkYqYIIyOvf4xM9osVDwcHxq6S
-         8Pzw==
-In-Reply-To: <CABEgKgrXqbF8XBc6vHa2b5KQe9E7_+WODvq3hE0vaT0Eyxo5=w@mail.gmail.com>
+        bh=j0D82YvS64E8ExcyAGdlElezhO+zw+2COxvjrJHod9g=;
+        b=W8aL1cxW0op7+Jg6ghioB/u48o7WlUP+Y8hoYfFn/OF9LskTiEmva8J2VxjAziPpEX
+         5uw91SqT5SewI8HVOQjz/WsksDcHVaceIDKFWEYiPzN9lstF3WNaWP7msbfnU04JN8f+
+         oDIk1GlWx+XaJWEaGStKax74oOu+Gj4kinFfWZXVoZOFNxBWh8oi30kQPXoLFqGZJI+b
+         6OBF4Wv7O/9VirhscDxeDok22H09odtOJ2v0BW8yQuTH+tMZE7IGAuLnWkmb08Hz8Fai
+         IIgH2dgjVnKIxwFapCZV+QAHy8GcOjKCxA+mb90WGnPx6XpuRITLJ7YOdIlT34lTqIHM
+         33+A==
+In-Reply-To: <1334959051-18203-10-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Greg Thelen <gthelen@google.com>
 
-On Fri, Apr 27, 2012 at 5:25 PM, Hiroyuki Kamezawa
-<kamezawa.hiroyuki@gmail.com> wrote:
-> On Sat, Apr 28, 2012 at 6:28 AM, Ying Han <yinghan@google.com> wrote:
->> On Thu, Apr 26, 2012 at 11:06 PM, KAMEZAWA Hiroyuki
->> <kamezawa.hiroyu@jp.fujitsu.com> wrote:
->>> When force_empty() called by ->pre_destroy(), no memory reclaim happens
->>> and it doesn't take very long time which requires signal_pending() chec=
-k.
->>> And if we return -EINTR from pre_destroy(), cgroup.c show warning.
->>>
->>> This patch removes signal check in force_empty(). By this, ->pre_destro=
-y()
->>> returns success always.
->>>
->>> Note: check for 'cgroup is empty' remains for force_empty interface.
->>>
->>> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
->>> ---
->>> =A0mm/hugetlb.c =A0 =A0| =A0 10 +---------
->>> =A0mm/memcontrol.c | =A0 14 +++++---------
->>> =A02 files changed, 6 insertions(+), 18 deletions(-)
->>>
->>> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
->>> index 4dd6b39..770f1642 100644
->>> --- a/mm/hugetlb.c
->>> +++ b/mm/hugetlb.c
->>> @@ -1922,20 +1922,12 @@ int hugetlb_force_memcg_empty(struct cgroup *cg=
-roup)
->>> =A0 =A0 =A0 =A0int ret =3D 0, idx =3D 0;
->>>
->>> =A0 =A0 =A0 =A0do {
->>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* see memcontrol.c::mem_cgroup_force_emp=
-ty() */
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgroup)
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|| !list_empty(&cgroup->=
-children)) {
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If the task doing the cgroup_rmdir g=
-ot a signal
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we don't really need to loop till th=
-e hugetlb resource
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* usage become zero.
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current)) {
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0for_each_hstate(h) {
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock(&hugetlb_lock)=
-;
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0list_for_each_entry(page=
-, &h->hugepage_activelist, lru) {
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index 2715223..ee350c5 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -3852,8 +3852,6 @@ static int mem_cgroup_force_empty_list(struct mem=
-_cgroup *memcg,
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc =3D lookup_page_cgroup(page);
->>>
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_move_parent(page, pc,=
- memcg, GFP_KERNEL);
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM || ret =3D=3D -EIN=
-TR)
->>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->>>
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ret =3D=3D -EBUSY || ret =3D=3D -EIN=
-VAL) {
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* found lock contention=
- or "pc" is obsolete. */
->>> @@ -3863,7 +3861,7 @@ static int mem_cgroup_force_empty_list(struct mem=
-_cgroup *memcg,
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0busy =3D NULL;
->>> =A0 =A0 =A0 =A0}
->>>
->>> - =A0 =A0 =A0 if (!ret && !list_empty(list))
->>> + =A0 =A0 =A0 if (!loop)
->>
->> This looks a bit strange to me... why we make the change ?
->>
-> Ah, I should this move to an independet patch.
-> Because we don't have -ENOMEM path to exit loop, the return value of
-> this function
-> is
-> =A00 (if loop !=3D0 this means lru is empty under the lru lock )
-> =A0-EBUSY (if loop=3D=3D 0)
-
+On Fri, Apr 20, 2012 at 2:57 PM, Glauber Costa <glommer@parallels.com> wrot=
+e:
+> This patch adds the basic infrastructure for the accounting of the slab
+> caches. To control that, the following files are created:
 >
-> I'll move this part out as an independent clean up patch
+> =A0* memory.kmem.usage_in_bytes
+> =A0* memory.kmem.limit_in_bytes
+> =A0* memory.kmem.failcnt
+> =A0* memory.kmem.max_usage_in_bytes
+>
+> They have the same meaning of their user memory counterparts. They reflec=
+t
+> the state of the "kmem" res_counter.
+>
+> The code is not enabled until a limit is set. This can be tested by the f=
+lag
+> "kmem_accounted". This means that after the patch is applied, no behavior=
+al
+> changes exists for whoever is still using memcg to control their memory u=
+sage.
+>
+> We always account to both user and kernel resource_counters. This effecti=
+vely
+> means that an independent kernel limit is in place when the limit is set
+> to a lower value than the user memory. A equal or higher value means that=
+ the
+> user limit will always hit first, meaning that kmem is effectively unlimi=
+ted.
+>
+> People who want to track kernel memory but not limit it, can set this lim=
+it
+> to a very high number (like RESOURCE_MAX - 1page - that no one will ever =
+hit,
+> or equal to the user memory)
+>
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+> =A0mm/memcontrol.c | =A0 80 +++++++++++++++++++++++++++++++++++++++++++++=
++++++++++-
+> =A01 files changed, 79 insertions(+), 1 deletions(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2810228..36f1e6b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -252,6 +252,10 @@ struct mem_cgroup {
+> =A0 =A0 =A0 =A0};
+>
+> =A0 =A0 =A0 =A0/*
+> + =A0 =A0 =A0 =A0* the counter to account for kernel memory usage.
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 struct res_counter kmem;
+> + =A0 =A0 =A0 /*
+> =A0 =A0 =A0 =A0 * Per cgroup active and inactive list, similar to the
+> =A0 =A0 =A0 =A0 * per zone LRU lists.
+> =A0 =A0 =A0 =A0 */
+> @@ -266,6 +270,7 @@ struct mem_cgroup {
+> =A0 =A0 =A0 =A0 * Should the accounting and control be hierarchical, per =
+subtree?
+> =A0 =A0 =A0 =A0 */
+> =A0 =A0 =A0 =A0bool use_hierarchy;
+> + =A0 =A0 =A0 bool kmem_accounted;
+>
+> =A0 =A0 =A0 =A0bool =A0 =A0 =A0 =A0 =A0 =A0oom_lock;
+> =A0 =A0 =A0 =A0atomic_t =A0 =A0 =A0 =A0under_oom;
+> @@ -378,6 +383,7 @@ enum res_type {
+> =A0 =A0 =A0 =A0_MEM,
+> =A0 =A0 =A0 =A0_MEMSWAP,
+> =A0 =A0 =A0 =A0_OOM_TYPE,
+> + =A0 =A0 =A0 _KMEM,
+> =A0};
+>
+> =A0#define MEMFILE_PRIVATE(x, val) =A0 =A0 =A0 =A0(((x) << 16) | (val))
+> @@ -1470,6 +1476,10 @@ done:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0res_counter_read_u64(&memcg->memsw, RES_US=
+AGE) >> 10,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0res_counter_read_u64(&memcg->memsw, RES_LI=
+MIT) >> 10,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0res_counter_read_u64(&memcg->memsw, RES_FA=
+ILCNT));
+> + =A0 =A0 =A0 printk(KERN_INFO "kmem: usage %llukB, limit %llukB, failcnt=
+ %llu\n",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 res_counter_read_u64(&memcg->kmem, RES_USAG=
+E) >> 10,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 res_counter_read_u64(&memcg->kmem, RES_LIMI=
+T) >> 10,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 res_counter_read_u64(&memcg->kmem, RES_FAIL=
+CNT));
+> =A0}
+>
+> =A0/*
+> @@ -3914,6 +3924,11 @@ static ssize_t mem_cgroup_read(struct cgroup *cont=
+, struct cftype *cft,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0else
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0val =3D res_counter_read_u=
+64(&memcg->memsw, name);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> + =A0 =A0 =A0 case _KMEM:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 val =3D res_counter_read_u64(&memcg->kmem, =
+name);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> +#endif
+> =A0 =A0 =A0 =A0default:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0BUG();
+> =A0 =A0 =A0 =A0}
+> @@ -3951,8 +3966,26 @@ static int mem_cgroup_write(struct cgroup *cont, s=
+truct cftype *cft,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (type =3D=3D _MEM)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_resize_=
+limit(memcg, val);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 else
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 else if (type =3D=3D _MEMSWAP)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_resize_=
+memsw_limit(memcg, val);
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 else if (type =3D=3D _KMEM) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D res_counter_set_lim=
+it(&memcg->kmem, val);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* Once enabled, can't be=
+ disabled. We could in theory
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* disable it if we haven=
+'t yet created any caches, or
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* if we can shrink them =
+all to death.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* But it is not worth th=
+e trouble
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!memcg->kmem_accounted =
+&& val !=3D RESOURCE_MAX)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 memcg->kmem=
+_accounted =3D true;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> +#endif
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 else
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0case RES_SOFT_LIMIT:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D res_counter_memparse_write_strateg=
+y(buffer, &val);
 
-Thanks ~
+Why is RESOURCE_MAX special?
 
---Ying
-
-> thanks,
-> -kame
+-- Suleiman
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
