@@ -1,51 +1,137 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH RESEND] memcg: Free spare array to avoid memory leak
-Date: Tue, 1 May 2012 14:03:14 -0700
-Message-ID: <20120501140314.1d7312fb.akpm@linux-foundation.org>
-References: <1334825690-9065-1-git-send-email-handai.szj@taobao.com>
+From: Suleiman Souhlal <suleiman@google.com>
+Subject: Re: [RFC][PATCH 9/9 v2] memcg: never return error at pre_destroy()
+Date: Tue, 1 May 2012 15:28:47 -0700
+Message-ID: <CABCjUKBhNkGf2QHzONMod3HmHgS-HxB5hUxpfJFHUG-eBkYBRw@mail.gmail.com>
+References: <4F9A327A.6050409@jp.fujitsu.com>
+	<4F9A375D.7@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1334825690-9065-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=yY0TzMgR4aCK6AeWls1lodTahLxEn7GC6879nAHQaPE=;
+        b=md5yQ9ONRt7AKf3xtFg/962o+zUFwRo3ACuRKdRgnU/90XuRoXC6EobcFeTvIDl9Zi
+         j2xi4oq9vUBwEUaM9OJhGYlLCKJvQkhnDDUv2fqnTKCmJqgi/D3PdHRX07Mk0nD4E/Wk
+         jA2Z/EcE9uEmS8NTyBrfTQoT5UmXkjtFaxHFoQr2RK7w8vQK0FeSakcfQG/FfBzZBxwi
+         hyEsPLU3/7wuqrh7UVlYyIZII3WFt0dgfl5tVRaOQQvVpg38Pz8VUD+T0Qt6Hdl+H3+R
+         kd77WzM8ctiqRxLMpsmmT6iTRcgG+XYNhkPbS96KBmI7zpqEkKVp+DKUtChwiwalAMVz
+         lNoA==
+In-Reply-To: <4F9A375D.7@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyuki@gmail.com
 
-On Thu, 19 Apr 2012 16:54:50 +0800
-Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-
-> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-> 
-> When the last event is unregistered, there is no need to keep the spare
-> array anymore. So free it to avoid memory leak.
-
-How serious is this leak?  Is there any way in which it can be used to
-consume unbounded amounts of memory?
-
+2012/4/26 KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>:
+> When force_empty() called by ->pre_destroy(), no memory reclaim happens
+> and it doesn't take very long time which requires signal_pending() check.
+> And if we return -EINTR from pre_destroy(), cgroup.c show warning.
+>
+> This patch removes signal check in force_empty(). By this, ->pre_destroy(=
+)
+> returns success always.
+>
+> Note: check for 'cgroup is empty' remains for force_empty interface.
+>
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+> =A0mm/hugetlb.c =A0 =A0| =A0 10 +---------
+> =A0mm/memcontrol.c | =A0 14 +++++---------
+> =A02 files changed, 6 insertions(+), 18 deletions(-)
+>
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index 4dd6b39..770f1642 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -1922,20 +1922,12 @@ int hugetlb_force_memcg_empty(struct cgroup *cgro=
+up)
+> =A0 =A0 =A0 =A0int ret =3D 0, idx =3D 0;
+>
+> =A0 =A0 =A0 =A0do {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* see memcontrol.c::mem_cgroup_force_empty=
+() */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgroup)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|| !list_empty(&cgroup->ch=
+ildren)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If the task doing the cgroup_rmdir got=
+ a signal
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we don't really need to loop till the =
+hugetlb resource
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* usage become zero.
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current)) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0for_each_hstate(h) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock(&hugetlb_lock);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0list_for_each_entry(page, =
+&h->hugepage_activelist, lru) {
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2715223..ee350c5 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -4412,6 +4412,12 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
->  swap_buffers:
->  	/* Swap primary and spare array */
->  	thresholds->spare = thresholds->primary;
-> +	/* If all events are unregistered, free the spare array */
-> +	if (!new) {
-> +		kfree(thresholds->spare);
-> +		thresholds->spare = NULL;
-> +	}
-> +
->  	rcu_assign_pointer(thresholds->primary, new);
->  
+> @@ -3852,8 +3852,6 @@ static int mem_cgroup_force_empty_list(struct mem_c=
+group *memcg,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc =3D lookup_page_cgroup(page);
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_move_parent(page, pc, m=
+emcg, GFP_KERNEL);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM || ret =3D=3D -EINTR=
+)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ret =3D=3D -EBUSY || ret =3D=3D -EINVA=
+L) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* found lock contention o=
+r "pc" is obsolete. */
+> @@ -3863,7 +3861,7 @@ static int mem_cgroup_force_empty_list(struct mem_c=
+group *memcg,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0busy =3D NULL;
+> =A0 =A0 =A0 =A0}
+>
+> - =A0 =A0 =A0 if (!ret && !list_empty(list))
+> + =A0 =A0 =A0 if (!loop)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EBUSY;
+> =A0 =A0 =A0 =A0return ret;
+> =A0}
+> @@ -3893,11 +3891,12 @@ static int mem_cgroup_force_empty(struct mem_cgro=
+up *memcg, bool free_all)
+> =A0move_account:
+> =A0 =A0 =A0 =A0do {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* This never happens when this is called=
+ by ->pre_destroy().
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* But we need to take care of force_empt=
+y interface.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgrp) || !list_empty=
+(&cgrp->children))
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
 
-The resulting code is really quite convoluted.  Try to read through it
-and follow the handling of ->primary and ->spare.  Head spins.
+Are you sure this never happens when called by ->pre_destroy()?
+Can't a task still get attached to the cgroup while ->pre_destroy() is runn=
+ing?
 
-What is the protocol here?  If ->primary is NULL then ->spare must also
-be NULL?
+At least, I don't see anything in the cgroup code that prevents
+someone from newly attaching a task at that point.
+In fact, there is code that seems to handle the case when someone
+attached to the cgroup after pre_destroy() has run: See the
+cgroup_wakeup_rmdir_waiter() call in cgroup_attach_task().
 
+-- Suleiman
 
-I'll apply the patch, although I don't (yet) have sufficient info to
-know which kernels it should be applied to.  Perhaps someone could
-revisit this code and see if it can be made more straightforward.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
