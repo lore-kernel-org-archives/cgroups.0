@@ -1,133 +1,400 @@
-From: Suleiman Souhlal <suleiman@google.com>
-Subject: Re: [RFC][PATCH 9/9 v2] memcg: never return error at pre_destroy()
-Date: Tue, 1 May 2012 15:28:47 -0700
-Message-ID: <CABCjUKBhNkGf2QHzONMod3HmHgS-HxB5hUxpfJFHUG-eBkYBRw@mail.gmail.com>
-References: <4F9A327A.6050409@jp.fujitsu.com>
-	<4F9A375D.7@jp.fujitsu.com>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
+Date: Tue, 1 May 2012 20:20:42 -0400
+Message-ID: <CAP=VYLqgaCabQGDVgUXnCwKCZHtz0nWxpm_a6Cgz_ciMzGe9gQ@mail.gmail.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=yY0TzMgR4aCK6AeWls1lodTahLxEn7GC6879nAHQaPE=;
-        b=md5yQ9ONRt7AKf3xtFg/962o+zUFwRo3ACuRKdRgnU/90XuRoXC6EobcFeTvIDl9Zi
-         j2xi4oq9vUBwEUaM9OJhGYlLCKJvQkhnDDUv2fqnTKCmJqgi/D3PdHRX07Mk0nD4E/Wk
-         jA2Z/EcE9uEmS8NTyBrfTQoT5UmXkjtFaxHFoQr2RK7w8vQK0FeSakcfQG/FfBzZBxwi
-         hyEsPLU3/7wuqrh7UVlYyIZII3WFt0dgfl5tVRaOQQvVpg38Pz8VUD+T0Qt6Hdl+H3+R
-         kd77WzM8ctiqRxLMpsmmT6iTRcgG+XYNhkPbS96KBmI7zpqEkKVp+DKUtChwiwalAMVz
-         lNoA==
-In-Reply-To: <4F9A375D.7@jp.fujitsu.com>
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:from:date
+         :x-google-sender-auth:message-id:subject:to:cc:content-type
+         :content-transfer-encoding;
+        bh=sSB4u5i9SQGcmu7QFJKyiRxBHauoupQvALjBmjOkXso=;
+        b=bKqb3SYeBuYe4jps78fqKXpCG/cvxWwidGWr1fto01bVR4HrVJALi8nXjdDJQaPAG3
+         ZYqMhfxn1aPRyt99xcOmLTSLZBY8qx0WOeKOfzKCn0Jnef+2efVCTmAf9Mgnfa/1TnRc
+         NvHpPZBMJBJkQn9b5uqe4lmD9clsqriFWFNJKv1LRxnmLxjXH5NJukVHn/4IUpr30Pfj
+         I6GXtLkexGHI/fpNgG5kt0QKbQ/uDdnVvDfyK6g9Ma17pF3/4zFJOZ0nqOkEvoRgOOhj
+         2raYE7toGPV8vAV526auOw7OCrqwSkrKxtOAieYuz+RiaufbCzyz0dBofvroHiW0Y7tS
+         zgwg==
+In-Reply-To: <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Han Ying <yinghan@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyuki@gmail.com
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-next@vger.kernel.org
 
-2012/4/26 KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>:
-> When force_empty() called by ->pre_destroy(), no memory reclaim happens
-> and it doesn't take very long time which requires signal_pending() check.
-> And if we return -EINTR from pre_destroy(), cgroup.c show warning.
+On Mon, Apr 16, 2012 at 6:44 AM, Aneesh Kumar K.V
+<aneesh.kumar@linux.vnet.ibm.com> wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 >
-> This patch removes signal check in force_empty(). By this, ->pre_destroy(=
-)
-> returns success always.
+> This patch implements a memcg extension that allows us to control HugeTLB
+> allocations via memory controller. The extension allows to limit the
+
+Hi Aneesh,
+
+This breaks linux-next on some arch because they don't have any
+HUGE_MAX_HSTATE in scope with the current #ifdef layout.
+
+The breakage is in sh4, m68k, s390, and possibly others.
+
+http://kisskb.ellerman.id.au/kisskb/buildresult/6228689/
+http://kisskb.ellerman.id.au/kisskb/buildresult/6228670/
+http://kisskb.ellerman.id.au/kisskb/buildresult/6228484/
+
+This is a commit in akpm's mmotm queue, which used to be here:
+
+http://userweb.kernel.org/~akpm/mmotm
+
+Of course the above is invalid since userweb.kernel.org is dead.
+I don't have a post-kernel.org break-in link handy and a quick
+search didn't give me one, but I'm sure you'll recognize the change.
+
+Thanks,
+Paul.
+--
+
+> HugeTLB usage per control group and enforces the controller limit during
+> page fault. Since HugeTLB doesn't support page reclaim, enforcing the lim=
+it
+> at page fault time implies that, the application will get SIGBUS signal i=
+f it
+> tries to access HugeTLB pages beyond its limit. This requires the applica=
+tion
+> to know beforehand how much HugeTLB pages it would require for its use.
 >
-> Note: check for 'cgroup is empty' remains for force_empty interface.
+> The charge/uncharge calls will be added to HugeTLB code in later patch.
+> Support for memcg removal will be added in later patches.
 >
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 > ---
-> =A0mm/hugetlb.c =A0 =A0| =A0 10 +---------
-> =A0mm/memcontrol.c | =A0 14 +++++---------
-> =A02 files changed, 6 insertions(+), 18 deletions(-)
+> =A0include/linux/hugetlb.h =A0 =A0| =A0 =A01 +
+> =A0include/linux/memcontrol.h | =A0 42 ++++++++++++++
+> =A0init/Kconfig =A0 =A0 =A0 =A0 =A0 =A0 =A0 | =A0 =A08 +++
+> =A0mm/hugetlb.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 | =A0 =A02 +-
+> =A0mm/memcontrol.c =A0 =A0 =A0 =A0 =A0 =A0| =A0132 ++++++++++++++++++++++=
+++++++++++++++++++++++
+> =A05 files changed, 184 insertions(+), 1 deletion(-)
 >
+> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+> index 46c6cbd..995c238 100644
+> --- a/include/linux/hugetlb.h
+> +++ b/include/linux/hugetlb.h
+> @@ -226,6 +226,7 @@ struct hstate *size_to_hstate(unsigned long size);
+> =A0#define HUGE_MAX_HSTATE 1
+> =A0#endif
+>
+> +extern int hugetlb_max_hstate;
+> =A0extern struct hstate hstates[HUGE_MAX_HSTATE];
+> =A0extern unsigned int default_hstate_idx;
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index f94efd2..1d07e14 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -448,5 +448,47 @@ static inline void sock_release_memcg(struct sock *s=
+k)
+> =A0{
+> =A0}
+> =A0#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+> +
+> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+> +extern int mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_page=
+s,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 struct mem_cgroup **ptr);
+> +extern void mem_cgroup_hugetlb_commit_charge(int idx, unsigned long nr_p=
+ages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0struct mem_cgroup *memcg,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0struct page *page);
+> +extern void mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_p=
+ages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0struct page *page);
+> +extern void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_=
+pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 struct mem_cgroup *memcg);
+> +
+> +#else
+> +static inline int
+> +mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0struct mem_cgroup **ptr)
+> +{
+> + =A0 =A0 =A0 return 0;
+> +}
+> +
+> +static inline void
+> +mem_cgroup_hugetlb_commit_charge(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct m=
+em_cgroup *memcg,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct p=
+age *page)
+> +{
+> + =A0 =A0 =A0 return;
+> +}
+> +
+> +static inline void
+> +mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct p=
+age *page)
+> +{
+> + =A0 =A0 =A0 return;
+> +}
+> +
+> +static inline void
+> +mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct =
+mem_cgroup *memcg)
+> +{
+> + =A0 =A0 =A0 return;
+> +}
+> +#endif =A0/* CONFIG_MEM_RES_CTLR_HUGETLB */
+> =A0#endif /* _LINUX_MEMCONTROL_H */
+>
+> diff --git a/init/Kconfig b/init/Kconfig
+> index 72f33fa..a3b5665 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -716,6 +716,14 @@ config CGROUP_PERF
+>
+> =A0 =A0 =A0 =A0 =A0Say N if unsure.
+>
+> +config MEM_RES_CTLR_HUGETLB
+> + =A0 =A0 =A0 bool "Memory Resource Controller HugeTLB Extension (EXPERIM=
+ENTAL)"
+> + =A0 =A0 =A0 depends on CGROUP_MEM_RES_CTLR && HUGETLB_PAGE && EXPERIMEN=
+TAL
+> + =A0 =A0 =A0 default n
+> + =A0 =A0 =A0 help
+> + =A0 =A0 =A0 =A0 Add HugeTLB management to memory resource controller. W=
+hen you
+> + =A0 =A0 =A0 =A0 enable this, you can put a per cgroup limit on HugeTLB =
+usage.
+> +
+> =A0menuconfig CGROUP_SCHED
+> =A0 =A0 =A0 =A0bool "Group CPU scheduler"
+> =A0 =A0 =A0 =A0default n
 > diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index 4dd6b39..770f1642 100644
+> index a3ac624..8cd89b4 100644
 > --- a/mm/hugetlb.c
 > +++ b/mm/hugetlb.c
-> @@ -1922,20 +1922,12 @@ int hugetlb_force_memcg_empty(struct cgroup *cgro=
-up)
-> =A0 =A0 =A0 =A0int ret =3D 0, idx =3D 0;
+> @@ -35,7 +35,7 @@ const unsigned long hugetlb_zero =3D 0, hugetlb_infinit=
+y =3D ~0UL;
+> =A0static gfp_t htlb_alloc_mask =3D GFP_HIGHUSER;
+> =A0unsigned long hugepages_treat_as_movable;
 >
-> =A0 =A0 =A0 =A0do {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* see memcontrol.c::mem_cgroup_force_empty=
-() */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgroup)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|| !list_empty(&cgroup->ch=
-ildren)) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If the task doing the cgroup_rmdir got=
- a signal
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we don't really need to loop till the =
-hugetlb resource
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* usage become zero.
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (signal_pending(current)) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -EINTR;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0for_each_hstate(h) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock(&hugetlb_lock);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0list_for_each_entry(page, =
-&h->hugepage_activelist, lru) {
+> -static int hugetlb_max_hstate;
+> +int hugetlb_max_hstate;
+> =A0unsigned int default_hstate_idx;
+> =A0struct hstate hstates[HUGE_MAX_HSTATE];
+>
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2715223..ee350c5 100644
+> index 901bb03..884f479 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -3852,8 +3852,6 @@ static int mem_cgroup_force_empty_list(struct mem_c=
-group *memcg,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pc =3D lookup_page_cgroup(page);
+> @@ -252,6 +252,10 @@ struct mem_cgroup {
+> =A0 =A0 =A0 =A0};
 >
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D mem_cgroup_move_parent(page, pc, m=
-emcg, GFP_KERNEL);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ret =3D=3D -ENOMEM || ret =3D=3D -EINTR=
-)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ret =3D=3D -EBUSY || ret =3D=3D -EINVA=
-L) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* found lock contention o=
-r "pc" is obsolete. */
-> @@ -3863,7 +3861,7 @@ static int mem_cgroup_force_empty_list(struct mem_c=
-group *memcg,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0busy =3D NULL;
-> =A0 =A0 =A0 =A0}
->
-> - =A0 =A0 =A0 if (!ret && !list_empty(list))
-> + =A0 =A0 =A0 if (!loop)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EBUSY;
-> =A0 =A0 =A0 =A0return ret;
+> =A0 =A0 =A0 =A0/*
+> + =A0 =A0 =A0 =A0* the counter to account for hugepages from hugetlb.
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 struct res_counter hugepage[HUGE_MAX_HSTATE];
+> + =A0 =A0 =A0 /*
+> =A0 =A0 =A0 =A0 * Per cgroup active and inactive list, similar to the
+> =A0 =A0 =A0 =A0 * per zone LRU lists.
+> =A0 =A0 =A0 =A0 */
+> @@ -3213,6 +3217,114 @@ static inline int mem_cgroup_move_swap_account(sw=
+p_entry_t entry,
 > =A0}
-> @@ -3893,11 +3891,12 @@ static int mem_cgroup_force_empty(struct mem_cgro=
-up *memcg, bool free_all)
-> =A0move_account:
-> =A0 =A0 =A0 =A0do {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -EBUSY;
+> =A0#endif
+>
+> +#ifdef CONFIG_MEM_RES_CTLR_HUGETLB
+> +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
+> +{
+> + =A0 =A0 =A0 int idx;
+> + =A0 =A0 =A0 for (idx =3D 0; idx < hugetlb_max_hstate; idx++) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if ((res_counter_read_u64(&memcg->hugepage[=
+idx], RES_USAGE)) > 0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
+> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 return 0;
+> +}
+> +
+> +int mem_cgroup_hugetlb_charge_page(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0stru=
+ct mem_cgroup **ptr)
+> +{
+> + =A0 =A0 =A0 int ret =3D 0;
+> + =A0 =A0 =A0 struct mem_cgroup *memcg =3D NULL;
+> + =A0 =A0 =A0 struct res_counter *fail_res;
+> + =A0 =A0 =A0 unsigned long csize =3D nr_pages * PAGE_SIZE;
+> +
+> + =A0 =A0 =A0 if (mem_cgroup_disabled())
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto done;
+> +again:
+> + =A0 =A0 =A0 rcu_read_lock();
+> + =A0 =A0 =A0 memcg =3D mem_cgroup_from_task(current);
+> + =A0 =A0 =A0 if (!memcg)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 memcg =3D root_mem_cgroup;
+> +
+> + =A0 =A0 =A0 if (!css_tryget(&memcg->css)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 rcu_read_unlock();
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto again;
+> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 rcu_read_unlock();
+> +
+> + =A0 =A0 =A0 ret =3D res_counter_charge(&memcg->hugepage[idx], csize, &f=
+ail_res);
+> + =A0 =A0 =A0 css_put(&memcg->css);
+> +done:
+> + =A0 =A0 =A0 *ptr =3D memcg;
+> + =A0 =A0 =A0 return ret;
+> +}
+> +
+> +void mem_cgroup_hugetlb_commit_charge(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ struct mem_cgroup *memcg,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ struct page *page)
+> +{
+> + =A0 =A0 =A0 struct page_cgroup *pc;
+> +
+> + =A0 =A0 =A0 if (mem_cgroup_disabled())
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> + =A0 =A0 =A0 pc =3D lookup_page_cgroup(page);
+> + =A0 =A0 =A0 lock_page_cgroup(pc);
+> + =A0 =A0 =A0 if (unlikely(PageCgroupUsed(pc))) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 unlock_page_cgroup(pc);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mem_cgroup_hugetlb_uncharge_memcg(idx, nr_p=
+ages, memcg);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 pc->mem_cgroup =3D memcg;
+> + =A0 =A0 =A0 SetPageCgroupUsed(pc);
+> + =A0 =A0 =A0 unlock_page_cgroup(pc);
+> + =A0 =A0 =A0 return;
+> +}
+> +
+> +void mem_cgroup_hugetlb_uncharge_page(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ struct page *page)
+> +{
+> + =A0 =A0 =A0 struct page_cgroup *pc;
+> + =A0 =A0 =A0 struct mem_cgroup *memcg;
+> + =A0 =A0 =A0 unsigned long csize =3D nr_pages * PAGE_SIZE;
+> +
+> + =A0 =A0 =A0 if (mem_cgroup_disabled())
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> + =A0 =A0 =A0 pc =3D lookup_page_cgroup(page);
+> + =A0 =A0 =A0 if (unlikely(!PageCgroupUsed(pc)))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> + =A0 =A0 =A0 lock_page_cgroup(pc);
+> + =A0 =A0 =A0 if (!PageCgroupUsed(pc)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 unlock_page_cgroup(pc);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 memcg =3D pc->mem_cgroup;
+> + =A0 =A0 =A0 pc->mem_cgroup =3D root_mem_cgroup;
+> + =A0 =A0 =A0 ClearPageCgroupUsed(pc);
+> + =A0 =A0 =A0 unlock_page_cgroup(pc);
+> +
+> + =A0 =A0 =A0 res_counter_uncharge(&memcg->hugepage[idx], csize);
+> + =A0 =A0 =A0 return;
+> +}
+> +
+> +void mem_cgroup_hugetlb_uncharge_memcg(int idx, unsigned long nr_pages,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0struct mem_cgroup *memcg)
+> +{
+> + =A0 =A0 =A0 unsigned long csize =3D nr_pages * PAGE_SIZE;
+> +
+> + =A0 =A0 =A0 if (mem_cgroup_disabled())
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> + =A0 =A0 =A0 res_counter_uncharge(&memcg->hugepage[idx], csize);
+> + =A0 =A0 =A0 return;
+> +}
+> +#else
+> +static bool mem_cgroup_have_hugetlb_usage(struct mem_cgroup *memcg)
+> +{
+> + =A0 =A0 =A0 return 0;
+> +}
+> +#endif /* CONFIG_MEM_RES_CTLR_HUGETLB */
+> +
+> =A0/*
+> =A0* Before starting migration, account PAGE_SIZE to mem_cgroup that the =
+old
+> =A0* page belongs to.
+> @@ -4955,6 +5067,7 @@ err_cleanup:
+> =A0static struct cgroup_subsys_state * __ref
+> =A0mem_cgroup_create(struct cgroup *cont)
+> =A0{
+> + =A0 =A0 =A0 int idx;
+> =A0 =A0 =A0 =A0struct mem_cgroup *memcg, *parent;
+> =A0 =A0 =A0 =A0long error =3D -ENOMEM;
+> =A0 =A0 =A0 =A0int node;
+> @@ -4997,9 +5110,22 @@ mem_cgroup_create(struct cgroup *cont)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * mem_cgroup(see mem_cgroup_put).
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mem_cgroup_get(parent);
 > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* This never happens when this is called=
- by ->pre_destroy().
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* But we need to take care of force_empt=
-y interface.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* We could get called before hugetlb ini=
+t is called.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* Use HUGE_MAX_HSTATE as the max index.
 > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (cgroup_task_count(cgrp) || !list_empty=
-(&cgrp->children))
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
-
-Are you sure this never happens when called by ->pre_destroy()?
-Can't a task still get attached to the cgroup while ->pre_destroy() is runn=
-ing?
-
-At least, I don't see anything in the cgroup code that prevents
-someone from newly attaching a task at that point.
-In fact, there is code that seems to handle the case when someone
-attached to the cgroup after pre_destroy() has run: See the
-cgroup_wakeup_rmdir_waiter() call in cgroup_attach_task().
-
--- Suleiman
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 for (idx =3D 0; idx < HUGE_MAX_HSTATE; idx+=
++)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 res_counter_init(&memcg->hu=
+gepage[idx],
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0&parent->hugepage[idx]);
+> =A0 =A0 =A0 =A0} else {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0res_counter_init(&memcg->res, NULL);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0res_counter_init(&memcg->memsw, NULL);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* We could get called before hugetlb ini=
+t is called.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* Use HUGE_MAX_HSTATE as the max index.
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 for (idx =3D 0; idx < HUGE_MAX_HSTATE; idx+=
++)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 res_counter_init(&memcg->hu=
+gepage[idx], NULL);
+> =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0memcg->last_scanned_node =3D MAX_NUMNODES;
+> =A0 =A0 =A0 =A0INIT_LIST_HEAD(&memcg->oom_notify);
+> @@ -5030,6 +5156,12 @@ free_out:
+> =A0static int mem_cgroup_pre_destroy(struct cgroup *cont)
+> =A0{
+> =A0 =A0 =A0 =A0struct mem_cgroup *memcg =3D mem_cgroup_from_cont(cont);
+> + =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0* Don't allow memcg removal if we have HugeTLB resource
+> + =A0 =A0 =A0 =A0* usage.
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 if (mem_cgroup_have_hugetlb_usage(memcg))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EBUSY;
+>
+> =A0 =A0 =A0 =A0return mem_cgroup_force_empty(memcg, false);
+> =A0}
+> --
+> 1.7.10
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at =A0http://www.tux.org/lkml/
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
