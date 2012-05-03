@@ -1,51 +1,92 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
-Date: Thu, 03 May 2012 10:07:59 +0530
-Message-ID: <87pqalhobc.fsf@skywalker.in.ibm.com>
-References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <CAP=VYLqgaCabQGDVgUXnCwKCZHtz0nWxpm_a6Cgz_ciMzGe9gQ@mail.gmail.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [RFD/RFC v2] event about group change
+Date: Thu, 03 May 2012 13:17:39 +0400
+Message-ID: <4FA24D33.7080202@samsung.com>
+References: <4F98E4E5.6020602@samsung.com> <4F98E57E.1040201@samsung.com>
+ <20120427223455.GU26595@google.com> <4F9B82E1.3070602@samsung.com>
+ <20120428214131.GB4586@mtj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAP=VYLqgaCabQGDVgUXnCwKCZHtz0nWxpm_a6Cgz_ciMzGe9gQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-reply-to: <20120428214131.GB4586-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 
-Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org> writes:
+On 04/29/2012 01:41 AM, Tejun Heo wrote:
+> Hello,
+>
+> On Sat, Apr 28, 2012 at 09:40:49AM +0400, Alexander Nikiforov wrote:
+>>>    git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
+>> About for-3.5 - sure. I'll do it. Sorry, but what is SOB? :)
+> Signed-off-by tag.  Sorry about the abbreviation.
 
-> On Mon, Apr 16, 2012 at 6:44 AM, Aneesh Kumar K.V
-> <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
->> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->>
->> This patch implements a memcg extension that allows us to control HugeTLB
->> allocations via memory controller. The extension allows to limit the
+done
+
 >
-> Hi Aneesh,
+>>> Also, can you please cc fsnotify people so that they can go over the
+>>> new usage?
+>> Done. But unfortunately mail from my box not reach Li Zefan. Routing loop.
+> His new mail address is lizefan-hv44wF8Li92Xj1p+fO2waQ@public.gmane.org
+
+done
+
 >
-> This breaks linux-next on some arch because they don't have any
-> HUGE_MAX_HSTATE in scope with the current #ifdef layout.
+>>>> @@ -179,6 +179,8 @@ struct cgroup {
+>>>>   	struct cgroup *parent;		/* my parent */
+>>>>   	struct dentry __rcu *dentry;	/* cgroup fs entry, RCU protected */
+>>>>
+>>>> +	struct dentry *tasks_dentry;	/* "tasks" dentry */
+>>> Urgh... not the prettiest but I suppose it's necessary.  It will
+>>> probably be better to point to cfent instead.
+>> Are you talking about struct cftype. If yes, I think for now put
+>> tasks_dentry into cgroup better. But if we can take dentry directly
+>> from cftype (look on this, for now I have no idea how can I do it)
+>> it will be of course better. If we can't take, we will have pointer
+>> to every file inside cgroup. Since for memcg we have different event
+>> approach, I don't think this proper way.
+> If you look at cgroup/for-3.5 branch, there's new entry named struct
+> cfent representing each instance of the file which has a pointer to
+> the matching dentry.
+
+done
+
 >
-> The breakage is in sh4, m68k, s390, and possibly others.
+>>>> +{
+>>>> +	struct cgroupfs_root *root;
+>>>> +	struct inode	*d_inode;
+>>>> +	struct cgroup	*cgrp;
+>>> What are the locking rules?
+>> fsnotify_cgroup() called inside cgroup_lock(), is it not sufficient??
+> I was hoping for lockdep_assert_held() annotation. :)
+
+done
+
 >
-> http://kisskb.ellerman.id.au/kisskb/buildresult/6228689/
-> http://kisskb.ellerman.id.au/kisskb/buildresult/6228670/
-> http://kisskb.ellerman.id.au/kisskb/buildresult/6228484/
+>>> Wouldn't it be better to make cgroup_add_file() return the created cft
+>>> and let the caller handle the tasks special case?  Also, why use 1/0
+>>> for boolean values instead of true/false?
+>> How can I understand that this cft from tasks, only with strcmp with
+>> name. Don't think this is the best way, but my way ugly too.
+>> About 1/0 try to write on current way, just made it like run_callbacks
+> I meant separating out "task" cftype entry and creating it separately
+> using a function returning the created cfent and storing it.  Instead
+> of putting the special logic inside file creation function.
+
+done
+
 >
-> This is a commit in akpm's mmotm queue, which used to be here:
->
-> http://userweb.kernel.org/~akpm/mmotm
->
-> Of course the above is invalid since userweb.kernel.org is dead.
-> I don't have a post-kernel.org break-in link handy and a quick
-> search didn't give me one, but I'm sure you'll recognize the change.
+> Thanks.
 >
 
-Andrew have the below patch 
+Please review new version
 
-http://article.gmane.org/gmane.linux.kernel.commits.mm/71649
+Thanks
 
-Does that fix the error ?
-
--aneesh
+-- 
+Best regards,
+      Alex Nikiforov,
+      Mobile SW, Advanced Software Group,
+      Moscow R&D center, Samsung Electronics
