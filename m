@@ -1,91 +1,51 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: Re: [PATCH RESEND] memcg: Free spare array to avoid memory leak
-Date: Thu, 03 May 2012 11:09:49 +0800
-Message-ID: <4FA1F6FD.7060100@gmail.com>
-References: <1334825690-9065-1-git-send-email-handai.szj@taobao.com> <20120501140314.1d7312fb.akpm@linux-foundation.org>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
+Date: Thu, 03 May 2012 10:07:59 +0530
+Message-ID: <87pqalhobc.fsf@skywalker.in.ibm.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <CAP=VYLqgaCabQGDVgUXnCwKCZHtz0nWxpm_a6Cgz_ciMzGe9gQ@mail.gmail.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=Vy9iYvvBuiTGw2XAEKw5t6rwQoTvd5C4MMYKq9KmNmI=;
-        b=wGaOv/kgxyaIQIybnwBZRa/i9YhJiE9iUw+SEHEUjiTXZLWO+L1/rAVnMGOZ4a6mar
-         oIYv+awwRE30ExqGOF34JlLx8zGz21ILVlDqXRpK37nZgs20oeTf9XuVXRUnNGyHb01u
-         DkIhG867EBhtGUNLCImwcKv/TnvcCqVDHrhnTlbm+OV62/PBNBnWF3iAO3sOvWeqJWul
-         bY54QKib17+hDzRk6D9EY7iwppotZ+/v8W2lsTtEj6AUsxNUo4/LNkSAVcn116GydCcU
-         b8jm41OMC541GVMjgiYdrOkg2Y23B5lLRO3D+rQlMr9hxfLCab6F0AK9bBycphCuEpOo
-         PwDQ==
-In-Reply-To: <20120501140314.1d7312fb.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAP=VYLqgaCabQGDVgUXnCwKCZHtz0nWxpm_a6Cgz_ciMzGe9gQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Sha Zhengju <handai.szj@gmail.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 05/02/2012 05:03 AM, Andrew Morton wrote:
-> On Thu, 19 Apr 2012 16:54:50 +0800
-> Sha Zhengju<handai.szj@gmail.com>  wrote:
->
->> From: Sha Zhengju<handai.szj@taobao.com>
+Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org> writes:
+
+> On Mon, Apr 16, 2012 at 6:44 AM, Aneesh Kumar K.V
+> <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+>> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >>
->> When the last event is unregistered, there is no need to keep the spare
->> array anymore. So free it to avoid memory leak.
-> How serious is this leak?  Is there any way in which it can be used to
-> consume unbounded amounts of memory?
-
-While registering events, the ->primary will apply for a larger array to 
-store
-the new threshold info and the ->spare holds the old primary space.
-But once unregistering event, the ->primary and ->spare pointer will be 
-swapped
-after updating thresholds info. So if we have an eventfd with many(>1) 
-thresholds
-attached to it, mem_cgroup_usage_unregister_event() will finally leave 
-->spare
-holding a large array and have no chance to be freed.
-
-I hope it is clear.
-
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -4412,6 +4412,12 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
->>   swap_buffers:
->>   	/* Swap primary and spare array */
->>   	thresholds->spare = thresholds->primary;
->> +	/* If all events are unregistered, free the spare array */
->> +	if (!new) {
->> +		kfree(thresholds->spare);
->> +		thresholds->spare = NULL;
->> +	}
->> +
->>   	rcu_assign_pointer(thresholds->primary, new);
->>
-> The resulting code is really quite convoluted.  Try to read through it
-> and follow the handling of ->primary and ->spare.  Head spins.
+>> This patch implements a memcg extension that allows us to control HugeTLB
+>> allocations via memory controller. The extension allows to limit the
 >
-> What is the protocol here?  If ->primary is NULL then ->spare must also
-> be NULL?
+> Hi Aneesh,
+>
+> This breaks linux-next on some arch because they don't have any
+> HUGE_MAX_HSTATE in scope with the current #ifdef layout.
+>
+> The breakage is in sh4, m68k, s390, and possibly others.
+>
+> http://kisskb.ellerman.id.au/kisskb/buildresult/6228689/
+> http://kisskb.ellerman.id.au/kisskb/buildresult/6228670/
+> http://kisskb.ellerman.id.au/kisskb/buildresult/6228484/
+>
+> This is a commit in akpm's mmotm queue, which used to be here:
+>
+> http://userweb.kernel.org/~akpm/mmotm
+>
+> Of course the above is invalid since userweb.kernel.org is dead.
+> I don't have a post-kernel.org break-in link handy and a quick
+> search didn't give me one, but I'm sure you'll recognize the change.
 >
 
-To be simple:  if new(->primary) is NULL, it means we are unregistering
-the last threshold and there is no need to keep ->spare any more.
-So give the ->spare array a chance to be freed.
+Andrew have the below patch 
 
-Thanks,
-Sha
+http://article.gmane.org/gmane.linux.kernel.commits.mm/71649
 
-> I'll apply the patch, although I don't (yet) have sufficient info to
-> know which kernels it should be applied to.  Perhaps someone could
-> revisit this code and see if it can be made more straightforward.
->
-> .
->
+Does that fix the error ?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-aneesh
