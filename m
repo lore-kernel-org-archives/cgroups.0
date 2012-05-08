@@ -1,133 +1,49 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [RFC] alternative mechanism to skip memcg kmem allocations
-Date: Tue,  8 May 2012 00:37:18 -0300
-Message-ID: <1336448238-3728-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Pekka Enberg <penberg@kernel.org>
+Subject: Re: [RFC] slub: show dead memcg caches in a separate file
+Date: Tue, 8 May 2012 08:42:04 +0300
+Message-ID: <CAOJsxLHFS+B64qfhCg-9LPbggPoyvkBSnA8nZPRoV15eeRpi_w@mail.gmail.com>
+References: <1336070841-1071-1-git-send-email-glommer@parallels.com>
+	<CABCjUKDuiN6bq6rbPjE7futyUwTPKsSFWHXCJ-OFf30tgq5WZg@mail.gmail.com>
+	<4FA89348.6070000@parallels.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=E/arSZKRzDhM8VRlGvxj7CaA7ccYr8t6HsnFoMkDb4U=;
+        b=ehsh1VE71RONKcTFn5lJil7iQp7lFFRb2+EJ+WrZgk+HUHrjbqGWR+yosyXjU8OTjL
+         6alUfnFdniedvzRu+m2zFN4R+JGqD7fLbUL2fuiPKhT+g9KTXWkaWGfHMVU7WZ11O7We
+         WxEkNkJpK+oAnk5ZiK3HxHM/uewjNC52N4WXzDx/kRbKuQuIFxSmzfZMoCV8VsKe73/x
+         bgqsECmzM5m6huoZ4ljCcIPv6U6y+trC5t42cY1HkgGFRmjA1qVsTHwlqXtb86uMecnE
+         qM79Mb0Do1AoqcH4w4ZnQ5y0GNz2JVmowxlfVeH8qD+mcz/Ed4JKWOPGWshHiZFrmdbE
+         9WEw==
+In-Reply-To: <4FA89348.6070000@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: Suleiman Souhlal <suleiman@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, Christoph Lameter <cl@linux.com>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>
 
-Since Kame expressed the wish to see a context-based method to skip
-accounting for caches, I came up with the following proposal for
-your appreciation.
+On Tue, May 8, 2012 at 6:30 AM, Glauber Costa <glommer@parallels.com> wrote:
+> But there is another aspect: those dead caches have one thing in common,
+> which is the fact that no new objects will ever be allocated on them. You
+> can't tune them, or do anything with them. I believe it is misleading to
+> include them in slabinfo.
+>
+> The fact that the caches change names - to append "dead" may also break
+> tools, if that is what you are concerned about.
+>
+> For all the above, I think a better semantics for slabinfo is to include the
+> active caches, and leave the dead ones somewhere else.
 
-It basically works in the same way as preempt_disable()/preempt_enable():
-By marking a region under which all allocations will be accounted
-to the root memcg.
+Can these "dead caches" still hold on to physical memory? If so, they
+must appear in /proc/slabinfo.
 
-I basically see two main advantages of it:
-
- * No need to clutter the code with *_noaccount functions; they could
-   become specially widespread if we needed to skip accounting for
-   kmalloc variants like track, zalloc, etc.
- * Works with other caches, not only kmalloc; specially interesting
-   since during cache creation we touch things like cache_cache,
-   that could very well we wrapped inside a noaccount region.
-
-However:
-
- * It touches task_struct
- * It is harder to keep drivers away from using it. With
-   kmalloc_no_account we could simply not export it. Here, one can
-   always set this in the task_struct...
-
-Let me know what you think of it.
-
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- include/linux/sched.h |    1 +
- mm/memcontrol.c       |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 81a173c..516a9fe 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1613,6 +1613,7 @@ struct task_struct {
- 		unsigned long nr_pages;	/* uncharged usage */
- 		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
- 	} memcg_batch;
-+	int memcg_kmem_skip_account;
- #endif
- #ifdef CONFIG_HAVE_HW_BREAKPOINT
- 	atomic_t ptrace_bp_refcnt;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8c7c404..833f4cd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -479,6 +479,33 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
- EXPORT_SYMBOL(tcp_proto_cgroup);
- #endif /* CONFIG_INET */
- 
-+static void memcg_stop_kmem_account(void)
-+{
-+	struct task_struct *p;
-+
-+	if (!current->mm)
-+		return;
-+
-+	p = rcu_dereference(current->mm->owner);
-+	if (p) {
-+		task_lock(p);
-+		p->memcg_kmem_skip_account = true;
-+	}
-+}
-+
-+static void memcg_start_kmem_account(void)
-+{
-+	struct task_struct *p;
-+
-+	if (!current->mm)
-+		return;
-+
-+	p = rcu_dereference(current->mm->owner);
-+	if (p) {
-+		p->memcg_kmem_skip_account = false;
-+		task_unlock(p);
-+	}
-+}
- char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
- {
- 	char *name;
-@@ -541,7 +568,9 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	if (new_cachep)
- 		goto out;
- 
-+	memcg_stop_kmem_account();
- 	new_cachep = kmem_cache_dup(memcg, cachep);
-+	memcg_start_kmem_account();
- 
- 	if (new_cachep == NULL) {
- 		new_cachep = cachep;
-@@ -634,7 +663,9 @@ static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
- 	if (!css_tryget(&memcg->css))
- 		return;
- 
-+	memcg_stop_kmem_account();
- 	cw = kmalloc(sizeof(struct create_work), GFP_NOWAIT);
-+	memcg_start_kmem_account();
- 	if (cw == NULL) {
- 		css_put(&memcg->css);
- 		return;
-@@ -678,6 +709,9 @@ struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
- 	VM_BUG_ON(idx == -1);
- 
- 	p = rcu_dereference(current->mm->owner);
-+	if (p->memcg_kmem_skip_account)
-+		return cachep;
-+
- 	memcg = mem_cgroup_from_task(p);
- 
- 	if (!mem_cgroup_kmem_enabled(memcg))
--- 
-1.7.7.6
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
