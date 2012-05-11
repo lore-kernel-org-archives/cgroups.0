@@ -1,13 +1,12 @@
 From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH v2 04/29] slub: always get the cache from its page in
- kfree
-Date: Fri, 11 May 2012 12:53:31 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205111251420.31049@router.home>
-References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-5-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v2 05/29] slab: rename gfpflags to allocflags
+Date: Fri, 11 May 2012 12:54:03 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205111253510.31049@router.home>
+References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-6-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1336758815; bh=EMcn3hk66tV5F2ACON8aE7ulDfUmJ1oJGMVLiUl4Ulo=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=1WSXNmhc1CTY+Zzjqsag/PdmUo7jIBjDK6MSpcL+Z7S2J0WJ+ziJ8mSt+6jEO34pHNb3hvLAqE1WsswzUdo6T/7zZFF/dDpwjLdA42cdOztV8FCjfWg/sRd4ocZ2SxG+y/+JD7e/K5uWfo6fKtvrrbctFI8jdQK+fF36/LMsm9U=
-In-Reply-To: <1336758272-24284-5-git-send-email-glommer@parallels.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1336758847; bh=s2+D3DFtO0ezm/n3U3eXWL+paVJGY7VnjhE8JuzhaX4=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=N0fDCWmCcTE+mvQ9b2uvmwHuH977YDi0TzGF1IZcofSixGxrwMfrVFb2EhKX9mu0lYJqDqu/nIhVTduh5FMBSGOaS461sTCCdO9W1UHsi+4O+9HAmourNjDNZyTdpUgfh9SJkda6B/MK94W22aNDXgHo8daDvVysa6RSah4tuIg=
+In-Reply-To: <1336758272-24284-6-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -17,15 +16,11 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, k
 
 On Fri, 11 May 2012, Glauber Costa wrote:
 
-> struct page already have this information. If we start chaining
-> caches, this information will always be more trustworthy than
-> whatever is passed into the function
+> A consistent name with slub saves us an acessor function.
+> In both caches, this field represents the same thing. We would
+> like to use it from the mem_cgroup code.
 
-Other allocators may not have that information and this patch may
-cause bugs to go unnoticed if the caller specifies the wrong slab cache.
-
-Adding a VM_BUG_ON may be useful to make sure that kmem_cache_free is
-always passed the correct slab cache.
+Acked-by: Christoph Lameter <cl@linux.com>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
