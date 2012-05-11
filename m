@@ -1,87 +1,178 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 17/29] slab: create duplicate cache
-Date: Fri, 11 May 2012 14:44:19 -0300
-Message-ID: <1336758272-24284-18-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v2 11/29] cgroups: ability to stop res charge propagation on bounded ancestor
+Date: Fri, 11 May 2012 14:44:13 -0300
+Message-ID: <1336758272-24284-12-git-send-email-glommer@parallels.com>
 References: <1336758272-24284-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1336758272-24284-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1336758272-24284-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, Frederic Weisbecker <fweisbec@gmail.com>, Li Zefan <lizf@cn.fujitsu.com>, Aditya Kali <adityakali@google.com>, Oleg Nesterov <oleg@redhat.com>, Kay Sievers <kay.sievers@vrfy.org>, Tim Hockin <thockin@hockin.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
 
-This patch provides kmem_cache_dup(), that duplicates
-a cache for a memcg, preserving its creation properties.
-Object size, alignment and flags are all respected.
-An exception is the SLAB_PANIC flag, since cache creation
-inside a memcg should not be fatal.
+From: Frederic Weisbecker <fweisbec@gmail.com>
 
-This code is mostly written by Suleiman Souhlal,
-with some adaptations and simplifications by me.
+Moving a task from a cgroup to another may require to substract its
+resource charge from the old cgroup and add it to the new one.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+For this to happen, the uncharge/charge propagation can just stop when we
+reach the common ancestor for the two cgroups.  Further the performance
+reasons, we also want to avoid to temporarily overload the common
+ancestors with a non-accurate resource counter usage if we charge first
+the new cgroup and uncharge the old one thereafter.  This is going to be a
+requirement for the coming max number of task subsystem.
+
+To solve this, provide a pair of new API that can charge/uncharge a
+resource counter until we reach a given ancestor.
+
+Signed-off-by: Frederic Weisbecker <fweisbec@gmail.com>
+Acked-by: Paul Menage <paul@paulmenage.org>
+Acked-by: Glauber Costa <glommer@parallels.com>
+Cc: Li Zefan <lizf@cn.fujitsu.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Aditya Kali <adityakali@google.com>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Tim Hockin <thockin@hockin.org>
+Cc: Tejun Heo <htejun@gmail.com>
+Acked-by: Kirill A. Shutemov <kirill@shutemov.name>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- mm/slab.c |   32 ++++++++++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+ Documentation/cgroups/resource_counter.txt |   18 +++++++++++++++++-
+ include/linux/res_counter.h                |   21 ++++++++++++++++++---
+ kernel/res_counter.c                       |   13 ++++++++-----
+ 3 files changed, 43 insertions(+), 9 deletions(-)
 
-diff --git a/mm/slab.c b/mm/slab.c
-index d05a326..985714a 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -301,6 +301,8 @@ static void free_block(struct kmem_cache *cachep, void **objpp, int len,
- 			int node);
- static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp);
- static void cache_reap(struct work_struct *unused);
-+static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
-+			    int batchcount, int shared, gfp_t gfp);
+diff --git a/Documentation/cgroups/resource_counter.txt b/Documentation/cgroups/resource_counter.txt
+index 95b24d7..a2cd05b 100644
+--- a/Documentation/cgroups/resource_counter.txt
++++ b/Documentation/cgroups/resource_counter.txt
+@@ -83,7 +83,15 @@ to work with it.
+ 	res_counter->lock internally (it must be called with res_counter->lock
+ 	held).
  
- /*
-  * This function must be completely optimized away if a constant is passed to
-@@ -2598,6 +2600,36 @@ kmem_cache_create(const char *name, size_t size, size_t align,
- EXPORT_SYMBOL(kmem_cache_create);
+- e. void res_counter_uncharge[_locked]
++ e. int res_counter_charge_until(struct res_counter *counter,
++			     struct res_counter *limit, unsigned long val,
++			     struct res_counter **limit_fail_at)
++
++	The same as res_counter_charge(), but the charge propagation to
++	the hierarchy stops at the limit given in the "limit" parameter.
++
++
++ f. void res_counter_uncharge[_locked]
+ 			(struct res_counter *rc, unsigned long val)
  
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-+				  struct kmem_cache *cachep)
+ 	When a resource is released (freed) it should be de-accounted
+@@ -92,6 +100,14 @@ to work with it.
+ 
+ 	The _locked routines imply that the res_counter->lock is taken.
+ 
++
++ g. void res_counter_uncharge_until(struct res_counter *counter,
++				struct res_counter *limit,
++				unsigned long val)
++
++	The same as res_counter_charge, but the uncharge propagation to
++	the hierarchy stops at the limit given in the "limit" parameter.
++
+  2.1 Other accounting routines
+ 
+     There are more routines that may help you with common needs, like
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+index f7621cf..c12143e 100644
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -117,11 +117,20 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent);
+ 
+ int __must_check res_counter_charge_locked(struct res_counter *counter,
+ 		unsigned long val);
+-int __must_check res_counter_charge(struct res_counter *counter,
+-		unsigned long val, struct res_counter **limit_fail_at);
++int __must_check res_counter_charge_until(struct res_counter *counter,
++					  struct res_counter *limit,
++					  unsigned long val,
++					  struct res_counter **limit_fail_at);
+ int res_counter_charge_nofail(struct res_counter *counter,
+ 		unsigned long val, struct res_counter **limit_fail_at);
+ 
++static inline int __must_check
++res_counter_charge(struct res_counter *counter, unsigned long val,
++		   struct res_counter **limit_fail_at)
 +{
-+	struct kmem_cache *new;
-+	unsigned long flags;
-+	char *name;
-+
-+	name = mem_cgroup_cache_name(memcg, cachep);
-+	if (!name)
-+		return NULL;
-+
-+	flags = cachep->flags & ~(SLAB_PANIC|CFLGS_OFF_SLAB);
-+	mutex_lock(&cache_chain_mutex);
-+	new = __kmem_cache_create(memcg, name, obj_size(cachep),
-+	    cachep->memcg_params.orig_align, flags, cachep->ctor);
-+
-+	if (new == NULL)
-+		goto out;
-+
-+	if ((cachep->limit != new->limit) ||
-+	    (cachep->batchcount != new->batchcount) ||
-+	    (cachep->shared != new->shared))
-+		do_tune_cpucache(new, cachep->limit, cachep->batchcount,
-+		    cachep->shared, GFP_KERNEL);
-+out:
-+	mutex_unlock(&cache_chain_mutex);
-+	kfree(name);
-+	return new;
++	return res_counter_charge_until(counter, NULL, val, limit_fail_at);
 +}
 +
- static int __init memcg_slab_register_all(void)
+ /*
+  * uncharge - tell that some portion of the resource is released
+  *
+@@ -133,7 +142,13 @@ int res_counter_charge_nofail(struct res_counter *counter,
+  */
+ 
+ void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+-void res_counter_uncharge(struct res_counter *counter, unsigned long val);
++void res_counter_uncharge_until(struct res_counter *counter,
++				struct res_counter *limit, unsigned long val);
++static inline void res_counter_uncharge(struct res_counter *counter,
++					unsigned long val)
++{
++	res_counter_uncharge_until(counter, NULL, val);
++}
+ 
+ /**
+  * res_counter_margin - calculate chargeable space of a counter
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index d508363..7aebf96 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -35,8 +35,9 @@ int res_counter_charge_locked(struct res_counter *counter, unsigned long val)
+ 	return 0;
+ }
+ 
+-int res_counter_charge(struct res_counter *counter, unsigned long val,
+-			struct res_counter **limit_fail_at)
++int res_counter_charge_until(struct res_counter *counter,
++			     struct res_counter *limit, unsigned long val,
++			     struct res_counter **limit_fail_at)
  {
- 	struct kmem_cache *cachep;
+ 	int ret;
+ 	unsigned long flags;
+@@ -44,7 +45,7 @@ int res_counter_charge(struct res_counter *counter, unsigned long val,
+ 
+ 	*limit_fail_at = NULL;
+ 	local_irq_save(flags);
+-	for (c = counter; c != NULL; c = c->parent) {
++	for (c = counter; c != limit; c = c->parent) {
+ 		spin_lock(&c->lock);
+ 		ret = res_counter_charge_locked(c, val);
+ 		spin_unlock(&c->lock);
+@@ -99,13 +100,15 @@ void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
+ 	counter->usage -= val;
+ }
+ 
+-void res_counter_uncharge(struct res_counter *counter, unsigned long val)
++void res_counter_uncharge_until(struct res_counter *counter,
++				struct res_counter *limit,
++				unsigned long val)
+ {
+ 	unsigned long flags;
+ 	struct res_counter *c;
+ 
+ 	local_irq_save(flags);
+-	for (c = counter; c != NULL; c = c->parent) {
++	for (c = counter; c != limit; c = c->parent) {
+ 		spin_lock(&c->lock);
+ 		res_counter_uncharge_locked(c, val);
+ 		spin_unlock(&c->lock);
 -- 
 1.7.7.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
