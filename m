@@ -1,47 +1,99 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH v3 6/6] remove __must_check for res_counter_charge_nofail()
-Date: Fri, 11 May 2012 18:53:08 +0900
-Message-ID: <4FACE184.6020307@jp.fujitsu.com>
-References: <4FACDED0.3020400@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v2 00/29] kmem limitation for memcg
+Date: Fri, 11 May 2012 14:44:02 -0300
+Message-ID: <1336758272-24284-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FACDED0.3020400-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-I picked this up from Costa's slub memcg series. For fixing added warning
-by patch 4.
-==
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 6/6] remove __must_check for res_counter_charge_nofail()
+Hello All,
 
-Since we will succeed with the allocation no matter what, there
-isn't the need to use __must_check with it. It can very well
-be optional.
+This is my new take for the memcg kmem accounting.
+At this point, I consider the series pretty mature - although of course,
+bugs are always there...
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- include/linux/res_counter.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+As a disclaimer, however, I must say that the slub code is much more stressed
+by me, since I know it better. If you have no more objections to the concepts
+presented, the remaining edges can probably be polished in a rc cycle,
+at the maintainers discretion, of course.
 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index d11c1cd..c6b0368 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -119,7 +119,7 @@ int __must_check res_counter_charge_locked(struct res_counter *counter,
- 		unsigned long val);
- int __must_check res_counter_charge(struct res_counter *counter,
- 		unsigned long val, struct res_counter **limit_fail_at);
--int __must_check res_counter_charge_nofail(struct res_counter *counter,
-+int res_counter_charge_nofail(struct res_counter *counter,
- 		unsigned long val, struct res_counter **limit_fail_at);
- 
- /*
+Otherwise, I'll be happy to address any concerns of yours.
+
+Since last submission:
+
+ * memcgs can be properly removed.
+ * We are not charging based on current->mm->owner instead of current
+ * kmem_large allocations for slub got some fixes, specially for the free case
+ * A cache that is registered can be properly removed (common module case)
+   even if it spans memcg children. Slab had some code for that, now it works
+   well with both
+ * A new mechanism for skipping allocations is proposed (patch posted
+   separately already). Now instead of having kmalloc_no_account, we mark
+   a region as non-accountable for memcg.
+
+I should point out again that most, if not all, of the code in the caches
+are wrapped in static_key areas, meaning they will be completely patched out
+until the first limit is set.
+
+I also put a lot of effort, as you will all see, in the proper separation
+of the patches, so the review process is made as easy as the complexity of
+the work allows to.
+
+Frederic Weisbecker (1):
+  cgroups: ability to stop res charge propagation on bounded ancestor
+
+Glauber Costa (24):
+  slab: dup name string
+  slub: fix slab_state for slub
+  memcg: Always free struct memcg through schedule_work()
+  slub: always get the cache from its page in kfree
+  slab: rename gfpflags to allocflags
+  slab: use obj_size field of struct kmem_cache when not debugging
+  memcg: change defines to an enum
+  res_counter: don't force return value checking in
+    res_counter_charge_nofail
+  kmem slab accounting basic infrastructure
+  slab/slub: struct memcg_params
+  slub: consider a memcg parameter in kmem_create_cache
+  slab: pass memcg parameter to kmem_cache_create
+  slub: create duplicate cache
+  slab: create duplicate cache
+  memcg: kmem controller charge/uncharge infrastructure
+  skip memcg kmem allocations in specified code regions
+  slub: charge allocation to a memcg
+  slab: per-memcg accounting of slab caches
+  memcg: disable kmem code when not in use.
+  memcg: destroy memcg caches
+  memcg/slub: shrink dead caches
+  slub: create slabinfo file for memcg
+  slub: track all children of a kmem cache
+  Documentation: add documentation for slab tracker for memcg
+
+Suleiman Souhlal (4):
+  memcg: Make it possible to use the stock for more than one page.
+  memcg: Reclaim when more than one page needed.
+  memcg: Track all the memcg children of a kmem_cache.
+  memcg: Per-memcg memory.kmem.slabinfo file.
+
+ Documentation/cgroups/memory.txt           |   33 ++
+ Documentation/cgroups/resource_counter.txt |   18 +-
+ include/linux/memcontrol.h                 |   88 ++++
+ include/linux/res_counter.h                |   23 +-
+ include/linux/sched.h                      |    1 +
+ include/linux/slab.h                       |   29 +
+ include/linux/slab_def.h                   |   72 +++-
+ include/linux/slub_def.h                   |   51 ++-
+ init/Kconfig                               |    2 +-
+ kernel/res_counter.c                       |   13 +-
+ mm/memcontrol.c                            |  773 ++++++++++++++++++++++++++--
+ mm/slab.c                                  |  394 ++++++++++++---
+ mm/slub.c                                  |  298 ++++++++++-
+ 13 files changed, 1658 insertions(+), 137 deletions(-)
+
 -- 
-1.7.4.1
-
+1.7.7.6
