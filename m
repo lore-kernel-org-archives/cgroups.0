@@ -1,55 +1,34 @@
-From: Andre Nathan <andre-K36Kqf6HJK439yzSjRtAkw@public.gmane.org>
-Subject: About cgroup memory limits
-Date: Thu, 10 May 2012 18:38:43 -0300
-Message-ID: <1336685923.15687.1.camel@andre>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH v3][0/6] memcg: prevent -ENOMEM in pre_destroy()
+Date: Fri, 11 May 2012 18:41:36 +0900
+Message-ID: <4FACDED0.3020400@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: andre-K36Kqf6HJK439yzSjRtAkw@public.gmane.org, michel-K36Kqf6HJK439yzSjRtAkw@public.gmane.org
+To: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello
+Hi, here is v3 based on memcg-devel tree.
+git://github.com/mstsxfx/memcg-devel.git
 
-I'm doing some tests with LXC and how it interacts with the memory
-cgroup limits, more specifically the memory.limit_in_bytes control file.
+This patch series is for avoiding -ENOMEM at calling pre_destroy() 
+which is called at rmdir(). After this patch, charges will be moved
+to root (if use_hierarchy==0) or parent (if use_hierarchy==1), and
+we'll not see -ENOMEM in rmdir() of cgroup.
 
-Am I correct in my understanding of the memory cgroup documentation[1]
-that the limit set in memory.limit_in_bytes is applied to the sum of the
-fields 'cache', 'rss' and 'mapped_file' in the memory.stat file?
+v2 included some other patches than ones for handling -ENOMEM problem,
+but I divided it. I'd like to post others in different series, later.
+No logical changes in general, maybe v3 is cleaner than v2.
 
-I am also trying to understand the values reported in memory.stat when
-compared to the statistics in /proc/$PID/statm.
+0001 ....fix error code in memcg-hugetlb
+0002 ....add res_counter_uncharge_until
+0003 ....use res_counter_uncharge_until in memcg
+0004 ....move charges to root is use_hierarchy==0
+0005 ....cleanup for mem_cgroup_move_account()
+0006 ....remove warning of res_counter_uncharge_nofail (from Costa's slub accounting series).
 
-Below is the sum of each field in /proc/$PID/statm for every process
-running inside a test container, converted to bytes:
-
-       size  resident     share     text  lib       data  dt
-  897208320  28741632  20500480  1171456    0  170676224   0
-
-Compare this with the usage reports from memory.stat (fields total_*,
-hierarchical_* and pg* omitted):
-
-cache                     16834560
-rss                       8192000
-mapped_file               3743744
-swap                      0
-inactive_anon             0
-active_anon               8192000
-inactive_file             13996032
-active_file               2838528
-unevictable               0
-
-Is there a way to reconcile these numbers somehow? I understand that the
-fields from the two files represent different things. What I'm trying to
-do is to combine, for example, the fields from memory.stat to
-approximately reach what is displayed by statm.
-
-Thank you in advance,
-Andre
-
-[1] http://www.kernel.org/doc/Documentation/cgroups/memory.txt
-
-
+Regards,
+-Kame
