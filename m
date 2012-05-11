@@ -1,40 +1,55 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Christoph Lameter <cl@linux.com>
 Subject: Re: [PATCH v2 04/29] slub: always get the cache from its page in
  kfree
-Date: Fri, 11 May 2012 15:11:56 -0300
-Message-ID: <4FAD566C.3000804@parallels.com>
+Date: Fri, 11 May 2012 13:17:41 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205111316540.386@router.home>
 References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205111251420.31049@router.home> <4FAD531D.6030007@parallels.com> <alpine.DEB.2.00.1205111305570.386@router.home>
+ <4FAD566C.3000804@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1205111305570.386-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1336760265; bh=hHv+vPp2/xPphN/ONOv8tg32DD2uOi/1KTJ5Tix/G9M=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=LL8pbjb54oletOuCHm4P/d0P52FuU7WzPLJR+c7OoOnamOR6xQFFrGtCsfHn1QKCdSGaWjHfcShPSbXIFJGFP9Vu5/Ny4PFKD2eXiHtNzNYy7W0d4g394Idh73knS9C9yBPW1ldAEGtjPkEWXUecfq8B88DaCQuycYWhlIA3a2I=
+In-Reply-To: <4FAD566C.3000804@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 05/11/2012 03:06 PM, Christoph Lameter wrote:
-> On Fri, 11 May 2012, Glauber Costa wrote:
+On Fri, 11 May 2012, Glauber Costa wrote:
+
+> On 05/11/2012 03:06 PM, Christoph Lameter wrote:
+> > On Fri, 11 May 2012, Glauber Costa wrote:
+> >
+> > > > Adding a VM_BUG_ON may be useful to make sure that kmem_cache_free is
+> > > > always passed the correct slab cache.
+> > >
+> > > Well, problem is , it isn't always passed the "correct" slab cache.
+> > > At least not after this series, since we'll have child caches associated
+> > > with
+> > > the main cache.
+> > >
+> > > So we'll pass, for instance, kmem_cache_free(dentry_cache...), but will in
+> > > fact free from the memcg copy of the dentry cache.
+> >
+> > Urg. But then please only do this for the MEMCG case and add a fat big
+> > warning in kmem_cache_free.
 >
->>> Adding a VM_BUG_ON may be useful to make sure that kmem_cache_free is
->>> always passed the correct slab cache.
->>
->> Well, problem is , it isn't always passed the "correct" slab cache.
->> At least not after this series, since we'll have child caches associated with
->> the main cache.
->>
->> So we'll pass, for instance, kmem_cache_free(dentry_cache...), but will in
->> fact free from the memcg copy of the dentry cache.
+> I can do that, of course.
+> Another option if you don't oppose, is to add another field in the kmem_cache
+> structure (I tried to keep them at a minimum),
+> to record the parent cache we got created from.
 >
-> Urg. But then please only do this for the MEMCG case and add a fat big
-> warning in kmem_cache_free.
+> Then, it gets trivial to do the following:
+>
+> VM_BUG_ON(page->slab != s && page->slab != s->parent_cache);
 
-I can do that, of course.
-Another option if you don't oppose, is to add another field in the 
-kmem_cache structure (I tried to keep them at a minimum),
-to record the parent cache we got created from.
+Sounds ok but I need to catch up on what this whole memcg thing in slab
+allocators should accomplish in order to say something definite.
 
-Then, it gets trivial to do the following:
-
-VM_BUG_ON(page->slab != s && page->slab != s->parent_cache);
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
