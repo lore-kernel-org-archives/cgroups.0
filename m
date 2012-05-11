@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 25/29] memcg: Track all the memcg children of a kmem_cache.
-Date: Fri, 11 May 2012 14:44:27 -0300
-Message-ID: <1336758272-24284-26-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 24/29] memcg/slub: shrink dead caches
+Date: Fri, 11 May 2012 14:44:26 -0300
+Message-ID: <1336758272-24284-25-git-send-email-glommer@parallels.com>
 References: <1336758272-24284-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1336758272-24284-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,162 +11,190 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+In the slub allocator, when the last object of a page goes away, we
+don't necessarily free it - there is not necessarily a test for empty
+page in any slab_free path.
 
-This enables us to remove all the children of a kmem_cache being
-destroyed, if for example the kernel module it's being used in
-gets unloaded. Otherwise, the children will still point to the
-destroyed parent.
+This means that when we destroy a memcg cache that happened to be empty,
+those caches may take a lot of time to go away: removing the memcg
+reference won't destroy them - because there are pending references,
+and the empty pages will stay there, until a shrinker is called upon
+for any reason.
 
-We also use this to propagate /proc/slabinfo settings to all
-the children of a cache, when, for example, changing its
-batchsize.
+This patch marks all memcg caches as dead. kmem_cache_shrink is called
+for the ones who are not yet dead - this will force internal cache
+reorganization, and then all references to empty pages will be removed.
 
-Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+An unlikely branch is used to make sure this case does not affect
+performance in the usual slab_free path.
+
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h |    1 +
- include/linux/slab.h       |    1 +
- mm/memcontrol.c            |    9 +++++++
- mm/slab.c                  |   52 ++++++++++++++++++++++++++++++++++++++++---
- 4 files changed, 59 insertions(+), 4 deletions(-)
+ include/linux/slab.h     |    4 +++
+ include/linux/slub_def.h |    9 ++++++++
+ mm/memcontrol.c          |   49 +++++++++++++++++++++++++++++++++++++++++++--
+ mm/slub.c                |    1 +
+ 4 files changed, 60 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 3e03f26..5a5cd42 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -465,6 +465,7 @@ extern struct static_key mem_cgroup_kmem_enabled_key;
- #define mem_cgroup_kmem_on static_key_false(&mem_cgroup_kmem_enabled_key)
- 
- void mem_cgroup_destroy_cache(struct kmem_cache *cachep);
-+void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id);
- #else
- static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 					     struct kmem_cache *s)
 diff --git a/include/linux/slab.h b/include/linux/slab.h
-index d03637e..876783b 100644
+index a03a4f2..d03637e 100644
 --- a/include/linux/slab.h
 +++ b/include/linux/slab.h
-@@ -169,6 +169,7 @@ struct mem_cgroup_cache_params {
- 
+@@ -154,10 +154,14 @@ unsigned int kmem_cache_size(struct kmem_cache *);
  #endif
- 	struct list_head destroyed_list; /* Used when deleting memcg cache */
-+	struct list_head sibling_list;
+ 
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++#include <linux/workqueue.h>
++
+ struct mem_cgroup_cache_params {
+ 	struct mem_cgroup *memcg;
+ 	int id;
+ 	atomic_t refcnt;
++	bool dead;
++	struct work_struct cache_shrinker;
+ 
+ #ifdef CONFIG_SLAB
+ 	/* Original cache parameters, used when creating a memcg cache */
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index 56b6fb4..7462b2e 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -117,6 +117,15 @@ struct kmem_cache {
+ 	struct kmem_cache_node *node[MAX_NUMNODES];
  };
- #endif
  
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c3772dc..933edf1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -548,6 +548,7 @@ void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 	else
- 		INIT_LIST_HEAD(&cachep->memcg_params.destroyed_list);
- 	cachep->memcg_params.id = id;
-+	INIT_LIST_HEAD(&cachep->memcg_params.sibling_list);
- }
- 
- void mem_cgroup_release_cache(struct kmem_cache *cachep)
-@@ -845,6 +846,14 @@ struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
- }
- EXPORT_SYMBOL(__mem_cgroup_get_kmem_cache);
- 
-+void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id)
++
++static inline void kmem_cache_verify_dead(struct kmem_cache *cachep)
 +{
-+	mutex_lock(&memcg_cache_mutex);
-+	cachep->memcg_params.memcg->slabs[id] = NULL;
-+	mutex_unlock(&memcg_cache_mutex);
-+	mem_cgroup_put(cachep->memcg_params.memcg);
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	if (unlikely(cachep->memcg_params.dead))
++		schedule_work(&cachep->memcg_params.cache_shrinker);
++#endif
 +}
 +
- bool __mem_cgroup_new_kmem_page(struct page *page, gfp_t gfp)
+ /*
+  * Kmalloc subsystem.
+  */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1d1a307..c3772dc 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -520,7 +520,7 @@ char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+ 
+ 	BUG_ON(dentry == NULL);
+ 
+-	name = kasprintf(GFP_KERNEL, "%s(%d:%s)",
++	name = kasprintf(GFP_KERNEL, "%s(%d:%s)dead",
+ 	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
+ 
+ 	return name;
+@@ -557,11 +557,24 @@ void mem_cgroup_release_cache(struct kmem_cache *cachep)
+ }
+ 
+ 
++static void cache_shrinker_work_func(struct work_struct *work)
++{
++	struct mem_cgroup_cache_params *params;
++	struct kmem_cache *cachep;
++
++	params = container_of(work, struct mem_cgroup_cache_params,
++			      cache_shrinker);
++	cachep = container_of(params, struct kmem_cache, memcg_params);
++
++	kmem_cache_shrink(cachep);
++}
++
+ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 						  struct kmem_cache *cachep)
  {
- 	struct mem_cgroup *memcg;
-diff --git a/mm/slab.c b/mm/slab.c
-index a6fd82e..cd4600d 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -2638,6 +2638,8 @@ struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
- 	if (new == NULL)
+ 	struct kmem_cache *new_cachep;
+ 	int idx;
++	char *name;
+ 
+ 	BUG_ON(!mem_cgroup_kmem_enabled(memcg));
+ 
+@@ -581,10 +594,21 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
  		goto out;
- 
-+	list_add(&new->memcg_params.sibling_list,
-+	    &cachep->memcg_params.sibling_list);
- 	if ((cachep->limit != new->limit) ||
- 	    (cachep->batchcount != new->batchcount) ||
- 	    (cachep->shared != new->shared))
-@@ -2853,6 +2855,29 @@ void kmem_cache_destroy(struct kmem_cache *cachep)
- {
- 	BUG_ON(!cachep || in_interrupt());
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	/* Destroy all the children caches if we aren't a memcg cache */
-+	if (cachep->memcg_params.id != -1) {
-+		struct kmem_cache *c;
-+		struct mem_cgroup_cache_params *p, *tmp;
-+		int id = cachep->memcg_params.id;
-+
-+		mutex_lock(&cache_chain_mutex);
-+		list_for_each_entry_safe(p, tmp,
-+		    &cachep->memcg_params.sibling_list, sibling_list) {
-+			c = container_of(p, struct kmem_cache, memcg_params);
-+			if (c == cachep)
-+				continue;
-+			mutex_unlock(&cache_chain_mutex);
-+			BUG_ON(c->memcg_params.id != -1);
-+			mem_cgroup_remove_child_kmem_cache(c, id);
-+			kmem_cache_destroy(c);
-+			mutex_lock(&cache_chain_mutex);
-+		}
-+		mutex_unlock(&cache_chain_mutex);
-+	}
-+#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-+
- 	/* Find the cache in the chain of caches. */
- 	get_online_cpus();
- 	mutex_lock(&cache_chain_mutex);
-@@ -2860,6 +2885,9 @@ void kmem_cache_destroy(struct kmem_cache *cachep)
- 	 * the chain is never empty, cache_cache is never destroyed
- 	 */
- 	list_del(&cachep->next);
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	list_del(&cachep->memcg_params.sibling_list);
-+#endif
- 	if (__cache_shrink(cachep)) {
- 		slab_error(cachep, "Can't free all objects");
- 		list_add(&cachep->next, &cache_chain);
-@@ -4650,11 +4678,27 @@ static ssize_t slabinfo_write(struct file *file, const char __user *buffer,
- 			if (limit < 1 || batchcount < 1 ||
- 					batchcount > limit || shared < 0) {
- 				res = 0;
--			} else {
--				res = do_tune_cpucache(cachep, limit,
--						       batchcount, shared,
--						       GFP_KERNEL);
-+				break;
- 			}
-+
-+			res = do_tune_cpucache(cachep, limit, batchcount,
-+			    shared, GFP_KERNEL);
-+
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+			{
-+				struct kmem_cache *c;
-+				struct mem_cgroup_cache_params *p;
-+
-+				list_for_each_entry(p,
-+				    &cachep->memcg_params.sibling_list,
-+				    sibling_list) {
-+					c = container_of(p, struct kmem_cache,
-+					    memcg_params);
-+					do_tune_cpucache(c, limit, batchcount,
-+					    shared, GFP_KERNEL);
-+				}
-+			}
-+#endif
- 			break;
- 		}
  	}
+ 
++	/*
++	 * Because the cache is expected to duplicate the string,
++	 * we must make sure it has opportunity to copy its full
++	 * name. Only now we can remove the dead part from it
++	 */
++	name = (char *)new_cachep->name;
++	if (name)
++		name[strlen(name) - 4] = '\0';
++
+ 	mem_cgroup_get(memcg);
+ 	memcg->slabs[idx] = new_cachep;
+ 	new_cachep->memcg_params.memcg = memcg;
+ 	atomic_set(&new_cachep->memcg_params.refcnt, 1);
++	INIT_WORK(&new_cachep->memcg_params.cache_shrinker,
++		  cache_shrinker_work_func);
+ out:
+ 	mutex_unlock(&memcg_cache_mutex);
+ 	return new_cachep;
+@@ -607,6 +631,21 @@ static void kmem_cache_destroy_work_func(struct work_struct *w)
+ 	struct mem_cgroup_cache_params *p, *tmp;
+ 	unsigned long flags;
+ 	LIST_HEAD(del_unlocked);
++	LIST_HEAD(shrinkers);
++
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	list_for_each_entry_safe(p, tmp, &destroyed_caches, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		if (atomic_read(&cachep->memcg_params.refcnt) != 0)
++			list_move(&cachep->memcg_params.destroyed_list, &shrinkers);
++	}
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	list_for_each_entry_safe(p, tmp, &shrinkers, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		list_del(&cachep->memcg_params.destroyed_list);
++		kmem_cache_shrink(cachep);
++	}
+ 
+ 	spin_lock_irqsave(&cache_queue_lock, flags);
+ 	list_for_each_entry_safe(p, tmp, &destroyed_caches, destroyed_list) {
+@@ -682,12 +721,16 @@ static void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
+ 
+ 	spin_lock_irqsave(&cache_queue_lock, flags);
+ 	for (i = 0; i < MAX_KMEM_CACHE_TYPES; i++) {
++		char *name;
+ 		cachep = memcg->slabs[i];
+ 		if (!cachep)
+ 			continue;
+ 
+-		if (atomic_dec_and_test(&cachep->memcg_params.refcnt))
+-			__mem_cgroup_destroy_cache(cachep);
++		atomic_dec(&cachep->memcg_params.refcnt);
++		cachep->memcg_params.dead = true;
++		name = (char *)cachep->name;
++		name[strlen(name)] = 'd';
++		__mem_cgroup_destroy_cache(cachep);
+ 	}
+ 	spin_unlock_irqrestore(&cache_queue_lock, flags);
+ 
+diff --git a/mm/slub.c b/mm/slub.c
+index 02d8f5e..f077b90 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -2675,6 +2675,7 @@ redo:
+ 	} else
+ 		__slab_free(s, page, x, addr);
+ 
++	kmem_cache_verify_dead(s);
+ }
+ 
+ void kmem_cache_free(struct kmem_cache *s, void *x)
 -- 
 1.7.7.6
