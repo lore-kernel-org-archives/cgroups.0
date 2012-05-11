@@ -1,34 +1,50 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH v3][0/6] memcg: prevent -ENOMEM in pre_destroy()
-Date: Fri, 11 May 2012 18:41:36 +0900
-Message-ID: <4FACDED0.3020400@jp.fujitsu.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: [PATCH v3 1/6] memcg: fix error code in hugetlb_force_memcg_empty()
+Date: Fri, 11 May 2012 18:45:18 +0900
+Message-ID: <4FACDFAE.5050808@jp.fujitsu.com>
+References: <4FACDED0.3020400@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4FACDED0.3020400@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Han Ying <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hi, here is v3 based on memcg-devel tree.
-git://github.com/mstsxfx/memcg-devel.git
+The conditions are handled as -EBUSY, _now_.
 
-This patch series is for avoiding -ENOMEM at calling pre_destroy() 
-which is called at rmdir(). After this patch, charges will be moved
-to root (if use_hierarchy==0) or parent (if use_hierarchy==1), and
-we'll not see -ENOMEM in rmdir() of cgroup.
+Reviewed-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+---
+ mm/hugetlb.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-v2 included some other patches than ones for handling -ENOMEM problem,
-but I divided it. I'd like to post others in different series, later.
-No logical changes in general, maybe v3 is cleaner than v2.
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 1d3c8ea9..824f07b 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1922,8 +1922,11 @@ int hugetlb_force_memcg_empty(struct cgroup *cgroup)
+ 	int ret = 0, idx = 0;
+ 
+ 	do {
+-		if (cgroup_task_count(cgroup) || !list_empty(&cgroup->children))
++		if (cgroup_task_count(cgroup)
++			|| !list_empty(&cgroup->children)) {
++			ret = -EBUSY;
+ 			goto out;
++		}
+ 		/*
+ 		 * If the task doing the cgroup_rmdir got a signal
+ 		 * we don't really need to loop till the hugetlb resource
+-- 
+1.7.4.1
 
-0001 ....fix error code in memcg-hugetlb
-0002 ....add res_counter_uncharge_until
-0003 ....use res_counter_uncharge_until in memcg
-0004 ....move charges to root is use_hierarchy==0
-0005 ....cleanup for mem_cgroup_move_account()
-0006 ....remove warning of res_counter_uncharge_nofail (from Costa's slub accounting series).
 
-Regards,
--Kame
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
