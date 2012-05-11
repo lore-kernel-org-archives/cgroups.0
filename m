@@ -1,34 +1,46 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH v2 04/29] slub: always get the cache from its page in
- kfree
-Date: Fri, 11 May 2012 13:06:36 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205111305570.386@router.home>
-References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205111251420.31049@router.home> <4FAD531D.6030007@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v2 00/29] kmem limitation for memcg
+Date: Fri, 11 May 2012 15:05:21 -0300
+Message-ID: <4FAD54E1.6040106@parallels.com>
+References: <1336758272-24284-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1336759600; bh=gv6IROagpWvwVLKhY9c7/hbqqq0Wg/iTDzl8z3IwF3g=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=eV4TuJJwuQKqe6EYEbFOfD4OzO199QRG8Plxa6KNbD2xHkrIMTZBE6g/QdJjoRw0CdC6UV6rgtwE2SZc4GFRbwScw2vMSOxKMcSrd2sCEG7GoxEO6knE1jFHzxnGHNqyGLqXGQ+YzFayOLyT5GKrohS/psiVKHO3FyJOF0kDFnY=
-In-Reply-To: <4FAD531D.6030007@parallels.com>
+In-Reply-To: <1336758272-24284-1-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org
 
-On Fri, 11 May 2012, Glauber Costa wrote:
-
-> > Adding a VM_BUG_ON may be useful to make sure that kmem_cache_free is
-> > always passed the correct slab cache.
+On 05/11/2012 02:44 PM, Glauber Costa wrote:
+> Hello All,
 >
-> Well, problem is , it isn't always passed the "correct" slab cache.
-> At least not after this series, since we'll have child caches associated with
-> the main cache.
+> This is my new take for the memcg kmem accounting.
+> At this point, I consider the series pretty mature - although of course,
+> bugs are always there...
 >
-> So we'll pass, for instance, kmem_cache_free(dentry_cache...), but will in
-> fact free from the memcg copy of the dentry cache.
-
-Urg. But then please only do this for the MEMCG case and add a fat big
-warning in kmem_cache_free.
+> As a disclaimer, however, I must say that the slub code is much more stressed
+> by me, since I know it better. If you have no more objections to the concepts
+> presented, the remaining edges can probably be polished in a rc cycle,
+> at the maintainers discretion, of course.
+>
+> Otherwise, I'll be happy to address any concerns of yours.
+>
+> Since last submission:
+>
+>   * memcgs can be properly removed.
+>   * We are not charging based on current->mm->owner instead of current
+>   * kmem_large allocations for slub got some fixes, specially for the free case
+>   * A cache that is registered can be properly removed (common module case)
+>     even if it spans memcg children. Slab had some code for that, now it works
+>     well with both
+>   * A new mechanism for skipping allocations is proposed (patch posted
+>     separately already). Now instead of having kmalloc_no_account, we mark
+>     a region as non-accountable for memcg.
+>
+Forgot to mention the ida-based index allocation, instead of keeping our 
+own bitmap.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
