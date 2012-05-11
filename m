@@ -1,60 +1,52 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 04/29] slub: always get the cache from its page in
- kfree
-Date: Fri, 11 May 2012 16:24:11 -0300
-Message-ID: <4FAD675B.6020709@parallels.com>
-References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205111251420.31049@router.home> <4FAD531D.6030007@parallels.com> <alpine.DEB.2.00.1205111305570.386@router.home> <4FAD566C.3000804@parallels.com> <alpine.DEB.2.00.1205111316540.386@router.home> <4FAD585A.4070007@parallels.com> <alpine.DEB.2.00.1205111331010.386@router.home> <4FAD5DA2.70803@parallels.com> <alpine.DEB.2.00.1205111354540.386@router.home> <4FAD6169.8090409@parallels.com> <alpine.DEB.2.00.1205111407280.386@router.home> <4FAD6449.2060201@parallels.com> <alpine.DEB.2.00.1205111418350.386@router.home>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1205111418350.386-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v5 0/2] fix static_key disabling problem in memcg
+Date: Fri, 11 May 2012 17:11:15 -0300
+Message-ID: <1336767077-25351-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>
 
-On 05/11/2012 04:20 PM, Christoph Lameter wrote:
-> On Fri, 11 May 2012, Glauber Costa wrote:
->
->>> I see that. But there are other subsystems from slab allocators that do
->>> the same. There are also objects that may be used by multiple processes.
->>
->> This is also true for normal user pages. And then, we do what memcg does:
->> first one to touch, gets accounted. I don't think deviating from the memcg
->> behavior for user pages makes much sense here.
->>
->> A cache won't go away while it still have objects, even after the memcg is
->> removed (it is marked as dead)
->
-> Ok so we will have some dead pages around that are then repatriated to
-> the / set?
+Hi, Tejun, Kame,
 
-No, they are not repatriated. I actually wrote code for that once in my 
-first series, but it was the general feeling at the time that it was too 
-complicated. (and I only tried for the slub, not slab)
+This series is composed of the two patches of the last fix, with no changes
+(only exception is the removal of x = false assignments that Tejun requested,
+that is done now). Note also that patch 1 of this series was reused by me
+in the slab accounting patches for memcg.
 
-So instead, we just keep the cache around, until the objects go away.
-It will show in slabinfo as dentry(css_id:memcgname)dead
+The first patch, that adds a mutex to memcg is dropped. I didn't posted it
+before so I could wait for Kame to get back from his vacations and properly
+review it.
 
-For the record, I wrote that code because I found a nice feature, but I 
-totally agree with the complicated part.
+Kame: Steven Rostedt pointed out that our analysis of the static branch updates
+were wrong, so the mutex is really not needed. 
 
-Also, in normal scenarios, dead caches are not expected to be common. 
-Most of them should go away as memcg dies.
+The key to understand that, is that atomic_inc_not_zero will only return right
+away if the value is not yet zero - as the name implies - but the update in the
+atomic variable only happens after the code is patched.
 
->>> Hmmm.. Would be better to have a hierachy there. /proc/slabinfo is more
->>> legacy.
->>
->> I can take a look at that then. Assuming you agree with all the rest, is
->> looking into that a pre-requisite for merging, or is something that can be
->> deferred for a phase2 ? (We still don't do shrinkers, for instance, so this is
->> sure to have a phase2)
->
-> Not a prerequisite for merging but note that I intend to rework the
-> allocators to extract common code so that they have the same sysfs
-> interface, error reporting and failure scenarios. We can at that time
-> also add support for /sys/kernel/slab to memcg. (/sys/memcg/<name>/slab/* ?)
+Therefore, if two callers enters with a key value of zero, both will be held at
+the jump_label_lock() call, effectively guaranteeing the behavior we need.
 
-Yes, that would be a good plan.
+Glauber Costa (2):
+  Always free struct memcg through schedule_work()
+  decrement static keys on real destroy time
 
+ include/net/sock.h        |    9 ++++++++
+ mm/memcontrol.c           |   50 +++++++++++++++++++++++++++++++++-----------
+ net/ipv4/tcp_memcontrol.c |   32 ++++++++++++++++++++++------
+ 3 files changed, 71 insertions(+), 20 deletions(-)
+
+-- 
+1.7.7.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
