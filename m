@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 16/29] slub: create duplicate cache
-Date: Fri, 11 May 2012 14:44:18 -0300
-Message-ID: <1336758272-24284-17-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 17/29] slab: create duplicate cache
+Date: Fri, 11 May 2012 14:44:19 -0300
+Message-ID: <1336758272-24284-18-git-send-email-glommer@parallels.com>
 References: <1336758272-24284-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1336758272-24284-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -16,11 +16,11 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6
 This patch provides kmem_cache_dup(), that duplicates
 a cache for a memcg, preserving its creation properties.
 Object size, alignment and flags are all respected.
+An exception is the SLAB_PANIC flag, since cache creation
+inside a memcg should not be fatal.
 
-When a duplicate cache is created, the parent cache cannot
-be destructed during the child lifetime. To assure this,
-its reference count is increased if the cache creation
-succeeds.
+This code is mostly written by Suleiman Souhlal,
+with some adaptations and simplifications by me.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
@@ -30,107 +30,58 @@ CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h |    2 ++
- include/linux/slab.h       |    2 ++
- mm/memcontrol.c            |   17 +++++++++++++++++
- mm/slub.c                  |   31 +++++++++++++++++++++++++++++++
- 4 files changed, 52 insertions(+), 0 deletions(-)
+ mm/slab.c |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 99e14b9..f93021a 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -445,6 +445,8 @@ int memcg_css_id(struct mem_cgroup *memcg);
- void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 				      struct kmem_cache *s);
- void mem_cgroup_release_cache(struct kmem_cache *cachep);
-+extern char *mem_cgroup_cache_name(struct mem_cgroup *memcg,
-+				   struct kmem_cache *cachep);
- #else
- static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 					     struct kmem_cache *s)
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 1386650..e73ef71 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -322,6 +322,8 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
+diff --git a/mm/slab.c b/mm/slab.c
+index d05a326..985714a 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -301,6 +301,8 @@ static void free_block(struct kmem_cache *cachep, void **objpp, int len,
+ 			int node);
+ static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp);
+ static void cache_reap(struct work_struct *unused);
++static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
++			    int batchcount, int shared, gfp_t gfp);
  
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
- #define MAX_KMEM_CACHE_TYPES 400
-+extern struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-+					 struct kmem_cache *cachep);
- #else
- #define MAX_KMEM_CACHE_TYPES 0
- #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9327996..a8171cb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -467,6 +467,23 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
- EXPORT_SYMBOL(tcp_proto_cgroup);
- #endif /* CONFIG_INET */
- 
-+char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
-+{
-+	char *name;
-+	struct dentry *dentry;
-+
-+	rcu_read_lock();
-+	dentry = rcu_dereference(memcg->css.cgroup->dentry);
-+	rcu_read_unlock();
-+
-+	BUG_ON(dentry == NULL);
-+
-+	name = kasprintf(GFP_KERNEL, "%s(%d:%s)",
-+	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
-+
-+	return name;
-+}
-+
- struct ida cache_types;
- 
- void mem_cgroup_register_cache(struct mem_cgroup *memcg,
-diff --git a/mm/slub.c b/mm/slub.c
-index 1698371..9b21b38 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -4034,6 +4034,37 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
- }
+ /*
+  * This function must be completely optimized away if a constant is passed to
+@@ -2598,6 +2600,36 @@ kmem_cache_create(const char *name, size_t size, size_t align,
  EXPORT_SYMBOL(kmem_cache_create);
  
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
 +struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
-+				  struct kmem_cache *s)
++				  struct kmem_cache *cachep)
 +{
-+	char *name;
 +	struct kmem_cache *new;
++	unsigned long flags;
++	char *name;
 +
-+	name = mem_cgroup_cache_name(memcg, s);
++	name = mem_cgroup_cache_name(memcg, cachep);
 +	if (!name)
 +		return NULL;
 +
-+	new = kmem_cache_create_memcg(memcg, name, s->objsize, s->align,
-+				      (s->allocflags & ~SLAB_PANIC), s->ctor);
++	flags = cachep->flags & ~(SLAB_PANIC|CFLGS_OFF_SLAB);
++	mutex_lock(&cache_chain_mutex);
++	new = __kmem_cache_create(memcg, name, obj_size(cachep),
++	    cachep->memcg_params.orig_align, flags, cachep->ctor);
 +
-+	/*
-+	 * We increase the reference counter in the parent cache, to
-+	 * prevent it from being deleted. If kmem_cache_destroy() is
-+	 * called for the root cache before we call it for a child cache,
-+	 * it will be queued for destruction when we finally drop the
-+	 * reference on the child cache.
-+	 */
-+	if (new) {
-+		down_write(&slub_lock);
-+		s->refcount++;
-+		up_write(&slub_lock);
-+	}
++	if (new == NULL)
++		goto out;
++
++	if ((cachep->limit != new->limit) ||
++	    (cachep->batchcount != new->batchcount) ||
++	    (cachep->shared != new->shared))
++		do_tune_cpucache(new, cachep->limit, cachep->batchcount,
++		    cachep->shared, GFP_KERNEL);
++out:
++	mutex_unlock(&cache_chain_mutex);
 +	kfree(name);
 +	return new;
 +}
-+#endif
 +
- #ifdef CONFIG_SMP
- /*
-  * Use the cpu notifier to insure that the cpu slabs are flushed when
+ static int __init memcg_slab_register_all(void)
+ {
+ 	struct kmem_cache *cachep;
 -- 
 1.7.7.6
