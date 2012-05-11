@@ -1,122 +1,130 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v2 19/29] skip memcg kmem allocations in specified code regions
-Date: Fri, 11 May 2012 14:44:21 -0300
-Message-ID: <1336758272-24284-20-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v2 28/29] slub: track all children of a kmem cache
+Date: Fri, 11 May 2012 14:44:30 -0300
+Message-ID: <1336758272-24284-29-git-send-email-glommer@parallels.com>
 References: <1336758272-24284-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1336758272-24284-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1336758272-24284-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, Glauber Costa <glommer@parallels.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-This patch creates a mechanism that skip memcg allocations during
-certain pieces of our core code. It basically works in the same way
-as preempt_disable()/preempt_enable(): By marking a region under
-which all allocations will be accounted to the root memcg.
+When we destroy a cache (like for instance, if we're unloading a module)
+we need to go through the list of memcg caches and destroy them as well.
 
-We need this to prevent races in early cache creation, when we
-allocate data using caches that are not necessarily created already.
+The caches are expected to be empty by themselves, so nothing is changed
+here. All previous guarantees are kept and no new guarantees are given.
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Christoph Lameter <cl@linux.com>
-CC: Pekka Enberg <penberg@cs.helsinki.fi>
-CC: Michal Hocko <mhocko@suse.cz>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-CC: Johannes Weiner <hannes@cmpxchg.org>
-CC: Suleiman Souhlal <suleiman@google.com>
+So given all memcg caches are expected to be empty - even though they are
+likely to be hanging around in the system, we just need to scan a list of
+sibling caches, and destroy each one of them.
+
+This is very similar to the work done by Suleiman for the slab.
+
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/sched.h |    1 +
- mm/memcontrol.c       |   25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ mm/slub.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++--------------
+ 1 files changed, 47 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 81a173c..0501114 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1613,6 +1613,7 @@ struct task_struct {
- 		unsigned long nr_pages;	/* uncharged usage */
- 		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
- 	} memcg_batch;
-+	atomic_t memcg_kmem_skip_account;
- #endif
- #ifdef CONFIG_HAVE_HW_BREAKPOINT
- 	atomic_t ptrace_bp_refcnt;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5a7416b..c4ecf9c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -479,6 +479,21 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
- EXPORT_SYMBOL(tcp_proto_cgroup);
- #endif /* CONFIG_INET */
+diff --git a/mm/slub.c b/mm/slub.c
+index afe29ef..cfa6295 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3267,6 +3267,20 @@ static inline int kmem_cache_close(struct kmem_cache *s)
+ 	return 0;
+ }
  
-+static void memcg_stop_kmem_account(void)
++void kmem_cache_destroy_unlocked(struct kmem_cache *s)
 +{
-+	if (!current->mm)
-+		return;
++	mem_cgroup_release_cache(s);
++	if (kmem_cache_close(s)) {
++		printk(KERN_ERR "SLUB %s: %s called for cache that "
++			"still has objects.\n", s->name, __func__);
++		dump_stack();
++	}
 +
-+	atomic_inc(&current->memcg_kmem_skip_account);
++	if (s->flags & SLAB_DESTROY_BY_RCU)
++		rcu_barrier();
++	sysfs_slab_remove(s);
 +}
 +
-+static void memcg_resume_kmem_account(void)
-+{
-+	if (!current->mm)
-+		return;
-+
-+	atomic_dec(&current->memcg_kmem_skip_account);
-+}
- char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+ /*
+  * Close a cache and release the kmem_cache structure
+  * (must be used for caches created using kmem_cache_create)
+@@ -3275,24 +3289,41 @@ void kmem_cache_destroy(struct kmem_cache *s)
  {
- 	char *name;
-@@ -540,7 +555,9 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	if (new_cachep)
- 		goto out;
- 
-+	memcg_stop_kmem_account();
- 	new_cachep = kmem_cache_dup(memcg, cachep);
-+	memcg_resume_kmem_account();
- 
- 	if (new_cachep == NULL) {
- 		new_cachep = cachep;
-@@ -631,7 +648,9 @@ static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
- 	if (!css_tryget(&memcg->css))
- 		return;
- 
-+	memcg_stop_kmem_account();
- 	cw = kmalloc(sizeof(struct create_work), GFP_NOWAIT);
-+	memcg_resume_kmem_account();
- 	if (cw == NULL) {
- 		css_put(&memcg->css);
- 		return;
-@@ -666,6 +685,9 @@ struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
- 	int idx;
- 	struct task_struct *p;
- 
-+	if (!current->mm || atomic_read(&current->memcg_kmem_skip_account))
-+		return cachep;
+ 	down_write(&slub_lock);
+ 	s->refcount--;
+-	if (!s->refcount) {
+-		list_del(&s->list);
 +
- 	gfp |=  cachep->allocflags;
- 
- 	if (cachep->memcg_params.memcg)
-@@ -700,6 +722,9 @@ bool __mem_cgroup_new_kmem_page(struct page *page, gfp_t gfp)
- 	if (!current->mm || in_interrupt())
- 		return true;
- 
-+	if (!current->mm || atomic_read(&current->memcg_kmem_skip_account))
-+		return true;
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+-		/* Not a memcg cache */
+-		if (s->memcg_params.id != -1) {
+-			mem_cgroup_release_cache(s);
+-			mem_cgroup_flush_cache_create_queue();
++	/* Not a memcg cache */
++	if (s->memcg_params.id != -1) {
++		struct mem_cgroup_cache_params *p, *tmp, *this;
++		struct kmem_cache *c;
++		int id = s->memcg_params.id;
 +
- 	rcu_read_lock();
- 	p = rcu_dereference(current->mm->owner);
- 	memcg = mem_cgroup_from_task(p);
++		this = &s->memcg_params;
++		mem_cgroup_flush_cache_create_queue();
++		list_for_each_entry_safe(p, tmp, &this->sibling_list, sibling_list) {
++			c = container_of(p, struct kmem_cache, memcg_params);
++			/* We never added the main cache to the sibling list */
++			if (WARN_ON(c == s))
++				continue;
++
++			c->refcount--;
++			if (c->refcount)
++				continue;
++
++			list_del(&c->list);
++			list_del(&c->memcg_params.sibling_list);
++			s->refcount--; /* parent reference */
++			up_write(&slub_lock);
++			mem_cgroup_remove_child_kmem_cache(c, id);
++			kmem_cache_destroy_unlocked(c);
++			down_write(&slub_lock);
+ 		}
++	}
+ #endif
++
++	if (!s->refcount) {
++		list_del(&s->list);
+ 		up_write(&slub_lock);
+-		if (kmem_cache_close(s)) {
+-			printk(KERN_ERR "SLUB %s: %s called for cache that "
+-				"still has objects.\n", s->name, __func__);
+-			dump_stack();
+-		}
+-		if (s->flags & SLAB_DESTROY_BY_RCU)
+-			rcu_barrier();
+-		sysfs_slab_remove(s);
++		kmem_cache_destroy_unlocked(s);
+ 	} else
+ 		up_write(&slub_lock);
+ }
+@@ -4150,6 +4181,8 @@ struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
+ 	 */
+ 	if (new) {
+ 		down_write(&slub_lock);
++		list_add(&new->memcg_params.sibling_list,
++			 &s->memcg_params.sibling_list);
+ 		s->refcount++;
+ 		up_write(&slub_lock);
+ 	}
 -- 
 1.7.7.6
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
