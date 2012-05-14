@@ -1,135 +1,81 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 3/6] mm: memcg: print statistics directly to seq_file
-Date: Mon, 14 May 2012 20:00:48 +0200
-Message-ID: <1337018451-27359-4-git-send-email-hannes@cmpxchg.org>
-References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
+Date: Mon, 14 May 2012 11:12:50 -0700
+Message-ID: <20120514181250.GD2366@google.com>
+References: <1336767077-25351-1-git-send-email-glommer@parallels.com>
+ <1336767077-25351-3-git-send-email-glommer@parallels.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=fkQggLsunezBTwf71vCXa8P3KBzjeVCt3a0OV4ZwrNU=;
+        b=C1dVIgl0/wC+WhfESyr7R01Dw5Ltq7XUJhg4751iCX4Vv5h8DCAe6sySBFXaBCUZ/q
+         93JgWf6ApgG6C8TgAtq51s4HBP058F7GWFAaHundoDCuvdhZaw3AiPCBXGId71JpnDrY
+         ZIOhVALw656SZEtK/p4VpwIMULB8HTN8J30oBBq2S7JKNBWDdwue7hHmli5mvwasAUqX
+         3T2gs90z9PLpyHjDF5XZQHpqzaA8NbUFQjCGXASigF+KQ7JG5dD/muHoh8w4EJ4vRSaL
+         3yaltkbbE+7zOSYT4doltdWpDbl3pc+fCgmAqkGhWi0xalRiud9zPaxIQD0veutO7Jky
+         xq6w==
+Content-Disposition: inline
+In-Reply-To: <1336767077-25351-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Being able to use seq_printf() allows being smarter about statistics
-name strings, which are currently listed twice, with the only
-difference being a "total_" prefix on the hierarchical version.
+On Fri, May 11, 2012 at 05:11:17PM -0300, Glauber Costa wrote:
+> We call the destroy function when a cgroup starts to be removed,
+> such as by a rmdir event.
+> 
+> However, because of our reference counters, some objects are still
+> inflight. Right now, we are decrementing the static_keys at destroy()
+> time, meaning that if we get rid of the last static_key reference,
+> some objects will still have charges, but the code to properly
+> uncharge them won't be run.
+> 
+> This becomes a problem specially if it is ever enabled again, because
+> now new charges will be added to the staled charges making keeping
+> it pretty much impossible.
+> 
+> We just need to be careful with the static branch activation:
+> since there is no particular preferred order of their activation,
+> we need to make sure that we only start using it after all
+> call sites are active. This is achieved by having a per-memcg
+> flag that is only updated after static_key_slow_inc() returns.
+> At this time, we are sure all sites are active.
+> 
+> This is made per-memcg, not global, for a reason:
+> it also has the effect of making socket accounting more
+> consistent. The first memcg to be limited will trigger static_key()
+> activation, therefore, accounting. But all the others will then be
+> accounted no matter what. After this patch, only limited memcgs
+> will have its sockets accounted.
+> 
+> [v2: changed a tcp limited flag for a generic proto limited flag ]
+> [v3: update the current active flag only after the static_key update ]
+> [v4: disarm_static_keys() inside free_work ]
+> [v5: got rid of tcp_limit_mutex, now in the static_key interface ]
+> 
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c |   56 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 28 insertions(+), 28 deletions(-)
+Generally looks sane to me.  Please feel free to addmy  Reviewed-by.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f0d248b..9e8551c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4274,24 +4274,21 @@ struct mcs_total_stat {
- 	s64 stat[NR_MCS_STAT];
- };
- 
--static struct {
--	char *local_name;
--	char *total_name;
--} memcg_stat_strings[NR_MCS_STAT] = {
--	{"cache", "total_cache"},
--	{"rss", "total_rss"},
--	{"mapped_file", "total_mapped_file"},
--	{"mlock", "total_mlock"},
--	{"pgpgin", "total_pgpgin"},
--	{"pgpgout", "total_pgpgout"},
--	{"swap", "total_swap"},
--	{"pgfault", "total_pgfault"},
--	{"pgmajfault", "total_pgmajfault"},
--	{"inactive_anon", "total_inactive_anon"},
--	{"active_anon", "total_active_anon"},
--	{"inactive_file", "total_inactive_file"},
--	{"active_file", "total_active_file"},
--	{"unevictable", "total_unevictable"}
-+static const char *memcg_stat_strings[NR_MCS_STAT] = {
-+	"cache",
-+	"rss",
-+	"mapped_file",
-+	"mlock",
-+	"pgpgin",
-+	"pgpgout",
-+	"swap",
-+	"pgfault",
-+	"pgmajfault",
-+	"inactive_anon",
-+	"active_anon",
-+	"inactive_file",
-+	"active_file",
-+	"unevictable",
- };
- 
- 
-@@ -4392,7 +4389,7 @@ static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- #endif /* CONFIG_NUMA */
- 
- static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
--				 struct cgroup_map_cb *cb)
-+				 struct seq_file *m)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 	struct mcs_total_stat mystat;
-@@ -4405,16 +4402,18 @@ static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
- 	for (i = 0; i < NR_MCS_STAT; i++) {
- 		if (i == MCS_SWAP && !do_swap_account)
- 			continue;
--		cb->fill(cb, memcg_stat_strings[i].local_name, mystat.stat[i]);
-+		seq_printf(m, "%s %llu\n", memcg_stat_strings[i],
-+			   (unsigned long long)mystat.stat[i]);
- 	}
- 
- 	/* Hierarchical information */
- 	{
- 		unsigned long long limit, memsw_limit;
- 		memcg_get_hierarchical_limit(memcg, &limit, &memsw_limit);
--		cb->fill(cb, "hierarchical_memory_limit", limit);
-+		seq_printf(m, "hierarchical_memory_limit %llu\n", limit);
- 		if (do_swap_account)
--			cb->fill(cb, "hierarchical_memsw_limit", memsw_limit);
-+			seq_printf(m, "hierarchical_memsw_limit %llu\n",
-+				   memsw_limit);
- 	}
- 
- 	memset(&mystat, 0, sizeof(mystat));
-@@ -4422,7 +4421,8 @@ static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
- 	for (i = 0; i < NR_MCS_STAT; i++) {
- 		if (i == MCS_SWAP && !do_swap_account)
- 			continue;
--		cb->fill(cb, memcg_stat_strings[i].total_name, mystat.stat[i]);
-+		seq_printf(m, "total_%s %llu\n", memcg_stat_strings[i],
-+			   (unsigned long long)mystat.stat[i]);
- 	}
- 
- #ifdef CONFIG_DEBUG_VM
-@@ -4443,10 +4443,10 @@ static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
- 				recent_scanned[0] += rstat->recent_scanned[0];
- 				recent_scanned[1] += rstat->recent_scanned[1];
- 			}
--		cb->fill(cb, "recent_rotated_anon", recent_rotated[0]);
--		cb->fill(cb, "recent_rotated_file", recent_rotated[1]);
--		cb->fill(cb, "recent_scanned_anon", recent_scanned[0]);
--		cb->fill(cb, "recent_scanned_file", recent_scanned[1]);
-+		seq_printf(m, "recent_rotated_anon %lu\n", recent_rotated[0]);
-+		seq_printf(m, "recent_rotated_file %lu\n", recent_rotated[1]);
-+		seq_printf(m, "recent_scanned_anon %lu\n", recent_scanned[0]);
-+		seq_printf(m, "recent_scanned_file %lu\n", recent_scanned[1]);
- 	}
- #endif
- 
-@@ -4880,7 +4880,7 @@ static struct cftype mem_cgroup_files[] = {
- 	},
- 	{
- 		.name = "stat",
--		.read_map = mem_control_stat_show,
-+		.read_seq_string = mem_control_stat_show,
- 	},
- 	{
- 		.name = "force_empty",
+> +	if (val == RESOURCE_MAX)
+> +		cg_proto->active = false;
+> +	else if (val != RESOURCE_MAX) {
+
+Minor nitpick: CodingStyle says not to omit { } if other branches need
+them.
+
+Thanks.
+
 -- 
-1.7.10.1
+tejun
