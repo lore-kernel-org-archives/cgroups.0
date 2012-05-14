@@ -1,79 +1,40 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
-Date: Mon, 14 May 2012 11:12:50 -0700
-Message-ID: <20120514181250.GD2366@google.com>
-References: <1336767077-25351-1-git-send-email-glommer@parallels.com>
- <1336767077-25351-3-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v3 1/6] memcg: fix error code in
+ hugetlb_force_memcg_empty()
+Date: Mon, 14 May 2012 11:15:56 -0700
+Message-ID: <20120514181556.GE2366@google.com>
+References: <4FACDED0.3020400@jp.fujitsu.com>
+ <4FACDFAE.5050808@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=fkQggLsunezBTwf71vCXa8P3KBzjeVCt3a0OV4ZwrNU=;
-        b=C1dVIgl0/wC+WhfESyr7R01Dw5Ltq7XUJhg4751iCX4Vv5h8DCAe6sySBFXaBCUZ/q
-         93JgWf6ApgG6C8TgAtq51s4HBP058F7GWFAaHundoDCuvdhZaw3AiPCBXGId71JpnDrY
-         ZIOhVALw656SZEtK/p4VpwIMULB8HTN8J30oBBq2S7JKNBWDdwue7hHmli5mvwasAUqX
-         3T2gs90z9PLpyHjDF5XZQHpqzaA8NbUFQjCGXASigF+KQ7JG5dD/muHoh8w4EJ4vRSaL
-         3yaltkbbE+7zOSYT4doltdWpDbl3pc+fCgmAqkGhWi0xalRiud9zPaxIQD0veutO7Jky
-         xq6w==
+        bh=KOLEb2uYJD8TpCrAg9Vo1Z7u99ORz3SogbtENCWXQSQ=;
+        b=l8DscEpQmAuWSJrYK8AFVX8HbL1ZMAupbc4AQC7M8wOGmrxJvrHj7rxKlp9U2F680V
+         QGEHlHrjZGabCNeQEms+s6TcYFJYoVng0t0qiznD6uDnqY7sIe8jkwUoFEmNQ7lt2Ogl
+         qyzKMfYhwgE/GS63qDW2KcOwVXU2iQAU3UPHmVrrzm9dLe6qjbkgREM5LyF+G8VG8eTG
+         WMd9wUn9Kbjnm+qgggnlmEFZLn855iJfbgI/MRwQZIyZ48OIF+CM9gKVg+rnL/04yakm
+         0SC7bzLRD9KmI+lHiX43/etaQCC3O5HqJ96vdDa+PH5aQPj/CUX2r8deK9Uycqto7xR5
+         DA5g==
 Content-Disposition: inline
-In-Reply-To: <1336767077-25351-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <4FACDFAE.5050808-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, May 11, 2012 at 05:11:17PM -0300, Glauber Costa wrote:
-> We call the destroy function when a cgroup starts to be removed,
-> such as by a rmdir event.
-> 
-> However, because of our reference counters, some objects are still
-> inflight. Right now, we are decrementing the static_keys at destroy()
-> time, meaning that if we get rid of the last static_key reference,
-> some objects will still have charges, but the code to properly
-> uncharge them won't be run.
-> 
-> This becomes a problem specially if it is ever enabled again, because
-> now new charges will be added to the staled charges making keeping
-> it pretty much impossible.
-> 
-> We just need to be careful with the static branch activation:
-> since there is no particular preferred order of their activation,
-> we need to make sure that we only start using it after all
-> call sites are active. This is achieved by having a per-memcg
-> flag that is only updated after static_key_slow_inc() returns.
-> At this time, we are sure all sites are active.
-> 
-> This is made per-memcg, not global, for a reason:
-> it also has the effect of making socket accounting more
-> consistent. The first memcg to be limited will trigger static_key()
-> activation, therefore, accounting. But all the others will then be
-> accounted no matter what. After this patch, only limited memcgs
-> will have its sockets accounted.
-> 
-> [v2: changed a tcp limited flag for a generic proto limited flag ]
-> [v3: update the current active flag only after the static_key update ]
-> [v4: disarm_static_keys() inside free_work ]
-> [v5: got rid of tcp_limit_mutex, now in the static_key interface ]
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On Fri, May 11, 2012 at 06:45:18PM +0900, KAMEZAWA Hiroyuki wrote:
+> -		if (cgroup_task_count(cgroup) || !list_empty(&cgroup->children))
+> +		if (cgroup_task_count(cgroup)
+> +			|| !list_empty(&cgroup->children)) {
+> +			ret = -EBUSY;
+>  			goto out;
 
-Generally looks sane to me.  Please feel free to addmy  Reviewed-by.
-
-> +	if (val == RESOURCE_MAX)
-> +		cg_proto->active = false;
-> +	else if (val != RESOURCE_MAX) {
-
-Minor nitpick: CodingStyle says not to omit { } if other branches need
-them.
+Why break the line?  It doesn't go over 80 col.
 
 Thanks.
 
