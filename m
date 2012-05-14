@@ -1,68 +1,48 @@
 From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
-Date: Mon, 14 May 2012 09:59:04 +0900
-Message-ID: <4FB058D8.6060707@jp.fujitsu.com>
-References: <1336767077-25351-1-git-send-email-glommer@parallels.com> <1336767077-25351-3-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v3 1/6] memcg: fix error code in hugetlb_force_memcg_empty()
+Date: Mon, 14 May 2012 10:07:34 +0900
+Message-ID: <4FB05AD6.1090400@jp.fujitsu.com>
+References: <4FACDED0.3020400@jp.fujitsu.com> <4FACDFAE.5050808@jp.fujitsu.com> <20120511141754.e0719c26.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1336767077-25351-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20120511141754.e0719c26.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-(2012/05/12 5:11), Glauber Costa wrote:
+(2012/05/12 6:17), Andrew Morton wrote:
 
-> We call the destroy function when a cgroup starts to be removed,
-> such as by a rmdir event.
+> On Fri, 11 May 2012 18:45:18 +0900
+> KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
 > 
-> However, because of our reference counters, some objects are still
-> inflight. Right now, we are decrementing the static_keys at destroy()
-> time, meaning that if we get rid of the last static_key reference,
-> some objects will still have charges, but the code to properly
-> uncharge them won't be run.
+>> The conditions are handled as -EBUSY, _now_.
 > 
-> This becomes a problem specially if it is ever enabled again, because
-> now new charges will be added to the staled charges making keeping
-> it pretty much impossible.
+> The changelog is poor.  I rewrote it to
 > 
-> We just need to be careful with the static branch activation:
-> since there is no particular preferred order of their activation,
-> we need to make sure that we only start using it after all
-> call sites are active. This is achieved by having a per-memcg
-> flag that is only updated after static_key_slow_inc() returns.
-> At this time, we are sure all sites are active.
+> : hugetlb_force_memcg_empty() incorrectly returns 0 (success) when the
+> : cgroup is found to be busy.  Return -EBUSY instead.
 > 
-> This is made per-memcg, not global, for a reason:
-> it also has the effect of making socket accounting more
-> consistent. The first memcg to be limited will trigger static_key()
-> activation, therefore, accounting. But all the others will then be
-> accounted no matter what. After this patch, only limited memcgs
-> will have its sockets accounted.
+> But it still doesn't tell us the end-user-visible effects of the bug. 
+> It should.
 > 
-> [v2: changed a tcp limited flag for a generic proto limited flag ]
-> [v3: update the current active flag only after the static_key update ]
-> [v4: disarm_static_keys() inside free_work ]
-> [v5: got rid of tcp_limit_mutex, now in the static_key interface ]
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
 
-Thank you for your patient works.
+Ah, sorry. How about this ?
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-BTW, what is the relationship between 1/2 and 2/2  ?
+
+The force_empty interface allows to make the memcg only when the cgroup
+doesn't include any tasks.
+
+	# echo 0 > /cgroup/xxxx/memory.force_empty
+
+If cgroup isn't empty, force_empty does nothing and retruns -EBUSY in usual
+memcg, memcontrol.c. But hugetlb implementation has inconsitency with
+it and returns 0 and do nothing. Fix it to return -EBUSY.
 
 Thanks,
 -Kame
-
-
 
