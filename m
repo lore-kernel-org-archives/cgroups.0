@@ -1,45 +1,47 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/6] add res_counter_uncharge_until()
-Date: Mon, 14 May 2012 12:56:38 +0200
-Message-ID: <CAFTL4hzFiFDTUAAgo=1RBLFhG5Xe8VEUESkpc-RgN7L-haMMbA@mail.gmail.com>
-References: <4FACDED0.3020400@jp.fujitsu.com>
-	<4FACE01A.4040405@jp.fujitsu.com>
-	<20120511141945.c487e94c.akpm@linux-foundation.org>
-	<4FB05B8F.8020408@jp.fujitsu.com>
-	<CAFTL4hwGEhyxZO0sXx5gVyK_xjhMQEbHojJbHzQmVKafNyVWtw@mail.gmail.com>
-	<4FB0DF4A.5010506@jp.fujitsu.com>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch 1/6] mm: memcg: remove obsolete statistics array boundary enum item
+Date: Mon, 14 May 2012 20:00:46 +0200
+Message-ID: <1337018451-27359-2-git-send-email-hannes@cmpxchg.org>
+References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=R40kkviYpcuEsz6/Ca1MgAkPSed/YLDnSg74lA34vFM=;
-        b=YShuH2Sxfr2ppD7ltBdDfJCfX5OfmrrgL3RvgB1sGifgHVJp/6Olqz1Sc3HbwE20sX
-         EHpHidl8/iy88pE4dBf90VWkmP/C1+BqLylVUGYbNoJsfPDpbm4LDSylE5SJsbdCWFwF
-         AkqeoIZapcRPrk8NOvjMTKwkZwcWn3PBg45D0vBbZWn6YF6MZXS+eLRuJNW235Q6isox
-         VTia4DUGTuUoWZdIhkoXJiuiG+fBt5cBF+zOd7Xfvf9o9fD4hUC2DEFBlVIiXiY2bU5Q
-         9wsV2Y3L7lJW7dRmPF3MNf2GINAFtp458Qv4szX0BZiR5y7vaq4v+qogPlHxmRq3n07g
-         1FSg==
-In-Reply-To: <4FB0DF4A.5010506-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <1337018451-27359-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-2012/5/14 KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>:
->> There may be some special cases with "Original-patch-from:" tags used when
->> one heavily inspire from a patch without taking much of its original code.
->>
->
->
-> Is this ok ?
+MEM_CGROUP_STAT_DATA is a leftover from when item counters were living
+in the same array as ever-increasing event counters.  It's no longer
+needed, use MEM_CGROUP_STAT_NSTATS to iterate over the stat array.
 
-Yep, or even better since I plan to use my company's address now to
-sign my patches:
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Signed-off-by: Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
-Thanks!
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9520ee9..aef89c1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -99,7 +99,6 @@ enum mem_cgroup_stat_index {
+ 	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+ 	MEM_CGROUP_STAT_MLOCK, /* # of pages charged as mlock()ed */
+ 	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
+-	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
+ 	MEM_CGROUP_STAT_NSTATS,
+ };
+ 
+@@ -2158,7 +2157,7 @@ static void mem_cgroup_drain_pcp_counter(struct mem_cgroup *memcg, int cpu)
+ 	int i;
+ 
+ 	spin_lock(&memcg->pcp_counter_lock);
+-	for (i = 0; i < MEM_CGROUP_STAT_DATA; i++) {
++	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+ 		long x = per_cpu(memcg->stat->count[i], cpu);
+ 
+ 		per_cpu(memcg->stat->count[i], cpu) = 0;
+-- 
+1.7.10.1
