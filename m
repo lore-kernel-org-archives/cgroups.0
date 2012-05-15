@@ -1,65 +1,61 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: About cgroup memory limits
-Date: Tue, 15 May 2012 11:20:40 +0200
-Message-ID: <20120515092040.GF1406@cmpxchg.org>
-References: <1336685923.15687.1.camel@andre>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 0/6] mm: memcg: statistics implementation cleanups
+Date: Tue, 15 May 2012 13:03:02 +0200
+Message-ID: <20120515110302.GH1406@cmpxchg.org>
+References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
+ <4FB1A115.2080303@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1336685923.15687.1.camel@andre>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <4FB1A115.2080303@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andre Nathan <andre-K36Kqf6HJK439yzSjRtAkw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, michel-K36Kqf6HJK439yzSjRtAkw@public.gmane.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, May 10, 2012 at 06:38:43PM -0300, Andre Nathan wrote:
-> Hello
+On Tue, May 15, 2012 at 09:19:33AM +0900, KAMEZAWA Hiroyuki wrote:
+> (2012/05/15 3:00), Johannes Weiner wrote:
 > 
-> I'm doing some tests with LXC and how it interacts with the memory
-> cgroup limits, more specifically the memory.limit_in_bytes control file.
+> > Before piling more things (reclaim stats) on top of the current mess,
+> > I thought it'd be better to clean up a bit.
+> > 
+> > The biggest change is printing statistics directly from live counters,
+> > it has always been annoying to declare a new counter in two separate
+> > enums and corresponding name string arrays.  After this series we are
+> > down to one of each.
+> > 
+> >  mm/memcontrol.c |  223 +++++++++++++++++------------------------------
+> >  1 file changed, 82 insertions(+), 141 deletions(-)
 > 
-> Am I correct in my understanding of the memory cgroup documentation[1]
-> that the limit set in memory.limit_in_bytes is applied to the sum of the
-> fields 'cache', 'rss' and 'mapped_file' in the memory.stat file?
-
-mapped_file is the subset of cache that is mapped into virtual memory.
-
-cache (= inactive_file + active_file) + rss (= inactive_anon +
-active_anon) is what the limit applies to.
-
-> I am also trying to understand the values reported in memory.stat when
-> compared to the statistics in /proc/$PID/statm.
+> to all 1-6. Thank you.
 > 
-> Below is the sum of each field in /proc/$PID/statm for every process
-> running inside a test container, converted to bytes:
-> 
->        size  resident     share     text  lib       data  dt
->   897208320  28741632  20500480  1171456    0  170676224   0
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-statms accounts based on virtual memory, not physical memory like
-memcg does.  If you have the same page mapped into two tasks, both
-their "share" counters will show a page, while the memcg will only
-account the single physical page in mapped_file.
+Thanks!
 
-> Compare this with the usage reports from memory.stat (fields total_*,
-> hierarchical_* and pg* omitted):
+> One excuse for my old implementation of mem_cgroup_get_total_stat(),
+> which is fixed in patch 6, is that I thought it's better to touch all counters
+> in a cachineline at once and avoiding long distance for-each loop.
 > 
-> cache                     16834560
-> rss                       8192000
-> mapped_file               3743744
-> swap                      0
-> inactive_anon             0
-> active_anon               8192000
-> inactive_file             13996032
-> active_file               2838528
-> unevictable               0
-> 
-> Is there a way to reconcile these numbers somehow? I understand that the
-> fields from the two files represent different things. What I'm trying to
-> do is to combine, for example, the fields from memory.stat to
-> approximately reach what is displayed by statm.
+> What number of performance difference with some big hierarchy(100+children) tree ?
+> (But I agree your code is cleaner. I'm just curious.)
 
-Excluding the memory shared between tasks in the same group from the
-"shared" counter gets you to "mapped_file" etc.
+I set up a parental group with hierarchy enabled, then created 512
+children and did a 4-job kernel bench in one of them.  Every 0.1
+seconds, I read the stats of the parent, which requires reading each
+stat/event/lru item from 512 groups before moving to the next one:
+
+                        512stats-vanilla        512stats-patched
+Walltime (s)            62.61 (  +0.00%)        62.88 (  +0.43%)
+Walltime (stddev)        0.17 (  +0.00%)         0.14 (  -3.17%)
+
+That should be acceptable, I think.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
