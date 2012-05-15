@@ -1,71 +1,65 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v3 1/6] memcg: fix error code in hugetlb_force_memcg_empty()
-Date: Tue, 15 May 2012 10:10:34 +0900
-Message-ID: <4FB1AD0A.50901@jp.fujitsu.com>
-References: <4FACDED0.3020400@jp.fujitsu.com> <4FACDFAE.5050808@jp.fujitsu.com> <20120514181556.GE2366@google.com> <20120514183219.GG2366@google.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v2 19/29] skip memcg kmem allocations in specified code
+ regions
+Date: Tue, 15 May 2012 11:46:48 +0900
+Message-ID: <4FB1C398.1010000@jp.fujitsu.com>
+References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-20-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120514183219.GG2366-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1336758272-24284-20-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-(2012/05/15 3:32), Tejun Heo wrote:
+(2012/05/12 2:44), Glauber Costa wrote:
 
-> On Mon, May 14, 2012 at 11:15:56AM -0700, Tejun Heo wrote:
->> On Fri, May 11, 2012 at 06:45:18PM +0900, KAMEZAWA Hiroyuki wrote:
->>> -		if (cgroup_task_count(cgroup) || !list_empty(&cgroup->children))
->>> +		if (cgroup_task_count(cgroup)
->>> +			|| !list_empty(&cgroup->children)) {
->>> +			ret = -EBUSY;
->>>  			goto out;
->>
->> Why break the line?  It doesn't go over 80 col.
+> This patch creates a mechanism that skip memcg allocations during
+> certain pieces of our core code. It basically works in the same way
+> as preempt_disable()/preempt_enable(): By marking a region under
+> which all allocations will be accounted to the root memcg.
 > 
-> Ooh, it does.  Sorry, my bad.  But still, isn't it more usual to leave
-> the operator in the preceding line and align the start of the second
-> line with the first?  ie.
+> We need this to prevent races in early cache creation, when we
+> allocate data using caches that are not necessarily created already.
 > 
-> 		if (cgroup_task_count(cgroup) ||
-> 		    !list_empty(&cgroup->children)) {
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Christoph Lameter <cl@linux.com>
+> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> CC: Suleiman Souhlal <suleiman@google.com>
+
+
+The concept seems okay to me but...
+
+> ---
+>  include/linux/sched.h |    1 +
+>  mm/memcontrol.c       |   25 +++++++++++++++++++++++++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
 > 
+> diff --git a/include/linux/sched.h b/include/linux/sched.h
+> index 81a173c..0501114 100644
+> --- a/include/linux/sched.h
+> +++ b/include/linux/sched.h
+> @@ -1613,6 +1613,7 @@ struct task_struct {
+>  		unsigned long nr_pages;	/* uncharged usage */
+>  		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
+>  	} memcg_batch;
+> +	atomic_t memcg_kmem_skip_account;
 
 
-How about this ?
-==
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Date: Fri, 27 Apr 2012 13:19:19 +0900
-Subject: [PATCH] memcg: fix error code in hugetlb_force_memcg_empty()
+If only 'current' thread touch this, you don't need to make this atomic counter.
+you can use 'long'.
 
-Changelog:
- - clean up.
-Reviewed-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- mm/hugetlb.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Thanks,
+-Kame
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 1d3c8ea9..82ec623 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -1922,8 +1922,11 @@ int hugetlb_force_memcg_empty(struct cgroup *cgroup)
- 	int ret = 0, idx = 0;
- 
- 	do {
--		if (cgroup_task_count(cgroup) || !list_empty(&cgroup->children))
-+		if (cgroup_task_count(cgroup) ||
-+		    !list_empty(&cgroup->children)){
-+			ret = -EBUSY;
- 			goto out;
-+		}
- 		/*
- 		 * If the task doing the cgroup_rmdir got a signal
- 		 * we don't really need to loop till the hugetlb resource
--- 
-1.7.4.1
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
