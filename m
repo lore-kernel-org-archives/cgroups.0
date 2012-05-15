@@ -1,95 +1,75 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 5/6] mm: memcg: group swapped-out statistics counter
- logically
-Date: Tue, 15 May 2012 17:04:52 +0200
-Message-ID: <20120515150452.GJ11346@tiehlicka.suse.cz>
-References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
- <1337018451-27359-6-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 1/6] memcg: fix error code in
+ hugetlb_force_memcg_empty()
+Date: Tue, 15 May 2012 08:12:10 -0700
+Message-ID: <20120515151210.GB6119@google.com>
+References: <4FACDED0.3020400@jp.fujitsu.com>
+ <4FACDFAE.5050808@jp.fujitsu.com>
+ <20120514181556.GE2366@google.com>
+ <20120514183219.GG2366@google.com>
+ <4FB1AD0A.50901@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=zDR6xYe4950K90i/oCx/MCvNvshvp0pBvLgb7NZDRXM=;
+        b=BExjyiyRGc4c04cylwVdt3c+MFbN6G+tWacYIIks4ActeLqfMpCf1SEc/ukhPV8UUW
+         qBtR37RSxCIFrBmJIhJuNyRDn2O3/d2eyU/T1FO1oMNG2A4zvLJdyLj0yg7qqVpNrXsV
+         srSQ8lICaXznrqA8NO2iDem9AMfat/zWCROITP+EuzTMYqmby5apF0EEhD5VeXldBvVR
+         nqGQXAdYgJdNTEO6mSEnsL3JtahrK6WvPcQF0ehOmtuCCrgTOWPIjQ3Gvk1ypvDoTT5P
+         hcPKNnSx9cdxWpTTp5oERhnbdVTEzt5rbLAfu7eipkH8PVoc3P5/t2awfxHC0lckyKIh
+         jlsQ==
 Content-Disposition: inline
-In-Reply-To: <1337018451-27359-6-git-send-email-hannes@cmpxchg.org>
+In-Reply-To: <4FB1AD0A.50901@jp.fujitsu.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Han Ying <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon 14-05-12 20:00:50, Johannes Weiner wrote:
-> The counter of currently swapped out pages in a memcg (hierarchy) is
-> sitting amidst ever-increasing event counters.  Move this item to the
-> other counters that reflect current state rather than history.
+On Tue, May 15, 2012 at 10:10:34AM +0900, KAMEZAWA Hiroyuki wrote:
+> (2012/05/15 3:32), Tejun Heo wrote:
 > 
-> This technically breaks the kernel ABI, but hopefully nobody relies on
-> the order of items in memory.stat.
+> > On Mon, May 14, 2012 at 11:15:56AM -0700, Tejun Heo wrote:
+> >> On Fri, May 11, 2012 at 06:45:18PM +0900, KAMEZAWA Hiroyuki wrote:
+> >>> -		if (cgroup_task_count(cgroup) || !list_empty(&cgroup->children))
+> >>> +		if (cgroup_task_count(cgroup)
+> >>> +			|| !list_empty(&cgroup->children)) {
+> >>> +			ret = -EBUSY;
+> >>>  			goto out;
+> >>
+> >> Why break the line?  It doesn't go over 80 col.
+> > 
+> > Ooh, it does.  Sorry, my bad.  But still, isn't it more usual to leave
+> > the operator in the preceding line and align the start of the second
+> > line with the first?  ie.
+> > 
+> > 		if (cgroup_task_count(cgroup) ||
+> > 		    !list_empty(&cgroup->children)) {
+> > 
+> 
+> 
+> How about this ?
+> ==
+> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Date: Fri, 27 Apr 2012 13:19:19 +0900
+> Subject: [PATCH] memcg: fix error code in hugetlb_force_memcg_empty()
+> 
+> Changelog:
+>  - clean up.
+> Reviewed-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-We did that already in 456f998e. Nobody complained AFAIR.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Heh, it was a nitpick anyway.  Please feel free to add my reviewed-by
+for the whole series.
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
-
-> ---
->  mm/memcontrol.c |   12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 546e7db..3ee63f6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4257,9 +4257,9 @@ enum {
->  	MCS_RSS,
->  	MCS_FILE_MAPPED,
->  	MCS_MLOCK,
-> +	MCS_SWAP,
->  	MCS_PGPGIN,
->  	MCS_PGPGOUT,
-> -	MCS_SWAP,
->  	MCS_PGFAULT,
->  	MCS_PGMAJFAULT,
->  	MCS_INACTIVE_ANON,
-> @@ -4279,9 +4279,9 @@ static const char *memcg_stat_strings[NR_MCS_STAT] = {
->  	"rss",
->  	"mapped_file",
->  	"mlock",
-> +	"swap",
->  	"pgpgin",
->  	"pgpgout",
-> -	"swap",
->  	"pgfault",
->  	"pgmajfault",
->  	"inactive_anon",
-> @@ -4306,14 +4306,14 @@ mem_cgroup_get_local_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
->  	s->stat[MCS_FILE_MAPPED] += val * PAGE_SIZE;
->  	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_MLOCK);
->  	s->stat[MCS_MLOCK] += val * PAGE_SIZE;
-> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGIN);
-> -	s->stat[MCS_PGPGIN] += val;
-> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGOUT);
-> -	s->stat[MCS_PGPGOUT] += val;
->  	if (do_swap_account) {
->  		val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_SWAPOUT);
->  		s->stat[MCS_SWAP] += val * PAGE_SIZE;
->  	}
-> +	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGIN);
-> +	s->stat[MCS_PGPGIN] += val;
-> +	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGOUT);
-> +	s->stat[MCS_PGPGOUT] += val;
->  	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGFAULT);
->  	s->stat[MCS_PGFAULT] += val;
->  	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGMAJFAULT);
-> -- 
-> 1.7.10.1
-> 
+Thank you!
 
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
