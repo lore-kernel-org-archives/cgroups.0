@@ -1,61 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 0/6] mm: memcg: statistics implementation cleanups
-Date: Tue, 15 May 2012 13:03:02 +0200
-Message-ID: <20120515110302.GH1406@cmpxchg.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 1/6] mm: memcg: remove obsolete statistics array boundary
+ enum item
+Date: Tue, 15 May 2012 16:14:48 +0200
+Message-ID: <20120515141447.GE11346@tiehlicka.suse.cz>
 References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
- <4FB1A115.2080303@jp.fujitsu.com>
+ <1337018451-27359-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4FB1A115.2080303@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1337018451-27359-2-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, May 15, 2012 at 09:19:33AM +0900, KAMEZAWA Hiroyuki wrote:
-> (2012/05/15 3:00), Johannes Weiner wrote:
+On Mon 14-05-12 20:00:46, Johannes Weiner wrote:
+> MEM_CGROUP_STAT_DATA is a leftover from when item counters were living
+> in the same array as ever-increasing event counters.  It's no longer
+> needed, use MEM_CGROUP_STAT_NSTATS to iterate over the stat array.
 > 
-> > Before piling more things (reclaim stats) on top of the current mess,
-> > I thought it'd be better to clean up a bit.
-> > 
-> > The biggest change is printing statistics directly from live counters,
-> > it has always been annoying to declare a new counter in two separate
-> > enums and corresponding name string arrays.  After this series we are
-> > down to one of each.
-> > 
-> >  mm/memcontrol.c |  223 +++++++++++++++++------------------------------
-> >  1 file changed, 82 insertions(+), 141 deletions(-)
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> to all 1-6. Thank you.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 9520ee9..aef89c1 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -99,7 +99,6 @@ enum mem_cgroup_stat_index {
+>  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+>  	MEM_CGROUP_STAT_MLOCK, /* # of pages charged as mlock()ed */
+>  	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
+> -	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
+>  	MEM_CGROUP_STAT_NSTATS,
+>  };
+>  
+> @@ -2158,7 +2157,7 @@ static void mem_cgroup_drain_pcp_counter(struct mem_cgroup *memcg, int cpu)
+>  	int i;
+>  
+>  	spin_lock(&memcg->pcp_counter_lock);
+> -	for (i = 0; i < MEM_CGROUP_STAT_DATA; i++) {
+> +	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+>  		long x = per_cpu(memcg->stat->count[i], cpu);
+>  
+>  		per_cpu(memcg->stat->count[i], cpu) = 0;
+> -- 
+> 1.7.10.1
 > 
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Thanks!
-
-> One excuse for my old implementation of mem_cgroup_get_total_stat(),
-> which is fixed in patch 6, is that I thought it's better to touch all counters
-> in a cachineline at once and avoiding long distance for-each loop.
-> 
-> What number of performance difference with some big hierarchy(100+children) tree ?
-> (But I agree your code is cleaner. I'm just curious.)
-
-I set up a parental group with hierarchy enabled, then created 512
-children and did a 4-job kernel bench in one of them.  Every 0.1
-seconds, I read the stats of the parent, which requires reading each
-stat/event/lru item from 512 groups before moving to the next one:
-
-                        512stats-vanilla        512stats-patched
-Walltime (s)            62.61 (  +0.00%)        62.88 (  +0.43%)
-Walltime (stddev)        0.17 (  +0.00%)         0.14 (  -3.17%)
-
-That should be acceptable, I think.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
