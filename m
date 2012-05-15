@@ -1,39 +1,265 @@
-From: Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -V3 1/1] cgroup: Add inotify event on change tasks file
- (fork, exit, move pid from file)
-Date: Tue, 15 May 2012 11:25:17 -0400
-Message-ID: <1337095517.31199.2.camel@localhost>
-References: <4F98E57E.1040201@samsung.com>
-	 <20120427223455.GU26595@google.com> <4F9B82E1.3070602@samsung.com>
-	 <20120428214131.GB4586@mtj.dyndns.org> <4FA24E07.1010206@samsung.com>
-	 <1336075511.2320.2.camel@localhost> <4FA36818.9010409@samsung.com>
-	 <20120504170412.GD24639@google.com>
-	 <20120504174330.GS6871@ZenIV.linux.org.uk>
-	 <20120507203848.GL19417@google.com> <20120515151637.GD6119@google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 6/6] mm: memcg: print statistics from live counters
+Date: Tue, 15 May 2012 17:27:05 +0200
+Message-ID: <20120515152705.GK11346@tiehlicka.suse.cz>
+References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
+ <1337018451-27359-7-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120515151637.GD6119-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1337018451-27359-7-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 2012-05-15 at 08:16 -0700, Tejun Heo wrote:
-> On Mon, May 07, 2012 at 01:38:48PM -0700, Tejun Heo wrote:
-> > On Fri, May 04, 2012 at 06:43:30PM +0100, Al Viro wrote:
-> > > 	Consider that preemptively NAKed.  Eric, would you mind explaining
-> > > WTF would fsnotify *do* with vfsmount(s) here, seeing that they might very
-> > > well be not mounted in anyone's namespace?  And as for generating an event
-> > > for each, they might appear and disappear at zero notice.
-> > 
-> > Eric, any ideas on how to proceed?
+On Mon 14-05-12 20:00:51, Johannes Weiner wrote:
+> Directly print statistics and event counters instead of going through
+> an intermediate accumulation stage into a separate array, which used
+> to require defining statistic items in more than one place.
+>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c |  173 +++++++++++++++++++++----------------------------------
+>  1 file changed, 66 insertions(+), 107 deletions(-)
+
+Nice
+
 > 
-> Ping?
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 3ee63f6..b0d343a 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -102,6 +102,14 @@ enum mem_cgroup_stat_index {
+>  	MEM_CGROUP_STAT_NSTATS,
+>  };
+>  
+> +static const char *mem_cgroup_stat_names[] = {
+> +	"cache",
+> +	"rss",
+> +	"mapped_file",
+> +	"mlock",
+> +	"swap",
+> +};
+> +
+>  enum mem_cgroup_events_index {
+>  	MEM_CGROUP_EVENTS_PGPGIN,	/* # of pages paged in */
+>  	MEM_CGROUP_EVENTS_PGPGOUT,	/* # of pages paged out */
+> @@ -109,6 +117,14 @@ enum mem_cgroup_events_index {
+>  	MEM_CGROUP_EVENTS_PGMAJFAULT,	/* # of major page-faults */
+>  	MEM_CGROUP_EVENTS_NSTATS,
+>  };
+> +
+> +static const char *mem_cgroup_events_names[] = {
+> +	"pgpgin",
+> +	"pgpgout",
+> +	"pgfault",
+> +	"pgmajfault",
+> +};
+> +
+>  /*
+>   * Per memcg event counter is incremented at every pagein/pageout. With THP,
+>   * it will be incremated by the number of pages. This counter is used for
+> @@ -4250,97 +4266,6 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
+>  }
+>  #endif
+>  
+> -
+> -/* For read statistics */
+> -enum {
+> -	MCS_CACHE,
+> -	MCS_RSS,
+> -	MCS_FILE_MAPPED,
+> -	MCS_MLOCK,
+> -	MCS_SWAP,
+> -	MCS_PGPGIN,
+> -	MCS_PGPGOUT,
+> -	MCS_PGFAULT,
+> -	MCS_PGMAJFAULT,
+> -	MCS_INACTIVE_ANON,
+> -	MCS_ACTIVE_ANON,
+> -	MCS_INACTIVE_FILE,
+> -	MCS_ACTIVE_FILE,
+> -	MCS_UNEVICTABLE,
+> -	NR_MCS_STAT,
+> -};
+> -
+> -struct mcs_total_stat {
+> -	s64 stat[NR_MCS_STAT];
+> -};
+> -
+> -static const char *memcg_stat_strings[NR_MCS_STAT] = {
+> -	"cache",
+> -	"rss",
+> -	"mapped_file",
+> -	"mlock",
+> -	"swap",
+> -	"pgpgin",
+> -	"pgpgout",
+> -	"pgfault",
+> -	"pgmajfault",
+> -	"inactive_anon",
+> -	"active_anon",
+> -	"inactive_file",
+> -	"active_file",
+> -	"unevictable",
+> -};
+> -
+> -
+> -static void
+> -mem_cgroup_get_local_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
+> -{
+> -	s64 val;
+> -
+> -	/* per cpu stat */
+> -	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_CACHE);
+> -	s->stat[MCS_CACHE] += val * PAGE_SIZE;
+> -	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_RSS);
+> -	s->stat[MCS_RSS] += val * PAGE_SIZE;
+> -	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
+> -	s->stat[MCS_FILE_MAPPED] += val * PAGE_SIZE;
+> -	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_MLOCK);
+> -	s->stat[MCS_MLOCK] += val * PAGE_SIZE;
+> -	if (do_swap_account) {
+> -		val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_SWAPOUT);
+> -		s->stat[MCS_SWAP] += val * PAGE_SIZE;
+> -	}
+> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGIN);
+> -	s->stat[MCS_PGPGIN] += val;
+> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGOUT);
+> -	s->stat[MCS_PGPGOUT] += val;
+> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGFAULT);
+> -	s->stat[MCS_PGFAULT] += val;
+> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGMAJFAULT);
+> -	s->stat[MCS_PGMAJFAULT] += val;
+> -
+> -	/* per zone stat */
+> -	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_INACTIVE_ANON));
+> -	s->stat[MCS_INACTIVE_ANON] += val * PAGE_SIZE;
+> -	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_ACTIVE_ANON));
+> -	s->stat[MCS_ACTIVE_ANON] += val * PAGE_SIZE;
+> -	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_INACTIVE_FILE));
+> -	s->stat[MCS_INACTIVE_FILE] += val * PAGE_SIZE;
+> -	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_ACTIVE_FILE));
+> -	s->stat[MCS_ACTIVE_FILE] += val * PAGE_SIZE;
+> -	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_UNEVICTABLE));
+> -	s->stat[MCS_UNEVICTABLE] += val * PAGE_SIZE;
+> -}
+> -
+> -static void
+> -mem_cgroup_get_total_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
+> -{
+> -	struct mem_cgroup *iter;
+> -
+> -	for_each_mem_cgroup_tree(iter, memcg)
+> -		mem_cgroup_get_local_stat(iter, s);
+> -}
+> -
+>  #ifdef CONFIG_NUMA
+>  static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+>  				      struct seq_file *m)
+> @@ -4388,24 +4313,40 @@ static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+>  }
+>  #endif /* CONFIG_NUMA */
+>  
+> +static const char *mem_cgroup_lru_names[] = {
+> +	"inactive_anon",
+> +	"active_anon",
+> +	"inactive_file",
+> +	"active_file",
+> +	"unevictable",
+> +};
+> +static inline void mem_cgroup_lru_names_not_uptodate(void)
+> +{
+> +	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+> +}
+> +
+>  static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
+>  				 struct seq_file *m)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+> -	struct mcs_total_stat mystat;
+> -	int i;
+> -
+> -	memset(&mystat, 0, sizeof(mystat));
+> -	mem_cgroup_get_local_stat(memcg, &mystat);
+> +	struct mem_cgroup *mi;
+> +	unsigned int i;
+>  
+> -
+> -	for (i = 0; i < NR_MCS_STAT; i++) {
+> -		if (i == MCS_SWAP && !do_swap_account)
+> +	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+> +		if (i == MEM_CGROUP_STAT_SWAPOUT && !do_swap_account)
+>  			continue;
+> -		seq_printf(m, "%s %llu\n", memcg_stat_strings[i],
+> -			   (unsigned long long)mystat.stat[i]);
+> +		seq_printf(m, "%s %ld\n", mem_cgroup_stat_names[i],
+> +			   mem_cgroup_read_stat(memcg, i) * PAGE_SIZE);
+>  	}
+>  
+> +	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++)
+> +		seq_printf(m, "%s %lu\n", mem_cgroup_events_names[i],
+> +			   mem_cgroup_read_events(memcg, i));
+> +
+> +	for (i = 0; i < NR_LRU_LISTS; i++)
+> +		seq_printf(m, "%s %lu\n", mem_cgroup_lru_names[i],
+> +			   mem_cgroup_nr_lru_pages(memcg, BIT(i)) * PAGE_SIZE);
+> +
+>  	/* Hierarchical information */
+>  	{
+>  		unsigned long long limit, memsw_limit;
+> @@ -4416,13 +4357,31 @@ static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
+>  				   memsw_limit);
+>  	}
+>  
+> -	memset(&mystat, 0, sizeof(mystat));
+> -	mem_cgroup_get_total_stat(memcg, &mystat);
+> -	for (i = 0; i < NR_MCS_STAT; i++) {
+> -		if (i == MCS_SWAP && !do_swap_account)
+> +	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+> +		long long val = 0;
+> +
+> +		if (i == MEM_CGROUP_STAT_SWAPOUT && !do_swap_account)
+>  			continue;
+> -		seq_printf(m, "total_%s %llu\n", memcg_stat_strings[i],
+> -			   (unsigned long long)mystat.stat[i]);
+> +		for_each_mem_cgroup_tree(mi, memcg)
+> +			val += mem_cgroup_read_stat(mi, i) * PAGE_SIZE;
+> +		seq_printf(m, "total_%s %lld\n", mem_cgroup_stat_names[i], val);
+> +	}
+> +
+> +	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++) {
+> +		unsigned long long val = 0;
+> +
+> +		for_each_mem_cgroup_tree(mi, memcg)
+> +			val += mem_cgroup_read_events(mi, i);
+> +		seq_printf(m, "total_%s %llu\n",
+> +			   mem_cgroup_events_names[i], val);
+> +	}
+> +
+> +	for (i = 0; i < NR_LRU_LISTS; i++) {
+> +		unsigned long long val = 0;
+> +
+> +		for_each_mem_cgroup_tree(mi, memcg)
+> +			val += mem_cgroup_nr_lru_pages(mi, BIT(i)) * PAGE_SIZE;
+> +		seq_printf(m, "total_%s %llu\n", mem_cgroup_lru_names[i], val);
+>  	}
+>  
+>  #ifdef CONFIG_DEBUG_VM
+> -- 
+> 1.7.10.1
+> 
 
-Oh sorry, if Al's correct, and there is just absolutely no way to come
-up with any kind of mnt for the path we have no choice.  Do it the way
-you were.
-
--Eric
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
