@@ -1,58 +1,65 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v2 11/29] cgroups: ability to stop res charge propagation
- on bounded ancestor
-Date: Tue, 15 May 2012 11:59:45 +0900
-Message-ID: <4FB1C6A1.1020602@jp.fujitsu.com>
-References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-12-git-send-email-glommer@parallels.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: About cgroup memory limits
+Date: Tue, 15 May 2012 11:20:40 +0200
+Message-ID: <20120515092040.GF1406@cmpxchg.org>
+References: <1336685923.15687.1.camel@andre>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1336758272-24284-12-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1336685923.15687.1.camel@andre>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, Frederic Weisbecker <fweisbec@gmail.com>, Li Zefan <lizf@cn.fujitsu.com>, Aditya Kali <adityakali@google.com>, Oleg Nesterov <oleg@redhat.com>, Kay Sievers <kay.sievers@vrfy.org>, Tim Hockin <thockin@hockin.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Transfer-Encoding: 7bit
+To: Andre Nathan <andre-K36Kqf6HJK439yzSjRtAkw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, michel-K36Kqf6HJK439yzSjRtAkw@public.gmane.org
 
-(2012/05/12 2:44), Glauber Costa wrote:
-
-> From: Frederic Weisbecker <fweisbec@gmail.com>
+On Thu, May 10, 2012 at 06:38:43PM -0300, Andre Nathan wrote:
+> Hello
 > 
-> Moving a task from a cgroup to another may require to substract its
-> resource charge from the old cgroup and add it to the new one.
+> I'm doing some tests with LXC and how it interacts with the memory
+> cgroup limits, more specifically the memory.limit_in_bytes control file.
 > 
-> For this to happen, the uncharge/charge propagation can just stop when we
-> reach the common ancestor for the two cgroups.  Further the performance
-> reasons, we also want to avoid to temporarily overload the common
-> ancestors with a non-accurate resource counter usage if we charge first
-> the new cgroup and uncharge the old one thereafter.  This is going to be a
-> requirement for the coming max number of task subsystem.
+> Am I correct in my understanding of the memory cgroup documentation[1]
+> that the limit set in memory.limit_in_bytes is applied to the sum of the
+> fields 'cache', 'rss' and 'mapped_file' in the memory.stat file?
+
+mapped_file is the subset of cache that is mapped into virtual memory.
+
+cache (= inactive_file + active_file) + rss (= inactive_anon +
+active_anon) is what the limit applies to.
+
+> I am also trying to understand the values reported in memory.stat when
+> compared to the statistics in /proc/$PID/statm.
 > 
-> To solve this, provide a pair of new API that can charge/uncharge a
-> resource counter until we reach a given ancestor.
+> Below is the sum of each field in /proc/$PID/statm for every process
+> running inside a test container, converted to bytes:
 > 
-> Signed-off-by: Frederic Weisbecker <fweisbec@gmail.com>
-> Acked-by: Paul Menage <paul@paulmenage.org>
-> Acked-by: Glauber Costa <glommer@parallels.com>
-> Cc: Li Zefan <lizf@cn.fujitsu.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Aditya Kali <adityakali@google.com>
-> Cc: Oleg Nesterov <oleg@redhat.com>
-> Cc: Kay Sievers <kay.sievers@vrfy.org>
-> Cc: Tim Hockin <thockin@hockin.org>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Acked-by: Kirill A. Shutemov <kirill@shutemov.name>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>        size  resident     share     text  lib       data  dt
+>   897208320  28741632  20500480  1171456    0  170676224   0
 
+statms accounts based on virtual memory, not physical memory like
+memcg does.  If you have the same page mapped into two tasks, both
+their "share" counters will show a page, while the memcg will only
+account the single physical page in mapped_file.
 
-Where is this function called in this series ?
+> Compare this with the usage reports from memory.stat (fields total_*,
+> hierarchical_* and pg* omitted):
+> 
+> cache                     16834560
+> rss                       8192000
+> mapped_file               3743744
+> swap                      0
+> inactive_anon             0
+> active_anon               8192000
+> inactive_file             13996032
+> active_file               2838528
+> unevictable               0
+> 
+> Is there a way to reconcile these numbers somehow? I understand that the
+> fields from the two files represent different things. What I'm trying to
+> do is to combine, for example, the fields from memory.stat to
+> approximately reach what is displayed by statm.
 
-Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Excluding the memory shared between tasks in the same group from the
+"shared" counter gets you to "mapped_file" etc.
