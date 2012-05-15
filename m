@@ -1,14 +1,14 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 4/6] mm: memcg: keep ratelimit counter separate from
- event counters
-Date: Tue, 15 May 2012 16:58:05 +0200
-Message-ID: <20120515145805.GI11346@tiehlicka.suse.cz>
+Subject: Re: [patch 5/6] mm: memcg: group swapped-out statistics counter
+ logically
+Date: Tue, 15 May 2012 17:04:52 +0200
+Message-ID: <20120515150452.GJ11346@tiehlicka.suse.cz>
 References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org>
- <1337018451-27359-5-git-send-email-hannes@cmpxchg.org>
+ <1337018451-27359-6-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1337018451-27359-5-git-send-email-hannes@cmpxchg.org>
+In-Reply-To: <1337018451-27359-6-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,61 +16,69 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Mon 14-05-12 20:00:49, Johannes Weiner wrote:
-> All events except the ratelimit counter are statistics exported to
-> userspace.  Keep this internal value out of the event count array.
+On Mon 14-05-12 20:00:50, Johannes Weiner wrote:
+> The counter of currently swapped out pages in a memcg (hierarchy) is
+> sitting amidst ever-increasing event counters.  Move this item to the
+> other counters that reflect current state rather than history.
+> 
+> This technically breaks the kernel ABI, but hopefully nobody relies on
+> the order of items in memory.stat.
 
-OK, makes sense. I was just thinking that events_internal array (with a
-single MEM_CGROUP_EVENTS_COUNT) would be more consistent. Probably too
-much churn for a single event though.
-
+We did that already in 456f998e. Nobody complained AFAIR.
 > 
 > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
 Acked-by: Michal Hocko <mhocko@suse.cz>
 
 > ---
->  mm/memcontrol.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  mm/memcontrol.c |   12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 9e8551c..546e7db 100644
+> index 546e7db..3ee63f6 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -105,7 +105,6 @@ enum mem_cgroup_stat_index {
->  enum mem_cgroup_events_index {
->  	MEM_CGROUP_EVENTS_PGPGIN,	/* # of pages paged in */
->  	MEM_CGROUP_EVENTS_PGPGOUT,	/* # of pages paged out */
-> -	MEM_CGROUP_EVENTS_COUNT,	/* # of pages paged in/out */
->  	MEM_CGROUP_EVENTS_PGFAULT,	/* # of page-faults */
->  	MEM_CGROUP_EVENTS_PGMAJFAULT,	/* # of major page-faults */
->  	MEM_CGROUP_EVENTS_NSTATS,
-> @@ -129,6 +128,7 @@ enum mem_cgroup_events_target {
->  struct mem_cgroup_stat_cpu {
->  	long count[MEM_CGROUP_STAT_NSTATS];
->  	unsigned long events[MEM_CGROUP_EVENTS_NSTATS];
-> +	unsigned long nr_page_events;
->  	unsigned long targets[MEM_CGROUP_NTARGETS];
->  };
->  
-> @@ -736,7 +736,7 @@ static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
->  		nr_pages = -nr_pages; /* for event */
+> @@ -4257,9 +4257,9 @@ enum {
+>  	MCS_RSS,
+>  	MCS_FILE_MAPPED,
+>  	MCS_MLOCK,
+> +	MCS_SWAP,
+>  	MCS_PGPGIN,
+>  	MCS_PGPGOUT,
+> -	MCS_SWAP,
+>  	MCS_PGFAULT,
+>  	MCS_PGMAJFAULT,
+>  	MCS_INACTIVE_ANON,
+> @@ -4279,9 +4279,9 @@ static const char *memcg_stat_strings[NR_MCS_STAT] = {
+>  	"rss",
+>  	"mapped_file",
+>  	"mlock",
+> +	"swap",
+>  	"pgpgin",
+>  	"pgpgout",
+> -	"swap",
+>  	"pgfault",
+>  	"pgmajfault",
+>  	"inactive_anon",
+> @@ -4306,14 +4306,14 @@ mem_cgroup_get_local_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
+>  	s->stat[MCS_FILE_MAPPED] += val * PAGE_SIZE;
+>  	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_MLOCK);
+>  	s->stat[MCS_MLOCK] += val * PAGE_SIZE;
+> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGIN);
+> -	s->stat[MCS_PGPGIN] += val;
+> -	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGOUT);
+> -	s->stat[MCS_PGPGOUT] += val;
+>  	if (do_swap_account) {
+>  		val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_SWAPOUT);
+>  		s->stat[MCS_SWAP] += val * PAGE_SIZE;
 >  	}
->  
-> -	__this_cpu_add(memcg->stat->events[MEM_CGROUP_EVENTS_COUNT], nr_pages);
-> +	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
->  
->  	preempt_enable();
->  }
-> @@ -797,7 +797,7 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
->  {
->  	unsigned long val, next;
->  
-> -	val = __this_cpu_read(memcg->stat->events[MEM_CGROUP_EVENTS_COUNT]);
-> +	val = __this_cpu_read(memcg->stat->nr_page_events);
->  	next = __this_cpu_read(memcg->stat->targets[target]);
->  	/* from time_after() in jiffies.h */
->  	if ((long)next - (long)val < 0) {
+> +	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGIN);
+> +	s->stat[MCS_PGPGIN] += val;
+> +	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGPGOUT);
+> +	s->stat[MCS_PGPGOUT] += val;
+>  	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGFAULT);
+>  	s->stat[MCS_PGFAULT] += val;
+>  	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGMAJFAULT);
 > -- 
 > 1.7.10.1
 > 
