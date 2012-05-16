@@ -1,42 +1,80 @@
-From: Michel Machado <michel-K36Kqf6HJK439yzSjRtAkw@public.gmane.org>
-Subject: Re: About cgroup memory limits
-Date: Wed, 16 May 2012 09:15:28 -0400
-Message-ID: <1337174128.2759.33.camel@Thor>
-References: <1336685923.15687.1.camel@andre>
-	 <20120515092040.GF1406@cmpxchg.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
+Date: Wed, 16 May 2012 13:57:55 -0700
+Message-ID: <20120516135755.cdcdf9ba.akpm@linux-foundation.org>
+References: <1336767077-25351-1-git-send-email-glommer@parallels.com>
+	<1336767077-25351-3-git-send-email-glommer@parallels.com>
+	<4FB0621C.3010604@huawei.com>
+	<4FB35153.3080309@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120515092040.GF1406-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4FB35153.3080309@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andre Nathan <andre-K36Kqf6HJK439yzSjRtAkw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
 
-Hi Johannes,
+On Wed, 16 May 2012 11:03:47 +0400
+Glauber Costa <glommer@parallels.com> wrote:
 
-   Thank you very much for your reply, it does help us to understand the
-numbers we have at hand.
-
-   Could you clarify your following statement further:
-
-> > Below is the sum of each field in /proc/$PID/statm for every process
-> > running inside a test container, converted to bytes:
+> On 05/14/2012 05:38 AM, Li Zefan wrote:
+> >> +static void disarm_static_keys(struct mem_cgroup *memcg)
 > > 
-> >        size  resident     share     text  lib       data  dt
-> >   897208320  28741632  20500480  1171456    0  170676224   0
+> >> +{
+> >> +#ifdef CONFIG_INET
+> >> +	if (memcg->tcp_mem.cg_proto.activated)
+> >> +		static_key_slow_dec(&memcg_socket_limit_enabled);
+> >> +#endif
+> >> +}
+> > 
+> > 
+> > Move this inside the ifdef/endif below ?
+> > 
+> > Otherwise I think you'll get compile error if !CONFIG_INET...
 > 
-> statms accounts based on virtual memory, not physical memory like
-> memcg does.  If you have the same page mapped into two tasks, both
-> their "share" counters will show a page, while the memcg will only
-> account the single physical page in mapped_file.
+> I don't fully get it.
+> 
+> We are supposed to provide a version of it for
+> CONFIG_CGROUP_MEM_RES_CTLR_KMEM and an empty version for
+> !CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> 
+> Inside the first, we take an action for CONFIG_INET, and no action for
+> !CONFIG_INET.
+> 
+> Bear in mind that the slab patches will add another test to that place,
+> and that's why I am doing it this way from the beginning.
+> 
+> Well, that said, I not only can be wrong, I very frequently am.
+> 
+> But I just compiled this one with and without CONFIG_INET, and it seems
+> to be going alright.
+> 
 
-   You mean when those two tasks are in the same cgroup, don't you? Is
-there a case in which a page is shared by two tasks that are in
-different cgroups but that page is accounted only for one of the two
-cgroups? If so, how's this case triggered?
+Yes, the ifdeffings in that area are rather nasty.
 
--- 
-[ ]'s
-Michel Machado
+I wonder if it would be simpler to do away with the ifdef nesting. 
+At the top-level, just do
+
+#if defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM) && defined(CONFIG_INET)
+static void disarm_static_keys(struct mem_cgroup *memcg)
+{
+	if (memcg->tcp_mem.cg_proto.activated)
+		static_key_slow_dec(&memcg_socket_limit_enabled);
+}
+#else
+static inline void disarm_static_keys(struct mem_cgroup *memcg)
+{
+}
+#endif
+
+
+The tcp_proto_cgroup() definition could go inside that ifdef as well.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
