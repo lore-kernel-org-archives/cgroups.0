@@ -1,62 +1,53 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
-Date: Wed, 16 May 2012 14:13:42 -0700
-Message-ID: <20120516141342.911931e7.akpm@linux-foundation.org>
-References: <1336767077-25351-1-git-send-email-glommer@parallels.com>
-	<1336767077-25351-3-git-send-email-glommer@parallels.com>
+From: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: make css->refcnt clearing on cgroup removal
+	optional
+Date: Thu, 17 May 2012 00:33:05 +0200
+Message-ID: <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
+References: <20120330223423.GJ28934@google.com>
+	<20120330223606.GK28934@google.com> <4F77B6BA.4070207@huawei.com>
+	<20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1336767077-25351-3-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+	:cc:content-type;
+	bh=S/8J/yrfXDacad8XopNtm/N/CjAxPrWxPvJKwyIDkpo=;
+	b=MSrNDvD13pfoyxfb4lGITx9WPjuuiwZxh5LpzWx9coOiu6JlEVxVKf/I1SeV0GF1wC
+	fOf5Ij5Zbn0ve57CdLyqf9IMFDDlyobujUsthZ6fE4DCXeTti1Y4FbJ+JLmiYsfPfWHd
+	eDD8mZOd5z3zO+k/r/3l5pkejdgydfBZmd7Xmfu0IXtFRwlpn6IK0nXvbntCOzelu0m2
+	rLzuUjDexN14UW0POit2x3Fus9JwGQXjHVuaxdmmxhc6f0xzZYLT8VBAMaEO6nVbO0i+
+	9YVTzL+MCOA42gPQJNsDGo54Cf4OExCgAb0clo6Bsxp6wxGrjM63HuaVAT5Njf8IhVUc
+	UKYA==
+In-Reply-To: <20120401185430.GA9230-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Fri, 11 May 2012 17:11:17 -0300
-Glauber Costa <glommer@parallels.com> wrote:
+Hi Tejun,
 
-> We call the destroy function when a cgroup starts to be removed,
-> such as by a rmdir event.
-> 
-> However, because of our reference counters, some objects are still
-> inflight. Right now, we are decrementing the static_keys at destroy()
-> time, meaning that if we get rid of the last static_key reference,
-> some objects will still have charges, but the code to properly
-> uncharge them won't be run.
-> 
-> This becomes a problem specially if it is ever enabled again, because
-> now new charges will be added to the staled charges making keeping
-> it pretty much impossible.
-> 
-> We just need to be careful with the static branch activation:
-> since there is no particular preferred order of their activation,
-> we need to make sure that we only start using it after all
-> call sites are active. This is achieved by having a per-memcg
-> flag that is only updated after static_key_slow_inc() returns.
-> At this time, we are sure all sites are active.
-> 
-> This is made per-memcg, not global, for a reason:
-> it also has the effect of making socket accounting more
-> consistent. The first memcg to be limited will trigger static_key()
-> activation, therefore, accounting. But all the others will then be
-> accounted no matter what. After this patch, only limited memcgs
-> will have its sockets accounted.
+On Sun, Apr 1, 2012 at 8:54 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello, Li.
+>
+> On Sun, Apr 01, 2012 at 10:00:26AM +0800, Li Zefan wrote:
+>> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>>
+>> Both patches look good.
+>>
+>> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>
+> Alright, adding the patches to cgroup/for-3.5.
 
-So I'm scratching my head over what the actual bug is, and how
-important it is.  AFAICT it will cause charging stats to exhibit some
-inaccuracy when memcg's are being torn down?
-
-I don't know how serious this in in the real world and so can't decide
-which kernel version(s) we should fix.
-
-When fixing bugs, please always fully describe the bug's end-user
-impact, so that I and others can make these sorts of decisions.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This patch allows for race when removing a cgroup since one of the
+css's may still have a dentry ref when the cgroup is removed, no? Is
+there a plan to deal with that before this patch gets pushed into 3.5?
