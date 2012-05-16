@@ -1,77 +1,36 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
-Date: Wed, 16 May 2012 10:03:08 +0400
-Message-ID: <4FB3431C.3050402@parallels.com>
-References: <1336767077-25351-1-git-send-email-glommer@parallels.com> <1336767077-25351-3-git-send-email-glommer@parallels.com> <4FB058D8.6060707@jp.fujitsu.com>
+Subject: Re: [PATCH v2 02/29] slub: fix slab_state for slub
+Date: Wed, 16 May 2012 10:10:24 +0400
+Message-ID: <4FB344D0.8050309@parallels.com>
+References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-3-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205151453460.18595@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FB058D8.6060707-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.00.1205151453460.18595-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 
-On 05/14/2012 04:59 AM, KAMEZAWA Hiroyuki wrote:
-> (2012/05/12 5:11), Glauber Costa wrote:
-> 
->> We call the destroy function when a cgroup starts to be removed,
->> such as by a rmdir event.
->>
->> However, because of our reference counters, some objects are still
->> inflight. Right now, we are decrementing the static_keys at destroy()
->> time, meaning that if we get rid of the last static_key reference,
->> some objects will still have charges, but the code to properly
->> uncharge them won't be run.
->>
->> This becomes a problem specially if it is ever enabled again, because
->> now new charges will be added to the staled charges making keeping
->> it pretty much impossible.
->>
->> We just need to be careful with the static branch activation:
->> since there is no particular preferred order of their activation,
->> we need to make sure that we only start using it after all
->> call sites are active. This is achieved by having a per-memcg
->> flag that is only updated after static_key_slow_inc() returns.
->> At this time, we are sure all sites are active.
->>
->> This is made per-memcg, not global, for a reason:
->> it also has the effect of making socket accounting more
->> consistent. The first memcg to be limited will trigger static_key()
->> activation, therefore, accounting. But all the others will then be
->> accounted no matter what. After this patch, only limited memcgs
->> will have its sockets accounted.
->>
->> [v2: changed a tcp limited flag for a generic proto limited flag ]
->> [v3: update the current active flag only after the static_key update ]
->> [v4: disarm_static_keys() inside free_work ]
->> [v5: got rid of tcp_limit_mutex, now in the static_key interface ]
+On 05/16/2012 01:55 AM, David Rientjes wrote:
+> On Fri, 11 May 2012, Glauber Costa wrote:
+>
+>> When the slub code wants to know if the sysfs state has already been
+>> initialized, it tests for slab_state == SYSFS. This is quite fragile,
+>> since new state can be added in the future (it is, in fact, for
+>> memcg caches). This patch fixes this behavior so the test matches
+>>> = SYSFS, as all other state does.
 >>
 >> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> CC: Tejun Heo<tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> CC: Li Zefan<lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->> CC: Kamezawa Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->> CC: Johannes Weiner<hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->> CC: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
-> 
-> 
-> Thank you for your patient works.
-> 
-> Acked-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> 
-> BTW, what is the relationship between 1/2 and 2/2  ?
+>
+> Acked-by: David Rientjes<rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> Can be merged now, there's no dependency on the rest of this patchset.
 
-Can't do jump label patching inside an interrupt handler. They need to
-happen when we free the structure, and I was about to add a worker
-myself when I found out we already have one: just we don't always use it.
+Agreed.
 
-Before we merge it, let me just make sure the issue with config Li
-pointed out don't exist. I did test it, but since I've reposted this
-many times with multiple tiny changes - the type that will usually get
-us killed, I'd be more comfortable with an extra round of testing if
-someone spotted a possibility.
+If anyone is willing to, would make my life easier in the future.
 
-Who is merging this fix, btw ?
-I find it to be entirely memcg related, even though it touches a file in
-net (but a file with only memcg code in it)
+Valid for all patches that fall in this category (there are quite a few 
+in the purely memcg land as well)
