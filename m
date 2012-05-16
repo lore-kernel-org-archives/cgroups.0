@@ -1,61 +1,77 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch 0/6] mm: memcg: statistics implementation cleanups
-Date: Wed, 16 May 2012 09:01:29 +0900
-Message-ID: <4FB2EE59.8070505@jp.fujitsu.com>
-References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org> <4FB1A115.2080303@jp.fujitsu.com> <20120515110302.GH1406@cmpxchg.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
+Date: Wed, 16 May 2012 10:03:08 +0400
+Message-ID: <4FB3431C.3050402@parallels.com>
+References: <1336767077-25351-1-git-send-email-glommer@parallels.com> <1336767077-25351-3-git-send-email-glommer@parallels.com> <4FB058D8.6060707@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120515110302.GH1406-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <4FB058D8.6060707-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-(2012/05/15 20:03), Johannes Weiner wrote:
+On 05/14/2012 04:59 AM, KAMEZAWA Hiroyuki wrote:
+> (2012/05/12 5:11), Glauber Costa wrote:
+> 
+>> We call the destroy function when a cgroup starts to be removed,
+>> such as by a rmdir event.
+>>
+>> However, because of our reference counters, some objects are still
+>> inflight. Right now, we are decrementing the static_keys at destroy()
+>> time, meaning that if we get rid of the last static_key reference,
+>> some objects will still have charges, but the code to properly
+>> uncharge them won't be run.
+>>
+>> This becomes a problem specially if it is ever enabled again, because
+>> now new charges will be added to the staled charges making keeping
+>> it pretty much impossible.
+>>
+>> We just need to be careful with the static branch activation:
+>> since there is no particular preferred order of their activation,
+>> we need to make sure that we only start using it after all
+>> call sites are active. This is achieved by having a per-memcg
+>> flag that is only updated after static_key_slow_inc() returns.
+>> At this time, we are sure all sites are active.
+>>
+>> This is made per-memcg, not global, for a reason:
+>> it also has the effect of making socket accounting more
+>> consistent. The first memcg to be limited will trigger static_key()
+>> activation, therefore, accounting. But all the others will then be
+>> accounted no matter what. After this patch, only limited memcgs
+>> will have its sockets accounted.
+>>
+>> [v2: changed a tcp limited flag for a generic proto limited flag ]
+>> [v3: update the current active flag only after the static_key update ]
+>> [v4: disarm_static_keys() inside free_work ]
+>> [v5: got rid of tcp_limit_mutex, now in the static_key interface ]
+>>
+>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> CC: Tejun Heo<tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>> CC: Li Zefan<lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>> CC: Kamezawa Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>> CC: Johannes Weiner<hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>> CC: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
+> 
+> 
+> Thank you for your patient works.
+> 
+> Acked-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> 
+> BTW, what is the relationship between 1/2 and 2/2  ?
 
-> On Tue, May 15, 2012 at 09:19:33AM +0900, KAMEZAWA Hiroyuki wrote:
->> (2012/05/15 3:00), Johannes Weiner wrote:
->>
->>> Before piling more things (reclaim stats) on top of the current mess,
->>> I thought it'd be better to clean up a bit.
->>>
->>> The biggest change is printing statistics directly from live counters,
->>> it has always been annoying to declare a new counter in two separate
->>> enums and corresponding name string arrays.  After this series we are
->>> down to one of each.
->>>
->>>  mm/memcontrol.c |  223 +++++++++++++++++------------------------------
->>>  1 file changed, 82 insertions(+), 141 deletions(-)
->>
->> to all 1-6. Thank you.
->>
->> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> 
-> Thanks!
-> 
->> One excuse for my old implementation of mem_cgroup_get_total_stat(),
->> which is fixed in patch 6, is that I thought it's better to touch all counters
->> in a cachineline at once and avoiding long distance for-each loop.
->>
->> What number of performance difference with some big hierarchy(100+children) tree ?
->> (But I agree your code is cleaner. I'm just curious.)
-> 
-> I set up a parental group with hierarchy enabled, then created 512
-> children and did a 4-job kernel bench in one of them.  Every 0.1
-> seconds, I read the stats of the parent, which requires reading each
-> stat/event/lru item from 512 groups before moving to the next one:
-> 
->                         512stats-vanilla        512stats-patched
-> Walltime (s)            62.61 (  +0.00%)        62.88 (  +0.43%)
-> Walltime (stddev)        0.17 (  +0.00%)         0.14 (  -3.17%)
-> 
-> That should be acceptable, I think.
-> 
-> 
+Can't do jump label patching inside an interrupt handler. They need to
+happen when we free the structure, and I was about to add a worker
+myself when I found out we already have one: just we don't always use it.
 
+Before we merge it, let me just make sure the issue with config Li
+pointed out don't exist. I did test it, but since I've reposted this
+many times with multiple tiny changes - the type that will usually get
+us killed, I'd be more comfortable with an extra round of testing if
+someone spotted a possibility.
 
-Yes, thank you. 
-Thanks,
--Kame
+Who is merging this fix, btw ?
+I find it to be entirely memcg related, even though it touches a file in
+net (but a file with only memcg code in it)
