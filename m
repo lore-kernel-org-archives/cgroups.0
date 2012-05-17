@@ -1,23 +1,22 @@
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: Glauber Costa <glommer@parallels.com>
 Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
-Date: Thu, 17 May 2012 09:07:11 +0900
-Message-ID: <4FB4412F.3050909@jp.fujitsu.com>
-References: <1336767077-25351-1-git-send-email-glommer@parallels.com> <1336767077-25351-3-git-send-email-glommer@parallels.com> <20120516141342.911931e7.akpm@linux-foundation.org>
+Date: Thu, 17 May 2012 07:06:52 +0400
+Message-ID: <4FB46B4C.3000307@parallels.com>
+References: <1336767077-25351-1-git-send-email-glommer@parallels.com> <1336767077-25351-3-git-send-email-glommer@parallels.com> <20120516140637.17741df6.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120516141342.911931e7.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20120516140637.17741df6.akpm@linux-foundation.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
 
-(2012/05/17 6:13), Andrew Morton wrote:
-
+On 05/17/2012 01:06 AM, Andrew Morton wrote:
 > On Fri, 11 May 2012 17:11:17 -0300
-> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> 
+> Glauber Costa<glommer@parallels.com>  wrote:
+>
 >> We call the destroy function when a cgroup starts to be removed,
 >> such as by a rmdir event.
 >>
@@ -44,51 +43,50 @@ Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79
 >> activation, therefore, accounting. But all the others will then be
 >> accounted no matter what. After this patch, only limited memcgs
 >> will have its sockets accounted.
-> 
-> So I'm scratching my head over what the actual bug is, and how
-> important it is.  AFAICT it will cause charging stats to exhibit some
-> inaccuracy when memcg's are being torn down?
-> 
-> I don't know how serious this in in the real world and so can't decide
-> which kernel version(s) we should fix.
-> 
-> When fixing bugs, please always fully describe the bug's end-user
-> impact, so that I and others can make these sorts of decisions.
-> 
-
-
-Ah, this was a bug report from me. tcp accounting can be easily broken.
-Costa, could you include this ?
-==
-
-tcp memcontrol uses static_branch to optimize limit=RESOURCE_MAX case.
-If all cgroup's limit=RESOUCE_MAX, resource usage is not accounted.
-But it's buggy now.
-
-For example, do following
-# while sleep 1;do
-   echo 9223372036854775807 > /cgroup/memory/A/memory.kmem.tcp.limit_in_bytes;
-   echo 300M > /cgroup/memory/A/memory.kmem.tcp.limit_in_bytes;
-   done
-and run network application under A. tcp's usage is sometimes accounted
-and sometimes not accounted because of frequent changes of static_branch.
-Then,  you can see broken tcp.usage_in_bytes.
-WARN_ON() is printed because res_counter->usage goes below 0.
-==
-kernel: ------------[ cut here ]----------
-kernel: WARNING: at kernel/res_counter.c:96 res_counter_uncharge_locked+0x37/0x40()
- <snip>
-kernel: Pid: 17753, comm: bash Tainted: G  W    3.3.0+ #99
-kernel: Call Trace:
-kernel: <IRQ>  [<ffffffff8104cc9f>] warn_slowpath_common+0x7f/0xc0
-kernel: [<ffffffff810d7e88>] ? rb_reserve__next_event+0x68/0x470
-kernel: [<ffffffff8104ccfa>] warn_slowpath_null+0x1a/0x20
-kernel: [<ffffffff810b4e37>] res_counter_uncharge_locked+0x37/0x40
- ...
-==
-
-
-
-
-
-
+>>
+>> ...
+>>
+>> @@ -107,10 +104,31 @@ static int tcp_update_limit(struct mem_cgroup *memcg, u64 val)
+>>   		tcp->tcp_prot_mem[i] = min_t(long, val>>  PAGE_SHIFT,
+>>   					     net->ipv4.sysctl_tcp_mem[i]);
+>>
+>> -	if (val == RESOURCE_MAX&&  old_lim != RESOURCE_MAX)
+>> -		static_key_slow_dec(&memcg_socket_limit_enabled);
+>> -	else if (old_lim == RESOURCE_MAX&&  val != RESOURCE_MAX)
+>> -		static_key_slow_inc(&memcg_socket_limit_enabled);
+>> +	if (val == RESOURCE_MAX)
+>> +		cg_proto->active = false;
+>> +	else if (val != RESOURCE_MAX) {
+>> +		/*
+>> +		 * ->activated needs to be written after the static_key update.
+>> +		 *  This is what guarantees that the socket activation function
+>> +		 *  is the last one to run. See sock_update_memcg() for details,
+>> +		 *  and note that we don't mark any socket as belonging to this
+>> +		 *  memcg until that flag is up.
+>> +		 *
+>> +		 *  We need to do this, because static_keys will span multiple
+>> +		 *  sites, but we can't control their order. If we mark a socket
+>> +		 *  as accounted, but the accounting functions are not patched in
+>> +		 *  yet, we'll lose accounting.
+>> +		 *
+>> +		 *  We never race with the readers in sock_update_memcg(), because
+>> +		 *  when this value change, the code to process it is not patched in
+>> +		 *  yet.
+>> +		 */
+>> +		if (!cg_proto->activated) {
+>> +			static_key_slow_inc(&memcg_socket_limit_enabled);
+>> +			cg_proto->activated = true;
+>> +		}
+>
+> If two threads run this code concurrently, they can both see
+> cg_proto->activated==false and they will both run
+> static_key_slow_inc().
+>
+> Hopefully there's some locking somewhere which prevents this, but it is
+> unobvious.  We should comment this, probably at the cg_proto.activated
+> definition site.  Or we should fix the bug ;)
+>
+If that happens, locking in static_key_slow_inc will prevent any damage.
+My previous version had explicit code to prevent that, but we were 
+pointed out that this is already part of the static_key expectations, so 
+that was dropped.
