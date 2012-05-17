@@ -1,29 +1,51 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [patch 6/6] mm: memcg: print statistics from live counters
-Date: Thu, 17 May 2012 14:56:05 +0400
-Message-ID: <4FB4D945.7060108@parallels.com>
-References: <1337018451-27359-1-git-send-email-hannes@cmpxchg.org> <1337018451-27359-7-git-send-email-hannes@cmpxchg.org> <20120516160131.fecb5ddf.akpm@linux-foundation.org> <4FB43FDB.6050300@jp.fujitsu.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
+Date: Thu, 17 May 2012 08:19:47 -0700
+Message-ID: <20120517151947.GI21275@google.com>
+References: <1336767077-25351-1-git-send-email-glommer@parallels.com>
+ <1336767077-25351-3-git-send-email-glommer@parallels.com>
+ <20120516140637.17741df6.akpm@linux-foundation.org>
+ <4FB46B4C.3000307@parallels.com>
+ <20120516223715.5d1b4385.akpm@linux-foundation.org>
+ <4FB4CA4D.50608@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FB43FDB.6050300-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=VpxeSh5Sog8MOVaa0E6Hj8mUA/BItUiXDmUI/OkYYJg=;
+        b=T5r6v1w99UevrNNs7IYhLe/Hd3k2CbVfQxd6xdONk/U5Unl5ySryLcCy3x+1a9/o/H
+         DGXCKYcEsySExMeEp+48AZF4UJKsJmbIiMVGguAbmDQZ9qt5QzIahbJk33+6c8VXO9iu
+         zNmarlBM9OWgMEu8y72YwfJLuHkQNrs8AY8iK0tjs248hPcEcpDC+/j0zpinKkNVSZ7F
+         u37K991NfZZ3POv1oHYPgjDU3PcrwRQeEpQhoXMx+jQazoQ3pOoeA26aL21T1P8HnwMl
+         J7IIgFxXTiBkCuRR6L/imLme4J6XK2qag+pZzJbuLXJ09oLiywdSzMFvh953REM8ytAe
+         eNPA==
+Content-Disposition: inline
+In-Reply-To: <4FB4CA4D.50608@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
 
-On 05/17/2012 04:01 AM, KAMEZAWA Hiroyuki wrote:
-> Hm...sorry. I(fujitsu) am now considering to add meminfo for memcg...,
->
-> add an option to override /proc/meminfo if a task is in container or
-> meminfo file somewhere.
-> (Now, we cannot trust /usr/bin/free, /usr/bin/top etc...in a container.)
+On Thu, May 17, 2012 at 01:52:13PM +0400, Glauber Costa wrote:
+> Andrew is right. It seems we will need that mutex after all. Just
+> this is not a race, and neither something that should belong in the
+> static_branch interface.
 
-Yes, and all the previous times I tried to touch those, I think the 
-general agreement was to come up with some kind of fuse overlay that 
-would read information available from the kernel, and present it 
-correctly formatted through bind-mounts on the files of interest.
+Yeah, with a completely different comment.  It just needs to wrap
+->activated alteration and static key inc/dec, right?
 
-But that's mainly because we never reached agreement on how to make that 
-appear automatically from such tasks
+Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
