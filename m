@@ -1,32 +1,57 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 02/29] slub: fix slab_state for slub
-Date: Thu, 17 May 2012 14:14:18 +0400
-Message-ID: <4FB4CF7A.9090108@parallels.com>
-References: <1336758272-24284-1-git-send-email-glommer@parallels.com> <1336758272-24284-3-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205151453460.18595@chino.kir.corp.google.com>
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v5 2/2] decrement static keys on real destroy time
+Date: Thu, 17 May 2012 19:18:09 +0900
+Message-ID: <4FB4D061.10406@jp.fujitsu.com>
+References: <1336767077-25351-1-git-send-email-glommer@parallels.com> <1336767077-25351-3-git-send-email-glommer@parallels.com> <20120516140637.17741df6.akpm@linux-foundation.org> <4FB46B4C.3000307@parallels.com> <20120516223715.5d1b4385.akpm@linux-foundation.org> <4FB4CA4D.50608@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1205151453460.18595-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4FB4CA4D.50608@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
 
-On 05/16/2012 01:55 AM, David Rientjes wrote:
-> On Fri, 11 May 2012, Glauber Costa wrote:
->
->> When the slub code wants to know if the sysfs state has already been
->> initialized, it tests for slab_state == SYSFS. This is quite fragile,
->> since new state can be added in the future (it is, in fact, for
->> memcg caches). This patch fixes this behavior so the test matches
->>> = SYSFS, as all other state does.
->>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->
-> Acked-by: David Rientjes<rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->
-> Can be merged now, there's no dependency on the rest of this patchset.
+(2012/05/17 18:52), Glauber Costa wrote:
 
-So, is anyone taking this? I plan another submission this week, let me 
-know if I should include these two patches or not.
+> On 05/17/2012 09:37 AM, Andrew Morton wrote:
+>>>>  If that happens, locking in static_key_slow_inc will prevent any damage.
+>>>>  My previous version had explicit code to prevent that, but we were
+>>>>  pointed out that this is already part of the static_key expectations, so
+>>>>  that was dropped.
+>> This makes no sense.  If two threads run that code concurrently,
+>> key->enabled gets incremented twice.  Nobody anywhere has a record that
+>> this happened so it cannot be undone.  key->enabled is now in an
+>> unknown state.
+> 
+> Kame, Tejun,
+> 
+> Andrew is right. It seems we will need that mutex after all. Just this 
+> is not a race, and neither something that should belong in the 
+> static_branch interface.
+> 
+
+
+Hmm....how about having
+
+res_counter_xchg_limit(res, &old_limit, new_limit);
+
+if (!cg_proto->updated && old_limit == RESOURCE_MAX)
+	....update labels...
+
+Then, no mutex overhead maybe and activated will be updated only once.
+Ah, but please fix in a way you like. Above is an example.
+
+Thanks,
+-Kame
+(*) I'm sorry I won't be able to read e-mails, tomorrow.
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
