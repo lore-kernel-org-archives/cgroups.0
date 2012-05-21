@@ -1,100 +1,109 @@
-From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix device deny of DEV_ALL
-Date: Mon, 21 May 2012 09:03:24 -0500
-Message-ID: <20120521140324.GA5091@sergelap>
-References: <CAFeW=pZ8Y7ycxjxro7zBMqdtaCOYs4RmoxtDrsN8+mqLhOL--g@mail.gmail.com>
- <20120518081912.16779.21065.stgit@t>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120518081912.16779.21065.stgit@t>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH] slab+slob: dup name string
+Date: Mon, 21 May 2012 19:18:59 +0400
+Message-ID: <1337613539-29108-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Amos Kong <akong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Glauber Costa <glommer@parallels.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, David Rientjes <rientjes@google.com>
 
-Quoting Amos Kong (akong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> @ mount -t cgroup -o devices none /cgroup
-> @ mkdir /cgroups/devices
-> @ ls -l /dev/dm-3
->  brw-rw----. 1 root disk 253, 3 Oct 14 19:03 /dev/dm-3
-> @ echo 'b 253:3 rw' > devices.deny
-> but I can still write it by 'dd if=/dev/zero of=/dev/dm-3'
-> 
-> In devcgroup_create(), we create a new whitelist, and add first
-> entry which type is 'DEV_ALL'. Execute "# echo 'b 253:3 rw' >
-> devices.deny", dev_whitelist_rm() will update access of first
-> entry to 1(m), but type of first entry is still 'DEV_ALL'.
+The slub allocator creates a copy of the name string, and
+frees it later. I would like all caches to behave the same,
+whether it is the slab+slob starting to create a copy of it itself,
+or the slub ceasing to.
 
-Hi,
+This patch creates copies of the name string for slob and slab,
+adopting slub behavior for them all.
 
-thanks.  You raise a good point, but I think it needs some discussion.
+For the slab, we can't really do it before the kmalloc caches are
+up. We need to rely that caches created before the state was set to
+EARLY will never be destroyed.
 
-What happens right now is that if you have the 'a *:* rwm' entry and do
-echo 'b 253:3 rw' > devices.deny, then when you next cat devices.list you
-will still see the 'a *:* rwm' entry.  So there should be no confusion
-over why the dd succeeds.  You didn't remove the entry, because there
-was no match echoed into devices.deny.
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+CC: Christoph Lameter <cl@linux.com>
+CC: Pekka Enberg <penberg@cs.helsinki.fi>
+CC: David Rientjes <rientjes@google.com>
+---
+ mm/slab.c |   10 ++++++++--
+ mm/slob.c |   12 ++++++++++--
+ 2 files changed, 18 insertions(+), 4 deletions(-)
 
-You have to remove the existing whitelist entries, then add the entries
-you want.  In particular, catting into devices.deny will not try to be
-smart by slicing an existing whitelist entry into (matching, nonmatching)
-parts so as to remove the matching and keep nonmatching.
+diff --git a/mm/slab.c b/mm/slab.c
+index e901a36..cabd217 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -2118,6 +2118,7 @@ static void __kmem_cache_destroy(struct kmem_cache *cachep)
+ 			kfree(l3);
+ 		}
+ 	}
++	kfree(cachep->name);
+ 	kmem_cache_free(&cache_cache, cachep);
+ }
+ 
+@@ -2526,9 +2527,14 @@ kmem_cache_create (const char *name, size_t size, size_t align,
+ 		BUG_ON(ZERO_OR_NULL_PTR(cachep->slabp_cache));
+ 	}
+ 	cachep->ctor = ctor;
+-	cachep->name = name;
+ 
+-	if (setup_cpu_cache(cachep, gfp)) {
++	/* Can't do strdup while kmalloc is not up */
++	if (g_cpucache_up > EARLY)
++		cachep->name = kstrdup(name, GFP_KERNEL);
++	else
++		cachep->name = name;
++
++	if (!cachep->name || setup_cpu_cache(cachep, gfp)) {
+ 		__kmem_cache_destroy(cachep);
+ 		cachep = NULL;
+ 		goto oops;
+diff --git a/mm/slob.c b/mm/slob.c
+index 8105be4..8f10d36 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -575,7 +575,12 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
+ 		GFP_KERNEL, ARCH_KMALLOC_MINALIGN, -1);
+ 
+ 	if (c) {
+-		c->name = name;
++		c->name = kstrdup(name, GFP_KERNEL);
++		if (!c->name) {
++			slob_free(c, sizeof(struct kmem_cache));
++			c = NULL;
++			goto out;
++		}
+ 		c->size = size;
+ 		if (flags & SLAB_DESTROY_BY_RCU) {
+ 			/* leave room for rcu footer at the end of object */
+@@ -589,7 +594,9 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
+ 			c->align = ARCH_SLAB_MINALIGN;
+ 		if (c->align < align)
+ 			c->align = align;
+-	} else if (flags & SLAB_PANIC)
++	}
++out:
++	if (!c && (flags & SLAB_PANIC))
+ 		panic("Cannot create slab cache %s\n", name);
+ 
+ 	kmemleak_alloc(c, sizeof(struct kmem_cache), 1, GFP_KERNEL);
+@@ -602,6 +609,7 @@ void kmem_cache_destroy(struct kmem_cache *c)
+ 	kmemleak_free(c);
+ 	if (c->flags & SLAB_DESTROY_BY_RCU)
+ 		rcu_barrier();
++	kfree(c->name);
+ 	slob_free(c, sizeof(struct kmem_cache));
+ }
+ EXPORT_SYMBOL(kmem_cache_destroy);
+-- 
+1.7.7.6
 
-If you'd like to submit a patch to change that, I'm quite sure I would
-ack it.  The problem is that your patch doesn't do that (unless I'm grossly
-misunderstanding).  Rather, it will remove both (matching, nonmatching).
-Of course, in your example above, (nonmatching) would amount to a huge
-set of rules, so in the end I'm not sure it is worth it.
-
-Note that the devices cgroup was meant to be a simple, useful stop-gap
-until the user and devices namespaces are ready.  The user namespace is
-getting close, but devices ns still needs to be designed (hopefully at
-plumber's).  So I don't mind improving on the devices cgroup.  It's
-turned out to be quite useful.  But I don't want to replace one (simple,
-easy to verify, but) incomplete user interface with a different one.
-There are sure to be existing users who would be broken.  In fact, it's
-possbile that "fixing" the incomplete behavior would bother some users,
-though I suspect the improvement would be worth it to them.
-
-So for this particular patch, NACK.  But thanks for bringing it up.
-
-thanks,
--serge
-
-> Execute dd cmd to write device, __devcgroup_inode_permission()
-> will be called, permission checking will pass if entry type
-> is 'DEV_ALL'. So write operation of 'dd' is not denied.
-> 
-> Currently 'access' is updated by not be used, this patch updated
-> the type,major,minor of first entry, then permission checking
-> would work.
-> 
-> Signed-off-by: Amos Kong <akong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  security/device_cgroup.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-> index c43a332..d16b4bc 100644
-> --- a/security/device_cgroup.c
-> +++ b/security/device_cgroup.c
-> @@ -146,6 +146,11 @@ static void dev_whitelist_rm(struct dev_cgroup *dev_cgroup,
->  
->  remove:
->  		walk->access &= ~wh->access;
-> +		if (walk->type == DEV_ALL) {
-> +			walk->type = wh->type;
-> +			walk->major = wh->major;
-> +			walk->minor = wh->minor;
-> +		}
->  		if (!walk->access) {
->  			list_del_rcu(&walk->list);
->  			kfree_rcu(walk, rcu);
-> 
-> _______________________________________________
-> Containers mailing list
-> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> https://lists.linuxfoundation.org/mailman/listinfo/containers
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
