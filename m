@@ -1,71 +1,50 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH] slab+slob: dup name string
-Date: Mon, 21 May 2012 20:22:25 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
-References: <1337613539-29108-1-git-send-email-glommer@parallels.com>
+From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH -V3 1/1] cgroup: Add inotify event on change tasks file
+ (fork, exit, move pid from file)
+Date: Tue, 22 May 2012 09:31:24 +0400
+Message-ID: <4FBB24AC.1010605@samsung.com>
+References: <4F9B82E1.3070602@samsung.com>
+ <20120428214131.GB4586@mtj.dyndns.org> <4FA24E07.1010206@samsung.com>
+ <1336075511.2320.2.camel@localhost> <4FA36818.9010409@samsung.com>
+ <20120504170412.GD24639@google.com> <20120504174330.GS6871@ZenIV.linux.org.uk>
+ <20120507203848.GL19417@google.com> <20120515151637.GD6119@google.com>
+ <1337095517.31199.2.camel@localhost> <20120515152844.GE6119@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=2LvqMex1iHh4Ufk7S3KDKLxYBTw3p51UyPnht4raYt8=;
-        b=KnAQEDyS7j0+NvPoXqE1FCviAeYpflnku0+1ZEmoXrV7nOFPnmBcFqiEAUqxIXmjLu
-         9Aw/NSSBq/0l7k+xYzZKRb5cEegGJQmaOjIk2zx2KelNU+afbYAOW2iMZCfz/CYIF/zv
-         gswQzPx/tP8xVsAaJ7tDhK3KKsMsjtV+I7kJyg4uMf9oje+qS8/dZ6Z8n/WPL1InZ03o
-         hxp+9byYnxyAJrB1xm7EkYH2gQTBwcHCgtDqIwvdP3tGx7eZrnhO6Et+Kq7OPHbeAJxm
-         pJqRxK8HlyOtElUvK01xCoIXObq7YnaEryiXRfF9745M4n2P3UehIC7Oh3tsSxRN+csl
-         4DqA==
-In-Reply-To: <1337613539-29108-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <20120515152844.GE6119-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 
-On Mon, 21 May 2012, Glauber Costa wrote:
+On 05/15/2012 07:28 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Tue, May 15, 2012 at 11:25:17AM -0400, Eric Paris wrote:
+>> On Tue, 2012-05-15 at 08:16 -0700, Tejun Heo wrote:
+>>> On Mon, May 07, 2012 at 01:38:48PM -0700, Tejun Heo wrote:
+>>>> On Fri, May 04, 2012 at 06:43:30PM +0100, Al Viro wrote:
+>>>>> 	Consider that preemptively NAKed.  Eric, would you mind explaining
+>>>>> WTF would fsnotify *do* with vfsmount(s) here, seeing that they might very
+>>>>> well be not mounted in anyone's namespace?  And as for generating an event
+>>>>> for each, they might appear and disappear at zero notice.
+>>>> Eric, any ideas on how to proceed?
+>>> Ping?
+>> Oh sorry, if Al's correct, and there is just absolutely no way to come
+>> up with any kind of mnt for the path we have no choice.  Do it the way
+>> you were.
+> The thing is that people have been requesting recursive notification
+> for cgroup events (especially cgroup becoming empty).  IIRC, that
+> can't be done without path, right?  Why so?  Can we change that?
+>
+> Thanks.
+>
+PIng...
 
-> diff --git a/mm/slab.c b/mm/slab.c
-> index e901a36..cabd217 100644
-> --- a/mm/slab.c
-> +++ b/mm/slab.c
-> @@ -2118,6 +2118,7 @@ static void __kmem_cache_destroy(struct kmem_cache *cachep)
->  			kfree(l3);
->  		}
->  	}
-> +	kfree(cachep->name);
->  	kmem_cache_free(&cache_cache, cachep);
->  }
->  
-> @@ -2526,9 +2527,14 @@ kmem_cache_create (const char *name, size_t size, size_t align,
->  		BUG_ON(ZERO_OR_NULL_PTR(cachep->slabp_cache));
->  	}
->  	cachep->ctor = ctor;
-> -	cachep->name = name;
->  
-> -	if (setup_cpu_cache(cachep, gfp)) {
-> +	/* Can't do strdup while kmalloc is not up */
-> +	if (g_cpucache_up > EARLY)
-> +		cachep->name = kstrdup(name, GFP_KERNEL);
-> +	else
-> +		cachep->name = name;
-> +
-> +	if (!cachep->name || setup_cpu_cache(cachep, gfp)) {
->  		__kmem_cache_destroy(cachep);
->  		cachep = NULL;
->  		goto oops;
-
-This doesn't work if you kmem_cache_destroy() a cache that was created 
-when g_cpucache_cpu <= EARLY, the kfree() will explode.  That never 
-happens for any existing cache created in kmem_cache_init(), but this 
-would introduce the first roadblock in doing so.  So you'll need some 
-magic to determine whether the cache was allocated statically and suppress 
-the kfree() in such a case.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Best regards,
+      Alex Nikiforov,
+      Mobile SW, Advanced Software Group,
+      Moscow R&D center, Samsung Electronics
