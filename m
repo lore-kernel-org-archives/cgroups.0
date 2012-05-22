@@ -1,75 +1,18 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH] slab: move FULL state transition to an initcall
-Date: Tue, 22 May 2012 18:07:59 +0400
-Message-ID: <1337695679-10178-1-git-send-email-glommer@parallels.com>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] slab: move FULL state transition to an initcall
+Date: Tue, 22 May 2012 09:59:43 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205220959290.17721@router.home>
+References: <1337695679-10178-1-git-send-email-glommer@parallels.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1337698785; bh=4v128Tp+ktDAhV/qENqEBuzjLJBLhHo3lzR/qUMTRlo=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=HDP0or6EAK0jTG4b/vUySjA5m1ArcRFP69yiHT1nCClRPZrujugjxVy6u6TM7CiXBZE8rRtun+ipx5UWBpdcMHAtR3NLYxUZ5VA7eBSYLLAz4UZqZoIDL9ysFFodKC+dgyRBmmZ+sTXpXojQr5WcaVxDSAkU0PZXDNpdD1PGVLY=
+In-Reply-To: <1337695679-10178-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-During kmem_cache_init_late(), we transition to the LATE state,
-and after some more work, to the FULL state, its last state
 
-This is quite different from slub, that will only transition to
-its last state (SYSFS), in a (late)initcall, after a lot more of
-the kernel is ready.
-
-This means that in slab, we have no way to taking actions dependent
-on the initialization of other pieces of the kernel that are supposed
-to start way after kmem_init_late(), such as cgroups initialization.
-
-To achieve more consistency in this behavior, that patch only
-transitions to the LATE state in kmem_init_late. In my analysis,
-setup_cpu_cache() should be happy to test for >= LATE, instead of
-== FULL. It also has passed some tests I've made.
-
-We then only mark FULL state after the reap timers are in place,
-meaning that no further setup is expected.
-
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/slab.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/mm/slab.c b/mm/slab.c
-index 58e5c9c..bd351a0 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -1741,9 +1741,6 @@ void __init kmem_cache_init_late(void)
- 			BUG();
- 	mutex_unlock(&cache_chain_mutex);
- 
--	/* Done! */
--	g_cpucache_up = FULL;
--
- 	/*
- 	 * Register a cpu startup notifier callback that initializes
- 	 * cpu_cache_get for all new cpus
-@@ -1773,6 +1770,9 @@ static int __init cpucache_init(void)
- 	 */
- 	for_each_online_cpu(cpu)
- 		start_cpu_timer(cpu);
-+
-+	/* Done! */
-+	g_cpucache_up = FULL;
- 	return 0;
- }
- __initcall(cpucache_init);
-@@ -2260,7 +2260,7 @@ static size_t calculate_slab_order(struct kmem_cache *cachep,
- 
- static int __init_refok setup_cpu_cache(struct kmem_cache *cachep, gfp_t gfp)
- {
--	if (g_cpucache_up == FULL)
-+	if (g_cpucache_up >= LATE)
- 		return enable_cpucache(cachep, gfp);
- 
- 	if (g_cpucache_up == NONE) {
--- 
-1.7.7.6
+Acked-by: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
