@@ -1,31 +1,25 @@
 From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH] slab+slob: dup name string
-Date: Tue, 22 May 2012 08:56:47 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205220855470.17600@router.home>
-References: <1337613539-29108-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
+Subject: Re: [PATCH v2] slab+slob: dup name string
+Date: Tue, 22 May 2012 08:58:08 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205220857380.17600@router.home>
+References: <1337680298-11929-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1337695009; bh=t9j54Bg8PbjYXLQAIYt4Vz1PIwhT4WnRuhcTf5pRjpA=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=0aNJDqynB/uGoc6+WwlGPvhY68oQ6u3hDD5/wYR+7PkZHjx6iK3ZQ1Ojb2D5XjY6vXkrAiZVDitiuBkenymWEedW7+CyS5OBcuSCNCayeL1UdpJyfhp7EIwt08quyyQ/5r9JCrxffat7VrRw/vvKPXugUt2XSBfcVsprPLUI5Xw=
-In-Reply-To: <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1337695091; bh=kjxthTrouvlFbyjqLXci0sXpHF0vmvW9o91g4r3UD7Q=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=fKeyJlZZ8AB8gfDaLe42Ok+A0EhhFlwB0VZ/P41odrJ0597DyTltlDYQ+dXku3vesveMOZVe7j1HGr5zyD057McARthOdxPKiLR1feoQu4F5J9Sn0cEdKcn4UAlqSVSZ9mzgljGZ6BvJod6dkCnPt2IFoqYAQ/tCD7igr5qOdMA=
+In-Reply-To: <1337680298-11929-1-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>, David Rientjes <rientjes@google.com>
 
-On Mon, 21 May 2012, David Rientjes wrote:
+On Tue, 22 May 2012, Glauber Costa wrote:
 
-> This doesn't work if you kmem_cache_destroy() a cache that was created
-> when g_cpucache_cpu <= EARLY, the kfree() will explode.  That never
-> happens for any existing cache created in kmem_cache_init(), but this
-> would introduce the first roadblock in doing so.  So you'll need some
-> magic to determine whether the cache was allocated statically and suppress
-> the kfree() in such a case.
+> [ v2: Also dup string for early caches, requested by David Rientjes ]
 
-Nope. Only slab management caches will be created that early. The patch is
-fine as is.
-
+kstrdups that early could cause additional issues. Its better to leave
+things as they were.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
