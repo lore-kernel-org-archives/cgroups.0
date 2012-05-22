@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
 Subject: Re: [PATCH] slab+slob: dup name string
-Date: Tue, 22 May 2012 11:23:48 +0400
-Message-ID: <4FBB3F04.7040207@parallels.com>
+Date: Tue, 22 May 2012 13:45:12 +0400
+Message-ID: <4FBB6028.3020307@parallels.com>
 References: <1337613539-29108-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -14,38 +14,17 @@ To: David Rientjes <rientjes@google.com>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
 On 05/22/2012 07:22 AM, David Rientjes wrote:
-> On Mon, 21 May 2012, Glauber Costa wrote:
->
->> diff --git a/mm/slab.c b/mm/slab.c
->> index e901a36..cabd217 100644
->> --- a/mm/slab.c
->> +++ b/mm/slab.c
->> @@ -2118,6 +2118,7 @@ static void __kmem_cache_destroy(struct kmem_cache *cachep)
->>   			kfree(l3);
->>   		}
->>   	}
->> +	kfree(cachep->name);
->>   	kmem_cache_free(&cache_cache, cachep);
->>   }
->>
->> @@ -2526,9 +2527,14 @@ kmem_cache_create (const char *name, size_t size, size_t align,
->>   		BUG_ON(ZERO_OR_NULL_PTR(cachep->slabp_cache));
->>   	}
->>   	cachep->ctor = ctor;
->> -	cachep->name = name;
->>
 >> -	if (setup_cpu_cache(cachep, gfp)) {
->> +	/* Can't do strdup while kmalloc is not up */
->> +	if (g_cpucache_up>  EARLY)
->> +		cachep->name = kstrdup(name, GFP_KERNEL);
->> +	else
->> +		cachep->name = name;
->> +
->> +	if (!cachep->name || setup_cpu_cache(cachep, gfp)) {
->>   		__kmem_cache_destroy(cachep);
->>   		cachep = NULL;
->>   		goto oops;
->
+>> >  +	/* Can't do strdup while kmalloc is not up */
+>> >  +	if (g_cpucache_up>  EARLY)
+>> >  +		cachep->name = kstrdup(name, GFP_KERNEL);
+>> >  +	else
+>> >  +		cachep->name = name;
+>> >  +
+>> >  +	if (!cachep->name || setup_cpu_cache(cachep, gfp)) {
+>> >    		__kmem_cache_destroy(cachep);
+>> >    		cachep = NULL;
+>> >    		goto oops;
 > This doesn't work if you kmem_cache_destroy() a cache that was created
 > when g_cpucache_cpu<= EARLY, the kfree() will explode.  That never
 > happens for any existing cache created in kmem_cache_init(), but this
@@ -53,7 +32,18 @@ On 05/22/2012 07:22 AM, David Rientjes wrote:
 > magic to determine whether the cache was allocated statically and suppress
 > the kfree() in such a case.
 
-Suggestions on how to do it other than using a flag?
+David,
+
+I tried to do something like I was doing for the memcg caches: after 
+creation of the kmalloc + cache_cache, I loop through them and duplicate 
+the name. So instead of conditionally freeing the late caches - that 
+could cause consistency headaches in the future - kfree'ing the name 
+string will just work for all of them. I will send it shortly.
+
+Cristoph, I am dropping your ack since this change is quite significant. 
+If you agree with it, would you ack it again?
+
+Thanks.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
