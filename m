@@ -1,41 +1,109 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH v2] slab+slob: dup name string
-Date: Tue, 22 May 2012 12:18:29 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205221216590.17721@router.home>
-References: <1337680298-11929-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205220857380.17600@router.home> <4FBBB059.1060903@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for 3.5-rc1
+Date: Tue, 22 May 2012 10:34:50 -0700
+Message-ID: <20120522173450.GG14339@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1337707111; bh=7DTDr/ZNQmFhWHGxmeB3tJq5aOyqEAJsEb6cMsR/FR8=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=LTIYBDSIsfPeVlbdSl3xYaXwnpuRJc25/aEahR0UHDMzkp8P0yiB86GCiyWMHppt25owXWWXbH4laxg2/M+29tNV/Skme74S9UyH7CBuIr595u3gx3rlpsTrWAIvVeuYdqh+NUW0f6nFwVTVExHHrlWWf7mgzTw69M4WKFtWY7E=
-In-Reply-To: <4FBBB059.1060903@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>, David Rientjes <rientjes@google.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=1tAt4C7Pc6Oh+CCeGo0YkUW/VeTxlHAW3HoKOyt66Vw=;
+	b=z79Ug3IgqRNgEKZ/9cb9a1Ork8kSTE5sJIdC85yQn+NTylSBZMaTbBw8nj00XlyUv6
+	NOfv0IMwOhOkCFPb1vx337DoM+Cq4lRswXgrdRn6WAmzAqiVKcYKIfIucu4okp6SJyox
+	AS7vEjUT1R21gw8QYkvnVxAwWk9u0Dl/izR9Y3Bx6PQu64Y08QfVvBle6C6QjrouOM6n
+	nVhq4bSPMpvwzsoFN/gLyuiQ1xlU5N7OYDpFWVwppvkRuUmRnBXXy+Ox+ZlldsnWaO3h
+	dhdKuHl9sirDoKdTylcDfsoIqhnKictIWcVAZ42hmNJkWl6GCVW0D2wlOf3i4XfY5Bgk
+	9S7A==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 22 May 2012, Glauber Costa wrote:
+Hello, Linus.
 
-> On 05/22/2012 05:58 PM, Christoph Lameter wrote:
-> > On Tue, 22 May 2012, Glauber Costa wrote:
-> >
-> > > [ v2: Also dup string for early caches, requested by David Rientjes ]
-> >
-> > kstrdups that early could cause additional issues. Its better to leave
-> > things as they were.
-> >
->
-> For me is really all the same. But note that before those kstrdups, we do a
-> bunch of kmallocs as well already. (ex:
+Please pull from the following branch to receive cgroup changes for
+3.5-rc1.
 
-We check carefully and make sure those caches are present before doing
-these kmallocs. See the slab bootup code. A kstrdup may take a variously
-sized string and explode because the required kmalloc cache is not
-present.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.5
+
+cgroup file type addition / removal is updated so that file types are
+added and removed instead of individual files so that dynamic file
+type addition / removal can be implemented by cgroup and used by
+controllers.  blkio controller changes which will come through block
+tree are dependent on this.  Other changes include res_counter cleanup
+and disallowing kthread / PF_THREAD_BOUND threads to be attached to
+non-root cgroups.
+
+There's a reported bug with the file type addition / removal handling
+which can lead to oops on cgroup umount.  The issue is being looked
+into.  It shouldn't cause problems for most setups and isn't a
+security concern.
+
+Merging with mainline causes a conflict in
+feature-removal-schedule.txt.  Simple append collision which can be
+trivially resolved.
+
+Thanks.
+
+Frederic Weisbecker (2):
+      res_counter: Merge res_counter_charge and res_counter_charge_nofail
+      res_counter: Account max_usage when calling res_counter_charge_nofail()
+
+Glauber Costa (2):
+      cgroup: pass struct mem_cgroup instead of struct cgroup to socket memcg
+      cgroup: get rid of populate for memcg
+
+Mike Galbraith (1):
+      cgroups: disallow attaching kthreadd or PF_THREAD_BOUND threads
+
+Tejun Heo (16):
+      cgroup: deprecate remount option changes
+      cgroup: move cgroup_clear_directory() call out of cgroup_populate_dir()
+      cgroup: build list of all cgroups under a given cgroupfs_root
+      cgroup: implement cgroup_add_cftypes() and friends
+      cgroup: merge cft_release_agent cftype array into the base files array
+      cgroup: relocate cftype and cgroup_subsys definitions in controllers
+      cgroup: convert all non-memcg controllers to the new cftype interface
+      memcg: always create memsw files if CONFIG_CGROUP_MEM_RES_CTLR_SWAP
+      cgroup: convert memcg controller to the new cftype interface
+      cgroup: remove cgroup_add_file[s]()
+      cgroup: relocate __d_cgrp() and __d_cft()
+      cgroup: introduce struct cfent
+      cgroup: implement cgroup_rm_cftypes()
+      cgroup: use negative bias on css->refcnt to block css_tryget()
+      cgroup: make css->refcnt clearing on cgroup removal optional
+      cgroup: remove cgroup_subsys->populate()
+
+ Documentation/cgroups/resource_counter.txt |    4 +-
+ Documentation/feature-removal-schedule.txt |    9 +
+ block/blk-cgroup.c                         |   45 +--
+ include/linux/cgroup.h                     |   81 +++--
+ include/linux/res_counter.h                |    2 +-
+ include/net/sock.h                         |   12 +-
+ include/net/tcp_memcontrol.h               |    4 +-
+ kernel/cgroup.c                            |  564 +++++++++++++++++++++-------
+ kernel/cgroup_freezer.c                    |   11 +-
+ kernel/cpuset.c                            |   31 +-
+ kernel/res_counter.c                       |   71 ++--
+ kernel/sched/core.c                        |   16 +-
+ mm/memcontrol.c                            |  115 +++---
+ net/core/netprio_cgroup.c                  |   30 +-
+ net/core/sock.c                            |   10 +-
+ net/ipv4/tcp_memcontrol.c                  |   77 ++--
+ net/sched/cls_cgroup.c                     |   31 +-
+ security/device_cgroup.c                   |   10 +-
+ 18 files changed, 685 insertions(+), 438 deletions(-)
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
