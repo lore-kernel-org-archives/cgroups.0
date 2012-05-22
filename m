@@ -1,18 +1,52 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] slab+slob: dup name string
-Date: Mon, 21 May 2012 10:35:23 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205211030520.27592@router.home>
-References: <1337613539-29108-1-git-send-email-glommer@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix device deny of DEV_ALL
+Date: Tue, 22 May 2012 08:34:34 +0800
+Message-ID: <4FBADF1A.6040303@huawei.com>
+References: <CAFeW=pZ8Y7ycxjxro7zBMqdtaCOYs4RmoxtDrsN8+mqLhOL--g@mail.gmail.com>
+	<20120518081912.16779.21065.stgit@t> <20120521140324.GA5091@sergelap>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1337617185; bh=4v128Tp+ktDAhV/qENqEBuzjLJBLhHo3lzR/qUMTRlo=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=t95AyCGh+e5oakSGf1159E8csCMkB6exmyzvaNK1EP8oFU6HfzS+7Pct5v0Ir7rTaViyl2K3xTfLYl+0qGuF+aDq+pw9x3Pn2Q9QlhBZMkW2Bm2oXg3myku02cEgZ+lWPim+ezAEv7c9WdMlURwYgipNuRpxcrJF5mVY2zlyAQA=
-In-Reply-To: <1337613539-29108-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-reply-to: <20120521140324.GA5091@sergelap>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Amos Kong <akong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+Serge Hallyn wrote:
+
+> Quoting Amos Kong (akong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+>> @ mount -t cgroup -o devices none /cgroup
+>> @ mkdir /cgroups/devices
+>> @ ls -l /dev/dm-3
+>>  brw-rw----. 1 root disk 253, 3 Oct 14 19:03 /dev/dm-3
+>> @ echo 'b 253:3 rw' > devices.deny
+>> but I can still write it by 'dd if=/dev/zero of=/dev/dm-3'
+>>
+>> In devcgroup_create(), we create a new whitelist, and add first
+>> entry which type is 'DEV_ALL'. Execute "# echo 'b 253:3 rw' >
+>> devices.deny", dev_whitelist_rm() will update access of first
+>> entry to 1(m), but type of first entry is still 'DEV_ALL'.
+> 
+> Hi,
+> 
+> thanks.  You raise a good point, but I think it needs some discussion.
+> 
+> What happens right now is that if you have the 'a *:* rwm' entry and do
+> echo 'b 253:3 rw' > devices.deny, then when you next cat devices.list you
+> will still see the 'a *:* rwm' entry.  So there should be no confusion
+> over why the dd succeeds.  You didn't remove the entry, because there
+> was no match echoed into devices.deny.
 
 
-Acked-by: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+No, you'll see the entry has been changed to 'a *:* m', so I think we
+should at least fix this.
