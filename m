@@ -1,18 +1,39 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] slab: move FULL state transition to an initcall
-Date: Tue, 22 May 2012 09:59:43 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205220959290.17721@router.home>
-References: <1337695679-10178-1-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH] slab+slob: dup name string
+Date: Tue, 22 May 2012 19:19:49 +0400
+Message-ID: <4FBBAE95.6080608@parallels.com>
+References: <1337613539-29108-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com> <alpine.DEB.2.00.1205220855470.17600@router.home>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1337698785; bh=4v128Tp+ktDAhV/qENqEBuzjLJBLhHo3lzR/qUMTRlo=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=HDP0or6EAK0jTG4b/vUySjA5m1ArcRFP69yiHT1nCClRPZrujugjxVy6u6TM7CiXBZE8rRtun+ipx5UWBpdcMHAtR3NLYxUZ5VA7eBSYLLAz4UZqZoIDL9ysFFodKC+dgyRBmmZ+sTXpXojQr5WcaVxDSAkU0PZXDNpdD1PGVLY=
-In-Reply-To: <1337695679-10178-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1205220855470.17600@router.home>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Christoph Lameter <cl@linux.com>
+Cc: David Rientjes <rientjes@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
+On 05/22/2012 05:56 PM, Christoph Lameter wrote:
+> On Mon, 21 May 2012, David Rientjes wrote:
+>
+>> This doesn't work if you kmem_cache_destroy() a cache that was created
+>> when g_cpucache_cpu<= EARLY, the kfree() will explode.  That never
+>> happens for any existing cache created in kmem_cache_init(), but this
+>> would introduce the first roadblock in doing so.  So you'll need some
+>> magic to determine whether the cache was allocated statically and suppress
+>> the kfree() in such a case.
+>
+> Nope. Only slab management caches will be created that early. The patch is
+> fine as is.
+>
+>
 
-Acked-by: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+I think that's precisely David's point: that we might want to destroy 
+them eventually.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
