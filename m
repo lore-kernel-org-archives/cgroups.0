@@ -1,50 +1,63 @@
-From: Alexander Nikiforov <a.nikiforov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH -V3 1/1] cgroup: Add inotify event on change tasks file
- (fork, exit, move pid from file)
-Date: Tue, 22 May 2012 09:31:24 +0400
-Message-ID: <4FBB24AC.1010605@samsung.com>
-References: <4F9B82E1.3070602@samsung.com>
- <20120428214131.GB4586@mtj.dyndns.org> <4FA24E07.1010206@samsung.com>
- <1336075511.2320.2.camel@localhost> <4FA36818.9010409@samsung.com>
- <20120504170412.GD24639@google.com> <20120504174330.GS6871@ZenIV.linux.org.uk>
- <20120507203848.GL19417@google.com> <20120515151637.GD6119@google.com>
- <1337095517.31199.2.camel@localhost> <20120515152844.GE6119@google.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH] slab+slob: dup name string
+Date: Tue, 22 May 2012 11:23:48 +0400
+Message-ID: <4FBB3F04.7040207@parallels.com>
+References: <1337613539-29108-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20120515152844.GE6119-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Dmitry Solodkiy <d.solodkiy-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 05/15/2012 07:28 PM, Tejun Heo wrote:
-> Hello,
+On 05/22/2012 07:22 AM, David Rientjes wrote:
+> On Mon, 21 May 2012, Glauber Costa wrote:
 >
-> On Tue, May 15, 2012 at 11:25:17AM -0400, Eric Paris wrote:
->> On Tue, 2012-05-15 at 08:16 -0700, Tejun Heo wrote:
->>> On Mon, May 07, 2012 at 01:38:48PM -0700, Tejun Heo wrote:
->>>> On Fri, May 04, 2012 at 06:43:30PM +0100, Al Viro wrote:
->>>>> 	Consider that preemptively NAKed.  Eric, would you mind explaining
->>>>> WTF would fsnotify *do* with vfsmount(s) here, seeing that they might very
->>>>> well be not mounted in anyone's namespace?  And as for generating an event
->>>>> for each, they might appear and disappear at zero notice.
->>>> Eric, any ideas on how to proceed?
->>> Ping?
->> Oh sorry, if Al's correct, and there is just absolutely no way to come
->> up with any kind of mnt for the path we have no choice.  Do it the way
->> you were.
-> The thing is that people have been requesting recursive notification
-> for cgroup events (especially cgroup becoming empty).  IIRC, that
-> can't be done without path, right?  Why so?  Can we change that?
+>> diff --git a/mm/slab.c b/mm/slab.c
+>> index e901a36..cabd217 100644
+>> --- a/mm/slab.c
+>> +++ b/mm/slab.c
+>> @@ -2118,6 +2118,7 @@ static void __kmem_cache_destroy(struct kmem_cache *cachep)
+>>   			kfree(l3);
+>>   		}
+>>   	}
+>> +	kfree(cachep->name);
+>>   	kmem_cache_free(&cache_cache, cachep);
+>>   }
+>>
+>> @@ -2526,9 +2527,14 @@ kmem_cache_create (const char *name, size_t size, size_t align,
+>>   		BUG_ON(ZERO_OR_NULL_PTR(cachep->slabp_cache));
+>>   	}
+>>   	cachep->ctor = ctor;
+>> -	cachep->name = name;
+>>
+>> -	if (setup_cpu_cache(cachep, gfp)) {
+>> +	/* Can't do strdup while kmalloc is not up */
+>> +	if (g_cpucache_up>  EARLY)
+>> +		cachep->name = kstrdup(name, GFP_KERNEL);
+>> +	else
+>> +		cachep->name = name;
+>> +
+>> +	if (!cachep->name || setup_cpu_cache(cachep, gfp)) {
+>>   		__kmem_cache_destroy(cachep);
+>>   		cachep = NULL;
+>>   		goto oops;
 >
-> Thanks.
->
-PIng...
+> This doesn't work if you kmem_cache_destroy() a cache that was created
+> when g_cpucache_cpu<= EARLY, the kfree() will explode.  That never
+> happens for any existing cache created in kmem_cache_init(), but this
+> would introduce the first roadblock in doing so.  So you'll need some
+> magic to determine whether the cache was allocated statically and suppress
+> the kfree() in such a case.
 
--- 
-Best regards,
-      Alex Nikiforov,
-      Mobile SW, Advanced Software Group,
-      Moscow R&D center, Samsung Electronics
+Suggestions on how to do it other than using a flag?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
