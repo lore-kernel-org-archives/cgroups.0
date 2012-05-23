@@ -1,51 +1,87 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v6 2/2] decrement static keys on real destroy time
-Date: Wed, 23 May 2012 13:33:54 -0700
-Message-ID: <20120523133354.373f1bb4.akpm@linux-foundation.org>
-References: <1337682339-21282-1-git-send-email-glommer@parallels.com>
-	<1337682339-21282-3-git-send-email-glommer@parallels.com>
-	<20120522154610.f2f9b78e.akpm@linux-foundation.org>
-	<4FBCAAF4.4030803@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: make css->refcnt clearing on cgroup removal
+ optional
+Date: Wed, 23 May 2012 15:22:42 -0700
+Message-ID: <20120523222242.GD3933@htj.dyndns.org>
+References: <20120330223423.GJ28934@google.com>
+ <20120330223606.GK28934@google.com>
+ <4F77B6BA.4070207@huawei.com>
+ <20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
+ <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
+ <20120518175548.GM19388@google.com>
+ <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4FBCAAF4.4030803@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=FSkVrmppXGqOQKhdQVrA8TZ0Qs8vI5rHrpndARHtCLk=;
+        b=SPU3I+4dIGQ9UbpHnNZiiZrP9/XsK+NoXneyoFEUXVXSojbxSo/Lxe6w4XOSws6csv
+         48wSx3Up3UmYZtRgZX24Y1/qGPRcBjiLwGlDRRbo2SdQJoZzWRYtFABIxm4rEyzThXmk
+         a8667VG05Z9SJy9J6+i7Cl/BqjHPfBqUj1SyI2L0BIYPYSHLH2QEjCXdtlLN3oT1yYRq
+         UMqT+/97yaQV3RU9YZcVqIh1DEuw4XX0Z7mQgdnwpkSXpFJxFX+YurP3MDJWgge6cm9t
+         wDN+lxN3rPVRU2MFnV3Ju+vqBOUaY/04jwu1O1OkA1p6+wac/qNqPVy/GIiWWAymRXqR
+         dmBA==
+Content-Disposition: inline
+In-Reply-To: <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, David Miller <davem@davemloft.net>
+Content-Transfer-Encoding: 7bit
+To: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Wed, 23 May 2012 13:16:36 +0400
-Glauber Costa <glommer@parallels.com> wrote:
+Hello, Sasha.
 
-> On 05/23/2012 02:46 AM, Andrew Morton wrote:
-> > Here, we're open-coding kinda-test_bit().  Why do that?  These flags are
-> > modified with set_bit() and friends, so we should read them with the
-> > matching test_bit()?
-> 
-> My reasoning was to be as cheap as possible, as you noted yourself two
-> paragraphs below.
+Does the following patch fix the problem you're seeing?
 
-These aren't on any fast path, are they?
+Thanks.
 
-Plus: you failed in that objective!  The C compiler's internal
-scalar->bool conversion makes these functions no more efficient than
-test_bit().
+---
+ kernel/cgroup.c |   17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-> > So here are suggested changes from*some*  of the above discussion.
-> > Please consider, incorporate, retest and send us a v7?
-> 
-> How do you want me to do it? Should I add your patch ontop of mine,
-> and then another one that tweaks whatever else is left, or should I just
-> merge those changes into the patches I have?
-
-A brand new patch, I guess.  I can sort out the what-did-he-change view
-at this end.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index ad8eae5..7cf9669 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -896,10 +896,13 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+ 		mutex_unlock(&cgroup_mutex);
+ 
+ 		/*
+-		 * Drop the active superblock reference that we took when we
+-		 * created the cgroup
++		 * We want to drop the active superblock reference that we
++		 * took when we created the cgroup after all dentry refs
++		 * are gone - kill_sb gets mighty unhappy otherwise.  Set
++		 * dentry->d_fsdata to cgroup_diput() to tell
++		 * cgroup_d_release() to call deactivate_super().
+ 		 */
+-		deactivate_super(cgrp->root->sb);
++		dentry->d_fsdata = cgroup_diput;
+ 
+ 		/*
+ 		 * if we're getting rid of the cgroup, refcount should ensure
+@@ -925,6 +928,13 @@ static int cgroup_delete(const struct dentry *d)
+ 	return 1;
+ }
+ 
++static void cgroup_d_release(struct dentry *dentry)
++{
++	/* did cgroup_diput() tell me to deactivate super? */
++	if (dentry->d_fsdata == cgroup_diput)
++		deactivate_super(dentry->d_sb);
++}
++
+ static void remove_dir(struct dentry *d)
+ {
+ 	struct dentry *parent = dget(d->d_parent);
+@@ -1532,6 +1542,7 @@ static int cgroup_get_rootdir(struct super_block *sb)
+ 	static const struct dentry_operations cgroup_dops = {
+ 		.d_iput = cgroup_diput,
+ 		.d_delete = cgroup_delete,
++		.d_release = cgroup_d_release,
+ 	};
+ 
+ 	struct inode *inode =
