@@ -1,34 +1,54 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2] slab+slob: dup name string
-Date: Wed, 23 May 2012 13:25:23 +0400
-Message-ID: <4FBCAD03.5010106@parallels.com>
-References: <1337680298-11929-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205220857380.17600@router.home> <alpine.DEB.2.00.1205222048380.28165@chino.kir.corp.google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] slab+slob: dup name string
+Date: Wed, 23 May 2012 12:46:35 +0100
+Message-ID: <1337773595.3013.15.camel@dabdike.int.hansenpartnership.com>
+References: <1337613539-29108-1-git-send-email-glommer@parallels.com>
+	 <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
+	 <alpine.DEB.2.00.1205220855470.17600@router.home>
+	 <4FBBAE95.6080608@parallels.com>
+	 <alpine.DEB.2.00.1205221216050.17721@router.home>
+	 <alpine.DEB.2.00.1205221529340.18325@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1205222048380.28165-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1205221529340.18325@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: David Rientjes <rientjes@google.com>
+Cc: Christoph Lameter <cl@linux.com>, Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 05/23/2012 07:55 AM, David Rientjes wrote:
-> I hate consistency patches like this because it could potentially fail a
-> kmem_cache_create() from a sufficiently long cache name when it wouldn't
-> have before, but I'm not really concerned since kmem_cache_create() will
-> naturally be followed by kmem_cache_alloc() which is more likely to cause
-> the oom anyway.  But it's just another waste of memory for consistency
-> sake.
->
-> This is much easier to do, just statically allocate the const char *'s
-> needed for the boot caches and then set their ->name's manually in
-> kmem_cache_init() and then avoid the kfree() in kmem_cache_destroy() if
-> the name is between&boot_cache_name[0] and&boot_cache_name[n].
+On Tue, 2012-05-22 at 15:31 -0700, David Rientjes wrote:
+> On Tue, 22 May 2012, Christoph Lameter wrote:
+> 
+> > > I think that's precisely David's point: that we might want to destroy them
+> > > eventually.
+> > 
+> > Cannot imagine why.
+> > 
+> 
+> We can't predict how slab will be extended in the future and this affects 
+> anything created before g_cpucache_cpu <= EARLY.  This would introduce the 
+> first problem with destroying such caches and is unnecessary if a 
+> workaround exists.
 
-That can be done.
+These problems seem to indicate that the slab behaviour: expecting the
+string to exist for the lifetime of the cache so there's no need to copy
+it might be better.
 
-I'll also revisit my memcg patches to see if I can rework it so it 
-doesn't care about this particular behavior. We're having a surprisingly 
-difficult time reaching consensus on this, so maybe it would be better 
-left untouched (if there is a way that makes sense to)
+This must be the behaviour all users of kmem_cache_create() expect
+anyway, since all enterprise distributions use slab and they're not
+getting bugs reported in this area.
+
+So, why not simply patch slab to rely on the string lifetime being the
+cache lifetime (or beyond) and therefore not having it take a copy?
+
+James
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
