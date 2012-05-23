@@ -1,31 +1,51 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH] slab+slob: dup name string
-Date: Wed, 23 May 2012 19:15:52 +0400
-Message-ID: <4FBCFF28.8080703@parallels.com>
-References: <1337613539-29108-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com> <alpine.DEB.2.00.1205220855470.17600@router.home> <4FBBAE95.6080608@parallels.com> <alpine.DEB.2.00.1205221216050.17721@router.home> <alpine.DEB.2.00.1205221529340.18325@chino.kir.corp.google.com> <1337773595.3013.15.camel@dabdike.int.hansenpartnership.com> <4FBCD328.6060406@parallels.com> <1337775878.3013.16.camel@dabdike.int.hansenpartnership.com> <alpine.DEB.2.00.1205230947490.30940@router.home> <4FBCFBE0.2080803@parallels.com> <alpine.DEB.2.00.1205231012330.30940@router.home>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v6 2/2] decrement static keys on real destroy time
+Date: Wed, 23 May 2012 13:33:54 -0700
+Message-ID: <20120523133354.373f1bb4.akpm@linux-foundation.org>
+References: <1337682339-21282-1-git-send-email-glommer@parallels.com>
+	<1337682339-21282-3-git-send-email-glommer@parallels.com>
+	<20120522154610.f2f9b78e.akpm@linux-foundation.org>
+	<4FBCAAF4.4030803@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1205231012330.30940-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4FBCAAF4.4030803@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, David Miller <davem@davemloft.net>
 
-On 05/23/2012 07:17 PM, Christoph Lameter wrote:
->> So if I understand it correctly, this is mostly because the name string
->> >  outlives the cache in the slub case, because of merging ?
-> Well this means we really only need the copying in slub which we already
-> have.
->
-> The problem is that you want to make this behavior uniform over all
-> allocators so that you do not have to allocate the string on your own.
->
-> Could you wait (and not rely on copying) until I am through with the
-> extraction project for common code for the allocators? At that point we
-> can resolve this issue consistently for all allocators.
->
+On Wed, 23 May 2012 13:16:36 +0400
+Glauber Costa <glommer@parallels.com> wrote:
 
-Yes, I can.
-Let's just defer this for now.
+> On 05/23/2012 02:46 AM, Andrew Morton wrote:
+> > Here, we're open-coding kinda-test_bit().  Why do that?  These flags are
+> > modified with set_bit() and friends, so we should read them with the
+> > matching test_bit()?
+> 
+> My reasoning was to be as cheap as possible, as you noted yourself two
+> paragraphs below.
+
+These aren't on any fast path, are they?
+
+Plus: you failed in that objective!  The C compiler's internal
+scalar->bool conversion makes these functions no more efficient than
+test_bit().
+
+> > So here are suggested changes from*some*  of the above discussion.
+> > Please consider, incorporate, retest and send us a v7?
+> 
+> How do you want me to do it? Should I add your patch ontop of mine,
+> and then another one that tweaks whatever else is left, or should I just
+> merge those changes into the patches I have?
+
+A brand new patch, I guess.  I can sort out the what-did-he-change view
+at this end.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
