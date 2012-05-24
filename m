@@ -1,87 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: make css->refcnt clearing on cgroup removal
- optional
-Date: Wed, 23 May 2012 15:22:42 -0700
-Message-ID: <20120523222242.GD3933@htj.dyndns.org>
-References: <20120330223423.GJ28934@google.com>
- <20120330223606.GK28934@google.com>
- <4F77B6BA.4070207@huawei.com>
- <20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
- <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
- <20120518175548.GM19388@google.com>
- <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
+From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Subject: Re: [PATCH] slab+slob: dup name string
+Date: Thu, 24 May 2012 10:18:31 +1000
+Message-ID: <20120524001831.GQ25351@dastard>
+References: <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com>
+ <alpine.DEB.2.00.1205220855470.17600@router.home>
+ <4FBBAE95.6080608@parallels.com>
+ <alpine.DEB.2.00.1205221216050.17721@router.home>
+ <alpine.DEB.2.00.1205221529340.18325@chino.kir.corp.google.com>
+ <1337773595.3013.15.camel@dabdike.int.hansenpartnership.com>
+ <4FBCD328.6060406@parallels.com>
+ <1337775878.3013.16.camel@dabdike.int.hansenpartnership.com>
+ <alpine.DEB.2.00.1205230947490.30940@router.home>
+ <4FBCF951.3040105@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=FSkVrmppXGqOQKhdQVrA8TZ0Qs8vI5rHrpndARHtCLk=;
-        b=SPU3I+4dIGQ9UbpHnNZiiZrP9/XsK+NoXneyoFEUXVXSojbxSo/Lxe6w4XOSws6csv
-         48wSx3Up3UmYZtRgZX24Y1/qGPRcBjiLwGlDRRbo2SdQJoZzWRYtFABIxm4rEyzThXmk
-         a8667VG05Z9SJy9J6+i7Cl/BqjHPfBqUj1SyI2L0BIYPYSHLH2QEjCXdtlLN3oT1yYRq
-         UMqT+/97yaQV3RU9YZcVqIh1DEuw4XX0Z7mQgdnwpkSXpFJxFX+YurP3MDJWgge6cm9t
-         wDN+lxN3rPVRU2MFnV3Ju+vqBOUaY/04jwu1O1OkA1p6+wac/qNqPVy/GIiWWAymRXqR
-         dmBA==
 Content-Disposition: inline
-In-Reply-To: <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <4FBCF951.3040105-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-Hello, Sasha.
+On Wed, May 23, 2012 at 06:50:57PM +0400, Glauber Costa wrote:
+> On 05/23/2012 06:48 PM, Christoph Lameter wrote:
+> >On Wed, 23 May 2012, James Bottomley wrote:
+> >
+> >>>>So, why not simply patch slab to rely on the string lifetime being the
+> >>>>cache lifetime (or beyond) and therefore not having it take a copy?
+> >
+> >Well thats they way it was for a long time. There must be some reason that
+> >someone started to add this copying business....  Pekka?
+> >
+> The question is less why we added, but rather why we're keeping.
+> 
+> Of course reasoning about why it was added helps (so let's try to
+> determine that), but so far the only reasonably strong argument in
+> favor of keeping it was robustness.
 
-Does the following patch fix the problem you're seeing?
+I'm pretty sure it was added because there are slab names
+constructed by snprintf on a stack buffer, so the name doesn't exist
+beyond the slab initialisation function call...
 
-Thanks.
+Cheers,
 
----
- kernel/cgroup.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+Dave.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ad8eae5..7cf9669 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -896,10 +896,13 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
- 		mutex_unlock(&cgroup_mutex);
- 
- 		/*
--		 * Drop the active superblock reference that we took when we
--		 * created the cgroup
-+		 * We want to drop the active superblock reference that we
-+		 * took when we created the cgroup after all dentry refs
-+		 * are gone - kill_sb gets mighty unhappy otherwise.  Set
-+		 * dentry->d_fsdata to cgroup_diput() to tell
-+		 * cgroup_d_release() to call deactivate_super().
- 		 */
--		deactivate_super(cgrp->root->sb);
-+		dentry->d_fsdata = cgroup_diput;
- 
- 		/*
- 		 * if we're getting rid of the cgroup, refcount should ensure
-@@ -925,6 +928,13 @@ static int cgroup_delete(const struct dentry *d)
- 	return 1;
- }
- 
-+static void cgroup_d_release(struct dentry *dentry)
-+{
-+	/* did cgroup_diput() tell me to deactivate super? */
-+	if (dentry->d_fsdata == cgroup_diput)
-+		deactivate_super(dentry->d_sb);
-+}
-+
- static void remove_dir(struct dentry *d)
- {
- 	struct dentry *parent = dget(d->d_parent);
-@@ -1532,6 +1542,7 @@ static int cgroup_get_rootdir(struct super_block *sb)
- 	static const struct dentry_operations cgroup_dops = {
- 		.d_iput = cgroup_diput,
- 		.d_delete = cgroup_delete,
-+		.d_release = cgroup_d_release,
- 	};
- 
- 	struct inode *inode =
+-- 
+Dave Chinner
+david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
