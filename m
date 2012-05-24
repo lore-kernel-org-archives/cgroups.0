@@ -1,40 +1,117 @@
-From: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: make css->refcnt clearing on cgroup removal optional
-Date: Thu, 24 May 2012 15:21:20 +0200
-Message-ID: <CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA@mail.gmail.com>
-References: <20120330223423.GJ28934@google.com> <20120330223606.GK28934@google.com>
- <4F77B6BA.4070207@huawei.com> <20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] cgroup: superblock can't be released with active dentries
+Date: Thu, 24 May 2012 08:41:39 -0700
+Message-ID: <20120524154139.GA27983@google.com>
+References: <20120330223423.GJ28934@google.com>
+ <20120330223606.GK28934@google.com>
+ <4F77B6BA.4070207@huawei.com>
+ <20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
  <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
- <20120518175548.GM19388@google.com> <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
+ <20120518175548.GM19388@google.com>
+ <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
  <20120523222242.GD3933@htj.dyndns.org>
+ <CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=OrKPIODVXNSaG9RHhq7FpqKCDHmgHcq64WJHLnsxKuw=;
-        b=VW49T6R6dhR0LHgn0XmHK2UpjcXlYQZUG7MU6UyRjibXsinStCKcknqJDsq+G26DDe
-         igdr06xU2rB1wUMjG9+lhgE5K2HEiUWjhZVHOMjPC3A0AEItEwb5nvja9toiV/K9Kmuo
-         BgP5+RTZC/uMrC5FmkaRjB9O5QUpUzgnuAZe3lF8uVxjh2PXbv7Ao61AoiclRZ4BNQe5
-         Do0A/U7z6OzQD3x6bUFoo6wuYULp0gWqcPNGIo/AfYiTIOGx+WRCNOlEknA4H+9uBh7W
-         rU6ilJwsuy14bTARGdLftebCfiW4l7DXLVlyj/NucuKHj6HlbQSIlnoiU3Qrg+KwR1nk
-         fXKA==
-In-Reply-To: <20120523222242.GD3933-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=LIQW0DwBDAiGtIXRLvmG9pyyy4SYNIKLgdzFindXbRs=;
+        b=aZyel4xXJHRltfKXh7q/nE1MSi2W//ANNJ6wicn/p8FymwWD7y0cxIjocU24HHmM1v
+         cgN4EsDwUcM1bG41Yfb9KbJbasKlzEwRPJaRsPWZSqrBGuTOxmkINkiO7Txk4rJn8hYZ
+         UV15vKBHe77ux2csPjr10CwZu/teesBxefKFfrKb1BlVINuAjF84zqck3Rp/XsuGKhIQ
+         hUmu9BVWF796AQEKP9UBFYZ4eRoE7iPQuAjBel/Y/U+DGOOJYcTgNGW/N9kCFIH2MePQ
+         fH3AdEJrn/QApDt4SVLk8JlSVsXvqu4X7bNhQAAxaluh/NDhTpqrC2LqxgLC2bPidcrZ
+         WOlA==
+Content-Disposition: inline
+In-Reply-To: <CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Thu, May 24, 2012 at 12:22 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello, Sasha.
->
-> Does the following patch fix the problem you're seeing?
->
-> Thanks.
+From 88787c483106c5830a46d18deaffdc1e70929af7 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Thu, 24 May 2012 08:24:39 -0700
 
-Yup, that did the trick.
+48ddbe1946 "cgroup: make css->refcnt clearing on cgroup removal
+optional" allowed a css to linger after the associated cgroup is
+removed.  As a css holds a reference on the cgroup's dentry, it means
+that cgroup dentries may linger for a while.
 
-Thanks!
+cgroup_create() does grab an active reference on the superblock to
+prevent it from going away while there are !root cgroups; however, the
+reference is put from cgroup_diput() which is invoked on cgroup
+removal, so cgroup dentries which are removed but persisting due to
+lingering csses already have released their superblock active refs
+allowing superblock to be killed while those dentries are around.
+
+Given the right condition, this makes cgroup_kill_sb() call
+kill_litter_super() with dentries with non-zero d_count leading to
+BUG() in shrink_dcache_for_umount_subtree().
+
+Fix it by adding cgroup_dops->d_release() operation and moving
+deactivate_super() to it.  cgroup_diput() now marks dentry->d_fsdata
+with itself if superblock should be deactivated and cgroup_d_release()
+deactivates the superblock on dentry release.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Tested-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+LKML-Reference: <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+---
+Li, can you please ack this?
+
+Thanks.
+
+ kernel/cgroup.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index ad8eae5..e887b55 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -896,10 +896,13 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+ 		mutex_unlock(&cgroup_mutex);
+ 
+ 		/*
+-		 * Drop the active superblock reference that we took when we
+-		 * created the cgroup
++		 * We want to drop the active superblock reference from the
++		 * cgroup creation after all the dentry refs are gone -
++		 * kill_sb gets mighty unhappy otherwise.  Mark
++		 * dentry->d_fsdata with cgroup_diput() to tell
++		 * cgroup_d_release() to call deactivate_super().
+ 		 */
+-		deactivate_super(cgrp->root->sb);
++		dentry->d_fsdata = cgroup_diput;
+ 
+ 		/*
+ 		 * if we're getting rid of the cgroup, refcount should ensure
+@@ -925,6 +928,13 @@ static int cgroup_delete(const struct dentry *d)
+ 	return 1;
+ }
+ 
++static void cgroup_d_release(struct dentry *dentry)
++{
++	/* did cgroup_diput() tell me to deactivate super? */
++	if (dentry->d_fsdata == cgroup_diput)
++		deactivate_super(dentry->d_sb);
++}
++
+ static void remove_dir(struct dentry *d)
+ {
+ 	struct dentry *parent = dget(d->d_parent);
+@@ -1532,6 +1542,7 @@ static int cgroup_get_rootdir(struct super_block *sb)
+ 	static const struct dentry_operations cgroup_dops = {
+ 		.d_iput = cgroup_diput,
+ 		.d_delete = cgroup_delete,
++		.d_release = cgroup_d_release,
+ 	};
+ 
+ 	struct inode *inode =
+-- 
+1.7.7.3
