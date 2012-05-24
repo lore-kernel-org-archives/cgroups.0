@@ -1,36 +1,40 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH] slab+slob: dup name string
-Date: Thu, 24 May 2012 16:06:23 +0400
-Message-ID: <4FBE243F.3080002@parallels.com>
-References: <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com> <alpine.DEB.2.00.1205220855470.17600@router.home> <4FBBAE95.6080608@parallels.com> <alpine.DEB.2.00.1205221216050.17721@router.home> <alpine.DEB.2.00.1205221529340.18325@chino.kir.corp.google.com> <1337773595.3013.15.camel@dabdike.int.hansenpartnership.com> <4FBCD328.6060406@parallels.com> <1337775878.3013.16.camel@dabdike.int.hansenpartnership.com> <alpine.DEB.2.00.1205230947490.30940@router.home> <4FBCF951.3040105@parallels.com> <20120524001831.GQ25351@dastard>
+From: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: make css->refcnt clearing on cgroup removal optional
+Date: Thu, 24 May 2012 15:21:20 +0200
+Message-ID: <CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA@mail.gmail.com>
+References: <20120330223423.GJ28934@google.com> <20120330223606.GK28934@google.com>
+ <4F77B6BA.4070207@huawei.com> <20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
+ <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
+ <20120518175548.GM19388@google.com> <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
+ <20120523222242.GD3933@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120524001831.GQ25351@dastard>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=OrKPIODVXNSaG9RHhq7FpqKCDHmgHcq64WJHLnsxKuw=;
+        b=VW49T6R6dhR0LHgn0XmHK2UpjcXlYQZUG7MU6UyRjibXsinStCKcknqJDsq+G26DDe
+         igdr06xU2rB1wUMjG9+lhgE5K2HEiUWjhZVHOMjPC3A0AEItEwb5nvja9toiV/K9Kmuo
+         BgP5+RTZC/uMrC5FmkaRjB9O5QUpUzgnuAZe3lF8uVxjh2PXbv7Ao61AoiclRZ4BNQe5
+         Do0A/U7z6OzQD3x6bUFoo6wuYULp0gWqcPNGIo/AfYiTIOGx+WRCNOlEknA4H+9uBh7W
+         rU6ilJwsuy14bTARGdLftebCfiW4l7DXLVlyj/NucuKHj6HlbQSIlnoiU3Qrg+KwR1nk
+         fXKA==
+In-Reply-To: <20120523222242.GD3933-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Lameter <cl@linux.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, David Rientjes <rientjes@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On 05/24/2012 04:18 AM, Dave Chinner wrote:
->> Of course reasoning about why it was added helps (so let's try to
->> >  determine that), but so far the only reasonably strong argument in
->> >  favor of keeping it was robustness.
-> I'm pretty sure it was added because there are slab names
-> constructed by snprintf on a stack buffer, so the name doesn't exist
-> beyond the slab initialisation function call...
+On Thu, May 24, 2012 at 12:22 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello, Sasha.
 >
-> Cheers,
+> Does the following patch fix the problem you're seeing?
 >
-> Dave.
-If that was the reason, we'd be seeing slab failing miserably where slub 
-succeeds, since slab keeps no copy.
+> Thanks.
 
+Yup, that did the trick.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks!
