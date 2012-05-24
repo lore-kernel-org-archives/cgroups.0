@@ -1,51 +1,36 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] per-cgroup /proc/stat statistics
-Date: Thu, 24 May 2012 13:10:26 +0400
-Message-ID: <4FBDFB02.4090502@parallels.com>
-References: <1334010315-4453-1-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH] slab+slob: dup name string
+Date: Thu, 24 May 2012 16:06:23 +0400
+Message-ID: <4FBE243F.3080002@parallels.com>
+References: <alpine.DEB.2.00.1205212018230.13522@chino.kir.corp.google.com> <alpine.DEB.2.00.1205220855470.17600@router.home> <4FBBAE95.6080608@parallels.com> <alpine.DEB.2.00.1205221216050.17721@router.home> <alpine.DEB.2.00.1205221529340.18325@chino.kir.corp.google.com> <1337773595.3013.15.camel@dabdike.int.hansenpartnership.com> <4FBCD328.6060406@parallels.com> <1337775878.3013.16.camel@dabdike.int.hansenpartnership.com> <alpine.DEB.2.00.1205230947490.30940@router.home> <4FBCF951.3040105@parallels.com> <20120524001831.GQ25351@dastard>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1334010315-4453-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120524001831.GQ25351@dastard>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Lameter <cl@linux.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, David Rientjes <rientjes@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 04/10/2012 02:25 AM, Glauber Costa wrote:
-> Hi,
+On 05/24/2012 04:18 AM, Dave Chinner wrote:
+>> Of course reasoning about why it was added helps (so let's try to
+>> >  determine that), but so far the only reasonably strong argument in
+>> >  favor of keeping it was robustness.
+> I'm pretty sure it was added because there are slab names
+> constructed by snprintf on a stack buffer, so the name doesn't exist
+> beyond the slab initialisation function call...
 >
-> This patch aims at allowing userspace to recreate the most important
-> contents of /proc/stat per-cgroup. It exports the data needed for it
-> from the guts of the scheduler, and then anyone can parse it and
-> present it to a container in a meaningful way. Again, the kernel won't
-> get involved in this directly.
+> Cheers,
 >
-> Part of it will come from the cpu cgroup. Another part, from the cpuacct
-> cgroup. Data is exported in cgroup files stat_percpu. They are just like
-> the normal stat files, but with a cpuXXX value before the actual data
-> field. As so, they are also extensible. So if anyone wants to give a
-> shot at values I am currently ignoring (as iowait) in the future, we
-> at least won't have a format problem.
->
-> Let me know what you think.
->
-> Glauber Costa (5):
->    measure exec_clock for rt sched entities
->    account guest time per-cgroup as well.
->    record nr_switches per task_group
->    expose fine-grained per-cpu data for cpuacct stats
->    expose per-taskgroup schedstats in cgroup
->
->   kernel/sched/core.c  |  214 ++++++++++++++++++++++++++++++++++++++++++++++++--
->   kernel/sched/fair.c  |   27 ++++++-
->   kernel/sched/rt.c    |    5 +
->   kernel/sched/sched.h |    6 ++
->   4 files changed, 245 insertions(+), 7 deletions(-)
->
-Paul and the other scheduler folks:
+> Dave.
+If that was the reason, we'd be seeing slab failing miserably where slub 
+succeeds, since slab keeps no copy.
 
-Do you have a saying on this?
 
-Thanks
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
