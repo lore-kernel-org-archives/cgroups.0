@@ -1,117 +1,40 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] cgroup: superblock can't be released with active dentries
-Date: Thu, 24 May 2012 08:41:39 -0700
-Message-ID: <20120524154139.GA27983@google.com>
-References: <20120330223423.GJ28934@google.com>
- <20120330223606.GK28934@google.com>
- <4F77B6BA.4070207@huawei.com>
- <20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
- <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
- <20120518175548.GM19388@google.com>
- <CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
- <20120523222242.GD3933@htj.dyndns.org>
- <CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA@mail.gmail.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -V6 01/14] hugetlb: rename max_hstate to
+ hugetlb_max_hstate
+Date: Thu, 24 May 2012 14:11:01 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205241410490.24113@chino.kir.corp.google.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=LIQW0DwBDAiGtIXRLvmG9pyyy4SYNIKLgdzFindXbRs=;
-        b=aZyel4xXJHRltfKXh7q/nE1MSi2W//ANNJ6wicn/p8FymwWD7y0cxIjocU24HHmM1v
-         cgN4EsDwUcM1bG41Yfb9KbJbasKlzEwRPJaRsPWZSqrBGuTOxmkINkiO7Txk4rJn8hYZ
-         UV15vKBHe77ux2csPjr10CwZu/teesBxefKFfrKb1BlVINuAjF84zqck3Rp/XsuGKhIQ
-         hUmu9BVWF796AQEKP9UBFYZ4eRoE7iPQuAjBel/Y/U+DGOOJYcTgNGW/N9kCFIH2MePQ
-         fH3AdEJrn/QApDt4SVLk8JlSVsXvqu4X7bNhQAAxaluh/NDhTpqrC2LqxgLC2bPidcrZ
-         WOlA==
-Content-Disposition: inline
-In-Reply-To: <CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=rE32qOA2MIULdtWuMXrAHYKxEdo6v21qrVnqL4rI99k=;
+        b=nUQU4J3yf1uYwWMf/pHlnkCdx8mQ+j1bkhDTsF8HrLrYcvIXcb1LV7IV6aFM691c9l
+         Q1CR3GuRcKw2OH9fLqvxcvVIy6D4rH4bwfbGWlRg8bc6k/5zjpA49Pmp5154709eAx/R
+         rMrj59cTAPLLzkVEHd6ReKPkN4QVwH/oWRkpB4fP7L+iIpjuY+BsYUpooi+4iPCDDtgu
+         LWeAWKUcdvMRDn8ZozxxOUosy7v5eMXOrjcEbIjx4aLGa/XFJYNcHhWMjwL9To/OGqg9
+         nGJpYUmml4vOwZ308GwVbdV0tB3Jr1U+iFgOpsm7jbAbE0ep3LpZ7SqGeDh4F/WY5Hs2
+         VOxw==
+In-Reply-To: <1334573091-18602-2-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From 88787c483106c5830a46d18deaffdc1e70929af7 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Thu, 24 May 2012 08:24:39 -0700
+On Mon, 16 Apr 2012, Aneesh Kumar K.V wrote:
 
-48ddbe1946 "cgroup: make css->refcnt clearing on cgroup removal
-optional" allowed a css to linger after the associated cgroup is
-removed.  As a css holds a reference on the cgroup's dentry, it means
-that cgroup dentries may linger for a while.
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> We will be using this from other subsystems like memcg
+> in later patches.
+> 
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Acked-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-cgroup_create() does grab an active reference on the superblock to
-prevent it from going away while there are !root cgroups; however, the
-reference is put from cgroup_diput() which is invoked on cgroup
-removal, so cgroup dentries which are removed but persisting due to
-lingering csses already have released their superblock active refs
-allowing superblock to be killed while those dentries are around.
-
-Given the right condition, this makes cgroup_kill_sb() call
-kill_litter_super() with dentries with non-zero d_count leading to
-BUG() in shrink_dcache_for_umount_subtree().
-
-Fix it by adding cgroup_dops->d_release() operation and moving
-deactivate_super() to it.  cgroup_diput() now marks dentry->d_fsdata
-with itself if superblock should be deactivated and cgroup_d_release()
-deactivates the superblock on dentry release.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Tested-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-LKML-Reference: <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
----
-Li, can you please ack this?
-
-Thanks.
-
- kernel/cgroup.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ad8eae5..e887b55 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -896,10 +896,13 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
- 		mutex_unlock(&cgroup_mutex);
- 
- 		/*
--		 * Drop the active superblock reference that we took when we
--		 * created the cgroup
-+		 * We want to drop the active superblock reference from the
-+		 * cgroup creation after all the dentry refs are gone -
-+		 * kill_sb gets mighty unhappy otherwise.  Mark
-+		 * dentry->d_fsdata with cgroup_diput() to tell
-+		 * cgroup_d_release() to call deactivate_super().
- 		 */
--		deactivate_super(cgrp->root->sb);
-+		dentry->d_fsdata = cgroup_diput;
- 
- 		/*
- 		 * if we're getting rid of the cgroup, refcount should ensure
-@@ -925,6 +928,13 @@ static int cgroup_delete(const struct dentry *d)
- 	return 1;
- }
- 
-+static void cgroup_d_release(struct dentry *dentry)
-+{
-+	/* did cgroup_diput() tell me to deactivate super? */
-+	if (dentry->d_fsdata == cgroup_diput)
-+		deactivate_super(dentry->d_sb);
-+}
-+
- static void remove_dir(struct dentry *d)
- {
- 	struct dentry *parent = dget(d->d_parent);
-@@ -1532,6 +1542,7 @@ static int cgroup_get_rootdir(struct super_block *sb)
- 	static const struct dentry_operations cgroup_dops = {
- 		.d_iput = cgroup_diput,
- 		.d_delete = cgroup_delete,
-+		.d_release = cgroup_d_release,
- 	};
- 
- 	struct inode *inode =
--- 
-1.7.7.3
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
