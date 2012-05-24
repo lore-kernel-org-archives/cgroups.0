@@ -1,56 +1,51 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH v2] slab+slob: dup name string
-Date: Wed, 23 May 2012 18:01:51 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205231759460.28167@chino.kir.corp.google.com>
-References: <1337680298-11929-1-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205220857380.17600@router.home> <alpine.DEB.2.00.1205222048380.28165@chino.kir.corp.google.com> <alpine.DEB.2.00.1205230849410.29893@router.home>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 0/5] per-cgroup /proc/stat statistics
+Date: Thu, 24 May 2012 13:10:26 +0400
+Message-ID: <4FBDFB02.4090502@parallels.com>
+References: <1334010315-4453-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=jcLY6SxqZ9qGOYeUNu9GljUbH0o+TJKVashsXacHflE=;
-        b=MbyQB+APvvRSk70XZC6XT+iD7hK0vJN0L8QQqjZ73s9vt6cRGYQWQ1Qcb3jhq77lJc
-         Z3tunT3XrcOt+phDw2bPFnThr0rVIXFbFkWe8mf7zlfd8iK30JZ4I6OWAfcY0FuLtprM
-         +RDfsJTPk91/flaZv/1AWSHYtPOiGyLpwnKV6kuldp//rPKL2Rg6+ch8LRnkHK01WEqj
-         1a9gZvtPqnr4Dqdz+Xf8BfslvXUeBDCDKlBLu8W1Q8SX3ESKZ2QDeVJjGAvpTNU1dRcN
-         dCc8Tpit19tn2+ZKBGYMF8CaKJQzpgudkFcZFTdXjbh2GIuOkoxFEojauPCJVsWm5Lka
-         Y5ow==
-In-Reply-To: <alpine.DEB.2.00.1205230849410.29893@router.home>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl@linux.com>
-Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1334010315-4453-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
 
-On Wed, 23 May 2012, Christoph Lameter wrote:
+On 04/10/2012 02:25 AM, Glauber Costa wrote:
+> Hi,
+>
+> This patch aims at allowing userspace to recreate the most important
+> contents of /proc/stat per-cgroup. It exports the data needed for it
+> from the guts of the scheduler, and then anyone can parse it and
+> present it to a container in a meaningful way. Again, the kernel won't
+> get involved in this directly.
+>
+> Part of it will come from the cpu cgroup. Another part, from the cpuacct
+> cgroup. Data is exported in cgroup files stat_percpu. They are just like
+> the normal stat files, but with a cpuXXX value before the actual data
+> field. As so, they are also extensible. So if anyone wants to give a
+> shot at values I am currently ignoring (as iowait) in the future, we
+> at least won't have a format problem.
+>
+> Let me know what you think.
+>
+> Glauber Costa (5):
+>    measure exec_clock for rt sched entities
+>    account guest time per-cgroup as well.
+>    record nr_switches per task_group
+>    expose fine-grained per-cpu data for cpuacct stats
+>    expose per-taskgroup schedstats in cgroup
+>
+>   kernel/sched/core.c  |  214 ++++++++++++++++++++++++++++++++++++++++++++++++--
+>   kernel/sched/fair.c  |   27 ++++++-
+>   kernel/sched/rt.c    |    5 +
+>   kernel/sched/sched.h |    6 ++
+>   4 files changed, 245 insertions(+), 7 deletions(-)
+>
+Paul and the other scheduler folks:
 
-> > No, it's not, there's no reason to prevent caches created before
-> > g_cpucache_up <= EARLY to be destroyed because it makes a patch easier to
-> > implement and then leave that little gotcha as an undocumented treasure
-> > for someone to find when they try it later on.
-> 
-> g_cpucache_up <= EARLY is slab bootstrap code and the system is in a
-> pretty fragile state. Plus the the kmalloc logic *depends* on these
-> caches being present. Removing those is not a good idea. The other caches
-> that are created at that point are needed to create more caches.
-> 
-> There is no reason to remove these caches.
-> 
+Do you have a saying on this?
 
-Yes, we know that we don't want to remove the caches that are currently 
-created in kmem_cache_init(), it would be a pretty stupid thing to do.  
-I'm talking about the possibility of creating additional caches while 
-g_cpucache_up <= EARLY in the future and then finding that you can't 
-destroy them because of this string allocation.  I don't think it's too 
-difficult to statically allocate space for these names and then test for 
-it before doing kfree() in kmem_cache_destroy(), it's not performance 
-critical.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks
