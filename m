@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 23/28] slab: Track all the memcg children of a kmem_cache.
-Date: Fri, 25 May 2012 17:03:43 +0400
-Message-ID: <1337951028-3427-24-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 24/28] memcg: Per-memcg memory.kmem.slabinfo file.
+Date: Fri, 25 May 2012 17:03:44 +0400
+Message-ID: <1337951028-3427-25-git-send-email-glommer@parallels.com>
 References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1337951028-3427-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,197 +11,224 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-This enables us to remove all the children of a kmem_cache being
-destroyed, if for example the kernel module it's being used in
-gets unloaded. Otherwise, the children will still point to the
-destroyed parent.
+From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
 
-We also use this to propagate /proc/slabinfo settings to all
-the children of a cache, when, for example, changing its
-batchsize.
-
-Code is inspired by Suleiman's, with adaptations to
-the patchset and simplifications by me.
+This file shows all the kmem_caches used by a memcg.
 
 Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- include/linux/memcontrol.h |    1 +
- include/linux/slab.h       |    1 +
- mm/memcontrol.c            |   13 ++++++++-
- mm/slab.c                  |   61 +++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 73 insertions(+), 3 deletions(-)
+ include/linux/slab.h |    1 +
+ mm/memcontrol.c      |   17 ++++++++++
+ mm/slab.c            |   87 ++++++++++++++++++++++++++++++++++++-------------
+ mm/slub.c            |    5 +++
+ 4 files changed, 87 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index df049e1..63113de 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -465,6 +465,7 @@ extern struct static_key mem_cgroup_kmem_enabled_key;
- #define mem_cgroup_kmem_on static_key_false(&mem_cgroup_kmem_enabled_key)
- 
- void mem_cgroup_destroy_cache(struct kmem_cache *cachep);
-+void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id);
- #else
- static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 					     struct kmem_cache *s)
 diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 25f073e..714aeab 100644
+index 714aeab..f2f51d8 100644
 --- a/include/linux/slab.h
 +++ b/include/linux/slab.h
-@@ -172,6 +172,7 @@ struct mem_cgroup_cache_params {
- 	struct kmem_cache *parent;
- #endif
- 	struct list_head destroyed_list; /* Used when deleting memcg cache */
-+	struct list_head sibling_list;
- };
- #endif
- 
+@@ -333,6 +333,7 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
+ #define MAX_KMEM_CACHE_TYPES 400
+ extern struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
+ 					 struct kmem_cache *cachep);
++extern int mem_cgroup_slabinfo(struct mem_cgroup *mem, struct seq_file *m);
+ #else
+ #define MAX_KMEM_CACHE_TYPES 0
+ #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e2576c5..08f3c3e 100644
+index 08f3c3e..3e99c69 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -542,10 +542,11 @@ void mem_cgroup_register_cache(struct mem_cgroup *memcg,
+@@ -5229,6 +5229,19 @@ static int mem_control_numa_stat_open(struct inode *unused, struct file *file)
+ #endif /* CONFIG_NUMA */
  
- 	cachep->memcg_params.memcg = memcg;
- 
--	if (!memcg)
-+	if (!memcg) {
- 		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
- 				    GFP_KERNEL);
--	else
-+		INIT_LIST_HEAD(&cachep->memcg_params.sibling_list);
-+	} else
- 		INIT_LIST_HEAD(&cachep->memcg_params.destroyed_list);
- 	cachep->memcg_params.id = id;
- }
-@@ -845,6 +846,14 @@ struct kmem_cache *__mem_cgroup_get_kmem_cache(struct kmem_cache *cachep,
- }
- EXPORT_SYMBOL(__mem_cgroup_get_kmem_cache);
- 
-+void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id)
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++static int mem_cgroup_slabinfo_show(struct cgroup *cgroup, struct cftype *ctf,
++				    struct seq_file *m)
 +{
-+	mutex_lock(&memcg_cache_mutex);
-+	cachep->memcg_params.memcg->slabs[id] = NULL;
-+	mutex_unlock(&memcg_cache_mutex);
-+	mem_cgroup_put(cachep->memcg_params.memcg);
++	struct mem_cgroup *mem;
++
++	mem  = mem_cgroup_from_cont(cgroup);
++
++	if (mem == root_mem_cgroup)
++		mem = NULL;
++
++	return mem_cgroup_slabinfo(mem, m);
 +}
 +
- bool __mem_cgroup_new_kmem_page(struct page *page, gfp_t gfp)
- {
- 	struct mem_cgroup *memcg;
+ static struct cftype kmem_cgroup_files[] = {
+ 	{
+ 		.name = "kmem.limit_in_bytes",
+@@ -5253,6 +5266,10 @@ static struct cftype kmem_cgroup_files[] = {
+ 		.trigger = mem_cgroup_reset,
+ 		.read = mem_cgroup_read,
+ 	},
++	{
++		.name = "kmem.slabinfo",
++		.read_seq_string = mem_cgroup_slabinfo_show,
++	},
+ 	{},
+ };
+ 
 diff --git a/mm/slab.c b/mm/slab.c
-index 59f1027..cb409ae 100644
+index cb409ae..2f9cf92 100644
 --- a/mm/slab.c
 +++ b/mm/slab.c
-@@ -2661,6 +2661,8 @@ struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
- 		goto out;
- 	}
- 
-+	list_add(&new->memcg_params.sibling_list,
-+	    &cachep->memcg_params.sibling_list);
- 	if ((cachep->limit != new->limit) ||
- 	    (cachep->batchcount != new->batchcount) ||
- 	    (cachep->shared != new->shared))
-@@ -2829,6 +2831,33 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
+@@ -4550,21 +4550,26 @@ static void s_stop(struct seq_file *m, void *p)
+ 	mutex_unlock(&cache_chain_mutex);
  }
- EXPORT_SYMBOL(kmem_cache_shrink);
  
-+static void kmem_cache_destroy_memcg_children(struct kmem_cache *cachep)
-+{
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	struct kmem_cache *c;
-+	struct mem_cgroup_cache_params *p, *tmp;
-+	int id = cachep->memcg_params.id;
+-static int s_show(struct seq_file *m, void *p)
+-{
+-	struct kmem_cache *cachep = list_entry(p, struct kmem_cache, next);
+-	struct slab *slabp;
++struct slab_counts {
+ 	unsigned long active_objs;
++	unsigned long active_slabs;
++	unsigned long num_slabs;
++	unsigned long free_objects;
++	unsigned long shared_avail;
+ 	unsigned long num_objs;
+-	unsigned long active_slabs = 0;
+-	unsigned long num_slabs, free_objects = 0, shared_avail = 0;
+-	const char *name;
+-	char *error = NULL;
+-	int node;
++};
 +
-+	if (id == -1)
-+		return;
++static char *
++get_slab_counts(struct kmem_cache *cachep, struct slab_counts *c)
++{
+ 	struct kmem_list3 *l3;
++	struct slab *slabp;
++	char *error;
++	int node;
++
++	error = NULL;
++	memset(c, 0, sizeof(struct slab_counts));
+ 
+-	active_objs = 0;
+-	num_slabs = 0;
+ 	for_each_online_node(node) {
+ 		l3 = cachep->nodelists[node];
+ 		if (!l3)
+@@ -4576,31 +4581,43 @@ static int s_show(struct seq_file *m, void *p)
+ 		list_for_each_entry(slabp, &l3->slabs_full, list) {
+ 			if (slabp->inuse != cachep->num && !error)
+ 				error = "slabs_full accounting error";
+-			active_objs += cachep->num;
+-			active_slabs++;
++			c->active_objs += cachep->num;
++			c->active_slabs++;
+ 		}
+ 		list_for_each_entry(slabp, &l3->slabs_partial, list) {
+ 			if (slabp->inuse == cachep->num && !error)
+ 				error = "slabs_partial inuse accounting error";
+ 			if (!slabp->inuse && !error)
+ 				error = "slabs_partial/inuse accounting error";
+-			active_objs += slabp->inuse;
+-			active_slabs++;
++			c->active_objs += slabp->inuse;
++			c->active_slabs++;
+ 		}
+ 		list_for_each_entry(slabp, &l3->slabs_free, list) {
+ 			if (slabp->inuse && !error)
+ 				error = "slabs_free/inuse accounting error";
+-			num_slabs++;
++			c->num_slabs++;
+ 		}
+-		free_objects += l3->free_objects;
++		c->free_objects += l3->free_objects;
+ 		if (l3->shared)
+-			shared_avail += l3->shared->avail;
++			c->shared_avail += l3->shared->avail;
+ 
+ 		spin_unlock_irq(&l3->list_lock);
+ 	}
+-	num_slabs += active_slabs;
+-	num_objs = num_slabs * cachep->num;
+-	if (num_objs - active_objs != free_objects && !error)
++	c->num_slabs += c->active_slabs;
++	c->num_objs = c->num_slabs * cachep->num;
++
++	return error;
++}
++
++static int s_show(struct seq_file *m, void *p)
++{
++	struct kmem_cache *cachep = list_entry(p, struct kmem_cache, next);
++	struct slab_counts c;
++	const char *name;
++	char *error;
++
++	error = get_slab_counts(cachep, &c);
++	if (c.num_objs - c.active_objs != c.free_objects && !error)
+ 		error = "free_objects accounting error";
+ 
+ 	name = cachep->name;
+@@ -4608,12 +4625,12 @@ static int s_show(struct seq_file *m, void *p)
+ 		printk(KERN_ERR "slab: cache %s error: %s\n", name, error);
+ 
+ 	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
+-		   name, active_objs, num_objs, cachep->buffer_size,
++		   name, c.active_objs, c.num_objs, cachep->buffer_size,
+ 		   cachep->num, (1 << cachep->gfporder));
+ 	seq_printf(m, " : tunables %4u %4u %4u",
+ 		   cachep->limit, cachep->batchcount, cachep->shared);
+ 	seq_printf(m, " : slabdata %6lu %6lu %6lu",
+-		   active_slabs, num_slabs, shared_avail);
++		   c.active_slabs, c.num_slabs, c.shared_avail);
+ #if STATS
+ 	{			/* list3 stats */
+ 		unsigned long high = cachep->high_mark;
+@@ -4647,6 +4664,30 @@ static int s_show(struct seq_file *m, void *p)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++int mem_cgroup_slabinfo(struct mem_cgroup *memcg, struct seq_file *m)
++{
++	struct kmem_cache *cachep;
++	struct slab_counts c;
++
++	seq_printf(m, "# name            <active_objs> <num_objs> <objsize>\n");
 +
 +	mutex_lock(&cache_chain_mutex);
-+	list_for_each_entry_safe(p, tmp,
-+	    &cachep->memcg_params.sibling_list, sibling_list) {
-+		c = container_of(p, struct kmem_cache, memcg_params);
-+		if (WARN_ON(c == cachep))
++	list_for_each_entry(cachep, &cache_chain, next) {
++		if (cachep->memcg_params.memcg != memcg)
 +			continue;
 +
-+		mutex_unlock(&cache_chain_mutex);
-+		BUG_ON(c->memcg_params.id != -1);
-+		mem_cgroup_remove_child_kmem_cache(c, id);
-+		kmem_cache_destroy(c);
-+		mutex_lock(&cache_chain_mutex);
++		get_slab_counts(cachep, &c);
++
++		seq_printf(m, "%-17s %6lu %6lu %6u\n", cachep->name,
++		   c.active_objs, c.num_objs, cachep->buffer_size);
 +	}
 +	mutex_unlock(&cache_chain_mutex);
++
++	return 0;
++}
 +#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-+}
 +
- /**
-  * kmem_cache_destroy - delete a cache
-  * @cachep: the cache to destroy
-@@ -2849,6 +2878,9 @@ void kmem_cache_destroy(struct kmem_cache *cachep)
- {
- 	BUG_ON(!cachep || in_interrupt());
- 
-+	/* Destroy all the children caches if we aren't a memcg cache */
-+	kmem_cache_destroy_memcg_children(cachep);
+ /*
+  * slabinfo_op - iterator that generates /proc/slabinfo
+  *
+diff --git a/mm/slub.c b/mm/slub.c
+index f5fc10c..c8a8cab 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -4110,6 +4110,11 @@ struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
+ 	kfree(name);
+ 	return new;
+ }
 +
- 	/* Find the cache in the chain of caches. */
- 	get_online_cpus();
- 	mutex_lock(&cache_chain_mutex);
-@@ -2869,6 +2901,7 @@ void kmem_cache_destroy(struct kmem_cache *cachep)
- 
- 	mem_cgroup_release_cache(cachep);
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	list_del(&cachep->memcg_params.sibling_list);
- 	/* memcg cache: free the name string. Doing it here saves us
- 	 * a pointer to it outside the slab code */
- 	if (cachep->memcg_params.id == -1)
-@@ -4243,7 +4276,7 @@ static void do_ccupdate_local(void *info)
- }
- 
- /* Always called with the cache_chain_mutex held */
--static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
-+static int __do_tune_cpucache(struct kmem_cache *cachep, int limit,
- 				int batchcount, int shared, gfp_t gfp)
- {
- 	struct ccupdate_struct *new;
-@@ -4286,6 +4319,32 @@ static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
- 	return alloc_kmemlist(cachep, gfp);
- }
- 
-+static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
-+				int batchcount, int shared, gfp_t gfp)
++int mem_cgroup_slabinfo(struct mem_cgroup *memcg, struct seq_file *m)
 +{
-+	int ret;
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	struct kmem_cache *c;
-+	struct mem_cgroup_cache_params *p;
-+#endif
-+
-+	ret = __do_tune_cpucache(cachep, limit, batchcount, shared, gfp);
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	if (g_cpucache_up < FULL)
-+		return ret;
-+
-+	if ((ret < 0) || (cachep->memcg_params.id == -1))
-+		return ret;
-+
-+	list_for_each_entry(p, &cachep->memcg_params.sibling_list, sibling_list) {
-+		c = container_of(p, struct kmem_cache, memcg_params);
-+		/* return value determined by the parent cache only */
-+		__do_tune_cpucache(c, limit, batchcount, shared, gfp);
-+	}
-+#endif
-+	return ret;
++	return 0;
 +}
-+
- /* Called with cache_chain_mutex held always */
- static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp)
- {
+ #endif
+ 
+ #ifdef CONFIG_SMP
 -- 
 1.7.7.6
