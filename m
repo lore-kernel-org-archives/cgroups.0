@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 06/28] slab: use obj_size field of struct kmem_cache when not debugging
-Date: Fri, 25 May 2012 17:03:26 +0400
-Message-ID: <1337951028-3427-7-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 05/28] memcg: Reclaim when more than one page needed.
+Date: Fri, 25 May 2012 17:03:25 +0400
+Message-ID: <1337951028-3427-6-git-send-email-glommer@parallels.com>
 References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1337951028-3427-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,117 +11,90 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-The kmem controller needs to keep track of the object size of
-a cache so it can later on create a per-memcg duplicate. Logic
-to keep track of that already exists, but it is only enable while
-debugging.
+From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
 
-This patch makes it also available when the kmem controller code
-is compiled in.
+mem_cgroup_do_charge() was written before slab accounting, and expects
+three cases: being called for 1 page, being called for a stock of 32 pages,
+or being called for a hugepage.  If we call for 2 pages (and several slabs
+used in process creation are such, at least with the debug options I had),
+it assumed it's being called for stock and just retried without reclaiming.
 
+Fix that by passing down a minsize argument in addition to the csize.
+
+And what to do about that (csize == PAGE_SIZE && ret) retry?  If it's
+needed at all (and presumably is since it's there, perhaps to handle
+races), then it should be extended to more than PAGE_SIZE, yet how far?
+And should there be a retry count limit, of what?  For now retry up to
+COSTLY_ORDER (as page_alloc.c does), stay safe with a cond_resched(),
+and make sure not to do it if __GFP_NORETRY.
+
+Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- include/linux/slab_def.h |    4 +++-
- mm/slab.c                |   37 ++++++++++++++++++++++++++-----------
- 2 files changed, 29 insertions(+), 12 deletions(-)
+ mm/memcontrol.c |   18 +++++++++++-------
+ 1 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-index d41effe..cba3139 100644
---- a/include/linux/slab_def.h
-+++ b/include/linux/slab_def.h
-@@ -78,8 +78,10 @@ struct kmem_cache {
- 	 * variables contain the offset to the user object and its size.
- 	 */
- 	int obj_offset;
--	int obj_size;
- #endif /* CONFIG_DEBUG_SLAB */
-+#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
-+	int obj_size;
-+#endif
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 248d80b..47d3979 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2187,7 +2187,8 @@ enum {
+ };
  
- /* 6) per-cpu/per-node data, touched during every alloc/free */
- 	/*
-diff --git a/mm/slab.c b/mm/slab.c
-index 1057a32..41345f6 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -413,8 +413,28 @@ static void kmem_list3_init(struct kmem_list3 *parent)
- #define STATS_INC_FREEMISS(x)	do { } while (0)
- #endif
- 
--#if DEBUG
-+#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
-+static int obj_size(struct kmem_cache *cachep)
-+{
-+	return cachep->obj_size;
-+}
-+static void set_obj_size(struct kmem_cache *cachep, int size)
-+{
-+	cachep->obj_size = size;
-+}
-+
-+#else
-+static int obj_size(struct kmem_cache *cachep)
-+{
-+	return cachep->buffer_size;
-+}
-+
-+static void set_obj_size(struct kmem_cache *cachep, int size)
-+{
-+}
-+#endif
- 
-+#if DEBUG
- /*
-  * memory layout of objects:
-  * 0		: objp
-@@ -433,11 +453,6 @@ static int obj_offset(struct kmem_cache *cachep)
- 	return cachep->obj_offset;
- }
- 
--static int obj_size(struct kmem_cache *cachep)
--{
--	return cachep->obj_size;
--}
--
- static unsigned long long *dbg_redzone1(struct kmem_cache *cachep, void *objp)
+ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-				unsigned int nr_pages, bool oom_check)
++				unsigned int nr_pages, unsigned int min_pages,
++				bool oom_check)
  {
- 	BUG_ON(!(cachep->flags & SLAB_RED_ZONE));
-@@ -465,7 +480,6 @@ static void **dbg_userword(struct kmem_cache *cachep, void *objp)
- #else
- 
- #define obj_offset(x)			0
--#define obj_size(cachep)		(cachep->buffer_size)
- #define dbg_redzone1(cachep, objp)	({BUG(); (unsigned long long *)NULL;})
- #define dbg_redzone2(cachep, objp)	({BUG(); (unsigned long long *)NULL;})
- #define dbg_userword(cachep, objp)	({BUG(); (void **)NULL;})
-@@ -1555,9 +1569,9 @@ void __init kmem_cache_init(void)
+ 	unsigned long csize = nr_pages * PAGE_SIZE;
+ 	struct mem_cgroup *mem_over_limit;
+@@ -2210,18 +2211,18 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	} else
+ 		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+ 	/*
+-	 * nr_pages can be either a huge page (HPAGE_PMD_NR), a batch
+-	 * of regular pages (CHARGE_BATCH), or a single regular page (1).
+-	 *
+ 	 * Never reclaim on behalf of optional batching, retry with a
+ 	 * single page instead.
  	 */
- 	cache_cache.buffer_size = offsetof(struct kmem_cache, array[nr_cpu_ids]) +
- 				  nr_node_ids * sizeof(struct kmem_list3 *);
--#if DEBUG
--	cache_cache.obj_size = cache_cache.buffer_size;
--#endif
-+
-+	set_obj_size(&cache_cache, cache_cache.buffer_size);
-+
- 	cache_cache.buffer_size = ALIGN(cache_cache.buffer_size,
- 					cache_line_size());
- 	cache_cache.reciprocal_buffer_size =
-@@ -2418,8 +2432,9 @@ kmem_cache_create (const char *name, size_t size, size_t align,
- 		goto oops;
+-	if (nr_pages == CHARGE_BATCH)
++	if (nr_pages > min_pages)
+ 		return CHARGE_RETRY;
  
- 	cachep->nodelists = (struct kmem_list3 **)&cachep->array[nr_cpu_ids];
+ 	if (!(gfp_mask & __GFP_WAIT))
+ 		return CHARGE_WOULDBLOCK;
+ 
++	if (gfp_mask & __GFP_NORETRY)
++		return CHARGE_NOMEM;
 +
-+	set_obj_size(cachep, size);
- #if DEBUG
--	cachep->obj_size = size;
+ 	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
+ 	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+ 		return CHARGE_RETRY;
+@@ -2234,8 +2235,10 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * unlikely to succeed so close to the limit, and we fall back
+ 	 * to regular pages anyway in case of failure.
+ 	 */
+-	if (nr_pages == 1 && ret)
++	if (nr_pages <= (PAGE_SIZE << PAGE_ALLOC_COSTLY_ORDER) && ret) {
++		cond_resched();
+ 		return CHARGE_RETRY;
++	}
  
  	/*
- 	 * Both debugging options require word-alignment which is calculated
+ 	 * At task move, charge accounts can be doubly counted. So, it's
+@@ -2369,7 +2372,8 @@ again:
+ 			nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
+ 		}
+ 
+-		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, oom_check);
++		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, nr_pages,
++		    oom_check);
+ 		switch (ret) {
+ 		case CHARGE_OK:
+ 			break;
 -- 
 1.7.7.6
