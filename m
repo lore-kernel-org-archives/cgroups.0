@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 19/28] slab: per-memcg accounting of slab caches
-Date: Fri, 25 May 2012 17:03:39 +0400
-Message-ID: <1337951028-3427-20-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 21/28] memcg: destroy memcg caches
+Date: Fri, 25 May 2012 17:03:41 +0400
+Message-ID: <1337951028-3427-22-git-send-email-glommer@parallels.com>
 References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1337951028-3427-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,340 +13,240 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-This patch charges allocation of a slab object to a particular
-memcg.
+This patch implements destruction of memcg caches. Right now,
+only caches where our reference counter is the last remaining are
+deleted. If there are any other reference counters around, we just
+leave the caches lying around until they go away.
 
-The cache is selected with mem_cgroup_get_kmem_cache(),
-which is the biggest overhead we pay here, because
-it happens at all allocations. However, other than forcing
-a function call, this function is not very expensive, and
-try to return as soon as we realize we are not a memcg cache.
-
-The charge/uncharge functions are heavier, but are only called
-for new page allocations.
-
-Code is heavily inspired by Suleiman's, with adaptations to
-the patchset and minor simplifications by me.
+When that happen, a destruction function is called from the cache
+code. Caches are only destroyed in process context, so we queue them
+up for later processing in the general case.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/slab_def.h |   62 +++++++++++++++++++++++++++++
- mm/slab.c                |   98 +++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 151 insertions(+), 9 deletions(-)
+ include/linux/memcontrol.h |    2 +
+ include/linux/slab.h       |    1 +
+ mm/memcontrol.c            |   91 +++++++++++++++++++++++++++++++++++++++++++-
+ mm/slab.c                  |    5 +-
+ mm/slub.c                  |    7 ++-
+ 5 files changed, 101 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-index 7c0cdd6..ea9054a 100644
---- a/include/linux/slab_def.h
-+++ b/include/linux/slab_def.h
-@@ -225,4 +225,66 @@ found:
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index bad8ebd..df049e1 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -463,6 +463,8 @@ __mem_cgroup_get_kmem_cache(struct kmem_cache *cachep, gfp_t gfp);
  
- #endif	/* CONFIG_NUMA */
+ extern struct static_key mem_cgroup_kmem_enabled_key;
+ #define mem_cgroup_kmem_on static_key_false(&mem_cgroup_kmem_enabled_key)
++
++void mem_cgroup_destroy_cache(struct kmem_cache *cachep);
+ #else
+ static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
+ 					     struct kmem_cache *s)
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 724c143..c81a5d3 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -167,6 +167,7 @@ struct mem_cgroup_cache_params {
+ #ifdef CONFIG_DEBUG_VM
+ 	struct kmem_cache *parent;
+ #endif
++	struct list_head destroyed_list; /* Used when deleting memcg cache */
+ };
+ #endif
  
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+
-+void kmem_cache_drop_ref(struct kmem_cache *cachep);
-+
-+static inline void
-+kmem_cache_get_ref(struct kmem_cache *cachep)
-+{
-+	if (cachep->memcg_params.id == -1 &&
-+	    unlikely(!atomic_add_unless(&cachep->memcg_params.refcnt, 1, 0)))
-+		BUG();
-+}
-+
-+static inline void
-+mem_cgroup_put_kmem_cache(struct kmem_cache *cachep)
-+{
-+	rcu_read_unlock();
-+}
-+
-+static inline void
-+mem_cgroup_kmem_cache_prepare_sleep(struct kmem_cache *cachep)
-+{
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f2f1525..e2ba527 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -476,6 +476,11 @@ static void disarm_static_keys(struct mem_cgroup *memcg)
+ {
+ 	if (memcg->kmem_accounted)
+ 		static_key_slow_dec(&mem_cgroup_kmem_enabled_key);
 +	/*
-+	 * Make sure the cache doesn't get freed while we have interrupts
-+	 * enabled.
++	 * This check can't live in kmem destruction function,
++	 * since the charges will outlive the cgroup
 +	 */
-+	kmem_cache_get_ref(cachep);
-+}
++	BUG_ON(res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0);
+ }
+ 
+ #ifdef CONFIG_INET
+@@ -540,6 +545,8 @@ void mem_cgroup_register_cache(struct mem_cgroup *memcg,
+ 	if (!memcg)
+ 		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
+ 				    GFP_KERNEL);
++	else
++		INIT_LIST_HEAD(&cachep->memcg_params.destroyed_list);
+ 	cachep->memcg_params.id = id;
+ }
+ 
+@@ -592,6 +599,53 @@ struct create_work {
+ /* Use a single spinlock for destruction and creation, not a frequent op */
+ static DEFINE_SPINLOCK(cache_queue_lock);
+ static LIST_HEAD(create_queue);
++static LIST_HEAD(destroyed_caches);
 +
-+static inline void
-+mem_cgroup_kmem_cache_finish_sleep(struct kmem_cache *cachep)
++static void kmem_cache_destroy_work_func(struct work_struct *w)
 +{
-+	kmem_cache_drop_ref(cachep);
++	struct kmem_cache *cachep;
++	struct mem_cgroup_cache_params *p, *tmp;
++	unsigned long flags;
++	LIST_HEAD(del_unlocked);
++
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	list_for_each_entry_safe(p, tmp, &destroyed_caches, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		list_move(&cachep->memcg_params.destroyed_list, &del_unlocked);
++	}
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	list_for_each_entry_safe(p, tmp, &del_unlocked, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		list_del(&cachep->memcg_params.destroyed_list);
++		if (!atomic_read(&cachep->memcg_params.refcnt)) {
++			mem_cgroup_put(cachep->memcg_params.memcg);
++			kmem_cache_destroy(cachep);
++		}
++	}
++}
++static DECLARE_WORK(kmem_cache_destroy_work, kmem_cache_destroy_work_func);
++
++static void __mem_cgroup_destroy_cache(struct kmem_cache *cachep)
++{
++	BUG_ON(cachep->memcg_params.id != -1);
++	list_add(&cachep->memcg_params.destroyed_list, &destroyed_caches);
 +}
 +
-+#else /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
++void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
++{
++	unsigned long flags;
 +
-+static inline void
-+kmem_cache_get_ref(struct kmem_cache *cachep)
++	/*
++	 * We have to defer the actual destroying to a workqueue, because
++	 * we might currently be in a context that cannot sleep.
++	 */
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	__mem_cgroup_destroy_cache(cachep);
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	schedule_work(&kmem_cache_destroy_work);
++}
+ 
+ /*
+  * Flush the queue of kmem_caches to create, because we're creating a cgroup.
+@@ -613,6 +667,33 @@ void mem_cgroup_flush_cache_create_queue(void)
+ 	spin_unlock_irqrestore(&cache_queue_lock, flags);
+ }
+ 
++static void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
++{
++	struct kmem_cache *cachep;
++	unsigned long flags;
++	int i;
++
++	/*
++	 * pre_destroy() gets called with no tasks in the cgroup.
++	 * this means that after flushing the create queue, no more caches
++	 * will appear
++	 */
++	mem_cgroup_flush_cache_create_queue();
++
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	for (i = 0; i < MAX_KMEM_CACHE_TYPES; i++) {
++		cachep = memcg->slabs[i];
++		if (!cachep)
++			continue;
++
++		if (atomic_dec_and_test(&cachep->memcg_params.refcnt))
++			__mem_cgroup_destroy_cache(cachep);
++	}
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	schedule_work(&kmem_cache_destroy_work);
++}
++
+ static void memcg_create_cache_work_func(struct work_struct *w)
+ {
+ 	struct create_work *cw, *tmp;
+@@ -857,6 +938,10 @@ static void memcg_slab_init(struct mem_cgroup *memcg)
+ static inline void disarm_static_keys(struct mem_cgroup *memcg)
+ {
+ }
++
++static inline void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
 +{
 +}
-+
-+static inline void
-+kmem_cache_drop_ref(struct kmem_cache *cachep)
-+{
-+}
-+
-+static inline void
-+mem_cgroup_put_kmem_cache(struct kmem_cache *cachep)
-+{
-+}
-+
-+static inline void
-+mem_cgroup_kmem_cache_prepare_sleep(struct kmem_cache *cachep)
-+{
-+}
-+
-+static inline void
-+mem_cgroup_kmem_cache_finish_sleep(struct kmem_cache *cachep)
-+{
-+}
-+#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-+
- #endif	/* _LINUX_SLAB_DEF_H */
+ #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+ 
+ static void drain_all_stock_async(struct mem_cgroup *memcg);
+@@ -4136,6 +4221,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg, bool free_all)
+ 	int node, zid, shrink;
+ 	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+ 	struct cgroup *cgrp = memcg->css.cgroup;
++	u64 usage;
+ 
+ 	css_get(&memcg->css);
+ 
+@@ -4175,8 +4261,10 @@ move_account:
+ 		if (ret == -ENOMEM)
+ 			goto try_to_free;
+ 		cond_resched();
++		usage = res_counter_read_u64(&memcg->res, RES_USAGE) -
++			res_counter_read_u64(&memcg->kmem, RES_USAGE);
+ 	/* "ret" should also be checked to ensure all lists are empty. */
+-	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 || ret);
++	} while (usage > 0 || ret);
+ out:
+ 	css_put(&memcg->css);
+ 	return ret;
+@@ -5523,6 +5611,7 @@ static int mem_cgroup_pre_destroy(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 
++	mem_cgroup_destroy_all_caches(memcg);
+ 	return mem_cgroup_force_empty(memcg, false);
+ }
+ 
 diff --git a/mm/slab.c b/mm/slab.c
-index e2227de..16ad229 100644
+index 16ad229..59f1027 100644
 --- a/mm/slab.c
 +++ b/mm/slab.c
-@@ -1845,20 +1845,28 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
- 	if (cachep->flags & SLAB_RECLAIM_ACCOUNT)
- 		flags |= __GFP_RECLAIMABLE;
- 
-+	nr_pages = (1 << cachep->gfporder);
-+	if (!mem_cgroup_charge_slab(cachep, flags, nr_pages * PAGE_SIZE))
-+		return NULL;
-+
- 	page = alloc_pages_exact_node(nodeid, flags | __GFP_NOTRACK, cachep->gfporder);
- 	if (!page) {
- 		if (!(flags & __GFP_NOWARN) && printk_ratelimit())
- 			slab_out_of_memory(cachep, flags, nodeid);
-+
-+		mem_cgroup_uncharge_slab(cachep, nr_pages * PAGE_SIZE);
- 		return NULL;
- 	}
- 
--	nr_pages = (1 << cachep->gfporder);
- 	if (cachep->flags & SLAB_RECLAIM_ACCOUNT)
- 		add_zone_page_state(page_zone(page),
- 			NR_SLAB_RECLAIMABLE, nr_pages);
- 	else
- 		add_zone_page_state(page_zone(page),
- 			NR_SLAB_UNRECLAIMABLE, nr_pages);
-+
-+	kmem_cache_get_ref(cachep);
-+
- 	for (i = 0; i < nr_pages; i++)
- 		__SetPageSlab(page + i);
- 
-@@ -1874,6 +1882,14 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
- 	return page_address(page);
- }
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+void kmem_cache_drop_ref(struct kmem_cache *cachep)
-+{
-+	if (cachep->memcg_params.id == -1)
-+		atomic_dec(&cachep->memcg_params.refcnt);
-+}
-+#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-+
- /*
-  * Interface to system's page release.
-  */
-@@ -1891,6 +1907,8 @@ static void kmem_freepages(struct kmem_cache *cachep, void *addr)
- 	else
- 		sub_zone_page_state(page_zone(page),
- 				NR_SLAB_UNRECLAIMABLE, nr_freed);
-+	mem_cgroup_uncharge_slab(cachep, i * PAGE_SIZE);
-+	kmem_cache_drop_ref(cachep);
- 	while (i--) {
- 		BUG_ON(!PageSlab(page));
- 		__ClearPageSlab(page);
-@@ -2855,7 +2873,6 @@ void kmem_cache_destroy(struct kmem_cache *cachep)
- 	if (cachep->memcg_params.id == -1)
- 		kfree(cachep->name);
- #endif
--
- 	__kmem_cache_destroy(cachep);
- 	mutex_unlock(&cache_chain_mutex);
- 	put_online_cpus();
-@@ -3061,8 +3078,10 @@ static int cache_grow(struct kmem_cache *cachep,
- 
- 	offset *= cachep->colour_off;
- 
--	if (local_flags & __GFP_WAIT)
-+	if (local_flags & __GFP_WAIT) {
- 		local_irq_enable();
-+		mem_cgroup_kmem_cache_prepare_sleep(cachep);
-+	}
- 
- 	/*
- 	 * The test for missing atomic flag is performed here, rather than
-@@ -3091,8 +3110,10 @@ static int cache_grow(struct kmem_cache *cachep,
- 
- 	cache_init_objs(cachep, slabp);
- 
--	if (local_flags & __GFP_WAIT)
-+	if (local_flags & __GFP_WAIT) {
- 		local_irq_disable();
-+		mem_cgroup_kmem_cache_finish_sleep(cachep);
-+	}
- 	check_irq_off();
- 	spin_lock(&l3->list_lock);
- 
-@@ -3105,8 +3126,10 @@ static int cache_grow(struct kmem_cache *cachep,
- opps1:
- 	kmem_freepages(cachep, objp);
- failed:
--	if (local_flags & __GFP_WAIT)
-+	if (local_flags & __GFP_WAIT) {
- 		local_irq_disable();
-+		mem_cgroup_kmem_cache_finish_sleep(cachep);
-+	}
- 	return 0;
- }
- 
-@@ -3867,11 +3890,15 @@ static inline void __cache_free(struct kmem_cache *cachep, void *objp,
-  */
- void *kmem_cache_alloc(struct kmem_cache *cachep, gfp_t flags)
+@@ -1885,8 +1885,9 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+ void kmem_cache_drop_ref(struct kmem_cache *cachep)
  {
--	void *ret = __cache_alloc(cachep, flags, __builtin_return_address(0));
-+	void *ret;
-+
-+	rcu_read_lock();
-+	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
-+	rcu_read_unlock();
-+	ret = __cache_alloc(cachep, flags, __builtin_return_address(0));
- 
- 	trace_kmem_cache_alloc(_RET_IP_, ret,
- 			       obj_size(cachep), cachep->buffer_size, flags);
--
- 	return ret;
+-	if (cachep->memcg_params.id == -1)
+-		atomic_dec(&cachep->memcg_params.refcnt);
++	if (cachep->memcg_params.id == -1 &&
++	    unlikely(atomic_dec_and_test(&cachep->memcg_params.refcnt)))
++		mem_cgroup_destroy_cache(cachep);
  }
- EXPORT_SYMBOL(kmem_cache_alloc);
-@@ -3882,6 +3909,10 @@ kmem_cache_alloc_trace(size_t size, struct kmem_cache *cachep, gfp_t flags)
- {
- 	void *ret;
+ #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
  
-+	rcu_read_lock();
-+	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
-+	rcu_read_unlock();
-+
- 	ret = __cache_alloc(cachep, flags, __builtin_return_address(0));
- 
- 	trace_kmalloc(_RET_IP_, ret,
-@@ -3894,13 +3925,17 @@ EXPORT_SYMBOL(kmem_cache_alloc_trace);
- #ifdef CONFIG_NUMA
- void *kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid)
- {
--	void *ret = __cache_alloc_node(cachep, flags, nodeid,
-+	void *ret;
-+
-+	rcu_read_lock();
-+	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
-+	rcu_read_unlock();
-+	ret  = __cache_alloc_node(cachep, flags, nodeid,
- 				       __builtin_return_address(0));
- 
- 	trace_kmem_cache_alloc_node(_RET_IP_, ret,
- 				    obj_size(cachep), cachep->buffer_size,
- 				    flags, nodeid);
--
- 	return ret;
+diff --git a/mm/slub.c b/mm/slub.c
+index 730e69f..eb0ff97 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1296,8 +1296,11 @@ static void kmem_cache_inc_ref(struct kmem_cache *s)
  }
- EXPORT_SYMBOL(kmem_cache_alloc_node);
-@@ -3913,6 +3948,9 @@ void *kmem_cache_alloc_node_trace(size_t size,
+ static void kmem_cache_drop_ref(struct kmem_cache *s)
  {
- 	void *ret;
- 
-+	rcu_read_lock();
-+	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
-+	rcu_read_unlock();
- 	ret = __cache_alloc_node(cachep, flags, nodeid,
- 				  __builtin_return_address(0));
- 	trace_kmalloc_node(_RET_IP_, ret,
-@@ -4021,9 +4059,33 @@ void kmem_cache_free(struct kmem_cache *cachep, void *objp)
- 
- 	local_irq_save(flags);
- 	debug_check_no_locks_freed(objp, obj_size(cachep));
+-	if (s->memcg_params.memcg)
+-		atomic_dec(&s->memcg_params.refcnt);
++	if (!s->memcg_params.memcg)
++		return;
 +
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	{
-+		struct kmem_cache *actual_cachep;
-+
-+		actual_cachep = virt_to_cache(objp);
-+		if (actual_cachep != cachep) {
-+			VM_BUG_ON(actual_cachep->memcg_params.id != -1);
-+			cachep = actual_cachep;
-+		}
-+		/*
-+		 * Grab a reference so that the cache is guaranteed to stay
-+		 * around.
-+		 * If we are freeing the last object of a dead memcg cache,
-+		 * the kmem_cache_drop_ref() at the end of this function
-+		 * will end up freeing the cache.
-+		 */
-+		kmem_cache_get_ref(cachep);
-+	}
-+#endif
-+
- 	if (!(cachep->flags & SLAB_DEBUG_OBJECTS))
- 		debug_check_no_obj_freed(objp, obj_size(cachep));
- 	__cache_free(cachep, objp, __builtin_return_address(0));
-+
-+	kmem_cache_drop_ref(cachep);
-+
- 	local_irq_restore(flags);
- 
- 	trace_kmem_cache_free(_RET_IP_, objp);
-@@ -4051,9 +4113,19 @@ void kfree(const void *objp)
- 	local_irq_save(flags);
- 	kfree_debugcheck(objp);
- 	c = virt_to_cache(objp);
-+
-+	/*
-+	 * Grab a reference so that the cache is guaranteed to stay around.
-+	 * If we are freeing the last object of a dead memcg cache, the
-+	 * kmem_cache_drop_ref() at the end of this function will end up
-+	 * freeing the cache.
-+	 */
-+	kmem_cache_get_ref(c);
-+
- 	debug_check_no_locks_freed(objp, obj_size(c));
- 	debug_check_no_obj_freed(objp, obj_size(c));
- 	__cache_free(c, (void *)objp, __builtin_return_address(0));
-+	kmem_cache_drop_ref(c);
- 	local_irq_restore(flags);
++	if (unlikely(atomic_dec_and_test(&s->memcg_params.refcnt)))
++		mem_cgroup_destroy_cache(s);
  }
- EXPORT_SYMBOL(kfree);
-@@ -4322,6 +4394,13 @@ static void cache_reap(struct work_struct *w)
- 	list_for_each_entry(searchp, &cache_chain, next) {
- 		check_irq_on();
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+		/* For memcg caches, make sure we only reap the active ones. */
-+		if (searchp->memcg_params.id == -1 &&
-+		    !atomic_add_unless(&searchp->memcg_params.refcnt, 1, 0))
-+			continue;
-+#endif
-+
- 		/*
- 		 * We only take the l3 lock if absolutely necessary and we
- 		 * have established with reasonable certainty that
-@@ -4354,6 +4433,7 @@ static void cache_reap(struct work_struct *w)
- 			STATS_ADD_REAPED(searchp, freed);
- 		}
- next:
-+		kmem_cache_drop_ref(searchp);
- 		cond_resched();
- 	}
- 	check_irq_on();
+ #else
+ static inline void kmem_cache_inc_ref(struct kmem_cache *s)
 -- 
 1.7.7.6
