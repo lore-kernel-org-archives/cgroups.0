@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 01/28] slab: move FULL state transition to an initcall
-Date: Fri, 25 May 2012 17:03:21 +0400
-Message-ID: <1337951028-3427-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 02/28] memcg: Always free struct memcg through schedule_work()
+Date: Fri, 25 May 2012 17:03:22 +0400
+Message-ID: <1337951028-3427-3-git-send-email-glommer@parallels.com>
 References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1337951028-3427-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,67 +11,89 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-During kmem_cache_init_late(), we transition to the LATE state,
-and after some more work, to the FULL state, its last state
+Right now we free struct memcg with kfree right after a
+rcu grace period, but defer it if we need to use vfree() to get
+rid of that memory area. We do that by need, because we need vfree
+to be called in a process context.
 
-This is quite different from slub, that will only transition to
-its last state (SYSFS), in a (late)initcall, after a lot more of
-the kernel is ready.
-
-This means that in slab, we have no way to taking actions dependent
-on the initialization of other pieces of the kernel that are supposed
-to start way after kmem_init_late(), such as cgroups initialization.
-
-To achieve more consistency in this behavior, that patch only
-transitions to the LATE state in kmem_init_late. In my analysis,
-setup_cpu_cache() should be happy to test for >= LATE, instead of
-== FULL. It also has passed some tests I've made.
-
-We then only mark FULL state after the reap timers are in place,
-meaning that no further setup is expected.
+This patch unifies this behavior, by ensuring that even kfree will
+happen in a separate thread. The goal is to have a stable place to
+call the upcoming jump label destruction function outside the realm
+of the complicated and quite far-reaching cgroup lock (that can't be
+held when calling neither the cpu_hotplug.lock nor the jump_label_mutex)
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Acked-by: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+CC: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 ---
- mm/slab.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ mm/memcontrol.c |   24 +++++++++++++-----------
+ 1 files changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/mm/slab.c b/mm/slab.c
-index e901a36..8658d72 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -1695,9 +1695,6 @@ void __init kmem_cache_init_late(void)
- 			BUG();
- 	mutex_unlock(&cache_chain_mutex);
- 
--	/* Done! */
--	g_cpucache_up = FULL;
--
- 	/*
- 	 * Register a cpu startup notifier callback that initializes
- 	 * cpu_cache_get for all new cpus
-@@ -1727,6 +1724,9 @@ static int __init cpucache_init(void)
- 	 */
- 	for_each_online_cpu(cpu)
- 		start_cpu_timer(cpu);
-+
-+	/* Done! */
-+	g_cpucache_up = FULL;
- 	return 0;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 932a734..0b4b4c8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -245,8 +245,8 @@ struct mem_cgroup {
+ 		 */
+ 		struct rcu_head rcu_freeing;
+ 		/*
+-		 * But when using vfree(), that cannot be done at
+-		 * interrupt time, so we must then queue the work.
++		 * We also need some space for a worker in deferred freeing.
++		 * By the time we call it, rcu_freeing is not longer in use.
+ 		 */
+ 		struct work_struct work_freeing;
+ 	};
+@@ -4826,23 +4826,28 @@ out_free:
  }
- __initcall(cpucache_init);
-@@ -2194,7 +2194,7 @@ static size_t calculate_slab_order(struct kmem_cache *cachep,
  
- static int __init_refok setup_cpu_cache(struct kmem_cache *cachep, gfp_t gfp)
+ /*
+- * Helpers for freeing a vzalloc()ed mem_cgroup by RCU,
++ * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
+  * but in process context.  The work_freeing structure is overlaid
+  * on the rcu_freeing structure, which itself is overlaid on memsw.
+  */
+-static void vfree_work(struct work_struct *work)
++static void free_work(struct work_struct *work)
  {
--	if (g_cpucache_up == FULL)
-+	if (g_cpucache_up >= LATE)
- 		return enable_cpucache(cachep, gfp);
+ 	struct mem_cgroup *memcg;
++	int size = sizeof(struct mem_cgroup);
  
- 	if (g_cpucache_up == NONE) {
+ 	memcg = container_of(work, struct mem_cgroup, work_freeing);
+-	vfree(memcg);
++	if (size < PAGE_SIZE)
++		kfree(memcg);
++	else
++		vfree(memcg);
+ }
+-static void vfree_rcu(struct rcu_head *rcu_head)
++
++static void free_rcu(struct rcu_head *rcu_head)
+ {
+ 	struct mem_cgroup *memcg;
+ 
+ 	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
+-	INIT_WORK(&memcg->work_freeing, vfree_work);
++	INIT_WORK(&memcg->work_freeing, free_work);
+ 	schedule_work(&memcg->work_freeing);
+ }
+ 
+@@ -4868,10 +4873,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ 		free_mem_cgroup_per_zone_info(memcg, node);
+ 
+ 	free_percpu(memcg->stat);
+-	if (sizeof(struct mem_cgroup) < PAGE_SIZE)
+-		kfree_rcu(memcg, rcu_freeing);
+-	else
+-		call_rcu(&memcg->rcu_freeing, vfree_rcu);
++	call_rcu(&memcg->rcu_freeing, free_rcu);
+ }
+ 
+ static void mem_cgroup_get(struct mem_cgroup *memcg)
 -- 
 1.7.7.6
