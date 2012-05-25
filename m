@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 04/28] memcg: Make it possible to use the stock for more than one page.
-Date: Fri, 25 May 2012 17:03:24 +0400
-Message-ID: <1337951028-3427-5-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 06/28] slab: use obj_size field of struct kmem_cache when not debugging
+Date: Fri, 25 May 2012 17:03:26 +0400
+Message-ID: <1337951028-3427-7-git-send-email-glommer@parallels.com>
 References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1337951028-3427-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,65 +11,117 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+The kmem controller needs to keep track of the object size of
+a cache so it can later on create a per-memcg duplicate. Logic
+to keep track of that already exists, but it is only enable while
+debugging.
 
-Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+This patch makes it also available when the kmem controller code
+is compiled in.
+
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 ---
- mm/memcontrol.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+ include/linux/slab_def.h |    4 +++-
+ mm/slab.c                |   37 ++++++++++++++++++++++++++-----------
+ 2 files changed, 29 insertions(+), 12 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0b4b4c8..248d80b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1998,19 +1998,19 @@ static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
- static DEFINE_MUTEX(percpu_charge_mutex);
+diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
+index d41effe..cba3139 100644
+--- a/include/linux/slab_def.h
++++ b/include/linux/slab_def.h
+@@ -78,8 +78,10 @@ struct kmem_cache {
+ 	 * variables contain the offset to the user object and its size.
+ 	 */
+ 	int obj_offset;
+-	int obj_size;
+ #endif /* CONFIG_DEBUG_SLAB */
++#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
++	int obj_size;
++#endif
  
+ /* 6) per-cpu/per-node data, touched during every alloc/free */
+ 	/*
+diff --git a/mm/slab.c b/mm/slab.c
+index 1057a32..41345f6 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -413,8 +413,28 @@ static void kmem_list3_init(struct kmem_list3 *parent)
+ #define STATS_INC_FREEMISS(x)	do { } while (0)
+ #endif
+ 
+-#if DEBUG
++#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
++static int obj_size(struct kmem_cache *cachep)
++{
++	return cachep->obj_size;
++}
++static void set_obj_size(struct kmem_cache *cachep, int size)
++{
++	cachep->obj_size = size;
++}
++
++#else
++static int obj_size(struct kmem_cache *cachep)
++{
++	return cachep->buffer_size;
++}
++
++static void set_obj_size(struct kmem_cache *cachep, int size)
++{
++}
++#endif
+ 
++#if DEBUG
  /*
-- * Try to consume stocked charge on this cpu. If success, one page is consumed
-- * from local stock and true is returned. If the stock is 0 or charges from a
-- * cgroup which is not current target, returns false. This stock will be
-- * refilled.
-+ * Try to consume stocked charge on this cpu. If success, nr_pages pages are
-+ * consumed from local stock and true is returned. If the stock is 0 or
-+ * charges from a cgroup which is not current target, returns false.
-+ * This stock will be refilled.
-  */
--static bool consume_stock(struct mem_cgroup *memcg)
-+static bool consume_stock(struct mem_cgroup *memcg, int nr_pages)
- {
- 	struct memcg_stock_pcp *stock;
- 	bool ret = true;
+  * memory layout of objects:
+  * 0		: objp
+@@ -433,11 +453,6 @@ static int obj_offset(struct kmem_cache *cachep)
+ 	return cachep->obj_offset;
+ }
  
- 	stock = &get_cpu_var(memcg_stock);
--	if (memcg == stock->cached && stock->nr_pages)
--		stock->nr_pages--;
-+	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
-+		stock->nr_pages -= nr_pages;
- 	else /* need to call res_counter_charge */
- 		ret = false;
- 	put_cpu_var(memcg_stock);
-@@ -2309,7 +2309,7 @@ again:
- 		VM_BUG_ON(css_is_removed(&memcg->css));
- 		if (mem_cgroup_is_root(memcg))
- 			goto done;
--		if (nr_pages == 1 && consume_stock(memcg))
-+		if (consume_stock(memcg, nr_pages))
- 			goto done;
- 		css_get(&memcg->css);
- 	} else {
-@@ -2334,7 +2334,7 @@ again:
- 			rcu_read_unlock();
- 			goto done;
- 		}
--		if (nr_pages == 1 && consume_stock(memcg)) {
-+		if (consume_stock(memcg, nr_pages)) {
- 			/*
- 			 * It seems dagerous to access memcg without css_get().
- 			 * But considering how consume_stok works, it's not
+-static int obj_size(struct kmem_cache *cachep)
+-{
+-	return cachep->obj_size;
+-}
+-
+ static unsigned long long *dbg_redzone1(struct kmem_cache *cachep, void *objp)
+ {
+ 	BUG_ON(!(cachep->flags & SLAB_RED_ZONE));
+@@ -465,7 +480,6 @@ static void **dbg_userword(struct kmem_cache *cachep, void *objp)
+ #else
+ 
+ #define obj_offset(x)			0
+-#define obj_size(cachep)		(cachep->buffer_size)
+ #define dbg_redzone1(cachep, objp)	({BUG(); (unsigned long long *)NULL;})
+ #define dbg_redzone2(cachep, objp)	({BUG(); (unsigned long long *)NULL;})
+ #define dbg_userword(cachep, objp)	({BUG(); (void **)NULL;})
+@@ -1555,9 +1569,9 @@ void __init kmem_cache_init(void)
+ 	 */
+ 	cache_cache.buffer_size = offsetof(struct kmem_cache, array[nr_cpu_ids]) +
+ 				  nr_node_ids * sizeof(struct kmem_list3 *);
+-#if DEBUG
+-	cache_cache.obj_size = cache_cache.buffer_size;
+-#endif
++
++	set_obj_size(&cache_cache, cache_cache.buffer_size);
++
+ 	cache_cache.buffer_size = ALIGN(cache_cache.buffer_size,
+ 					cache_line_size());
+ 	cache_cache.reciprocal_buffer_size =
+@@ -2418,8 +2432,9 @@ kmem_cache_create (const char *name, size_t size, size_t align,
+ 		goto oops;
+ 
+ 	cachep->nodelists = (struct kmem_list3 **)&cachep->array[nr_cpu_ids];
++
++	set_obj_size(cachep, size);
+ #if DEBUG
+-	cachep->obj_size = size;
+ 
+ 	/*
+ 	 * Both debugging options require word-alignment which is calculated
 -- 
 1.7.7.6
