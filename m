@@ -1,77 +1,110 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v7 1/2] Always free struct memcg through schedule_work()
-Date: Fri, 25 May 2012 13:51:22 +0400
-Message-ID: <4FBF561A.7030003@parallels.com>
-References: <1337938328-11537-1-git-send-email-glommer@parallels.com> <1337938328-11537-2-git-send-email-glommer@parallels.com> <20120525095007.GA30527@tiehlicka.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v3 00/28] kmem limitation for memcg
+Date: Fri, 25 May 2012 17:03:20 +0400
+Message-ID: <1337951028-3427-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120525095007.GA30527-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 05/25/2012 01:50 PM, Michal Hocko wrote:
-> On Fri 25-05-12 13:32:07, Glauber Costa wrote:
->> Right now we free struct memcg with kfree right after a
->> rcu grace period, but defer it if we need to use vfree() to get
->> rid of that memory area. We do that by need, because we need vfree
->> to be called in a process context.
->>
->> This patch unifies this behavior, by ensuring that even kfree will
->> happen in a separate thread. The goal is to have a stable place to
->> call the upcoming jump label destruction function outside the realm
->> of the complicated and quite far-reaching cgroup lock (that can't be
->> held when calling neither the cpu_hotplug.lock nor the jump_label_mutex)
->>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> Acked-by: Kamezawa Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->
-> Acked-by: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
->
-> Just one comment below
->
->> CC: Tejun Heo<tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> CC: Li Zefan<lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->> CC: Johannes Weiner<hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->> CC: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
->> CC: Andrew Morton<akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
->> ---
->>   mm/memcontrol.c |   24 +++++++++++++-----------
->>   1 files changed, 13 insertions(+), 11 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 932a734..0b4b4c8 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
-> [...]
->> @@ -4826,23 +4826,28 @@ out_free:
->>   }
->>
->>   /*
->> - * Helpers for freeing a vzalloc()ed mem_cgroup by RCU,
->> + * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
->>    * but in process context.  The work_freeing structure is overlaid
->>    * on the rcu_freeing structure, which itself is overlaid on memsw.
->>    */
->> -static void vfree_work(struct work_struct *work)
->> +static void free_work(struct work_struct *work)
->>   {
->>   	struct mem_cgroup *memcg;
->> +	int size = sizeof(struct mem_cgroup);
->>
->>   	memcg = container_of(work, struct mem_cgroup, work_freeing);
->> -	vfree(memcg);
->> +	if (size<  PAGE_SIZE)
->
-> What about
-> 	if (is_vmalloc_addr(memcg))
->> +		kfree(memcg);
->> +	else
->> +		vfree(memcg);
->>   }
->
-Could be, but I believe this one is already in Andrew's tree from last 
-submission (might be wrong)
+Hello All,
+
+This is my new take for the memcg kmem accounting. This should merge
+all of the previous comments from you, plus fix a bunch of bugs.
+
+At this point, I consider the series pretty mature. Since last submission
+2 weeks ago, I focused on broadening the testing coverage. Some bugs were
+fixed, but that of course doesn't mean no bugs exist.
+
+I believe some of the early patches here are already in some trees around.
+I don't know who should pick this, so if everyone agrees with what's in here,
+please just ack them and tell me which tree I should aim for (-mm? Hocko's?)
+and I'll rebase it.
+
+I should point out again that most, if not all, of the code in the caches
+are wrapped in static_key areas, meaning they will be completely patched out
+until the first limit is set. Enabling and disabling of static_keys incorporate
+the last fixes for sock memcg, and should be pretty robust.
+
+I also put a lot of effort, as you will all see, in the proper separation
+of the patches, so the review process is made as easy as the complexity of
+the work allows to.
+
+[ v3 ]
+ * fixed lockdep bugs in slab (ordering of get_online_cpus() vs slab_mutex)
+ * improved style in slab and slub with less #ifdefs in-code
+ * tested and fixed hierarchical accounting (memcg: propagate kmem limiting...)
+ * some more small bug fixes
+ * No longer using res_counter_charge_nofail for GFP_NOFAIL submissions. Those
+   go to the root memcg directly.
+ * reordered tests in mem_cgroup_get_kmem_cache so we exit even earlier for
+   tasks in root memcg
+ * no more memcg state for slub initialization
+ * do_tune_cpucache will always (only after FULL) propagate to children when
+   they exist.
+ * slab itself will destroy the kmem_cache string for chained caches, so we
+   don't need to bother with consistency between them.
+ * other minor issues
+[ v2 ]
+ * memcgs can be properly removed.
+ * We are not charging based on current->mm->owner instead of current
+ * kmem_large allocations for slub got some fixes, specially for the free case
+ * A cache that is registered can be properly removed (common module case)
+   even if it spans memcg children. Slab had some code for that, now it works
+   well with both
+ * A new mechanism for skipping allocations is proposed (patch posted
+   separately already). Now instead of having kmalloc_no_account, we mark
+   a region as non-accountable for memcg.
+
+Glauber Costa (25):
+  slab: move FULL state transition to an initcall
+  memcg: Always free struct memcg through schedule_work()
+  slab: rename gfpflags to allocflags
+  slab: use obj_size field of struct kmem_cache when not debugging
+  memcg: change defines to an enum
+  res_counter: don't force return value checking in
+    res_counter_charge_nofail
+  kmem slab accounting basic infrastructure
+  slab/slub: struct memcg_params
+  slub: consider a memcg parameter in kmem_create_cache
+  slab: pass memcg parameter to kmem_cache_create
+  slub: create duplicate cache
+  slab: create duplicate cache
+  slub: always get the cache from its page in kfree
+  memcg: kmem controller charge/uncharge infrastructure
+  skip memcg kmem allocations in specified code regions
+  slub: charge allocation to a memcg
+  slab: per-memcg accounting of slab caches
+  memcg: disable kmem code when not in use.
+  memcg: destroy memcg caches
+  memcg/slub: shrink dead caches
+  slab: Track all the memcg children of a kmem_cache.
+  slub: create slabinfo file for memcg
+  slub: track all children of a kmem cache
+  memcg: propagate kmem limiting information to children
+  Documentation: add documentation for slab tracker for memcg
+
+Suleiman Souhlal (3):
+  memcg: Make it possible to use the stock for more than one page.
+  memcg: Reclaim when more than one page needed.
+  memcg: Per-memcg memory.kmem.slabinfo file.
+
+ Documentation/cgroups/memory.txt |   33 ++
+ include/linux/memcontrol.h       |  101 +++++
+ include/linux/res_counter.h      |    2 +-
+ include/linux/sched.h            |    1 +
+ include/linux/slab.h             |   32 ++
+ include/linux/slab_def.h         |   79 ++++-
+ include/linux/slub_def.h         |   68 +++-
+ init/Kconfig                     |    2 +-
+ mm/memcontrol.c                  |  897 ++++++++++++++++++++++++++++++++++++--
+ mm/slab.c                        |  423 +++++++++++++++---
+ mm/slub.c                        |  282 +++++++++++-
+ 11 files changed, 1787 insertions(+), 133 deletions(-)
+
+-- 
+1.7.7.6
