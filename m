@@ -1,26 +1,52 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v7 2/2] decrement static keys on real destroy time
-Date: Sun, 27 May 2012 01:10:49 -0400 (EDT)
-Message-ID: <20120527.011049.1301327046347523212.davem@davemloft.net>
-References: <1337938328-11537-1-git-send-email-glommer@parallels.com>
-	<1337938328-11537-3-git-send-email-glommer@parallels.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V6 03/14] hugetlbfs: Add an inline helper for finding
+ hstate index
+Date: Mon, 28 May 2012 01:37:57 +0530
+Message-ID: <20120527200757.GA7631@skywalker.linux.vnet.ibm.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1334573091-18602-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <alpine.DEB.2.00.1205241420410.24113@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1337938328-11537-3-git-send-email-glommer@parallels.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1205241420410.24113@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: glommer@parallels.com
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, netdev@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, mhocko@suse.cz
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: linux-mm@kvack.org, mgorman@suse.de, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-From: Glauber Costa <glommer@parallels.com>
-Date: Fri, 25 May 2012 13:32:08 +0400
+On Thu, May 24, 2012 at 02:22:27PM -0700, David Rientjes wrote:
+> On Mon, 16 Apr 2012, Aneesh Kumar K.V wrote:
+> 
+> > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> > 
+> > Add an inline helper and use it in the code.
+> > 
+> > Acked-by: Michal Hocko <mhocko@suse.cz>
+> > Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> 
+> I like the helper function, but you missed using it in 
+> hugetlb_init().
+> 
 
- ...
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
+Will do this as an add on patc on top
 
-Acked-by: David S. Miller <davem@davemloft.net>
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 4b90dd5..58eead5 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1891,7 +1891,7 @@ static int __init hugetlb_init(void)
+ 		if (!size_to_hstate(default_hstate_size))
+ 			hugetlb_add_hstate(HUGETLB_PAGE_ORDER);
+ 	}
+-	default_hstate_idx = size_to_hstate(default_hstate_size) - hstates;
++	default_hstate_idx = hstate_index(size_to_hstate(default_hstate_size));
+ 	if (default_hstate_max_huge_pages)
+ 		default_hstate.max_huge_pages = default_hstate_max_huge_pages;
+ 
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
