@@ -1,65 +1,53 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: superblock can't be released with active dentries
-Date: Mon, 28 May 2012 08:18:08 +0800
-Message-ID: <4FC2C440.8090104@huawei.com>
-References: <20120330223423.GJ28934@google.com>
-	<20120330223606.GK28934@google.com> <4F77B6BA.4070207@huawei.com>
-	<20120401185430.GA9230@dhcp-172-17-108-109.mtv.corp.google.com>
-	<CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g@mail.gmail.com>
-	<20120518175548.GM19388@google.com>
-	<CA+1xoqfr5aaGbxoX3YKrJHXTjU9fWSbX_xbuEOU=4K7kMay6XQ@mail.gmail.com>
-	<20120523222242.GD3933@htj.dyndns.org>
-	<CA+1xoqdbtkC5Ue3s1qZHHJBLcj9a=djFDGny6AJJSV-pdn7mcA@mail.gmail.com>
-	<20120524154139.GA27983@google.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 00/28] kmem limitation for memcg
+Date: Mon, 28 May 2012 12:32:28 +0400
+Message-ID: <4FC3381C.9020608@parallels.com>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <20120525133441.GB30527@tiehlicka.suse.cz> <alpine.DEB.2.00.1205250933170.22597@router.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-reply-to: <20120524154139.GA27983-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1205250933170.22597@router.home>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Christoph Lameter <cl@linux.com>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>
 
-2012/5/24 23:41, Tejun Heo wrote:
+On 05/25/2012 06:34 PM, Christoph Lameter wrote:
+> On Fri, 25 May 2012, Michal Hocko wrote:
+>
+>> On Fri 25-05-12 17:03:20, Glauber Costa wrote:
+>>> I believe some of the early patches here are already in some trees around.
+>>> I don't know who should pick this, so if everyone agrees with what's in here,
+>>> please just ack them and tell me which tree I should aim for (-mm? Hocko's?)
+>>> and I'll rebase it.
+>>
+>> memcg-devel tree is only to make development easier. Everything that
+>> applies on top of this tree should be applicable to both -mm and
+>> linux-next.
+>> So the patches should go via traditional Andrew's channel.
+>
+> It would be best to merge these with my patchset to extract common code
+> from the allocators. The modifications of individual slab allocators would
+> then be not necessary anymore and it would save us a lot of work.
+>
+Some of them would not, some of them would still be. But also please 
+note that the patches here that deal with differences between allocators 
+are usually the low hanging fruits compared to the rest.
 
->>From 88787c483106c5830a46d18deaffdc1e70929af7 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Thu, 24 May 2012 08:24:39 -0700
-> 
-> 48ddbe1946 "cgroup: make css->refcnt clearing on cgroup removal
-> optional" allowed a css to linger after the associated cgroup is
-> removed.  As a css holds a reference on the cgroup's dentry, it means
-> that cgroup dentries may linger for a while.
-> 
-> cgroup_create() does grab an active reference on the superblock to
-> prevent it from going away while there are !root cgroups; however, the
-> reference is put from cgroup_diput() which is invoked on cgroup
-> removal, so cgroup dentries which are removed but persisting due to
-> lingering csses already have released their superblock active refs
-> allowing superblock to be killed while those dentries are around.
-> 
-> Given the right condition, this makes cgroup_kill_sb() call
-> kill_litter_super() with dentries with non-zero d_count leading to
-> BUG() in shrink_dcache_for_umount_subtree().
-> 
-> Fix it by adding cgroup_dops->d_release() operation and moving
-> deactivate_super() to it.  cgroup_diput() now marks dentry->d_fsdata
-> with itself if superblock should be deactivated and cgroup_d_release()
-> deactivates the superblock on dentry release.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Tested-by: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> LKML-Reference: <CA+1xoqe5hMuxzCRhMy7J0XchDk2ZnuxOHJKikROk1-ReAzcT6g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+I agree that long term it not only better, but inevitable, if we are 
+going to merge both.
+
+But right now, I think we should agree with the implementation itself - 
+so if you have any comments on how I am handling these, I'd be happy to 
+hear. Then we can probably set up a tree that does both, or get your 
+patches merged and I'll rebase, etc.
 
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
