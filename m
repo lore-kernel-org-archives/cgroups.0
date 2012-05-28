@@ -1,17 +1,21 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Subject: Re: [PATCH v2 2/5] account guest time per-cgroup as well.
-Date: Mon, 28 May 2012 13:03:19 +0400
-Message-ID: <4FC33F57.3010702@parallels.com>
+Date: Mon, 28 May 2012 17:26:25 +0400
+Message-ID: <4FC37D01.7080704@parallels.com>
 References: <1334010315-4453-1-git-send-email-glommer@parallels.com> <1334010315-4453-3-git-send-email-glommer@parallels.com> <CAPM31RLwY4d-Ng3-T+-1eLxuZxr8wbdC_+sDQbJQXuqEfe9tfg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="------------050909060109020409000805"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <CAPM31RLwY4d-Ng3-T+-1eLxuZxr8wbdC_+sDQbJQXuqEfe9tfg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
+
+--------------050909060109020409000805
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
 On 05/26/2012 08:44 AM, Paul Turner wrote:
 > On 04/09/2012 03:25 PM, Glauber Costa wrote:
@@ -26,112 +30,100 @@ On 05/26/2012 08:44 AM, Paul Turner wrote:
 >> When this figure needs to be read (different patch), we will
 >> aggregate them at read time.
 >>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ-XMD5yJDbdMReXY1tMh2IBg@public.gmane.org>
->> ---
->>   kernel/sched/core.c  |   32 ++++++++++++++++++++++++++++++++
->>   kernel/sched/sched.h |    3 +++
->>   2 files changed, 35 insertions(+), 0 deletions(-)
 >>
->> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
->> index 1cfb7f0..1ee3772 100644
->> --- a/kernel/sched/core.c
->> +++ b/kernel/sched/core.c
->> @@ -3168,6 +3168,37 @@ pick_next_task(struct rq *rq)
->>   }
->>
->>   /*
->> + * For all other data, we do a tree walk at the time of
->> + * gathering. We want, however, to minimize the impact over schedule(),
->> + * because... well... it's schedule().
->> + *
->> + * Therefore we only gather for the current cgroup, and walk the tree
->> + * at read time
->> + */
->> +static void update_switches_task_group(struct rq *rq,
->> +				       struct task_struct *prev,
->> +				       struct task_struct *next)
->> +{
->> +#ifdef CONFIG_CGROUP_SCHED
->> +	int cpu = cpu_of(rq);
->> +
->> +	if (rq->curr_tg ==&root_task_group)
->> +		goto out;
->> +
->> +#ifdef CONFIG_FAIR_GROUP_SCHED
->> +	if (prev->sched_class ==&fair_sched_class)
->> +		rq->curr_tg->cfs_rq[cpu]->nr_switches++;
->> +#endif
->> +#ifdef CONFIG_RT_GROUP_SCHED
->> +	if (prev->sched_class ==&rt_sched_class)
->> +		rq->curr_tg->rt_rq[cpu]->nr_switches++;
->> +#endif
->
-> With this approach why differentiate cfs vs rt?  These could both just
-> be on the task_group.
->
-> This could then just be
-> if (prev != root_task_group)
->    task_group(prev)->nr_switches++;
 
-well, no. Then it needs to be an atomic update, or something like it.
-The runqueue is a percpu data, the task_group is not. That's why I 
-choosed to use a rq (and the runqueues are separated between classes).
+Paul,
 
-It all boils down to the fact that I wanted to avoid an atomic update in 
-this path.
+How about the following patch instead?
 
-But if you think that would be okay, I could change it. Alternatively, I 
-could come up with another percpu storage as well, since we're 
-ultimately just reading it later (and for that we need to iterate on all 
-cpus anyway).
+It is still using the cfs_rq and rt_rq's structures, (this code actually 
+only touches fair.c as a PoC, rt would be similar).
 
-> Which you could wrap in a nice static inline that disappears when
-> CONFIG_CGROUP_PROC_STAT isn't there
+Tasks in the root cgroup (without an se->parent), will do a branch and 
+exit. For the others, we accumulate here, and simplify the reader.
 
-That I can do.
+My reasoning for this, is based on the fact that all the se->parent 
+relations should be cached by our recent call to put_prev_task (well, 
+unless of course we have a really big chain)
 
->
-> Another way to go about this would be to promote (demote?) nr_switches
-> to the sched_entity.  At which point you know you only need to update
-> yours, and conditionally update your parents.
+This would incur a slightly higher context switch time for tasks inside 
+a cgroup.
 
-You mean the global one ?
+The reader (in a different patch) would then be the same as the others:
 
-Not sure it will work, because that always refer to the root cgroup...
++static u64 tg_nr_switches(struct task_group *tg, int cpu)
++{
++	if (tg != &root_task_group)
++		return rt_rq(rt_nr_switches, tg, cpu)
+                        +fair_rq(nr_switches, tg, cpu);
++
++	return cpu_rq(cpu)->nr_switches;
++}
 
-> But.. that's still gross.. Hmm..
->
->> +out:
->> +	rq->curr_tg = task_group(next);
->
-> If you're going to task_group every time anyway you might as well just
-> take it against prev -- then you don't have to cache rq->curr_tg?
->
-> Another way to do this would be:
->
-> On cfs_rq, rt_rq add:
->    int prev_rq_nr_switches, nr_switches
->
-> On put_prev_prev_task_fair (against a task)
->    cfs_rq_of(prev->se)->prev_rq_nr_switches = rq->nr_switches
->
-> On pick_next_task_fair:
->    if (cfs_rq_of(prev->se)->prev_rq_nr_switches != rq->nr_switches)
->      cfs_rq->nr_switches++;
->
-> On aggregating the value for read: +1 if prev_rq_nr_running != rq->nr_running
-> [And equivalent for sched_rt]
->
-> While this is no nicer (and fractionally more expensive but this is
-> never something we'd enable by default), it at least gets the goop out
-> of schedule().
+I plan to measure this today, but an extra branch cost for the common 
+case of a task in the root cgroup + O(depth) for tasks inside cgroups 
+may be acceptable, given the simplification it brings.
 
-At first look this sounds a bit weird to me, but OTOH, this is how a lot 
-of the stuff is done... All the other statistics in the patch set are 
-collected this exact same way - because it draws from schedstats, that 
-always touch the specific rqs, so maybe this gain points for consistency.
+Let me know what you think.
 
-I'll give it a shot.
 
-BTW, this means that your first comment about merging cfq and rt is 
-basically to be disconsidered should I take this route, right ?
+
+
+
+--------------050909060109020409000805
+Content-Type: text/x-patch; name="alternative.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="alternative.patch"
+
+Index: linux/kernel/sched/fair.c
+===================================================================
+--- linux.orig/kernel/sched/fair.c
++++ linux/kernel/sched/fair.c
+@@ -2990,6 +2990,22 @@ static struct task_struct *pick_next_tas
+ 	if (hrtick_enabled(rq))
+ 		hrtick_start_fair(rq, p);
+ 
++#ifdef CONFIG_FAIR_GROUP_SCHED
++	if (!se->parent)
++		goto out;
++	cfs_rq = group_cfs_rq(se->parent);
++	if (cfs_rq->prev == se)
++		goto out;
++	cfs_rq->prev = se;
++
++	while (se->parent) {
++		se = se->parent;
++		cfs_rq = group_cfs_rq(se);
++		cfs_rq->nr_switches++;
++	}
++out:
++#endif
++
+ 	return p;
+ }
+ 
+Index: linux/kernel/sched/sched.h
+===================================================================
+--- linux.orig/kernel/sched/sched.h
++++ linux/kernel/sched/sched.h
+@@ -237,6 +237,8 @@ struct cfs_rq {
+ 	struct list_head leaf_cfs_rq_list;
+ 	struct task_group *tg;	/* group that "owns" this runqueue */
+ 
++	u64 nr_switches;
++	struct sched_entity *prev;
+ #ifdef CONFIG_SMP
+ 	/*
+ 	 *   h_load = weight * f(tg)
+@@ -307,6 +309,9 @@ struct rt_rq {
+ 	struct rq *rq;
+ 	struct list_head leaf_rt_rq_list;
+ 	struct task_group *tg;
++
++	u64 rt_nr_switches;
++	struct sched_rt_entity *prev;
+ #endif
+ };
+ 
+
+--------------050909060109020409000805--
