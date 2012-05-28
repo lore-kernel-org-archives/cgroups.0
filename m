@@ -1,53 +1,137 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v3 00/28] kmem limitation for memcg
-Date: Mon, 28 May 2012 12:32:28 +0400
-Message-ID: <4FC3381C.9020608@parallels.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <20120525133441.GB30527@tiehlicka.suse.cz> <alpine.DEB.2.00.1205250933170.22597@router.home>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 2/5] account guest time per-cgroup as well.
+Date: Mon, 28 May 2012 13:03:19 +0400
+Message-ID: <4FC33F57.3010702@parallels.com>
+References: <1334010315-4453-1-git-send-email-glommer@parallels.com> <1334010315-4453-3-git-send-email-glommer@parallels.com> <CAPM31RLwY4d-Ng3-T+-1eLxuZxr8wbdC_+sDQbJQXuqEfe9tfg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.00.1205250933170.22597@router.home>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAPM31RLwY4d-Ng3-T+-1eLxuZxr8wbdC_+sDQbJQXuqEfe9tfg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl@linux.com>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>
+To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
 
-On 05/25/2012 06:34 PM, Christoph Lameter wrote:
-> On Fri, 25 May 2012, Michal Hocko wrote:
->
->> On Fri 25-05-12 17:03:20, Glauber Costa wrote:
->>> I believe some of the early patches here are already in some trees around.
->>> I don't know who should pick this, so if everyone agrees with what's in here,
->>> please just ack them and tell me which tree I should aim for (-mm? Hocko's?)
->>> and I'll rebase it.
+On 05/26/2012 08:44 AM, Paul Turner wrote:
+> On 04/09/2012 03:25 PM, Glauber Costa wrote:
+>> In the interest of providing a per-cgroup figure of common statistics,
+>> this patch adds a nr_switches counter to each group runqueue (both cfs
+>> and rt).
 >>
->> memcg-devel tree is only to make development easier. Everything that
->> applies on top of this tree should be applicable to both -mm and
->> linux-next.
->> So the patches should go via traditional Andrew's channel.
+>> To avoid impact on schedule(), we don't walk the tree at stat gather
+>> time. This is because schedule() is called much more frequently than
+>> the tick functions, in which we do walk the tree.
+>>
+>> When this figure needs to be read (different patch), we will
+>> aggregate them at read time.
+>>
+>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ-XMD5yJDbdMReXY1tMh2IBg@public.gmane.org>
+>> ---
+>>   kernel/sched/core.c  |   32 ++++++++++++++++++++++++++++++++
+>>   kernel/sched/sched.h |    3 +++
+>>   2 files changed, 35 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+>> index 1cfb7f0..1ee3772 100644
+>> --- a/kernel/sched/core.c
+>> +++ b/kernel/sched/core.c
+>> @@ -3168,6 +3168,37 @@ pick_next_task(struct rq *rq)
+>>   }
+>>
+>>   /*
+>> + * For all other data, we do a tree walk at the time of
+>> + * gathering. We want, however, to minimize the impact over schedule(),
+>> + * because... well... it's schedule().
+>> + *
+>> + * Therefore we only gather for the current cgroup, and walk the tree
+>> + * at read time
+>> + */
+>> +static void update_switches_task_group(struct rq *rq,
+>> +				       struct task_struct *prev,
+>> +				       struct task_struct *next)
+>> +{
+>> +#ifdef CONFIG_CGROUP_SCHED
+>> +	int cpu = cpu_of(rq);
+>> +
+>> +	if (rq->curr_tg ==&root_task_group)
+>> +		goto out;
+>> +
+>> +#ifdef CONFIG_FAIR_GROUP_SCHED
+>> +	if (prev->sched_class ==&fair_sched_class)
+>> +		rq->curr_tg->cfs_rq[cpu]->nr_switches++;
+>> +#endif
+>> +#ifdef CONFIG_RT_GROUP_SCHED
+>> +	if (prev->sched_class ==&rt_sched_class)
+>> +		rq->curr_tg->rt_rq[cpu]->nr_switches++;
+>> +#endif
 >
-> It would be best to merge these with my patchset to extract common code
-> from the allocators. The modifications of individual slab allocators would
-> then be not necessary anymore and it would save us a lot of work.
+> With this approach why differentiate cfs vs rt?  These could both just
+> be on the task_group.
 >
-Some of them would not, some of them would still be. But also please 
-note that the patches here that deal with differences between allocators 
-are usually the low hanging fruits compared to the rest.
+> This could then just be
+> if (prev != root_task_group)
+>    task_group(prev)->nr_switches++;
 
-I agree that long term it not only better, but inevitable, if we are 
-going to merge both.
+well, no. Then it needs to be an atomic update, or something like it.
+The runqueue is a percpu data, the task_group is not. That's why I 
+choosed to use a rq (and the runqueues are separated between classes).
 
-But right now, I think we should agree with the implementation itself - 
-so if you have any comments on how I am handling these, I'd be happy to 
-hear. Then we can probably set up a tree that does both, or get your 
-patches merged and I'll rebase, etc.
+It all boils down to the fact that I wanted to avoid an atomic update in 
+this path.
 
+But if you think that would be okay, I could change it. Alternatively, I 
+could come up with another percpu storage as well, since we're 
+ultimately just reading it later (and for that we need to iterate on all 
+cpus anyway).
 
+> Which you could wrap in a nice static inline that disappears when
+> CONFIG_CGROUP_PROC_STAT isn't there
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+That I can do.
+
+>
+> Another way to go about this would be to promote (demote?) nr_switches
+> to the sched_entity.  At which point you know you only need to update
+> yours, and conditionally update your parents.
+
+You mean the global one ?
+
+Not sure it will work, because that always refer to the root cgroup...
+
+> But.. that's still gross.. Hmm..
+>
+>> +out:
+>> +	rq->curr_tg = task_group(next);
+>
+> If you're going to task_group every time anyway you might as well just
+> take it against prev -- then you don't have to cache rq->curr_tg?
+>
+> Another way to do this would be:
+>
+> On cfs_rq, rt_rq add:
+>    int prev_rq_nr_switches, nr_switches
+>
+> On put_prev_prev_task_fair (against a task)
+>    cfs_rq_of(prev->se)->prev_rq_nr_switches = rq->nr_switches
+>
+> On pick_next_task_fair:
+>    if (cfs_rq_of(prev->se)->prev_rq_nr_switches != rq->nr_switches)
+>      cfs_rq->nr_switches++;
+>
+> On aggregating the value for read: +1 if prev_rq_nr_running != rq->nr_running
+> [And equivalent for sched_rt]
+>
+> While this is no nicer (and fractionally more expensive but this is
+> never something we'd enable by default), it at least gets the goop out
+> of schedule().
+
+At first look this sounds a bit weird to me, but OTOH, this is how a lot 
+of the stuff is done... All the other statistics in the patch set are 
+collected this exact same way - because it draws from schedstats, that 
+always touch the specific rqs, so maybe this gain points for consistency.
+
+I'll give it a shot.
+
+BTW, this means that your first comment about merging cfq and rt is 
+basically to be disconsidered should I take this route, right ?
