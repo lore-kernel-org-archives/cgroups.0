@@ -1,13 +1,12 @@
 From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 12/28] slab: pass memcg parameter to
- kmem_cache_create
-Date: Tue, 29 May 2012 09:27:52 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205290922340.4666@router.home>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-13-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
+Date: Tue, 29 May 2012 09:36:55 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205290932530.4666@router.home>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-14-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338301676; bh=8Y259vYo3jZx3fxcMzVQ7wV2h7h2FgOYljwvSCb//FM=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=DN+4aVdVAC/wQe84BU8DS6a9nUDUCIIzLo7hZ5vNGn8CFyZRHWF4bBHoJbMhN6an+J+F6kSW2kipFjiID60TKKo8skX2iZ990LIAdj6tYPar86nBRPEXZz8qdcw8wr2Qpeg0p0UcQxVLlZIaPnD/wvZGP9xk9T7jrMWUOKGxdu4=
-In-Reply-To: <1337951028-3427-13-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338302219; bh=YIGLCJO1/I7+nSztJv9U5HsoxmHKHFklV+9c4GHhaSY=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=ZxXjlxZeYWxbzQuyEXo1tEjkWVSYYC2fST+fJJsE/hwAvxm2tPpkkZoM/FrQJK/BnwhkBdkGTN8kFjQaxoy3YzowpfvYVpZMSLJb14Srv5Zo0CZ9S90YAsA/YgFZdpV/DUQvULTrl91GOOym+eOLdLq9ODPu8JqFgKkO52X6LSE=
+In-Reply-To: <1337951028-3427-14-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -17,76 +16,66 @@ Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z
 
 On Fri, 25 May 2012, Glauber Costa wrote:
 
-> index 06e4a3e..7c0cdd6 100644
-> --- a/include/linux/slab_def.h
-> +++ b/include/linux/slab_def.h
-> @@ -102,6 +102,13 @@ struct kmem_cache {
->  	 */
->  };
+> index dacd1fb..4689034 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -467,6 +467,23 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
+>  EXPORT_SYMBOL(tcp_proto_cgroup);
+>  #endif /* CONFIG_INET */
 >
-> +static inline void store_orig_align(struct kmem_cache *cachep, int orig_align)
+> +char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
 > +{
-> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-> +	cachep->memcg_params.orig_align = orig_align;
-> +#endif
-> +}
+> +	char *name;
+> +	struct dentry *dentry;
 > +
+> +	rcu_read_lock();
+> +	dentry = rcu_dereference(memcg->css.cgroup->dentry);
+> +	rcu_read_unlock();
+> +
+> +	BUG_ON(dentry == NULL);
+> +
+> +	name = kasprintf(GFP_KERNEL, "%s(%d:%s)",
+> +	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
+> +
+> +	return name;
+> +}
 
-Why do you need to store the original alignment? Is the calculated
-alignment not enough?
+Function allocates a string that is supposed to be disposed of by the
+caller. That needs to be documented and maybe even the name needs to
+reflect that.
 
-> +++ b/mm/slab.c
-> @@ -1729,6 +1729,31 @@ void __init kmem_cache_init_late(void)
->  	 */
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -4002,6 +4002,38 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
 >  }
+>  EXPORT_SYMBOL(kmem_cache_create);
 >
-> +static int __init memcg_slab_register_all(void)
-> +{
 > +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-> +	struct kmem_cache *cachep;
-> +	struct cache_sizes *sizes;
+> +struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
+> +				  struct kmem_cache *s)
+> +{
+> +	char *name;
+> +	struct kmem_cache *new;
 > +
-> +	sizes = malloc_sizes;
+> +	name = mem_cgroup_cache_name(memcg, s);
+> +	if (!name)
+> +		return NULL;
 > +
-> +	while (sizes->cs_size != ULONG_MAX) {
-> +		if (sizes->cs_cachep)
-> +			mem_cgroup_register_cache(NULL, sizes->cs_cachep);
-> +		if (sizes->cs_dmacachep)
-> +			mem_cgroup_register_cache(NULL, sizes->cs_dmacachep);
-> +		sizes++;
+> +	new = kmem_cache_create_memcg(memcg, name, s->objsize, s->align,
+> +				      (s->allocflags & ~SLAB_PANIC), s->ctor);
+
+Hmmm... A full duplicate of the slab cache? We may have many sparsely
+used portions of the per node and per cpu structure as a result.
+
+> +	 * prevent it from being deleted. If kmem_cache_destroy() is
+> +	 * called for the root cache before we call it for a child cache,
+> +	 * it will be queued for destruction when we finally drop the
+> +	 * reference on the child cache.
+> +	 */
+> +	if (new) {
+> +		down_write(&slub_lock);
+> +		s->refcount++;
+> +		up_write(&slub_lock);
 > +	}
-> +
-> +	mutex_lock(&cache_chain_mutex);
-> +	list_for_each_entry(cachep, &cache_chain, next)
-> +		mem_cgroup_register_cache(NULL, cachep);
-> +
-> +	mutex_unlock(&cache_chain_mutex);
-> +#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-> +	return 0;
-> +}
 
-Ok this only duplicates the kmalloc arrays. Why not the others?
-
-> @@ -2331,7 +2350,7 @@ kmem_cache_create (const char *name, size_t size, size_t align,
->  			continue;
->  		}
->
-> -		if (!strcmp(pc->name, name)) {
-> +		if (!memcg && !strcmp(pc->name, name)) {
->  			printk(KERN_ERR
->  			       "kmem_cache_create: duplicate cache %s\n", name);
->  			dump_stack();
-
-This implementation means that duplicate cache detection will no longer
-work within a cgroup?
-
-> @@ -2543,7 +2564,12 @@ kmem_cache_create (const char *name, size_t size, size_t align,
->  	cachep->ctor = ctor;
->  	cachep->name = name;
->
-> +	if (g_cpucache_up >= FULL)
-> +		mem_cgroup_register_cache(memcg, cachep);
-
-What happens if a cgroup was active during creation of slab xxy but
-then a process running in a different cgroup uses that slab to allocate
-memory? Is it charged to the first cgroup?
+Why do you need to increase the refcount? You made a full copy right?
