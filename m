@@ -1,12 +1,12 @@
 From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 18/28] slub: charge allocation to a memcg
-Date: Tue, 29 May 2012 09:51:20 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205290948250.4666@router.home>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-19-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v3 19/28] slab: per-memcg accounting of slab caches
+Date: Tue, 29 May 2012 09:52:59 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205290951520.4666@router.home>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-20-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338303084; bh=B58hbctrkFp29U+Hq74KxrdE09U7bukJAmiPIYIxtMU=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=uPgleiFibg/neLh2lc1cI0zhfitLhwMDrNOPum7pEK4cDHiiZYo8nvxAn9QenK0AgwLDN6wf6Jo5X8twOCoXjU/tIAnqisGGVZMOK6x4RoF6R2zm2nHbFT4qJmj74TjLjjXFyhwzPgg3Z0j/j7kF3PpKmWhoNhrzhuep9Rw+69A=
-In-Reply-To: <1337951028-3427-19-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338303183; bh=22z7FULqKLE90lNeeylCQopZbBfnRPuSr5i0BQ6QGnE=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=oNhtlUVd3ntu/C5TuwULetAWCnl51UhbWBmbSKS/UTrQy+d06OIG+nq8tPxmWCMtvQPWQR2eVrrx//m2Ix78kmTCa9z//mgS40qQppasA48wM2FhLYJ6is7swJi+kDUGjeak2JeAVwNPdpek4DaXRaqbjbon7NVzfKGntTuc4vg=
+In-Reply-To: <1337951028-3427-20-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -19,11 +19,7 @@ On Fri, 25 May 2012, Glauber Costa wrote:
 > This patch charges allocation of a slab object to a particular
 > memcg.
 
-I am wondering why you need all the other patches. The simplest approach
-would just to hook into page allocation and freeing from the slab
-allocators as done here and charge to the currently active cgroup. This
-avoids all the duplication of slab caches and per node as well as per cpu
-structures. A certain degree of fuzziness cannot be avoided given that
-objects are cached and may be served to multiple cgroups. If that can be
-tolerated then the rest would be just like this patch which could be made
-more simple and non intrusive.
+Ok so a requirement is to support tracking of individual slab
+objects to cgroups? That is going to be quite expensive since it will
+touch the hotpaths.
+
