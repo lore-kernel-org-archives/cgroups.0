@@ -1,116 +1,57 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
-Date: Tue, 29 May 2012 19:56:23 +0400
-Message-ID: <4FC4F1A7.2010206@parallels.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-14-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205290932530.4666@router.home>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 00/28] kmem limitation for memcg
+Date: Tue, 29 May 2012 11:01:03 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205291056440.6723@router.home>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <20120525133441.GB30527@tiehlicka.suse.cz> <alpine.DEB.2.00.1205250933170.22597@router.home> <4FC3381C.9020608@parallels.com> <alpine.DEB.2.00.1205290955270.4666@router.home>
+ <4FC4EEF6.2050204@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.00.1205290932530.4666@router.home>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338307266; bh=3+NE+2mQ3C7bPuAWxX16MvMgSCRRNBrqRKnMOyu9GHI=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=nMFvuDPqMetXs9Nwka3W/2As0O6fmH+mAJr93U62vbaajxYvRR6P5HDDNf+7hEtvMX5G4v6Yg6JbD7KZl/A2yw1Pnl57R8waZWi6O9Hk/MR7LTGYqTnQ2/Vq6gNXkOa1A+f+aFmZNHudUrZ0PMC5bYTow4ac/yNISJXO8piFves=
+In-Reply-To: <4FC4EEF6.2050204-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl@linux.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 05/29/2012 06:36 PM, Christoph Lameter wrote:
-> On Fri, 25 May 2012, Glauber Costa wrote:
+On Tue, 29 May 2012, Glauber Costa wrote:
+
+> > I think it may be simplest to only account for the pages used by a slab in
+> > a memcg. That code could be added to the functions in the slab allocators
+> > that interface with the page allocators. Those are not that performance
+> > critical and would do not much harm.
 >
->> index dacd1fb..4689034 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -467,6 +467,23 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
->>   EXPORT_SYMBOL(tcp_proto_cgroup);
->>   #endif /* CONFIG_INET */
->>
->> +char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
->> +{
->> +	char *name;
->> +	struct dentry *dentry;
->> +
->> +	rcu_read_lock();
->> +	dentry = rcu_dereference(memcg->css.cgroup->dentry);
->> +	rcu_read_unlock();
->> +
->> +	BUG_ON(dentry == NULL);
->> +
->> +	name = kasprintf(GFP_KERNEL, "%s(%d:%s)",
->> +	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
->> +
->> +	return name;
->> +}
+> No, I don't think so. Well, accounting the page is easy, but when we do a new
+> allocation, we need to match a process to its correspondent page. This will
+> likely lead to flushing the internal cpu caches of the slub, for instance,
+> hurting performance. That is because once we allocate a page, all objects on
+> that page need to belong to the same cgroup.
+
+Matching a process to its page is a complex thing even for pages used by
+userspace.
+
+How can you make sure that all objects on a page belong to the same
+cgroup? There are various kernel allocations that have uses far beyond a
+single context. There is already a certain degree of fuzziness there and
+we tolerate that in other contexts as well.
+
+
+> Also, you talk about intrusiveness, accounting pages is a lot more intrusive,
+> since then you need to know a lot about the internal structure of each cache.
+> Having the cache replicated has exactly the effect of isolating it better.
+
+Why would you need to know about the internal structure? Just get the
+current process context and use the cgroup that is readily available there
+to account for the pages.
+
+> > If you need per object accounting then the cleanest solution would be to
+> > duplicate the per node arrays per memcg (or only the statistics) and have
+> > the kmem_cache structure only once in memory.
 >
-> Function allocates a string that is supposed to be disposed of by the
-> caller. That needs to be documented and maybe even the name needs to
-> reflect that.
+> No, it's all per-page. Nothing here is per-object, maybe you misunderstood
+> something?
 
-Okay, I can change it.
-
->> --- a/mm/slub.c
->> +++ b/mm/slub.c
->> @@ -4002,6 +4002,38 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size,
->>   }
->>   EXPORT_SYMBOL(kmem_cache_create);
->>
->> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
->> +struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
->> +				  struct kmem_cache *s)
->> +{
->> +	char *name;
->> +	struct kmem_cache *new;
->> +
->> +	name = mem_cgroup_cache_name(memcg, s);
->> +	if (!name)
->> +		return NULL;
->> +
->> +	new = kmem_cache_create_memcg(memcg, name, s->objsize, s->align,
->> +				      (s->allocflags&  ~SLAB_PANIC), s->ctor);
->
-> Hmmm... A full duplicate of the slab cache? We may have many sparsely
-> used portions of the per node and per cpu structure as a result.
-
-I've already commented on patch 0, but I will repeat it here. This 
-approach leads to more fragmentation, yes, but this is exactly to be 
-less intrusive.
-
-With a full copy, all I need to do is:
-
-1) relay the allocation to the right cache.
-2) account for a new page when it is needed.
-
-How does the cache work from inside? I don't care.
-
-Accounting pages seems just crazy to me. If new allocators come in the 
-future, organizing the pages in a different way, instead of patching it 
-here and there, we need to totally rewrite this.
-
-If those allocators happen to depend on a specific placement for 
-performance, then we're destroying this as well too.
-
->
->> +	 * prevent it from being deleted. If kmem_cache_destroy() is
->> +	 * called for the root cache before we call it for a child cache,
->> +	 * it will be queued for destruction when we finally drop the
->> +	 * reference on the child cache.
->> +	 */
->> +	if (new) {
->> +		down_write(&slub_lock);
->> +		s->refcount++;
->> +		up_write(&slub_lock);
->> +	}
->
-> Why do you need to increase the refcount? You made a full copy right?
-
-Yes, but I don't want this copy to go away while we have other caches 
-around.
-
-So, in the memcg internals, I used a different reference counter, to 
-avoid messing with this one. I could use that, and leave the original 
-refcnt alone. Would you prefer this?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+There are free/used object counters in each page. You could account for
+objects in the l3 lists or kmem_cache_node strcut and thereby avoid
+having to deal with the individual objects at the per cpu level.
