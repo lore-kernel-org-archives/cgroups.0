@@ -1,30 +1,58 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Suleiman Souhlal <suleiman@google.com>
 Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
-Date: Wed, 30 May 2012 00:25:36 +0400
-Message-ID: <4FC530C0.30509@parallels.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-14-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205290932530.4666@router.home> <4FC4F1A7.2010206@parallels.com> <alpine.DEB.2.00.1205291101580.6723@router.home> <4FC501E9.60607@parallels.com> <alpine.DEB.2.00.1205291222360.8495@router.home> <4FC506E6.8030108@parallels.com> <alpine.DEB.2.00.1205291424130.8495@router.home> <4FC52612.5060006@parallels.com> <alpine.DEB.2.00.1205291454030.2504@router.home> <4FC52CC6.7020109@parallels.com> <alpine.DEB.2.00.1205291514090.2504@router.home>
+Date: Tue, 29 May 2012 13:57:41 -0700
+Message-ID: <CABCjUKCPoL1+qzjX85RVGpRBn_javD3JY2avstYuoM=tsJa8dA@mail.gmail.com>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
+	<1337951028-3427-14-git-send-email-glommer@parallels.com>
+	<alpine.DEB.2.00.1205290932530.4666@router.home>
+	<4FC4F1A7.2010206@parallels.com>
+	<alpine.DEB.2.00.1205291101580.6723@router.home>
+	<4FC501E9.60607@parallels.com>
+	<alpine.DEB.2.00.1205291222360.8495@router.home>
+	<4FC506E6.8030108@parallels.com>
+	<alpine.DEB.2.00.1205291424130.8495@router.home>
+	<4FC52612.5060006@parallels.com>
+	<alpine.DEB.2.00.1205291454030.2504@router.home>
+	<4FC52CC6.7020109@parallels.com>
+	<alpine.DEB.2.00.1205291514090.2504@router.home>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=u0KK5I6J9vxsVVTs8szihck84JwLpGO/zFl7IFPZ+tU=;
+        b=DtYdyScnaO123AF70QNOm8XnQOlCZUVz0zJGoB0LjioC2lx2LybMw1rlzP2+bO56LM
+         0CdxxtLCLb4gN3J40gjTzwggGka+IBOnpakXxgrbVk73miAZYb0kZjEFzQGbt9DueqPh
+         SxcEWhEfrfLtKvope4FM2XpKRbfn4elivMQBVJUmrDuLI7KsiDzaxkN8p6GMQUkABQnO
+         zlJo3p1nT+4iq50M6PiU4ZTXse0P93kvpPknBVkIcMURhZvqSgMv1pVJjnFPKMSiFybg
+         rYEjxlqIAY45xdwrpD4uglR6DExj7Ab+t0JQPYLVGeYwWFzsTjvav/BNNfnTgGICqPgn
+         9OLg==
 In-Reply-To: <alpine.DEB.2.00.1205291514090.2504@router.home>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
 To: Christoph Lameter <cl@linux.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 05/30/2012 12:21 AM, Christoph Lameter wrote:
+Hi Christoph,
+
+On Tue, May 29, 2012 at 1:21 PM, Christoph Lameter <cl@linux.com> wrote:
 > On Wed, 30 May 2012, Glauber Costa wrote:
 >
->> Well, I'd have to dive in the code a bit more, but that the impression that
+>> Well, I'd have to dive in the code a bit more, but that the impression t=
+hat
 >> the documentation gives me, by saying:
 >>
 >> "Cpusets constrain the CPU and Memory placement of tasks to only
 >> the resources within a task's current cpuset."
 >>
->> is that you can't allocate from a node outside that set. Is this correct?
+>> is that you can't allocate from a node outside that set. Is this correct=
+?
 >
-> Basically yes but there are exceptions (like slab queues etc). Look at the
+> Basically yes but there are exceptions (like slab queues etc). Look at th=
+e
 > hardwall stuff too that allows more exceptions for kernel allocations to
 > use memory from other nodes.
 >
@@ -33,22 +61,27 @@ On 05/30/2012 12:21 AM, Christoph Lameter wrote:
 >> * You can't use more memory than what you are assigned to.
 >> * In order to do that, you need to account the memory you are using
 >> * and to account the memory you are using, all objects in the page
->>    must belong to you.
+>> =A0 must belong to you.
 >
-> Cpusets work at the page boundary and they do not have the requirement you
+> Cpusets work at the page boundary and they do not have the requirement yo=
+u
 > are mentioning of all objects in the page having to belong to a certain
 > cpusets. Let that go and things become much easier.
 >
->> With a predictable enough workload, this is a recipe for working around the
+>> With a predictable enough workload, this is a recipe for working around =
+the
 >> very protection we need to establish: one can DoS a physical box full of
->> containers, by always allocating in someone else's pages, and pinning kernel
+>> containers, by always allocating in someone else's pages, and pinning ke=
+rnel
 >> memory down. Never releasing it, so the shrinkers are useless.
 >
 > Sure you can construct hyperthetical cases like that. But then that is
 > true already of other container like logic in the kernel already.
 >
->> So I still believe that if a page is allocated to a cgroup, all the objects in
->> there belong to it  - unless of course the sharing actually means something -
+>> So I still believe that if a page is allocated to a cgroup, all the obje=
+cts in
+>> there belong to it =A0- unless of course the sharing actually means some=
+thing -
 >> and identifying this is just too complicated.
 >
 > We have never worked container like logic like that in the kernel due to
@@ -57,9 +90,21 @@ On 05/30/2012 12:21 AM, Christoph Lameter wrote:
 > drop this notion then things become very easy and the patches will become
 > simple.
 
-I promise to look at that in more detail and get back to it. In the 
-meantime, I think it would be enlightening to hear from other parties as 
-well, specially the ones also directly interested in using the technology.
+Back when we (Google) started using cpusets for memory isolation (fake
+NUMA), we found that there was a significant isolation breakage coming
+from slab pages belonging to one cpuset being used by other cpusets,
+which caused us problems: It was very easy for one job to cause slab
+growth in another container, which would cause it to OOM, despite
+being well-behaved.
+
+Because of this, we had to add logic to prevent that from happening
+(by making sure we only allocate objects from pages coming from our
+allowed nodes).
+
+Now that we're switching to doing containers with memcg, I think this
+is a hard requirement, for us. :-(
+
+-- Suleiman
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
