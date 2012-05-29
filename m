@@ -1,50 +1,54 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v3 19/28] slab: per-memcg accounting of slab caches
-Date: Tue, 29 May 2012 20:13:28 +0400
-Message-ID: <4FC4F5A8.9060506@parallels.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-20-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205290951520.4666@router.home> <4FC4F42D.6060601@parallels.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [PATCH v3 12/28] slab: pass memcg parameter to
+ kmem_cache_create
+Date: Tue, 29 May 2012 11:33:17 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1205291131590.6723@router.home>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-13-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205290922340.4666@router.home> <4FC4F04F.1070401@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FC4F42D.6060601-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338309201; bh=mxH7LAiMYt6Xc4v6WdxsJA2F0BTLzmg/2hJJNakRgI0=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=wUN2M4y2XVyCz6Hh8rSSwbgcIbA7rXwMMFkU2JAN18HwNA4CzgjopNK71n2ioDxHAJz5GgjxszjnpMMyzihzXDrKfPSWccNdz/+RSImaXT2V66mF+9RrV2dHj0xWcTDcqCRDsMXeTplJrQhhGZgGAfztV4FDelGyIXAhGtvTPw8=
+In-Reply-To: <4FC4F04F.1070401@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 05/29/2012 08:07 PM, Glauber Costa wrote:
-> On 05/29/2012 06:52 PM, Christoph Lameter wrote:
->> On Fri, 25 May 2012, Glauber Costa wrote:
->>
->>> > This patch charges allocation of a slab object to a particular
->>> > memcg.
->> Ok so a requirement is to support tracking of individual slab
->> objects to cgroups? That is going to be quite expensive since it will
->> touch the hotpaths.
->>
+On Tue, 29 May 2012, Glauber Costa wrote:
+
+> > Ok this only duplicates the kmalloc arrays. Why not the others?
 >
-> No, we track pages. But all the objects in the page belong to the same
-> cgroup.
+> It does duplicate the others.
 >
+> First it does a while look on the kmalloc caches, then a list_for_each_entry
+> in the rest. You probably missed it.
 
-Also, please note the following:
+There is no need to separately duplicate the kmalloc_caches. Those are
+included on the cache_chain.
 
-The code that relays us to the right cache, is wrapped inside a static 
-branch. Whoever is not using more than the root cgroup, will not suffer 
-a single bit.
+> > > @@ -2543,7 +2564,12 @@ kmem_cache_create (const char *name, size_t size,
+> > > size_t align,
+> > >   	cachep->ctor = ctor;
+> > >   	cachep->name = name;
+> > >
+> > > +	if (g_cpucache_up>= FULL)
+> > > +		mem_cgroup_register_cache(memcg, cachep);
+> >
+> > What happens if a cgroup was active during creation of slab xxy but
+> > then a process running in a different cgroup uses that slab to allocate
+> > memory? Is it charged to the first cgroup?
+>
+> I don't see this situation ever happening. kmem_cache_create, when called
+> directly, will always create a global cache. It doesn't matter which cgroups
+> are or aren't active at this time or any other. We create copies per-cgroup,
+> but we create it lazily, when someone will touch it.
 
-If you are, but your process is in the right cgroup, you will 
-unfortunately pay function call penalty(*), but the code will make and 
-effort to detect that as early as possible and resume.
+How do you detect that someone is touching it?
 
-
-(*) Not even then if you fall in the following categories, that are 
-resolved inline:
-
-+       if (!current->mm)
-+               return cachep;
-+       if (in_interrupt())
-+               return cachep;
-+       if (gfp & __GFP_NOFAIL)
-+               return cachep;
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
