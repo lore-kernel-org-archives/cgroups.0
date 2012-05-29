@@ -1,43 +1,73 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v3 12/28] slab: pass memcg parameter to kmem_cache_create
-Date: Tue, 29 May 2012 20:59:54 +0400
-Message-ID: <4FC5008A.1060808@parallels.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-13-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205290922340.4666@router.home> <4FC4F04F.1070401@parallels.com> <alpine.DEB.2.00.1205291131590.6723@router.home> <4FC4FAF6.8060900@parallels.com> <alpine.DEB.2.00.1205291149280.8406@router.home>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
+Date: Tue, 29 May 2012 21:05:45 +0400
+Message-ID: <4FC501E9.60607@parallels.com>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-14-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1205290932530.4666@router.home> <4FC4F1A7.2010206@parallels.com> <alpine.DEB.2.00.1205291101580.6723@router.home>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1205291149280.8406-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1205291101580.6723@router.home>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: Christoph Lameter <cl@linux.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 05/29/2012 08:52 PM, Christoph Lameter wrote:
-> Well kmem_cache_alloc cache is the performance critical hotpath.
+On 05/29/2012 08:05 PM, Christoph Lameter wrote:
+> On Tue, 29 May 2012, Glauber Costa wrote:
 >
-> If you are already there and doing all of that then would it not be better
-> to simply count the objects allocated and freed per cgroup? Directly
-> increment and decrement counters in a cgroup? You do not really need to
-> duplicate the kmem_cache structure and do not need to modify allocators if
-> you are willing to take that kind of a performance hit. Put a wrapper
-> around kmem_cache_alloc/free and count things.
+>> Accounting pages seems just crazy to me. If new allocators come in the future,
+>> organizing the pages in a different way, instead of patching it here and
+>> there, we need to totally rewrite this.
+>
+> Quite to the contrary. We could either pass a THIS_IS_A_SLAB page flag to
+> the page allocator call or have a special call that does the accounting
+> and then calls the page allocator. The code could be completely in
+> cgroups. There would be no changes to the allocators aside from setting
+> the flag or calling the alternate page allocator functions.
 
-Well, I see it as the difference between being a big slower, and a lot 
-slower.
+Again: for the page allocation itself, we could do it. (maybe we still 
+can, keeping the rest of the approach, so as to simplify that particular 
+piece of code, and reduce the churn inside the cache - I am all for it)
 
-Accounting in memcg is hard, specially because it is potentially 
-hierarchical, (meaning you need to nest downwards until your parents).
+But that only solves the page allocation part. I would still need to 
+make sure the caller is directed to the right page.
 
-I never discussed that this is, unfortunately, a hotpath. However, I did 
-try to minimize the impact as much as I could.
+>>> Why do you need to increase the refcount? You made a full copy right?
+>>
+>> Yes, but I don't want this copy to go away while we have other caches around.
+>
+> You copied all metadata so what is there that you would still need should
+> the other copy go away?
 
-Not to mention that the current scheme is bound to improvement as 
-cgroups improve. One of the things being discussed is to having all 
-cgroups always in the same hierarchy. If that ever happens, we can have 
-the information about the current cgroup stored in a very accessible 
-way, so to make this even faster.
+Well, consistency being one, because it sounded weird to have the parent 
+cache being deleted while the kids are around. You wouldn't be able to 
+reach them, for once.
 
-This felt like the best way I could do with the current infrastructure, 
-(and again, I did make it free for people not limiting kmem), and is 
-way, way cheaper than doing accounting here.
+But one can argue that if you deleted the cache, why would you want to 
+ever reach it?
+
+I can try to remove the refcount.
+
+>
+>> So, in the memcg internals, I used a different reference counter, to avoid
+>> messing with this one. I could use that, and leave the original refcnt alone.
+>> Would you prefer this?
+>
+> The refcounter is really not the issue.
+>
+> I am a bit worried about the various duplicate features here and there.
+> The approach is not tightened down yet.
+
+Well, I still think that duplication of the structure is better - a lot 
+less intrusive - than messing with the cache internals.
+
+I will try to at least have the page accounting done in a consistent 
+way. How about that?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
