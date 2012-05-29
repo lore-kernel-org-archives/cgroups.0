@@ -1,64 +1,60 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Tue, 29 May 2012 12:24:23 +0400
-Message-ID: <4FC487B7.6090505@parallels.com>
-References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
+Subject: Re: [PATCH v2 2/5] account guest time per-cgroup as well.
+Date: Tue, 29 May 2012 14:34:55 +0400
+Message-ID: <4FC4A64F.3040707@parallels.com>
+References: <1334010315-4453-1-git-send-email-glommer@parallels.com> <1334010315-4453-3-git-send-email-glommer@parallels.com> <CAPM31RLwY4d-Ng3-T+-1eLxuZxr8wbdC_+sDQbJQXuqEfe9tfg@mail.gmail.com> <4FC37D01.7080704@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1338260214-21919-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <4FC37D01.7080704-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lxc-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org
 
-On 05/29/2012 06:56 AM, Gao feng wrote:
-> cgroup and namespaces are used for creating containers but some of
-> information is not isolated/virtualized. This patch is for isolating /proc/meminfo
-> information per container, which uses memory cgroup. By this, top,free
-> and other tools under container can work as expected(show container's
-> usage) without changes.
+On 05/28/2012 05:26 PM, Glauber Costa wrote:
 >
-> This patch is a trial to show memcg's info in /proc/meminfo if 'current'
-> is under a memcg other than root.
+> I plan to measure this today, but an extra branch cost for the common
+> case of a task in the root cgroup + O(depth) for tasks inside cgroups
+> may be acceptable, given the simplification it brings.
 >
-> we show /proc/meminfo base on container's memory cgroup.
-> because there are lots of info can't be provide by memcg, and
-> the cmds such as top, free just use some entries of /proc/meminfo,
-> we replace those entries by memory cgroup.
->
-> if container has no memcg, we will show host's /proc/meminfo
-> as before.
->
-> there is no idea how to deal with Buffers,I just set it zero,
-> It's strange if Buffers bigger than MemTotal.
->
-> Signed-off-by: Gao feng<gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Let me know what you think.
 
-This is the very same problem that exists with CPU cgroup.
-So I'll tell you what kind of resistance we faced, and why I sort of 
-agree with it.
+Numbers:
 
-In summary, there is no guarantee that current wants to see this. This 
-is true for containers environments, but doing this unconditionally can
-break applications out there.
+benchmark is hackbench -pipe 1 thread 4000
 
-With cpu is easier to demonstrate, because you would still see all other 
-tasks in the system (no pid namespaces used), but the tick figures won't 
-match. But not only memory falls prey to the same issue,
-but we really need a common solution to that.
+task sitting in the root cgroup
+================================
+Without this patch:
+4.857700 (0.69 %)
+With this patch:
+4.828733 (0.55 %)
 
-A flag is too ugly, or mount options are too ugly, and when parenting is 
-in place, hard to get right.
+Difference between them: 0.59 %, very close to the standard deviation, 
+no real difference.
 
-So I've seen a lot of people advocating we should just use a userspace 
-filesystem that would bind mount that ontop of normal proc.
+task sitting in a 3-level cgroup
+=================================
+Without this patch
+5.120867 (1.60 %)
+With this patch
+5.126267 (1.30 %)
 
-For instance: bind mount your special meminfo into /proc/meminfo inside 
-a container. Reads of the later would redirect to the former, that would 
-then assemble the proper results from the cgroup filesystem, and display it.
+Difference between them: 0.10 %, way within the standard deviation
 
-I do believe this is a more neutral way to go, and we have all the 
-tools. It also does not risk breaking anything, since only people that 
-want it would use it.
+
+Task sitting in a level-30 cgroup: (total crazy)
+=================================================
+Without this patch:
+8.829385 (2.63 %)
+With this patch:
+9.347846 (2.25 %)
+
+Difference is about 5.8 %, way out of the standard deviation, so it is 
+really worse. But who uses 30-level hierarchy?
+
+I believe depth-3 is close to a practical worst case, for the very 
+majority of the workloads out there. Therefore I don't see the loop here 
+as a big problem. It does degrade, but not in any use case that matters.
