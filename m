@@ -1,86 +1,206 @@
-From: Chen Baozi <baozich-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] memcg: remove the unnecessary MEM_CGROUP_STAT_DATA
-Date: Tue, 29 May 2012 01:22:41 +0800
-Message-ID: <B23B2709-F70C-4B47-80CC-FBC3AA40A907@gmail.com>
-References: <1337933501-3985-1-git-send-email-baozich@gmail.com> <20120528133918.GA22185@tiehlicka.suse.cz>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=subject:mime-version:content-type:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to:x-mailer;
-        bh=mGVXH6CZndrDcK8Vr6sv6xJGiecCFLWZkTJI/Rsm+dg=;
-        b=nPrwqi1NzxQUMjmKhkaVBNRpiUMqX9hiTYFAPSATVwiTINDPALbwB/xjQQbHMCU9x+
-         rvYY9vFRXLdyXT8gjH/4T/rHyQjNKZQQX6v1B7fYR7X4kK602DIkVLo3O10mHLp7qeVh
-         55bfGqivzlT9/S1njZxJCkbOzhOFhIfRwvAyxeXdY0Enq6E1pxwL0L2MSbo/niKBqUmj
-         hzvnCsO5Wj5/6mNLQMRfhXc42d5OpZwE5qMxAijrsd4QjvfyHzzu9k7YWmoeFEMf5QtU
-         OjhFhSqb0whaK4qmOHX3sNcWnVhZ5XqmpLT+zAGU2aQTP3CLDTVCg9Psl+/kmU1nLS1A
-         vdnw==
-In-Reply-To: <20120528133918.GA22185-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Gao feng <gaofeng@cn.fujitsu.com>
+Subject: [PATCH] meminfo: show /proc/meminfo base on container's memcg
+Date: Tue, 29 May 2012 10:56:54 +0800
+Message-ID: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: hannes@cmpxchg.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suse.cz, bsingharora@gmail.com, akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org, Gao feng <gaofeng@cn.fujitsu.com>
 
+cgroup and namespaces are used for creating containers but some of
+information is not isolated/virtualized. This patch is for isolating /proc/meminfo
+information per container, which uses memory cgroup. By this, top,free
+and other tools under container can work as expected(show container's
+usage) without changes.
 
-On May 28, 2012, at 9:39 PM, Michal Hocko wrote:
+This patch is a trial to show memcg's info in /proc/meminfo if 'current'
+is under a memcg other than root.
 
-> On Fri 25-05-12 16:11:41, Chen Baozi wrote:
->> Since MEM_CGROUP_ON_MOVE has been removed, it comes to be redudant
->> to hold MEM_CGROUP_STAT_DATA to mark the end of data requires
->> synchronization.
-> 
-> A similar patch has been already posted by Johannes 2 weeks ago
-> (http://www.gossamer-threads.com/lists/linux/kernel/1535888) and it
-> should appear in -next soonish.
-Oh, I see, Thanks for informing.
+we show /proc/meminfo base on container's memory cgroup.
+because there are lots of info can't be provide by memcg, and
+the cmds such as top, free just use some entries of /proc/meminfo,
+we replace those entries by memory cgroup.
 
-Baozi
+if container has no memcg, we will show host's /proc/meminfo
+as before.
 
-> 
->> 
->> Signed-off-by: Chen Baozi <baozich-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> ---
->> mm/memcontrol.c |    3 +--
->> 1 files changed, 1 insertions(+), 2 deletions(-)
->> 
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index f342778..446ca94 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -88,7 +88,6 @@ enum mem_cgroup_stat_index {
->> 	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
->> 	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
->> 	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
->> -	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
->> 	MEM_CGROUP_STAT_NSTATS,
->> };
->> 
->> @@ -2139,7 +2138,7 @@ static void mem_cgroup_drain_pcp_counter(struct mem_cgroup *memcg, int cpu)
->> 	int i;
->> 
->> 	spin_lock(&memcg->pcp_counter_lock);
->> -	for (i = 0; i < MEM_CGROUP_STAT_DATA; i++) {
->> +	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
->> 		long x = per_cpu(memcg->stat->count[i], cpu);
->> 
->> 		per_cpu(memcg->stat->count[i], cpu) = 0;
->> -- 
->> 1.7.1
->> 
->> --
->> To unsubscribe, send a message with 'unsubscribe linux-mm' in
->> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
->> see: http://www.linux-mm.org/ .
->> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
->> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
-> SUSE LINUX s.r.o.
-> Lihovarska 1060/12
-> 190 00 Praha 9    
-> Czech Republic
+there is no idea how to deal with Buffers,I just set it zero,
+It's strange if Buffers bigger than MemTotal.
+
+Signed-off-by: Gao feng <gaofeng@cn.fujitsu.com>
+---
+ fs/proc/meminfo.c          |   11 +++++---
+ include/linux/memcontrol.h |   15 +++++++++++
+ mm/memcontrol.c            |   56 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 78 insertions(+), 4 deletions(-)
+
+diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+index 80e4645..29a1fcd 100644
+--- a/fs/proc/meminfo.c
++++ b/fs/proc/meminfo.c
+@@ -13,6 +13,7 @@
+ #include <linux/atomic.h>
+ #include <asm/page.h>
+ #include <asm/pgtable.h>
++#include <linux/memcontrol.h>
+ #include "internal.h"
+ 
+ void __attribute__((weak)) arch_report_meminfo(struct seq_file *m)
+@@ -27,7 +28,6 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 	struct vmalloc_info vmi;
+ 	long cached;
+ 	unsigned long pages[NR_LRU_LISTS];
+-	int lru;
+ 
+ /*
+  * display in kilobytes.
+@@ -39,16 +39,19 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 	allowed = ((totalram_pages - hugetlb_total_pages())
+ 		* sysctl_overcommit_ratio / 100) + total_swap_pages;
+ 
++	memcg_meminfo(&i);
+ 	cached = global_page_state(NR_FILE_PAGES) -
+ 			total_swapcache_pages - i.bufferram;
++	/*
++	 * If 'current' is in root memory cgroup, returns global status.
++	 * If not, returns the status of memcg under which current runs.
++	 */
++	sys_page_state(pages, &cached);
+ 	if (cached < 0)
+ 		cached = 0;
+ 
+ 	get_vmalloc_info(&vmi);
+ 
+-	for (lru = LRU_BASE; lru < NR_LRU_LISTS; lru++)
+-		pages[lru] = global_page_state(NR_LRU_BASE + lru);
+-
+ 	/*
+ 	 * Tagged format, for easy grepping and expansion.
+ 	 */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0316197..6220764 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -21,6 +21,7 @@
+ #define _LINUX_MEMCONTROL_H
+ #include <linux/cgroup.h>
+ #include <linux/vm_event_item.h>
++#include <linux/mm.h>
+ 
+ struct mem_cgroup;
+ struct page_cgroup;
+@@ -116,6 +117,9 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *,
+ 				   struct mem_cgroup_reclaim_cookie *);
+ void mem_cgroup_iter_break(struct mem_cgroup *, struct mem_cgroup *);
+ 
++extern void memcg_meminfo(struct sysinfo *si);
++extern void sys_page_state(unsigned long *page, long *cached);
++
+ /*
+  * For memory reclaim.
+  */
+@@ -323,6 +327,17 @@ static inline void mem_cgroup_iter_break(struct mem_cgroup *root,
+ {
+ }
+ 
++static inline void memcg_meminfo(struct sysinfo *si)
++{
++}
++
++static inline void sys_page_state(unsigned long *pages, long *cached)
++{
++	int lru;
++	for (lru = LRU_BASE; lru < NR_LRU_LISTS; lru++)
++		pages[lru] = global_page_state(NR_LRU_BASE + lru);
++}
++
+ static inline bool mem_cgroup_disabled(void)
+ {
+ 	return true;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f142ea9..c25e160 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -52,6 +52,7 @@
+ #include "internal.h"
+ #include <net/sock.h>
+ #include <net/tcp_memcontrol.h>
++#include <linux/pid_namespace.h>
+ 
+ #include <asm/uaccess.h>
+ 
+@@ -4345,6 +4346,61 @@ mem_cgroup_get_total_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
+ 		mem_cgroup_get_local_stat(iter, s);
+ }
+ 
++void memcg_meminfo(struct sysinfo *val)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_task(current);
++	__kernel_ulong_t totalram, totalswap;
++	if (current->nsproxy->pid_ns == &init_pid_ns ||
++	    memcg == NULL || mem_cgroup_is_root(memcg))
++		return;
++
++	totalram = res_counter_read_u64(&memcg->res,
++					RES_LIMIT) >> PAGE_SHIFT;
++	if (totalram < val->totalram) {
++		__kernel_ulong_t usageram;
++		usageram = res_counter_read_u64(&memcg->res,
++						RES_USAGE) >> PAGE_SHIFT;
++		val->totalram = totalram;
++		val->freeram = totalram - usageram;
++		val->bufferram = 0;
++		val->totalhigh = 0;
++		val->freehigh = 0;
++	} else
++		return;
++
++	totalswap = res_counter_read_u64(&memcg->memsw,
++					 RES_LIMIT) >> PAGE_SHIFT;
++	if (totalswap < val->totalswap) {
++		__kernel_ulong_t usageswap;
++		usageswap = res_counter_read_u64(&memcg->memsw,
++						 RES_USAGE) >> PAGE_SHIFT;
++		val->totalswap = totalswap - val->totalram;
++		val->freeswap = totalswap - usageswap - val->freeram;
++	}
++}
++
++void sys_page_state(unsigned long *pages, long *cached)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_task(current);
++
++	if (current->nsproxy->pid_ns == &init_pid_ns ||
++	    memcg == NULL || mem_cgroup_is_root(memcg)) {
++		int lru;
++		for (lru = LRU_BASE; lru < NR_LRU_LISTS; lru++)
++			pages[lru] = global_page_state(NR_LRU_BASE + lru);
++	} else {
++		struct mcs_total_stat s;
++		memset(&s, 0, sizeof(s));
++		mem_cgroup_get_total_stat(memcg, &s);
++		*cached = s.stat[MCS_CACHE] >> PAGE_SHIFT;
++		pages[LRU_ACTIVE_ANON] = s.stat[MCS_ACTIVE_ANON] >> PAGE_SHIFT;
++		pages[LRU_ACTIVE_FILE] = s.stat[MCS_ACTIVE_FILE] >> PAGE_SHIFT;
++		pages[LRU_INACTIVE_ANON] = s.stat[MCS_INACTIVE_ANON] >> PAGE_SHIFT;
++		pages[LRU_INACTIVE_FILE] = s.stat[MCS_INACTIVE_FILE] >> PAGE_SHIFT;
++		pages[LRU_UNEVICTABLE] = s.stat[MCS_UNEVICTABLE] >> PAGE_SHIFT;
++	}
++}
++
+ #ifdef CONFIG_NUMA
+ static int mem_control_numa_stat_show(struct seq_file *m, void *arg)
+ {
+-- 
+1.7.7.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
