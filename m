@@ -1,34 +1,63 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v3 1/6] measure exec_clock for rt sched entities
-Date: Wed, 30 May 2012 14:42:35 +0400
-Message-ID: <4FC5F99B.2060109@parallels.com>
-References: <1338371317-5980-1-git-send-email-glommer@parallels.com>   <1338371317-5980-2-git-send-email-glommer@parallels.com>  <1338373759.26856.238.camel@twins> <4FC5F727.2040804@parallels.com> <1338374555.26856.243.camel@twins>
+From: Paul Turner <pjt@google.com>
+Subject: Re: [PATCH v3 2/6] account guest time per-cgroup as well.
+Date: Wed, 30 May 2012 03:46:13 -0700
+Message-ID: <CAPM31RJjMZ4ZJP_=_nGLk8AeBvzZ+PhEpjXxEb2Ko_0f7dsdgg@mail.gmail.com>
+References: <1338371317-5980-1-git-send-email-glommer@parallels.com>
+ <1338371317-5980-3-git-send-email-glommer@parallels.com> <1338373947.26856.240.camel@twins>
+ <4FC5F82B.6030404@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1338374555.26856.243.camel@twins>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=zUnaBM7sMFQShXfBkb7RL3fCTzzWNGCBEJzP4PJzTJc=;
+        b=AZCzrNMQmleHMFnsVpIzokC5W8nkR49IgtI/cUYjhE2CmFAe6Jxe0VprKjPvSBWGZV
+         UeHWBHUjTNRm6rgIdF9/9jcwnVI6kDxpS7eRyTTHxAMcanhpp0BOyMzp2CzGzSfaB9Eb
+         aenbfC8GEfCYQ8YiwScpknpGslcuPgCngDaCl1JPsFt5N6FHx4SBX+XoLQR7jKzfHUER
+         2L8xyO3gBbaPU+41/0N70hO/1fmci7j3LIUmLwJ3+2yza2GoqjK8qHg30skYFDHP8lOj
+         zfYbgln6Q/mVcDLMOJ+nalhWNLjs1mpQCE0FxvBrAvRpAbIcNx8n2+50WoZuj6IUMFsT
+         oGmQ==
+In-Reply-To: <4FC5F82B.6030404@parallels.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Glauber Costa <glommer@parallels.com>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, devel@openvz.org, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, handai.szj@gmail.com, Andrew.Phillips@lmax.com, Serge Hallyn <serge.hallyn@canonical.com>
 
-On 05/30/2012 02:42 PM, Peter Zijlstra wrote:
-> On Wed, 2012-05-30 at 14:32 +0400, Glauber Costa wrote:
->>>> +    for_each_sched_rt_entity(rt_se) {
->>>> +            rt_rq = rt_rq_of_se(rt_se);
->>>> +            schedstat_add(rt_rq, exec_clock, delta_exec);
->>>> +    }
->>>> +
->>>>       if (!rt_bandwidth_enabled())
->>>>               return;
->>>
->>> See, this just makes me sad.. you now have a double
->>> for_each_sched_rt_entity() loop.
+On Wed, May 30, 2012 at 3:36 AM, Glauber Costa <glommer@parallels.com> =
+wrote:
+> On 05/30/2012 02:32 PM, Peter Zijlstra wrote:
 >>
->> The way I read the rt.c code, it it is called from enqueue_task_rt only
->> once.
+>> On Wed, 2012-05-30 at 13:48 +0400, Glauber Costa wrote:
+>>>
+>>> > =A0We already track multiple tick statistics per-cgroup, using
+>>> > =A0the task_group_account_field facility. This patch accounts
+>>> > =A0guest_time in that manner as well.
+>>
+>> So this leaves IOWAIT and IDLE the only fields not using
+>> task_group_account_field(), right?
 >
-> Ah, what I meant was, right after that !rt_bandwidth_enabled() muck we
-> do another for_each_sched_rt_entity() walk.
-I guess I can fold it there...
+>
+> Yes, because they are essentially global, and their meaning is ill-de=
+fined
+> from within a cgroup.
+>
+> If you look further out in the patchset, I intend to export idle from=
+ cpu,
+> instead of cpuacct, because something that can be used as idle value =
+is
+> already computed anyway from the schedstats, so I'm just using it.
+>
+> iowait will be left blank for now. Me and Paul agreed last time we ta=
+lked
+> that it is not uber important to have iowait values per-cgroup.
+
+Stronger:  it lacks a definition you can sanely measure without atomic
+counters everywhere (similarly for group-idle).
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
