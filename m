@@ -1,35 +1,43 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
-Date: Wed, 30 May 2012 10:37:49 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1205301036220.28968@router.home>
-References: <alpine.DEB.2.00.1205291101580.6723@router.home> <4FC501E9.60607@parallels.com> <alpine.DEB.2.00.1205291222360.8495@router.home> <4FC506E6.8030108@parallels.com> <alpine.DEB.2.00.1205291424130.8495@router.home> <4FC52612.5060006@parallels.com>
- <alpine.DEB.2.00.1205291454030.2504@router.home> <4FC52CC6.7020109@parallels.com> <alpine.DEB.2.00.1205291514090.2504@router.home> <4FC530C0.30509@parallels.com> <20120530012955.GA4854@google.com> <4FC5D228.2070100@parallels.com>
- <CAOS58YPqOBgmXQia5wM1FKKj5zD2K6gbC3EyQyppFnVSM2i-gQ@mail.gmail.com>
+From: Ted Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
+Subject: Re: [PATCH 10/12] container quota: bill container inodes
+	alloc/free on ext4.
+Date: Wed, 30 May 2012 11:55:43 -0400
+Message-ID: <20120530155543.GB13236@thunk.org>
+References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com>
+	<1338389946-13711-11-git-send-email-jeff.liu@oracle.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1338392274; bh=CL9Q7LB6S9Ia3YZPsBpTU8ALKlrAWHuHH97L03QB0+0=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=DbINdVRuH+pb3vU3SdeqEo/cHH83jUzivaiWb2cuBAXvYOx7offUuEQQd8LXqDB/IZoKFvcnAPne1Kymd8IPKmNxNwPEojDlq0dPG/Tc9ui10xvi8NfvdXwhLLJ67AeErWyFX5Vy9BFJhCq+Mi7tKeICfoXgYy2dvBlkIks9//I=
-In-Reply-To: <CAOS58YPqOBgmXQia5wM1FKKj5zD2K6gbC3EyQyppFnVSM2i-gQ@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1338389946-13711-11-git-send-email-jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bpm-sJ/iWh9BUns@public.gmane.org, christopher.jones-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tm-d1IQDZat3X0@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tinguely-sJ/iWh9BUns@public.gmane.org
 
-On Wed, 30 May 2012, Tejun Heo wrote:
+On Wed, May 30, 2012 at 10:59:04PM +0800, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org wrote:
+>  	dquot_free_inode(inode);
+> +	ns_dquot_free_inode(inode);
 
-> Yeah, I prefer your per-cg cache approach but do hope that it stays as
-> far from actual allocator code as possible. Christoph, would it be
-> acceptable if the cg logic is better separated?
+It looks like you are adding ns_dquot_<foo>() with exactly the same
+arguments after dquot_<foo>() calls, for various values of <foo>.
 
-Certainly anything that would allow this to be separated out would be
-appreciated. I do not anticipate to ever run cgroup in my environment and
-that is due to the additional latency created in key OS paths. Memory we
-have enough. The increased cache footprint is killing performance.
+Instead of needing to change all of the file systems, would it be
+possible simply to change the quota layer to call the ns_dquot_*
+functions?  It might make your life simpler, and it would certainly
+reduce the number of filesystem maintainers that would need to look
+through and review your changes.  You'd just have to work with Jan
+Kara as the quota system maintainer.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Regards,
+
+						- Ted
