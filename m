@@ -1,47 +1,57 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 0/6] per cgroup /proc/stat statistics
-Date: Wed, 30 May 2012 13:48:31 +0400
-Message-ID: <1338371317-5980-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v3 2/6] account guest time per-cgroup as well.
+Date: Wed, 30 May 2012 13:48:33 +0400
+Message-ID: <1338371317-5980-3-git-send-email-glommer@parallels.com>
+References: <1338371317-5980-1-git-send-email-glommer@parallels.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1338371317-5980-1-git-send-email-glommer@parallels.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, devel@openvz.org, Paul Turner <pjt@google.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, handai.szj@gmail.com, Andrew.Phillips@lmax.com, Serge Hallyn <serge.hallyn@canonical.com>, Glauber Costa <glommer@parallels.com>
 
-Hi
+We already track multiple tick statistics per-cgroup, using
+the task_group_account_field facility. This patch accounts
+guest_time in that manner as well.
 
-This is a rework of my v2 series taking into account Paul
-Turner's comments. All the series is the same except for
-the patch that collets nr_switches that is now completely reworked.
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+CC: Peter Zijlstra <a.p.zijlstra@chello.nl>
+CC: Paul Turner <pjt@google.com>
+---
+ kernel/sched/core.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-It is out of schedule(), relegated to a scheduler hook. Only difference
-from Paul's suggestion is that I added a new one, instead of messing with
-put_prev_task + pick_next_task pairs. In the patchset that adds it,
-I'll try to argue for my solution.
-
-Hope this is acceptable, and please let me know of any other concerns.
-
-v2:
-* completely reworked nr_switches gathering
-* separated per-se sleep_start to be more clear about it
-
-Glauber Costa (6):
-  measure exec_clock for rt sched entities
-  account guest time per-cgroup as well.
-  expose fine-grained per-cpu data for cpuacct stats
-  add a new scheduler hook for context switch
-  Also record sleep start for a task group
-  expose per-taskgroup schedstats in cgroup
-
- include/linux/sched.h |    1 +
- kernel/sched/core.c   |  166 +++++++++++++++++++++++++++++++++++++++++++++++--
- kernel/sched/fair.c   |   42 ++++++++++++-
- kernel/sched/rt.c     |   20 ++++++
- kernel/sched/sched.h  |    6 ++
- 5 files changed, 228 insertions(+), 7 deletions(-)
-
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 39eb601..220d416 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2717,8 +2717,6 @@ void account_user_time(struct task_struct *p, cputime_t cputime,
+ static void account_guest_time(struct task_struct *p, cputime_t cputime,
+ 			       cputime_t cputime_scaled)
+ {
+-	u64 *cpustat = kcpustat_this_cpu->cpustat;
+-
+ 	/* Add guest time to process. */
+ 	p->utime += cputime;
+ 	p->utimescaled += cputime_scaled;
+@@ -2727,11 +2725,11 @@ static void account_guest_time(struct task_struct *p, cputime_t cputime,
+ 
+ 	/* Add guest time to cpustat. */
+ 	if (TASK_NICE(p) > 0) {
+-		cpustat[CPUTIME_NICE] += (__force u64) cputime;
+-		cpustat[CPUTIME_GUEST_NICE] += (__force u64) cputime;
++		task_group_account_field(p, CPUTIME_NICE, (__force u64) cputime);
++		task_group_account_field(p, CPUTIME_GUEST, (__force u64) cputime);
+ 	} else {
+-		cpustat[CPUTIME_USER] += (__force u64) cputime;
+-		cpustat[CPUTIME_GUEST] += (__force u64) cputime;
++		task_group_account_field(p, CPUTIME_USER, (__force u64) cputime);
++		task_group_account_field(p, CPUTIME_GUEST, (__force u64) cputime);
+ 	}
+ }
+ 
 -- 
 1.7.10.2
