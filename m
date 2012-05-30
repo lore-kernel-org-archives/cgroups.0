@@ -1,66 +1,34 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v3 5/6] Also record sleep start for a task group
-Date: Wed, 30 May 2012 16:24:40 +0400
-Message-ID: <4FC61188.8000908@parallels.com>
-References: <1338371317-5980-1-git-send-email-glommer@parallels.com> <1338371317-5980-6-git-send-email-glommer@parallels.com> <CAPM31R+VXsffUOSOtMPG=g+G9OdzWMKQvx9usTFa3KBbrqPe6A@mail.gmail.com>
+Subject: Re: [PATCH v3 16/28] memcg: kmem controller charge/uncharge infrastructure
+Date: Wed, 30 May 2012 16:26:28 +0400
+Message-ID: <4FC611F4.7010202@parallels.com>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-17-git-send-email-glommer@parallels.com> <20120530121706.GB25094@somewhere.redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAPM31R+VXsffUOSOtMPG=g+G9OdzWMKQvx9usTFa3KBbrqPe6A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20120530121706.GB25094-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-On 05/30/2012 03:35 PM, Paul Turner wrote:
-> On Wed, May 30, 2012 at 2:48 AM, Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>  wrote:
->> When we're dealing with a task group, instead of a task, also record
->> the start of its sleep time. Since the test agains TASK_UNINTERRUPTIBLE
->> does not really make sense and lack an obvious analogous, we always
->> record it as sleep_start, never block_start.
->>
->> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> CC: Peter Zijlstra<a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
->> CC: Paul Turner<pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->> ---
->>   kernel/sched/fair.c |    3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
->> index c26fe38..d932559 100644
->> --- a/kernel/sched/fair.c
->> +++ b/kernel/sched/fair.c
->> @@ -1182,7 +1182,8 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
->>                                 se->statistics.sleep_start = rq_of(cfs_rq)->clock;
->>                         if (tsk->state&  TASK_UNINTERRUPTIBLE)
->>                                 se->statistics.block_start = rq_of(cfs_rq)->clock;
->> -               }
->> +               } else
->> +                       se->statistics.sleep_start = rq_of(cfs_rq)->clock;
+On 05/30/2012 04:17 PM, Frederic Weisbecker wrote:
+> On Fri, May 25, 2012 at 05:03:36PM +0400, Glauber Costa wrote:
+>>   #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+>> +static __always_inline struct kmem_cache *
+>> +mem_cgroup_get_kmem_cache(struct kmem_cache *cachep, gfp_t gfp)
+>> +{
+>> +	if (!mem_cgroup_kmem_on)
+>> +		return cachep;
+>> +	if (!current->mm)
+>> +		return cachep;
+>> +	if (in_interrupt())
+>> +		return cachep;
 >
-> You can't sanely account sleep on a group entity.
->
-> Suppose you have 2 sleepers on 1 cpu: you account 1s/s of idle
-> Suppose you have 2 sleepers now on 2 cpus: you account 2s/s of idle
->
-> Furthermore, in the latter case when one wakes up you still continue
-> to accrue sleep time whereas in the former you don't.
->
-> Just don't report/collect this.
+> Does that mean interrupts are kept out of accounting?
 
-sleep_start is not for iowait. This is for idle. And I know no other way 
-to collect idle time per cgroup, other than the time during which it was 
-out of the runqueue.
-
-Now what you say about the sleepers don't make that much sense for idle 
-because this information is per-cpu as well.
-
-When the se is being dequeued, it means none of its children is running 
-on that runqueue. That's idle.
->>   #endif
->>         }
->>
->> --
->> 1.7.10.2
->>
+Well, since interrupts have no process context, if you are in an 
+interrupt I can't think of any sane thing to do than relay it to the 
+root memcg. That's what happen when I return cachep: I return the 
+original parent cache, and we allocate from that.
