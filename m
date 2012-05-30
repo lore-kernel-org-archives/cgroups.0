@@ -1,93 +1,97 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
-Date: Wed, 30 May 2012 17:02:35 +0900
-Message-ID: <CAOS58YPqOBgmXQia5wM1FKKj5zD2K6gbC3EyQyppFnVSM2i-gQ@mail.gmail.com>
-References: <alpine.DEB.2.00.1205291101580.6723@router.home>
-	<4FC501E9.60607@parallels.com>
-	<alpine.DEB.2.00.1205291222360.8495@router.home>
-	<4FC506E6.8030108@parallels.com>
-	<alpine.DEB.2.00.1205291424130.8495@router.home>
-	<4FC52612.5060006@parallels.com>
-	<alpine.DEB.2.00.1205291454030.2504@router.home>
-	<4FC52CC6.7020109@parallels.com>
-	<alpine.DEB.2.00.1205291514090.2504@router.home>
-	<4FC530C0.30509@parallels.com>
-	<20120530012955.GA4854@google.com>
-	<4FC5D228.2070100@parallels.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v3 3/6] expose fine-grained per-cpu data for cpuacct stats
+Date: Wed, 30 May 2012 13:48:34 +0400
+Message-ID: <1338371317-5980-4-git-send-email-glommer@parallels.com>
+References: <1338371317-5980-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type
-         :content-transfer-encoding;
-        bh=ntEBM6MF20rpMHZzP00CyhEp0qdMkK3He8mUwi41ICs=;
-        b=TmrQNXtX4mjCknjAbfyLScgwU2V5DzzxucYruW02Hn/z8d9/t0i0wkmAdtiL/wt9RX
-         l+kpWBbP60rjVd7d4zS0P2Zt7k/7xarqUhqOYIvnGrVMCDK5rVaCg5cigPMxxhJQGN0m
-         Ln0JHn5iXeoIjlJ7Al1SIxsyqvV3DMvJhxIipLORV9Yi3bYk/TX8/Jovp9l66AwgEOQY
-         gaZx8SGjliaE7GsYc5Zd10ZkpTHf+XQbGXgCcoWzRox2PPG3/2JpCLiFqXh1jqMEZrqV
-         1Xmo+oOsORtT2tf31x1jPOdKfnTEDXKZzZMVsTIDjB5qX4ZSRyYPk2ev27MR3Qxy/pSw
-         Jl1w==
-In-Reply-To: <4FC5D228.2070100-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1338371317-5980-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Hello, Glauber.
+The cpuacct cgroup already exposes user and system numbers in a per-cgroup
+fashion. But they are a summation along the whole group, not a per-cpu figure.
+Also, they are coarse-grained version of the stats usually shown at places
+like /proc/stat.
 
-On Wed, May 30, 2012 at 4:54 PM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> =
-wrote:
-> On 05/30/2012 05:29 AM, Tejun Heo wrote:
->>
->> The two goals for cgroup controllers that I think are important are
->> proper (no, not crazy perfect but good enough) isolation and an
->> implementation which doesn't impact !cg path in an intrusive manner =
--
->> if someone who doesn't care about cgroup but knows and wants to work
->> on the subsystem should be able to mostly ignore cgroup support. =A0=
-If
->> that means overhead for cgroup users, so be it.
->
->
-> Well, my code in the slab is totally wrapped in static branches. They=
- only
-> come active when the first group is *limited* (not even created: you =
-can
-> have a thousand memcg, if none of them are kmem limited, nothing will
-> happen).
+I want to have enough cgroup data to emulate the /proc/stat interface. To
+achieve that, I am creating a new file "stat_percpu" that displays the
+fine-grained per-cpu data. The original data is left alone.
 
-Great, but I'm not sure why you're trying to emphasize that while my
-point was about memory overhead and that it's OK to have some
-overheads for cg users. :)
+The format of this file resembles the one found in the usual cgroup's stat
+files. But of course, the fields will be repeated, one per cpu, and prefixed
+with the cpu number.
 
-> After that, the cost paid is to find out at which cgroup the process =
-is at.
-> I believe that if we had a faster way for this (like for instance: if=
- we had
-> a single hierarchy, the scheduler could put this in a percpu variable=
- after
-> context switch - or any other method), then the cost of it could be r=
-eally
-> low, even when this is enabled.
+Therefore, we'll have something like:
 
-Someday, hopefully.
+  cpu0.user X
+  cpu0.system Y
+  ...
+  cpu1.user X1
+  cpu1.system Y1
+  ...
 
-> I will rework this series to try work more towards this goal, but at =
-least
-> for now I'll keep duplicating the caches. I still don't believe that =
-a loose
-> accounting to the extent Christoph proposed will achieve what we need=
- this
-> to achieve.
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/sched/core.c |   33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-Yeah, I prefer your per-cg cache approach but do hope that it stays as
-far from actual allocator code as possible. Christoph, would it be
-acceptable if the cg logic is better separated?
-
-Thanks.
-
---=20
-tejun
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 220d416..4c1d7e9 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -8178,6 +8178,35 @@ static int cpuacct_stats_show(struct cgroup *cgrp, struct cftype *cft,
+ 	return 0;
+ }
+ 
++static inline void do_fill_cb(struct cgroup_map_cb *cb, struct cpuacct *ca,
++			      char *str, int cpu, int index)
++{
++	char name[24];
++	struct kernel_cpustat *kcpustat = per_cpu_ptr(ca->cpustat, cpu);
++
++	snprintf(name, sizeof(name), "cpu%d.%s", cpu, str);
++	cb->fill(cb, name, cputime64_to_clock_t(kcpustat->cpustat[index]));
++}
++
++static int cpuacct_stats_percpu_show(struct cgroup *cgrp, struct cftype *cft,
++				     struct cgroup_map_cb *cb)
++{
++	struct cpuacct *ca = cgroup_ca(cgrp);
++	int cpu;
++
++	for_each_online_cpu(cpu) {
++		do_fill_cb(cb, ca, "user", cpu, CPUTIME_USER);
++		do_fill_cb(cb, ca, "nice", cpu, CPUTIME_NICE);
++		do_fill_cb(cb, ca, "system", cpu, CPUTIME_SYSTEM);
++		do_fill_cb(cb, ca, "irq", cpu, CPUTIME_IRQ);
++		do_fill_cb(cb, ca, "softirq", cpu, CPUTIME_SOFTIRQ);
++		do_fill_cb(cb, ca, "guest", cpu, CPUTIME_GUEST);
++		do_fill_cb(cb, ca, "guest_nice", cpu, CPUTIME_GUEST_NICE);
++	}
++
++	return 0;
++}
++
+ static struct cftype files[] = {
+ 	{
+ 		.name = "usage",
+@@ -8192,6 +8221,10 @@ static struct cftype files[] = {
+ 		.name = "stat",
+ 		.read_map = cpuacct_stats_show,
+ 	},
++	{
++		.name = "stat_percpu",
++		.read_map = cpuacct_stats_percpu_show,
++	},
+ 	{ }	/* terminate */
+ };
+ 
+-- 
+1.7.10.2
