@@ -1,232 +1,220 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 6/6] expose per-taskgroup schedstats in cgroup
-Date: Wed, 30 May 2012 13:48:37 +0400
-Message-ID: <1338371317-5980-7-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v3 4/6] add a new scheduler hook for context switch
+Date: Wed, 30 May 2012 13:48:35 +0400
+Message-ID: <1338371317-5980-5-git-send-email-glommer@parallels.com>
 References: <1338371317-5980-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1338371317-5980-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1338371317-5980-1-git-send-email-glommer@parallels.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, devel@openvz.org, Paul Turner <pjt@google.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, handai.szj@gmail.com, Andrew.Phillips@lmax.com, Serge Hallyn <serge.hallyn@canonical.com>, Glauber Costa <glommer@parallels.com>
 
-This patch aims at exposing stat information per-cgroup, such as:
- * idle time,
- * iowait time,
- * steal time,
- * # context switches
-and friends. The ultimate goal is to be able to present a per-container view of
-/proc/stat inside a container. With this patch, everything that is needed to do
-that is in place, except for number of tasks.
+To be able to count the number of switches per-cgroup, and merging
+Paul's hint that it would be better to do it in fair.c and rt.c,
+I am introducing a new write-side walk through a new scheduler hook,
+called at every context switch away from a task (prev).
 
-For most of the data, I achieve that by hooking into the schedstats framework,
-so although the overhead of that is prone to discussion, I am not adding anything,
-but reusing what's already there instead. The exception being that the data is
-now computed and stored in non-task se's as well, instead of entity_is_task() branches.
-However, I expect this to be minimum comparing to the alternative of adding new
-hierarchy walks. Those are kept intact.
+Read-side is greatly simplified, and as I'll show, the performance impact
+does not seem huge. First, aside from the function call, this walk is
+O(depth), which is not likely to be huge (if it is, the performance
+impact is indeed bad - but one can argue this is a good punishment)
 
-The format of the new file added is the same as the one recently
-introduced for cpuacct:
+Also, this walk is likely to be cache-hot, since it is at most the very
+same loop done by put_prev_task, except it loops depth - 1 instead of depth
+times. This is specially important not to hurt tasks in the root cgroup,
+that will pay just a branch.
 
-  cpu0.idle X
-  cpu0.steal Y
-  ...
-  cpu1.idle X1
-  cpu1.steal Y1
-  ...
+I am introducing a new hook, because the existing ones didn't seem
+appropriate. The main possibilities would be put_prev_task and
+pick_next_task.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+With pick_next_task, there are two main problems:
+
+1) first, the loop is only cache hot in pick_next_task if tasks actually
+belong to the same class and group as prev. Depending on the workload,
+this is possibly unlikely.
+
+2) This is vulnerable to wrongdoings in accountings when exiting to idle.
+Consider two groups A and B with a following pattern: A exits to idle,
+but after that, B is scheduled. B, on the other hand, always get back
+to itself when it yields to idle. This means that the to-idle transition
+in A is never noted.
+
+So because of that, I do believe that prev is the right point of that.
+
+However, put_prev_task is called many times from multiple places,
+and the logic to differentiate a context switch from another kind of
+put would make a mess out of it.
+
+On a 4-way x86_64, hackbench -pipe 1 process 4000 shows the following results:
+- units are seconds to complete the whole benchmark
+- percentual stdev for easier assesment
+
+Task sitting in the root cgroup:
+Without patchset: 4.857700 (0.69 %)
+With    patchset: 4.863700 (0.63 %)
+Difference      : 0.12 %
+
+Task sitting in a 3-level depth cgroup:
+Without patchset: 5.120867 (1.60 %)
+With    patchset: 5.113800 (0.41 %)
+Difference      : 0.13 %
+
+Task sitting in a 30-level depth cgroup (totally crazy scenario):
+Without patchset: 8.829385 (2.63 %)
+With    patchset: 9.975467 (2.80 %)
+Difference      : 12 %
+
+For any sane use case, the user is unlikely to be nesting for much more than
+3-levels. For that, and for the important case for most people, the difference
+is inside the standard deviation and can be said to be negligible.
+
+Although the patch does add a penalty, it only does that for
+deeply nested scenarios (but those are already paying a 100 % penalty
+against no-nesting even without the patchset!)
+
+I hope this approach is acceptable.
+
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+CC: Peter Zijlstra <a.p.zijlstra@chello.nl>
+CC: Paul Turner <pjt@google.com>
 ---
- kernel/sched/core.c  |  114 ++++++++++++++++++++++++++++++++++++++++++++++++++
- kernel/sched/fair.c  |   24 +++++++++++
- kernel/sched/sched.h |    2 +
- 3 files changed, 140 insertions(+)
+ include/linux/sched.h |    1 +
+ kernel/sched/core.c   |    9 +++++++++
+ kernel/sched/fair.c   |   15 +++++++++++++++
+ kernel/sched/rt.c     |   15 +++++++++++++++
+ kernel/sched/sched.h  |    3 +++
+ 5 files changed, 43 insertions(+)
 
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index f45c0b2..d28d6ec 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1084,6 +1084,7 @@ struct sched_class {
+ 
+ 	struct task_struct * (*pick_next_task) (struct rq *rq);
+ 	void (*put_prev_task) (struct rq *rq, struct task_struct *p);
++	void (*context_switch) (struct rq *rq, struct task_struct *p);
+ 
+ #ifdef CONFIG_SMP
+ 	int  (*select_task_rq)(struct task_struct *p, int sd_flag, int flags);
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index db4f2c3..9c344d3 100644
+index 4c1d7e9..db4f2c3 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -7969,6 +7969,107 @@ static u64 cpu_rt_period_read_uint(struct cgroup *cgrp, struct cftype *cft)
- }
- #endif /* CONFIG_RT_GROUP_SCHED */
+@@ -1894,6 +1894,14 @@ fire_sched_out_preempt_notifiers(struct task_struct *curr,
  
-+#ifdef CONFIG_SCHEDSTATS
-+
-+#ifdef CONFIG_FAIR_GROUP_SCHED
-+#define fair_rq(field, tg, i)  tg->cfs_rq[i]->field
-+#else
-+#define fair_rq(field, tg, i)  0
+ #endif /* CONFIG_PREEMPT_NOTIFIERS */
+ 
++static void sched_class_context_switch(struct rq *rq, struct task_struct *prev)
++{
++#if defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED)
++	if (prev->sched_class->context_switch)
++		prev->sched_class->context_switch(rq, prev);
 +#endif
-+
-+#ifdef CONFIG_RT_GROUP_SCHED
-+#define rt_rq(field, tg, i)  tg->rt_rq[i]->field
-+#else
-+#define rt_rq(field, tg, i)  0
-+#endif
-+
-+static u64 tg_nr_switches(struct task_group *tg, int cpu)
-+{
-+	if (tg != &root_task_group)
-+		return rt_rq(rt_nr_switches, tg, cpu) + fair_rq(nr_switches, tg, cpu);
-+
-+	return cpu_rq(cpu)->nr_switches;
 +}
 +
-+static u64 tg_nr_running(struct task_group *tg, int cpu)
-+{
-+	/*
-+	 * because of autogrouped groups in root_task_group, the
-+	 * following does not hold.
-+	 */
-+	if (tg != &root_task_group)
-+		return rt_rq(rt_nr_running, tg, cpu) + fair_rq(nr_running, tg, cpu);
-+
-+	return cpu_rq(cpu)->nr_running;
-+}
-+
-+static u64 tg_idle(struct task_group *tg, int cpu)
-+{
-+	u64 val;
-+
-+	if (tg != &root_task_group) {
-+		val = cfs_read_sleep(tg->se[cpu]);
-+		/* If we have rt tasks running, we're not really idle */
-+		val -= rt_rq(exec_clock, tg, cpu);
-+	} else
-+		/*
-+		 * There are many errors here that we are accumulating.
-+		 * However, we only provide this in the interest of having
-+		 * a consistent interface for all cgroups. Everybody
-+		 * probing the root cgroup should be getting its figures
-+		 * from system-wide files as /proc/stat. That would be faster
-+		 * to begin with...
-+		 *
-+		 * Ditto for steal.
-+		 */
-+		val = kcpustat_cpu(cpu).cpustat[CPUTIME_IDLE] * TICK_NSEC;
-+
-+	return val;
-+}
-+
-+static u64 tg_steal(struct task_group *tg, int cpu)
-+{
-+	u64 val;
-+
-+	if (tg != &root_task_group)
-+		val = cfs_read_wait(tg->se[cpu]);
-+	else
-+		val = kcpustat_cpu(cpu).cpustat[CPUTIME_STEAL] * TICK_NSEC;
-+
-+	return val;
-+}
-+
-+static int cpu_stats_percpu_show(struct cgroup *cgrp, struct cftype *cft,
-+				 struct cgroup_map_cb *cb)
-+{
-+	struct task_group *tg = cgroup_tg(cgrp);
-+	int cpu;
-+	/*
-+	 * should be enough to hold:
-+	 * "cpu" (len = 3)
-+	 * "nr_switches" (len = 11, biggest string so far
-+	 * 4 bytes for the cpu number, up to 9999 cpus
-+	 * dot character and NULL termination,
-+	 *
-+	 * and still be small enough for the stack
-+	 */
-+	char name[24];
-+
-+	for_each_online_cpu(cpu) {
-+		snprintf(name, sizeof(name), "cpu%d.idle", cpu);
-+		cb->fill(cb, name, tg_idle(tg, cpu));
-+		snprintf(name, sizeof(name), "cpu%d.steal", cpu);
-+		cb->fill(cb, name, tg_steal(tg, cpu));
-+		snprintf(name, sizeof(name), "cpu%d.nr_switches", cpu);
-+		cb->fill(cb, name, tg_nr_switches(tg, cpu));
-+		snprintf(name, sizeof(name), "cpu%d.nr_running", cpu);
-+		cb->fill(cb, name, tg_nr_running(tg, cpu));
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
- static struct cftype cpu_files[] = {
- #ifdef CONFIG_FAIR_GROUP_SCHED
- 	{
-@@ -7976,6 +8077,19 @@ static struct cftype cpu_files[] = {
- 		.read_u64 = cpu_shares_read_u64,
- 		.write_u64 = cpu_shares_write_u64,
- 	},
-+/*
-+ * In theory, those could be done using the rt tasks as a basis
-+ * as well. Since we're interested in figures like idle, iowait, etc
-+ * for the whole cgroup, the results should be the same.
-+ * But that only complicates the code, and I doubt anyone using !FAIR_GROUP_SCHED
-+ * is terribly interested in those.
-+ */
-+#ifdef CONFIG_SCHEDSTATS
-+	{
-+		.name = "stat_percpu",
-+		.read_map = cpu_stats_percpu_show,
-+	},
-+#endif
- #endif
- #ifdef CONFIG_CFS_BANDWIDTH
- 	{
+ /**
+  * prepare_task_switch - prepare to switch tasks
+  * @rq: the runqueue preparing to switch
+@@ -1911,6 +1919,7 @@ static inline void
+ prepare_task_switch(struct rq *rq, struct task_struct *prev,
+ 		    struct task_struct *next)
+ {
++	sched_class_context_switch(rq, prev);
+ 	sched_info_switch(prev, next);
+ 	perf_event_task_sched_out(prev, next);
+ 	fire_sched_out_preempt_notifiers(prev, next);
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index d932559..7145c59 100644
+index 940e6d1..c26fe38 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -719,6 +719,30 @@ update_stats_wait_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
- 	schedstat_set(se->statistics.wait_start, rq_of(cfs_rq)->clock);
+@@ -2993,6 +2993,20 @@ static struct task_struct *pick_next_task_fair(struct rq *rq)
+ 	return p;
  }
  
-+#ifdef CONFIG_SCHEDSTATS
-+u64 cfs_read_sleep(struct sched_entity *se)
++static void context_switch_fair(struct rq *rq, struct task_struct *p)
 +{
-+	struct cfs_rq *cfs_rq = se->cfs_rq;
-+	u64 value = se->statistics.sum_sleep_runtime;
++#ifdef CONFIG_FAIR_GROUP_SCHED
++	struct cfs_rq *cfs_rq;
++	struct sched_entity *se = &p->se;
 +
-+	if (!se->statistics.sleep_start)
-+		return value;
-+
-+	return value + rq_of(cfs_rq)->clock - se->statistics.sleep_start;
-+}
-+
-+u64 cfs_read_wait(struct sched_entity *se)
-+{
-+	struct cfs_rq *cfs_rq = se->cfs_rq;
-+	u64 value = se->statistics.wait_sum;
-+
-+	if (!se->statistics.wait_start)
-+		return value;
-+
-+	return value + rq_of(cfs_rq)->clock - se->statistics.wait_start;
-+}
++	while (se->parent) {
++		se = se->parent;
++		cfs_rq = group_cfs_rq(se);
++		cfs_rq->nr_switches++;
++	}
 +#endif
++}
 +
  /*
-  * Task is being enqueued - update stats:
+  * Account for a descheduled task:
   */
+@@ -5255,6 +5269,7 @@ const struct sched_class fair_sched_class = {
+ 	.check_preempt_curr	= check_preempt_wakeup,
+ 
+ 	.pick_next_task		= pick_next_task_fair,
++	.context_switch		= context_switch_fair,
+ 	.put_prev_task		= put_prev_task_fair,
+ 
+ #ifdef CONFIG_SMP
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 30ee4e2..6f416e4 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -1392,6 +1392,20 @@ static struct task_struct *pick_next_task_rt(struct rq *rq)
+ 	return p;
+ }
+ 
++static void context_switch_rt(struct rq *rq, struct task_struct *p)
++{
++#ifdef CONFIG_RT_GROUP_SCHED
++	struct sched_rt_entity *rt_se = &p->rt;
++	struct rt_rq *rt_rq;
++
++	while (rt_se->parent) {
++		rt_se = rt_se->parent;
++		rt_rq = group_rt_rq(rt_se);
++		rt_rq->rt_nr_switches++;
++	}
++#endif
++}
++
+ static void put_prev_task_rt(struct rq *rq, struct task_struct *p)
+ {
+ 	update_curr_rt(rq);
+@@ -2040,6 +2054,7 @@ const struct sched_class rt_sched_class = {
+ 	.check_preempt_curr	= check_preempt_curr_rt,
+ 
+ 	.pick_next_task		= pick_next_task_rt,
++	.context_switch		= context_switch_rt,
+ 	.put_prev_task		= put_prev_task_rt,
+ 
+ #ifdef CONFIG_SMP
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 76f6839..3d8ba03 100644
+index cd2f1e1..76f6839 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -1150,6 +1150,8 @@ extern void init_rt_rq(struct rt_rq *rt_rq, struct rq *rq);
- extern void unthrottle_offline_cfs_rqs(struct rq *rq);
+@@ -237,6 +237,7 @@ struct cfs_rq {
+ 	struct list_head leaf_cfs_rq_list;
+ 	struct task_group *tg;	/* group that "owns" this runqueue */
  
- extern void account_cfs_bandwidth_used(int enabled, int was_enabled);
-+extern u64 cfs_read_sleep(struct sched_entity *se);
-+extern u64 cfs_read_wait(struct sched_entity *se);
++	u64 nr_switches;
+ #ifdef CONFIG_SMP
+ 	/*
+ 	 *   h_load = weight * f(tg)
+@@ -307,6 +308,8 @@ struct rt_rq {
+ 	struct rq *rq;
+ 	struct list_head leaf_rt_rq_list;
+ 	struct task_group *tg;
++
++	u64 rt_nr_switches;
+ #endif
+ };
  
- #ifdef CONFIG_NO_HZ
- enum rq_nohz_flag_bits {
 -- 
 1.7.10.2
