@@ -1,42 +1,53 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 16/28] memcg: kmem controller charge/uncharge
- infrastructure
-Date: Wed, 30 May 2012 14:17:09 +0200
-Message-ID: <20120530121706.GB25094@somewhere.redhat.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
- <1337951028-3427-17-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 3/6] expose fine-grained per-cpu data for cpuacct stats
+Date: Wed, 30 May 2012 16:20:15 +0400
+Message-ID: <4FC6107F.9020802@parallels.com>
+References: <1338371317-5980-1-git-send-email-glommer@parallels.com> <1338371317-5980-4-git-send-email-glommer@parallels.com> <CAPM31RJanAvDB+pZ+h5J3W6KXvAwPgbbeXgw6C_56tx_Mc+cgA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=SZfwRlUNN/nSRr10HN/7+ka8ee9/RcUUWKZ2gLWMLf0=;
-        b=NROPiAy6X0BltXPhDLg3B5+UluDqWX7EB9dMdYlzAZ7q6ScupgFMD7kLKX/7k83F9U
-         /975xUZ9+Bhx+SIrBLDA7/tE7PPpxGqOrmum+Ev7JqQz+oD4XR9LIGTOfUEJpsSE+ZTh
-         6ajp00lyRMBHMDMnc5W9SiFD3lno6qiGbcyVfgXaXZ2okt7U1dcnrJunfnwjOx7Zk0to
-         AauYwalfqwQiPKvpnBqfS0psPmXNBdirpqu21QE3oR6HKQOu4AkSOX35J+BoohrVUG8S
-         lxjii2+gVX7wKAdl3OWRBnXH5jYDBwcK0NpjoF8p9ebhqnKyn/HHyffOhzkG3Q4xTrVJ
-         Iggg==
-Content-Disposition: inline
-In-Reply-To: <1337951028-3427-17-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <CAPM31RJanAvDB+pZ+h5J3W6KXvAwPgbbeXgw6C_56tx_Mc+cgA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Fri, May 25, 2012 at 05:03:36PM +0400, Glauber Costa wrote:
->  #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-> +static __always_inline struct kmem_cache *
-> +mem_cgroup_get_kmem_cache(struct kmem_cache *cachep, gfp_t gfp)
-> +{
-> +	if (!mem_cgroup_kmem_on)
-> +		return cachep;
-> +	if (!current->mm)
-> +		return cachep;
-> +	if (in_interrupt())
-> +		return cachep;
+On 05/30/2012 03:24 PM, Paul Turner wrote:
+>> +static int cpuacct_stats_percpu_show(struct cgroup *cgrp, struct cftype *cft,
+>> >  +                                    struct cgroup_map_cb *cb)
+>> >  +{
+>> >  +       struct cpuacct *ca = cgroup_ca(cgrp);
+>> >  +       int cpu;
+>> >  +
+>> >  +       for_each_online_cpu(cpu) {
+>> >  +               do_fill_cb(cb, ca, "user", cpu, CPUTIME_USER);
+>> >  +               do_fill_cb(cb, ca, "nice", cpu, CPUTIME_NICE);
+>> >  +               do_fill_cb(cb, ca, "system", cpu, CPUTIME_SYSTEM);
+>> >  +               do_fill_cb(cb, ca, "irq", cpu, CPUTIME_IRQ);
+>> >  +               do_fill_cb(cb, ca, "softirq", cpu, CPUTIME_SOFTIRQ);
+>> >  +               do_fill_cb(cb, ca, "guest", cpu, CPUTIME_GUEST);
+>> >  +               do_fill_cb(cb, ca, "guest_nice", cpu, CPUTIME_GUEST_NICE);
+>> >  +       }
+>> >  +
+> I don't know if there's much that can be trivially done about it but I
+> suspect these are a bit of a memory allocation time-bomb on a many-CPU
+> machine.  The cgroup:seq_file mating (via read_map) treats everything
+> as/one/  record.  This means that seq_printf is going to end up
+> eventually allocating a buffer that can fit_everything_  (as well as
+> every power-of-2 on the way there).  Adding insult to injury is that
+> that the backing buffer is kmalloc() not vmalloc().
+>
+> 200+ bytes per-cpu above really is not unreasonable (46 bytes just for
+> the text, plus a byte per base 10 digit we end up reporting), but that
+> then  leaves us looking at order-12/13 allocations just to print this
+> thing when there are O(many) cpus.
+>
 
-Does that mean interrupts are kept out of accounting?
+And how's /proc/stat different ?
+It will suffer from the very same problems, since it also have this very 
+same information (actually more, since I am skipping some), per-cpu.
+
+Now, if you guys are okay with a file per-cpu, I can do it as well.
+It pollutes the filesystem, but at least protects against the fact that 
+this is kmalloc-backed.
