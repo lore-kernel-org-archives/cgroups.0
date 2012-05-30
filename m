@@ -1,65 +1,33 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
 Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Wed, 30 May 2012 14:38:25 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
+Date: Thu, 31 May 2012 02:20:05 +0300
+Message-ID: <20120530232004.GA15423@shutemov.name>
 References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
+ <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=aN/9ppZ1FM1z1jFx5GMH452ESueNR3nRXBuMg86OedM=;
-        b=Mr4TOuW0ciBA1djoTlE7iLqNDvvBrZCunDd3kDqhLsK/0B3D+77RSkQ+NOypqar1YT
-         cTIh2snMpjTMWcM4cipEdup2fw+62JDBr7ETx34cVbu1btwNhj8mhbizx7rMl0GGh3jT
-         aKG7StEYB+rE6pk+CCCPYmGI4dG1xtq+4poezDCNPkN0659s0x5+1gXLZd4r03iDRp6y
-         //7m3CeGKCQxfNcZgdvsd8by6Ujt60zEDwc+IDveD+iI89fs9+A7mgn6mY8azJ6CMBoZ
-         6KlDeUg8TmpW4lVrwlRhNgt/mKvqioZacQuaH7YqvZubh7zu14ICHLmxtXrwIPBYqWz2
-         pM0Q==
-In-Reply-To: <1338260214-21919-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Gao feng <gaofeng@cn.fujitsu.com>, hannes@cmpxchg.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suse.cz, bsingharora@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
 
-On Tue, 29 May 2012, Gao feng wrote:
+On Wed, May 30, 2012 at 02:38:25PM -0700, David Rientjes wrote:
+> Why?  Because the information exported by /proc/meminfo is considered by 
+> applications to be static whereas the limit of a memcg may change without 
+> any knowledge of the application.
 
-> cgroup and namespaces are used for creating containers but some of
-> information is not isolated/virtualized. This patch is for isolating /proc/meminfo
-> information per container, which uses memory cgroup. By this, top,free
-> and other tools under container can work as expected(show container's
-> usage) without changes.
-> 
-> This patch is a trial to show memcg's info in /proc/meminfo if 'current'
-> is under a memcg other than root.
-> 
-> we show /proc/meminfo base on container's memory cgroup.
-> because there are lots of info can't be provide by memcg, and
-> the cmds such as top, free just use some entries of /proc/meminfo,
-> we replace those entries by memory cgroup.
-> 
-> if container has no memcg, we will show host's /proc/meminfo
-> as before.
-> 
-> there is no idea how to deal with Buffers,I just set it zero,
-> It's strange if Buffers bigger than MemTotal.
-> 
-> Signed-off-by: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Memory hotplug does the same, right?
 
-Nack, this type of thing was initially tried with cpusets when a thread 
-was bound to a subset of nodes, i.e. only show the total amount of memory 
-spanned by those nodes.
+-- 
+ Kirill A. Shutemov
 
-For your particular interest, this information is already available 
-elsewhere: memory.limit_in_bytes and memory.usage_in_bytes and that should 
-be the interface where this is attained via /proc/cgroups.
-
-Why?  Because the information exported by /proc/meminfo is considered by 
-applications to be static whereas the limit of a memcg may change without 
-any knowledge of the application.  Applications which need to know the 
-amount of memory they are constrained to are assuming that there are no 
-other consumers of memory on the system and thus they should be written to 
-understand memcg limits just like they should understand cpusets (through 
-either /proc/cgroups or /proc/cpuset).
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
