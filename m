@@ -1,114 +1,77 @@
-From: Suleiman Souhlal <suleiman@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v3 13/28] slub: create duplicate cache
-Date: Tue, 29 May 2012 13:57:41 -0700
-Message-ID: <CABCjUKCPoL1+qzjX85RVGpRBn_javD3JY2avstYuoM=tsJa8dA@mail.gmail.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com>
-	<1337951028-3427-14-git-send-email-glommer@parallels.com>
-	<alpine.DEB.2.00.1205290932530.4666@router.home>
-	<4FC4F1A7.2010206@parallels.com>
-	<alpine.DEB.2.00.1205291101580.6723@router.home>
-	<4FC501E9.60607@parallels.com>
-	<alpine.DEB.2.00.1205291222360.8495@router.home>
-	<4FC506E6.8030108@parallels.com>
-	<alpine.DEB.2.00.1205291424130.8495@router.home>
-	<4FC52612.5060006@parallels.com>
-	<alpine.DEB.2.00.1205291454030.2504@router.home>
-	<4FC52CC6.7020109@parallels.com>
-	<alpine.DEB.2.00.1205291514090.2504@router.home>
+Date: Wed, 30 May 2012 10:29:55 +0900
+Message-ID: <20120530012955.GA4854@google.com>
+References: <alpine.DEB.2.00.1205291101580.6723@router.home>
+ <4FC501E9.60607@parallels.com>
+ <alpine.DEB.2.00.1205291222360.8495@router.home>
+ <4FC506E6.8030108@parallels.com>
+ <alpine.DEB.2.00.1205291424130.8495@router.home>
+ <4FC52612.5060006@parallels.com>
+ <alpine.DEB.2.00.1205291454030.2504@router.home>
+ <4FC52CC6.7020109@parallels.com>
+ <alpine.DEB.2.00.1205291514090.2504@router.home>
+ <4FC530C0.30509@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=u0KK5I6J9vxsVVTs8szihck84JwLpGO/zFl7IFPZ+tU=;
-        b=DtYdyScnaO123AF70QNOm8XnQOlCZUVz0zJGoB0LjioC2lx2LybMw1rlzP2+bO56LM
-         0CdxxtLCLb4gN3J40gjTzwggGka+IBOnpakXxgrbVk73miAZYb0kZjEFzQGbt9DueqPh
-         SxcEWhEfrfLtKvope4FM2XpKRbfn4elivMQBVJUmrDuLI7KsiDzaxkN8p6GMQUkABQnO
-         zlJo3p1nT+4iq50M6PiU4ZTXse0P93kvpPknBVkIcMURhZvqSgMv1pVJjnFPKMSiFybg
-         rYEjxlqIAY45xdwrpD4uglR6DExj7Ab+t0JQPYLVGeYwWFzsTjvav/BNNfnTgGICqPgn
-         9OLg==
-In-Reply-To: <alpine.DEB.2.00.1205291514090.2504@router.home>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=dlGnKVi2Bq7oINFfcnsF0WuIXjBrXe7XckaYWvilAA0=;
+        b=fGEFmfFFNMNKqIvFjdPpxHDwimxEB5MbF4SnY9Y8WTnVw60MM+RR6+1Ri2ZrDcWXsU
+         1lAZ0FGcuaptWRKDJJMFufHvM6NNVk5siT6ShW9vX2KGfZipD6I3JhP3cB6/J5TtG96D
+         QzqvTsM4LXWOqzf/6Jz+njh8gyXIYi4JitALMZlEkUo97f7PxwnHTnV0IUFRKz4QrrD3
+         rXVTpf6FXU8sSaJLPb0ClwyMmCOLF3Bf1xm9U/Ay2rJj20TnyCD6p5YnMmma/dNfgp24
+         ScKyZPC/9E+C3QlgYY1Wr9IGdAvkr25bZ1yYR2jgk5tWkzAzAMTxBMu2OtYey4MqhzKu
+         HlTQ==
+Content-Disposition: inline
+In-Reply-To: <4FC530C0.30509-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Christoph Lameter <cl@linux.com>
-Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-Hi Christoph,
+Hello, Christoph, Glauber.
 
-On Tue, May 29, 2012 at 1:21 PM, Christoph Lameter <cl@linux.com> wrote:
-> On Wed, 30 May 2012, Glauber Costa wrote:
->
->> Well, I'd have to dive in the code a bit more, but that the impression t=
-hat
->> the documentation gives me, by saying:
->>
->> "Cpusets constrain the CPU and Memory placement of tasks to only
->> the resources within a task's current cpuset."
->>
->> is that you can't allocate from a node outside that set. Is this correct=
-?
->
-> Basically yes but there are exceptions (like slab queues etc). Look at th=
-e
-> hardwall stuff too that allows more exceptions for kernel allocations to
-> use memory from other nodes.
->
->> So extrapolating this to memcg, the situation is as follows:
->>
->> * You can't use more memory than what you are assigned to.
->> * In order to do that, you need to account the memory you are using
->> * and to account the memory you are using, all objects in the page
->> =A0 must belong to you.
->
-> Cpusets work at the page boundary and they do not have the requirement yo=
-u
-> are mentioning of all objects in the page having to belong to a certain
-> cpusets. Let that go and things become much easier.
->
->> With a predictable enough workload, this is a recipe for working around =
-the
->> very protection we need to establish: one can DoS a physical box full of
->> containers, by always allocating in someone else's pages, and pinning ke=
-rnel
->> memory down. Never releasing it, so the shrinkers are useless.
->
-> Sure you can construct hyperthetical cases like that. But then that is
-> true already of other container like logic in the kernel already.
->
->> So I still believe that if a page is allocated to a cgroup, all the obje=
-cts in
->> there belong to it =A0- unless of course the sharing actually means some=
-thing -
->> and identifying this is just too complicated.
->
-> We have never worked container like logic like that in the kernel due to
-> the complicated logic you would have to put in. The requirement that all
-> objects in a page come from the same container is not necessary. If you
-> drop this notion then things become very easy and the patches will become
-> simple.
+On Wed, May 30, 2012 at 12:25:36AM +0400, Glauber Costa wrote:
+> >We have never worked container like logic like that in the kernel due to
+> >the complicated logic you would have to put in. The requirement that all
+> >objects in a page come from the same container is not necessary. If you
+> >drop this notion then things become very easy and the patches will become
+> >simple.
+> 
+> I promise to look at that in more detail and get back to it. In the
+> meantime, I think it would be enlightening to hear from other
+> parties as well, specially the ones also directly interested in
+> using the technology.
 
-Back when we (Google) started using cpusets for memory isolation (fake
-NUMA), we found that there was a significant isolation breakage coming
-from slab pages belonging to one cpuset being used by other cpusets,
-which caused us problems: It was very easy for one job to cause slab
-growth in another container, which would cause it to OOM, despite
-being well-behaved.
+I don't think I'm too interested in using the technology ;) and
+haven't read the code (just glanced through the descriptions and
+discussions), but, in general, I think the approach of duplicating
+memory allocator per-memcg is a sane approach.  It isn't the most
+efficient one with the possibility of wasting considerable amount of
+caching area per memcg but it is something which can mostly stay out
+of the way if done right and that's how I want cgroup implementations
+to be.
 
-Because of this, we had to add logic to prevent that from happening
-(by making sure we only allocate objects from pages coming from our
-allowed nodes).
+The two goals for cgroup controllers that I think are important are
+proper (no, not crazy perfect but good enough) isolation and an
+implementation which doesn't impact !cg path in an intrusive manner -
+if someone who doesn't care about cgroup but knows and wants to work
+on the subsystem should be able to mostly ignore cgroup support.  If
+that means overhead for cgroup users, so be it.
 
-Now that we're switching to doing containers with memcg, I think this
-is a hard requirement, for us. :-(
+Without looking at the actual code, my rainbow-farting unicorn here
+would be having a common slXb interface layer which handles
+interfacing with memory allocator users and cgroup and let slXb
+implement the same backend interface which doesn't care / know about
+cgroup at all (other than using the correct allocation context, that
+is).  Glauber, would something like that be possible?
 
--- Suleiman
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
