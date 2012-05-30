@@ -1,45 +1,31 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v3 16/28] memcg: kmem controller charge/uncharge infrastructure
-Date: Wed, 30 May 2012 17:55:38 +0400
-Message-ID: <4FC626DA.3030408@parallels.com>
-References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <1337951028-3427-17-git-send-email-glommer@parallels.com> <20120530130416.GD25094@somewhere.redhat.com> <4FC61B4E.2060206@parallels.com> <20120530133736.GF25094@somewhere.redhat.com> <4FC622B5.9080600@parallels.com> <20120530135319.GG25094@somewhere.redhat.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 3/6] expose fine-grained per-cpu data for cpuacct stats
+Date: Wed, 30 May 2012 17:26:12 +0400
+Message-ID: <4FC61FF4.4050304@parallels.com>
+References: <1338371317-5980-1-git-send-email-glommer@parallels.com> <1338371317-5980-4-git-send-email-glommer@parallels.com> <CAPM31RJanAvDB+pZ+h5J3W6KXvAwPgbbeXgw6C_56tx_Mc+cgA@mail.gmail.com> <4FC6107F.9020802@parallels.com> <CAPM31RJ7s+pNciOEnsfXRU9xCwnUano1k8CTEUuCjsSN5n0-1Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120530135319.GG25094@somewhere.redhat.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAPM31RJ7s+pNciOEnsfXRU9xCwnUano1k8CTEUuCjsSN5n0-1Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On 05/30/2012 05:53 PM, Frederic Weisbecker wrote:
-> On Wed, May 30, 2012 at 05:37:57PM +0400, Glauber Costa wrote:
->> On 05/30/2012 05:37 PM, Frederic Weisbecker wrote:
->>> Right. __mem_cgroup_get_kmem_cache() fetches the memcg of the owner
->>> and calls memcg_create_cache_enqueue() which does css_tryget(&memcg->css).
->>> After this tryget I think you're fine. And in-between you're safe against
->>> css_set removal due to rcu_read_lock().
->>>
->>> I'm less clear with __mem_cgroup_new_kmem_page() though...
->>
->> That one does not get memcg->css but it does call mem_cgroup_get(),
->> that does prevent against the memcg structure being freed, which I
->> believe to be good enough.
+On 05/30/2012 04:48 PM, Paul Turner wrote:
+>> >  Now, if you guys are okay with a file per-cpu, I can do it as well.
+>> >  It pollutes the filesystem, but at least protects against the fact that this
+>> >  is kmalloc-backed.
+>> >
+> As I prefaced, I'm not sure there's much that can be trivially done
+> about it.  This is really a fundamental limitation of how read_map()
+> works.
 >
-> What if the owner calls cgroup_exit() between mem_cgroup_from_task()
-> and mem_cgroup_get()? The css_set which contains the memcg gets freed.
-> Also the reference on the memcg doesn't even prevent the css_set to
-> be removed, does it?
-It doesn't, but we don't really care. The css can go away, if the memcg 
-structure stays. The caches will outlive the memcg anyway, since it is 
-possible that you delete it, with some caches still holding objects that
-are not freed (they will be marked as dead).
+> What we really need is a proper seq_file exposed through cftypes.
 
+Tejun, would you be okay with an interface that exports somehow the raw 
+seq_file in cgroups ?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This way we could call s_show for each cpu and get away with the memory 
+usage problem, I presume
