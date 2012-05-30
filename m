@@ -1,63 +1,55 @@
-From: Paul Turner <pjt@google.com>
-Subject: Re: [PATCH v3 2/6] account guest time per-cgroup as well.
-Date: Wed, 30 May 2012 03:46:13 -0700
-Message-ID: <CAPM31RJjMZ4ZJP_=_nGLk8AeBvzZ+PhEpjXxEb2Ko_0f7dsdgg@mail.gmail.com>
-References: <1338371317-5980-1-git-send-email-glommer@parallels.com>
- <1338371317-5980-3-git-send-email-glommer@parallels.com> <1338373947.26856.240.camel@twins>
- <4FC5F82B.6030404@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 3/6] expose fine-grained per-cpu data for cpuacct stats
+Date: Wed, 30 May 2012 14:44:48 +0400
+Message-ID: <4FC5FA20.50301@parallels.com>
+References: <1338371317-5980-1-git-send-email-glommer@parallels.com>   <1338371317-5980-4-git-send-email-glommer@parallels.com>  <1338374041.26856.241.camel@twins> <4FC5F7A0.2000201@parallels.com> <1338374628.26856.244.camel@twins>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=zUnaBM7sMFQShXfBkb7RL3fCTzzWNGCBEJzP4PJzTJc=;
-        b=AZCzrNMQmleHMFnsVpIzokC5W8nkR49IgtI/cUYjhE2CmFAe6Jxe0VprKjPvSBWGZV
-         UeHWBHUjTNRm6rgIdF9/9jcwnVI6kDxpS7eRyTTHxAMcanhpp0BOyMzp2CzGzSfaB9Eb
-         aenbfC8GEfCYQ8YiwScpknpGslcuPgCngDaCl1JPsFt5N6FHx4SBX+XoLQR7jKzfHUER
-         2L8xyO3gBbaPU+41/0N70hO/1fmci7j3LIUmLwJ3+2yza2GoqjK8qHg30skYFDHP8lOj
-         zfYbgln6Q/mVcDLMOJ+nalhWNLjs1mpQCE0FxvBrAvRpAbIcNx8n2+50WoZuj6IUMFsT
-         oGmQ==
-In-Reply-To: <4FC5F82B.6030404@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1338374628.26856.244.camel@twins>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer@parallels.com>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, devel@openvz.org, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, handai.szj@gmail.com, Andrew.Phillips@lmax.com, Serge Hallyn <serge.hallyn@canonical.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrew.Phillips-xheW4WVAX9Y@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Wed, May 30, 2012 at 3:36 AM, Glauber Costa <glommer@parallels.com> =
-wrote:
-> On 05/30/2012 02:32 PM, Peter Zijlstra wrote:
->>
->> On Wed, 2012-05-30 at 13:48 +0400, Glauber Costa wrote:
+On 05/30/2012 02:43 PM, Peter Zijlstra wrote:
+> On Wed, 2012-05-30 at 14:34 +0400, Glauber Costa wrote:
+>> On 05/30/2012 02:34 PM, Peter Zijlstra wrote:
+>>> On Wed, 2012-05-30 at 13:48 +0400, Glauber Costa wrote:
 >>>
->>> > =A0We already track multiple tick statistics per-cgroup, using
->>> > =A0the task_group_account_field facility. This patch accounts
->>> > =A0guest_time in that manner as well.
->>
->> So this leaves IOWAIT and IDLE the only fields not using
->> task_group_account_field(), right?
+>>>> +static int cpuacct_stats_percpu_show(struct cgroup *cgrp, struct cftype *cft,
+>>>> +				     struct cgroup_map_cb *cb)
+>>>> +{
+>>>> +	struct cpuacct *ca = cgroup_ca(cgrp);
+>>>> +	int cpu;
+>>>> +
+>>>> +	for_each_online_cpu(cpu) {
+>>>> +		do_fill_cb(cb, ca, "user", cpu, CPUTIME_USER);
+>>>> +		do_fill_cb(cb, ca, "nice", cpu, CPUTIME_NICE);
+>>>> +		do_fill_cb(cb, ca, "system", cpu, CPUTIME_SYSTEM);
+>>>> +		do_fill_cb(cb, ca, "irq", cpu, CPUTIME_IRQ);
+>>>> +		do_fill_cb(cb, ca, "softirq", cpu, CPUTIME_SOFTIRQ);
+>>>> +		do_fill_cb(cb, ca, "guest", cpu, CPUTIME_GUEST);
+>>>> +		do_fill_cb(cb, ca, "guest_nice", cpu, CPUTIME_GUEST_NICE);
+>>>> +	}
+>>>> +
+>>>> +	return 0;
+>>>> +}
+>>>
+>>> Uhm, hotplug anyone?
+>> What's with hotplug ?
 >
 >
-> Yes, because they are essentially global, and their meaning is ill-de=
-fined
-> from within a cgroup.
+> Who's to say all cpus are online at this point? If you don't want to
+> make the files come and go with hotplug, one should use
+> for_each_possible_cpu().
 >
-> If you look further out in the patchset, I intend to export idle from=
- cpu,
-> instead of cpuacct, because something that can be used as idle value =
-is
-> already computed anyway from the schedstats, so I'm just using it.
->
-> iowait will be left blank for now. Me and Paul agreed last time we ta=
-lked
-> that it is not uber important to have iowait values per-cgroup.
+I don't oppose that.
+But I don't really parse what you mean by "make the files go away". We 
+have just one file, with multiple entries. The entries are in key:value 
+form, so I don't see a huge problem in having some entries disappearing.
 
-Stronger:  it lacks a definition you can sanely measure without atomic
-counters everywhere (similarly for group-idle).
+As a matter of fact, this is exactly what happens in /proc/stat when you 
+offline a cpu: the correspondent line will stop showing up.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
