@@ -1,77 +1,55 @@
-From: KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Thu, 31 May 2012 03:23:00 -0400
-Message-ID: <4FC71C54.3060909@gmail.com>
-References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
-	<alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
-	<4FC6B68C.2070703@jp.fujitsu.com>
-	<CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com>
-	<4FC6BC3E.5010807@jp.fujitsu.com>
-	<alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com>
-	<4FC6C111.2060108@jp.fujitsu.com>
-	<alpine.DEB.2.00.1205301831270.25774@chino.kir.corp.google.com>
-	<4FC6D881.4090706@jp.fujitsu.com>
-	<alpine.DEB.2.00.1205302156090.25774@chino.kir.corp.google.com>
-	<4FC70355.70805@jp.fujitsu.com>
-	<alpine.DEB.2.00.1205302314190.25774@chino.kir.corp.google.com>
-	<4FC70E5E.1010003@gmail.com>
-	<alpine.DEB.2.00.1205302325500.25774@chino.kir.corp.google.com>
-	<4FC711A5.4090003@gmail.com> <4FC718BA.8060608@jp.fujitsu.com>
+Date: Thu, 31 May 2012 00:35:49 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205310028420.8864@chino.kir.corp.google.com>
+References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com> <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com> <4FC6B68C.2070703@jp.fujitsu.com> <CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com> <4FC6BC3E.5010807@jp.fujitsu.com>
+ <alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com> <4FC6C111.2060108@jp.fujitsu.com> <alpine.DEB.2.00.1205301831270.25774@chino.kir.corp.google.com> <4FC6D881.4090706@jp.fujitsu.com> <alpine.DEB.2.00.1205302156090.25774@chino.kir.corp.google.com>
+ <4FC70355.70805@jp.fujitsu.com> <alpine.DEB.2.00.1205302314190.25774@chino.kir.corp.google.com> <4FC70E5E.1010003@gmail.com> <alpine.DEB.2.00.1205302325500.25774@chino.kir.corp.google.com> <4FC711A5.4090003@gmail.com> <alpine.DEB.2.00.1205302351510.25774@chino.kir.corp.google.com>
+ <CAHGf_=qVDVT6VW2j9gE3bQKwizW24iivrDryiCKoxVu4m_fWKw@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=G/RFysMj3Qjxb3+NCTpo67v6q975ptNXE8tGrMWRc+g=;
+        b=pBgRuG9Yi/XoALfMSrMYxQTEhO6CWahbQb48+mxO6jVNfaPt4ZBFlOMXeAUoxuWpNc
+         51NsSJMgM8lov0eUUugZN+HUgjJ2lcIDNacQFUgOuHKDmh/mZb3vzg6CcC9SkWz1bs8Q
+         luywFsjsHN3vj3/wpX100TedP8Sg+l/AZ2oGpabQC3s7UylBGQHJ5hfNUzDU+23OgnRT
+         1wDEJaD8zNahmQL6JqlrCB8+cqWRS5/sagvBAg2+oS0JyhoAAjC9Z7NvV99v1dD5aCYA
+         zHLbuSGzC7ch9Wtu0myNnZNQbA3KFOJFCcymH3WFP0erzSHa+82U1kOtGzjt4hcN7fjb
+         bpTA==
+In-Reply-To: <CAHGf_=qVDVT6VW2j9gE3bQKwizW24iivrDryiCKoxVu4m_fWKw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=message-id:date:from:user-agent:mime-version:to:cc:subject
-	:references:in-reply-to:content-type:content-transfer-encoding;
-	bh=yeIa57yU9Q/IKbNa7UUJtyWNhA6x890xU8CBEudJIUQ=;
-	b=aeKD2tHB9yU9lJTRq2f44tsT3mpMta6VD3aYaYmxRHPZDbRuDkryYUntWzmQ/wsvFN
-	tS5n8Rhh96fudAh1ks7U5hG9KZhy5IKVY5/08w/UPpWeIrgQmqCIMhye6PurSvNJ4/N0
-	X4XKl/CTsAmfqi7ZMP6D6eHDak2BtmYLbk/xTHBoMIqVddfPbR+I99H3NKwU8kL9HOjh
-	iwgA2Y/r9YtByzCPxjCk70qWvAErnwE1UIcwbydekeBEmPGa9yPbaHGLzmEIxKHDsqE7
-	DbTYptYk5/YcvogIgALef//B8U+uh5VbLpIXcFctczuSnUyAFsz4UBqixgRDxA4nFz1d
-	ICvg==
-In-Reply-To: <4FC718BA.8060608-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-(5/31/12 3:07 AM), Kamezawa Hiroyuki wrote:
-> (2012/05/31 15:37), KOSAKI Motohiro wrote:
->> (5/31/12 2:28 AM), David Rientjes wrote:
->>> On Thu, 31 May 2012, KOSAKI Motohiro wrote:
->>>
->>>>> An application should always know the cgroup that its attached to and be
->>>>> able to read its state using the command that I gave earlier.
->>>>
->>>> No. you don't need why userland folks want namespaces. Even though you don't
->>>> need namespaces. It doesn't good reason to refuse another use case.
->>>>
->>>
->>> This is tangent to the discussion, we need to revisit why an application
->>> other than a daemon managing a set of memcgs would ever need to know the
->>> information in /proc/meminfo. No use-case was ever presented in the
->>> changelog and its not clear how this is at all relevant. So before
->>> changing the kernel, please describe how this actually matters in a real-
->>> world scenario.
->>
->> Huh? Don't you know a meanings of a namespace ISOLATION? isolation mean,
->> isolated container shouldn't be able to access global information. If you
->> want to lean container/namespace concept, tasting openvz or solaris container
->> is a good start.
->>
->> But anyway, I dislike current implementaion. So, I NAK this patch too.
->
-> Could you give us advice for improving this ? What idea do you have ?
+On Thu, 31 May 2012, KOSAKI Motohiro wrote:
 
-?
-I'm ok your idea. I only NAKed current Gao's patch.
+> > As I said, LXC and namespace isolation is a tangent to the discussion of
+> > faking the /proc/meminfo for the memcg context of a thread.
+> 
+> Because of, /proc/meminfo affect a lot of libraries behavior. So, it's not only
+> application issue. If you can't rewrite _all_ of userland assets, fake meminfo
+> can't be escaped. Again see alternative container implementation.
+> 
+
+It's a tangent because it isn't a complete psuedo /proc/meminfo for all 
+threads attached to a memcg regardless of any namespace isolation; the LXC 
+solution has existed for a couple of years by its procfs patchset that 
+overlaps procfs with fuse and can suppress or modify any output in the 
+context of a memory controller using things like 
+memory.{limit,usage}_in_bytes.  I'm sure all other fields could be 
+modified if outputted in some structured way via memcg; it looks like 
+memory.stat would need to be extended to provide that.  If that's mounted 
+prior to executing the application, then your isolation is achieved and 
+all libraries should see the new output that you've defined in LXC.
+
+However, this seems like a seperate topic than the patch at hand which 
+does this directly to /proc/meminfo based on a thread's memcg context, 
+that's the part that I'm nacking.  I'd recommend to Gao to expose this 
+information via memory.stat and then use fuse and the procfs lxc support 
+as your way of contextualizing the resources.
