@@ -1,23 +1,23 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH -V7 01/14] hugetlb: rename max_hstate to
- hugetlb_max_hstate
-Date: Wed, 30 May 2012 17:55:54 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205301755420.25774@chino.kir.corp.google.com>
-References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V7 02/14] hugetlbfs: don't use ERR_PTR with VM_FAULT*
+ values
+Date: Wed, 30 May 2012 18:02:59 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205301801060.25774@chino.kir.corp.google.com>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=Oqhb4mZJBGCKSonRwCW8nNBM5TwlB7vkATXhsG+wIDk=;
-        b=B0/shb5oZvLMRHq9oyWSAZtTfow4dhjE0p9CvLezhzUY/pygeev9Y/DMGmCRXYrZp8
-         7NOQcV1mofQp92nfzmuf/Jf4LvBTo8ZtL4Yx2SlusRIGOMxxcRbhJUyb7N4HCshPfOFF
-         tKXQNyk50XJRjJCO9bqRFfNlbgiD3WKmXRU7TC5E899sT6kjUYw4c5IrsQlA+fUuHr5r
-         NzP6JucMEzXi9vAXfl1GkML/XUp28jcwNyDS4P3p+z0wfggsstVFU7mujm6nUHI0DZu9
-         wS5UkdeSpHMkGZ48BLzRYrsroQjrw/ooCaDKuTbo3xl1sVD2lmpolArgT1msmn1BpxmT
-         1fyQ==
-In-Reply-To: <1338388739-22919-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+        bh=9Ip3FRGJVF+cMKbpKGTPAQr50YkIioRViNso0575uxY=;
+        b=gGG7kDJGHQApuHz4qOQInV8JS7AJAzyqnpQGjyyeUV4M2LSbxZZpRy7jJnM926v2NZ
+         ap6eRNY43vG5P1MRNKNjgy+si5+0fX2bOwfZ/o9SdCHs51HUxYVeZgTh7pjzo6L3NqFC
+         WJaWeozJIa3JvQHxjQdNE5FpTGwIFGXUAUEq57a/iVTsAuZN6jxVd2P0Kbcbfe3d3kLV
+         H3UN4Xsi0C2lAVHmyiqJ884tdlAlX52zxe4LykwTt87nDbWreHcm2dhS2SYFEnCkeImr
+         ZLc+lCyswop9HkioqjnO/VDoNnNP6Fc1EPBcCGoGl3dZQ41wFKOW/s73RE5vBzwYRoVU
+         KtJA==
+In-Reply-To: <1338388739-22919-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -29,17 +29,16 @@ On Wed, 30 May 2012, Aneesh Kumar K.V wrote:
 
 > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 > 
-> Rename max_hstate to hugetlb_max_hstate.  We will be using this from other
-> subsystems like hugetlb controller in later patches.
+> The current use of VM_FAULT_* codes with ERR_PTR requires us to ensure
+> VM_FAULT_* values will not exceed MAX_ERRNO value.  Decouple the
+> VM_FAULT_* values from MAX_ERRNO.
 > 
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> Acked-by: Hillf Danton <dhillf@gmail.com>
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-> Cc: Andrea Arcangeli <aarcange@redhat.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
 
-Acked-by: David Rientjes <rientjes@google.com>
+Yeah, but is there a reason for using VM_FAULT_HWPOISON_LARGE_MASK since 
+that's the only VM_FAULT_* value that is greater than MAX_ERRNO?  The rest 
+of your patch set doesn't require this, so I think this change should just 
+be dropped.  (And PTR_ERR() still returns long, this wasn't fixed from my 
+original review.)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
