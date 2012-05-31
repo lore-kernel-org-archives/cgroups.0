@@ -1,45 +1,45 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Thu, 31 May 2012 09:53:37 +0900
-Message-ID: <4FC6C111.2060108@jp.fujitsu.com>
-References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com> <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com> <4FC6B68C.2070703@jp.fujitsu.com> <CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com> <4FC6BC3E.5010807@jp.fujitsu.com> <alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH -V7 01/14] hugetlb: rename max_hstate to
+ hugetlb_max_hstate
+Date: Wed, 30 May 2012 17:55:54 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205301755420.25774@chino.kir.corp.google.com>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=Oqhb4mZJBGCKSonRwCW8nNBM5TwlB7vkATXhsG+wIDk=;
+        b=B0/shb5oZvLMRHq9oyWSAZtTfow4dhjE0p9CvLezhzUY/pygeev9Y/DMGmCRXYrZp8
+         7NOQcV1mofQp92nfzmuf/Jf4LvBTo8ZtL4Yx2SlusRIGOMxxcRbhJUyb7N4HCshPfOFF
+         tKXQNyk50XJRjJCO9bqRFfNlbgiD3WKmXRU7TC5E899sT6kjUYw4c5IrsQlA+fUuHr5r
+         NzP6JucMEzXi9vAXfl1GkML/XUp28jcwNyDS4P3p+z0wfggsstVFU7mujm6nUHI0DZu9
+         wS5UkdeSpHMkGZ48BLzRYrsroQjrw/ooCaDKuTbo3xl1sVD2lmpolArgT1msmn1BpxmT
+         1fyQ==
+In-Reply-To: <1338388739-22919-2-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes@google.com>
-Cc: KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Gao feng <gaofeng@cn.fujitsu.com>, hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>
 
-(2012/05/31 9:44), David Rientjes wrote:
-> On Thu, 31 May 2012, Kamezawa Hiroyuki wrote:
->
->> My test with sysfs node's meminfo seems to work...
->>
->> [root@rx100-1 qqm]# mount --bind /sys/devices/system/node/node0/meminfo
->> /proc/meminfo
->> [root@rx100-1 qqm]# cat /proc/meminfo
->>
->> Node 0 MemTotal:        8379636 kB
->
-> This doesn't seem like a good idea unless the application supports the
-> "Node 0" prefix in /proc/meminfo.
->
-Of course, /cgroup/memory/..../memory.meminfo , a new file, will use the same
-format of /proc/meminfo. Above is just an example of bind-mount.
+On Wed, 30 May 2012, Aneesh Kumar K.V wrote:
 
-> If any application really cares about the amount of memory available to
-> it, it should be taught to be memcg aware.  Then do something like
->
+> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> 
+> Rename max_hstate to hugetlb_max_hstate.  We will be using this from other
+> subsystems like hugetlb controller in later patches.
+> 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Acked-by: Hillf Danton <dhillf@gmail.com>
+> Acked-by: Michal Hocko <mhocko@suse.cz>
+> Cc: Andrea Arcangeli <aarcange@redhat.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
 
-Considering the container as a kind of virtualization, Some kind of
-transparent way is required.
-
-Thanks,
--Kame
-
+Acked-by: David Rientjes <rientjes@google.com>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
