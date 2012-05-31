@@ -1,79 +1,59 @@
-From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 10/12] container quota: bill container inodes alloc/free
-	on ext4.
-Date: Thu, 31 May 2012 11:24:25 +0800
-Message-ID: <4FC6E469.2040405@oracle.com>
-References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com>
-	<1338389946-13711-11-git-send-email-jeff.liu@oracle.com>
-	<20120530155543.GB13236@thunk.org>
-	<4FC6CCB6.4090908@oracle.com> <20120531015453.GA6759@thunk.org>
-	<4FC6D94D.6040106@oracle.com>
-Reply-To: jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
+Date: Wed, 30 May 2012 22:02:23 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205302156090.25774@chino.kir.corp.google.com>
+References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com> <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com> <4FC6B68C.2070703@jp.fujitsu.com> <CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com> <4FC6BC3E.5010807@jp.fujitsu.com>
+ <alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com> <4FC6C111.2060108@jp.fujitsu.com> <alpine.DEB.2.00.1205301831270.25774@chino.kir.corp.google.com> <4FC6D881.4090706@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=HDdXOVLmQG/6BUj0aQnhkZGHrQPm2VIqzez/dvY3A8E=;
+        b=Q0ZSJzt1pdxrLsTHwiaXUC0jCZEwg82TGCtuAZoODbQOHSB8fdTWahn0oOUtPe+LOU
+         xEhOjOXg35/SmEDQTbYbqDQxkbLEJMjmsL8HWq1dHtVo7NjYO0cwyYdGzkl/CcselYcE
+         oGwMG+tx4g9rr73V8t0nppHqmZ1CNugRSfE9G4xtodq63NRE6db8LtxrVJv8mksT7sPy
+         7V5YZgC89nMAZLyJLPzrg+2qQQRIJEdQnVBkHU+RDIwu9IodGcm7gB+LOEVuHukplkfl
+         1IjYf3gGbkzh32lOc13H9B2elGXV7qSMPfBxZ0+T2+HtHFaJMUnSighxjX7aLX+tOd6L
+         HKsA==
+In-Reply-To: <4FC6D881.4090706@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <4FC6D94D.6040106-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Ted Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bpm-sJ/iWh9BUns@public.gmane.org, christopher.jones-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tm-d1IQDZat3X0@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tinguely-sJ/iWh9BUns@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Gao feng <gaofeng@cn.fujitsu.com>, hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
 
-On 05/31/2012 10:37 AM, Jeff Liu wrote:
+On Thu, 31 May 2012, Kamezawa Hiroyuki wrote:
 
-> On 05/31/2012 09:54 AM, Ted Ts'o wrote:
+> > It's not just a memcg issue, it would also be a cpusets issue.
 > 
->> On Thu, May 31, 2012 at 09:43:18AM +0800, Jeff Liu wrote:
->>> I also think that is stupid to change all of the file systems with those
->>> hook routines.
->>> At first I have tried to change the quota layer by adding
->>> ns_dquot_<foo>() to the corresponding dquot_<foo>(), it could works on
->>> ext4, and it should works on other file systems which are tightly bound
->>> to VFS quota IMHO.
->>>
->>> However, XFS has its own quota management subsystem, with looser binding
->>> to VFS quota.  That's why am trying to export those routines over all
->>> the file systems and CC to the maintainers, sorry for the noise.
->>
->> No worries about the noise.  I was just trying to suggest something
->> that might be easier for you.
->>
->> As near as I can tell XFS doesn't use the fs/quota functions at all,
->> yes?  But if you add it into the fs/quota functions, it should get you
->> integration with ext2, ext3, ext4, jfs, ocfs2, and reiserfs.  Yes?
+> I think you can add cpuset.meminfo.
 > 
-> Yes, I just took a quick look through over ocfs2, reiserfs and jfs, they
-> are all ok.
 
-Such being the case, maybe I should tight ns_dquot_<foo>() to VFS quota
-to reduce duplication firstly, at lease, it could works with most file
-systems.  Then consider another way to let it works with other file
-systems doesn't use fs/quota.
+It's simple to find the same information by reading the per-node meminfo 
+files in sysfs for each of the allowed cpuset mems.  This is why this 
+approach has been nacked in the past, specifically by Paul Jackson when he 
+implemented cpusets.
 
-Thanks,
--Jeff
+The bottomline is that /proc/meminfo is one of many global resource state 
+interfaces and doesn't imply that every thread has access to the full 
+resources.  It never has.  It's very simple for another thread to consume 
+a large amount of memory as soon as your read() of /proc/meminfo completes 
+and then that information is completely bogus.  We also don't want to 
+virtualize every single global resource state interface, it would be never 
+ending.
 
-> 
-> Thanks,
-> -Jeff
-> 
->>
->> 	    	       	     	   	       - Ted
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applications that administer memory cgroups or cpusets can get this 
+information very easily, each application within those memory cgroups or 
+cpusets does not need it and should not rely on it: it provides no 
+guarantee about future usage nor notifies the application when the amount 
+of free memory changes.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
