@@ -1,201 +1,219 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V7 11/14] hugetlbfs: add hugetlb cgroup control files
-Date: Thu, 31 May 2012 11:09:52 +0530
-Message-ID: <20120531053952.GC24855@skywalker.linux.vnet.ibm.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH -V7 10/14] hugetlbfs: Add new HugeTLB cgroup
+Date: Thu, 31 May 2012 11:13:16 +0530
+Message-ID: <20120531054316.GD24855@skywalker.linux.vnet.ibm.com>
 References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <1338388739-22919-12-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <20120531013225.GF401@localhost.localdomain>
+ <1338388739-22919-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <20120531011953.GE401@localhost.localdomain>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120531013225.GF401@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120531011953.GE401-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad-Gq0aWv8utHQdnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, May 30, 2012 at 09:32:25PM -0400, Konrad Rzeszutek Wilk wrote:
-> On Wed, May 30, 2012 at 08:08:56PM +0530, Aneesh Kumar K.V wrote:
-> > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-> > 
-> > Add the control files for hugetlb controller
-> > 
-> > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> > ---
-> >  include/linux/hugetlb.h        |    5 ++
-> >  include/linux/hugetlb_cgroup.h |    6 ++
-> >  mm/hugetlb.c                   |    2 +
-> >  mm/hugetlb_cgroup.c            |  130 ++++++++++++++++++++++++++++++++++++++++
-> >  4 files changed, 143 insertions(+)
-> > 
-> > diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-> > index dcd55c7..92f75a5 100644
-> > --- a/include/linux/hugetlb.h
-> > +++ b/include/linux/hugetlb.h
-> > @@ -4,6 +4,7 @@
-> >  #include <linux/mm_types.h>
-> >  #include <linux/fs.h>
-> >  #include <linux/hugetlb_inline.h>
-> > +#include <linux/cgroup.h>
-> >  
-> >  struct ctl_table;
-> >  struct user_struct;
-> > @@ -221,6 +222,10 @@ struct hstate {
-> >  	unsigned int nr_huge_pages_node[MAX_NUMNODES];
-> >  	unsigned int free_huge_pages_node[MAX_NUMNODES];
-> >  	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
-> > +#ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
-> > +	/* cgroup control files */
-> > +	struct cftype cgroup_files[5];
-> 
-> Why five? Should there be a #define for this magic value?
-> 
-
-Because we have 4 control files. Was not sure whether that should be a #define because
-we are not going to use that #define anywhere else. Also the same patch index them
-in hugetlb_file_init. That is the only place it is used.
-
-> > +#endif
-> >  	char name[HSTATE_NAME_LEN];
-> >  };
-> >  
-> > diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-> > index 5794be4..fbf8c5f 100644
-> > --- a/include/linux/hugetlb_cgroup.h
-> > +++ b/include/linux/hugetlb_cgroup.h
-> > @@ -42,6 +42,7 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
-> >  					 struct page *page);
-> >  extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
-> >  					   struct hugetlb_cgroup *h_cg);
-> > +extern int hugetlb_cgroup_file_init(int idx) __init;
-> >  #else
-> >  static inline bool hugetlb_cgroup_disabled(void)
-> >  {
-> > @@ -75,5 +76,10 @@ hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
-> >  {
-> >  	return;
-> >  }
-> > +
-> > +static inline int __init hugetlb_cgroup_file_init(int idx)
+On Wed, May 30, 2012 at 09:19:54PM -0400, Konrad Rzeszutek Wilk wrote:
+> > +static inline bool hugetlb_cgroup_have_usage(struct cgroup *cg)
 > > +{
-> > +	return 0;
-> > +}
-> >  #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
-> >  #endif
-> > diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> > index 53840dd..6330de2 100644
-> > --- a/mm/hugetlb.c
-> > +++ b/mm/hugetlb.c
-> > @@ -29,6 +29,7 @@
-> >  #include <linux/io.h>
-> >  #include <linux/hugetlb.h>
-> >  #include <linux/node.h>
-> > +#include <linux/hugetlb_cgroup.h>
-> >  #include "internal.h"
-> >  
-> >  const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
-> > @@ -1912,6 +1913,7 @@ void __init hugetlb_add_hstate(unsigned order)
-> >  	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
-> >  	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
-> >  					huge_page_size(h)/1024);
-> > +	hugetlb_cgroup_file_init(hugetlb_max_hstate - 1);
-> >  
-> >  	parsed_hstate = h;
-> >  }
-> > diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-> > index 3a288f7..49a3f20 100644
-> > --- a/mm/hugetlb_cgroup.c
-> > +++ b/mm/hugetlb_cgroup.c
-> > @@ -19,6 +19,11 @@
-> >  #include <linux/page_cgroup.h>
-> >  #include <linux/hugetlb_cgroup.h>
-> >  
-> > +/* lifted from mem control */
-> 
-> Might also include the comment from said file explaining the
-> purpose of these #define.
-> 
-> > +#define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
-> > +#define MEMFILE_IDX(val)	(((val) >> 16) & 0xffff)
-> > +#define MEMFILE_ATTR(val)	((val) & 0xffff)
+> > +	int idx;
+> > +	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_cgroup(cg);
 > > +
-> >  struct cgroup_subsys hugetlb_subsys __read_mostly;
-> >  struct hugetlb_cgroup *root_h_cgroup __read_mostly;
-> >  
-> > @@ -271,6 +276,131 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
-> >  	return;
-> >  }
-> >  
-> > +static ssize_t hugetlb_cgroup_read(struct cgroup *cgroup, struct cftype *cft,
-> > +				   struct file *file, char __user *buf,
-> > +				   size_t nbytes, loff_t *ppos)
+> > +	for (idx = 0; idx < HUGE_MAX_HSTATE; idx++) {
+> > +		if ((res_counter_read_u64(&h_cg->hugepage[idx], RES_USAGE)) > 0)
+> > +			return 1;
+> 
+> return true;
+> > +	}
+> > +	return 0;
+> 
+> And return false here
+> > +}
+> > +
+> > +static struct cgroup_subsys_state *hugetlb_cgroup_create(struct cgroup *cgroup)
 > > +{
-> > +	u64 val;
-> > +	char str[64];
-> 
-> I would think there would be a define for this somewhere?
-
-lifted from mem_cgroup_read. Number is big enough to find the return for usage_in_bytes,
-limit_in_bytes etc
-
-> 
-> > +	int idx, name, len;
-> > +	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_cgroup(cgroup);
+> > +	int idx;
+> > +	struct cgroup *parent_cgroup;
+> > +	struct hugetlb_cgroup *h_cgroup, *parent_h_cgroup;
 > > +
-> > +	idx = MEMFILE_IDX(cft->private);
-> > +	name = MEMFILE_ATTR(cft->private);
+> > +	h_cgroup = kzalloc(sizeof(*h_cgroup), GFP_KERNEL);
+> > +	if (!h_cgroup)
+> > +		return ERR_PTR(-ENOMEM);
 > > +
-> > +	val = res_counter_read_u64(&h_cg->hugepage[idx], name);
-> > +	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
-> > +	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
+> 
+> No need to check cgroup for NULL?
+
+Other cgroups (memcg) doesn't do that. Can we really get NULL cgroup tere ?
+
+
+> 
+> > +	parent_cgroup = cgroup->parent;
+> > +	if (parent_cgroup) {
+> > +		parent_h_cgroup = hugetlb_cgroup_from_cgroup(parent_cgroup);
+> > +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+> > +			res_counter_init(&h_cgroup->hugepage[idx],
+> > +					 &parent_h_cgroup->hugepage[idx]);
+> > +	} else {
+> > +		root_h_cgroup = h_cgroup;
+> > +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+> > +			res_counter_init(&h_cgroup->hugepage[idx], NULL);
+> > +	}
+> > +	return &h_cgroup->css;
 > > +}
 > > +
-
-......
-......
-
-> > +	cft->private = MEMFILE_PRIVATE(idx, RES_USAGE);
-> > +	cft->read = hugetlb_cgroup_read;
+> > +static int hugetlb_cgroup_move_parent(int idx, struct cgroup *cgroup,
+> > +				      struct page *page)
+> > +{
+> > +	int csize,  ret = 0;
+> > +	struct page_cgroup *pc;
+> > +	struct res_counter *counter;
+> > +	struct res_counter *fail_res;
+> > +	struct hugetlb_cgroup *h_cg   = hugetlb_cgroup_from_cgroup(cgroup);
+> > +	struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(cgroup);
 > > +
-> > +	/* Add the MAX usage file */
-> > +	cft = &h->cgroup_files[2];
-> > +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.max_usage_in_bytes", buf);
-> > +	cft->private = MEMFILE_PRIVATE(idx, RES_MAX_USAGE);
-> > +	cft->trigger = hugetlb_cgroup_reset;
-> > +	cft->read = hugetlb_cgroup_read;
-> > +
-> > +	/* Add the failcntfile */
-> > +	cft = &h->cgroup_files[3];
-> > +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.failcnt", buf);
-> > +	cft->private  = MEMFILE_PRIVATE(idx, RES_FAILCNT);
-> > +	cft->trigger  = hugetlb_cgroup_reset;
-> > +	cft->read = hugetlb_cgroup_read;
-> > +
-> > +	/* NULL terminate the last cft */
-> > +	cft = &h->cgroup_files[4];
-> > +	memset(cft, 0, sizeof(*cft));
-> > +
-> > +	WARN_ON(cgroup_add_cftypes(&hugetlb_subsys, h->cgroup_files));
-> > +
+> > +	if (!get_page_unless_zero(page))
+> > +		goto out;
 > 
-> Wouldn't doing:
-> 	return cgroup_add_cftypes(&hugetlb_subsys, h->cgroup_files);
+> Hmm, so it goes to out, and does return ret. ret is zero. Is
+> that correct? Should ret be set to -EBUSY or such?
 > 
-> be more appropiate?
 
+Fixed
 
-cgroup wanted a WARN_ON around that IIUC. I guess we will drop all of the later.
+> > +
+> > +	pc = lookup_page_cgroup(page);
+> 
+> What if pc is NULL? Or is it guaranteed that it will
+> never happen so?
+> 
+> > +	lock_page_cgroup(pc);
+> > +	if (!PageCgroupUsed(pc) || pc->cgroup != cgroup)
+> > +		goto err_out;
+> 
+> err is still set to zero. Is that OK? Should it be -EINVAL
+> or such?
+> 
 
-> > +	return 0;
+Fixed
+
+> > +
+> > +	csize = PAGE_SIZE << compound_order(page);
+> > +	/* If use_hierarchy == 0, we need to charge root */
+> > +	if (!parent) {
+> > +		parent = root_h_cgroup;
+> > +		/* root has no limit */
+> > +		res_counter_charge_nofail(&parent->hugepage[idx],
+> > +					  csize, &fail_res);
+> > +	}
+> > +	counter = &h_cg->hugepage[idx];
+> > +	res_counter_uncharge_until(counter, counter->parent, csize);
+> > +
+> > +	pc->cgroup = cgroup->parent;
+> > +err_out:
+> > +	unlock_page_cgroup(pc);
+> > +	put_page(page);
+> > +out:
+> > +	return ret;
 > > +}
 > > +
-> >  struct cgroup_subsys hugetlb_subsys = {
-> >  	.name = "hugetlb",
-> >  	.create     = hugetlb_cgroup_create,
-> > -- 
-> > 1.7.10
-> > 
+> > +/*
+> > + * Force the hugetlb cgroup to empty the hugetlb resources by moving them to
+> > + * the parent cgroup.
+> > + */
+> > +static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+> > +{
+> > +	struct hstate *h;
+> > +	struct page *page;
+> > +	int ret = 0, idx = 0;
+> > +
+> > +	do {
+> > +		if (cgroup_task_count(cgroup) ||
+> > +		    !list_empty(&cgroup->children)) {
+> > +			ret = -EBUSY;
+> > +			goto out;
+> > +		}
+> > +		/*
+> > +		 * If the task doing the cgroup_rmdir got a signal
+> > +		 * we don't really need to loop till the hugetlb resource
+> > +		 * usage become zero.
+> 
+> Why don't we need to loop? Is somebody else (and if so can you
+> say who) doing the deletion?
+> 
+
+No we just come out without doing the deletion and handle the signal.
+
+> > +		 */
+> > +		if (signal_pending(current)) {
+> > +			ret = -EINTR;
+> > +			goto out;
+> > +		}
+> > +		for_each_hstate(h) {
+> > +			spin_lock(&hugetlb_lock);
+> > +			list_for_each_entry(page, &h->hugepage_activelist, lru) {
+> > +				ret = hugetlb_cgroup_move_parent(idx, cgroup, page);
+> > +				if (ret) {
+> > +					spin_unlock(&hugetlb_lock);
+> > +					goto out;
+> > +				}
+> > +			}
+> > +			spin_unlock(&hugetlb_lock);
+> > +			idx++;
+> > +		}
+> > +		cond_resched();
+> > +	} while (hugetlb_cgroup_have_usage(cgroup));
+> > +out:
+> > +	return ret;
+> > +}
+> > +
+> > +static void hugetlb_cgroup_destroy(struct cgroup *cgroup)
+> > +{
+> > +	struct hugetlb_cgroup *h_cgroup;
+> > +
+> > +	h_cgroup = hugetlb_cgroup_from_cgroup(cgroup);
+> > +	kfree(h_cgroup);
+> > +}
+> > +
+> > +int hugetlb_cgroup_charge_page(int idx, unsigned long nr_pages,
+> > +			       struct hugetlb_cgroup **ptr)
+> > +{
+> > +	int ret = 0;
+> > +	struct res_counter *fail_res;
+> > +	struct hugetlb_cgroup *h_cg = NULL;
+> > +	unsigned long csize = nr_pages * PAGE_SIZE;
+> > +
+> > +	if (hugetlb_cgroup_disabled())
+> > +		goto done;
+> > +again:
+> > +	rcu_read_lock();
+> > +	h_cg = hugetlb_cgroup_from_task(current);
+> > +	if (!h_cg)
+> > +		h_cg = root_h_cgroup;
+> > +
+> > +	if (!css_tryget(&h_cg->css)) {
+> > +		rcu_read_unlock();
+> > +		goto again;
+> 
+> You don't want some form of limit on how many times you can
+> loop around?
+> 
+
+you mean fail the allocation after some tries. I am not sure memcg doesn't do that.
+
+
+> > +	}
+> > +	rcu_read_unlock();
+> > +
+> > +	ret = res_counter_charge(&h_cg->hugepage[idx], csize, &fail_res);
+> > +	css_put(&h_cg->css);
+> > +done:
+> > +	*ptr = h_cg;
+> > +	return ret;
+> > +}
+> > +
+> 
 
 -aneesh
