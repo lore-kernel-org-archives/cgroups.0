@@ -1,57 +1,283 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Wed, 30 May 2012 18:31:41 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205301831270.25774@chino.kir.corp.google.com>
-References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
-	<alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
-	<4FC6B68C.2070703@jp.fujitsu.com>
-	<CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com>
-	<4FC6BC3E.5010807@jp.fujitsu.com>
-	<alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com>
-	<4FC6C111.2060108@jp.fujitsu.com>
+From: Konrad Rzeszutek Wilk <konrad-Gq0aWv8utHQdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -V7 11/14] hugetlbfs: add hugetlb cgroup control files
+Date: Wed, 30 May 2012 21:32:25 -0400
+Message-ID: <20120531013225.GF401@localhost.localdomain>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1338388739-22919-12-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=PBBBbEYPcdQ9pV6kTGl7eSFMjF1gpIPfKuY6JWPRgLc=;
+        b=xvQryV27q2F+rayUpVG1ZFZWkqMld5hA92Axq+XvNZqYTiaxMAAHmsojLgkDT8YVXw
+         j7v4XaSgvQTmjdozADuyylWjVAOUI5a+LJRD1K4dUQ8CGl9Mtgx4bGlUxip6TjyYbJE+
+         FayZfS2N3sp22giUD12F0Rf2OMFEIMeUkkETOZT7ILgnuydQIAXkoq0Pa9+YRBscj/1m
+         O1NX9o2Zbdz+dFt0uxEQ3gRBCudkAHBBRW6/D9bju3q5qzxxnFiP2zblTsYQ0MIAiysu
+         w8ErZblk/G0+yBYzh3T7HSTe8IxVPnSfwWOJipOtN0NjrAJbelJd8lHAU2p+KuysMHzU
+         qVEg==
+Content-Disposition: inline
+In-Reply-To: <1338388739-22919-12-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
-	h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-	:references:user-agent:mime-version:content-type;
-	bh=ZSyiaY9ZQ3PVlvoOtHWVI0DItgvWweRQz4Q3YmKBQrg=;
-	b=PP3PKVadi3CzxVsnWLdGNPAnwLnF4V3NvHiiUuJKhFXXn+eGV9YrLW3FRZfQufDCZD
-	KDGZ0+rnKEnaBQCPyfxyCO1Xs5y8sVNMZNAPW6FDp1lG9IJ2gKCwwWKya77hl9U49W5p
-	6Jq6d2OYKd4hqdTdvXmSgY4bCG/oXwtuwASDvTF1wz0npgj10q05aJYCo7TqkbeVPyuh
-	OIvI8UWnwSfBRwtGPjyaYoTmz3GJcil6ybc3QSqfIBN2KQB9w2eoQLwHS3P7JZOu1P2P
-	0c7dghKf5B43Wwm7DXH89z/gbmKKcPwccb8ltavWhL5XO46OQSoI27BE3LB3yQsrmtVI
-	vLhg==
-In-Reply-To: <4FC6C111.2060108-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, 31 May 2012, Kamezawa Hiroyuki wrote:
-
-> > > My test with sysfs node's meminfo seems to work...
-> > > 
-> > > [root@rx100-1 qqm]# mount --bind /sys/devices/system/node/node0/meminfo
-> > > /proc/meminfo
-> > > [root@rx100-1 qqm]# cat /proc/meminfo
-> > > 
-> > > Node 0 MemTotal:        8379636 kB
-> > 
-> > This doesn't seem like a good idea unless the application supports the
-> > "Node 0" prefix in /proc/meminfo.
-> > 
-> Of course, /cgroup/memory/..../memory.meminfo , a new file, will use the same
-> format of /proc/meminfo. Above is just an example of bind-mount.
+On Wed, May 30, 2012 at 08:08:56PM +0530, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
+> Add the control files for hugetlb controller
+> 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> ---
+>  include/linux/hugetlb.h        |    5 ++
+>  include/linux/hugetlb_cgroup.h |    6 ++
+>  mm/hugetlb.c                   |    2 +
+>  mm/hugetlb_cgroup.c            |  130 ++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 143 insertions(+)
+> 
+> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+> index dcd55c7..92f75a5 100644
+> --- a/include/linux/hugetlb.h
+> +++ b/include/linux/hugetlb.h
+> @@ -4,6 +4,7 @@
+>  #include <linux/mm_types.h>
+>  #include <linux/fs.h>
+>  #include <linux/hugetlb_inline.h>
+> +#include <linux/cgroup.h>
+>  
+>  struct ctl_table;
+>  struct user_struct;
+> @@ -221,6 +222,10 @@ struct hstate {
+>  	unsigned int nr_huge_pages_node[MAX_NUMNODES];
+>  	unsigned int free_huge_pages_node[MAX_NUMNODES];
+>  	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
+> +#ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
+> +	/* cgroup control files */
+> +	struct cftype cgroup_files[5];
 
-It's not just a memcg issue, it would also be a cpusets issue.
+Why five? Should there be a #define for this magic value?
+
+> +#endif
+>  	char name[HSTATE_NAME_LEN];
+>  };
+>  
+> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+> index 5794be4..fbf8c5f 100644
+> --- a/include/linux/hugetlb_cgroup.h
+> +++ b/include/linux/hugetlb_cgroup.h
+> @@ -42,6 +42,7 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
+>  					 struct page *page);
+>  extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>  					   struct hugetlb_cgroup *h_cg);
+> +extern int hugetlb_cgroup_file_init(int idx) __init;
+>  #else
+>  static inline bool hugetlb_cgroup_disabled(void)
+>  {
+> @@ -75,5 +76,10 @@ hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>  {
+>  	return;
+>  }
+> +
+> +static inline int __init hugetlb_cgroup_file_init(int idx)
+> +{
+> +	return 0;
+> +}
+>  #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
+>  #endif
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index 53840dd..6330de2 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/io.h>
+>  #include <linux/hugetlb.h>
+>  #include <linux/node.h>
+> +#include <linux/hugetlb_cgroup.h>
+>  #include "internal.h"
+>  
+>  const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
+> @@ -1912,6 +1913,7 @@ void __init hugetlb_add_hstate(unsigned order)
+>  	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
+>  	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
+>  					huge_page_size(h)/1024);
+> +	hugetlb_cgroup_file_init(hugetlb_max_hstate - 1);
+>  
+>  	parsed_hstate = h;
+>  }
+> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+> index 3a288f7..49a3f20 100644
+> --- a/mm/hugetlb_cgroup.c
+> +++ b/mm/hugetlb_cgroup.c
+> @@ -19,6 +19,11 @@
+>  #include <linux/page_cgroup.h>
+>  #include <linux/hugetlb_cgroup.h>
+>  
+> +/* lifted from mem control */
+
+Might also include the comment from said file explaining the
+purpose of these #define.
+
+> +#define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
+> +#define MEMFILE_IDX(val)	(((val) >> 16) & 0xffff)
+> +#define MEMFILE_ATTR(val)	((val) & 0xffff)
+> +
+>  struct cgroup_subsys hugetlb_subsys __read_mostly;
+>  struct hugetlb_cgroup *root_h_cgroup __read_mostly;
+>  
+> @@ -271,6 +276,131 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>  	return;
+>  }
+>  
+> +static ssize_t hugetlb_cgroup_read(struct cgroup *cgroup, struct cftype *cft,
+> +				   struct file *file, char __user *buf,
+> +				   size_t nbytes, loff_t *ppos)
+> +{
+> +	u64 val;
+> +	char str[64];
+
+I would think there would be a define for this somewhere?
+
+> +	int idx, name, len;
+> +	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_cgroup(cgroup);
+> +
+> +	idx = MEMFILE_IDX(cft->private);
+> +	name = MEMFILE_ATTR(cft->private);
+> +
+> +	val = res_counter_read_u64(&h_cg->hugepage[idx], name);
+> +	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
+> +	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
+> +}
+> +
+> +static int hugetlb_cgroup_write(struct cgroup *cgroup, struct cftype *cft,
+> +				const char *buffer)
+> +{
+> +	int idx, name, ret;
+> +	unsigned long long val;
+> +	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_cgroup(cgroup);
+> +
+> +	idx = MEMFILE_IDX(cft->private);
+> +	name = MEMFILE_ATTR(cft->private);
+> +
+> +	switch (name) {
+> +	case RES_LIMIT:
+> +		if (hugetlb_cgroup_is_root(h_cg)) {
+> +			/* Can't set limit on root */
+> +			ret = -EINVAL;
+> +			break;
+> +		}
+> +		/* This function does all necessary parse...reuse it */
+> +		ret = res_counter_memparse_write_strategy(buffer, &val);
+> +		if (ret)
+> +			break;
+> +		ret = res_counter_set_limit(&h_cg->hugepage[idx], val);
+> +		break;
+> +	default:
+> +		ret = -EINVAL;
+> +		break;
+> +	}
+> +	return ret;
+> +}
+> +
+> +static int hugetlb_cgroup_reset(struct cgroup *cgroup, unsigned int event)
+> +{
+> +	int idx, name, ret = 0;
+> +	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_cgroup(cgroup);
+> +
+> +	idx = MEMFILE_IDX(event);
+> +	name = MEMFILE_ATTR(event);
+> +
+> +	switch (name) {
+> +	case RES_MAX_USAGE:
+> +		res_counter_reset_max(&h_cg->hugepage[idx]);
+> +		break;
+> +	case RES_FAILCNT:
+> +		res_counter_reset_failcnt(&h_cg->hugepage[idx]);
+> +		break;
+> +	default:
+> +		ret = -EINVAL;
+> +		break;
+> +	}
+> +	return ret;
+> +}
+> +
+> +static char *mem_fmt(char *buf, int size, unsigned long hsize)
+> +{
+> +	if (hsize >= (1UL << 30))
+> +		snprintf(buf, size, "%luGB", hsize >> 30);
+> +	else if (hsize >= (1UL << 20))
+> +		snprintf(buf, size, "%luMB", hsize >> 20);
+> +	else
+> +		snprintf(buf, size, "%luKB", hsize >> 10);
+> +	return buf;
+> +}
+> +
+> +int __init hugetlb_cgroup_file_init(int idx)
+> +{
+> +	char buf[32];
+
+#define pls.
+
+> +	struct cftype *cft;
+> +	struct hstate *h = &hstates[idx];
+> +
+> +	/* format the size */
+> +	mem_fmt(buf, 32, huge_page_size(h));
+> +
+> +	/* Add the limit file */
+> +	cft = &h->cgroup_files[0];
+> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.limit_in_bytes", buf);
+> +	cft->private = MEMFILE_PRIVATE(idx, RES_LIMIT);
+> +	cft->read = hugetlb_cgroup_read;
+> +	cft->write_string = hugetlb_cgroup_write;
+> +
+> +	/* Add the usage file */
+> +	cft = &h->cgroup_files[1];
+> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.usage_in_bytes", buf);
+> +	cft->private = MEMFILE_PRIVATE(idx, RES_USAGE);
+> +	cft->read = hugetlb_cgroup_read;
+> +
+> +	/* Add the MAX usage file */
+> +	cft = &h->cgroup_files[2];
+> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.max_usage_in_bytes", buf);
+> +	cft->private = MEMFILE_PRIVATE(idx, RES_MAX_USAGE);
+> +	cft->trigger = hugetlb_cgroup_reset;
+> +	cft->read = hugetlb_cgroup_read;
+> +
+> +	/* Add the failcntfile */
+> +	cft = &h->cgroup_files[3];
+> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.failcnt", buf);
+> +	cft->private  = MEMFILE_PRIVATE(idx, RES_FAILCNT);
+> +	cft->trigger  = hugetlb_cgroup_reset;
+> +	cft->read = hugetlb_cgroup_read;
+> +
+> +	/* NULL terminate the last cft */
+> +	cft = &h->cgroup_files[4];
+> +	memset(cft, 0, sizeof(*cft));
+> +
+> +	WARN_ON(cgroup_add_cftypes(&hugetlb_subsys, h->cgroup_files));
+> +
+
+Wouldn't doing:
+	return cgroup_add_cftypes(&hugetlb_subsys, h->cgroup_files);
+
+be more appropiate?
+> +	return 0;
+> +}
+> +
+>  struct cgroup_subsys hugetlb_subsys = {
+>  	.name = "hugetlb",
+>  	.create     = hugetlb_cgroup_create,
+> -- 
+> 1.7.10
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+> 
