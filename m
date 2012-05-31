@@ -1,48 +1,208 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH -V7 03/14] hugetlbfs: add an inline helper for finding
- hstate index
-Date: Wed, 30 May 2012 18:05:46 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205301805360.25774@chino.kir.corp.google.com>
-References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: Konrad Rzeszutek Wilk <konrad-Gq0aWv8utHQdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -V7 10/14] hugetlbfs: Add new HugeTLB cgroup
+Date: Wed, 30 May 2012 21:19:54 -0400
+Message-ID: <20120531011953.GE401@localhost.localdomain>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1338388739-22919-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=19bXRiYwAbqw/Ys7DLmeB7aMVq3w8OXRGSUBQPsqjAo=;
-        b=j2VmQ9gSEdl8UZ6bkVw3R9NxO9EqoD9i5ARarFHzZlr7zqkUIrwje8hMrvY6sYW6sZ
-         HPeRkATo7TPHQRWP1Q5fb2tFZNJQWRt2PLsuTnDQpAMyKArcQ2R20ioTZbfkkR7578Te
-         8NJAibWKX5TvBLzo55B8IsB3LRoW+TSBtYTRM4EHKIbDHiNTG+nRL3V4ey0XTLluHlq/
-         yQG7hJ2eEwPdY4doIKVWgB24CTSb2VyrHv3c0SjFcSQKkGCUQqHnFm3ewz4b37AOMm7t
-         Du8vLKE+VzSpi8A7FyHbE1awoBfwS1AZReUU3UtvJdAJ+h9fIkUDFMwzf8HpB4Ir64Ls
-         +J9w==
-In-Reply-To: <1338388739-22919-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=d7KwBTusHqjmUSk3kTz2qtGm6rfyq2D6dTEEwpEz6gI=;
+        b=xF7OYXv31QCd1vXFQ88NBi11BuHDY0gELyTyY7MM9OyooenDy5D/GZ4z4F2hZXTuzl
+         oV6DE9HCnEXI5C99ds0NGFl+R4dHv0N9UQBhC/ULrRB7ufIsQ60yKGfXWsx2OFrr8TlD
+         IOzIyXHX4dny8vNtdA/gInhRsTMDr2PqEBc5t6thnhHTpWY6lcMnT105UJaaLg57AIbH
+         8VyGO1FNRUIQEKglxxjQuQR96G8iofv4fHwwunlJPUFybGr1/jTvejJBwhgBGn0gyIH5
+         fyOxEE1EPRIEQS0NpUPlCveCcPAFhcf16nW09P6Nt9Y3S9vyIjJsUQoR9lMwjp9KxRK+
+         nbtg==
+Content-Disposition: inline
+In-Reply-To: <1338388739-22919-11-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 30 May 2012, Aneesh Kumar K.V wrote:
+> +static inline bool hugetlb_cgroup_have_usage(struct cgroup *cg)
+> +{
+> +	int idx;
+> +	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_cgroup(cg);
+> +
+> +	for (idx = 0; idx < HUGE_MAX_HSTATE; idx++) {
+> +		if ((res_counter_read_u64(&h_cg->hugepage[idx], RES_USAGE)) > 0)
+> +			return 1;
 
-> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-> 
-> Add an inline helper and use it in the code.
-> 
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> Cc: Hillf Danton <dhillf@gmail.com>
-> Cc: Andrea Arcangeli <aarcange@redhat.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
+return true;
+> +	}
+> +	return 0;
 
-Acked-by: David Rientjes <rientjes@google.com>
+And return false here
+> +}
+> +
+> +static struct cgroup_subsys_state *hugetlb_cgroup_create(struct cgroup *cgroup)
+> +{
+> +	int idx;
+> +	struct cgroup *parent_cgroup;
+> +	struct hugetlb_cgroup *h_cgroup, *parent_h_cgroup;
+> +
+> +	h_cgroup = kzalloc(sizeof(*h_cgroup), GFP_KERNEL);
+> +	if (!h_cgroup)
+> +		return ERR_PTR(-ENOMEM);
+> +
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+No need to check cgroup for NULL?
+
+> +	parent_cgroup = cgroup->parent;
+> +	if (parent_cgroup) {
+> +		parent_h_cgroup = hugetlb_cgroup_from_cgroup(parent_cgroup);
+> +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+> +			res_counter_init(&h_cgroup->hugepage[idx],
+> +					 &parent_h_cgroup->hugepage[idx]);
+> +	} else {
+> +		root_h_cgroup = h_cgroup;
+> +		for (idx = 0; idx < HUGE_MAX_HSTATE; idx++)
+> +			res_counter_init(&h_cgroup->hugepage[idx], NULL);
+> +	}
+> +	return &h_cgroup->css;
+> +}
+> +
+> +static int hugetlb_cgroup_move_parent(int idx, struct cgroup *cgroup,
+> +				      struct page *page)
+> +{
+> +	int csize,  ret = 0;
+> +	struct page_cgroup *pc;
+> +	struct res_counter *counter;
+> +	struct res_counter *fail_res;
+> +	struct hugetlb_cgroup *h_cg   = hugetlb_cgroup_from_cgroup(cgroup);
+> +	struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(cgroup);
+> +
+> +	if (!get_page_unless_zero(page))
+> +		goto out;
+
+Hmm, so it goes to out, and does return ret. ret is zero. Is
+that correct? Should ret be set to -EBUSY or such?
+
+> +
+> +	pc = lookup_page_cgroup(page);
+
+What if pc is NULL? Or is it guaranteed that it will
+never happen so?
+
+> +	lock_page_cgroup(pc);
+> +	if (!PageCgroupUsed(pc) || pc->cgroup != cgroup)
+> +		goto err_out;
+
+err is still set to zero. Is that OK? Should it be -EINVAL
+or such?
+
+> +
+> +	csize = PAGE_SIZE << compound_order(page);
+> +	/* If use_hierarchy == 0, we need to charge root */
+> +	if (!parent) {
+> +		parent = root_h_cgroup;
+> +		/* root has no limit */
+> +		res_counter_charge_nofail(&parent->hugepage[idx],
+> +					  csize, &fail_res);
+> +	}
+> +	counter = &h_cg->hugepage[idx];
+> +	res_counter_uncharge_until(counter, counter->parent, csize);
+> +
+> +	pc->cgroup = cgroup->parent;
+> +err_out:
+> +	unlock_page_cgroup(pc);
+> +	put_page(page);
+> +out:
+> +	return ret;
+> +}
+> +
+> +/*
+> + * Force the hugetlb cgroup to empty the hugetlb resources by moving them to
+> + * the parent cgroup.
+> + */
+> +static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+> +{
+> +	struct hstate *h;
+> +	struct page *page;
+> +	int ret = 0, idx = 0;
+> +
+> +	do {
+> +		if (cgroup_task_count(cgroup) ||
+> +		    !list_empty(&cgroup->children)) {
+> +			ret = -EBUSY;
+> +			goto out;
+> +		}
+> +		/*
+> +		 * If the task doing the cgroup_rmdir got a signal
+> +		 * we don't really need to loop till the hugetlb resource
+> +		 * usage become zero.
+
+Why don't we need to loop? Is somebody else (and if so can you
+say who) doing the deletion?
+
+> +		 */
+> +		if (signal_pending(current)) {
+> +			ret = -EINTR;
+> +			goto out;
+> +		}
+> +		for_each_hstate(h) {
+> +			spin_lock(&hugetlb_lock);
+> +			list_for_each_entry(page, &h->hugepage_activelist, lru) {
+> +				ret = hugetlb_cgroup_move_parent(idx, cgroup, page);
+> +				if (ret) {
+> +					spin_unlock(&hugetlb_lock);
+> +					goto out;
+> +				}
+> +			}
+> +			spin_unlock(&hugetlb_lock);
+> +			idx++;
+> +		}
+> +		cond_resched();
+> +	} while (hugetlb_cgroup_have_usage(cgroup));
+> +out:
+> +	return ret;
+> +}
+> +
+> +static void hugetlb_cgroup_destroy(struct cgroup *cgroup)
+> +{
+> +	struct hugetlb_cgroup *h_cgroup;
+> +
+> +	h_cgroup = hugetlb_cgroup_from_cgroup(cgroup);
+> +	kfree(h_cgroup);
+> +}
+> +
+> +int hugetlb_cgroup_charge_page(int idx, unsigned long nr_pages,
+> +			       struct hugetlb_cgroup **ptr)
+> +{
+> +	int ret = 0;
+> +	struct res_counter *fail_res;
+> +	struct hugetlb_cgroup *h_cg = NULL;
+> +	unsigned long csize = nr_pages * PAGE_SIZE;
+> +
+> +	if (hugetlb_cgroup_disabled())
+> +		goto done;
+> +again:
+> +	rcu_read_lock();
+> +	h_cg = hugetlb_cgroup_from_task(current);
+> +	if (!h_cg)
+> +		h_cg = root_h_cgroup;
+> +
+> +	if (!css_tryget(&h_cg->css)) {
+> +		rcu_read_unlock();
+> +		goto again;
+
+You don't want some form of limit on how many times you can
+loop around?
+
+> +	}
+> +	rcu_read_unlock();
+> +
+> +	ret = res_counter_charge(&h_cg->hugepage[idx], csize, &fail_res);
+> +	css_put(&h_cg->css);
+> +done:
+> +	*ptr = h_cg;
+> +	return ret;
+> +}
+> +
