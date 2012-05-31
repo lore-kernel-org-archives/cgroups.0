@@ -1,232 +1,54 @@
 From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -V7 04/14] hugetlb: use mmu_gather instead of a temporary
- linked list for accumulating pages
-Date: Wed, 30 May 2012 18:56:36 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205301844010.25774@chino.kir.corp.google.com>
-References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V7 05/14] hugetlb: avoid taking i_mmap_mutex in
+ unmap_single_vma() for hugetlb
+Date: Wed, 30 May 2012 18:57:47 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205301857170.25774@chino.kir.corp.google.com>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=DePxYOPiQlTaDJ1IBxGaBeOaYcN0ZiOEyC8LzaheUnQ=;
-        b=h9hlJS35mF+UHuC9dJofCV7qmIdCmK8R6zfmq3mh3TcHxPWbgOKRZNtbWqUFkqDtXa
-         jiiW6bmnYACUY20RyIDD1EOw/saNlBIMuVlOgv8jsrX3+f0KTsFmPI+9ylWjHxXE7FY8
-         YV6XyWlV/qPHrzF4HUQNqqimfQYpVzP93jV/re32I8vnw8nDNv+H89mgmJ7a5+SFWD/0
-         g9Awmvrf833sxJajWUuJtmvwrMHBkQcXSv7s3XOxbeJvj0E7yDKYOIGrdO+QHeGtRwgx
-         94VaHimUvz7Z725FCJBsrFp5x4vIWr2iJ/lDxdd0AhgZX3+PuzJv3+9h/Yq2C/FzGWIw
-         ewaw==
-In-Reply-To: <1338388739-22919-5-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+        bh=W3xwPet3fxrmOgxqpbYPT+yIaTYMNWe6zRzpJtsxCWE=;
+        b=kjSAr7uk5FP8yEr+MXupCYkf1ClG1RcEktrg1k8TzGYmd0gDFlNGGJRb8fbBAM1bJh
+         Xlbw4CUrCNffP651ztUfnUAP5gl2U3s5o0QvBeRvxSE/RrnBf7LZ0BHkGoortDDZ64ah
+         VX0aslslFjyTh2BjkTfmauGB8tJz0fsYfKZYFYaWyYV8lCZoGAW3eEwYA5jmHsFkHfII
+         PVMWpQbhSrEc+HBh375my+fLAgf/M23zyU5lLe5gNGDU0RX8L7BBnrV87eOVrp7T0tDf
+         zJqADZW75MYq/KNhca009EXNwWuzPPDoLC80E2br0snaOX5zT5RHDTcA7/wDqQdXNNxS
+         sJQg==
+In-Reply-To: <1338388739-22919-6-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 On Wed, 30 May 2012, Aneesh Kumar K.V wrote:
 
-> diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
-> index cc9281b..ff233e4 100644
-> --- a/fs/hugetlbfs/inode.c
-> +++ b/fs/hugetlbfs/inode.c
-> @@ -416,8 +416,8 @@ hugetlb_vmtruncate_list(struct prio_tree_root *root, pgoff_t pgoff)
->  		else
->  			v_offset = 0;
->  
-> -		__unmap_hugepage_range(vma,
-> -				vma->vm_start + v_offset, vma->vm_end, NULL);
-> +		unmap_hugepage_range(vma, vma->vm_start + v_offset,
-> +				     vma->vm_end, NULL);
->  	}
->  }
->  
-> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-> index 217f528..c21e136 100644
-> --- a/include/linux/hugetlb.h
-> +++ b/include/linux/hugetlb.h
-> @@ -7,6 +7,7 @@
->  
->  struct ctl_table;
->  struct user_struct;
-> +struct mmu_gather;
->  
->  #ifdef CONFIG_HUGETLB_PAGE
->  
-> @@ -40,9 +41,10 @@ int follow_hugetlb_page(struct mm_struct *, struct vm_area_struct *,
->  			struct page **, struct vm_area_struct **,
->  			unsigned long *, int *, int, unsigned int flags);
->  void unmap_hugepage_range(struct vm_area_struct *,
-> -			unsigned long, unsigned long, struct page *);
-> -void __unmap_hugepage_range(struct vm_area_struct *,
-> -			unsigned long, unsigned long, struct page *);
-> +			  unsigned long, unsigned long, struct page *);
-> +void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vms,
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> i_mmap_mutex lock was added in unmap_single_vma by 502717f4e ("hugetlb:
+> fix linked list corruption in unmap_hugepage_range()") but we don't use
+> page->lru in unmap_hugepage_range any more.  Also the lock was taken
+> higher up in the stack in some code path.  That would result in deadlock.
+> 
+> unmap_mapping_range (i_mmap_mutex)
+>  -> unmap_mapping_range_tree
+>     -> unmap_mapping_range_vma
+>        -> zap_page_range_single
+>          -> unmap_single_vma
+> 	      -> unmap_hugepage_range (i_mmap_mutex)
+> 
 
-s/vms/vma/
+You should be able to show this with lockdep?
 
-> +				unsigned long start, unsigned long end,
-> +				struct page *ref_page);
->  int hugetlb_prefault(struct address_space *, struct vm_area_struct *);
->  void hugetlb_report_meminfo(struct seq_file *);
->  int hugetlb_report_node_meminfo(int, char *);
-> @@ -98,7 +100,6 @@ static inline unsigned long hugetlb_total_pages(void)
->  #define follow_huge_addr(mm, addr, write)	ERR_PTR(-EINVAL)
->  #define copy_hugetlb_page_range(src, dst, vma)	({ BUG(); 0; })
->  #define hugetlb_prefault(mapping, vma)		({ BUG(); 0; })
-> -#define unmap_hugepage_range(vma, start, end, page)	BUG()
->  static inline void hugetlb_report_meminfo(struct seq_file *m)
->  {
->  }
+> For shared pagetable support for huge pages, since pagetable pages are ref
+> counted we don't need any lock during huge_pmd_unshare.  We do take
+> i_mmap_mutex in huge_pmd_share while walking the vma_prio_tree in mapping.
+> (39dde65c9940c97f ("shared page table for hugetlb page")).
+> 
 
-Why?
-
-> @@ -112,13 +113,24 @@ static inline void hugetlb_report_meminfo(struct seq_file *m)
->  #define hugetlb_free_pgd_range(tlb, addr, end, floor, ceiling) ({BUG(); 0; })
->  #define hugetlb_fault(mm, vma, addr, flags)	({ BUG(); 0; })
->  #define huge_pte_offset(mm, address)	0
-> -#define dequeue_hwpoisoned_huge_page(page)	0
-> +static inline int dequeue_hwpoisoned_huge_page(struct page *page)
-> +{
-> +	return 0;
-> +}
-> +
-
-Unrelated from this patchset.
-
->  static inline void copy_huge_page(struct page *dst, struct page *src)
->  {
->  }
->  
->  #define hugetlb_change_protection(vma, address, end, newprot)
->  
-> +static inline void __unmap_hugepage_range(struct mmu_gather *tlb,
-> +			struct vm_area_struct *vma, unsigned long start,
-> +			unsigned long end, struct page *ref_page)
-> +{
-> +	BUG();
-> +}
-> +
-
-I think this should be done under the unmap_hugepage_range() definition 
-you removed (and change it to be a static inline function as well).
-
->  #endif /* !CONFIG_HUGETLB_PAGE */
->  
->  #define HUGETLB_ANON_FILE "anon_hugepage"
-> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index 9b97a5c..704a269 100644
-> --- a/mm/hugetlb.c
-> +++ b/mm/hugetlb.c
-> @@ -24,8 +24,9 @@
->  
->  #include <asm/page.h>
->  #include <asm/pgtable.h>
-> -#include <linux/io.h>
-> +#include <asm/tlb.h>
->  
-> +#include <linux/io.h>
->  #include <linux/hugetlb.h>
->  #include <linux/node.h>
->  #include "internal.h"
-> @@ -2310,30 +2311,26 @@ static int is_hugetlb_entry_hwpoisoned(pte_t pte)
->  		return 0;
->  }
->  
-> -void __unmap_hugepage_range(struct vm_area_struct *vma, unsigned long start,
-> -			    unsigned long end, struct page *ref_page)
-> +void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vma,
-> +			    unsigned long start, unsigned long end,
-> +			    struct page *ref_page)
->  {
-> +	int force_flush = 0;
-
-Can this be bool?
-
->  	struct mm_struct *mm = vma->vm_mm;
->  	unsigned long address;
->  	pte_t *ptep;
->  	pte_t pte;
->  	struct page *page;
-> -	struct page *tmp;
->  	struct hstate *h = hstate_vma(vma);
->  	unsigned long sz = huge_page_size(h);
->  
-> -	/*
-> -	 * A page gathering list, protected by per file i_mmap_mutex. The
-> -	 * lock is used to avoid list corruption from multiple unmapping
-> -	 * of the same page since we are using page->lru.
-> -	 */
-> -	LIST_HEAD(page_list);
-> -
->  	WARN_ON(!is_vm_hugetlb_page(vma));
->  	BUG_ON(start & ~huge_page_mask(h));
->  	BUG_ON(end & ~huge_page_mask(h));
->  
-> +	tlb_start_vma(tlb, vma);
->  	mmu_notifier_invalidate_range_start(mm, start, end);
-> +again:
->  	spin_lock(&mm->page_table_lock);
->  	for (address = start; address < end; address += sz) {
->  		ptep = huge_pte_offset(mm, address);
-> @@ -2372,30 +2369,45 @@ void __unmap_hugepage_range(struct vm_area_struct *vma, unsigned long start,
->  		}
->  
->  		pte = huge_ptep_get_and_clear(mm, address, ptep);
-> +		tlb_remove_tlb_entry(tlb, ptep, address);
->  		if (pte_dirty(pte))
->  			set_page_dirty(page);
-> -		list_add(&page->lru, &page_list);
->  
-> +		page_remove_rmap(page);
-> +		force_flush = !__tlb_remove_page(tlb, page);
-> +		if (force_flush)
-> +			break;
->  		/* Bail out after unmapping reference page if supplied */
->  		if (ref_page)
->  			break;
->  	}
-> -	flush_tlb_range(vma, start, end);
->  	spin_unlock(&mm->page_table_lock);
-> -	mmu_notifier_invalidate_range_end(mm, start, end);
-> -	list_for_each_entry_safe(page, tmp, &page_list, lru) {
-> -		page_remove_rmap(page);
-> -		list_del(&page->lru);
-> -		put_page(page);
-> +	/*
-> +	 * mmu_gather ran out of room to batch pages, we break out of
-> +	 * the PTE lock to avoid doing the potential expensive TLB invalidate
-> +	 * and page-free while holding it.
-> +	 */
-> +	if (force_flush) {
-> +		force_flush = 0;
-> +		tlb_flush_mmu(tlb);
-> +		if (address < end && !ref_page)
-> +			goto again;
-
-Shouldn't be copying "start" at the beginning of this function and then 
-updating that copy now and use it as the loop initialization?
-
->  	}
-> +	mmu_notifier_invalidate_range_end(mm, start, end);
-> +	tlb_end_vma(tlb, vma);
->  }
->  
->  void unmap_hugepage_range(struct vm_area_struct *vma, unsigned long start,
->  			  unsigned long end, struct page *ref_page)
->  {
-> -	mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
-> -	__unmap_hugepage_range(vma, start, end, ref_page);
-> -	mutex_unlock(&vma->vm_file->f_mapping->i_mmap_mutex);
-> +	struct mm_struct *mm;
-> +	struct mmu_gather tlb;
-> +
-> +	mm = vma->vm_mm;
-> +
-> +	tlb_gather_mmu(&tlb, mm, 0);
-> +	__unmap_hugepage_range(&tlb, vma, start, end, ref_page);
-> +	tlb_finish_mmu(&tlb, start, end);
->  }
->  
->  /*
+I think this should be folded into patch 4, the code you're removing here 
+is just added in that function unnecessarily.
