@@ -1,71 +1,59 @@
-From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Thu, 31 May 2012 03:42:38 -0400
-Message-ID: <4FC720EE.3010307@gmail.com>
-References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com> <alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com> <4FC6B68C.2070703@jp.fujitsu.com> <CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com> <4FC6BC3E.5010807@jp.fujitsu.com> <alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com> <4FC6C111.2060108@jp.fujitsu.com> <alpine.DEB.2.00.1205301831270.25774@chino.kir.corp.google.com> <4FC6D881.4090706@jp.fujitsu.com> <alpine.DEB.2.00.1205302156090.25774@chino.kir.corp.google.com> <4FC70355.70805@jp.fujitsu.com> <alpine.DEB.2.00.1205302314190.25774@chino.kir.corp.google.com> <4FC70E5E.1010003@gmail.com> <alpine.DEB.2.00.1205302325500.25774@chino.kir.corp.google.com> <4FC711A5.4090003@gmail.com> <alpine.DEB.2.00.1205302351510.25774@chino.kir.corp
- .google.com> <CAHGf_=qVDVT6VW2j9gE3bQKwizW24iivrDryiCKoxVu4m_fWKw@mail.gmail.com> <alpine.DEB.2.00.1205310028420.8864@chino.kir.corp.google.com>
+Date: Thu, 31 May 2012 09:57:18 +0200
+Message-ID: <20120531075718.GB1371@cmpxchg.org>
+References: <alpine.DEB.2.00.1205302156090.25774@chino.kir.corp.google.com>
+ <4FC70355.70805@jp.fujitsu.com>
+ <alpine.DEB.2.00.1205302314190.25774@chino.kir.corp.google.com>
+ <4FC70E5E.1010003@gmail.com>
+ <alpine.DEB.2.00.1205302325500.25774@chino.kir.corp.google.com>
+ <4FC711A5.4090003@gmail.com>
+ <alpine.DEB.2.00.1205302351510.25774@chino.kir.corp.google.com>
+ <CAHGf_=qVDVT6VW2j9gE3bQKwizW24iivrDryiCKoxVu4m_fWKw@mail.gmail.com>
+ <alpine.DEB.2.00.1205310028420.8864@chino.kir.corp.google.com>
+ <4FC720EE.3010307@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=LMbopO/Lould8gGF4/QE/7Otn41256t8Q3YX+/f70Lo=;
-        b=seb1Fzqy/dBczLMR1EzGfEBOlryHkpp8PgKw7/gxw/JvI4n0/8XqbO4LruQEVg7OEp
-         xpNx0eAqkOlg5sKEx8IjhfZqNmYdXoFTNi3DIKXkiPksU6S7zILpolkgUPx6CZZdC8dt
-         jcBYXWIo962kNIL6KaEP7V139QC95ANPY5GKkW1rdajheWXbaeXkwDJc5AQsiiyEPdEN
-         +7/Tue8QJP8f9cfhV0i6LZ3EJyqkKnKFbDQrjNPCK//1F9UWJzqI+WeQ+C1ytmMe1wgA
-         zEHsmzpprlfnkHBwDJYN+31y2Pm/CzhVEXTGEIT8fAaAODpIYtEd/tH+wcxN5v6k9m3G
-         nxzQ==
-In-Reply-To: <alpine.DEB.2.00.1205310028420.8864@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4FC720EE.3010307-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes@google.com>
-Cc: KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Gao feng <gaofeng@cn.fujitsu.com>, hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-(5/31/12 3:35 AM), David Rientjes wrote:
-> On Thu, 31 May 2012, KOSAKI Motohiro wrote:
->
->>> As I said, LXC and namespace isolation is a tangent to the discussion of
->>> faking the /proc/meminfo for the memcg context of a thread.
->>
->> Because of, /proc/meminfo affect a lot of libraries behavior. So, it's not only
->> application issue. If you can't rewrite _all_ of userland assets, fake meminfo
->> can't be escaped. Again see alternative container implementation.
->>
->
-> It's a tangent because it isn't a complete psuedo /proc/meminfo for all
-> threads attached to a memcg regardless of any namespace isolation; the LXC
-> solution has existed for a couple of years by its procfs patchset that
-> overlaps procfs with fuse and can suppress or modify any output in the
-> context of a memory controller using things like
-> memory.{limit,usage}_in_bytes.  I'm sure all other fields could be
-> modified if outputted in some structured way via memcg; it looks like
-> memory.stat would need to be extended to provide that.  If that's mounted
-> prior to executing the application, then your isolation is achieved and
-> all libraries should see the new output that you've defined in LXC.
->
-> However, this seems like a seperate topic than the patch at hand which
-> does this directly to /proc/meminfo based on a thread's memcg context,
-> that's the part that I'm nacking.
+On Thu, May 31, 2012 at 03:42:38AM -0400, KOSAKI Motohiro wrote:
+> (5/31/12 3:35 AM), David Rientjes wrote:
+> >On Thu, 31 May 2012, KOSAKI Motohiro wrote:
+> >
+> >>>As I said, LXC and namespace isolation is a tangent to the discussion of
+> >>>faking the /proc/meminfo for the memcg context of a thread.
+> >>
+> >>Because of, /proc/meminfo affect a lot of libraries behavior. So, it's not only
+> >>application issue. If you can't rewrite _all_ of userland assets, fake meminfo
+> >>can't be escaped. Again see alternative container implementation.
+> >>
+> >
+> >It's a tangent because it isn't a complete psuedo /proc/meminfo for all
+> >threads attached to a memcg regardless of any namespace isolation; the LXC
+> >solution has existed for a couple of years by its procfs patchset that
+> >overlaps procfs with fuse and can suppress or modify any output in the
+> >context of a memory controller using things like
+> >memory.{limit,usage}_in_bytes.  I'm sure all other fields could be
+> >modified if outputted in some structured way via memcg; it looks like
+> >memory.stat would need to be extended to provide that.  If that's mounted
+> >prior to executing the application, then your isolation is achieved and
+> >all libraries should see the new output that you've defined in LXC.
+> >
+> >However, this seems like a seperate topic than the patch at hand which
+> >does this directly to /proc/meminfo based on a thread's memcg context,
+> >that's the part that I'm nacking.
+> 
+> Then, I NAKed current patch too. Yeah, current one is ugly. It assume _all_
+> user need namespace isolation and it clearly is not.
 
-Then, I NAKed current patch too. Yeah, current one is ugly. It assume _all_
-user need namespace isolation and it clearly is not.
-
-
-> I'd recommend to Gao to expose this
-> information via memory.stat and then use fuse and the procfs lxc support
-> as your way of contextualizing the resources.
-
-It's one of a option. But, I seriously doubt fuse can make simpler than kamezawa-san's
-idea. But yeah, I might NACK kamezawa-san's one if he will post ugly patch.
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Actually, it only chooses the memcg version for tasks that are not in
+the init pid namespace.  Tying this to the pid namespace is a bit
+ugly, but would probably end up doing the right thing most of the
+time.  A separate namespace would be better.
