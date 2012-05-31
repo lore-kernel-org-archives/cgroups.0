@@ -1,59 +1,60 @@
-From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 10/12] container quota: bill container inodes alloc/free
-	on ext4.
-Date: Thu, 31 May 2012 21:43:32 +0800
-Message-ID: <4FC77584.30503@oracle.com>
-References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com>
-	<1338389946-13711-11-git-send-email-jeff.liu@oracle.com>
-	<4FC736AD.2070404@parallels.com> <4FC76B0D.6020804@oracle.com>
-	<4FC76ECA.3070301@parallels.com>
-Reply-To: jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -V7 10/14] hugetlbfs: Add new HugeTLB cgroup
+Date: Thu, 31 May 2012 16:01:46 +0200
+Message-ID: <20120531140146.GC12809@tiehlicka.suse.cz>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1338388739-22919-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1338388739-22919-11-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <4FC76ECA.3070301-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, Ted Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bpm-sJ/iWh9BUns@public.gmane.org, christopher.jones-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tm-d1IQDZat3X0@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tinguely-sJ/iWh9BUns@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 05/31/2012 09:14 PM, Glauber Costa wrote:
-
-> On 05/31/2012 04:58 PM, Jeff Liu wrote:
->>> >  This should be inside dquot_free_inode().
->> Yeah, Ted also mentioned this before, all name space dquot bill routine
->> could be placed to dquot_xxx() for VFS quota user.
->>
->> However, AFAICS, they still have to be exported to other file systems
->> which have their own quota management module, like XFS.
->>
->> Thanks,
->> -Jeff
->>
-> Do you have a personal need to have it working with xfs, or is the use
-> you are pursuing achievable with the other filesystems?
-
-I am just trying to figure out a unique interface for all file systems.
-
+On Wed 30-05-12 20:08:55, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> Unless you have a reason yourself to use xfs, I'd say don't bother with
-> it too much at the moment. get it working for the standard interface first.
+> This patch implements a new controller that allows us to control HugeTLB
+> allocations. The extension allows to limit the HugeTLB usage per control
+> group and enforces the controller limit during page fault.  Since HugeTLB
+> doesn't support page reclaim, enforcing the limit at page fault time implies
+> that, the application will get SIGBUS signal if it tries to access HugeTLB
+> pages beyond its limit. This requires the application to know beforehand
+> how much HugeTLB pages it would require for its use.
 
-Ok, It can also make my life easier.
+You forgot to mention that the tracking is based on page_cgroup which
+is essential IMO. This also means that shadow pages are allocated for
+_every_ single page in the system even though only a preallocated huge
+pages (their heads to be precise) use them. Please mention that in the
+Kconfig help text as well. Users should be aware of that.
+The overhead is huge but this might change in future because there is
+tendency to merge page_cgroup with struct page.
 
-Thanks,
--Jeff
+I would also appreciate if you describe the motivation why is this a
+separate controller here in the description.
 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You are also changing behavior of cgroup_disable slightly. Many users of
+distribution kernels are used to disable memory controller (which is
+compiled in by default) because of its memory footprint primarily so
+they use cgroup_disable=memory boot parameter. Things changed with
+this patch because this won't be enough and they have to learn about
+hugetlb controller which has to be disabled as well (distributions will
+have to compile it in as well).
+
+As I already mentioned earlier I do not see any of these as a show
+stopper. If people feel strong that this should be separate because
+they need only hugetlb pages tracking without memcg then why not.
+It is definitely much better than range tracking proposed at the
+beginning.
+
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
