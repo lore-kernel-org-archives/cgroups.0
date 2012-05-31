@@ -1,7 +1,7 @@
 From: KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
-Date: Thu, 31 May 2012 03:09:45 -0400
-Message-ID: <CAHGf_=qVDVT6VW2j9gE3bQKwizW24iivrDryiCKoxVu4m_fWKw@mail.gmail.com>
+Date: Thu, 31 May 2012 03:23:00 -0400
+Message-ID: <4FC71C54.3060909@gmail.com>
 References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
 	<alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
 	<4FC6B68C.2070703@jp.fujitsu.com>
@@ -16,23 +16,21 @@ References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
 	<alpine.DEB.2.00.1205302314190.25774@chino.kir.corp.google.com>
 	<4FC70E5E.1010003@gmail.com>
 	<alpine.DEB.2.00.1205302325500.25774@chino.kir.corp.google.com>
-	<4FC711A5.4090003@gmail.com>
-	<alpine.DEB.2.00.1205302351510.25774@chino.kir.corp.google.com>
+	<4FC711A5.4090003@gmail.com> <4FC718BA.8060608@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-	:cc:content-type:content-transfer-encoding;
-	bh=e4qLLYhiFTY9Yq057suKZRu/WSVCS0SOEZrbpeM4ROk=;
-	b=wRvPNLa4pZQl3Gj4r94+7rsj/gI1ddtNA8fIQCUq3g5uttZAmv/iJcCXX8YygzinAZ
-	Nhc2/HKF/vwT3cSjn9SJSAqp3k50SI6jWufC3gcmXWC+lfcbxga0+mGERNMkJ8OZHIb3
-	lPu9hFIBn9TRVodoXq+ldFh5olCVp/0KeJ2YvRuFeBdClFBmYKQHTKrzbzJP0OwjRY4U
-	a7ptIkdHXEChTRiFiDW1Hyd+54g25Vgv14lbpXLnz67Y27fr1Rs5pcWJ8/tv39G6JH0o
-	wvvWwUy5Np+JPczHnPPt5ZLpxQZQvf4mqQX1Cb8Inoz19odB7F+8WCIKWvzVYKlrCB7w
-	L1rA==
-In-Reply-To: <alpine.DEB.2.00.1205302351510.25774-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+	h=message-id:date:from:user-agent:mime-version:to:cc:subject
+	:references:in-reply-to:content-type:content-transfer-encoding;
+	bh=yeIa57yU9Q/IKbNa7UUJtyWNhA6x890xU8CBEudJIUQ=;
+	b=aeKD2tHB9yU9lJTRq2f44tsT3mpMta6VD3aYaYmxRHPZDbRuDkryYUntWzmQ/wsvFN
+	tS5n8Rhh96fudAh1ks7U5hG9KZhy5IKVY5/08w/UPpWeIrgQmqCIMhye6PurSvNJ4/N0
+	X4XKl/CTsAmfqi7ZMP6D6eHDak2BtmYLbk/xTHBoMIqVddfPbR+I99H3NKwU8kL9HOjh
+	iwgA2Y/r9YtByzCPxjCk70qWvAErnwE1UIcwbydekeBEmPGa9yPbaHGLzmEIxKHDsqE7
+	DbTYptYk5/YcvogIgALef//B8U+uh5VbLpIXcFctczuSnUyAFsz4UBqixgRDxA4nFz1d
+	ICvg==
+In-Reply-To: <4FC718BA.8060608-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -43,43 +41,37 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Thu, May 31, 2012 at 2:56 AM, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> On Thu, 31 May 2012, KOSAKI Motohiro wrote:
->
->> > This is tangent to the discussion, we need to revisit why an applicati=
-on
->> > other than a daemon managing a set of memcgs would ever need to know t=
-he
->> > information in /proc/meminfo. =A0No use-case was ever presented in the
->> > changelog and its not clear how this is at all relevant. =A0So before
->> > changing the kernel, please describe how this actually matters in a re=
-al-
->> > world scenario.
+(5/31/12 3:07 AM), Kamezawa Hiroyuki wrote:
+> (2012/05/31 15:37), KOSAKI Motohiro wrote:
+>> (5/31/12 2:28 AM), David Rientjes wrote:
+>>> On Thu, 31 May 2012, KOSAKI Motohiro wrote:
+>>>
+>>>>> An application should always know the cgroup that its attached to and be
+>>>>> able to read its state using the command that I gave earlier.
+>>>>
+>>>> No. you don't need why userland folks want namespaces. Even though you don't
+>>>> need namespaces. It doesn't good reason to refuse another use case.
+>>>>
+>>>
+>>> This is tangent to the discussion, we need to revisit why an application
+>>> other than a daemon managing a set of memcgs would ever need to know the
+>>> information in /proc/meminfo. No use-case was ever presented in the
+>>> changelog and its not clear how this is at all relevant. So before
+>>> changing the kernel, please describe how this actually matters in a real-
+>>> world scenario.
 >>
 >> Huh? Don't you know a meanings of a namespace ISOLATION? isolation mean,
 >> isolated container shouldn't be able to access global information. If you
->> want to lean container/namespace concept, tasting openvz or solaris cont=
-ainer
+>> want to lean container/namespace concept, tasting openvz or solaris container
 >> is a good start.
->
-> As I said, LXC and namespace isolation is a tangent to the discussion of
-> faking the /proc/meminfo for the memcg context of a thread.
-
-Because of, /proc/meminfo affect a lot of libraries behavior. So, it's not =
-only
-application issue. If you can't rewrite _all_ of userland assets, fake memi=
-nfo
-can't be escaped. Again see alternative container implementation.
-
-
->
->> But anyway, I dislike current implementaion. So, I NAK this patch too.
 >>
+>> But anyway, I dislike current implementaion. So, I NAK this patch too.
 >
-> I'm glad you reached that conclusion, but I think you did so for a much
-> different (although unspecified) reason.
->
-> Thanks.
+> Could you give us advice for improving this ? What idea do you have ?
+
+?
+I'm ok your idea. I only NAKed current Gao's patch.
