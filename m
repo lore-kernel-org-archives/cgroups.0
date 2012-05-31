@@ -1,23 +1,23 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH -V7 02/14] hugetlbfs: don't use ERR_PTR with VM_FAULT*
- values
-Date: Wed, 30 May 2012 18:02:59 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205301801060.25774@chino.kir.corp.google.com>
-References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V7 03/14] hugetlbfs: add an inline helper for finding
+ hstate index
+Date: Wed, 30 May 2012 18:05:46 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205301805360.25774@chino.kir.corp.google.com>
+References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=9Ip3FRGJVF+cMKbpKGTPAQr50YkIioRViNso0575uxY=;
-        b=gGG7kDJGHQApuHz4qOQInV8JS7AJAzyqnpQGjyyeUV4M2LSbxZZpRy7jJnM926v2NZ
-         ap6eRNY43vG5P1MRNKNjgy+si5+0fX2bOwfZ/o9SdCHs51HUxYVeZgTh7pjzo6L3NqFC
-         WJaWeozJIa3JvQHxjQdNE5FpTGwIFGXUAUEq57a/iVTsAuZN6jxVd2P0Kbcbfe3d3kLV
-         H3UN4Xsi0C2lAVHmyiqJ884tdlAlX52zxe4LykwTt87nDbWreHcm2dhS2SYFEnCkeImr
-         ZLc+lCyswop9HkioqjnO/VDoNnNP6Fc1EPBcCGoGl3dZQ41wFKOW/s73RE5vBzwYRoVU
-         KtJA==
-In-Reply-To: <1338388739-22919-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+        bh=19bXRiYwAbqw/Ys7DLmeB7aMVq3w8OXRGSUBQPsqjAo=;
+        b=j2VmQ9gSEdl8UZ6bkVw3R9NxO9EqoD9i5ARarFHzZlr7zqkUIrwje8hMrvY6sYW6sZ
+         HPeRkATo7TPHQRWP1Q5fb2tFZNJQWRt2PLsuTnDQpAMyKArcQ2R20ioTZbfkkR7578Te
+         8NJAibWKX5TvBLzo55B8IsB3LRoW+TSBtYTRM4EHKIbDHiNTG+nRL3V4ey0XTLluHlq/
+         yQG7hJ2eEwPdY4doIKVWgB24CTSb2VyrHv3c0SjFcSQKkGCUQqHnFm3ewz4b37AOMm7t
+         Du8vLKE+VzSpi8A7FyHbE1awoBfwS1AZReUU3UtvJdAJ+h9fIkUDFMwzf8HpB4Ir64Ls
+         +J9w==
+In-Reply-To: <1338388739-22919-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -29,16 +29,16 @@ On Wed, 30 May 2012, Aneesh Kumar K.V wrote:
 
 > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 > 
-> The current use of VM_FAULT_* codes with ERR_PTR requires us to ensure
-> VM_FAULT_* values will not exceed MAX_ERRNO value.  Decouple the
-> VM_FAULT_* values from MAX_ERRNO.
+> Add an inline helper and use it in the code.
 > 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> Acked-by: Michal Hocko <mhocko@suse.cz>
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Cc: Hillf Danton <dhillf@gmail.com>
+> Cc: Andrea Arcangeli <aarcange@redhat.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
 
-Yeah, but is there a reason for using VM_FAULT_HWPOISON_LARGE_MASK since 
-that's the only VM_FAULT_* value that is greater than MAX_ERRNO?  The rest 
-of your patch set doesn't require this, so I think this change should just 
-be dropped.  (And PTR_ERR() still returns long, this wasn't fixed from my 
-original review.)
+Acked-by: David Rientjes <rientjes@google.com>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
