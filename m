@@ -1,53 +1,72 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH -V7 02/14] hugetlbfs: don't use ERR_PTR with VM_FAULT*
- values
-Date: Wed, 30 May 2012 23:50:18 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1205302331380.25774@chino.kir.corp.google.com>
-References: <1338388739-22919-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1338388739-22919-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <alpine.DEB.2.00.1205301801060.25774@chino.kir.corp.google.com>
- <20120531054533.GE24855@skywalker.linux.vnet.ibm.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] meminfo: show /proc/meminfo base on container's memcg
+Date: Wed, 30 May 2012 23:56:13 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1205302351510.25774@chino.kir.corp.google.com>
+References: <1338260214-21919-1-git-send-email-gaofeng@cn.fujitsu.com>
+	<alpine.DEB.2.00.1205301433490.9716@chino.kir.corp.google.com>
+	<4FC6B68C.2070703@jp.fujitsu.com>
+	<CAHGf_=pFbsy4FO_UNu6O1-KyTd6O=pkmR8=3EGuZB5Reu3Vb9w@mail.gmail.com>
+	<4FC6BC3E.5010807@jp.fujitsu.com>
+	<alpine.DEB.2.00.1205301737530.25774@chino.kir.corp.google.com>
+	<4FC6C111.2060108@jp.fujitsu.com>
+	<alpine.DEB.2.00.1205301831270.25774@chino.kir.corp.google.com>
+	<4FC6D881.4090706@jp.fujitsu.com>
+	<alpine.DEB.2.00.1205302156090.25774@chino.kir.corp.google.com>
+	<4FC70355.70805@jp.fujitsu.com>
+	<alpine.DEB.2.00.1205302314190.25774@chino.kir.corp.google.com>
+	<4FC70E5E.1010003@gmail.com>
+	<alpine.DEB.2.00.1205302325500.25774@chino.kir.corp.google.com>
+	<4FC711A5.4090003@gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=3MueL/pcMxdugeigNIEqWk+v2m9w0ZNJt7bT89WweOc=;
-        b=oHPso4Nrzu46+KQMHRnHgBLRXQevJ59H2kZ+AbCvsKnWaB1P97s04UkaINM6b12ouV
-         bLPtEnhcPaMq/4KnJcn8mHebwIXyEe2EIjehYS+oEN6ygkvo+l7jx8Y+F19McIiVrBps
-         orDsr91jdhp8s7ujwMGmc5HJsIplH3Sr3Zpk+r+EXs9y1VER5e6lfONh6xijgwnBiaqR
-         VNpIuUE7eYJ8Q2icuYcIyMyWbJBfYnhM53wnJI1J9ZYZHavxfVlwEp4AD9UPvMy5c1D2
-         i1Tve8H0mX7bYyVYQ5GymeDC0ryjqM5HWAlfM3YB6w4AhblgiYee0gtT8C4yMHfzOdiy
-         GmzA==
-In-Reply-To: <20120531054533.GE24855@skywalker.linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
+	h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+	:references:user-agent:mime-version:content-type;
+	bh=CKmlgPnU07K0YxzxVt/LRVBxyfzQTaPG/J+RaDhtDPw=;
+	b=iq4XgWHN7xgN77eV2boqryPwMzJtEI9/78lHvNYeE6Oq5K1fWflO0//cYYgBYAl0FP
+	DwVrtr+TK+lEWfPSrCyw27W0cEyqNjUH2GEakKk0/QiIdpnsmyAzuJhZ9xvzr4P8YImw
+	W2xgMmJmcVX8qQdVQ1fiHQrboTkP554EDwXXCc9spxTaLqX01NHKl7cpFU2OK0hVJi+I
+	7M/MB/v9aOTYgrSQSTg5O4SdDXsMETuGfZf9uaqmesP9wL7XI9G0G5XHZf0FZvJNyIID
+	JYfuZ5TtJYRbP2uWLo9u1FsEBjTtS4Xf025D+ZcD86OhTAIU6nei9LT5kJyj6UneKgqG
+	Dgag==
+In-Reply-To: <4FC711A5.4090003-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Thu, 31 May 2012, Aneesh Kumar K.V wrote:
+On Thu, 31 May 2012, KOSAKI Motohiro wrote:
 
-> > Yeah, but is there a reason for using VM_FAULT_HWPOISON_LARGE_MASK since 
-> > that's the only VM_FAULT_* value that is greater than MAX_ERRNO?  The rest 
-> > of your patch set doesn't require this, so I think this change should just 
-> > be dropped.  (And PTR_ERR() still returns long, this wasn't fixed from my 
-> > original review.)
-> > 
+> > This is tangent to the discussion, we need to revisit why an application
+> > other than a daemon managing a set of memcgs would ever need to know the
+> > information in /proc/meminfo.  No use-case was ever presented in the
+> > changelog and its not clear how this is at all relevant.  So before
+> > changing the kernel, please describe how this actually matters in a real-
+> > world scenario.
 > 
-> The changes was done as per Andrew's request so that we don't have such hidden
-> dependencies on the values of VM_FAULT_*. Yes it can be a seperate patch from
-> the patchset. I have changed int to long as per your review.
+> Huh? Don't you know a meanings of a namespace ISOLATION? isolation mean,
+> isolated container shouldn't be able to access global information. If you
+> want to lean container/namespace concept, tasting openvz or solaris container
+> is a good start.
 > 
 
-I think it confuscates the code, can't we just add something like 
-BUILD_BUG_ON() to ensure that PTR_ERR() never uses values that are outside 
-the bounds of MAX_ERRNO so we'll catch these at compile time if 
-mm/hugetlb.c or anything else is ever extended to use such values?
+As I said, LXC and namespace isolation is a tangent to the discussion of 
+faking the /proc/meminfo for the memcg context of a thread.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> But anyway, I dislike current implementaion. So, I NAK this patch too.
+> 
+
+I'm glad you reached that conclusion, but I think you did so for a much 
+different (although unspecified) reason.
+
+Thanks.
