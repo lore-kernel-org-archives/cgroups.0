@@ -1,95 +1,52 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] rename MEM_CGROUP_STAT_SWAPOUT as MEM_CGROUP_STAT_NR_SWAP
-Date: Fri, 1 Jun 2012 13:11:42 +0200
-Message-ID: <20120601111142.GF30196@tiehlicka.suse.cz>
-References: <4FC89BC4.9030604@jp.fujitsu.com>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: container disk quota
+Date: Fri, 1 Jun 2012 17:54:57 +0200
+Message-ID: <20120601155457.GA30909@quack.suse.cz>
+References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4FC89BC4.9030604-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1338389946-13711-1-git-send-email-jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bpm-sJ/iWh9BUns@public.gmane.org, christopher.jones-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tm-d1IQDZat3X0@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tinguely-sJ/iWh9BUns@public.gmane.org
 
-On Fri 01-06-12 19:39:00, KAMEZAWA Hiroyuki wrote:
-> MEM_CGROUP_STAT_SWAPOUT represents the usage of swap rather than
-> the number of swap-out events. Rename it to be MEM_CGROUP_STAT_NR_SWAP.
-> 
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+  Hello,
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On Wed 30-05-12 22:58:54, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org wrote:
+> According to glauber's comments regarding container disk quota, it should be binded to mount
+> namespace rather than cgroup.
+> 
+> Per my try out, it works just fine by combining with userland quota utilitly in this way.
+> However, they are something has to be done at user tools too IMHO.
+> 
+> Currently, the patchset is in very initial phase, I'd like to post it early to seek more
+> feedbacks from you guys.
+> 
+> Hopefully I can clarify my ideas clearly.
+  So what I miss in this introductory email is some highlevel description
+like what is the desired functionality you try to implement and what is it
+good for. Looking at the examples below, it seems you want to be able to
+set quota limits for namespace-uid (and also namespace-gid???) pairs, am I
+right?
 
-> ---
->  mm/memcontrol.c |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 0121ef3..76bc54c 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -97,7 +97,7 @@ enum mem_cgroup_stat_index {
->  	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
->  	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
->  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
-> -	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
-> +	MEM_CGROUP_STAT_NR_SWAP, /* # of pages, swapped out */
->  	MEM_CGROUP_STAT_NSTATS,
->  };
->  
-> @@ -722,7 +722,7 @@ static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
->  					 bool charge)
->  {
->  	int val = (charge) ? 1 : -1;
-> -	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAPOUT], val);
-> +	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_NR_SWAP], val);
->  }
->  
->  static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
-> @@ -4042,7 +4042,7 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
->  	val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
->  
->  	if (swap)
-> -		val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_SWAPOUT);
-> +		val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_NR_SWAP);
->  
->  	return val << PAGE_SHIFT;
->  }
-> @@ -4303,7 +4303,7 @@ static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
->  	unsigned int i;
->  
->  	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
-> -		if (i == MEM_CGROUP_STAT_SWAPOUT && !do_swap_account)
-> +		if (i == MEM_CGROUP_STAT_NR_SWAP && !do_swap_account)
->  			continue;
->  		seq_printf(m, "%s %ld\n", mem_cgroup_stat_names[i],
->  			   mem_cgroup_read_stat(memcg, i) * PAGE_SIZE);
-> @@ -4330,7 +4330,7 @@ static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
->  	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
->  		long long val = 0;
->  
-> -		if (i == MEM_CGROUP_STAT_SWAPOUT && !do_swap_account)
-> +		if (i == MEM_CGROUP_STAT_NR_SWAP && !do_swap_account)
->  			continue;
->  		for_each_mem_cgroup_tree(mi, memcg)
->  			val += mem_cgroup_read_stat(mi, i) * PAGE_SIZE;
-> -- 
-> 1.7.4.1
-> 
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+  If yes, then I would like to understand one thing: When writing to a
+file, used space is accounted to the owner of the file. Now how do we
+determine owning namespace? Do you implicitely assume that only processes
+from one namespace will be able to access the file?
 
+								Honza
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+SUSE Labs, CR
