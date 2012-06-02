@@ -1,46 +1,88 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] rename MEM_CGROUP_STAT_SWAPOUT as
- MEM_CGROUP_STAT_NR_SWAP
-Date: Fri, 1 Jun 2012 10:54:27 -0700 (PDT)
-Message-ID: <alpine.LSU.2.00.1206011047430.9814@eggly.anvils>
-References: <4FC89BC4.9030604@jp.fujitsu.com> <20120601165320.GA1761@cmpxchg.org>
+From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: container disk quota
+Date: Sat, 02 Jun 2012 13:42:18 +0800
+Message-ID: <4FC9A7BA.5020805@oracle.com>
+References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com>
+	<20120601155457.GA30909@quack.suse.cz>
+Reply-To: jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=6x6ZaSWJRGIEXsBxZxsY1biHdyV50bDKcqP9Uha7Z6s=;
-        b=KfvQdfFwR2cYMMPKsLY/PY5mzFqAHeUSMgcAFqlkd15skcgClQZBPwjVfiOEiR8FT5
-         RL39RZYdQSpNpJD42C4GVt2/FYUpg5AUGPN0fBBT93BcdZUy8DZw6qlOJZgUDvYshmNF
-         aa8cZSWAFO6eK8Hpp+cGQgCJ5cfLUT7EN5TuP4jmhA3tLdSGxq25CUseqy7pn8iILAxh
-         1Caem141jciy8rwiu9C6G4VSRlxV8PXphs/DTb9aItIvbvlLIG3Qyv9qFmK9ITejRYV+
-         C7maZRjDaInSJSvX6Ufg0QQogug2uk7aFG53Uc0/A4VQt5+ivYef6XF230HOT/QyTBIs
-         CICA==
-In-Reply-To: <20120601165320.GA1761-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20120601155457.GA30909-+0h/O2h83AeN3ZZ/Hiejyg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: tytso-3s7WtUTddSA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bpm-sJ/iWh9BUns@public.gmane.org, christopher.jones-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tm-d1IQDZat3X0@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tinguely-sJ/iWh9BUns@public.gmane.org
 
-On Fri, 1 Jun 2012, Johannes Weiner wrote:
-> On Fri, Jun 01, 2012 at 07:39:00PM +0900, Kamezawa Hiroyuki wrote:
-> > MEM_CGROUP_STAT_SWAPOUT represents the usage of swap rather than
-> > the number of swap-out events. Rename it to be MEM_CGROUP_STAT_NR_SWAP.
-> > 
-> > Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Hi Jan,
+
+On 06/01/2012 11:54 PM, Jan Kara wrote:
+
+>   Hello,
 > 
-> Wouldn't MEM_CGROUP_STAT_SWAP be better?  It's equally descriptive but
-> matches the string.  And we also don't have NR_ for cache, rss, mapped
-> file etc.
+> On Wed 30-05-12 22:58:54, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org wrote:
+>> According to glauber's comments regarding container disk quota, it should be binded to mount
+>> namespace rather than cgroup.
+>>
+>> Per my try out, it works just fine by combining with userland quota utilitly in this way.
+>> However, they are something has to be done at user tools too IMHO.
+>>
+>> Currently, the patchset is in very initial phase, I'd like to post it early to seek more
+>> feedbacks from you guys.
+>>
+>> Hopefully I can clarify my ideas clearly.
+>   So what I miss in this introductory email is some highlevel description
+> like what is the desired functionality you try to implement and what is it
+> good for. Looking at the examples below, it seems you want to be able to
+> set quota limits for namespace-uid (and also namespace-gid???) pairs, am I
+> right?
 
-That's just what I thought too.
+Sorry for lacking the high level descriptions.
 
-You can attach Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-to MEM_CGROUP_STAT_SWAP and MEM_CGROUP_CHARGE_TYPE_ANON.
+The main idea is to introduce a quota mechanism to let container make use of it like VFS quota/quota
+tools as transparent as possible.
 
-Oh, and to a patch deleting MEM_CGROUP_CHARGE_TYPE_FORCE!
+However our general quota subsystem works with one global hashtable list, and it based on superblock
+and global UID/PID for those accounting, and looks that's not convenient to support container quota
+without much changes IMHO.
 
-Hugh
+The current opinion is to bind it to mount namespace, since container can be setup through CLONE_MNTNS to
+have its private mount tree.
+
+> 
+>   If yes, then I would like to understand one thing: When writing to a
+> file, used space is accounted to the owner of the file. Now how do we
+> determine owning namespace?
+
+That's also the main point I am concerned.
+It think the latest USER_NS feature would be got involved in.
+And also, we can detect the mount namespace by inferring it from processes context.  We only bill those
+space operations if themount namespace is quota desired.
+
+Here has another issue, when we doing quota info initialization on a mount namespace?
+In my current implementation, it is simply implemented by checking if mount namespace was cloned out,
+and do quotactl(2) if the input device is "rootfs",  or just checking if the mount namespace is not the
+initial global one.
+quotactl(2) will be processed if meet either above conditions, and space operations will be counted if
+the desired UID/GID dquot could be searched.
+
+> Do you implicitely assume that only processes
+> from one namespace will be able to access the file?
+
+All processes could access the file, but only those space operation of processes resides in the mount
+namespace with quota setup will be billed.
+
+
+Thanks,
+-Jeff
+
+> 								Honza
