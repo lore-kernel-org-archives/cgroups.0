@@ -1,48 +1,39 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: container disk quota
-Date: Sun, 3 Jun 2012 13:48:18 +0400
-Message-ID: <4FCB32E2.6050404@parallels.com>
-References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com> <20120601155457.GA30909@quack.suse.cz>	<20120601160421.GA17402@amd1> <4FC9ABBB.3050303@oracle.com> <01FED15D-15A3-4542-B95B-1166F0A309E6@parallels.com> <4FC9B183.10605@oracle.com> <8660DDAA-D7A7-4C03-8CBB-9DB7E94C80CB@parallels.com> <4FCAE6CB.8060208@oracle.com> <81DE9C10-649B-4D13-86B0-200944AE8767@parallels.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] rename MEM_CGROUP_STAT_SWAPOUT as MEM_CGROUP_STAT_NR_SWAP
+Date: Mon, 04 Jun 2012 09:24:00 +0900
+Message-ID: <4FCC0020.5080801@jp.fujitsu.com>
+References: <4FC89BC4.9030604@jp.fujitsu.com> <20120601165320.GA1761@cmpxchg.org> <alpine.LSU.2.00.1206011047430.9814@eggly.anvils>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <81DE9C10-649B-4D13-86B0-200944AE8767@parallels.com>
-Sender: linux-ext4-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <alpine.LSU.2.00.1206011047430.9814-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Kirill Korotaev <dev@parallels.com>
-Cc: "jeff.liu@oracle.com" <jeff.liu@oracle.com>, Jan Kara <jack@suse.cz>, "tytso@mit.edu" <tytso@mit.edu>, "tinguely@sgi.com" <tinguely@sgi.com>, "containers@lists.linux-foundation.org" <containers@lists.linux-foundation.org>, "david@fromorbit.com" <david@fromorbit.com>, "hch@infradead.org" <hch@infradead.org>, "bpm@sgi.com" <bpm@sgi.com>, "christopher.jones@oracle.com" <christopher.jones@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "tm@tao.ma" <tm@tao.ma>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "chris.mason@oracle.com" <chris.mason@oracle.com>
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-On 06/03/2012 09:47 AM, Kirill Korotaev wrote:
->
-> On Jun 3, 2012, at 08:23 , Jeff Liu wrote:
->
->> Hi Kirill,
->>
->> On 06/02/2012 11:21 PM, Kirill Korotaev wrote:
->>
->>>>>>>
->>>>>>> Not having looked closely at the original patchset, let me ask - is this
->>>>>>> feature going to be a freebie with Eric's usernamespace patches?
->>>>>>
->>>>>> It we can reach a consensus to bind quota on mount namespace for
->>>>>> container or other things maybe.
->>>>>
->>>>> 1. OpenVZ doesn't use mount namespaces and still has quotas per container.
->>>>
->>>> AFAICS, OpenVZ has self-released quota tools to supply this feature.
+(2012/06/02 2:54), Hugh Dickins wrote:
+> On Fri, 1 Jun 2012, Johannes Weiner wrote:
+>> On Fri, Jun 01, 2012 at 07:39:00PM +0900, Kamezawa Hiroyuki wrote:
+>>> MEM_CGROUP_STAT_SWAPOUT represents the usage of swap rather than
+>>> the number of swap-out events. Rename it to be MEM_CGROUP_STAT_NR_SWAP.
 >>>
->>> but standard quota tools work inside container w/o any modifications.
->>> This is very important for us, cause we run unmodified distros inside.
+>>> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 >>
->> Yes, am agree.
->> I can work out a new patches regarding quota tools based on mount namespace w/o any modification.
+>> Wouldn't MEM_CGROUP_STAT_SWAP be better?  It's equally descriptive but
+>> matches the string.  And we also don't have NR_ for cache, rss, mapped
+>> file etc.
 >
-> Jeff, why do you need fs namespace for quotas? OpenVZ works w/o it.
-> It sounds as too strict use case limitation. Or do I understand your patchset description wrong?
+> That's just what I thought too.
 >
+> You can attach Acked-by: Hugh Dickins<hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> to MEM_CGROUP_STAT_SWAP and MEM_CGROUP_CHARGE_TYPE_ANON.
+>
+> Oh, and to a patch deleting MEM_CGROUP_CHARGE_TYPE_FORCE!
+>
+Sure, I'll prepare v2.
 
-OpenVZ has its own kernel, with its very own isolation capabilities.
-So in upstream, something has to be used instead.
-
+Thanks,
+-Kame
 
