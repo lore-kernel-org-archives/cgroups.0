@@ -1,73 +1,49 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] allow a task to join a pid namespace
-Date: Mon, 4 Jun 2012 18:51:17 +0200
-Message-ID: <20120604165117.GA13091@redhat.com>
-References: <1338816828-25312-1-git-send-email-glommer@parallels.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 10/12] container quota: bill container inodes alloc/free
+ on ext4.
+Date: Tue, 5 Jun 2012 10:03:03 +1000
+Message-ID: <20120605000302.GC4347@dastard>
+References: <1338389946-13711-1-git-send-email-jeff.liu@oracle.com>
+ <1338389946-13711-11-git-send-email-jeff.liu@oracle.com>
+ <4FC736AD.2070404@parallels.com>
+ <4FC76B0D.6020804@oracle.com>
+ <4FC76ECA.3070301@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ext4-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1338816828-25312-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <4FC76ECA.3070301@parallels.com>
+Sender: linux-ext4-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kir-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: jeff.liu@oracle.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, jack@suse.cz, daniel.lezcano@free.fr, Ted Ts'o <tytso@mit.edu>, bpm@sgi.com, chris.mason@oracle.com, hch@infradead.org, christopher.jones@oracle.com, tinguely@sgi.com, tm@tao.ma, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 06/04, Glauber Costa wrote:
->
-> Currently, it is possible for a process  to join existing
-> net, uts and ipc namespaces. This patch allows a process to join an
-> existing pid namespace as well.
+On Thu, May 31, 2012 at 05:14:50PM +0400, Glauber Costa wrote:
+> On 05/31/2012 04:58 PM, Jeff Liu wrote:
+> >>>  This should be inside dquot_free_inode().
+> >Yeah, Ted also mentioned this before, all name space dquot bill routine
+> >could be placed to dquot_xxx() for VFS quota user.
+> >
+> >However, AFAICS, they still have to be exported to other file systems
+> >which have their own quota management module, like XFS.
+> >
+> >Thanks,
+> >-Jeff
+> >
+> Do you have a personal need to have it working with xfs, or is the
+> use you are pursuing achievable with the other filesystems?
+> 
+> Unless you have a reason yourself to use xfs, I'd say don't bother
+> with it too much at the moment. get it working for the standard
+> interface first.
 
-I can't understand this patch... but probably I missed something,
-I never really understood setns.
+Which means you'll end up with something that has to be rewritten to
+support XFS. Do it right the first time.
 
-> +static int pidns_install(struct nsproxy *nsproxy, void *_ns)
-> +{
-> +	struct pid *newpid;
-> +	struct pid_namespace *ns = _ns;
-> +
-> +	if (is_container_init(current))
-> +		return -EINVAL;
-> +
-> +	if (nsproxy->pid_ns != ns->parent)
-> +		return -EPERM;
+Cheers,
 
-At least you should also check that current is single-threaded,
-I guess.
-
-> +
-> +	if (task_pgrp(current) !=  task_pid(current))
-> +		return -EPERM;
-> +
-> +	if (task_session(current) !=  task_pid(current))
-> +		return -EPERM;
-
-Both checks are obviously racy without tasklist.
-
-> +	newpid = alloc_pid(ns);
-> +	if (!newpid)
-> +		return -ENOMEM;
-
-Hmm. Doesn't this mean that pid_nr of this task (as it seen
-in its current namespace) will be changed? This doesn't look
-sane.
-
-> +	put_pid_ns(nsproxy->pid_ns);
-> +	nsproxy->pid_ns = get_pid_ns(ns);
-> +
-> +	write_lock_irq(&tasklist_lock);
-> +	change_pid(current, PIDTYPE_PID, newpid);
-> +	change_pid(current, PIDTYPE_PGID, newpid);
-> +	change_pid(current, PIDTYPE_SID, newpid);
-> +	write_unlock_irq(&tasklist_lock);
-
-Hmm. So, until the caller does switch_task_namespaces()
-task_active_pid_ns(current) != current->nsproxy->pid_ns,
-doesn't look very nice too.
-
-I don't think this can be right. If nothing else, this breaks
-it_real_fn().
-
-Oleg.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
