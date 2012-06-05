@@ -1,31 +1,52 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: [Devel] Re: [PATCH] allow a task to join a pid namespace
-Date: Tue, 05 Jun 2012 10:39:09 -0700
-Message-ID: <87r4tt64le.fsf@xmission.com>
-References: <1338816828-25312-1-git-send-email-glommer@parallels.com>
-	<4FCDD315.502@free.fr> <4FCDD346.9090008@parallels.com>
-	<4FCDD8A0.1070608@parallels.com>
+From: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: make sure that decisions in __css_put are atomic
+Date: Tue, 05 Jun 2012 14:50:19 -0700
+Message-ID: <20120605215019.4722.31817.stgit@dungbeetle.mtv.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FCDD8A0.1070608-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> (Glauber Costa's message of
-	"Tue, 5 Jun 2012 14:00:00 +0400")
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=subject:to:from:date:message-id:user-agent:mime-version
+         :content-type:content-transfer-encoding;
+        bh=jZ61KrBSNe0IxUNtbNh8E0/VIbeXeAbh3fYzNlFFp7o=;
+        b=Lop3kq1bW+XVIHvwDlw+Is67jU2uGNEOfdxDXIe9x3lEiNOjh2guyfkhdmIghImAYd
+         OT3/HwS0iOQInYDwxCaH92sRD+Ztg0qFpp2hlN/5hddRJ6fQdMLTmiewG3LFPUnLGkYJ
+         5aWKHgq8OPL5kIeGKMDzZajR9XWc5IzLRTSHHb5QFi5tMOIuZOqyc7kws9xddbga6KH0
+         m6l0TuvEtqRb/8zYza9Mt/ESNKMvP9bNXg/4DOVhSlWtUxgezaxmnxLJj5dI+82AWBAK
+         3bwVsDrmGrItIwKPAdgt2k0lfoWVH3H3G950DWML2RcYgyyMrxE8wFPLhsZFelJR/6Vh
+         ohTQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Daniel Lezcano <daniel.lezcano-GANU6spQydw@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, kir-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Michael-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tejun-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
+__css_put is using atomic_dec on the ref count, and then
+looking at the ref count to make decisions.  This is prone
+to races, as someone else may decrement ref count between
+our decrement and our decision.  Instead, we should base our
+decisions on the value that we decremented the ref count to.
 
-> Eric, what are your plans for merging the content of that tree ?
+(This results in an actual race on Google's kernel which I
+haven't been able to reproduce on the upstream kernel.  Having
+said that, it's still incorrect by inspection).
 
-Hopefully this cycle.
+Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-The issue with the pid namespace is primarily that we need to fix
-all of the life cycle issues with the pid namespace and make certain
-that setns adding an additional pid in a pid namespace does not break
-those pid namespace life cycle fixes.
-
-So I have been working on the hard tricky fixes off and on with Oleg.
-
-Eric
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 0f3527d..18dc8aa 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4973,8 +4973,7 @@ void __css_put(struct cgroup_subsys_state *css)
+ 	struct cgroup *cgrp = css->cgroup;
+ 
+ 	rcu_read_lock();
+-	atomic_dec(&css->refcnt);
+-	switch (css_refcnt(css)) {
++	switch (atomic_dec_return(&css->refcnt)) {
+ 	case 1:
+ 		if (notify_on_release(cgrp)) {
+ 			set_bit(CGRP_RELEASABLE, &cgrp->flags);
