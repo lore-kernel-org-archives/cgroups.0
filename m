@@ -1,99 +1,67 @@
-From: Daniel Lezcano <daniel.lezcano-GANU6spQydw@public.gmane.org>
-Subject: Re: [Devel] Re: [PATCH] allow a task to join a pid namespace
-Date: Tue, 05 Jun 2012 15:18:59 +0200
-Message-ID: <4FCE0743.8070006@free.fr>
-References: <1338816828-25312-1-git-send-email-glommer@parallels.com> <4FCDD315.502@free.fr> <4FCDD346.9090008@parallels.com> <4FCDD8A0.1070608@parallels.com> <4FCE0101.6010908@free.fr> <4FCE0157.4080007@parallels.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FCE0157.4080007-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v4 0/4] per cgroup cpu statistics
+Date: Tue,  5 Jun 2012 18:49:37 +0400
+Message-ID: <1338907781-20904-1-git-send-email-glommer@parallels.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, kir-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Michael-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, devel@openvz.org, Paul Turner <pjt@google.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, handai.szj@gmail.com, Andrew.Phillips@lmax.com, Serge Hallyn <serge.hallyn@canonical.com>
 
-On 06/05/2012 02:53 PM, Glauber Costa wrote:
-> On 06/05/2012 04:52 PM, Daniel Lezcano wrote:
->> On 06/05/2012 12:00 PM, Glauber Costa wrote:
->>> On 06/05/2012 01:37 PM, Glauber Costa wrote:
->>>> On 06/05/2012 01:36 PM, Daniel Lezcano wrote:
->>>>> On 06/04/2012 03:33 PM, Glauber Costa wrote:
->>>>>> Currently, it is possible for a process to join existing
->>>>>> net, uts and ipc namespaces. This patch allows a process to join an
->>>>>> existing pid namespace as well.
->>>>>>
->>>>>> For that to remain sane, some restrictions are made in the calling
->>>>>> process:
->>>>>>
->>>>>> * It needs to be in the parent namespace of the namespace it
->>>>>> wants to
->>>>>> jump to
->>>>>> * It needs to sit in its own session and group as a leader.
->>>>>>
->>>>>> The rationale for that, is that people want to trigger actions in a
->>>>>> Container
->>>>>> from the outside. For instance, mainstream linux recently gained the
->>>>>> ability
->>>>>> to safely reboot a container. It would be desirable, however, that
->>>>>> this
->>>>>> action is triggered from an admin in the outside world, very much
->>>>>> like a
->>>>>> power switch in a physical box.
->>>>>>
->>>>>> This would also allow us to connect a console to the container,
->>>>>> provide a
->>>>>> repair mode for setups without networking (or with a broken one),
->>>>>> etc.
->>>>>
->>>>> Hi Glauber,
->>>>>
->>>>> I am in favor of this patch but I think the pidns support won't be
->>>>> complete and some corner-cases are not handled.
->>>>>
->>>>> May be you can look at Eric's patchset [1] where, IMO, everything is
->>>>> taken into account. Some of the patches may be already upstream.
->>>>>
->>>>> Thanks
->>>>> -- Daniel
->>>>
->>>> I don't remember seeing such patchset in the mailing lists, but that
->>>> might be my fault, due to traffic...
->>>>
->>>> I'll take a look. If it does what I need, I can just drop this.
->>>>
->>>
->>> Ok. In a quick look, it does not seem to go all the way. This is just
->>> by reading, but your reboot patch, for instance, is unlikely to work
->>> with that, since if it doesn't alter pid->level, things like task
->>> ns_of_pid won't work.
->>>
->>> Running the test scripts I wrote for my testing of that patch also
->>> doesn't seem to produce the expected result:
->>>
->>> after doing setns, the pid won't show up in that namespace.
->>
->> Yes, AFAIR, pid won't show up, you have to do fork-exec.
->
-> Ah, so you mean the kid will show up... Well, ok.
->
-> That's acceptable, but how about the behavior I am proposing ? (in the
-> patch I sent as a reply to this thread).
+Hello,
 
-Let me look at the patch closely.
->
-> I believe it to be saner, even though there is a price tag attached to
-> it. None of the other setns calls require you to do any such trickery...
+This is the 4th version of this per-cgroup statistics. My aim with that is
+to provide userspace with the necessary tools to export a view of /proc/stat
+inside a container, so tools like top would work. 
 
-Yeah, but the pidns is different from the other namespace, it is not
-supposed to be unshared.
-I remember we had a discussion about this and Eric had some good reasons
-to do it this way. One of them of the pid cached by the glibc. Also, we
-don't want to have our pid changing in our application.
+I believe this version merges all the comments from Peter and Paul. Let me know
+if I forgot any of them.
 
-You may find more informations in there [1]
+I now reuse put_prev_task to account for nr_switches, so no extra walks are added.
+For that, I had to add another parameter to the function, but I hope this is
+acceptable. Please note that this parameter would still be needed even if
+Peter's patch that merges put_prev_task behavior inside pick_next_task.
 
-Thanks
-  -- Daniel
+This is because the previous class may live in a different class and we may
+have to call it anyway. In which case a hint like this would be needed.
+I believe this to be orthogonal to the work you are doing.
 
-[1] http://thread.gmane.org/gmane.linux.network/153200
+Peter: the patch that adds exec_clock to rt was removed. That was my bad, it
+was intended to be part of the series that unifies cpu and cpuacct for the
+comounted case. I have them together in my tree, and I made the cut in the wrong
+place. It is not needed here.
+
+Let me know what you think of this.
+
+v4:
+* read_seq_string used instead of read_map. This is because the
+  buffer can get very big, and that's easier to fix by using seq_string
+* idle time no longer exported. It can be derived from userspace easily
+* "steal" changed to "wait", since steal is more our interpretation of it
+* nr_switches now being accounted as we walk the tree in put_prev_task, so no
+  new hierarchy walks are being inserted.
+v3:
+* completely reworked nr_switches gathering
+* separated per-se sleep_start to be more clear about it
+
+
+Glauber Costa (4):
+  account guest time per-cgroup as well.
+  expose fine-grained per-cpu data for cpuacct stats
+  mark whenever put_prev_task is called from context_switch
+  expose per-taskgroup schedstats in cgroup
+
+ include/linux/sched.h    |    2 +-
+ kernel/sched/core.c      |  178 +++++++++++++++++++++++++++++++++++++++++++---
+ kernel/sched/fair.c      |   28 +++++++-
+ kernel/sched/idle_task.c |    2 +-
+ kernel/sched/rt.c        |    6 +-
+ kernel/sched/sched.h     |    5 ++
+ kernel/sched/stop_task.c |    2 +-
+ 7 files changed, 207 insertions(+), 16 deletions(-)
+
+-- 
+1.7.10.2
