@@ -1,81 +1,99 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Daniel Lezcano <daniel.lezcano-GANU6spQydw@public.gmane.org>
 Subject: Re: [Devel] Re: [PATCH] allow a task to join a pid namespace
-Date: Tue, 5 Jun 2012 16:53:43 +0400
-Message-ID: <4FCE0157.4080007@parallels.com>
-References: <1338816828-25312-1-git-send-email-glommer@parallels.com> <4FCDD315.502@free.fr> <4FCDD346.9090008@parallels.com> <4FCDD8A0.1070608@parallels.com> <4FCE0101.6010908@free.fr>
+Date: Tue, 05 Jun 2012 15:18:59 +0200
+Message-ID: <4FCE0743.8070006@free.fr>
+References: <1338816828-25312-1-git-send-email-glommer@parallels.com> <4FCDD315.502@free.fr> <4FCDD346.9090008@parallels.com> <4FCDD8A0.1070608@parallels.com> <4FCE0101.6010908@free.fr> <4FCE0157.4080007@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FCE0101.6010908-GANU6spQydw@public.gmane.org>
+In-Reply-To: <4FCE0157.4080007-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Daniel Lezcano <daniel.lezcano-GANU6spQydw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, kir-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Michael-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
-On 06/05/2012 04:52 PM, Daniel Lezcano wrote:
-> On 06/05/2012 12:00 PM, Glauber Costa wrote:
->> On 06/05/2012 01:37 PM, Glauber Costa wrote:
->>> On 06/05/2012 01:36 PM, Daniel Lezcano wrote:
->>>> On 06/04/2012 03:33 PM, Glauber Costa wrote:
->>>>> Currently, it is possible for a process to join existing
->>>>> net, uts and ipc namespaces. This patch allows a process to join an
->>>>> existing pid namespace as well.
+On 06/05/2012 02:53 PM, Glauber Costa wrote:
+> On 06/05/2012 04:52 PM, Daniel Lezcano wrote:
+>> On 06/05/2012 12:00 PM, Glauber Costa wrote:
+>>> On 06/05/2012 01:37 PM, Glauber Costa wrote:
+>>>> On 06/05/2012 01:36 PM, Daniel Lezcano wrote:
+>>>>> On 06/04/2012 03:33 PM, Glauber Costa wrote:
+>>>>>> Currently, it is possible for a process to join existing
+>>>>>> net, uts and ipc namespaces. This patch allows a process to join an
+>>>>>> existing pid namespace as well.
+>>>>>>
+>>>>>> For that to remain sane, some restrictions are made in the calling
+>>>>>> process:
+>>>>>>
+>>>>>> * It needs to be in the parent namespace of the namespace it
+>>>>>> wants to
+>>>>>> jump to
+>>>>>> * It needs to sit in its own session and group as a leader.
+>>>>>>
+>>>>>> The rationale for that, is that people want to trigger actions in a
+>>>>>> Container
+>>>>>> from the outside. For instance, mainstream linux recently gained the
+>>>>>> ability
+>>>>>> to safely reboot a container. It would be desirable, however, that
+>>>>>> this
+>>>>>> action is triggered from an admin in the outside world, very much
+>>>>>> like a
+>>>>>> power switch in a physical box.
+>>>>>>
+>>>>>> This would also allow us to connect a console to the container,
+>>>>>> provide a
+>>>>>> repair mode for setups without networking (or with a broken one),
+>>>>>> etc.
 >>>>>
->>>>> For that to remain sane, some restrictions are made in the calling
->>>>> process:
+>>>>> Hi Glauber,
 >>>>>
->>>>> * It needs to be in the parent namespace of the namespace it wants to
->>>>> jump to
->>>>> * It needs to sit in its own session and group as a leader.
+>>>>> I am in favor of this patch but I think the pidns support won't be
+>>>>> complete and some corner-cases are not handled.
 >>>>>
->>>>> The rationale for that, is that people want to trigger actions in a
->>>>> Container
->>>>> from the outside. For instance, mainstream linux recently gained the
->>>>> ability
->>>>> to safely reboot a container. It would be desirable, however, that
->>>>> this
->>>>> action is triggered from an admin in the outside world, very much
->>>>> like a
->>>>> power switch in a physical box.
+>>>>> May be you can look at Eric's patchset [1] where, IMO, everything is
+>>>>> taken into account. Some of the patches may be already upstream.
 >>>>>
->>>>> This would also allow us to connect a console to the container,
->>>>> provide a
->>>>> repair mode for setups without networking (or with a broken one), etc.
+>>>>> Thanks
+>>>>> -- Daniel
 >>>>
->>>> Hi Glauber,
+>>>> I don't remember seeing such patchset in the mailing lists, but that
+>>>> might be my fault, due to traffic...
 >>>>
->>>> I am in favor of this patch but I think the pidns support won't be
->>>> complete and some corner-cases are not handled.
+>>>> I'll take a look. If it does what I need, I can just drop this.
 >>>>
->>>> May be you can look at Eric's patchset [1] where, IMO, everything is
->>>> taken into account. Some of the patches may be already upstream.
->>>>
->>>> Thanks
->>>> -- Daniel
 >>>
->>> I don't remember seeing such patchset in the mailing lists, but that
->>> might be my fault, due to traffic...
+>>> Ok. In a quick look, it does not seem to go all the way. This is just
+>>> by reading, but your reboot patch, for instance, is unlikely to work
+>>> with that, since if it doesn't alter pid->level, things like task
+>>> ns_of_pid won't work.
 >>>
->>> I'll take a look. If it does what I need, I can just drop this.
+>>> Running the test scripts I wrote for my testing of that patch also
+>>> doesn't seem to produce the expected result:
 >>>
+>>> after doing setns, the pid won't show up in that namespace.
 >>
->> Ok. In a quick look, it does not seem to go all the way. This is just
->> by reading, but your reboot patch, for instance, is unlikely to work
->> with that, since if it doesn't alter pid->level, things like task
->> ns_of_pid won't work.
->>
->> Running the test scripts I wrote for my testing of that patch also
->> doesn't seem to produce the expected result:
->>
->> after doing setns, the pid won't show up in that namespace.
+>> Yes, AFAIR, pid won't show up, you have to do fork-exec.
 >
-> Yes, AFAIR, pid won't show up, you have to do fork-exec.
+> Ah, so you mean the kid will show up... Well, ok.
+>
+> That's acceptable, but how about the behavior I am proposing ? (in the
+> patch I sent as a reply to this thread).
 
-Ah, so you mean the kid will show up... Well, ok.
+Let me look at the patch closely.
+>
+> I believe it to be saner, even though there is a price tag attached to
+> it. None of the other setns calls require you to do any such trickery...
 
-That's acceptable, but how about the behavior I am proposing ? (in the 
-patch I sent as a reply to this thread).
+Yeah, but the pidns is different from the other namespace, it is not
+supposed to be unshared.
+I remember we had a discussion about this and Eric had some good reasons
+to do it this way. One of them of the pid cached by the glibc. Also, we
+don't want to have our pid changing in our application.
 
-I believe it to be saner, even though there is a price tag attached to 
-it. None of the other setns calls require you to do any such trickery...
+You may find more informations in there [1]
+
+Thanks
+  -- Daniel
+
+[1] http://thread.gmane.org/gmane.linux.network/153200
