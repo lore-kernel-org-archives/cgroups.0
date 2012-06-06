@@ -1,32 +1,54 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 3/3] remove MEM_CGROUP_CHARGE_TYPE_FORCE
-Date: Wed, 6 Jun 2012 09:19:47 +0200
-Message-ID: <20120606071947.GE1761@cmpxchg.org>
-References: <4FCD609E.8070704@jp.fujitsu.com>
- <4FCD6264.7090905@jp.fujitsu.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: make sure that decisions in __css_put are atomic
+Date: Wed, 06 Jun 2012 15:31:19 +0800
+Message-ID: <4FCF0747.7050000@huawei.com>
+References: <20120605215019.4722.31817.stgit@dungbeetle.mtv.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <4FCD6264.7090905@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <20120605215019.4722.31817.stgit-Oz2bD8w/QAX+Wsei8lUk51LMcqb5oVE02SarAXORi/o@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org
+To: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tejun-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Tue, Jun 05, 2012 at 10:35:32AM +0900, Kamezawa Hiroyuki wrote:
+Salman Qazi wrote:
+
+> __css_put is using atomic_dec on the ref count, and then
+> looking at the ref count to make decisions.  This is prone
+> to races, as someone else may decrement ref count between
+> our decrement and our decision.  Instead, we should base our
+> decisions on the value that we decremented the ref count to.
 > 
-> There are no users since commit b24028572fb69 "memcg: remove PCG_CACHE"
+> (This results in an actual race on Google's kernel which I
+> haven't been able to reproduce on the upstream kernel.  Having
+> said that, it's still incorrect by inspection).
 > 
-> Acked-by: Hugh Dickins <hughd@google.com>
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+
+Good catch! This patch should be backported for 3.4.
+
+> ---
+>  kernel/cgroup.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 0f3527d..18dc8aa 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -4973,8 +4973,7 @@ void __css_put(struct cgroup_subsys_state *css)
+>  	struct cgroup *cgrp = css->cgroup;
+>  
+>  	rcu_read_lock();
+> -	atomic_dec(&css->refcnt);
+> -	switch (css_refcnt(css)) {
+> +	switch (atomic_dec_return(&css->refcnt)) {
+>  	case 1:
+>  		if (notify_on_release(cgrp)) {
+>  			set_bit(CGRP_RELEASABLE, &cgrp->flags);
+> 
+
