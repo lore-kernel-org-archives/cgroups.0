@@ -1,54 +1,35 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: make sure that decisions in __css_put are atomic
-Date: Wed, 06 Jun 2012 15:31:19 +0800
-Message-ID: <4FCF0747.7050000@huawei.com>
-References: <20120605215019.4722.31817.stgit@dungbeetle.mtv.corp.google.com>
+From: Stanislav Kinsbursky <skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [RFC] connectat() and bindat() system calls
+Date: Wed, 6 Jun 2012 12:38:51 +0400
+Message-ID: <4FCF171B.8000207@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20120605215019.4722.31817.stgit-Oz2bD8w/QAX+Wsei8lUk51LMcqb5oVE02SarAXORi/o@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tejun-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org" <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, "bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-Salman Qazi wrote:
+Hello.
+I'd really appreciate for any comments on subj - implementation of new system 
+call: connectat and bindat.
 
-> __css_put is using atomic_dec on the ref count, and then
-> looking at the ref count to make decisions.  This is prone
-> to races, as someone else may decrement ref count between
-> our decrement and our decision.  Instead, we should base our
-> decisions on the value that we decremented the ref count to.
-> 
-> (This results in an actual race on Google's kernel which I
-> haven't been able to reproduce on the upstream kernel.  Having
-> said that, it's still incorrect by inspection).
-> 
-> Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reasons for new system calls:
+1) Path length for UNIX sockets is limited to 108 symbols.
+Syscalls are useful as is since removes limitation.
 
+2) Ability to perform connect/bind calls to UNIX sockets starting from specified 
+path in kernel.
+This is required for proper support of kernel connect operations in SUNRPC 
+layer. Which, in turn, required for proper support of NFS in containers.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+These system calls could be used only for non-abstract UNIX sockets, obviously.
 
-Good catch! This patch should be backported for 3.4.
+Possible implementation could be adding of struct path pointer to sockaddr_un.
+But this pointer have to valid only for connect and bind calls, and caller have 
+to hold and release path by himself.
 
-> ---
->  kernel/cgroup.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 0f3527d..18dc8aa 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -4973,8 +4973,7 @@ void __css_put(struct cgroup_subsys_state *css)
->  	struct cgroup *cgrp = css->cgroup;
->  
->  	rcu_read_lock();
-> -	atomic_dec(&css->refcnt);
-> -	switch (css_refcnt(css)) {
-> +	switch (atomic_dec_return(&css->refcnt)) {
->  	case 1:
->  		if (notify_on_release(cgrp)) {
->  			set_bit(CGRP_RELEASABLE, &cgrp->flags);
-> 
-
+-- 
+Best regards,
+Stanislav Kinsbursky
