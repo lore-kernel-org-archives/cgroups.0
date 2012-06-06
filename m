@@ -1,201 +1,234 @@
-From: Glauber Costa <glommer@parallels.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
 Subject: Re: [PATCH] allow a task to join a pid namespace
-Date: Wed, 6 Jun 2012 12:54:23 +0400
-Message-ID: <4FCF1ABF.7020803@parallels.com>
-References: <1338816828-25312-1-git-send-email-glommer@parallels.com> <8762b5aele.fsf@xmission.com>
+Date: Wed, 06 Jun 2012 11:29:16 -0700
+Message-ID: <87txyo1egz.fsf@xmission.com>
+References: <1338816828-25312-1-git-send-email-glommer@parallels.com>
+	<4FCDD315.502@free.fr> <4FCDEE8E.8000005@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8762b5aele.fsf@xmission.com>
+In-Reply-To: <4FCDEE8E.8000005@parallels.com> (Glauber Costa's message of
+	"Tue, 5 Jun 2012 15:33:34 +0400")
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, devel@openvz.org, kir@parallels.com, Serge Hallyn <serge.hallyn@canonical.com>, Oleg Nesterov <oleg@redhat.com>, Michael Kerrisk <mtk.manpages@gmail.com>, Tejun Heo <tj@kernel.org>, Daniel Lezcano <daniel.lezcano@linaro.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: Daniel Lezcano <daniel.lezcano@free.fr>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, devel@openvz.org, kir@parallels.com, Serge Hallyn <serge.hallyn@canonical.com>, Oleg Nesterov <oleg@redhat.com>, Michael Kerrisk <mtk.manpages@gmail.com>, Tejun Heo <tj@kernel.org>
 
-On 06/05/2012 08:49 PM, Eric W. Biederman wrote:
-> Glauber Costa<glommer@parallels.com>  writes:
+Glauber Costa <glommer@parallels.com> writes:
 >
->> Currently, it is possible for a process  to join existing
->> net, uts and ipc namespaces. This patch allows a process to join an
->> existing pid namespace as well.
->>
->> For that to remain sane, some restrictions are made in the calling process:
->>
->> * It needs to be in the parent namespace of the namespace it wants to jump to
->> * It needs to sit in its own session and group as a leader.
->>
->> The rationale for that, is that people want to trigger actions in a Container
->> from the outside. For instance, mainstream linux recently gained the ability
->> to safely reboot a container. It would be desirable, however, that this
->> action is triggered from an admin in the outside world, very much like a
->> power switch in a physical box.
->>
->> This would also allow us to connect a console to the container, provide a
->> repair mode for setups without networking (or with a broken one), etc.
->>
->> Signed-off-by: Glauber Costa<glommer@parallels.com>
->> CC: Serge Hallyn<serge.hallyn@canonical.com>
->> CC: Oleg Nesterov<oleg@redhat.com>
->> CC: Michael Kerrisk<mtk.manpages@gmail.com>
->> CC: "Eric W. Biederman"<ebiederm@xmission.com>
->> CC: Tejun Heo<tj@kernel.org>
->> CC: Daniel Lezcano<daniel.lezcano@linaro.org>
->> ---
->>   fs/proc/namespaces.c    |    3 ++
->>   include/linux/proc_fs.h |    1 +
->>   kernel/pid_namespace.c  |   76 +++++++++++++++++++++++++++++++++++++++++++++++
->>   3 files changed, 80 insertions(+)
->>
->> diff --git a/fs/proc/namespaces.c b/fs/proc/namespaces.c
->> index 0d9e23a..6b52af5 100644
->> --- a/fs/proc/namespaces.c
->> +++ b/fs/proc/namespaces.c
->> @@ -24,6 +24,9 @@ static const struct proc_ns_operations *ns_entries[] = {
->>   #ifdef CONFIG_IPC_NS
->>   	&ipcns_operations,
->>   #endif
->> +#ifdef CONFIG_PID_NS
->> +	&pidns_operations,
->> +#endif
->>   };
->>
->>   static const struct file_operations ns_file_operations = {
->> diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
->> index 3fd2e87..acaafcd 100644
->> --- a/include/linux/proc_fs.h
->> +++ b/include/linux/proc_fs.h
->> @@ -251,6 +251,7 @@ struct proc_ns_operations {
->>   extern const struct proc_ns_operations netns_operations;
->>   extern const struct proc_ns_operations utsns_operations;
->>   extern const struct proc_ns_operations ipcns_operations;
->> +extern const struct proc_ns_operations pidns_operations;
->>
->>   union proc_op {
->>   	int (*proc_get_link)(struct dentry *, struct path *);
->> diff --git a/kernel/pid_namespace.c b/kernel/pid_namespace.c
->> index 57bc1fd..c4555b9d 100644
->> --- a/kernel/pid_namespace.c
->> +++ b/kernel/pid_namespace.c
->> @@ -258,3 +258,79 @@ static __init int pid_namespaces_init(void)
->>   }
->>
->>   __initcall(pid_namespaces_init);
->> +
->> +static void *pidns_get(struct task_struct *task)
->> +{
->> +	struct pid_namespace *pid = NULL;
->> +	struct nsproxy *nsproxy;
->> +
->> +	rcu_read_lock();
->> +	nsproxy = task_nsproxy(task);
->> +	if (nsproxy)
->> +		pid = get_pid_ns(nsproxy->pid_ns);
->> +	rcu_read_unlock();
->> +
->> +	return pid;
->> +}
->> +
->> +static void pidns_put(void *ns)
->> +{
->> +	put_pid_ns(ns);
->> +}
->> +
->> +/*
->> + * pid_ns' callback for setns
->> + *
->> + * this call switches current's pid_ns from nsproxy to ns.
->> + * In order to do that successfully, we need to create a new pid living
->> + * in the new namespace, and attach_pid() it.
->> + *
->> + * Because we don't want to deal with processes leaving their current
->> + * namespace or being duplicate, it is mandatory that the namespace
->> + * we're switching from is the parent of the namespace we are switching to.
->> + * This is because in this scenario, a view of the pid exists there anyway.
->> + *
->> + * Caller must be group and session leader. This restriction guarantees
->> + * that we won't mess with more than we should, like the controlling terminal
->> + * in our host namespace, and ambiguities about who is the child reaper.
->> + */
->> +static int pidns_install(struct nsproxy *nsproxy, void *_ns)
->> +{
->> +	struct pid *newpid;
->> +	struct pid_namespace *ns = _ns;
->> +
->> +	if (is_container_init(current))
->> +		return -EINVAL;
->> +
->> +	if (nsproxy->pid_ns != ns->parent)
->> +		return -EPERM;
->> +
->> +	if (task_pgrp(current) !=  task_pid(current))
->> +		return -EPERM;
->> +
->> +	if (task_session(current) !=  task_pid(current))
->> +		return -EPERM;
->> +
->> +	newpid = alloc_pid(ns);
->> +	if (!newpid)
->> +		return -ENOMEM;
->> +
->> +	put_pid_ns(nsproxy->pid_ns);
->> +	nsproxy->pid_ns = get_pid_ns(ns);
->> +
->> +	write_lock_irq(&tasklist_lock);
->> +	change_pid(current, PIDTYPE_PID, newpid);
->> +	change_pid(current, PIDTYPE_PGID, newpid);
->> +	change_pid(current, PIDTYPE_SID, newpid);
->> +	write_unlock_irq(&tasklist_lock);
+> Please let me know what you think of the attached patch. It is ontop of Eric's
+> tree that you pointed me to, but I am not really using any of its functionality,
+> so this would be equally doable in current mainline kernel - but I wanted to
+> make sure it integrates well with what Eric is doing as well.
+
+The trees I have out there for pid namespace work are for historical
+reference at this point.
+
+> It is a bit wasteful space-wise, but this approach pretty much guarantees we
+> don't need to update pointers anywhere - therefore, totally
+> lock-free. pid->level is only updated after switch_task_namespaces(), so every
+> call before that will see correct information up to the previous
+> level.
+
+This solves none of the pid namespace life cycle problems and the issues
+you solve by extending a pid can probably be solved better by allocating
+a new pid and setting it's low pids the same as the original pid and
+then atomically swapping them.
+
+So I do not find the patch below at all interesting.
+
+Eric
+
+
+> From 1192e0ff3c854f4690d44fadccbc575fff653578 Mon Sep 17 00:00:00 2001
+> From: Glauber Costa <glommer@parallels.com>
+> Date: Tue, 5 Jun 2012 15:23:12 +0400
+> Subject: [PATCH] pid_ns: expand the current pid namespace to a new namespace
 >
-> This part where you are changing the pid on an existing process
-> to something different is flat out wrong.
+> install pid_ns doesn't go as far as needed. Things like
+> ns_of_pid() will rely on the current level to get to the
+> right task. So when attaching a task to a new pid namespace,
+> we need to make sure the upid vector grows as needed, and the
+> level updated accordingly
 >
-> The practical issues include processes sending signals will no longer
-> find this process, not handling multithreaded processes and glibc
-> caching getpid and getting totally confusedl, and those are just
-> off the top of my head.
+> To do that, this patch leaves room for one more upid at the end
+> of the structure at all times. It also stores the original level so
+> we know afterwards which cache to free from.
 >
-> We do need to figure out a practical way of entering a pid namespace.
+> Although this is, of course, a bit wasteful, it has the advantage
+> that we never need to touch the existing struct pid, nor the existing
+> upid vectors. That would be racy in nature, and may require us to pick
+> locks here and there - which seems to me like a big no.
 >
-
-Yes, I realize that. So, I posted a new version of this patchset here, 
-as a reply to one of Daniel's message, but I can post it again 
-separately to avoid confusion.
-
-The main idea is as follows:
-
-* We only allow transitions to a namespace that has the current
-   namespace as its parent. While doing that by keeping track of the
-   original allocation level.
-
-* I leave an extra upid slot at the end of the pid structure. That's
-   the main drawback, I think, because it waste space even if you're not
-   using setns. But since it is a small structure, the final result won't
-   be that big.
-
-* When calling setns, after a bunch of safety checks, I use the extra
-   pid to allocate an extra level.
-
-* When freeing, I use the original level to find the correct cache to
-   free from.
-
-This basically means that the task continue existing the same way as 
-before. Its pid won't change, we won't mess with pointers, and the task 
-is equally visible in the parent namespace. We can go one step further 
-with this and have getpid return based on the original level information.
-
-What I personally like about this approach, is that we never have a 
-ghost process in a namespace. You can always see from the process tree 
-which processes are in each namespace.
-
-Since one of the requirements I make is to have the calling process be 
-the group and session leader, and be single-threaded, there is no 
-pre-existing process tree to preserve, and the one to be created will be 
-sane.
-
-I'd very much like to hear your thoughts on this approach. I do realize 
-that you have been hacking for a lot longer than me on this, so I may be 
-overlooking something.
-
-
-
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> ---
+>  include/linux/pid.h    |    3 +++
+>  kernel/nsproxy.c       |    2 ++
+>  kernel/pid.c           |   54 +++++++++++++++++++++++++++++++++++++++++++++++-
+>  kernel/pid_namespace.c |   30 +++++++++++++++++++++++++--
+>  4 files changed, 86 insertions(+), 3 deletions(-)
+>
+> diff --git a/include/linux/pid.h b/include/linux/pid.h
+> index b152d44..2f01763 100644
+> --- a/include/linux/pid.h
+> +++ b/include/linux/pid.h
+> @@ -58,6 +58,7 @@ struct pid
+>  {
+>  	atomic_t count;
+>  	unsigned int level;
+> +	unsigned int orig_level;
+>  	/* lists of tasks that use this pid */
+>  	struct hlist_head tasks[PIDTYPE_MAX];
+>  	struct rcu_head rcu;
+> @@ -121,6 +122,8 @@ int next_pidmap(struct pid_namespace *pid_ns, unsigned int last);
+>  
+>  extern struct pid *alloc_pid(struct pid_namespace *ns);
+>  extern void free_pid(struct pid *pid);
+> +extern int expand_pid(struct pid *pid, struct pid_namespace *ns);
+> +extern void  update_expanded_pid(struct task_struct *task);
+>  
+>  /*
+>   * ns_of_pid() returns the pid namespace in which the specified pid was
+> diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
+> index b956079..9851f11 100644
+> --- a/kernel/nsproxy.c
+> +++ b/kernel/nsproxy.c
+> @@ -267,6 +267,8 @@ SYSCALL_DEFINE2(setns, int, fd, int, nstype)
+>  		goto out;
+>  	}
+>  	switch_task_namespaces(tsk, new_nsproxy);
+> +	if (nstype == CLONE_NEWPID)
+> +		update_expanded_pid(current);
+>  out:
+>  	fput(file);
+>  	return err;
+> diff --git a/kernel/pid.c b/kernel/pid.c
+> index 8c51c26..f2b1bd7 100644
+> --- a/kernel/pid.c
+> +++ b/kernel/pid.c
+> @@ -247,7 +247,7 @@ void put_pid(struct pid *pid)
+>  	if (!pid)
+>  		return;
+>  
+> -	ns = pid->numbers[pid->level].ns;
+> +	ns = pid->numbers[pid->orig_level].ns;
+>  	if ((atomic_read(&pid->count) == 1) ||
+>  	     atomic_dec_and_test(&pid->count)) {
+>  		kmem_cache_free(ns->pid_cachep, pid);
+> @@ -306,6 +306,7 @@ struct pid *alloc_pid(struct pid_namespace *ns)
+>  
+>  	get_pid_ns(ns);
+>  	pid->level = ns->level;
+> +	pid->orig_level = ns->level;
+>  	atomic_set(&pid->count, 1);
+>  	for (type = 0; type < PIDTYPE_MAX; ++type)
+>  		INIT_HLIST_HEAD(&pid->tasks[type]);
+> @@ -329,6 +330,57 @@ out_free:
+>  	goto out;
+>  }
+>  
+> +int expand_pid(struct pid *pid, struct pid_namespace *ns)
+> +{
+> +	int i, nr;
+> +	struct pid_namespace *tmp;
+> +	struct upid *upid;
+> +
+> +	if  ((ns->level - pid->orig_level) > 1)
+> +		return -EINVAL;
+> +
+> +	if (ns->parent != pid->numbers[pid->orig_level].ns)
+> +		return -EINVAL;
+> +
+> +	tmp = ns;
+> +	for (i = ns->level; i > pid->level; i--) {
+> +		if (ns->dead)
+> +			goto out_free;
+> +		nr = alloc_pidmap(tmp);
+> +		if (nr < 0)
+> +			goto out_free;
+> +
+> +		pid->numbers[i].nr = nr;
+> +		pid->numbers[i].ns = tmp;
+> +		tmp = tmp->parent;
+> +	}
+> +
+> +	upid = pid->numbers + ns->level;
+> +	spin_lock_irq(&pidmap_lock);
+> +	for (i = ns->level; i > pid->level; i--) {
+> +		upid = &pid->numbers[i];
+> +		hlist_add_head_rcu(&upid->pid_chain,
+> +				&pid_hash[pid_hashfn(upid->nr, upid->ns)]);
+> +	}
+> +	spin_unlock_irq(&pidmap_lock);
+> +
+> +	return 0;
+> +
+> +out_free:
+> +	while (++i <= ns->level)
+> +		free_pidmap(pid->numbers + i);
+> +
+> +	return -ENOMEM;
+> +}
+> +
+> +void update_expanded_pid(struct task_struct *task)
+> +{
+> +	struct pid *pid;
+> +	pid = get_task_pid(task, PIDTYPE_PID);
+> +
+> +	pid->level++;
+> +}
+> +
+>  struct pid *find_pid_ns(int nr, struct pid_namespace *ns)
+>  {
+>  	struct hlist_node *elem;
+> diff --git a/kernel/pid_namespace.c b/kernel/pid_namespace.c
+> index 79bf459..0f3a521 100644
+> --- a/kernel/pid_namespace.c
+> +++ b/kernel/pid_namespace.c
+> @@ -49,8 +49,12 @@ static struct kmem_cache *create_pid_cachep(int nr_ids)
+>  		goto err_alloc;
+>  
+>  	snprintf(pcache->name, sizeof(pcache->name), "pid_%d", nr_ids);
+> +	/*
+> +	 * nr_ids - 1 would provide room for upids up to the right level.
+> +	 * We leave room for one in the end for usage with setns.
+> +	 */
+>  	cachep = kmem_cache_create(pcache->name,
+> -			sizeof(struct pid) + (nr_ids - 1) * sizeof(struct upid),
+> +			sizeof(struct pid) + (nr_ids) * sizeof(struct upid),
+>  			0, SLAB_HWCACHE_ALIGN, NULL);
+>  	if (cachep == NULL)
+>  		goto err_cachep;
+> @@ -244,8 +248,30 @@ static void pidns_put(void *ns)
+>  	put_pid_ns(ns);
+>  }
+>  
+> -static int pidns_install(struct nsproxy *nsproxy, void *ns)
+> +static int pidns_install(struct nsproxy *nsproxy, void *_ns)
+>  {
+> +	int ret = 0;
+> +	struct pid *pid;
+> +	struct pid_namespace *ns = _ns;
+> +
+> +	rcu_read_lock();
+> +	pid = task_pid(current);
+> +	rcu_read_unlock();
+> +
+> +	if (is_container_init(current) || (get_nr_threads(current) > 1))
+> +		return -EINVAL;
+> +
+> +	read_lock(&tasklist_lock);
+> +	if ((task_pgrp(current) != pid) || task_session(current) != pid)
+> +		ret = -EPERM;
+> +	read_unlock(&tasklist_lock);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = expand_pid(pid, ns);
+> +	if (ret)
+> +		return ret;
+> +
+>  	put_pid_ns(nsproxy->pid_ns);
+>  	nsproxy->pid_ns = get_pid_ns(ns);
+>  	return 0;
