@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 2/4] Add a __GFP_SLABMEMCG flag
-Date: Fri,  8 Jun 2012 13:43:19 +0400
-Message-ID: <1339148601-20096-3-git-send-email-glommer@parallels.com>
+Subject: [PATCH 3/4] don't do __ClearPageSlab before freeing slab page.
+Date: Fri,  8 Jun 2012 13:43:20 +0400
+Message-ID: <1339148601-20096-4-git-send-email-glommer@parallels.com>
 References: <1339148601-20096-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1339148601-20096-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,50 +11,96 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-This flag is used to indicate to the callees that this allocation will be
-serviced to the kernel. It is not supposed to be passed by the callers
-of kmem_cache_alloc, but rather by the cache core itself.
+This will give the oportunity to the page allocator to
+determine that a given page was previously a slab page, and
+take action accordingly.
 
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+If memcg kmem is present, this means that that page needs to
+be unaccounted. The page allocator will now have the responsibility
+to clear that bit upon free_pages().
+
+It is not uncommon to have the page allocator to check page flags.
+Mlock flag, for instance, is checked pervasively all over the place.
+So I hope this is okay for the slab as well.
+
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/gfp.h |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/page_alloc.c |    5 ++++-
+ mm/slab.c       |    5 -----
+ mm/slob.c       |    1 -
+ mm/slub.c       |    1 -
+ 4 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index 581e74b..05cfbc2 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -37,6 +37,7 @@ struct vm_area_struct;
- #define ___GFP_NO_KSWAPD	0x400000u
- #define ___GFP_OTHER_NODE	0x800000u
- #define ___GFP_WRITE		0x1000000u
-+#define ___GFP_SLABMEMCG	0x2000000u
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 918330f..a884a9c 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -697,8 +697,10 @@ static bool free_pages_prepare(struct page *page, unsigned int order)
  
- /*
-  * GFP bitmasks..
-@@ -87,6 +88,7 @@ struct vm_area_struct;
- #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
- #define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE) /* On behalf of other node */
- #define __GFP_WRITE	((__force gfp_t)___GFP_WRITE)	/* Allocator intends to dirty page */
-+#define __GFP_SLABMEMCG	((__force gfp_t)___GFP_SLABMEMCG)/* Allocation comes from a memcg slab */
+ 	if (PageAnon(page))
+ 		page->mapping = NULL;
+-	for (i = 0; i < (1 << order); i++)
++	for (i = 0; i < (1 << order); i++) {
++		__ClearPageSlab(page + i);
+ 		bad += free_pages_check(page + i);
++	}
+ 	if (bad)
+ 		return false;
  
- /*
-  * This may seem redundant, but it's a way of annotating false positives vs.
-@@ -94,7 +96,7 @@ struct vm_area_struct;
-  */
- #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
+@@ -2505,6 +2507,7 @@ EXPORT_SYMBOL(get_zeroed_page);
+ void __free_pages(struct page *page, unsigned int order)
+ {
+ 	if (put_page_testzero(page)) {
++		__ClearPageSlab(page);
+ 		if (order == 0)
+ 			free_hot_cold_page(page, 0);
+ 		else
+diff --git a/mm/slab.c b/mm/slab.c
+index d7dfd26..66ef370 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -1794,11 +1794,6 @@ static void kmem_freepages(struct kmem_cache *cachep, void *addr)
+ 	else
+ 		sub_zone_page_state(page_zone(page),
+ 				NR_SLAB_UNRECLAIMABLE, nr_freed);
+-	while (i--) {
+-		BUG_ON(!PageSlab(page));
+-		__ClearPageSlab(page);
+-		page++;
+-	}
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += nr_freed;
+ 	free_pages((unsigned long)addr, cachep->gfporder);
+diff --git a/mm/slob.c b/mm/slob.c
+index 61b1845..b03d65e 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -360,7 +360,6 @@ static void slob_free(void *block, int size)
+ 		if (slob_page_free(sp))
+ 			clear_slob_page_free(sp);
+ 		spin_unlock_irqrestore(&slob_lock, flags);
+-		__ClearPageSlab(sp);
+ 		reset_page_mapcount(sp);
+ 		slob_free_pages(b, 0);
+ 		return;
+diff --git a/mm/slub.c b/mm/slub.c
+index ed01be5..a0eeb4a 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1399,7 +1399,6 @@ static void __free_slab(struct kmem_cache *s, struct page *page)
+ 		NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
+ 		-pages);
  
--#define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
-+#define __GFP_BITS_SHIFT 26	/* Room for N __GFP_FOO bits */
- #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
- 
- /* This equals 0, but use constants in case they ever change */
+-	__ClearPageSlab(page);
+ 	reset_page_mapcount(page);
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += pages;
 -- 
 1.7.10.2
