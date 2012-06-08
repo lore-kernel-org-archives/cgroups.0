@@ -1,27 +1,60 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/4] Add a __GFP_SLABMEMCG flag
-Date: Fri, 8 Jun 2012 14:31:07 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1206081430380.4213@router.home>
-References: <1339148601-20096-1-git-send-email-glommer@parallels.com> <1339148601-20096-3-git-send-email-glommer@parallels.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
+Date: Fri, 8 Jun 2012 16:06:12 -0700
+Message-ID: <20120608160612.dea6d1ce.akpm@linux-foundation.org>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+	<1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+	<alpine.DEB.2.00.1205241436180.24113@chino.kir.corp.google.com>
+	<20120527202848.GC7631@skywalker.linux.vnet.ibm.com>
+	<87lik920h8.fsf@skywalker.in.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1339183870; bh=1ygLXs6A27r9mPsqPMP7pNTvs8zpaRkLsH9JfugnWJ0=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=vHcjKOZzQepL915Y1PY9J1qy7TsZLbspEmECzRwsE/I5lQ6qD15bcTp1lqGrf6rSkuqCCdlH4a8AdddGH4xdjRfO9NW38LGavYuuHQwplJjnQNJKR0hSP62ENeLHhjFpyer0DM6Wmc3eti4fiOviUG34Krg9E7cyOGpHBw0DAig=
-In-Reply-To: <1339148601-20096-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <87lik920h8.fsf@skywalker.in.ibm.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, mgorman@suse.de, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, dhillf@gmail.com, aarcange@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Ying Han <yinghan@google.com>
 
-On Fri, 8 Jun 2012, Glauber Costa wrote:
+On Wed, 30 May 2012 20:13:31 +0530
+"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> wrote:
 
->   */
->  #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
->
-> -#define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
-> +#define __GFP_BITS_SHIFT 26	/* Room for N __GFP_FOO bits */
->  #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
+> >> 
+> >>  - code: seperating hugetlb bits out from memcg bits to avoid growing 
+> >>    mm/memcontrol.c beyond its current 5650 lines, and
+> >> 
+> >
+> > I can definitely look at spliting mm/memcontrol.c 
+> >
+> >
+> >>  - performance: not incurring any overhead of enabling memcg for per-
+> >>    page tracking that is unnecessary if users only want to limit hugetlb 
+> >>    pages.
+> >> 
+> 
+> Since Andrew didn't sent the patchset to Linus because of this
+> discussion, I looked at reworking the patchset as a seperate
+> controller. The patchset I sent here
+> 
+> http://thread.gmane.org/gmane.linux.kernel.mm/79230
+> 
+> have seen minimal testing. I also folded the fixup patches
+> Andrew had in -mm to original patchset.
+> 
+> Let me know if the changes looks good.
 
-Please make this conditional on CONFIG_MEMCG or so. The bit can be useful
-in particular on 32 bit architectures.
+This is starting to be a problem.  I'm still sitting on the old version
+of this patchset and it will start to get in the way of other work.
+
+We now have this new version of the patchset which implements a
+separate controller but it is unclear to me which way we want to go.
+
+Can the memcg developers please drop everything else and make a
+decision here?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
