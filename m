@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V8 14/16] hugetlb/cgroup: add charge/uncharge calls for HugeTLB alloc/free
-Date: Sat,  9 Jun 2012 14:29:59 +0530
-Message-ID: <1339232401-14392-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V8 15/16] hugetlb/cgroup: migrate hugetlb cgroup info from oldpage to new page during migration
+Date: Sat,  9 Jun 2012 14:30:00 +0530
+Message-ID: <1339232401-14392-16-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,92 +15,97 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This adds necessary charge/uncharge calls in the HugeTLB code.  We do
-hugetlb cgroup charge in page alloc and uncharge in compound page destructor.
+With HugeTLB pages, hugetlb cgroup is uncharged in compound page destructor.  Since
+we are holding a hugepage reference, we can be sure that old page won't
+get uncharged till the last put_page().
 
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- mm/hugetlb.c        |   16 +++++++++++++++-
- mm/hugetlb_cgroup.c |    7 +------
- 2 files changed, 16 insertions(+), 7 deletions(-)
+ include/linux/hugetlb_cgroup.h |    8 ++++++++
+ mm/hugetlb_cgroup.c            |   21 +++++++++++++++++++++
+ mm/migrate.c                   |    5 +++++
+ 3 files changed, 34 insertions(+)
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index bf79131..4ca92a9 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -628,6 +628,8 @@ static void free_huge_page(struct page *page)
- 	BUG_ON(page_mapcount(page));
- 
- 	spin_lock(&hugetlb_lock);
-+	hugetlb_cgroup_uncharge_page(hstate_index(h),
-+				     pages_per_huge_page(h), page);
- 	if (h->surplus_huge_pages_node[nid] && huge_page_order(h) < MAX_ORDER) {
- 		/* remove the page from active list */
- 		list_del(&page->lru);
-@@ -1116,7 +1118,10 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
- 	struct hstate *h = hstate_vma(vma);
- 	struct page *page;
- 	long chg;
-+	int ret, idx;
-+	struct hugetlb_cgroup *h_cg;
- 
-+	idx = hstate_index(h);
- 	/*
- 	 * Processes that did not create the mapping will have no
- 	 * reserves and will not have accounted against subpool
-@@ -1132,6 +1137,11 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
- 		if (hugepage_subpool_get_pages(spool, chg))
- 			return ERR_PTR(-ENOSPC);
- 
-+	ret = hugetlb_cgroup_charge_page(idx, pages_per_huge_page(h), &h_cg);
-+	if (ret) {
-+		hugepage_subpool_put_pages(spool, chg);
-+		return ERR_PTR(-ENOSPC);
-+	}
- 	spin_lock(&hugetlb_lock);
- 	page = dequeue_huge_page_vma(h, vma, addr, avoid_reserve);
- 	spin_unlock(&hugetlb_lock);
-@@ -1139,6 +1149,9 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
- 	if (!page) {
- 		page = alloc_buddy_huge_page(h, NUMA_NO_NODE);
- 		if (!page) {
-+			hugetlb_cgroup_uncharge_cgroup(idx,
-+						       pages_per_huge_page(h),
-+						       h_cg);
- 			hugepage_subpool_put_pages(spool, chg);
- 			return ERR_PTR(-ENOSPC);
- 		}
-@@ -1147,7 +1160,8 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
- 	set_page_private(page, (unsigned long)spool);
- 
- 	vma_commit_reservation(h, vma, addr);
--
-+	/* update page cgroup details */
-+	hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg, page);
- 	return page;
+diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+index ba4836f..b64d067 100644
+--- a/include/linux/hugetlb_cgroup.h
++++ b/include/linux/hugetlb_cgroup.h
+@@ -63,6 +63,8 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
+ extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+ 					   struct hugetlb_cgroup *h_cg);
+ extern int hugetlb_cgroup_file_init(int idx) __init;
++extern void hugetlb_cgroup_migrate(struct page *oldhpage,
++				   struct page *newhpage);
+ #else
+ static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
+ {
+@@ -112,5 +114,11 @@ static inline int __init hugetlb_cgroup_file_init(int idx)
+ {
+ 	return 0;
  }
- 
++
++static inline void hugetlb_cgroup_migrate(struct page *oldhpage,
++					  struct page *newhpage)
++{
++	return;
++}
+ #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
+ #endif
 diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 2a4881d..c2b7b8e 100644
+index c2b7b8e..2d384fe 100644
 --- a/mm/hugetlb_cgroup.c
 +++ b/mm/hugetlb_cgroup.c
-@@ -249,15 +249,10 @@ void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
- 	if (hugetlb_cgroup_disabled())
- 		return;
- 
--	spin_lock(&hugetlb_lock);
- 	h_cg = hugetlb_cgroup_from_page(page);
--	if (unlikely(!h_cg)) {
--		spin_unlock(&hugetlb_lock);
-+	if (unlikely(!h_cg))
- 		return;
--	}
- 	set_hugetlb_cgroup(page, NULL);
--	spin_unlock(&hugetlb_lock);
--
- 	res_counter_uncharge(&h_cg->hugepage[idx], csize);
- 	return;
+@@ -394,6 +394,27 @@ int __init hugetlb_cgroup_file_init(int idx)
+ 	return 0;
  }
+ 
++void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
++{
++	struct hugetlb_cgroup *h_cg;
++
++	VM_BUG_ON(!PageHuge(oldhpage));
++
++	if (hugetlb_cgroup_disabled())
++		return;
++
++	spin_lock(&hugetlb_lock);
++	h_cg = hugetlb_cgroup_from_page(oldhpage);
++	set_hugetlb_cgroup(oldhpage, NULL);
++	cgroup_exclude_rmdir(&h_cg->css);
++
++	/* move the h_cg details to new cgroup */
++	set_hugetlb_cgroup(newhpage, h_cg);
++	spin_unlock(&hugetlb_lock);
++	cgroup_release_and_wakeup_rmdir(&h_cg->css);
++	return;
++}
++
+ struct cgroup_subsys hugetlb_subsys = {
+ 	.name = "hugetlb",
+ 	.create     = hugetlb_cgroup_create,
+diff --git a/mm/migrate.c b/mm/migrate.c
+index fdce3a2..6c37c51 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -33,6 +33,7 @@
+ #include <linux/memcontrol.h>
+ #include <linux/syscalls.h>
+ #include <linux/hugetlb.h>
++#include <linux/hugetlb_cgroup.h>
+ #include <linux/gfp.h>
+ 
+ #include <asm/tlbflush.h>
+@@ -931,6 +932,10 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
+ 
+ 	if (anon_vma)
+ 		put_anon_vma(anon_vma);
++
++	if (!rc)
++		hugetlb_cgroup_migrate(hpage, new_hpage);
++
+ 	unlock_page(hpage);
+ out:
+ 	put_page(new_hpage);
 -- 
 1.7.10
 
