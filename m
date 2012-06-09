@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V8 06/16] hugetlb: simplify migrate_huge_page()
-Date: Sat,  9 Jun 2012 14:29:51 +0530
-Message-ID: <1339232401-14392-7-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V8 03/16] hugetlb: add an inline helper for finding hstate index
+Date: Sat,  9 Jun 2012 14:29:48 +0530
+Message-ID: <1339232401-14392-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,163 +15,108 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-Since we migrate only one hugepage don't use linked list for passing the
-page around.  Directly pass page that need to be migrated as argument.
-This also remove the usage page->lru in migrate path.
+Add an inline helper and use it in the code.
 
+Acked-by: David Rientjes <rientjes@google.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- include/linux/migrate.h |    4 +--
- mm/memory-failure.c     |   13 ++--------
- mm/migrate.c            |   65 +++++++++++++++--------------------------------
- 3 files changed, 25 insertions(+), 57 deletions(-)
+ include/linux/hugetlb.h |    6 ++++++
+ mm/hugetlb.c            |   20 +++++++++++---------
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/migrate.h b/include/linux/migrate.h
-index 855c337..ce7e667 100644
---- a/include/linux/migrate.h
-+++ b/include/linux/migrate.h
-@@ -15,7 +15,7 @@ extern int migrate_page(struct address_space *,
- extern int migrate_pages(struct list_head *l, new_page_t x,
- 			unsigned long private, bool offlining,
- 			enum migrate_mode mode);
--extern int migrate_huge_pages(struct list_head *l, new_page_t x,
-+extern int migrate_huge_page(struct page *, new_page_t x,
- 			unsigned long private, bool offlining,
- 			enum migrate_mode mode);
- 
-@@ -36,7 +36,7 @@ static inline void putback_lru_pages(struct list_head *l) {}
- static inline int migrate_pages(struct list_head *l, new_page_t x,
- 		unsigned long private, bool offlining,
- 		enum migrate_mode mode) { return -ENOSYS; }
--static inline int migrate_huge_pages(struct list_head *l, new_page_t x,
-+static inline int migrate_huge_page(struct page *page, new_page_t x,
- 		unsigned long private, bool offlining,
- 		enum migrate_mode mode) { return -ENOSYS; }
- 
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index ab1e714..53a1495 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -1414,7 +1414,6 @@ static int soft_offline_huge_page(struct page *page, int flags)
- 	int ret;
- 	unsigned long pfn = page_to_pfn(page);
- 	struct page *hpage = compound_head(page);
--	LIST_HEAD(pagelist);
- 
- 	ret = get_any_page(page, pfn, flags);
- 	if (ret < 0)
-@@ -1429,19 +1428,11 @@ static int soft_offline_huge_page(struct page *page, int flags)
- 	}
- 
- 	/* Keep page count to indicate a given hugepage is isolated. */
--
--	list_add(&hpage->lru, &pagelist);
--	ret = migrate_huge_pages(&pagelist, new_page, MPOL_MF_MOVE_ALL, 0,
--				true);
-+	ret = migrate_huge_page(hpage, new_page, MPOL_MF_MOVE_ALL, 0, true);
-+	put_page(hpage);
- 	if (ret) {
--		struct page *page1, *page2;
--		list_for_each_entry_safe(page1, page2, &pagelist, lru)
--			put_page(page1);
--
- 		pr_info("soft offline: %#lx: migration failed %d, type %lx\n",
- 			pfn, ret, page->flags);
--		if (ret > 0)
--			ret = -EIO;
- 		return ret;
- 	}
- done:
-diff --git a/mm/migrate.c b/mm/migrate.c
-index be26d5c..fdce3a2 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -932,15 +932,8 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
- 	if (anon_vma)
- 		put_anon_vma(anon_vma);
- 	unlock_page(hpage);
--
- out:
--	if (rc != -EAGAIN) {
--		list_del(&hpage->lru);
--		put_page(hpage);
--	}
--
- 	put_page(new_hpage);
--
- 	if (result) {
- 		if (rc)
- 			*result = rc;
-@@ -1016,48 +1009,32 @@ out:
- 	return nr_failed + retry;
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index d5d6bbe..217f528 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -302,6 +302,11 @@ static inline unsigned hstate_index_to_shift(unsigned index)
+ 	return hstates[index].order + PAGE_SHIFT;
  }
  
--int migrate_huge_pages(struct list_head *from,
--		new_page_t get_new_page, unsigned long private, bool offlining,
--		enum migrate_mode mode)
-+int migrate_huge_page(struct page *hpage, new_page_t get_new_page,
-+		      unsigned long private, bool offlining,
-+		      enum migrate_mode mode)
- {
--	int retry = 1;
--	int nr_failed = 0;
--	int pass = 0;
--	struct page *page;
--	struct page *page2;
--	int rc;
--
--	for (pass = 0; pass < 10 && retry; pass++) {
--		retry = 0;
--
--		list_for_each_entry_safe(page, page2, from, lru) {
-+	int pass, rc;
++static inline int hstate_index(struct hstate *h)
++{
++	return h - hstates;
++}
 +
-+	for (pass = 0; pass < 10; pass++) {
-+		rc = unmap_and_move_huge_page(get_new_page,
-+					      private, hpage, pass > 2, offlining,
-+					      mode);
-+		switch (rc) {
-+		case -ENOMEM:
-+			goto out;
-+		case -EAGAIN:
-+			/* try again */
- 			cond_resched();
--
--			rc = unmap_and_move_huge_page(get_new_page,
--					private, page, pass > 2, offlining,
--					mode);
--
--			switch(rc) {
--			case -ENOMEM:
--				goto out;
--			case -EAGAIN:
--				retry++;
--				break;
--			case 0:
--				break;
--			default:
--				/* Permanent failure */
--				nr_failed++;
--				break;
--			}
-+			break;
-+		case 0:
-+			goto out;
-+		default:
-+			rc = -EIO;
-+			goto out;
+ #else
+ struct hstate {};
+ #define alloc_huge_page_node(h, nid) NULL
+@@ -320,6 +325,7 @@ static inline unsigned int pages_per_huge_page(struct hstate *h)
+ 	return 1;
+ }
+ #define hstate_index_to_shift(index) 0
++#define hstate_index(h) 0
+ #endif
+ 
+ #endif /* _LINUX_HUGETLB_H */
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 34a7e23..b1e0ed1 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1646,7 +1646,7 @@ static int hugetlb_sysfs_add_hstate(struct hstate *h, struct kobject *parent,
+ 				    struct attribute_group *hstate_attr_group)
+ {
+ 	int retval;
+-	int hi = h - hstates;
++	int hi = hstate_index(h);
+ 
+ 	hstate_kobjs[hi] = kobject_create_and_add(h->name, parent);
+ 	if (!hstate_kobjs[hi])
+@@ -1741,11 +1741,13 @@ void hugetlb_unregister_node(struct node *node)
+ 	if (!nhs->hugepages_kobj)
+ 		return;		/* no hstate attributes */
+ 
+-	for_each_hstate(h)
+-		if (nhs->hstate_kobjs[h - hstates]) {
+-			kobject_put(nhs->hstate_kobjs[h - hstates]);
+-			nhs->hstate_kobjs[h - hstates] = NULL;
++	for_each_hstate(h) {
++		int idx = hstate_index(h);
++		if (nhs->hstate_kobjs[idx]) {
++			kobject_put(nhs->hstate_kobjs[idx]);
++			nhs->hstate_kobjs[idx] = NULL;
+ 		}
++	}
+ 
+ 	kobject_put(nhs->hugepages_kobj);
+ 	nhs->hugepages_kobj = NULL;
+@@ -1848,7 +1850,7 @@ static void __exit hugetlb_exit(void)
+ 	hugetlb_unregister_all_nodes();
+ 
+ 	for_each_hstate(h) {
+-		kobject_put(hstate_kobjs[h - hstates]);
++		kobject_put(hstate_kobjs[hstate_index(h)]);
+ 	}
+ 
+ 	kobject_put(hugepages_kobj);
+@@ -1869,7 +1871,7 @@ static int __init hugetlb_init(void)
+ 		if (!size_to_hstate(default_hstate_size))
+ 			hugetlb_add_hstate(HUGETLB_PAGE_ORDER);
+ 	}
+-	default_hstate_idx = size_to_hstate(default_hstate_size) - hstates;
++	default_hstate_idx = hstate_index(size_to_hstate(default_hstate_size));
+ 	if (default_hstate_max_huge_pages)
+ 		default_hstate.max_huge_pages = default_hstate_max_huge_pages;
+ 
+@@ -2687,7 +2689,7 @@ retry:
+ 		 */
+ 		if (unlikely(PageHWPoison(page))) {
+ 			ret = VM_FAULT_HWPOISON |
+-			      VM_FAULT_SET_HINDEX(h - hstates);
++				VM_FAULT_SET_HINDEX(hstate_index(h));
+ 			goto backout_unlocked;
  		}
  	}
--	rc = 0;
- out:
--	if (rc)
--		return rc;
--
--	return nr_failed + retry;
-+	return rc;
- }
+@@ -2760,7 +2762,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+ 			return 0;
+ 		} else if (unlikely(is_hugetlb_entry_hwpoisoned(entry)))
+ 			return VM_FAULT_HWPOISON_LARGE |
+-			       VM_FAULT_SET_HINDEX(h - hstates);
++				VM_FAULT_SET_HINDEX(hstate_index(h));
+ 	}
  
- #ifdef CONFIG_NUMA
+ 	ptep = huge_pte_alloc(mm, address, huge_page_size(h));
 -- 
 1.7.10
 
