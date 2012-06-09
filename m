@@ -1,50 +1,71 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 2/4] Add a __GFP_SLABMEMCG flag
-Date: Sat, 9 Jun 2012 12:24:03 +0400
-Message-ID: <4FD30823.8070808@parallels.com>
-References: <1339148601-20096-1-git-send-email-glommer@parallels.com>  <1339148601-20096-3-git-send-email-glommer@parallels.com>  <alpine.DEB.2.00.1206081430380.4213@router.home> <1339203416.6893.10.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH -V8 00/16] hugetlb: Add HugeTLB controller to control HugeTLB allocation
+Date: Sat,  9 Jun 2012 14:29:45 +0530
+Message-ID: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1339203416.6893.10.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 06/09/2012 04:56 AM, James Bottomley wrote:
-> On Fri, 2012-06-08 at 14:31 -0500, Christoph Lameter wrote:
->> On Fri, 8 Jun 2012, Glauber Costa wrote:
->>
->>>    */
->>>   #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
->>>
->>> -#define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
->>> +#define __GFP_BITS_SHIFT 26	/* Room for N __GFP_FOO bits */
->>>   #define __GFP_BITS_MASK ((__force gfp_t)((1<<  __GFP_BITS_SHIFT) - 1))
->>
->> Please make this conditional on CONFIG_MEMCG or so. The bit can be useful
->> in particular on 32 bit architectures.
->
-> I really don't think that's at all a good idea.  It's asking for trouble
-> when we don't spot we have a flag overlap.  It also means that we're
-> trusting the reuser to know that their use case can never clash with
-> CONFIG_MEMGC and I can't think of any configuration where this is
-> possible currently.
->
-> I think making the flag define of __GFP_SLABMEMCG conditional might be a
-> reasonable idea so we get a compile failure if anyone tries to use it
-> when !CONFIG_MEMCG.
->
+Hi,
 
-Which is also difficult since that's not code that we can BUG or WARN, 
-but just a number people or and and into their own flags. And it is too 
-fragile to rely on any given sequence we put here (like -1UL, etc) to 
-provide predictable enough results to tell someone he is doing it wrong.
+This patchset implements a cgroup resource controller for HugeTLB
+pages. The controller allows to limit the HugeTLB usage per control
+group and enforces the controller limit during page fault. Since
+HugeTLB doesn't support page reclaim, enforcing the limit at page
+fault time implies that, the application will get SIGBUS signal if
+it tries to access HugeTLB pages beyond its limit. This requires
+the application to know beforehand how much HugeTLB pages it would
+require for its use.
 
-A much better approach if we want to protect against that, is to add 
-code in the page or slab allocator (or both) to ignore and WARN upon 
-seeing this flag when !memcg.
+The goal is to control how many HugeTLB pages a group of task can
+allocate. It can be looked at as an extension of the existing quota
+interface which limits the number of HugeTLB pages per hugetlbfs
+superblock. HPC job scheduler requires jobs to specify their resource
+requirements in the job file. Once their requirements can be met,
+job schedulers like (SLURM) will schedule the job. We need to make sure
+that the jobs won't consume more resources than requested. If they do
+we should either error out or kill the application.
 
-I'd leave the flag itself alone.
+Changes from V7:
+  * Remove dependency on page cgroup.
+  * Use page[2].lru.next to store HugeTLB cgroup information.
+
+Changes from V6:
+ * Implement the controller as a seperate HugeTLB cgroup.
+ * Folded fixup patches in -mm to the original patches
+
+Changes from V5:
+ * Address review feedback.
+
+Changes from V4:
+ * Add support for charge/uncharge during page migration
+ * Drop the usage of page->lru in unmap_hugepage_range.
+
+Changes from v3:
+ * Address review feedback.
+ * Fix a bug in cgroup removal related parent charging with use_hierarchy set
+
+Changes from V2:
+* Changed the implementation to limit the HugeTLB usage during page
+  fault time. This simplifies the extension and keep it closer to
+  memcg design. This also allows to support cgroup removal with less
+  complexity. Only caveat is the application should ensure its HugeTLB
+  usage doesn't cross the cgroup limit.
+
+Changes from V1:
+* Changed the implementation as a memcg extension. We still use
+  the same logic to track the cgroup and range.
+
+Changes from RFC post:
+* Added support for HugeTLB cgroup hierarchy
+* Added support for task migration
+* Added documentation patch
+* Other bug fixes
+
+-aneesh
+
