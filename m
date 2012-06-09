@@ -1,68 +1,83 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
-Date: Sat, 09 Jun 2012 19:46:52 +0530
-Message-ID: <87zk8cfu3v.fsf@skywalker.in.ibm.com>
-References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <alpine.DEB.2.00.1205241436180.24113@chino.kir.corp.google.com> <20120527202848.GC7631@skywalker.linux.vnet.ibm.com> <87lik920h8.fsf@skywalker.in.ibm.com> <20120608160612.dea6d1ce.akpm@linux-foundation.org>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH -V8 14/16] hugetlb/cgroup: add charge/uncharge calls for
+ HugeTLB alloc/free
+Date: Sat, 9 Jun 2012 16:30:54 +0200
+Message-ID: <20120609143054.GH1761@cmpxchg.org>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1339232401-14392-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <20120609092301.GF1761@cmpxchg.org>
+ <87pq98ljil.fsf@skywalker.in.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120608160612.dea6d1ce.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <87pq98ljil.fsf@skywalker.in.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> writes:
+On Sat, Jun 09, 2012 at 06:39:06PM +0530, Aneesh Kumar K.V wrote:
+> Johannes Weiner <hannes@cmpxchg.org> writes:
+> 
+> > On Sat, Jun 09, 2012 at 02:29:59PM +0530, Aneesh Kumar K.V wrote:
+> >> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+> >> 
+> >> This adds necessary charge/uncharge calls in the HugeTLB code.  We do
+> >> hugetlb cgroup charge in page alloc and uncharge in compound page destructor.
+> >> 
+> >> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> >> ---
+> >>  mm/hugetlb.c        |   16 +++++++++++++++-
+> >>  mm/hugetlb_cgroup.c |    7 +------
+> >>  2 files changed, 16 insertions(+), 7 deletions(-)
+> >> 
+> >> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> >> index bf79131..4ca92a9 100644
+> >> --- a/mm/hugetlb.c
+> >> +++ b/mm/hugetlb.c
+> >> @@ -628,6 +628,8 @@ static void free_huge_page(struct page *page)
+> >>  	BUG_ON(page_mapcount(page));
+> >>  
+> >>  	spin_lock(&hugetlb_lock);
+> >> +	hugetlb_cgroup_uncharge_page(hstate_index(h),
+> >> +				     pages_per_huge_page(h), page);
+> >
+> > hugetlb_cgroup_uncharge_page() takes the hugetlb_lock, no?
+> 
+> Yes, But this patch also modifies it to not take the lock, because we
+> hold spin_lock just below in the call site. I didn't want to drop the
+> lock and take it again.
 
-> On Wed, 30 May 2012 20:13:31 +0530
-> "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
->
->> >> 
->> >>  - code: seperating hugetlb bits out from memcg bits to avoid growing 
->> >>    mm/memcontrol.c beyond its current 5650 lines, and
->> >> 
->> >
->> > I can definitely look at spliting mm/memcontrol.c 
->> >
->> >
->> >>  - performance: not incurring any overhead of enabling memcg for per-
->> >>    page tracking that is unnecessary if users only want to limit hugetlb 
->> >>    pages.
->> >> 
->> 
->> Since Andrew didn't sent the patchset to Linus because of this
->> discussion, I looked at reworking the patchset as a seperate
->> controller. The patchset I sent here
->> 
->> http://thread.gmane.org/gmane.linux.kernel.mm/79230
->> 
->> have seen minimal testing. I also folded the fixup patches
->> Andrew had in -mm to original patchset.
->> 
->> Let me know if the changes looks good.
->
-> This is starting to be a problem.  I'm still sitting on the old version
-> of this patchset and it will start to get in the way of other work.
->
-> We now have this new version of the patchset which implements a
-> separate controller but it is unclear to me which way we want to go.
->
-> Can the memcg developers please drop everything else and make a
-> decision here?
+Sorry, I missed that.
 
+> > It's quite hard to review code that is split up like this.  Please
+> > always keep the introduction of new functions in the same patch that
+> > adds the callsite(s).
+> 
+> One of the reason I split the charge/uncharge routines and the callers
+> in separate patches is to make it easier for review. Irrespective of
+> the call site charge/uncharge routines should be correct with respect
+> to locking and other details. What I did in this patch is a small
+> optimization of avoiding dropping and taking the lock again. May be the
+> right approach would have been to name it __hugetlb_cgroup_uncharge_page
+> and make sure the hugetlb_cgroup_uncharge_page still takes spin_lock.
+> But then we don't have any callers for that.
 
-David Rientjes didn't like HugetTLB limit to be a memcg extension and
-wanted this to be a separate controller. I posted a v7 version that did
-HugeTLB limit as a separate controller and used page cgroup to track
-HugeTLB cgroup. Kamezawa Hiroyuki didn't like the usage of page_cgroup
-in HugeTLB controller( http://mid.gmane.org/4FCD648E.90709-+CUm20s59erQFUHtdCDX3A@public.gmane.org )
+I think this makes it needlessly complicated and there is no correct
+or incorrect locking in (initially) dead code :-)
 
-I ended up doing a v8 that used page[2].lru.next for storing hugetlb
-controller.
+The callsites are just a few lines.  It's harder to review if you
+introduce an API and then change it again mid-patchset.
 
-http://mid.gmane.org/1339232401-14392-1-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+If there are no callers for a function that grabs the lock itself,
+don't add it.  Just add a note to the kerneldoc that explains the
+requirement or put VM_BUG_ON(!spin_is_locked(&hugetlb_lock)); in
+there or so.
 
-I guess that should address all the concerns.
-
--aneesh
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
