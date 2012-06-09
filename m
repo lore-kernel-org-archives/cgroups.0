@@ -1,84 +1,51 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V8 14/16] hugetlb/cgroup: add charge/uncharge calls for HugeTLB alloc/free
-Date: Sat, 09 Jun 2012 21:25:37 +0530
-Message-ID: <87wr3gfpja.fsf@skywalker.in.ibm.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120609092301.GF1761@cmpxchg.org> <87pq98ljil.fsf@skywalker.in.ibm.com> <20120609143054.GH1761@cmpxchg.org>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+Subject: Re: [PATCH -V8 10/16] hugetlb/cgroup: Add the cgroup pointer to page lru
+Date: Sat, 09 Jun 2012 22:34:23 +0530
+Message-ID: <87txykfmco.fsf@skywalker.in.ibm.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>User-Agent: Notmuch/0.11.1+346~g13d19c3 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120609143054.GH1761@cmpxchg.org>
+In-Reply-To: <1339232401-14392-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Johannes Weiner <hannes@cmpxchg.org> writes:
+"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com> writes:
 
-> On Sat, Jun 09, 2012 at 06:39:06PM +0530, Aneesh Kumar K.V wrote:
->> Johannes Weiner <hannes@cmpxchg.org> writes:
->> 
->> > On Sat, Jun 09, 2012 at 02:29:59PM +0530, Aneesh Kumar K.V wrote:
->> >> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
->> >> 
->> >> This adds necessary charge/uncharge calls in the HugeTLB code.  We do
->> >> hugetlb cgroup charge in page alloc and uncharge in compound page destructor.
->> >> 
->> >> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
->> >> ---
->> >>  mm/hugetlb.c        |   16 +++++++++++++++-
->> >>  mm/hugetlb_cgroup.c |    7 +------
->> >>  2 files changed, 16 insertions(+), 7 deletions(-)
->> >> 
->> >> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
->> >> index bf79131..4ca92a9 100644
->> >> --- a/mm/hugetlb.c
->> >> +++ b/mm/hugetlb.c
->> >> @@ -628,6 +628,8 @@ static void free_huge_page(struct page *page)
->> >>  	BUG_ON(page_mapcount(page));
->> >>  
->> >>  	spin_lock(&hugetlb_lock);
->> >> +	hugetlb_cgroup_uncharge_page(hstate_index(h),
->> >> +				     pages_per_huge_page(h), page);
->> >
->> > hugetlb_cgroup_uncharge_page() takes the hugetlb_lock, no?
->> 
->> Yes, But this patch also modifies it to not take the lock, because we
->> hold spin_lock just below in the call site. I didn't want to drop the
->> lock and take it again.
+> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 >
-> Sorry, I missed that.
+> Add the hugetlb cgroup pointer to 3rd page lru.next. This limit
+> the usage to hugetlb cgroup to only hugepages with 3 or more
+> normal pages. I guess that is an acceptable limitation.
 >
->> > It's quite hard to review code that is split up like this.  Please
->> > always keep the introduction of new functions in the same patch that
->> > adds the callsite(s).
->> 
->> One of the reason I split the charge/uncharge routines and the callers
->> in separate patches is to make it easier for review. Irrespective of
->> the call site charge/uncharge routines should be correct with respect
->> to locking and other details. What I did in this patch is a small
->> optimization of avoiding dropping and taking the lock again. May be the
->> right approach would have been to name it __hugetlb_cgroup_uncharge_page
->> and make sure the hugetlb_cgroup_uncharge_page still takes spin_lock.
->> But then we don't have any callers for that.
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> ---
+>  include/linux/hugetlb_cgroup.h |   31 +++++++++++++++++++++++++++++++
+>  mm/hugetlb.c                   |    4 ++++
+>  2 files changed, 35 insertions(+)
 >
-> I think this makes it needlessly complicated and there is no correct
-> or incorrect locking in (initially) dead code :-)
+> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+> index 5794be4..ceff1d5 100644
+> --- a/include/linux/hugetlb_cgroup.h
+> +++ b/include/linux/hugetlb_cgroup.h
+> @@ -26,6 +26,26 @@ struct hugetlb_cgroup {
+>  };
 >
-> The callsites are just a few lines.  It's harder to review if you
-> introduce an API and then change it again mid-patchset.
->
+>  #ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
+> +static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
+> +{
+> +	if (!PageHuge(page))
+> +		return NULL;
+> +	if (compound_order(page) < 3)
 
-I will fold the patches.
+That should be if (compound_order(page) < 2) ? I will send an updated
+patchset with this fix and other review changes.
 
-> If there are no callers for a function that grabs the lock itself,
-> don't add it.  Just add a note to the kerneldoc that explains the
-> requirement or put VM_BUG_ON(!spin_is_locked(&hugetlb_lock)); in
-> there or so.
 
-That is excellent. I will add kerneldoc and VM_BUG_ON. 
-
--aneesh
+-aneesh 
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
