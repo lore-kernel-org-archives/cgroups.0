@@ -1,7 +1,7 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V8 03/16] hugetlb: add an inline helper for finding hstate index
-Date: Sat,  9 Jun 2012 14:29:48 +0530
-Message-ID: <1339232401-14392-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V8 07/16] hugetlb: add a list for tracking in-use HugeTLB pages
+Date: Sat,  9 Jun 2012 14:29:52 +0530
+Message-ID: <1339232401-14392-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
@@ -15,108 +15,105 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <a
 
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-Add an inline helper and use it in the code.
+hugepage_activelist will be used to track currently used HugeTLB pages.
+We need to find the in-use HugeTLB pages to support HugeTLB cgroup removal.
+On cgroup removal we update the page's HugeTLB cgroup to point to parent
+cgroup.
 
-Acked-by: David Rientjes <rientjes@google.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
 Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- include/linux/hugetlb.h |    6 ++++++
- mm/hugetlb.c            |   20 +++++++++++---------
- 2 files changed, 17 insertions(+), 9 deletions(-)
+ include/linux/hugetlb.h |    1 +
+ mm/hugetlb.c            |   12 +++++++-----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
 diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index d5d6bbe..217f528 100644
+index 0f23c18..ed550d8 100644
 --- a/include/linux/hugetlb.h
 +++ b/include/linux/hugetlb.h
-@@ -302,6 +302,11 @@ static inline unsigned hstate_index_to_shift(unsigned index)
- 	return hstates[index].order + PAGE_SHIFT;
- }
- 
-+static inline int hstate_index(struct hstate *h)
-+{
-+	return h - hstates;
-+}
-+
- #else
- struct hstate {};
- #define alloc_huge_page_node(h, nid) NULL
-@@ -320,6 +325,7 @@ static inline unsigned int pages_per_huge_page(struct hstate *h)
- 	return 1;
- }
- #define hstate_index_to_shift(index) 0
-+#define hstate_index(h) 0
- #endif
- 
- #endif /* _LINUX_HUGETLB_H */
+@@ -211,6 +211,7 @@ struct hstate {
+ 	unsigned long resv_huge_pages;
+ 	unsigned long surplus_huge_pages;
+ 	unsigned long nr_overcommit_huge_pages;
++	struct list_head hugepage_activelist;
+ 	struct list_head hugepage_freelists[MAX_NUMNODES];
+ 	unsigned int nr_huge_pages_node[MAX_NUMNODES];
+ 	unsigned int free_huge_pages_node[MAX_NUMNODES];
 diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 34a7e23..b1e0ed1 100644
+index e54b695..b5b6e15 100644
 --- a/mm/hugetlb.c
 +++ b/mm/hugetlb.c
-@@ -1646,7 +1646,7 @@ static int hugetlb_sysfs_add_hstate(struct hstate *h, struct kobject *parent,
- 				    struct attribute_group *hstate_attr_group)
+@@ -510,7 +510,7 @@ void copy_huge_page(struct page *dst, struct page *src)
+ static void enqueue_huge_page(struct hstate *h, struct page *page)
  {
- 	int retval;
--	int hi = h - hstates;
-+	int hi = hstate_index(h);
+ 	int nid = page_to_nid(page);
+-	list_add(&page->lru, &h->hugepage_freelists[nid]);
++	list_move(&page->lru, &h->hugepage_freelists[nid]);
+ 	h->free_huge_pages++;
+ 	h->free_huge_pages_node[nid]++;
+ }
+@@ -522,7 +522,7 @@ static struct page *dequeue_huge_page_node(struct hstate *h, int nid)
+ 	if (list_empty(&h->hugepage_freelists[nid]))
+ 		return NULL;
+ 	page = list_entry(h->hugepage_freelists[nid].next, struct page, lru);
+-	list_del(&page->lru);
++	list_move(&page->lru, &h->hugepage_activelist);
+ 	set_page_refcounted(page);
+ 	h->free_huge_pages--;
+ 	h->free_huge_pages_node[nid]--;
+@@ -626,10 +626,11 @@ static void free_huge_page(struct page *page)
+ 	page->mapping = NULL;
+ 	BUG_ON(page_count(page));
+ 	BUG_ON(page_mapcount(page));
+-	INIT_LIST_HEAD(&page->lru);
  
- 	hstate_kobjs[hi] = kobject_create_and_add(h->name, parent);
- 	if (!hstate_kobjs[hi])
-@@ -1741,11 +1741,13 @@ void hugetlb_unregister_node(struct node *node)
- 	if (!nhs->hugepages_kobj)
- 		return;		/* no hstate attributes */
+ 	spin_lock(&hugetlb_lock);
+ 	if (h->surplus_huge_pages_node[nid] && huge_page_order(h) < MAX_ORDER) {
++		/* remove the page from active list */
++		list_del(&page->lru);
+ 		update_and_free_page(h, page);
+ 		h->surplus_huge_pages--;
+ 		h->surplus_huge_pages_node[nid]--;
+@@ -642,6 +643,7 @@ static void free_huge_page(struct page *page)
  
--	for_each_hstate(h)
--		if (nhs->hstate_kobjs[h - hstates]) {
--			kobject_put(nhs->hstate_kobjs[h - hstates]);
--			nhs->hstate_kobjs[h - hstates] = NULL;
-+	for_each_hstate(h) {
-+		int idx = hstate_index(h);
-+		if (nhs->hstate_kobjs[idx]) {
-+			kobject_put(nhs->hstate_kobjs[idx]);
-+			nhs->hstate_kobjs[idx] = NULL;
+ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
+ {
++	INIT_LIST_HEAD(&page->lru);
+ 	set_compound_page_dtor(page, free_huge_page);
+ 	spin_lock(&hugetlb_lock);
+ 	h->nr_huge_pages++;
+@@ -890,6 +892,7 @@ static struct page *alloc_buddy_huge_page(struct hstate *h, int nid)
+ 
+ 	spin_lock(&hugetlb_lock);
+ 	if (page) {
++		INIT_LIST_HEAD(&page->lru);
+ 		r_nid = page_to_nid(page);
+ 		set_compound_page_dtor(page, free_huge_page);
+ 		/*
+@@ -994,7 +997,6 @@ retry:
+ 	list_for_each_entry_safe(page, tmp, &surplus_list, lru) {
+ 		if ((--needed) < 0)
+ 			break;
+-		list_del(&page->lru);
+ 		/*
+ 		 * This page is now managed by the hugetlb allocator and has
+ 		 * no users -- drop the buddy allocator's reference.
+@@ -1009,7 +1011,6 @@ free:
+ 	/* Free unnecessary surplus pages to the buddy allocator */
+ 	if (!list_empty(&surplus_list)) {
+ 		list_for_each_entry_safe(page, tmp, &surplus_list, lru) {
+-			list_del(&page->lru);
+ 			put_page(page);
  		}
-+	}
- 
- 	kobject_put(nhs->hugepages_kobj);
- 	nhs->hugepages_kobj = NULL;
-@@ -1848,7 +1850,7 @@ static void __exit hugetlb_exit(void)
- 	hugetlb_unregister_all_nodes();
- 
- 	for_each_hstate(h) {
--		kobject_put(hstate_kobjs[h - hstates]);
-+		kobject_put(hstate_kobjs[hstate_index(h)]);
  	}
- 
- 	kobject_put(hugepages_kobj);
-@@ -1869,7 +1871,7 @@ static int __init hugetlb_init(void)
- 		if (!size_to_hstate(default_hstate_size))
- 			hugetlb_add_hstate(HUGETLB_PAGE_ORDER);
- 	}
--	default_hstate_idx = size_to_hstate(default_hstate_size) - hstates;
-+	default_hstate_idx = hstate_index(size_to_hstate(default_hstate_size));
- 	if (default_hstate_max_huge_pages)
- 		default_hstate.max_huge_pages = default_hstate_max_huge_pages;
- 
-@@ -2687,7 +2689,7 @@ retry:
- 		 */
- 		if (unlikely(PageHWPoison(page))) {
- 			ret = VM_FAULT_HWPOISON |
--			      VM_FAULT_SET_HINDEX(h - hstates);
-+				VM_FAULT_SET_HINDEX(hstate_index(h));
- 			goto backout_unlocked;
- 		}
- 	}
-@@ -2760,7 +2762,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
- 			return 0;
- 		} else if (unlikely(is_hugetlb_entry_hwpoisoned(entry)))
- 			return VM_FAULT_HWPOISON_LARGE |
--			       VM_FAULT_SET_HINDEX(h - hstates);
-+				VM_FAULT_SET_HINDEX(hstate_index(h));
- 	}
- 
- 	ptep = huge_pte_alloc(mm, address, huge_page_size(h));
+@@ -1909,6 +1910,7 @@ void __init hugetlb_add_hstate(unsigned order)
+ 	h->free_huge_pages = 0;
+ 	for (i = 0; i < MAX_NUMNODES; ++i)
+ 		INIT_LIST_HEAD(&h->hugepage_freelists[i]);
++	INIT_LIST_HEAD(&h->hugepage_activelist);
+ 	h->next_nid_to_alloc = first_node(node_states[N_HIGH_MEMORY]);
+ 	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
+ 	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
 -- 
 1.7.10
 
