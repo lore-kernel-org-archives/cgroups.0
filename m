@@ -1,42 +1,58 @@
-From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH -V8 02/16] hugetlb: don't use ERR_PTR with VM_FAULT* values
-Date: Sun, 10 Jun 2012 09:59:28 +0800
-Message-ID: <CAJd=RBCRTj0BVdngyb7eHXCwB7pCp_tS6LNqmg1Uc-v_GbT4SQ@mail.gmail.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	<1339232401-14392-3-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
+Date: Sun, 10 Jun 2012 20:34:10 +0530
+Message-ID: <20120610150410.GA11204@skywalker.linux.vnet.ibm.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <alpine.DEB.2.00.1205241436180.24113@chino.kir.corp.google.com>
+ <20120527202848.GC7631@skywalker.linux.vnet.ibm.com>
+ <87lik920h8.fsf@skywalker.in.ibm.com>
+ <20120608160612.dea6d1ce.akpm@linux-foundation.org>
+ <87zk8cfu3v.fsf@skywalker.in.ibm.com>
+ <alpine.DEB.2.00.1206091853580.7832@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=qvUkzTIe+C/ofKOsT5LRBU8IePiF+9lP4290zYqsIJo=;
-        b=wa9iwDr+ErOCZb26Tdu974aY3G2YiYzs2rk6RDm+7L3URP4LdQMYYXbTx1G0gveJ7l
-         bpmbynxpRqyg7gppqLRRmjgTrlKxZY4sRC3sodRaZsVStLCHE165TA+okC8YbrAg7wyX
-         CGkwD/6VNPT30t1oiSX0VuMSN6wG5Q5UCVax47n1O03oMfg6aTbeYVq0/mgqMGpcO2Uf
-         1U3r8axcp3TKPoLsC+vSb9NzNodM1tuT7qx+OKFTJEnqOBu3lG61eYM2dr0YnSJsLrpl
-         GOkCC0HB6MtIHZi5S7ON8WofKDSxJD4N+CwHjuJBD5OahneRv//HGoieV8eELY5pkum8
-         Tfrw==
-In-Reply-To: <1339232401-14392-3-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1206091853580.7832@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, mgorman@suse.de, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, dhillf@gmail.com, aarcange@redhat.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Ying Han <yinghan@google.com>
 
-On Sat, Jun 9, 2012 at 4:59 PM, Aneesh Kumar K.V
-<aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
-> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->
-> The current use of VM_FAULT_* codes with ERR_PTR requires us to ensure
-> VM_FAULT_* values will not exceed MAX_ERRNO value. Decouple the
-> VM_FAULT_* values from MAX_ERRNO.
->
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> ---
+On Sat, Jun 09, 2012 at 06:55:30PM -0700, David Rientjes wrote:
+> On Sat, 9 Jun 2012, Aneesh Kumar K.V wrote:
+> 
+> > David Rientjes didn't like HugetTLB limit to be a memcg extension and
+> > wanted this to be a separate controller. I posted a v7 version that did
+> > HugeTLB limit as a separate controller and used page cgroup to track
+> > HugeTLB cgroup. Kamezawa Hiroyuki didn't like the usage of page_cgroup
+> > in HugeTLB controller( http://mid.gmane.org/4FCD648E.90709@jp.fujitsu.com )
+> > 
+> 
+> Yes, and thank you very much for working on v8 to remove the dependency on 
+> page_cgroup and to seperate this out.  I think it will benefit users who 
+> don't want to enable all of memcg but still want to account and restrict 
+> hugetlb page usage, and I think the code seperation is much cleaner 
+> internally.
+> 
 
-Thank you, AKKV.
+I have V9 ready to post. Only change I have against v8 is to fix the compund_order
+comparison and folding the charge/uncharge patches with its users. I will wait for
+your review feedback before posting V9 so that I can address the review comments
+in V9. Once we get V9 out we can get the series added to -mm ?
 
-Acked-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> I'll review that patchset and suggest that the old hugetlb extension in 
+> -mm be dropped in the interim.
+> 
+
+I also agree with dropping the old hugetlb extension patchset in -mm.
+
+-aneesh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
