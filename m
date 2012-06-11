@@ -1,11 +1,11 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH -V8 13/16] hugetlb/cgroup: add hugetlb cgroup control files
-Date: Mon, 11 Jun 2012 15:13:31 +0530
-Message-ID: <87bokq5gl8.fsf@skywalker.in.ibm.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611090234.GE12402@tiehlicka.suse.cz>
+Subject: Re: [PATCH -V8 15/16] hugetlb/cgroup: migrate hugetlb cgroup info from oldpage to new page during migration
+Date: Mon, 11 Jun 2012 15:47:28 +0530
+Message-ID: <878vfu5f0n.fsf@skywalker.in.ibm.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-16-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611092424.GJ12402@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120611090234.GE12402-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+In-Reply-To: <20120611092424.GJ12402-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -15,65 +15,21 @@ Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59e
 
 Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
 
-> On Sat 09-06-12 14:29:58, Aneesh Kumar K.V wrote:
+> On Sat 09-06-12 14:30:00, Aneesh Kumar K.V wrote:
 >> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >> 
->> Add the control files for hugetlb controller
->> 
->> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->> ---
-> [...]
->> +int __init hugetlb_cgroup_file_init(int idx)
->> +{
->> +	char buf[32];
->> +	struct cftype *cft;
->> +	struct hstate *h = &hstates[idx];
->> +
->> +	/* format the size */
->> +	mem_fmt(buf, 32, huge_page_size(h));
->> +
->> +	/* Add the limit file */
->> +	cft = &h->cgroup_files[0];
->> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.limit_in_bytes", buf);
->> +	cft->private = MEMFILE_PRIVATE(idx, RES_LIMIT);
->> +	cft->read = hugetlb_cgroup_read;
->> +	cft->write_string = hugetlb_cgroup_write;
->> +
->> +	/* Add the usage file */
->> +	cft = &h->cgroup_files[1];
->> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.usage_in_bytes", buf);
->> +	cft->private = MEMFILE_PRIVATE(idx, RES_USAGE);
->> +	cft->read = hugetlb_cgroup_read;
->> +
->> +	/* Add the MAX usage file */
->> +	cft = &h->cgroup_files[2];
->> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.max_usage_in_bytes", buf);
->> +	cft->private = MEMFILE_PRIVATE(idx, RES_MAX_USAGE);
->> +	cft->trigger = hugetlb_cgroup_reset;
->> +	cft->read = hugetlb_cgroup_read;
->> +
->> +	/* Add the failcntfile */
->> +	cft = &h->cgroup_files[3];
->> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.failcnt", buf);
->> +	cft->private  = MEMFILE_PRIVATE(idx, RES_FAILCNT);
->> +	cft->trigger  = hugetlb_cgroup_reset;
->> +	cft->read = hugetlb_cgroup_read;
->> +
->> +	/* NULL terminate the last cft */
->> +	cft = &h->cgroup_files[4];
->> +	memset(cft, 0, sizeof(*cft));
->> +
->> +	WARN_ON(cgroup_add_cftypes(&hugetlb_subsys, h->cgroup_files));
->> +
->> +	return 0;
->> +}
->> +
+>> With HugeTLB pages, hugetlb cgroup is uncharged in compound page
+>> destructor.  Since we are holding a hugepage reference,
 >
-> I am not so familiar with the recent changes in the generic cgroup
-> infrastructure but isn't this somehow automated?
+> Who is holding that reference? I do not see anybody calling get_page in
+> this patch...
+>
 
-yes for most of the cgroups. But in the hugetlb case we have variable number
-of control files. We have the above set of control files for each
-hugetlb size supported by the architecture.
+soft_offline_huge_page takes the reference. It does the final
+put_page(hpage) there.
+
+>> we can be sure that old page won't get uncharged till the last
+>> put_page().
+>> 
 
 -aneesh
