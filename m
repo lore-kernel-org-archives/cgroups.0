@@ -1,11 +1,11 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH -V8 12/16] hugetlb/cgroup: Add support for cgroup removal
-Date: Mon, 11 Jun 2012 15:10:20 +0530
-Message-ID: <87fwa25gqj.fsf@skywalker.in.ibm.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-13-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611085258.GD12402@tiehlicka.suse.cz>
+Subject: Re: [PATCH -V8 13/16] hugetlb/cgroup: add hugetlb cgroup control files
+Date: Mon, 11 Jun 2012 15:13:31 +0530
+Message-ID: <87bokq5gl8.fsf@skywalker.in.ibm.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611090234.GE12402@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120611085258.GD12402-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+In-Reply-To: <20120611090234.GE12402-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -15,57 +15,65 @@ Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59e
 
 Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
 
-> On Sat 09-06-12 14:29:57, Aneesh Kumar K.V wrote:
+> On Sat 09-06-12 14:29:58, Aneesh Kumar K.V wrote:
 >> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >> 
->> This patch add support for cgroup removal. If we don't have parent
->> cgroup, the charges are moved to root cgroup.
+>> Add the control files for hugetlb controller
 >> 
 >> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >> ---
->>  mm/hugetlb_cgroup.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++--
->>  1 file changed, 79 insertions(+), 2 deletions(-)
->> 
->> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
->> index 48efd5a..9458fe3 100644
->> --- a/mm/hugetlb_cgroup.c
->> +++ b/mm/hugetlb_cgroup.c
->> @@ -99,10 +99,87 @@ static void hugetlb_cgroup_destroy(struct cgroup *cgroup)
->>  	kfree(h_cgroup);
->>  }
->>  
->> +
->> +static int hugetlb_cgroup_move_parent(int idx, struct cgroup *cgroup,
->> +				      struct page *page)
->
-> deserves a comment about the locking (needs to be called with
-> hugetlb_lock).
-
-will do
-
->
+> [...]
+>> +int __init hugetlb_cgroup_file_init(int idx)
 >> +{
->> +	int csize;
->> +	struct res_counter *counter;
->> +	struct res_counter *fail_res;
->> +	struct hugetlb_cgroup *page_hcg;
->> +	struct hugetlb_cgroup *h_cg   = hugetlb_cgroup_from_cgroup(cgroup);
->> +	struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(cgroup);
+>> +	char buf[32];
+>> +	struct cftype *cft;
+>> +	struct hstate *h = &hstates[idx];
 >> +
->> +	if (!get_page_unless_zero(page))
->> +		goto out;
+>> +	/* format the size */
+>> +	mem_fmt(buf, 32, huge_page_size(h));
 >> +
->> +	page_hcg = hugetlb_cgroup_from_page(page);
->> +	/*
->> +	 * We can have pages in active list without any cgroup
->> +	 * ie, hugepage with less than 3 pages. We can safely
->> +	 * ignore those pages.
->> +	 */
->> +	if (!page_hcg || page_hcg != h_cg)
->> +		goto err_out;
+>> +	/* Add the limit file */
+>> +	cft = &h->cgroup_files[0];
+>> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.limit_in_bytes", buf);
+>> +	cft->private = MEMFILE_PRIVATE(idx, RES_LIMIT);
+>> +	cft->read = hugetlb_cgroup_read;
+>> +	cft->write_string = hugetlb_cgroup_write;
+>> +
+>> +	/* Add the usage file */
+>> +	cft = &h->cgroup_files[1];
+>> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.usage_in_bytes", buf);
+>> +	cft->private = MEMFILE_PRIVATE(idx, RES_USAGE);
+>> +	cft->read = hugetlb_cgroup_read;
+>> +
+>> +	/* Add the MAX usage file */
+>> +	cft = &h->cgroup_files[2];
+>> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.max_usage_in_bytes", buf);
+>> +	cft->private = MEMFILE_PRIVATE(idx, RES_MAX_USAGE);
+>> +	cft->trigger = hugetlb_cgroup_reset;
+>> +	cft->read = hugetlb_cgroup_read;
+>> +
+>> +	/* Add the failcntfile */
+>> +	cft = &h->cgroup_files[3];
+>> +	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.failcnt", buf);
+>> +	cft->private  = MEMFILE_PRIVATE(idx, RES_FAILCNT);
+>> +	cft->trigger  = hugetlb_cgroup_reset;
+>> +	cft->read = hugetlb_cgroup_read;
+>> +
+>> +	/* NULL terminate the last cft */
+>> +	cft = &h->cgroup_files[4];
+>> +	memset(cft, 0, sizeof(*cft));
+>> +
+>> +	WARN_ON(cgroup_add_cftypes(&hugetlb_subsys, h->cgroup_files));
+>> +
+>> +	return 0;
+>> +}
+>> +
 >
-> How can we have page_hcg != NULL && page_hcg != h_cg?
+> I am not so familiar with the recent changes in the generic cgroup
+> infrastructure but isn't this somehow automated?
 
-pages belonging to other cgroup ?
+yes for most of the cgroups. But in the hugetlb case we have variable number
+of control files. We have the above set of control files for each
+hugetlb size supported by the architecture.
 
 -aneesh
