@@ -1,111 +1,149 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
-Date: Mon, 11 Jun 2012 12:55:05 +0900
-Message-ID: <4FD56C19.4060307@jp.fujitsu.com>
-References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <alpine.DEB.2.00.1205241436180.24113@chino.kir.corp.google.com> <20120527202848.GC7631@skywalker.linux.vnet.ibm.com> <87lik920h8.fsf@skywalker.in.ibm.com> <20120608160612.dea6d1ce.akpm@linux-foundation.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -V8 10/16] hugetlb/cgroup: Add the cgroup pointer to page
+ lru
+Date: Mon, 11 Jun 2012 10:16:53 +0200
+Message-ID: <20120611081653.GB12402@tiehlicka.suse.cz>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1339232401-14392-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120608160612.dea6d1ce.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1339232401-14392-11-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-(2012/06/09 8:06), Andrew Morton wrote:
-> On Wed, 30 May 2012 20:13:31 +0530
-> "Aneesh Kumar K.V"<aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>  wrote:
->
->>>>
->>>>   - code: seperating hugetlb bits out from memcg bits to avoid growing
->>>>     mm/memcontrol.c beyond its current 5650 lines, and
->>>>
->>>
->>> I can definitely look at spliting mm/memcontrol.c
->>>
->>>
->>>>   - performance: not incurring any overhead of enabling memcg for per-
->>>>     page tracking that is unnecessary if users only want to limit hugetlb
->>>>     pages.
->>>>
->>
->> Since Andrew didn't sent the patchset to Linus because of this
->> discussion, I looked at reworking the patchset as a seperate
->> controller. The patchset I sent here
->>
->> http://thread.gmane.org/gmane.linux.kernel.mm/79230
->>
->> have seen minimal testing. I also folded the fixup patches
->> Andrew had in -mm to original patchset.
->>
->> Let me know if the changes looks good.
->
-> This is starting to be a problem.  I'm still sitting on the old version
-> of this patchset and it will start to get in the way of other work.
->
-> We now have this new version of the patchset which implements a
-> separate controller but it is unclear to me which way we want to go.
->
-> Can the memcg developers please drop everything else and make a
-> decision here?
+On Sat 09-06-12 14:29:55, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> Add the hugetlb cgroup pointer to 3rd page lru.next.
 
-Following is a summary in my point of view.
-I think there are several topics.
+Interesting and I really like the idea much more than tracking by
+page_cgroup.
 
-  - overheads.
-   (A) IMHO, runtime overhead will be negligible because...
-      - if hugetlb is used, anonymous memory accouning doesn't add much overheads
-        because they're not used.
-      - when it comes to file-cache accounting, I/O dominates performance rather
-        than memcg..
-      - but you may see some overheads with 100+ cpu system...I'm not sure.
+> This limit the usage to hugetlb cgroup to only hugepages with 3 or
+> more normal pages. I guess that is an acceptable limitation.
 
-   (B) memory space overhead will not be negligible.
-      - now, memcg uses 16bytes per page....4GB/1TB.
-        This may be an obvious overhead to the system if working set size are
-        quite big and the apps want to use huge size memory.
+Agreed.
 
-   (C) what hugetlbfs is.
-    - hugetlb is statically allocated. So, they're not usual memory.
-      Then, hugetlb cgroup is better.
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-    - IMHO, hugetlb is memory. And I thought memory.limit_in_bytes should
-      take it into account....
+Other than some nits I like this.
+Thanks!
 
-   (D) code duplication
-    - memory cgroup and hugetlb cgroup will have similar hooks,codes,UIs.
-    - we need some #ifdef if we have consolidated memory/hugetlb cgroup.
+> ---
+>  include/linux/hugetlb_cgroup.h |   31 +++++++++++++++++++++++++++++++
+>  mm/hugetlb.c                   |    4 ++++
+>  2 files changed, 35 insertions(+)
+> 
+> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+> index 5794be4..ceff1d5 100644
+> --- a/include/linux/hugetlb_cgroup.h
+> +++ b/include/linux/hugetlb_cgroup.h
+> @@ -26,6 +26,26 @@ struct hugetlb_cgroup {
+>  };
+>  
+>  #ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
+> +static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
+> +{
+> +	if (!PageHuge(page))
+> +		return NULL;
+> +	if (compound_order(page) < 3)
 
-   (E) user experience
-    - with independent hugetlb cgroup, users can disable memory cgroup.
-    - with consolidated memcg+hugetlb cgroup, we'll be able to limit
-      usual page + hugetlb usage by a limit.
+Why 3? I think you wanted 2 here, right?
 
+> +		return NULL;
+> +	return (struct hugetlb_cgroup *)page[2].lru.next;
+> +}
+> +
+> +static inline
+> +int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
+> +{
+> +	if (!PageHuge(page))
+> +		return -1;
+> +	if (compound_order(page) < 3)
 
-Now, I think...
+Here as well.
 
-   1. I need to agree that overhead is _not_ negligible.
+> +		return -1;
+> +	page[2].lru.next = (void *)h_cg;
+> +	return 0;
+> +}
+> +
+>  static inline bool hugetlb_cgroup_disabled(void)
+>  {
+>  	if (hugetlb_subsys.disabled)
+> @@ -43,6 +63,17 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
+>  extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>  					   struct hugetlb_cgroup *h_cg);
+>  #else
+> +static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
+> +{
+> +	return NULL;
+> +}
+> +
+> +static inline
+> +int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
+> +{
+> +	return 0;
+> +}
+> +
+>  static inline bool hugetlb_cgroup_disabled(void)
+>  {
+>  	return true;
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index e899a2d..1ca2d8f 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -28,6 +28,7 @@
+>  
+>  #include <linux/io.h>
+>  #include <linux/hugetlb.h>
+> +#include <linux/hugetlb_cgroup.h>
+>  #include <linux/node.h>
+>  #include "internal.h"
+>  
+> @@ -591,6 +592,7 @@ static void update_and_free_page(struct hstate *h, struct page *page)
+>  				1 << PG_active | 1 << PG_reserved |
+>  				1 << PG_private | 1 << PG_writeback);
+>  	}
+> +	BUG_ON(hugetlb_cgroup_from_page(page));
 
-   2. THP should be the way rather than hugetlb for my main target platform.
-      (shmem/tmpfs should support THP. we need study.)
-      user-experience should be fixed by THP+tmpfs+memcg.
+What about VM_BUG_ON?
 
-   3. It seems Aneesh decided to have independent hugetlb cgroup.
+>  	set_compound_page_dtor(page, NULL);
+>  	set_page_refcounted(page);
+>  	arch_release_hugepage(page);
+> @@ -643,6 +645,7 @@ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
+>  	INIT_LIST_HEAD(&page->lru);
+>  	set_compound_page_dtor(page, free_huge_page);
+>  	spin_lock(&hugetlb_lock);
+> +	set_hugetlb_cgroup(page, NULL);
 
-So, now, I admit to have independent hugetlb cgroup.
-Other opinions ?
+Why inside the spin lock?
 
-Thanks,
--Kame
+>  	h->nr_huge_pages++;
+>  	h->nr_huge_pages_node[nid]++;
+>  	spin_unlock(&hugetlb_lock);
+> @@ -892,6 +895,7 @@ static struct page *alloc_buddy_huge_page(struct hstate *h, int nid)
+>  		INIT_LIST_HEAD(&page->lru);
+>  		r_nid = page_to_nid(page);
+>  		set_compound_page_dtor(page, free_huge_page);
+> +		set_hugetlb_cgroup(page, NULL);
+>  		/*
+>  		 * We incremented the global counters already
+>  		 */
+> -- 
+> 1.7.10
+> 
 
-
-
-
-
-
-
-
-
-
-
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
