@@ -1,49 +1,77 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/4] Add a __GFP_SLABMEMCG flag
-Date: Mon, 11 Jun 2012 09:24:37 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1206110905220.31180@router.home>
-References: <1339148601-20096-1-git-send-email-glommer@parallels.com> <1339148601-20096-3-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206081430380.4213@router.home> <1339203416.6893.10.camel@dabdike.int.hansenpartnership.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V8 12/16] hugetlb/cgroup: Add support for cgroup removal
+Date: Mon, 11 Jun 2012 21:04:43 +0530
+Message-ID: <87bokpvp4c.fsf@skywalker.in.ibm.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-13-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611085258.GD12402@tiehlicka.suse.cz> <87fwa25gqj.fsf@skywalker.in.ibm.com> <20120611131411.GN12402@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1339424680; bh=inndZdjCiZaZHWhvIDk4ltwpruYyUKRJsKyo1ztlJRE=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=utUSS6Z9VxxE2FFvY3pysfmtoV6ZpzFBKLdRCJr/49VvUks4eKwBy5B7DlA4UJbLZ0zlf9MWIYtReoDpUw7iSIEDpuAGSxDQUuwNAUXkeZHwsZdHhljv5wtRVD/ZQEvhCps9CK/JvEb6OxCyM5Xq6jujC1JeI3W1ZP4l+gM3kmo=
-In-Reply-To: <1339203416.6893.10.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120611131411.GN12402@tiehlicka.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Sat, 9 Jun 2012, James Bottomley wrote:
+Michal Hocko <mhocko@suse.cz> writes:
 
-> On Fri, 2012-06-08 at 14:31 -0500, Christoph Lameter wrote:
-> > On Fri, 8 Jun 2012, Glauber Costa wrote:
-> >
-> > >   */
-> > >  #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
-> > >
-> > > -#define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
-> > > +#define __GFP_BITS_SHIFT 26	/* Room for N __GFP_FOO bits */
-> > >  #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
-> >
-> > Please make this conditional on CONFIG_MEMCG or so. The bit can be useful
-> > in particular on 32 bit architectures.
+> On Mon 11-06-12 15:10:20, Aneesh Kumar K.V wrote:
+>> Michal Hocko <mhocko@suse.cz> writes:
+> [...]
+>> >> +static int hugetlb_cgroup_move_parent(int idx, struct cgroup *cgroup,
+>> >> +				      struct page *page)
+>> >
+>> > deserves a comment about the locking (needs to be called with
+>> > hugetlb_lock).
+>> 
+>> will do
+>> 
+>> >
+>> >> +{
+>> >> +	int csize;
+>> >> +	struct res_counter *counter;
+>> >> +	struct res_counter *fail_res;
+>> >> +	struct hugetlb_cgroup *page_hcg;
+>> >> +	struct hugetlb_cgroup *h_cg   = hugetlb_cgroup_from_cgroup(cgroup);
+>> >> +	struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(cgroup);
+>> >> +
+>> >> +	if (!get_page_unless_zero(page))
+>> >> +		goto out;
+>> >> +
+>> >> +	page_hcg = hugetlb_cgroup_from_page(page);
+>> >> +	/*
+>> >> +	 * We can have pages in active list without any cgroup
+>> >> +	 * ie, hugepage with less than 3 pages. We can safely
+>> >> +	 * ignore those pages.
+>> >> +	 */
+>> >> +	if (!page_hcg || page_hcg != h_cg)
+>> >> +		goto err_out;
+>> >
+>> > How can we have page_hcg != NULL && page_hcg != h_cg?
+>> 
+>> pages belonging to other cgroup ?
 >
-> I really don't think that's at all a good idea.  It's asking for trouble
-> when we don't spot we have a flag overlap.  It also means that we're
-> trusting the reuser to know that their use case can never clash with
-> CONFIG_MEMGC and I can't think of any configuration where this is
-> possible currently.
+> OK, I've forgot that you are iterating over all active huge pages in
+> hugetlb_cgroup_pre_destroy. What prevents you from doing the filtering
+> in the caller? 
+> I am also wondering why you need to play with the page reference
+> counting here. You are under hugetlb_lock so the page cannot disappear
+> in the meantime or am I missing something?
 
-Flag overlap can be avoided using the same method as we have done with the
-page flags (which uses an enum).  There are other uses of N bits after
-GFP_BITS_SHIFT. On first look this looks like its 4 right now so we cannot
-go above 28 on 32 bit platforms. It would also be useful to have that
-limit in there somehow so that someone modifying the GFP_BITS sees the
-danger.
+That is correct. Updated the patch and also added the below comment to
+the function.
++
++/*
++ * Should be called with hugetlb_lock held.
++ * Since we are holding hugetlb_lock, pages cannot get moved from
++ * active list or uncharged from the cgroup, So no need to get
++ * page reference and test for page active here.
++ */
 
-> I think making the flag define of __GFP_SLABMEMCG conditional might be a
-> reasonable idea so we get a compile failure if anyone tries to use it
-> when !CONFIG_MEMCG.
+-aneesh
 
-Ok that is another reason to do so.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
