@@ -1,79 +1,71 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V8 10/16] hugetlb/cgroup: Add the cgroup pointer to page lru
-Date: Mon, 11 Jun 2012 15:03:30 +0530
-Message-ID: <87ipey5h1x.fsf@skywalker.in.ibm.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611081653.GB12402@tiehlicka.suse.cz> <87oboq5ifb.fsf@skywalker.in.ibm.com> <20120611091658.GG12402@tiehlicka.suse.cz>
+From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH -V8 12/16] hugetlb/cgroup: Add support for cgroup removal
+Date: Mon, 11 Jun 2012 15:10:20 +0530
+Message-ID: <87fwa25gqj.fsf@skywalker.in.ibm.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-13-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120611085258.GD12402@tiehlicka.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120611091658.GG12402@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120611085258.GD12402-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Michal Hocko <mhocko@suse.cz> writes:
+Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
 
-> On Mon 11-06-12 14:33:52, Aneesh Kumar K.V wrote:
->> Michal Hocko <mhocko@suse.cz> writes:
+> On Sat 09-06-12 14:29:57, Aneesh Kumar K.V wrote:
+>> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 >> 
->> > On Sat 09-06-12 14:29:55, Aneesh Kumar K.V wrote:
->> >> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
->> >> 
->> >> Add the hugetlb cgroup pointer to 3rd page lru.next.
->> >
->> > Interesting and I really like the idea much more than tracking by
->> > page_cgroup.
->> >
->> >> This limit the usage to hugetlb cgroup to only hugepages with 3 or
->> >> more normal pages. I guess that is an acceptable limitation.
->> >
->> > Agreed.
->> >
->> >> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
->> >
->> > Other than some nits I like this.
->> > Thanks!
->> >
->> >> ---
->> >>  include/linux/hugetlb_cgroup.h |   31 +++++++++++++++++++++++++++++++
->> >>  mm/hugetlb.c                   |    4 ++++
->> >>  2 files changed, 35 insertions(+)
->> >> 
->> >> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
->> >> index 5794be4..ceff1d5 100644
->> >> --- a/include/linux/hugetlb_cgroup.h
->> >> +++ b/include/linux/hugetlb_cgroup.h
->> >> @@ -26,6 +26,26 @@ struct hugetlb_cgroup {
->> >>  };
->> >>  
->> >>  #ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
->> >> +static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
->> >> +{
->> >> +	if (!PageHuge(page))
->> >> +		return NULL;
->> >> +	if (compound_order(page) < 3)
->> >
->> > Why 3? I think you wanted 2 here, right?
+>> This patch add support for cgroup removal. If we don't have parent
+>> cgroup, the charges are moved to root cgroup.
 >> 
->> Yes that should be 2. I updated that in an earlier. Already in v9
->> version I have locally.
+>> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+>> ---
+>>  mm/hugetlb_cgroup.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++--
+>>  1 file changed, 79 insertions(+), 2 deletions(-)
+>> 
+>> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+>> index 48efd5a..9458fe3 100644
+>> --- a/mm/hugetlb_cgroup.c
+>> +++ b/mm/hugetlb_cgroup.c
+>> @@ -99,10 +99,87 @@ static void hugetlb_cgroup_destroy(struct cgroup *cgroup)
+>>  	kfree(h_cgroup);
+>>  }
+>>  
+>> +
+>> +static int hugetlb_cgroup_move_parent(int idx, struct cgroup *cgroup,
+>> +				      struct page *page)
 >
-> ohh, I should have read replies to the patch first where you already
-> mentioned that you are aware of that.
-> Maybe it would be worth something like:
-> /* Minimum page order trackable by hugetlb cgroup.
->  * At least 3 pages are necessary for all the tracking information.
->  */
-> #define HUGETLB_CGROUP_MIN_ORDER	2
+> deserves a comment about the locking (needs to be called with
+> hugetlb_lock).
 
-Excellent will do that.
+will do
+
+>
+>> +{
+>> +	int csize;
+>> +	struct res_counter *counter;
+>> +	struct res_counter *fail_res;
+>> +	struct hugetlb_cgroup *page_hcg;
+>> +	struct hugetlb_cgroup *h_cg   = hugetlb_cgroup_from_cgroup(cgroup);
+>> +	struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(cgroup);
+>> +
+>> +	if (!get_page_unless_zero(page))
+>> +		goto out;
+>> +
+>> +	page_hcg = hugetlb_cgroup_from_page(page);
+>> +	/*
+>> +	 * We can have pages in active list without any cgroup
+>> +	 * ie, hugepage with less than 3 pages. We can safely
+>> +	 * ignore those pages.
+>> +	 */
+>> +	if (!page_hcg || page_hcg != h_cg)
+>> +		goto err_out;
+>
+> How can we have page_hcg != NULL && page_hcg != h_cg?
+
+pages belonging to other cgroup ?
 
 -aneesh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
