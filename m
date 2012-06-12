@@ -1,115 +1,103 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH -V8 13/16] hugetlb/cgroup: add hugetlb cgroup control files
-Date: Tue, 12 Jun 2012 16:28:16 +0530
-Message-ID: <87d354okzb.fsf@skywalker.in.ibm.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4FD6FF47.8080200@jp.fujitsu.com>
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V8 15/16] hugetlb/cgroup: migrate hugetlb cgroup info from oldpage to new page during migration
+Date: Tue, 12 Jun 2012 16:30:16 +0530
+Message-ID: <87aa08okvz.fsf@skywalker.in.ibm.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-16-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4FD70329.4080009@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FD6FF47.8080200-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4FD70329.4080009@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm@kvack.org, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> writes:
+Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> writes:
 
-> (2012/06/09 17:59), Aneesh Kumar K.V wrote:
->> From: "Aneesh Kumar K.V"<aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> (2012/06/09 18:00), Aneesh Kumar K.V wrote:
+>> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
 >> 
->> Add the control files for hugetlb controller
+>> With HugeTLB pages, hugetlb cgroup is uncharged in compound page destructor.  Since
+>> we are holding a hugepage reference, we can be sure that old page won't
+>> get uncharged till the last put_page().
 >> 
->> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+>> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
+>
+> one comment.
+>
 >> ---
->>   include/linux/hugetlb.h        |    5 ++
->>   include/linux/hugetlb_cgroup.h |    6 ++
->>   mm/hugetlb.c                   |    8 +++
->>   mm/hugetlb_cgroup.c            |  130 ++++++++++++++++++++++++++++++++++++++++
->>   4 files changed, 149 insertions(+)
->> 
->> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
->> index 4aca057..9650bb1 100644
->> --- a/include/linux/hugetlb.h
->> +++ b/include/linux/hugetlb.h
->> @@ -4,6 +4,7 @@
->>   #include<linux/mm_types.h>
->>   #include<linux/fs.h>
->>   #include<linux/hugetlb_inline.h>
->> +#include<linux/cgroup.h>
->> 
->>   struct ctl_table;
->>   struct user_struct;
->> @@ -221,6 +222,10 @@ struct hstate {
->>   	unsigned int nr_huge_pages_node[MAX_NUMNODES];
->>   	unsigned int free_huge_pages_node[MAX_NUMNODES];
->>   	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
->> +#ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
->> +	/* cgroup control files */
->> +	struct cftype cgroup_files[5];
->> +#endif
->>   	char name[HSTATE_NAME_LEN];
->>   };
+>>   include/linux/hugetlb_cgroup.h |    8 ++++++++
+>>   mm/hugetlb_cgroup.c            |   21 +++++++++++++++++++++
+>>   mm/migrate.c                   |    5 +++++
+>>   3 files changed, 34 insertions(+)
 >> 
 >> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
->> index ceff1d5..ba4836f 100644
+>> index ba4836f..b64d067 100644
 >> --- a/include/linux/hugetlb_cgroup.h
 >> +++ b/include/linux/hugetlb_cgroup.h
->> @@ -62,6 +62,7 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
->>   					 struct page *page);
+>> @@ -63,6 +63,8 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
 >>   extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
 >>   					   struct hugetlb_cgroup *h_cg);
->> +extern int hugetlb_cgroup_file_init(int idx) __init;
+>>   extern int hugetlb_cgroup_file_init(int idx) __init;
+>> +extern void hugetlb_cgroup_migrate(struct page *oldhpage,
+>> +				   struct page *newhpage);
 >>   #else
 >>   static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
 >>   {
->> @@ -106,5 +107,10 @@ hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>> @@ -112,5 +114,11 @@ static inline int __init hugetlb_cgroup_file_init(int idx)
 >>   {
->>   	return;
+>>   	return 0;
 >>   }
 >> +
->> +static inline int __init hugetlb_cgroup_file_init(int idx)
+>> +static inline void hugetlb_cgroup_migrate(struct page *oldhpage,
+>> +					  struct page *newhpage)
 >> +{
->> +	return 0;
+>> +	return;
 >> +}
 >>   #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
 >>   #endif
->> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
->> index 1ca2d8f..bf79131 100644
->> --- a/mm/hugetlb.c
->> +++ b/mm/hugetlb.c
->> @@ -30,6 +30,7 @@
->>   #include<linux/hugetlb.h>
->>   #include<linux/hugetlb_cgroup.h>
->>   #include<linux/node.h>
->> +#include<linux/hugetlb_cgroup.h>
->>   #include "internal.h"
+>> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+>> index c2b7b8e..2d384fe 100644
+>> --- a/mm/hugetlb_cgroup.c
+>> +++ b/mm/hugetlb_cgroup.c
+>> @@ -394,6 +394,27 @@ int __init hugetlb_cgroup_file_init(int idx)
+>>   	return 0;
+>>   }
 >> 
->>   const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
->> @@ -1916,6 +1917,13 @@ void __init hugetlb_add_hstate(unsigned order)
->>   	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
->>   	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
->>   					huge_page_size(h)/1024);
->> +	/*
->> +	 * Add cgroup control files only if the huge page consists
->> +	 * of more than two normal pages. This is because we use
->> +	 * page[2].lru.next for storing cgoup details.
->> +	 */
->> +	if (order>= 2)
->> +		hugetlb_cgroup_file_init(hugetlb_max_hstate - 1);
->> 
+>> +void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
+>> +{
+>> +	struct hugetlb_cgroup *h_cg;
+>> +
+>> +	VM_BUG_ON(!PageHuge(oldhpage));
+>> +
+>> +	if (hugetlb_cgroup_disabled())
+>> +		return;
+>> +
+>> +	spin_lock(&hugetlb_lock);
+>> +	h_cg = hugetlb_cgroup_from_page(oldhpage);
+>> +	set_hugetlb_cgroup(oldhpage, NULL);
+>> +	cgroup_exclude_rmdir(&h_cg->css);
+>> +
+>> +	/* move the h_cg details to new cgroup */
+>> +	set_hugetlb_cgroup(newhpage, h_cg);
+>> +	spin_unlock(&hugetlb_lock);
+>> +	cgroup_release_and_wakeup_rmdir(&h_cg->css);
+>> +	return;
 >
-> What happens at hugetlb module exit ? please see hugetlb_exit().
 >
-> BTW, module unload of hugetlbfs is restricted if hugetlb cgroup is mounted ??
+> Why do you need  cgroup_exclude/release rmdir here ? you holds hugetlb_lock()
+> and charges will not be empty, here.
 >
 
-hugetlb is a binary config
-
-config HUGETLBFS
-	bool "HugeTLB file system support"
-
-config HUGETLB_PAGE
-	def_bool HUGETLBFS
+ But even without empty charge, we can still remove the cgroup right ?
+ ie if we don't have any task but some charge in the cgroup because of
+ shared mmap in hugetlbfs. 
 
 -aneesh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
