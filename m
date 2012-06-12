@@ -1,103 +1,65 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V8 15/16] hugetlb/cgroup: migrate hugetlb cgroup info from oldpage to new page during migration
-Date: Tue, 12 Jun 2012 16:30:16 +0530
-Message-ID: <87aa08okvz.fsf@skywalker.in.ibm.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-16-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4FD70329.4080009@jp.fujitsu.com>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [PATCH 2/4] Add a __GFP_SLABMEMCG flag
+Date: Tue, 12 Jun 2012 15:36:27 +0100
+Message-ID: <1339511787.3050.5.camel@dabdike.int.hansenpartnership.com>
+References: <1339148601-20096-1-git-send-email-glommer@parallels.com>
+	 <1339148601-20096-3-git-send-email-glommer@parallels.com>
+	 <alpine.DEB.2.00.1206081430380.4213@router.home>
+	 <1339203416.6893.10.camel@dabdike.int.hansenpartnership.com>
+	 <alpine.DEB.2.00.1206110905220.31180@router.home>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4FD70329.4080009@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.00.1206110905220.31180-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> writes:
+On Mon, 2012-06-11 at 09:24 -0500, Christoph Lameter wrote:
+> On Sat, 9 Jun 2012, James Bottomley wrote:
+> 
+> > On Fri, 2012-06-08 at 14:31 -0500, Christoph Lameter wrote:
+> > > On Fri, 8 Jun 2012, Glauber Costa wrote:
+> > >
+> > > >   */
+> > > >  #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
+> > > >
+> > > > -#define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
+> > > > +#define __GFP_BITS_SHIFT 26	/* Room for N __GFP_FOO bits */
+> > > >  #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
+> > >
+> > > Please make this conditional on CONFIG_MEMCG or so. The bit can be useful
+> > > in particular on 32 bit architectures.
+> >
+> > I really don't think that's at all a good idea.  It's asking for trouble
+> > when we don't spot we have a flag overlap.  It also means that we're
+> > trusting the reuser to know that their use case can never clash with
+> > CONFIG_MEMGC and I can't think of any configuration where this is
+> > possible currently.
+> 
+> Flag overlap can be avoided using the same method as we have done with the
+> page flags (which uses an enum).  There are other uses of N bits after
+> GFP_BITS_SHIFT. On first look this looks like its 4 right now so we cannot
+> go above 28 on 32 bit platforms. It would also be useful to have that
+> limit in there somehow so that someone modifying the GFP_BITS sees the
+> danger.
 
-> (2012/06/09 18:00), Aneesh Kumar K.V wrote:
->> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
->> 
->> With HugeTLB pages, hugetlb cgroup is uncharged in compound page destructor.  Since
->> we are holding a hugepage reference, we can be sure that old page won't
->> get uncharged till the last put_page().
->> 
->> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
->
-> one comment.
->
->> ---
->>   include/linux/hugetlb_cgroup.h |    8 ++++++++
->>   mm/hugetlb_cgroup.c            |   21 +++++++++++++++++++++
->>   mm/migrate.c                   |    5 +++++
->>   3 files changed, 34 insertions(+)
->> 
->> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
->> index ba4836f..b64d067 100644
->> --- a/include/linux/hugetlb_cgroup.h
->> +++ b/include/linux/hugetlb_cgroup.h
->> @@ -63,6 +63,8 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
->>   extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
->>   					   struct hugetlb_cgroup *h_cg);
->>   extern int hugetlb_cgroup_file_init(int idx) __init;
->> +extern void hugetlb_cgroup_migrate(struct page *oldhpage,
->> +				   struct page *newhpage);
->>   #else
->>   static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
->>   {
->> @@ -112,5 +114,11 @@ static inline int __init hugetlb_cgroup_file_init(int idx)
->>   {
->>   	return 0;
->>   }
->> +
->> +static inline void hugetlb_cgroup_migrate(struct page *oldhpage,
->> +					  struct page *newhpage)
->> +{
->> +	return;
->> +}
->>   #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
->>   #endif
->> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
->> index c2b7b8e..2d384fe 100644
->> --- a/mm/hugetlb_cgroup.c
->> +++ b/mm/hugetlb_cgroup.c
->> @@ -394,6 +394,27 @@ int __init hugetlb_cgroup_file_init(int idx)
->>   	return 0;
->>   }
->> 
->> +void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
->> +{
->> +	struct hugetlb_cgroup *h_cg;
->> +
->> +	VM_BUG_ON(!PageHuge(oldhpage));
->> +
->> +	if (hugetlb_cgroup_disabled())
->> +		return;
->> +
->> +	spin_lock(&hugetlb_lock);
->> +	h_cg = hugetlb_cgroup_from_page(oldhpage);
->> +	set_hugetlb_cgroup(oldhpage, NULL);
->> +	cgroup_exclude_rmdir(&h_cg->css);
->> +
->> +	/* move the h_cg details to new cgroup */
->> +	set_hugetlb_cgroup(newhpage, h_cg);
->> +	spin_unlock(&hugetlb_lock);
->> +	cgroup_release_and_wakeup_rmdir(&h_cg->css);
->> +	return;
->
->
-> Why do you need  cgroup_exclude/release rmdir here ? you holds hugetlb_lock()
-> and charges will not be empty, here.
->
+But if there's no possible configuration that can use a flag and depends
+on !CONFIG_MEMGC then why bother?  The main problem is that unless you
+get two configurations which exactly cancel each other and require a GFP
+flag, you end up eventually with unbuildable configurations that need
+>32 flags.
 
- But even without empty charge, we can still remove the cgroup right ?
- ie if we don't have any task but some charge in the cgroup because of
- shared mmap in hugetlbfs. 
+> > I think making the flag define of __GFP_SLABMEMCG conditional might be a
+> > reasonable idea so we get a compile failure if anyone tries to use it
+> > when !CONFIG_MEMCG.
+> 
+> Ok that is another reason to do so.
 
--aneesh
+A reason to make it conditional, not a reason to go to the trouble of
+making the flags reusable.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+James
+
