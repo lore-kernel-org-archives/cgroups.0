@@ -1,122 +1,69 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V9 [updated] 10/15] hugetlb/cgroup: Add the cgroup pointer to page lru
-Date: Wed, 13 Jun 2012 17:04:30 +0530
-Message-ID: <1339587270-5831-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-References: <1339583254-895-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1339583254-895-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -V9 04/15] hugetlb: use mmu_gather instead of a temporary
+ linked list for accumulating pages
+Date: Wed, 13 Jun 2012 16:59:23 +0200
+Message-ID: <20120613145923.GA14777@tiehlicka.suse.cz>
+References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1339583254-895-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1339583254-895-5-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+On Wed 13-06-12 15:57:23, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> Use a mmu_gather instead of a temporary linked list for accumulating
+> pages when we unmap a hugepage range
 
-Add the hugetlb cgroup pointer to 3rd page lru.next. This limit
-the usage to hugetlb cgroup to only hugepages with 3 or more
-normal pages. I guess that is an acceptable limitation.
+Sorry for coming up with the comment that late but you owe us an
+explanation _why_ you are doing this.
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
----
- include/linux/hugetlb_cgroup.h |   37 +++++++++++++++++++++++++++++++++++++
- mm/hugetlb.c                   |    4 ++++
- 2 files changed, 41 insertions(+)
+I assume that this fixes a real problem when we take i_mmap_mutex
+already up in 
+unmap_mapping_range
+  mutex_lock(&mapping->i_mmap_mutex);
+  unmap_mapping_range_tree | unmap_mapping_range_list 
+    unmap_mapping_range_vma
+      zap_page_range_single
+        unmap_single_vma
+	  unmap_hugepage_range
+	    mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
 
-diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-index e9944b4..2e4cb6b 100644
---- a/include/linux/hugetlb_cgroup.h
-+++ b/include/linux/hugetlb_cgroup.h
-@@ -18,8 +18,34 @@
- #include <linux/res_counter.h>
- 
- struct hugetlb_cgroup;
-+/*
-+ * Minimum page order trackable by hugetlb cgroup.
-+ * At least 3 pages are necessary for all the tracking information.
-+ */
-+#define HUGETLB_CGROUP_MIN_ORDER	2
- 
- #ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
-+
-+static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
-+{
-+	VM_BUG_ON(!PageHuge(page));
-+
-+	if (compound_order(page) < HUGETLB_CGROUP_MIN_ORDER)
-+		return NULL;
-+	return (struct hugetlb_cgroup *)page[2].lru.next;
-+}
-+
-+static inline
-+int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
-+{
-+	VM_BUG_ON(!PageHuge(page));
-+
-+	if (compound_order(page) < HUGETLB_CGROUP_MIN_ORDER)
-+		return -1;
-+	page[2].lru.next = (void *)h_cg;
-+	return 0;
-+}
-+
- static inline bool hugetlb_cgroup_disabled(void)
- {
- 	if (hugetlb_subsys.disabled)
-@@ -28,6 +54,17 @@ static inline bool hugetlb_cgroup_disabled(void)
- }
- 
- #else
-+static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
-+{
-+	return NULL;
-+}
-+
-+static inline
-+int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
-+{
-+	return 0;
-+}
-+
- static inline bool hugetlb_cgroup_disabled(void)
- {
- 	return true;
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index e899a2d..6a449c5 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -28,6 +28,7 @@
- 
- #include <linux/io.h>
- #include <linux/hugetlb.h>
-+#include <linux/hugetlb_cgroup.h>
- #include <linux/node.h>
- #include "internal.h"
- 
-@@ -591,6 +592,7 @@ static void update_and_free_page(struct hstate *h, struct page *page)
- 				1 << PG_active | 1 << PG_reserved |
- 				1 << PG_private | 1 << PG_writeback);
- 	}
-+	VM_BUG_ON(hugetlb_cgroup_from_page(page));
- 	set_compound_page_dtor(page, NULL);
- 	set_page_refcounted(page);
- 	arch_release_hugepage(page);
-@@ -643,6 +645,7 @@ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
- 	INIT_LIST_HEAD(&page->lru);
- 	set_compound_page_dtor(page, free_huge_page);
- 	spin_lock(&hugetlb_lock);
-+	set_hugetlb_cgroup(page, NULL);
- 	h->nr_huge_pages++;
- 	h->nr_huge_pages_node[nid]++;
- 	spin_unlock(&hugetlb_lock);
-@@ -892,6 +895,7 @@ static struct page *alloc_buddy_huge_page(struct hstate *h, int nid)
- 		INIT_LIST_HEAD(&page->lru);
- 		r_nid = page_to_nid(page);
- 		set_compound_page_dtor(page, free_huge_page);
-+		set_hugetlb_cgroup(page, NULL);
- 		/*
- 		 * We incremented the global counters already
- 		 */
+And that this should have been marked for stable as well (I haven't
+checked when this has been introduced).
+
+But then I do not see how this help when you still do this:
+[...]
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 1b7dc66..545e18a 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -1326,8 +1326,11 @@ static void unmap_single_vma(struct mmu_gather *tlb,
+>  			 * Since no pte has actually been setup, it is
+>  			 * safe to do nothing in this case.
+>  			 */
+> -			if (vma->vm_file)
+> -				unmap_hugepage_range(vma, start, end, NULL);
+> +			if (vma->vm_file) {
+> +				mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
+> +				__unmap_hugepage_range(tlb, vma, start, end, NULL);
+> +				mutex_unlock(&vma->vm_file->f_mapping->i_mmap_mutex);
+> +			}
+>  		} else
+>  			unmap_page_range(tlb, vma, start, end, details);
+>  	}
+
 -- 
-1.7.10
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
