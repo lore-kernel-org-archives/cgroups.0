@@ -1,123 +1,79 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH -V8 13/16] hugetlb/cgroup: add hugetlb cgroup control
- files
-Date: Wed, 13 Jun 2012 09:16:26 +0900
-Message-ID: <4FD7DBDA.2070403@jp.fujitsu.com>
-References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4FD6FF47.8080200@jp.fujitsu.com> <87d354okzb.fsf@skywalker.in.ibm.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V9 00/15] hugetlb: Add HugeTLB controller to control HugeTLB allocation
+Date: Wed, 13 Jun 2012 15:57:19 +0530
+Message-ID: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <87d354okzb.fsf@skywalker.in.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-(2012/06/12 19:58), Aneesh Kumar K.V wrote:
-> Kamezawa Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  writes:
-> 
->> (2012/06/09 17:59), Aneesh Kumar K.V wrote:
->>> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
->>>
->>> Add the control files for hugetlb controller
->>>
->>> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
->>> ---
->>>    include/linux/hugetlb.h        |    5 ++
->>>    include/linux/hugetlb_cgroup.h |    6 ++
->>>    mm/hugetlb.c                   |    8 +++
->>>    mm/hugetlb_cgroup.c            |  130 ++++++++++++++++++++++++++++++++++++++++
->>>    4 files changed, 149 insertions(+)
->>>
->>> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
->>> index 4aca057..9650bb1 100644
->>> --- a/include/linux/hugetlb.h
->>> +++ b/include/linux/hugetlb.h
->>> @@ -4,6 +4,7 @@
->>>    #include<linux/mm_types.h>
->>>    #include<linux/fs.h>
->>>    #include<linux/hugetlb_inline.h>
->>> +#include<linux/cgroup.h>
->>>
->>>    struct ctl_table;
->>>    struct user_struct;
->>> @@ -221,6 +222,10 @@ struct hstate {
->>>    	unsigned int nr_huge_pages_node[MAX_NUMNODES];
->>>    	unsigned int free_huge_pages_node[MAX_NUMNODES];
->>>    	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
->>> +#ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
->>> +	/* cgroup control files */
->>> +	struct cftype cgroup_files[5];
->>> +#endif
->>>    	char name[HSTATE_NAME_LEN];
->>>    };
->>>
->>> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
->>> index ceff1d5..ba4836f 100644
->>> --- a/include/linux/hugetlb_cgroup.h
->>> +++ b/include/linux/hugetlb_cgroup.h
->>> @@ -62,6 +62,7 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
->>>    					 struct page *page);
->>>    extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
->>>    					   struct hugetlb_cgroup *h_cg);
->>> +extern int hugetlb_cgroup_file_init(int idx) __init;
->>>    #else
->>>    static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
->>>    {
->>> @@ -106,5 +107,10 @@ hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
->>>    {
->>>    	return;
->>>    }
->>> +
->>> +static inline int __init hugetlb_cgroup_file_init(int idx)
->>> +{
->>> +	return 0;
->>> +}
->>>    #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
->>>    #endif
->>> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
->>> index 1ca2d8f..bf79131 100644
->>> --- a/mm/hugetlb.c
->>> +++ b/mm/hugetlb.c
->>> @@ -30,6 +30,7 @@
->>>    #include<linux/hugetlb.h>
->>>    #include<linux/hugetlb_cgroup.h>
->>>    #include<linux/node.h>
->>> +#include<linux/hugetlb_cgroup.h>
->>>    #include "internal.h"
->>>
->>>    const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
->>> @@ -1916,6 +1917,13 @@ void __init hugetlb_add_hstate(unsigned order)
->>>    	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
->>>    	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
->>>    					huge_page_size(h)/1024);
->>> +	/*
->>> +	 * Add cgroup control files only if the huge page consists
->>> +	 * of more than two normal pages. This is because we use
->>> +	 * page[2].lru.next for storing cgoup details.
->>> +	 */
->>> +	if (order>= 2)
->>> +		hugetlb_cgroup_file_init(hugetlb_max_hstate - 1);
->>>
->>
->> What happens at hugetlb module exit ? please see hugetlb_exit().
->>
->> BTW, module unload of hugetlbfs is restricted if hugetlb cgroup is mounted ??
->>
-> 
-> hugetlb is a binary config
-> 
-> config HUGETLBFS
-> 	bool "HugeTLB file system support"
-> 
-> config HUGETLB_PAGE
-> 	def_bool HUGETLBFS
-> 
-ok, so....hugetlb_exit() is never called ?
+Hi,
 
-Thanks,
--Kame
+This patchset implements a cgroup resource controller for HugeTLB
+pages. The controller allows to limit the HugeTLB usage per control
+group and enforces the controller limit during page fault. Since
+HugeTLB doesn't support page reclaim, enforcing the limit at page
+fault time implies that, the application will get SIGBUS signal if
+it tries to access HugeTLB pages beyond its limit. This requires
+the application to know beforehand how much HugeTLB pages it would
+require for its use.
+
+The goal is to control how many HugeTLB pages a group of task can
+allocate. It can be looked at as an extension of the existing quota
+interface which limits the number of HugeTLB pages per hugetlbfs
+superblock. HPC job scheduler requires jobs to specify their resource
+requirements in the job file. Once their requirements can be met,
+job schedulers like (SLURM) will schedule the job. We need to make sure
+that the jobs won't consume more resources than requested. If they do
+we should either error out or kill the application.
+
+Patches are on top of v3.5-rc2
+
+Changes from V8:
+  * Address review feedback
+
+Changes from V7:
+  * Remove dependency on page_cgroup.
+  * Use page[2].lru.next to store HugeTLB cgroup information.
+
+Changes from V6:
+ * Implement the controller as a seperate HugeTLB cgroup.
+ * Folded fixup patches in -mm to the original patches
+
+Changes from V5:
+ * Address review feedback.
+
+Changes from V4:
+ * Add support for charge/uncharge during page migration
+ * Drop the usage of page->lru in unmap_hugepage_range.
+
+Changes from v3:
+ * Address review feedback.
+ * Fix a bug in cgroup removal related parent charging with use_hierarchy set
+
+Changes from V2:
+* Changed the implementation to limit the HugeTLB usage during page
+  fault time. This simplifies the extension and keep it closer to
+  memcg design. This also allows to support cgroup removal with less
+  complexity. Only caveat is the application should ensure its HugeTLB
+  usage doesn't cross the cgroup limit.
+
+Changes from V1:
+* Changed the implementation as a memcg extension. We still use
+  the same logic to track the cgroup and range.
+
+Changes from RFC post:
+* Added support for HugeTLB cgroup hierarchy
+* Added support for task migration
+* Added documentation patch
+* Other bug fixes
+
+-aneesh
+
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
