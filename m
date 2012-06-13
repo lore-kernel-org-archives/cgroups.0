@@ -1,112 +1,141 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V9 14/15] hugetlb/cgroup: migrate hugetlb cgroup info from oldpage to new page during migration
-Date: Wed, 13 Jun 2012 15:57:33 +0530
-Message-ID: <1339583254-895-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH -V8 11/16] hugetlb/cgroup: Add charge/uncharge routines
+ for hugetlb cgroup
+Date: Wed, 13 Jun 2012 20:02:10 +0900
+Message-ID: <4FD87332.8030805@jp.fujitsu.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-12-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4FD6F8F9.2040901@jp.fujitsu.com> <87ipewold0.fsf@skywalker.in.ibm.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+In-Reply-To: <87ipewold0.fsf@skywalker.in.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+(2012/06/12 19:50), Aneesh Kumar K.V wrote:
+> Kamezawa Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  writes:
+> 
+>> (2012/06/09 17:59), Aneesh Kumar K.V wrote:
+>>> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
+>>>
+>>> This patchset add the charge and uncharge routines for hugetlb cgroup.
+>>> This will be used in later patches when we allocate/free HugeTLB
+>>> pages.
+>>>
+>>> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
+>>
+>>
+>> I'm sorry if following has been already pointed out.
+>>
+>>> ---
+>>>    mm/hugetlb_cgroup.c |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>    1 file changed, 87 insertions(+)
+>>>
+>>> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+>>> index 20a32c5..48efd5a 100644
+>>> --- a/mm/hugetlb_cgroup.c
+>>> +++ b/mm/hugetlb_cgroup.c
+>>> @@ -105,6 +105,93 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+>>>    	   return -EBUSY;
+>>>    }
+>>>
+>>> +int hugetlb_cgroup_charge_page(int idx, unsigned long nr_pages,
+>>> +			       struct hugetlb_cgroup **ptr)
+>>> +{
+>>> +	int ret = 0;
+>>> +	struct res_counter *fail_res;
+>>> +	struct hugetlb_cgroup *h_cg = NULL;
+>>> +	unsigned long csize = nr_pages * PAGE_SIZE;
+>>> +
+>>> +	if (hugetlb_cgroup_disabled())
+>>> +		goto done;
+>>> +	/*
+>>> +	 * We don't charge any cgroup if the compound page have less
+>>> +	 * than 3 pages.
+>>> +	 */
+>>> +	if (hstates[idx].order<   2)
+>>> +		goto done;
+>>> +again:
+>>> +	rcu_read_lock();
+>>> +	h_cg = hugetlb_cgroup_from_task(current);
+>>> +	if (!h_cg)
+>>> +		h_cg = root_h_cgroup;
+>>> +
+>>> +	if (!css_tryget(&h_cg->css)) {
+>>> +		rcu_read_unlock();
+>>> +		goto again;
+>>> +	}
+>>> +	rcu_read_unlock();
+>>> +
+>>> +	ret = res_counter_charge(&h_cg->hugepage[idx], csize,&fail_res);
+>>> +	css_put(&h_cg->css);
+>>> +done:
+>>> +	*ptr = h_cg;
+>>> +	return ret;
+>>> +}
+>>> +
+>>
+>> Memory cgroup uses very complicated 'charge' routine for handling pageout...
+>> which gets sleep.
+>>
+>> For hugetlbfs, it has not sleep routine, you can do charge in simple way.
+>> I guess...get/put here is overkill.
+>>
+>> For example, h_cg cannot be freed while it has tasks. So, if 'current' is
+>> belongs to the cgroup, it cannot be disappear. Then, you don't need get/put,
+>> additional atomic ops for holding cgroup.
+>>
+>> 	rcu_read_lock();
+>> 	h_cg = hugetlb_cgroup_from_task(current);
+>> 	ret = res_counter_charge(&h_cg->hugetpage[idx], csize,&fail_res);
+>> 	rcu_read_unlock();
+>>
+>> 	return ret;
+>>
+> 
+> What if the task got moved ot of the cgroup and cgroup got deleted by an
+> rmdir ?
+> 
 
-With HugeTLB pages, hugetlb cgroup is uncharged in compound page destructor.  Since
-we are holding a hugepage reference, we can be sure that old page won't
-get uncharged till the last put_page().
+I think 
+ - yes, the task, 'current', can be moved off from the cgroup.
+ - rcu_read_lock() prevents ->destroy() cgroup.
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
----
- include/linux/hugetlb_cgroup.h |    8 ++++++++
- mm/hugetlb_cgroup.c            |   20 ++++++++++++++++++++
- mm/migrate.c                   |    5 +++++
- 3 files changed, 33 insertions(+)
+Then, the concern is that the cgroup may have resource usage even after
+->pre_destroy() is called. We don't have any serialization between
+charging <-> task_move <-> rmdir().
 
-diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-index bd8bc98..e9e6d74 100644
---- a/include/linux/hugetlb_cgroup.h
-+++ b/include/linux/hugetlb_cgroup.h
-@@ -63,6 +63,8 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
- extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
- 					   struct hugetlb_cgroup *h_cg);
- extern int hugetlb_cgroup_file_init(int idx) __init;
-+extern void hugetlb_cgroup_migrate(struct page *oldhpage,
-+				   struct page *newhpage);
- 
- #else
- static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
-@@ -114,5 +116,11 @@ static inline int __init hugetlb_cgroup_file_init(int idx)
- 	return 0;
- }
- 
-+static inline void hugetlb_cgroup_migrate(struct page *oldhpage,
-+					  struct page *newhpage)
-+{
-+	return;
-+}
-+
- #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
- #endif
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 64e93e0..8e7ca0a 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -388,6 +388,26 @@ int __init hugetlb_cgroup_file_init(int idx)
- 	return 0;
- }
- 
-+void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
-+{
-+	struct hugetlb_cgroup *h_cg;
-+
-+	if (hugetlb_cgroup_disabled())
-+		return;
-+
-+	VM_BUG_ON(!PageHuge(oldhpage));
-+	spin_lock(&hugetlb_lock);
-+	h_cg = hugetlb_cgroup_from_page(oldhpage);
-+	set_hugetlb_cgroup(oldhpage, NULL);
-+	cgroup_exclude_rmdir(&h_cg->css);
-+
-+	/* move the h_cg details to new cgroup */
-+	set_hugetlb_cgroup(newhpage, h_cg);
-+	spin_unlock(&hugetlb_lock);
-+	cgroup_release_and_wakeup_rmdir(&h_cg->css);
-+	return;
-+}
-+
- struct cgroup_subsys hugetlb_subsys = {
- 	.name = "hugetlb",
- 	.create     = hugetlb_cgroup_create,
-diff --git a/mm/migrate.c b/mm/migrate.c
-index fdce3a2..6c37c51 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -33,6 +33,7 @@
- #include <linux/memcontrol.h>
- #include <linux/syscalls.h>
- #include <linux/hugetlb.h>
-+#include <linux/hugetlb_cgroup.h>
- #include <linux/gfp.h>
- 
- #include <asm/tlbflush.h>
-@@ -931,6 +932,10 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
- 
- 	if (anon_vma)
- 		put_anon_vma(anon_vma);
-+
-+	if (!rc)
-+		hugetlb_cgroup_migrate(hpage, new_hpage);
-+
- 	unlock_page(hpage);
- out:
- 	put_page(new_hpage);
--- 
-1.7.10
+How about taking
+	write_lock(&mm->mmap_sem)
+	write_unlock(&mm->mmap_sem)
+
+at moving task (->attach()) ? This will serialize task-move and charging
+without any realistic performance impact. If tasks cannot move, rmdir
+never happens.
+
+Maybe you can do this later as an optimization. So, please take this as
+an suggestion.
+
+Thanks,
+-Kame
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
