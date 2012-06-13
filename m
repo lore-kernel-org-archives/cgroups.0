@@ -1,65 +1,126 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH 2/4] Add a __GFP_SLABMEMCG flag
-Date: Tue, 12 Jun 2012 15:36:27 +0100
-Message-ID: <1339511787.3050.5.camel@dabdike.int.hansenpartnership.com>
-References: <1339148601-20096-1-git-send-email-glommer@parallels.com>
-	 <1339148601-20096-3-git-send-email-glommer@parallels.com>
-	 <alpine.DEB.2.00.1206081430380.4213@router.home>
-	 <1339203416.6893.10.camel@dabdike.int.hansenpartnership.com>
-	 <alpine.DEB.2.00.1206110905220.31180@router.home>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH -V8 13/16] hugetlb/cgroup: add hugetlb cgroup control
+ files
+Date: Wed, 13 Jun 2012 09:16:26 +0900
+Message-ID: <4FD7DBDA.2070403@jp.fujitsu.com>
+References: <1339232401-14392-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339232401-14392-14-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <4FD6FF47.8080200@jp.fujitsu.com> <87d354okzb.fsf@skywalker.in.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1206110905220.31180-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <87d354okzb.fsf@skywalker.in.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbeck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Mon, 2012-06-11 at 09:24 -0500, Christoph Lameter wrote:
-> On Sat, 9 Jun 2012, James Bottomley wrote:
+(2012/06/12 19:58), Aneesh Kumar K.V wrote:
+> Kamezawa Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  writes:
 > 
-> > On Fri, 2012-06-08 at 14:31 -0500, Christoph Lameter wrote:
-> > > On Fri, 8 Jun 2012, Glauber Costa wrote:
-> > >
-> > > >   */
-> > > >  #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
-> > > >
-> > > > -#define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
-> > > > +#define __GFP_BITS_SHIFT 26	/* Room for N __GFP_FOO bits */
-> > > >  #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
-> > >
-> > > Please make this conditional on CONFIG_MEMCG or so. The bit can be useful
-> > > in particular on 32 bit architectures.
-> >
-> > I really don't think that's at all a good idea.  It's asking for trouble
-> > when we don't spot we have a flag overlap.  It also means that we're
-> > trusting the reuser to know that their use case can never clash with
-> > CONFIG_MEMGC and I can't think of any configuration where this is
-> > possible currently.
+>> (2012/06/09 17:59), Aneesh Kumar K.V wrote:
+>>> From: "Aneesh Kumar K.V"<aneesh.kumar@linux.vnet.ibm.com>
+>>>
+>>> Add the control files for hugetlb controller
+>>>
+>>> Signed-off-by: Aneesh Kumar K.V<aneesh.kumar@linux.vnet.ibm.com>
+>>> ---
+>>>    include/linux/hugetlb.h        |    5 ++
+>>>    include/linux/hugetlb_cgroup.h |    6 ++
+>>>    mm/hugetlb.c                   |    8 +++
+>>>    mm/hugetlb_cgroup.c            |  130 ++++++++++++++++++++++++++++++++++++++++
+>>>    4 files changed, 149 insertions(+)
+>>>
+>>> diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+>>> index 4aca057..9650bb1 100644
+>>> --- a/include/linux/hugetlb.h
+>>> +++ b/include/linux/hugetlb.h
+>>> @@ -4,6 +4,7 @@
+>>>    #include<linux/mm_types.h>
+>>>    #include<linux/fs.h>
+>>>    #include<linux/hugetlb_inline.h>
+>>> +#include<linux/cgroup.h>
+>>>
+>>>    struct ctl_table;
+>>>    struct user_struct;
+>>> @@ -221,6 +222,10 @@ struct hstate {
+>>>    	unsigned int nr_huge_pages_node[MAX_NUMNODES];
+>>>    	unsigned int free_huge_pages_node[MAX_NUMNODES];
+>>>    	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
+>>> +#ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
+>>> +	/* cgroup control files */
+>>> +	struct cftype cgroup_files[5];
+>>> +#endif
+>>>    	char name[HSTATE_NAME_LEN];
+>>>    };
+>>>
+>>> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+>>> index ceff1d5..ba4836f 100644
+>>> --- a/include/linux/hugetlb_cgroup.h
+>>> +++ b/include/linux/hugetlb_cgroup.h
+>>> @@ -62,6 +62,7 @@ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
+>>>    					 struct page *page);
+>>>    extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>>>    					   struct hugetlb_cgroup *h_cg);
+>>> +extern int hugetlb_cgroup_file_init(int idx) __init;
+>>>    #else
+>>>    static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
+>>>    {
+>>> @@ -106,5 +107,10 @@ hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>>>    {
+>>>    	return;
+>>>    }
+>>> +
+>>> +static inline int __init hugetlb_cgroup_file_init(int idx)
+>>> +{
+>>> +	return 0;
+>>> +}
+>>>    #endif  /* CONFIG_MEM_RES_CTLR_HUGETLB */
+>>>    #endif
+>>> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+>>> index 1ca2d8f..bf79131 100644
+>>> --- a/mm/hugetlb.c
+>>> +++ b/mm/hugetlb.c
+>>> @@ -30,6 +30,7 @@
+>>>    #include<linux/hugetlb.h>
+>>>    #include<linux/hugetlb_cgroup.h>
+>>>    #include<linux/node.h>
+>>> +#include<linux/hugetlb_cgroup.h>
+>>>    #include "internal.h"
+>>>
+>>>    const unsigned long hugetlb_zero = 0, hugetlb_infinity = ~0UL;
+>>> @@ -1916,6 +1917,13 @@ void __init hugetlb_add_hstate(unsigned order)
+>>>    	h->next_nid_to_free = first_node(node_states[N_HIGH_MEMORY]);
+>>>    	snprintf(h->name, HSTATE_NAME_LEN, "hugepages-%lukB",
+>>>    					huge_page_size(h)/1024);
+>>> +	/*
+>>> +	 * Add cgroup control files only if the huge page consists
+>>> +	 * of more than two normal pages. This is because we use
+>>> +	 * page[2].lru.next for storing cgoup details.
+>>> +	 */
+>>> +	if (order>= 2)
+>>> +		hugetlb_cgroup_file_init(hugetlb_max_hstate - 1);
+>>>
+>>
+>> What happens at hugetlb module exit ? please see hugetlb_exit().
+>>
+>> BTW, module unload of hugetlbfs is restricted if hugetlb cgroup is mounted ??
+>>
 > 
-> Flag overlap can be avoided using the same method as we have done with the
-> page flags (which uses an enum).  There are other uses of N bits after
-> GFP_BITS_SHIFT. On first look this looks like its 4 right now so we cannot
-> go above 28 on 32 bit platforms. It would also be useful to have that
-> limit in there somehow so that someone modifying the GFP_BITS sees the
-> danger.
-
-But if there's no possible configuration that can use a flag and depends
-on !CONFIG_MEMGC then why bother?  The main problem is that unless you
-get two configurations which exactly cancel each other and require a GFP
-flag, you end up eventually with unbuildable configurations that need
->32 flags.
-
-> > I think making the flag define of __GFP_SLABMEMCG conditional might be a
-> > reasonable idea so we get a compile failure if anyone tries to use it
-> > when !CONFIG_MEMCG.
+> hugetlb is a binary config
 > 
-> Ok that is another reason to do so.
+> config HUGETLBFS
+> 	bool "HugeTLB file system support"
+> 
+> config HUGETLB_PAGE
+> 	def_bool HUGETLBFS
+> 
+ok, so....hugetlb_exit() is never called ?
 
-A reason to make it conditional, not a reason to go to the trouble of
-making the flags reusable.
+Thanks,
+-Kame
 
-James
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
