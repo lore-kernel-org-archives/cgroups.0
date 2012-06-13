@@ -1,79 +1,124 @@
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: [PATCH -V9 00/15] hugetlb: Add HugeTLB controller to control HugeTLB allocation
-Date: Wed, 13 Jun 2012 15:57:19 +0530
-Message-ID: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: [PATCH -V9 03/15] hugetlb: add an inline helper for finding hstate index
+Date: Wed, 13 Jun 2012 15:57:22 +0530
+Message-ID: <1339583254-895-4-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-Hi,
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 
-This patchset implements a cgroup resource controller for HugeTLB
-pages. The controller allows to limit the HugeTLB usage per control
-group and enforces the controller limit during page fault. Since
-HugeTLB doesn't support page reclaim, enforcing the limit at page
-fault time implies that, the application will get SIGBUS signal if
-it tries to access HugeTLB pages beyond its limit. This requires
-the application to know beforehand how much HugeTLB pages it would
-require for its use.
+Add an inline helper and use it in the code.
 
-The goal is to control how many HugeTLB pages a group of task can
-allocate. It can be looked at as an extension of the existing quota
-interface which limits the number of HugeTLB pages per hugetlbfs
-superblock. HPC job scheduler requires jobs to specify their resource
-requirements in the job file. Once their requirements can be met,
-job schedulers like (SLURM) will schedule the job. We need to make sure
-that the jobs won't consume more resources than requested. If they do
-we should either error out or kill the application.
+Acked-by: David Rientjes <rientjes@google.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+---
+ include/linux/hugetlb.h |    6 ++++++
+ mm/hugetlb.c            |   20 +++++++++++---------
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-Patches are on top of v3.5-rc2
-
-Changes from V8:
-  * Address review feedback
-
-Changes from V7:
-  * Remove dependency on page_cgroup.
-  * Use page[2].lru.next to store HugeTLB cgroup information.
-
-Changes from V6:
- * Implement the controller as a seperate HugeTLB cgroup.
- * Folded fixup patches in -mm to the original patches
-
-Changes from V5:
- * Address review feedback.
-
-Changes from V4:
- * Add support for charge/uncharge during page migration
- * Drop the usage of page->lru in unmap_hugepage_range.
-
-Changes from v3:
- * Address review feedback.
- * Fix a bug in cgroup removal related parent charging with use_hierarchy set
-
-Changes from V2:
-* Changed the implementation to limit the HugeTLB usage during page
-  fault time. This simplifies the extension and keep it closer to
-  memcg design. This also allows to support cgroup removal with less
-  complexity. Only caveat is the application should ensure its HugeTLB
-  usage doesn't cross the cgroup limit.
-
-Changes from V1:
-* Changed the implementation as a memcg extension. We still use
-  the same logic to track the cgroup and range.
-
-Changes from RFC post:
-* Added support for HugeTLB cgroup hierarchy
-* Added support for task migration
-* Added documentation patch
-* Other bug fixes
-
--aneesh
-
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index d5d6bbe..217f528 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -302,6 +302,11 @@ static inline unsigned hstate_index_to_shift(unsigned index)
+ 	return hstates[index].order + PAGE_SHIFT;
+ }
+ 
++static inline int hstate_index(struct hstate *h)
++{
++	return h - hstates;
++}
++
+ #else
+ struct hstate {};
+ #define alloc_huge_page_node(h, nid) NULL
+@@ -320,6 +325,7 @@ static inline unsigned int pages_per_huge_page(struct hstate *h)
+ 	return 1;
+ }
+ #define hstate_index_to_shift(index) 0
++#define hstate_index(h) 0
+ #endif
+ 
+ #endif /* _LINUX_HUGETLB_H */
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 34a7e23..b1e0ed1 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1646,7 +1646,7 @@ static int hugetlb_sysfs_add_hstate(struct hstate *h, struct kobject *parent,
+ 				    struct attribute_group *hstate_attr_group)
+ {
+ 	int retval;
+-	int hi = h - hstates;
++	int hi = hstate_index(h);
+ 
+ 	hstate_kobjs[hi] = kobject_create_and_add(h->name, parent);
+ 	if (!hstate_kobjs[hi])
+@@ -1741,11 +1741,13 @@ void hugetlb_unregister_node(struct node *node)
+ 	if (!nhs->hugepages_kobj)
+ 		return;		/* no hstate attributes */
+ 
+-	for_each_hstate(h)
+-		if (nhs->hstate_kobjs[h - hstates]) {
+-			kobject_put(nhs->hstate_kobjs[h - hstates]);
+-			nhs->hstate_kobjs[h - hstates] = NULL;
++	for_each_hstate(h) {
++		int idx = hstate_index(h);
++		if (nhs->hstate_kobjs[idx]) {
++			kobject_put(nhs->hstate_kobjs[idx]);
++			nhs->hstate_kobjs[idx] = NULL;
+ 		}
++	}
+ 
+ 	kobject_put(nhs->hugepages_kobj);
+ 	nhs->hugepages_kobj = NULL;
+@@ -1848,7 +1850,7 @@ static void __exit hugetlb_exit(void)
+ 	hugetlb_unregister_all_nodes();
+ 
+ 	for_each_hstate(h) {
+-		kobject_put(hstate_kobjs[h - hstates]);
++		kobject_put(hstate_kobjs[hstate_index(h)]);
+ 	}
+ 
+ 	kobject_put(hugepages_kobj);
+@@ -1869,7 +1871,7 @@ static int __init hugetlb_init(void)
+ 		if (!size_to_hstate(default_hstate_size))
+ 			hugetlb_add_hstate(HUGETLB_PAGE_ORDER);
+ 	}
+-	default_hstate_idx = size_to_hstate(default_hstate_size) - hstates;
++	default_hstate_idx = hstate_index(size_to_hstate(default_hstate_size));
+ 	if (default_hstate_max_huge_pages)
+ 		default_hstate.max_huge_pages = default_hstate_max_huge_pages;
+ 
+@@ -2687,7 +2689,7 @@ retry:
+ 		 */
+ 		if (unlikely(PageHWPoison(page))) {
+ 			ret = VM_FAULT_HWPOISON |
+-			      VM_FAULT_SET_HINDEX(h - hstates);
++				VM_FAULT_SET_HINDEX(hstate_index(h));
+ 			goto backout_unlocked;
+ 		}
+ 	}
+@@ -2760,7 +2762,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+ 			return 0;
+ 		} else if (unlikely(is_hugetlb_entry_hwpoisoned(entry)))
+ 			return VM_FAULT_HWPOISON_LARGE |
+-			       VM_FAULT_SET_HINDEX(h - hstates);
++				VM_FAULT_SET_HINDEX(hstate_index(h));
+ 	}
+ 
+ 	ptep = huge_pte_alloc(mm, address, huge_page_size(h));
+-- 
+1.7.10
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
