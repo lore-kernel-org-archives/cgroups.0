@@ -1,14 +1,14 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH -V9 14/15] hugetlb/cgroup: migrate hugetlb cgroup info
- from oldpage to new page during migration
-Date: Thu, 14 Jun 2012 12:04:54 +0200
-Message-ID: <20120614100454.GL27397@tiehlicka.suse.cz>
+Subject: Re: [PATCH -V9 15/15] hugetlb/cgroup: add HugeTLB controller
+ documentation
+Date: Thu, 14 Jun 2012 12:07:55 +0200
+Message-ID: <20120614100755.GM27397@tiehlicka.suse.cz>
 References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <1339583254-895-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <1339583254-895-16-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1339583254-895-15-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <1339583254-895-16-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,44 +16,65 @@ Content-Transfer-Encoding: 7bit
 To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 13-06-12 15:57:33, Aneesh Kumar K.V wrote:
+On Wed 13-06-12 15:57:34, Aneesh Kumar K.V wrote:
 > From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> With HugeTLB pages, hugetlb cgroup is uncharged in compound page destructor.  Since
-> we are holding a hugepage reference, we can be sure that old page won't
-> get uncharged till the last put_page().
-> 
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
 Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-One question below
+Minor nid below
+> ---
+>  Documentation/cgroups/hugetlb.txt |   45 +++++++++++++++++++++++++++++++++++++
+>  1 file changed, 45 insertions(+)
+>  create mode 100644 Documentation/cgroups/hugetlb.txt
+> 
+> diff --git a/Documentation/cgroups/hugetlb.txt b/Documentation/cgroups/hugetlb.txt
+> new file mode 100644
+> index 0000000..a9faaca
+> --- /dev/null
+> +++ b/Documentation/cgroups/hugetlb.txt
 [...]
-> +void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
-> +{
-> +	struct hugetlb_cgroup *h_cg;
+> +With the above step, the initial or the parent HugeTLB group becomes
+> +visible at /sys/fs/cgroup. At bootup, this group includes all the tasks in
+> +the system. /sys/fs/cgroup/tasks lists the tasks in this cgroup.
 > +
-> +	if (hugetlb_cgroup_disabled())
-> +		return;
+> +New groups can be created under the parent group /sys/fs/cgroup.
 > +
-> +	VM_BUG_ON(!PageHuge(oldhpage));
-> +	spin_lock(&hugetlb_lock);
-> +	h_cg = hugetlb_cgroup_from_page(oldhpage);
-> +	set_hugetlb_cgroup(oldhpage, NULL);
-> +	cgroup_exclude_rmdir(&h_cg->css);
+> +# cd /sys/fs/cgroup
+> +# mkdir g1
+> +# echo $$ > g1/tasks
 > +
-> +	/* move the h_cg details to new cgroup */
-> +	set_hugetlb_cgroup(newhpage, h_cg);
-> +	spin_unlock(&hugetlb_lock);
-> +	cgroup_release_and_wakeup_rmdir(&h_cg->css);
-> +	return;
-> +}
-> +
+> +The above steps create a new group g1 and move the current shell
+> +process (bash) into it.
 
-The changelog says that the old page won't get uncharged - which means
-that the the cgroup cannot go away (even if we raced with the move
-parent, hugetlb_lock makes sure we either see old or new cgroup) so why
-do we need to play with css ref. counting?
+This is probably not needed as it is already described in the generic
+cgroups description
+
+> +
+> +Brief summary of control files
+> +
+> + hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
+> + hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
+> + hugetlb.<hugepagesize>.usage_in_bytes     # show current res_counter usage for "hugepagesize" hugetlb
+> + hugetlb.<hugepagesize>.failcnt		   # show the number of allocation failure due to HugeTLB limit
+> +
+> +For a system supporting two hugepage size (16M and 16G) the control
+> +files include:
+> +
+> +hugetlb.16GB.limit_in_bytes
+> +hugetlb.16GB.max_usage_in_bytes
+> +hugetlb.16GB.usage_in_bytes
+> +hugetlb.16GB.failcnt
+> +hugetlb.16MB.limit_in_bytes
+> +hugetlb.16MB.max_usage_in_bytes
+> +hugetlb.16MB.usage_in_bytes
+> +hugetlb.16MB.failcnt
+> -- 
+> 1.7.10
+> 
+
 -- 
 Michal Hocko
 SUSE Labs
