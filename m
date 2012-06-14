@@ -1,80 +1,89 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH -V9 04/15] hugetlb: use mmu_gather instead of a temporary linked list for accumulating pages
-Date: Wed, 13 Jun 2012 22:13:00 +0530
-Message-ID: <87y5nrmacr.fsf@skywalker.in.ibm.com>
-References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339583254-895-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120613145923.GA14777@tiehlicka.suse.cz> <20120613150338.GB14777@tiehlicka.suse.cz>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v3 00/28] kmem limitation for memcg
+Date: Thu, 14 Jun 2012 11:24:53 +0900
+Message-ID: <4FD94B75.6080401@jp.fujitsu.com>
+References: <1337951028-3427-1-git-send-email-glommer@parallels.com> <20120607102604.GE19842@somewhere.redhat.com> <4FD08813.9070307@parallels.com> <20120607140037.GG19842@somewhere.redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120613150338.GB14777@tiehlicka.suse.cz>
+In-Reply-To: <20120607140037.GG19842@somewhere.redhat.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Frederic Weisbecker <fweisbec@gmail.com>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, Suleiman Souhlal <suleiman@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, devel@openvz.org, David Rientjes <rientjes@google.com>
 
-Michal Hocko <mhocko@suse.cz> writes:
-
-> On Wed 13-06-12 16:59:23, Michal Hocko wrote:
->> On Wed 13-06-12 15:57:23, Aneesh Kumar K.V wrote:
->> > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
->> > 
->> > Use a mmu_gather instead of a temporary linked list for accumulating
->> > pages when we unmap a hugepage range
->> 
->> Sorry for coming up with the comment that late but you owe us an
->> explanation _why_ you are doing this.
->> 
->> I assume that this fixes a real problem when we take i_mmap_mutex
->> already up in 
->> unmap_mapping_range
->>   mutex_lock(&mapping->i_mmap_mutex);
->>   unmap_mapping_range_tree | unmap_mapping_range_list 
->>     unmap_mapping_range_vma
->>       zap_page_range_single
->>         unmap_single_vma
->> 	  unmap_hugepage_range
->> 	    mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
->> 
->> And that this should have been marked for stable as well (I haven't
->> checked when this has been introduced).
->> 
->> But then I do not see how this help when you still do this:
->> [...]
->> > diff --git a/mm/memory.c b/mm/memory.c
->> > index 1b7dc66..545e18a 100644
->> > --- a/mm/memory.c
->> > +++ b/mm/memory.c
->> > @@ -1326,8 +1326,11 @@ static void unmap_single_vma(struct mmu_gather *tlb,
->> >  			 * Since no pte has actually been setup, it is
->> >  			 * safe to do nothing in this case.
->> >  			 */
->> > -			if (vma->vm_file)
->> > -				unmap_hugepage_range(vma, start, end, NULL);
->> > +			if (vma->vm_file) {
->> > +				mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
->> > +				__unmap_hugepage_range(tlb, vma, start, end, NULL);
->> > +				mutex_unlock(&vma->vm_file->f_mapping->i_mmap_mutex);
->> > +			}
->> >  		} else
->> >  			unmap_page_range(tlb, vma, start, end, details);
->> >  	}
+(2012/06/07 23:00), Frederic Weisbecker wrote:
+> On Thu, Jun 07, 2012 at 02:53:07PM +0400, Glauber Costa wrote:
+>> On 06/07/2012 02:26 PM, Frederic Weisbecker wrote:
+>>> On Fri, May 25, 2012 at 05:03:20PM +0400, Glauber Costa wrote:
+>>>> Hello All,
+>>>>
+>>>> This is my new take for the memcg kmem accounting. This should merge
+>>>> all of the previous comments from you, plus fix a bunch of bugs.
+>>>>
+>>>> At this point, I consider the series pretty mature. Since last submission
+>>>> 2 weeks ago, I focused on broadening the testing coverage. Some bugs were
+>>>> fixed, but that of course doesn't mean no bugs exist.
+>>>>
+>>>> I believe some of the early patches here are already in some trees around.
+>>>> I don't know who should pick this, so if everyone agrees with what's in here,
+>>>> please just ack them and tell me which tree I should aim for (-mm? Hocko's?)
+>>>> and I'll rebase it.
+>>>>
+>>>> I should point out again that most, if not all, of the code in the caches
+>>>> are wrapped in static_key areas, meaning they will be completely patched out
+>>>> until the first limit is set. Enabling and disabling of static_keys incorporate
+>>>> the last fixes for sock memcg, and should be pretty robust.
+>>>>
+>>>> I also put a lot of effort, as you will all see, in the proper separation
+>>>> of the patches, so the review process is made as easy as the complexity of
+>>>> the work allows to.
+>>>
+>>> So I believe that if I want to implement a per kernel stack accounting/limitation,
+>>> I need to work on top of your patchset.
+>>>
+>>> What do you think about having some sub kmem accounting based on the caches?
+>>> For example there could be a specific accounting per kmem cache.
+>>>
+>>> Like if we use a specific kmem cache to allocate the kernel stack
+>>> (as is done by some archs but I can generalize that for those who want
+>>> kernel stack accounting), allocations are accounted globally in the memcg as
+>>> done in your patchset but also on a seperate counter only for this kmem cache
+>>> on the memcg, resulting in a kmem.stack.usage somewhere.
+>>>
+>>> The concept of per kmem cache accounting can be expanded more for any
+>>> kind of finegrained kmem accounting.
+>>>
+>>> Thoughts?
+>>
+>> I believe a general separation is too much, and will lead to knob
+>> explosion. So I don't think it is a good idea.
 >
-> Ahhh, you are removing the lock in the next patch. Really confusing and
-> not nice for the stable backport.
-> Could you merge those two patches and add Cc: stable? 
-> Then you can add my
-> Reviewed-by: Michal Hocko <mhocko@suse.cz>
+> Right. This could be an option in kmem_cache_create() or something.
 >
+>>
+>> Now, for the stack itself, it can be justified. The question that
+>> remains to be answered is:
+>>
+>> Why do you need to set the stack value separately? Isn't accounting
+>> the stack value, and limiting against the global kmem limit enough?
+>
+> Well, I may want to let my container have a full access to some kmem
+> resources (net, file, etc...) but defend against fork bombs or NR_PROC
+> rlimit exhaustion of other containers.
+>
+> So I need to be able to set my limit precisely on kstack.
 
-In the last review cycle I was asked to see if we can get a lockdep
-report for the above and what I found was we don't really cause the
-above deadlock with the current codebase because for hugetlb we don't
-directly call unmap_mapping_range. But still it is good to remove the
-i_mmap_mutex, because we don't need that protection now. I didn't
-mark it for stable because of the above reason.
+You explained that the limitation is necessary for fork-bomb, and the bad
+point of fork-bomb is that it can cause OOM. So, the problem is OOM not fork-bomb.
 
--aneesh
+If the problem is OOM, IIUC, generic kernel memory limiting will work better than
+kernel stack limiting.
+
+Thanks,
+-Kame
+
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
