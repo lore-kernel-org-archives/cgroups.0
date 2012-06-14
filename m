@@ -1,142 +1,48 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH -V9 [updated] 10/15] hugetlb/cgroup: Add the cgroup
- pointer to page lru
-Date: Thu, 14 Jun 2012 10:44:29 +0200
-Message-ID: <20120614084429.GH27397@tiehlicka.suse.cz>
-References: <1339583254-895-11-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <1339587270-5831-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH -V9 09/15] mm/hugetlb: Add new HugeTLB cgroup
+Date: Thu, 14 Jun 2012 16:54:14 +0800
+Message-ID: <4FD9A6B6.50503@huawei.com>
+References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339583254-895-10-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1339587270-5831-1-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1339583254-895-10-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, mhocko@suse.cz, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Wed 13-06-12 17:04:30, Aneesh Kumar K.V wrote:
-> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> 
-> Add the hugetlb cgroup pointer to 3rd page lru.next. This limit
-> the usage to hugetlb cgroup to only hugepages with 3 or more
-> normal pages. I guess that is an acceptable limitation.
-> 
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-
-I would be happier if you explicitely mentioned that both
-hugetlb_cgroup_from_page and set_hugetlb_cgroup need hugetlb_lock held,
-but
-
-Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-> ---
->  include/linux/hugetlb_cgroup.h |   37 +++++++++++++++++++++++++++++++++++++
->  mm/hugetlb.c                   |    4 ++++
->  2 files changed, 41 insertions(+)
-> 
-> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-> index e9944b4..2e4cb6b 100644
-> --- a/include/linux/hugetlb_cgroup.h
-> +++ b/include/linux/hugetlb_cgroup.h
-> @@ -18,8 +18,34 @@
->  #include <linux/res_counter.h>
->  
->  struct hugetlb_cgroup;
-> +/*
-> + * Minimum page order trackable by hugetlb cgroup.
-> + * At least 3 pages are necessary for all the tracking information.
-> + */
-> +#define HUGETLB_CGROUP_MIN_ORDER	2
->  
->  #ifdef CONFIG_CGROUP_HUGETLB_RES_CTLR
-> +
-> +static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
-> +{
-> +	VM_BUG_ON(!PageHuge(page));
-> +
-> +	if (compound_order(page) < HUGETLB_CGROUP_MIN_ORDER)
-> +		return NULL;
-> +	return (struct hugetlb_cgroup *)page[2].lru.next;
-> +}
-> +
 > +static inline
-> +int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
+
+> +struct hugetlb_cgroup *hugetlb_cgroup_from_css(struct cgroup_subsys_state *s)
 > +{
-> +	VM_BUG_ON(!PageHuge(page));
-> +
-> +	if (compound_order(page) < HUGETLB_CGROUP_MIN_ORDER)
-> +		return -1;
-> +	page[2].lru.next = (void *)h_cg;
-> +	return 0;
-> +}
-> +
->  static inline bool hugetlb_cgroup_disabled(void)
->  {
->  	if (hugetlb_subsys.disabled)
-> @@ -28,6 +54,17 @@ static inline bool hugetlb_cgroup_disabled(void)
->  }
->  
->  #else
-> +static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page)
-> +{
+> +	if (s)
+
+
+Neither cgroup_subsys_state() or task_subsys_state() will ever return NULL,
+so here 's' won't be NULL.
+
+> +		return container_of(s, struct hugetlb_cgroup, css);
 > +	return NULL;
 > +}
 > +
 > +static inline
-> +int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
+> +struct hugetlb_cgroup *hugetlb_cgroup_from_cgroup(struct cgroup *cgroup)
 > +{
-> +	return 0;
+> +	return hugetlb_cgroup_from_css(cgroup_subsys_state(cgroup,
+> +							   hugetlb_subsys_id));
 > +}
 > +
->  static inline bool hugetlb_cgroup_disabled(void)
->  {
->  	return true;
-> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index e899a2d..6a449c5 100644
-> --- a/mm/hugetlb.c
-> +++ b/mm/hugetlb.c
-> @@ -28,6 +28,7 @@
->  
->  #include <linux/io.h>
->  #include <linux/hugetlb.h>
-> +#include <linux/hugetlb_cgroup.h>
->  #include <linux/node.h>
->  #include "internal.h"
->  
-> @@ -591,6 +592,7 @@ static void update_and_free_page(struct hstate *h, struct page *page)
->  				1 << PG_active | 1 << PG_reserved |
->  				1 << PG_private | 1 << PG_writeback);
->  	}
-> +	VM_BUG_ON(hugetlb_cgroup_from_page(page));
->  	set_compound_page_dtor(page, NULL);
->  	set_page_refcounted(page);
->  	arch_release_hugepage(page);
-> @@ -643,6 +645,7 @@ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
->  	INIT_LIST_HEAD(&page->lru);
->  	set_compound_page_dtor(page, free_huge_page);
->  	spin_lock(&hugetlb_lock);
-> +	set_hugetlb_cgroup(page, NULL);
->  	h->nr_huge_pages++;
->  	h->nr_huge_pages_node[nid]++;
->  	spin_unlock(&hugetlb_lock);
-> @@ -892,6 +895,7 @@ static struct page *alloc_buddy_huge_page(struct hstate *h, int nid)
->  		INIT_LIST_HEAD(&page->lru);
->  		r_nid = page_to_nid(page);
->  		set_compound_page_dtor(page, free_huge_page);
-> +		set_hugetlb_cgroup(page, NULL);
->  		/*
->  		 * We incremented the global counters already
->  		 */
-> -- 
-> 1.7.10
-> 
+> +static inline
+> +struct hugetlb_cgroup *hugetlb_cgroup_from_task(struct task_struct *task)
+> +{
+> +	return hugetlb_cgroup_from_css(task_subsys_state(task,
+> +							 hugetlb_subsys_id));
+> +}
 
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
