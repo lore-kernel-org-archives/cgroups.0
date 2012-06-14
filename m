@@ -1,13 +1,12 @@
 From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH -V9 11/15] hugetlb/cgroup: Add charge/uncharge routines
- for hugetlb cgroup
-Date: Thu, 14 Jun 2012 13:07:12 +0900
-Message-ID: <4FD96370.2020708@jp.fujitsu.com>
-References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339583254-895-12-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH -V9 12/15] hugetlb/cgroup: Add support for cgroup removal
+Date: Thu, 14 Jun 2012 13:09:05 +0900
+Message-ID: <4FD963E1.6080506@jp.fujitsu.com>
+References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339583254-895-13-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1339583254-895-12-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <1339583254-895-13-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,9 +16,8 @@ Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMw
 (2012/06/13 19:27), Aneesh Kumar K.V wrote:
 > From: "Aneesh Kumar K.V"<aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> This patchset add the charge and uncharge routines for hugetlb cgroup.
-> We do cgroup charging in page alloc and uncharge in compound page
-> destructor. Assigning page's hugetlb cgroup is protected by hugetlb_lock.
+> This patch add support for cgroup removal. If we don't have parent
+> cgroup, the charges are moved to root cgroup.
 > 
 > Signed-off-by: Aneesh Kumar K.V<aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
