@@ -1,70 +1,109 @@
 From: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroups: Account for CSS_DEACT_BIAS in __css_put
-Date: Thu, 14 Jun 2012 14:55:30 -0700
-Message-ID: <20120614215530.12092.3543.stgit@dungbeetle.mtv.corp.google.com>
+Subject: [PATCH] perf: Use css_tryget to avoid propping up css refcount.
+Date: Thu, 14 Jun 2012 15:31:09 -0700
+Message-ID: <20120614223108.1025.2503.stgit@dungbeetle.mtv.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
-        h=subject:to:from:date:message-id:user-agent:mime-version
+        h=subject:to:from:cc:date:message-id:user-agent:mime-version
          :content-type:content-transfer-encoding;
-        bh=Soma0bOYqmSpMcdhKXgWyQgIqVLx7XaNvSdCffUdmLA=;
-        b=Do24MUYkKWQRpZq09w0Ke2f2++FHmM1rcq//4xqnLU1nDiZyd7RV9O715ZQ/+5VKb4
-         Bu1qP3k4X9YGHnoDGv+gK6yY3qLw049BbrME/ubgcQSIsEnghjbWAu8ktSMoic5Hv2l+
-         qfRcutbrEl0DW5aYMUP1+3OVD5pEW8IQQ68haI79YLoF70+zI2ONQ5kOhgxbgsO6YqdD
-         hfAhNU+W2XsyUAAe5kT3p9Skm9PSbJx6gB2IaBk7xBXLkAoeE0QxuWH8r9DFIS4C+sHx
-         ugd/VY6XUWiMbhG0YmvEydzQi51h3zHVceI8sAzpDSJQAT3utLTdn226sx2nxVr7gKLi
-         FKUw==
+        bh=K8wMh1cSVgyViK6qOW9At9E7N7Qo3o1qxUOJj0240PQ=;
+        b=fpaW0T/I8UmJd+zaKQSvWepLCDrqqsx9ULlJFrLFwN7qfO+HIA0oIH95ZBAhEXrQXQ
+         Q9fzFlR6Dmc6pm3gfptzOwd7ppAtuV/uzSvoaOXmq7GGwV8WSAK+S0aaUTPTZPtf1Vd3
+         VRcjyHo3HvTxXrzGtGRBVFaG5r7pz9rXv4Dvi+0OY/7LnSqFiCorNfbWz0U1N/cCcdjH
+         Ftm1Sqfs6piwmuCaHZv5hVfsNDiIRPAgZpUejeJH9Ot6PoZGsRHjNzZHFh+Agjl5EpbN
+         UMj1CvfuWVHWu3zUNBHC9DmFyDkMr4W4awg6O/cn0YEhhiujCPYrrtuyoksNS927UCk7
+         exGw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-When we fixed the race between atomic_dec and css_refcnt, we missed
-the fact that css_refcnt internally subtracts CSS_DEACT_BIAS to get
-the actual reference count.  This can potentially cause a refcount leak
-if __css_put races with cgroup_clear_css_refs.
+An rmdir pushes css's ref count to zero.  However, if the associated
+directory is open at the time, the dentry ref count is non-zero.  If
+the fd for this directory is then passed into perf_event_open, it
+does a css_get().  This bounces the ref count back up from zero.  This
+is a problem by itself.  But what makes it turn into a crash is the
+fact that we end up doing an extra dput, since we perform a dput
+when css_put sees the ref count go down to zero.
+
+css_tryget does not fall into that trap. So, we use that instead.
+
+Reproduction case for the bug:
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <linux/unistd.h>
+#include <linux/perf_event.h>
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
+
+#define PERF_FLAG_PID_CGROUP    (1U << 2)
+
+int perf_event_open(struct perf_event_attr *hw_event_uptr,
+                    pid_t pid, int cpu, int group_fd, unsigned long flags) {
+  return syscall(__NR_perf_event_open,hw_event_uptr, pid, cpu,
+                 group_fd, flags);
+}
+
+/* Directly poke at the perf_event bug, since it's proving hard to repro
+ * depending on where in the kernel tree.  what moved?
+ */
+int main(int argc, char **argv)
+{
+        int fd;
+        struct perf_event_attr attr;
+        memset(&attr, 0, sizeof(attr));
+        attr.exclude_kernel = 1;
+        attr.size = sizeof(attr);
+        mkdir("/dev/cgroup/perf_event/blah", 0777);
+        fd = open("/dev/cgroup/perf_event/blah", O_RDONLY);
+        perror("open");
+        rmdir("/dev/cgroup/perf_event/blah");
+        sleep(2);
+        perf_event_open(&attr, fd, 0, -1,  PERF_FLAG_PID_CGROUP);
+        perror("perf_event_open");
+        close(fd);
+        return 0;
+}
 
 Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+ kernel/events/core.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ceeafe8..2097684 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -255,12 +255,17 @@ int cgroup_lock_is_held(void)
- 
- EXPORT_SYMBOL_GPL(cgroup_lock_is_held);
- 
-+static int css_unbias_refcnt(int refcnt)
-+{
-+	return refcnt >= 0 ? refcnt : refcnt - CSS_DEACT_BIAS;
-+}
-+
- /* the current nr of refs, always >= 0 whether @css is deactivated or not */
- static int css_refcnt(struct cgroup_subsys_state *css)
- {
- 	int v = atomic_read(&css->refcnt);
- 
--	return v >= 0 ? v : v - CSS_DEACT_BIAS;
-+	return css_unbias_refcnt(v);
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index f85c015..d7d71d6 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -253,9 +253,9 @@ perf_cgroup_match(struct perf_event *event)
+ 	return !event->cgrp || event->cgrp == cpuctx->cgrp;
  }
  
- /* convenient tests for these bits */
-@@ -4982,9 +4987,12 @@ EXPORT_SYMBOL_GPL(__css_tryget);
- void __css_put(struct cgroup_subsys_state *css)
+-static inline void perf_get_cgroup(struct perf_event *event)
++static inline bool perf_tryget_cgroup(struct perf_event *event)
  {
- 	struct cgroup *cgrp = css->cgroup;
-+	int v;
+-	css_get(&event->cgrp->css);
++	return css_tryget(&event->cgrp->css);
+ }
  
- 	rcu_read_lock();
--	switch (atomic_dec_return(&css->refcnt)) {
-+	v = css_unbias_refcnt(atomic_dec_return(&css->refcnt));
-+
-+	switch (v) {
- 	case 1:
- 		if (notify_on_release(cgrp)) {
- 			set_bit(CGRP_RELEASABLE, &cgrp->flags);
+ static inline void perf_put_cgroup(struct perf_event *event)
+@@ -484,7 +484,11 @@ static inline int perf_cgroup_connect(int fd, struct perf_event *event,
+ 	event->cgrp = cgrp;
+ 
+ 	/* must be done before we fput() the file */
+-	perf_get_cgroup(event);
++	if (!perf_tryget_cgroup(event)) {
++		event->cgrp = NULL;
++		ret = -ENOENT;
++		goto out;
++	}
+ 
+ 	/*
+ 	 * all events in a group must monitor
