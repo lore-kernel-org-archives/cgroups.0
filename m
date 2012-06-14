@@ -1,53 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH -V9 04/15] hugetlb: use mmu_gather instead of a temporary
- linked list for accumulating pages
-Date: Thu, 14 Jun 2012 09:16:37 +0200
-Message-ID: <20120614071637.GB27397@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH -V9 05/15] hugetlb: avoid taking i_mmap_mutex in
+ unmap_single_vma() for hugetlb
+Date: Thu, 14 Jun 2012 09:20:53 +0200
+Message-ID: <20120614072053.GC27397@tiehlicka.suse.cz>
 References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <1339583254-895-5-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
- <20120613145923.GA14777@tiehlicka.suse.cz>
- <871uljnp71.fsf@skywalker.in.ibm.com>
+ <1339583254-895-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <871uljnp71.fsf-6yE53ggjAfyqSkle7U1LjlaTQe2KTcn/@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1339583254-895-6-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, dhillf@gmail.com, rientjes@google.com, akpm@linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Wed 13-06-12 22:07:06, Aneesh Kumar K.V wrote:
-> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+On Wed 13-06-12 15:57:24, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 > 
-> > On Wed 13-06-12 15:57:23, Aneesh Kumar K.V wrote:
-> >> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> >> 
-> >> Use a mmu_gather instead of a temporary linked list for accumulating
-> >> pages when we unmap a hugepage range
-> >
-> > Sorry for coming up with the comment that late but you owe us an
-> > explanation _why_ you are doing this.
-> >
-> > I assume that this fixes a real problem when we take i_mmap_mutex
-> > already up in 
-> > unmap_mapping_range
-> >   mutex_lock(&mapping->i_mmap_mutex);
-> >   unmap_mapping_range_tree | unmap_mapping_range_list 
-> >     unmap_mapping_range_vma
-> >       zap_page_range_single
-> >         unmap_single_vma
-> > 	  unmap_hugepage_range
-> > 	    mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
-> >
-> > And that this should have been marked for stable as well (I haven't
-> > checked when this has been introduced).
-> 
-> Switch to mmu_gather is to get rid of the use of page->lru so that i can use it for
-> active list.
+> i_mmap_mutex lock was added in unmap_single_vma by 502717f4e ("hugetlb:
+> fix linked list corruption in unmap_hugepage_range()") but we don't use
+> page->lru in unmap_hugepage_range any more.  Also the lock was taken
+> higher up in the stack in some code path.  That would result in deadlock.
 
-So can we get this to the changelog please?
+This sounds like the deadlock is real but in the other email you wrote
+that the deadlock cannot happen so it would be good to mention it here.
+ 
+> unmap_mapping_range (i_mmap_mutex)
+>  -> unmap_mapping_range_tree
+>     -> unmap_mapping_range_vma
+>        -> zap_page_range_single
+>          -> unmap_single_vma
+> 	      -> unmap_hugepage_range (i_mmap_mutex)
+> 
+> For shared pagetable support for huge pages, since pagetable pages are ref
+> counted we don't need any lock during huge_pmd_unshare.  We do take
+> i_mmap_mutex in huge_pmd_share while walking the vma_prio_tree in mapping.
+> (39dde65c9940c97f ("shared page table for hugetlb page")).
+> 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> ---
+>  mm/memory.c |    5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 545e18a..f6bc04f 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -1326,11 +1326,8 @@ static void unmap_single_vma(struct mmu_gather *tlb,
+>  			 * Since no pte has actually been setup, it is
+>  			 * safe to do nothing in this case.
+>  			 */
+> -			if (vma->vm_file) {
+> -				mutex_lock(&vma->vm_file->f_mapping->i_mmap_mutex);
+> +			if (vma->vm_file)
+>  				__unmap_hugepage_range(tlb, vma, start, end, NULL);
+> -				mutex_unlock(&vma->vm_file->f_mapping->i_mmap_mutex);
+> -			}
+>  		} else
+>  			unmap_page_range(tlb, vma, start, end, details);
+>  	}
+> -- 
+> 1.7.10
+> 
 
 -- 
 Michal Hocko
