@@ -1,33 +1,31 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Christoph Lameter <cl@linux.com>
 Subject: Re: [PATCH 4/4] make CFLGS_OFF_SLAB visible for all slabs
-Date: Thu, 14 Jun 2012 20:01:31 +0400
-Message-ID: <4FDA0ADB.2010508@parallels.com>
-References: <1339676244-27967-1-git-send-email-glommer@parallels.com> <1339676244-27967-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206141019010.32075@router.home>
+Date: Thu, 14 Jun 2012 12:29:02 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1206141228230.12773@router.home>
+References: <1339676244-27967-1-git-send-email-glommer@parallels.com> <1339676244-27967-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206141019010.32075@router.home> <4FDA0ADB.2010508@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1206141019010.32075-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1339694945; bh=l00b1MraFGtJ6zElVCvHfHQj3ZXcFSTCbGtjTvFvJn0=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=gQ6lUAHNxTt8nAOMpI9MaDIr/ccNnK2c8SPI0JVuHN7q/zt1jcZVPycMuoxriHdblosOC5u5fGf9B06A1kvfvbYrsXBH49TESdje6QULuDw26kdtJF+lL2SXSDB0yj8DzP6pRrjhorZLv1w3WpNZ33zdCmdE0VF1ZuMowQKaYPc=
+In-Reply-To: <4FDA0ADB.2010508@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 06/14/2012 07:19 PM, Christoph Lameter wrote:
-> On Thu, 14 Jun 2012, Glauber Costa wrote:
->
->> Since we're now moving towards a unified slab allocator interface,
->> make CFLGS_OFF_SLAB visible to all allocators, even though SLAB keeps
->> being its only users. Also, make the name consistent with the other
->> flags, that start with SLAB_xx.
->
-> What is the significance of knowledge about internal slab structures (such
-> as the CFGLFS_OFF_SLAB) outside of the allocators?
+On Thu, 14 Jun 2012, Glauber Costa wrote:
+
+> I want to mask that out in kmem-specific slab creation. Since I am copying the
+> original flags, and that flag is embedded in the slab saved flags, it will be
+> carried to the new slab if I don't mask it out.
+
+I thought you intercepted slab creation? You can copy the flags at that
+point.
 
 
-I want to mask that out in kmem-specific slab creation. Since I am 
-copying the original flags, and that flag is embedded in the slab saved 
-flags, it will be carried to the new slab if I don't mask it out.
-
-Alternatively to this, I can tweak slab.c to always mask out this at the 
-beginning of cache creation, if you so prefer.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
