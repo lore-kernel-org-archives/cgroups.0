@@ -1,31 +1,70 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH 4/4] make CFLGS_OFF_SLAB visible for all slabs
-Date: Thu, 14 Jun 2012 12:29:02 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1206141228230.12773@router.home>
-References: <1339676244-27967-1-git-send-email-glommer@parallels.com> <1339676244-27967-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206141019010.32075@router.home> <4FDA0ADB.2010508@parallels.com>
+From: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroups: Account for CSS_DEACT_BIAS in __css_put
+Date: Thu, 14 Jun 2012 14:55:30 -0700
+Message-ID: <20120614215530.12092.3543.stgit@dungbeetle.mtv.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1339694945; bh=l00b1MraFGtJ6zElVCvHfHQj3ZXcFSTCbGtjTvFvJn0=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=gQ6lUAHNxTt8nAOMpI9MaDIr/ccNnK2c8SPI0JVuHN7q/zt1jcZVPycMuoxriHdblosOC5u5fGf9B06A1kvfvbYrsXBH49TESdje6QULuDw26kdtJF+lL2SXSDB0yj8DzP6pRrjhorZLv1w3WpNZ33zdCmdE0VF1ZuMowQKaYPc=
-In-Reply-To: <4FDA0ADB.2010508@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=subject:to:from:date:message-id:user-agent:mime-version
+         :content-type:content-transfer-encoding;
+        bh=Soma0bOYqmSpMcdhKXgWyQgIqVLx7XaNvSdCffUdmLA=;
+        b=Do24MUYkKWQRpZq09w0Ke2f2++FHmM1rcq//4xqnLU1nDiZyd7RV9O715ZQ/+5VKb4
+         Bu1qP3k4X9YGHnoDGv+gK6yY3qLw049BbrME/ubgcQSIsEnghjbWAu8ktSMoic5Hv2l+
+         qfRcutbrEl0DW5aYMUP1+3OVD5pEW8IQQ68haI79YLoF70+zI2ONQ5kOhgxbgsO6YqdD
+         hfAhNU+W2XsyUAAe5kT3p9Skm9PSbJx6gB2IaBk7xBXLkAoeE0QxuWH8r9DFIS4C+sHx
+         ugd/VY6XUWiMbhG0YmvEydzQi51h3zHVceI8sAzpDSJQAT3utLTdn226sx2nxVr7gKLi
+         FKUw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Thu, 14 Jun 2012, Glauber Costa wrote:
+When we fixed the race between atomic_dec and css_refcnt, we missed
+the fact that css_refcnt internally subtracts CSS_DEACT_BIAS to get
+the actual reference count.  This can potentially cause a refcount leak
+if __css_put races with cgroup_clear_css_refs.
 
-> I want to mask that out in kmem-specific slab creation. Since I am copying the
-> original flags, and that flag is embedded in the slab saved flags, it will be
-> carried to the new slab if I don't mask it out.
+Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-I thought you intercepted slab creation? You can copy the flags at that
-point.
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index ceeafe8..2097684 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -255,12 +255,17 @@ int cgroup_lock_is_held(void)
+ 
+ EXPORT_SYMBOL_GPL(cgroup_lock_is_held);
+ 
++static int css_unbias_refcnt(int refcnt)
++{
++	return refcnt >= 0 ? refcnt : refcnt - CSS_DEACT_BIAS;
++}
++
+ /* the current nr of refs, always >= 0 whether @css is deactivated or not */
+ static int css_refcnt(struct cgroup_subsys_state *css)
+ {
+ 	int v = atomic_read(&css->refcnt);
+ 
+-	return v >= 0 ? v : v - CSS_DEACT_BIAS;
++	return css_unbias_refcnt(v);
+ }
+ 
+ /* convenient tests for these bits */
+@@ -4982,9 +4987,12 @@ EXPORT_SYMBOL_GPL(__css_tryget);
+ void __css_put(struct cgroup_subsys_state *css)
+ {
+ 	struct cgroup *cgrp = css->cgroup;
++	int v;
+ 
+ 	rcu_read_lock();
+-	switch (atomic_dec_return(&css->refcnt)) {
++	v = css_unbias_refcnt(atomic_dec_return(&css->refcnt));
++
++	switch (v) {
+ 	case 1:
+ 		if (notify_on_release(cgrp)) {
+ 			set_bit(CGRP_RELEASABLE, &cgrp->flags);
