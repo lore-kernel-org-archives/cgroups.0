@@ -1,176 +1,91 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/2] memcg: add per cgroup dirty pages accounting
-Date: Fri, 15 Jun 2012 20:01:57 +0800
-Message-ID: <1339761717-29070-1-git-send-email-handai.szj@taobao.com>
-References: <1339761611-29033-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Wanpeng Li <liwp.linux@gmail.com>
+Subject: [PATCH 1/7][TRIVIAL][resend] powerpc: cleanup kernel-doc warning
+Date: Fri, 15 Jun 2012 21:10:03 +0800
+Message-ID: <1339765810-7161-1-git-send-email-liwp.linux@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=qhqHJ9ff3rB80Gocj4bcZUJ6UIRSdSD3DgR96jJWzms=;
-        b=ftBWm79SmbcizV9icQa9JzVXv9DYAbH74zEvz0FNFVIyw0TLVbrn07oXbhyyM8J8vI
-         Pwh6fsBw5hqoZ0uvz6F4TawsBkkdrMMSDhLhhdvVXtl4aml2kLjCmJg3YADR24PQ2ZgE
-         /RbUwnlKnDXpY3UL89K1P9A9MKisvgpu6L48VezFz9ggtjyedIbbZHomqELzu9slwWnT
-         +4NOVvIB6WUXx2FixSxFEYyHnFke55H3aLQPAZ7et63EyxZv1CBpeNnz5HPogb9x3SPN
-         1sWuTnZpLOrWVdrVBmlD+9gc7GZIHxZXIUWlcF0hZo9pB+ddQjYvzwfx5bbZZVO3dkTm
-         5hjg==
-In-Reply-To: <1339761611-29033-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=I2S5NvGdP4yXWbNHm4HV6R+da2NnXiQAQd85hwcGTzY=;
+        b=Qw8DRjEwIAxyYHAWXeJCtrgFs/OpSQzCkhz0infVv3hWmvinJo4ED+UcRJieNTr/Tn
+         rb0T1li8sUh1cTih8sshHjDdtkoCJIotghlvrWKXHYeA7SR9sIJVmoDefGe/kSCH+I5V
+         Ea9I+8KcBVSsKOIAczC1zoaOHHtaLhGepx19lUrFjPDLEvZ97WKivANL1W097NF1NgC3
+         44iRgdOJnZo6BKXYmTtusyQkipbHbuzM54voyEAWNtqPgvFNlqZMMJ5vzXTWCY/2efCj
+         6uRmbWIlWdcur1kVSVuLVnDkA/N5+1sJX0fubE4kCvZ0PmQSuSMS1KFDyfyTnJE7vHQR
+         f69Q==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: trivial@kernel.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Christoph Lameter <cl@linux-foundation.org>, Paul Gortmaker <paul.gortmaker@windriver.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Milton Miller <miltonm@bga.com>, Nishanth Aravamudan <nacc@us.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Jason Wessel <jason.wessel@windriver.com>, Jan Kiszka <jan.kiszka@siemens.com>, David Howells <dhowells@redhat.com>, Srikar Dronamraju <srikar@linux.vnet.ibm.com>
 
-This patch adds memcg routines to count dirty pages. I notice that
-the list has talked about per-cgroup dirty page limiting
-(http://lwn.net/Articles/455341/) before, but it did not get merged.
-I've no idea how is this going now, but maybe we can add per cgroup
-dirty pages accounting first. This allows the memory controller to
-maintain an accurate view of the amount of its memory that is dirty
-and can provide some infomation while group's direct reclaim is working.
+From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-After commit 89c06bd5 (memcg: use new logic for page stat accounting),
-we do not need per page_cgroup flag anymore and can directly use
-struct page flag.
+Warning(arch/powerpc/kernel/pci_of_scan.c:210): Excess function parameter 'node' description in 'of_scan_pci_bridge'
+Warning(arch/powerpc/kernel/vio.c:636): No description found for parameter 'desired'
+Warning(arch/powerpc/kernel/vio.c:636): Excess function parameter 'new_desired' description in 'vio_cmo_set_dev_desired'
+Warning(arch/powerpc/kernel/vio.c:1270): No description found for parameter 'viodrv'
+Warning(arch/powerpc/kernel/vio.c:1270): Excess function parameter 'drv' description in '__vio_register_driver'
+Warning(arch/powerpc/kernel/vio.c:1289): No description found for parameter 'viodrv'
+Warning(arch/powerpc/kernel/vio.c:1289): Excess function parameter 'driver' description in 'vio_unregister_driver'
 
 
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
 ---
- include/linux/memcontrol.h |    1 +
- mm/filemap.c               |    1 +
- mm/memcontrol.c            |   32 +++++++++++++++++++++++++-------
- mm/page-writeback.c        |    2 ++
- mm/truncate.c              |    1 +
- 5 files changed, 30 insertions(+), 7 deletions(-)
+ arch/powerpc/kernel/pci_of_scan.c |    1 -
+ arch/powerpc/kernel/vio.c         |    6 +++---
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index a337c2e..8154ade 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -39,6 +39,7 @@ enum mem_cgroup_stat_index {
- 	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
- 	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
- 	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
-+	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
- 	MEM_CGROUP_STAT_NSTATS,
- };
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 89dde17..d7dd42b 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -198,7 +198,6 @@ EXPORT_SYMBOL(of_create_pci_dev);
  
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 79c4b2b..5b5c121 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -141,6 +141,7 @@ void __delete_from_page_cache(struct page *page)
- 	 * having removed the page entirely.
- 	 */
- 	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
-+		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
- 		dec_zone_page_state(page, NR_FILE_DIRTY);
- 		dec_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
- 	}
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9102b8c..d200ad1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2548,6 +2548,18 @@ void mem_cgroup_split_huge_fixup(struct page *head)
- }
- #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
- 
-+static inline
-+void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
-+					struct mem_cgroup *to,
-+					enum mem_cgroup_stat_index idx)
-+{
-+	/* Update stat data for mem_cgroup */
-+	preempt_disable();
-+	__this_cpu_dec(from->stat->count[idx]);
-+	__this_cpu_inc(to->stat->count[idx]);
-+	preempt_enable();
-+}
-+
  /**
-  * mem_cgroup_move_account - move account of the page
-  * @page: the page
-@@ -2597,13 +2609,14 @@ static int mem_cgroup_move_account(struct page *page,
+  * of_scan_pci_bridge - Set up a PCI bridge and scan for child nodes
+- * @node: device tree node of bridge
+  * @dev: pci_dev structure for the bridge
+  *
+  * of_scan_bus() calls this routine for each PCI bridge that it finds, and
+diff --git a/arch/powerpc/kernel/vio.c b/arch/powerpc/kernel/vio.c
+index cb87301..06cbc30 100644
+--- a/arch/powerpc/kernel/vio.c
++++ b/arch/powerpc/kernel/vio.c
+@@ -625,7 +625,7 @@ struct dma_map_ops vio_dma_mapping_ops = {
+  * vio_cmo_set_dev_desired - Set desired entitlement for a device
+  *
+  * @viodev: struct vio_dev for device to alter
+- * @new_desired: new desired entitlement level in bytes
++ * @desired: new desired entitlement level in bytes
+  *
+  * For use by devices to request a change to their entitlement at runtime or
+  * through sysfs.  The desired entitlement level is changed and a balancing
+@@ -1262,7 +1262,7 @@ static int vio_bus_remove(struct device *dev)
  
- 	move_lock_mem_cgroup(from, &flags);
+ /**
+  * vio_register_driver: - Register a new vio driver
+- * @drv:	The vio_driver structure to be registered.
++ * @viodrv:	The vio_driver structure to be registered.
+  */
+ int __vio_register_driver(struct vio_driver *viodrv, struct module *owner,
+ 			  const char *mod_name)
+@@ -1282,7 +1282,7 @@ EXPORT_SYMBOL(__vio_register_driver);
  
--	if (!anon && page_mapped(page)) {
--		/* Update mapped_file data for mem_cgroup */
--		preempt_disable();
--		__this_cpu_dec(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
--		__this_cpu_inc(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
--		preempt_enable();
--	}
-+	if (!anon && page_mapped(page))
-+		mem_cgroup_move_account_page_stat(from, to,
-+					MEM_CGROUP_STAT_FILE_MAPPED);
-+
-+	if (PageDirty(page))
-+		mem_cgroup_move_account_page_stat(from, to,
-+					MEM_CGROUP_STAT_FILE_DIRTY);
-+
- 	mem_cgroup_charge_statistics(from, anon, -nr_pages);
- 	if (uncharge)
- 		/* This is not "cancel", but cancel_charge does all we need. */
-@@ -4023,6 +4036,7 @@ enum {
- 	MCS_SWAP,
- 	MCS_PGFAULT,
- 	MCS_PGMAJFAULT,
-+	MCS_FILE_DIRTY,
- 	MCS_INACTIVE_ANON,
- 	MCS_ACTIVE_ANON,
- 	MCS_INACTIVE_FILE,
-@@ -4047,6 +4061,7 @@ struct {
- 	{"swap", "total_swap"},
- 	{"pgfault", "total_pgfault"},
- 	{"pgmajfault", "total_pgmajfault"},
-+	{"dirty", "total_dirty"},
- 	{"inactive_anon", "total_inactive_anon"},
- 	{"active_anon", "total_active_anon"},
- 	{"inactive_file", "total_inactive_file"},
-@@ -4080,6 +4095,9 @@ mem_cgroup_get_local_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
- 	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGMAJFAULT);
- 	s->stat[MCS_PGMAJFAULT] += val;
- 
-+	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_FILE_DIRTY);
-+	s->stat[MCS_FILE_DIRTY] += val * PAGE_SIZE;
-+
- 	/* per zone stat */
- 	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_INACTIVE_ANON));
- 	s->stat[MCS_INACTIVE_ANON] += val * PAGE_SIZE;
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 26adea8..b17c692 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1936,6 +1936,7 @@ int __set_page_dirty_no_writeback(struct page *page)
- void account_page_dirtied(struct page *page, struct address_space *mapping)
+ /**
+  * vio_unregister_driver - Remove registration of vio driver.
+- * @driver:	The vio_driver struct to be removed form registration
++ * @viodrv:	The vio_driver struct to be removed form registration
+  */
+ void vio_unregister_driver(struct vio_driver *viodrv)
  {
- 	if (mapping_cap_account_dirty(mapping)) {
-+		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
- 		__inc_zone_page_state(page, NR_FILE_DIRTY);
- 		__inc_zone_page_state(page, NR_DIRTIED);
- 		__inc_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
-@@ -2155,6 +2156,7 @@ int clear_page_dirty_for_io(struct page *page)
- 		 * for more comments.
- 		 */
- 		if (TestClearPageDirty(page)) {
-+			mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
- 			dec_bdi_stat(mapping->backing_dev_info,
- 					BDI_RECLAIMABLE);
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 61a183b..fe8363e 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -76,6 +76,7 @@ void cancel_dirty_page(struct page *page, unsigned int account_size)
- 	if (TestClearPageDirty(page)) {
- 		struct address_space *mapping = page->mapping;
- 		if (mapping && mapping_cap_account_dirty(mapping)) {
-+			mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
- 			dec_bdi_stat(mapping->backing_dev_info,
- 					BDI_RECLAIMABLE);
 -- 
-1.7.1
+1.7.9.5
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
