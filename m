@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: [PATCH 7/7] mm/memory.c : cleanup the coding style issue
-Date: Fri, 15 Jun 2012 21:20:47 +0800
-Message-ID: <1339766449-7835-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH 0/7][TRIVIAL][resend] trivial patches
+Date: Fri, 15 Jun 2012 21:21:39 +0800
+Message-ID: <1339766499-7891-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=DO76zEDFOPbUUWOYT8+e+VNrrtZmbbSN16bn9yUv8FA=;
-        b=YDxKo9bULR1Y0Ee2npVC5zHyKSl8VXeIgVjEyQzkUEEbpOe1Tzwm1YePx7sR1ly0JU
-         UraKPx3QluzfaFdUE+H+SrQtHhTPH8rSI9v7XgsbUFn3O0PZYO49Rl4skvLMjldaYBuc
-         z+i2Es4jBoXgHojCllKZ7RafqNduQI92IPn4XsMej2uwOaJMAtAYh6xKnMGcXEw+6USC
-         yNqkmgrO96XPp6OFcZaUibCPw7p/8PNEHVtbSYMp4MYtywhLmuA4Osoo0RuLeGyK3TQ4
-         7BCFhnSgKvtI4TmhtKDTUPzLd0eAiDnih7oRD1qbW40wDQSdNreLHco6xcu8QSxuRT7D
-         gWxA==
+        bh=mJNKTIu1aH1rcU860lCRO3kex3ceZzwjp4EmA/W0OWo=;
+        b=KPWTwcuKafx65bcIviT3t5PLhllecJ5eBHB4VtDtjI3b+GkAQDK02Ztu1lFGCktZby
+         KwKZEyjHOx9gR9zSKTPttQ4UCdoVWsxR1yH0xWbeLFUxpVTjy4hY5khRSnYhkprNSJKo
+         eoJg+Nk2WIuR7lOHiYi+enV0zInM2uWTeGqPlq8aUTRrfhKUBzCtJ3M5AsTtQ/fhlbrp
+         VYG7S+oUvInZDaXTkBkMyJk8jwJ1AAHOaEDl0bFAFQiUd8OiA8l+W4HovXIAdDNuazS8
+         LcGg5gvEM6pVp0a9xKkpi4ycHv6P614iWfnwUJnSu5rCek0OUmIO6T1GyC2BF6pv6Jtt
+         RVyg==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,28 +23,36 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@lin
 
 From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
+Since these patches has already send more than one week and 
+doesn't get any response, I collect them and send out a patch set.
+
+Wanpeng Li (7)
+
+powerpc: cleanup some kernel doc warning 
+x86/kernel: cleanup some kernel doc warning  
+drivers/pci: cleanup some kernel doc warning
+mm: cleanup on the comments of zone_reclaim_stat
+mm: cleanup some kernel doc warning
+mm: cleanup page relaim comment error
+mm/memory.c: cleanup coding style issue
+
 Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
-
----
- mm/memory.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/mm/memory.c b/mm/memory.c
-index 1b7dc66..195d6e1 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -2447,7 +2447,8 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
- 	return same;
- }
- 
--static inline void cow_user_page(struct page *dst, struct page *src, unsigned long va, struct vm_area_struct *vma)
-+static inline void cow_user_page(struct page *dst, struct page *src,
-+		unsigned long va, struct vm_area_struct *vma)
- {
- 	/*
- 	 * If the source page was a PFN mapping, we don't have
--- 
-1.7.9.5
+--
+ arch/powerpc/kernel/pci_of_scan.c |    1 -
+ arch/powerpc/kernel/vio.c         |    6 +++---
+ arch/x86/kernel/kgdb.c            |    8 ++++----
+ arch/x86/kernel/uprobes.c         |    2 +-
+ drivers/pci/setup-bus.c           |    2 +-
+ include/linux/mmzone.h            |    2 +-
+ mm/memblock.c                     |   12 ++++++------
+ mm/memcontrol.c                   |    4 ++--
+ mm/memory.c                       |    3 ++-
+ mm/oom_kill.c                     |    2 +-
+ mm/page_cgroup.c                  |    4 ++--
+ mm/pagewalk.c                     |    1 -
+ mm/percpu-vm.c                    |    1 -
+ mm/vmscan.c                       |    3 ++-
+ 14 files changed, 25 insertions(+), 26 deletions(-)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
