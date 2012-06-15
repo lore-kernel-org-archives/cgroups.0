@@ -1,60 +1,161 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH -V9 14/15] hugetlb/cgroup: migrate hugetlb cgroup info from oldpage to new page during migration
-Date: Fri, 15 Jun 2012 16:20:31 +0530
-Message-ID: <87haucn91k.fsf@skywalker.in.ibm.com>
-References: <1339583254-895-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1339583254-895-15-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120614100454.GL27397@tiehlicka.suse.cz>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120614100454.GL27397-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH 1/2] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Fri, 15 Jun 2012 20:00:11 +0800
+Message-ID: <1339761611-29033-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=r4e1+SwRtf3dtHeDDMUGN7e6uENCi+x4AxdUhqWUM+U=;
+        b=mMQWzMEOBND/aqivY8Vo+r6W7+niXfSdvjwQrbnqotE5w6gos1esKyxqq9Pio+zPml
+         in+YuaZJ2uOV7z0tUECksAdy8Z5JUWwdR/1ClOWW1YQ5LSRocEn/YpmT+35LE314kkSL
+         mcxkvswJIDWymr4YNBZA0uKi8VUndUYVfVkONP23R89H+r8kqNNasPav30YW2vKmJgSE
+         V551caX+aQNO1oiln9z74PcNizqPrF/4zCfBlKE3NncVR3wptlDy+FDhDVQKa5WoxwWJ
+         jlS5hYBCCFJxNx7Yr8MEyiIHds8HDd7DYnpjgbGGu5Raa6AmgU7AGPuy6WEKbUVpOT5Y
+         RNgA==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
 
-Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+While doing memcg page stat accounting, there's no need to use MEMCG_NR_FILE_MAPPED
+as an intermediate, we can use MEM_CGROUP_STAT_FILE_MAPPED directly.
 
-> On Wed 13-06-12 15:57:33, Aneesh Kumar K.V wrote:
->> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->> 
->> With HugeTLB pages, hugetlb cgroup is uncharged in compound page destructor.  Since
->> we are holding a hugepage reference, we can be sure that old page won't
->> get uncharged till the last put_page().
->> 
->> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->
-> Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
->
-> One question below
-> [...]
->> +void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
->> +{
->> +	struct hugetlb_cgroup *h_cg;
->> +
->> +	if (hugetlb_cgroup_disabled())
->> +		return;
->> +
->> +	VM_BUG_ON(!PageHuge(oldhpage));
->> +	spin_lock(&hugetlb_lock);
->> +	h_cg = hugetlb_cgroup_from_page(oldhpage);
->> +	set_hugetlb_cgroup(oldhpage, NULL);
->> +	cgroup_exclude_rmdir(&h_cg->css);
->> +
->> +	/* move the h_cg details to new cgroup */
->> +	set_hugetlb_cgroup(newhpage, h_cg);
->> +	spin_unlock(&hugetlb_lock);
->> +	cgroup_release_and_wakeup_rmdir(&h_cg->css);
->> +	return;
->> +}
->> +
->
-> The changelog says that the old page won't get uncharged - which means
-> that the the cgroup cannot go away (even if we raced with the move
-> parent, hugetlb_lock makes sure we either see old or new cgroup) so why
-> do we need to play with css ref. counting?
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+---
+ include/linux/memcontrol.h |   22 ++++++++++++++++------
+ mm/memcontrol.c            |   25 +------------------------
+ mm/rmap.c                  |    4 ++--
+ 3 files changed, 19 insertions(+), 32 deletions(-)
 
-Ok hugetlb_lock should be sufficient here i guess. I will send a patch
-on top to remove the exclude_rmdir and release_and_wakeup_rmdir 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index f94efd2..a337c2e 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -27,9 +27,19 @@ struct page_cgroup;
+ struct page;
+ struct mm_struct;
+ 
+-/* Stats that can be updated by kernel. */
+-enum mem_cgroup_page_stat_item {
+-	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
++/*
++ * Statistics for memory cgroup.
++ */
++enum mem_cgroup_stat_index {
++	/*
++	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
++	 */
++	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
++	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
++	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
++	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
++	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
++	MEM_CGROUP_STAT_NSTATS,
+ };
+ 
+ struct mem_cgroup_reclaim_cookie {
+@@ -170,17 +180,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+ }
+ 
+ void mem_cgroup_update_page_stat(struct page *page,
+-				 enum mem_cgroup_page_stat_item idx,
++				 enum mem_cgroup_stat_index idx,
+ 				 int val);
+ 
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ 	mem_cgroup_update_page_stat(page, idx, 1);
+ }
+ 
+ static inline void mem_cgroup_dec_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ 	mem_cgroup_update_page_stat(page, idx, -1);
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7685d4a..9102b8c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -77,21 +77,6 @@ static int really_do_swap_account __initdata = 0;
+ #endif
+ 
+ 
+-/*
+- * Statistics for memory cgroup.
+- */
+-enum mem_cgroup_stat_index {
+-	/*
+-	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+-	 */
+-	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
+-	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
+-	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+-	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
+-	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
+-	MEM_CGROUP_STAT_NSTATS,
+-};
+-
+ enum mem_cgroup_events_index {
+ 	MEM_CGROUP_EVENTS_PGPGIN,	/* # of pages paged in */
+ 	MEM_CGROUP_EVENTS_PGPGOUT,	/* # of pages paged out */
+@@ -1958,7 +1943,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
+ }
+ 
+ void mem_cgroup_update_page_stat(struct page *page,
+-				 enum mem_cgroup_page_stat_item idx, int val)
++				 enum mem_cgroup_stat_index idx, int val)
+ {
+ 	struct mem_cgroup *memcg;
+ 	struct page_cgroup *pc = lookup_page_cgroup(page);
+@@ -1971,14 +1956,6 @@ void mem_cgroup_update_page_stat(struct page *page,
+ 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+ 		return;
+ 
+-	switch (idx) {
+-	case MEMCG_NR_FILE_MAPPED:
+-		idx = MEM_CGROUP_STAT_FILE_MAPPED;
+-		break;
+-	default:
+-		BUG();
+-	}
+-
+ 	this_cpu_add(memcg->stat->count[idx], val);
+ }
+ 
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 5b5ad58..7e4e481 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1154,7 +1154,7 @@ void page_add_file_rmap(struct page *page)
+ 	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+ 	if (atomic_inc_and_test(&page->_mapcount)) {
+ 		__inc_zone_page_state(page, NR_FILE_MAPPED);
+-		mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED);
++		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+ 	}
+ 	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+ }
+@@ -1208,7 +1208,7 @@ void page_remove_rmap(struct page *page)
+ 					      NR_ANON_TRANSPARENT_HUGEPAGES);
+ 	} else {
+ 		__dec_zone_page_state(page, NR_FILE_MAPPED);
+-		mem_cgroup_dec_page_stat(page, MEMCG_NR_FILE_MAPPED);
++		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+ 	}
+ 	/*
+ 	 * It would be tidy to reset the PageAnon mapping here,
+-- 
+1.7.1
 
--aneesh
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
