@@ -1,60 +1,115 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 6/7][TRIVIAL][resend] mm: cleanup page reclaim comment
- error
-Date: Fri, 15 Jun 2012 16:58:09 +0200
-Message-ID: <20120615145809.GA27816@cmpxchg.org>
-References: <1339766387-7740-1-git-send-email-liwp.linux@gmail.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH 1/2] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Fri, 15 Jun 2012 08:18:17 -0700
+Message-ID: <xr937gv8vc1y.fsf@gthelen.mtv.corp.google.com>
+References: <1339761611-29033-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1339766387-7740-1-git-send-email-liwp.linux@gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:references:date:message-id:user-agent
+         :mime-version:content-type;
+        bh=RFGEgXbhg/NGmaHutMnDSPt0CTh+GcIQSdGIs0gCzGw=;
+        b=lLO8Yv+Uhx8KZT6Kx5A+7UIfOBkUX3ROWWwSIOx4NshWO56oDWpMI/AYTlnEmYu8QB
+         4cJMELEG4Ad0J7svZPAOR4I7LZHmnm1Hurm/C9bocIa/SZs3AEZiH8rLh8CNXI3Gr0YQ
+         WiPRxkVdrC7Mx3EXVT5Ovbk1wDE9I+6zdoqB+1h9gse587A/3vV2OeAKJSb64yQyQh4S
+         qhljw8Yvf5XaE8e4wsPrHDAbgeYiooMLbqPs/WAwF0biUvyYNbJSeE2rwLg+TqCUD6Cg
+         MZANMMrDaUaOFdeyK1dzwPmEONc8APRKVyARPFkwDF/C6s6Z9Q30k/1rATewLjofRug5
+         r3MQ==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wanpeng Li <liwp.linux@gmail.com>
-Cc: trivial@kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Christoph Lameter <cl@linux-foundation.org>, Paul Gortmaker <paul.gortmaker@windriver.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Milton Miller <miltonm@bga.com>, Nishanth Aravamudan <nacc@us.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Jason Wessel <jason.wessel@windriver.com>, Jan Kiszka <jan.kiszka@siemens.com>, David Howells <dhowells@redhat.com>, Srikar Dronamraju <srikar@linux.vnet.ibm.com>, Andrew Morton <>
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, yinghan@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
 
-On Fri, Jun 15, 2012 at 09:19:45PM +0800, Wanpeng Li wrote:
-> From: Wanpeng Li <liwp@linux.vnet.ibm.com>
-> 
-> Since there are five lists in LRU cache, the array nr in get_scan_count
-> should be:
-> 
-> nr[0] = anon inactive pages to scan; nr[1] = anon active pages to scan
-> nr[2] = file inactive pages to scan; nr[3] = file active pages to scan
-> 
-> Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
-> Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-> Acked-by: Minchan Kim <minchan@kernel.org>
-> Reviewed-by: Rik van Riel <riel@redhat.com>
-> 
+On Fri, Jun 15 2012, Sha Zhengju wrote:
+
+> While doing memcg page stat accounting, there's no need to use MEMCG_NR_FILE_MAPPED
+> as an intermediate, we can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+>
+> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
 > ---
->  mm/vmscan.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index eeb3bc9..ed823df 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1567,7 +1567,8 @@ static int vmscan_swappiness(struct scan_control *sc)
->   * by looking at the fraction of the pages scanned we did rotate back
->   * onto the active list instead of evict.
->   *
-> - * nr[0] = anon pages to scan; nr[1] = file pages to scan
-> + * nr[0] = anon inactive pages to scan; nr[1] = anon active pages to scan
-> + * nr[2] = file inactive pages to scan; nr[3] = file active pages to scan
->   */
+>  include/linux/memcontrol.h |   22 ++++++++++++++++------
+>  mm/memcontrol.c            |   25 +------------------------
+>  mm/rmap.c                  |    4 ++--
+>  3 files changed, 19 insertions(+), 32 deletions(-)
 
-Does including this in the comment have any merit in the first place?
-We never access nr[0] or nr[1] etc. anywhere with magic numbers.  It's
-a local function with one callsite, the passed array is declared and
-accessed exclusively by what is defined in enum lru_list, where is the
-point in repeating the enum items?.  I'd rather the next change to
-this comment would be its removal.
+I assume this patch is relative to v3.4.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index f94efd2..a337c2e 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -27,9 +27,19 @@ struct page_cgroup;
+>  struct page;
+>  struct mm_struct;
+>  
+> -/* Stats that can be updated by kernel. */
+> -enum mem_cgroup_page_stat_item {
+> -	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
+> +/*
+> + * Statistics for memory cgroup.
+> + */
+> +enum mem_cgroup_stat_index {
+> +	/*
+> +	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+> +	 */
+> +	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
+> +	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
+> +	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+> +	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
+> +	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
+> +	MEM_CGROUP_STAT_NSTATS,
+>  };
+
+This has unfortunate side effect of letting code outside of memcontrol.c
+manipulate memcg internally managed statistics
+(e.g. MEM_CGROUP_STAT_CACHE) with mem_cgroup_{dec,inc}_page_stat.  I
+think that your change is fine.  The complexity and presumed performance
+overhead of the extra layer of indirection was not worth it.
+
+>  struct mem_cgroup_reclaim_cookie {
+> @@ -170,17 +180,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+>  }
+>  
+>  void mem_cgroup_update_page_stat(struct page *page,
+> -				 enum mem_cgroup_page_stat_item idx,
+> +				 enum mem_cgroup_stat_index idx,
+>  				 int val);
+>  
+>  static inline void mem_cgroup_inc_page_stat(struct page *page,
+> -					    enum mem_cgroup_page_stat_item idx)
+> +					    enum mem_cgroup_stat_index idx)
+>  {
+>  	mem_cgroup_update_page_stat(page, idx, 1);
+>  }
+>  
+>  static inline void mem_cgroup_dec_page_stat(struct page *page,
+> -					    enum mem_cgroup_page_stat_item idx)
+> +					    enum mem_cgroup_stat_index idx)
+>  {
+>  	mem_cgroup_update_page_stat(page, idx, -1);
+>  }
+
+You missed two more uses of enum mem_cgroup_page_stat_item in
+memcontrol.h.
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index a337c2e..08475b9 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -390,12 +390,12 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+ }
+ 
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ }
+ 
+ static inline void mem_cgroup_dec_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ }
