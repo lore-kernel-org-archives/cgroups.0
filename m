@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: [PATCH 6/7][TRIVIAL][resend] mm: cleanup page reclaim comment error
-Date: Fri, 15 Jun 2012 21:19:45 +0800
-Message-ID: <1339766387-7740-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH 7/7] mm/memory.c : cleanup the coding style issue
+Date: Fri, 15 Jun 2012 21:20:47 +0800
+Message-ID: <1339766449-7835-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=0/bTixQ/iPv1uQayUR7dw+SWYPQgWW1qnB1S4FO1e/o=;
-        b=g+HuGF5hvzRpYDqRhIB2KtyhoCRRh7qnyNqGD3jpk/As94rc7d4/sNRq0Bo6JsZ0Xm
-         VMbqIsVyijVyB9/FuqdDKsRMXBDeIZuQLpyyhfzFCeGOAYQ1SqKYm+p3MpYp97fMbzxz
-         UHLPYngFsIC7jOllPm8gl7cYxGWMJu7ZBBJA0S2WMwLacbx589pe5MIS7yC5zBLPBP7h
-         nD+0mTcas6mvqL21neSxe0q3+lOBLG2sAS1KrLP+8l+g0m0jDhAmhGVYtZ7MMdx6zltb
-         0CpxoOhLcpO4OG0VNbM4miKmv/Rzdco1N9Wr1Zw0KlCppUE7VUeuq+IL5erLjXpLvAFF
-         HXtA==
+        bh=DO76zEDFOPbUUWOYT8+e+VNrrtZmbbSN16bn9yUv8FA=;
+        b=YDxKo9bULR1Y0Ee2npVC5zHyKSl8VXeIgVjEyQzkUEEbpOe1Tzwm1YePx7sR1ly0JU
+         UraKPx3QluzfaFdUE+H+SrQtHhTPH8rSI9v7XgsbUFn3O0PZYO49Rl4skvLMjldaYBuc
+         z+i2Es4jBoXgHojCllKZ7RafqNduQI92IPn4XsMej2uwOaJMAtAYh6xKnMGcXEw+6USC
+         yNqkmgrO96XPp6OFcZaUibCPw7p/8PNEHVtbSYMp4MYtywhLmuA4Osoo0RuLeGyK3TQ4
+         7BCFhnSgKvtI4TmhtKDTUPzLd0eAiDnih7oRD1qbW40wDQSdNreLHco6xcu8QSxuRT7D
+         gWxA==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,35 +23,26 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@lin
 
 From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Since there are five lists in LRU cache, the array nr in get_scan_count
-should be:
-
-nr[0] = anon inactive pages to scan; nr[1] = anon active pages to scan
-nr[2] = file inactive pages to scan; nr[3] = file active pages to scan
-
 Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
-Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Acked-by: Minchan Kim <minchan@kernel.org>
-Reviewed-by: Rik van Riel <riel@redhat.com>
 
 ---
- mm/vmscan.c |    3 ++-
+ mm/memory.c |    3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index eeb3bc9..ed823df 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1567,7 +1567,8 @@ static int vmscan_swappiness(struct scan_control *sc)
-  * by looking at the fraction of the pages scanned we did rotate back
-  * onto the active list instead of evict.
-  *
-- * nr[0] = anon pages to scan; nr[1] = file pages to scan
-+ * nr[0] = anon inactive pages to scan; nr[1] = anon active pages to scan
-+ * nr[2] = file inactive pages to scan; nr[3] = file active pages to scan
-  */
- static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
- 			   unsigned long *nr)
+diff --git a/mm/memory.c b/mm/memory.c
+index 1b7dc66..195d6e1 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2447,7 +2447,8 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
+ 	return same;
+ }
+ 
+-static inline void cow_user_page(struct page *dst, struct page *src, unsigned long va, struct vm_area_struct *vma)
++static inline void cow_user_page(struct page *dst, struct page *src,
++		unsigned long va, struct vm_area_struct *vma)
+ {
+ 	/*
+ 	 * If the source page was a PFN mapping, we don't have
 -- 
 1.7.9.5
 
