@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: [PATCH 3/7][TRIVIAL][resend] drivers/pci: cleanup kernel-doc warning
-Date: Fri, 15 Jun 2012 21:15:49 +0800
-Message-ID: <1339766154-7470-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH 4/7][TRIVIAL][resend] mm: cleanup on the comments of zone_reclaim_stat
+Date: Fri, 15 Jun 2012 21:17:16 +0800
+Message-ID: <1339766240-7622-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=XK9D+Ei2gJEDYJ6qctnQ9roL/WMiGoUs6OPnMH918TM=;
-        b=iQtFLo2zURu6ISm0HQ1NFOvh0prJ+sXrmvimnE01zowM1osJ9k77j1HjwGxM75JAmI
-         tbPWGLJlNaaB0jOZkzqmue73axQG+Sr83GhrsMobmrTC+Vh4DH+TxdlcKecX0QjsEd+c
-         dj8s5Lb9YSP1N10vtfzax0K8Yu8D+kGzAd4Rz+XMNehsAC0XXaRXwQOAb7zgeGi4J9fR
-         4QSM+EjHcDRAX5QVNCZsDmS6HMsB8X8TRUUU6PvWQp61Ex8xd66t+rKRkqrqGZUSGDft
-         bAoGrYPQCOXqNrpNlIrR6Hlvg0Y27DX/EVyqKacj0rTAwsG/ZrwwpqXHVy6h/3Vq/76k
-         pnnA==
+        bh=9/O8sraMOGGUzseAcyqb4Q4gRAiac/RtmwHnZzCQX8E=;
+        b=nJX/hE4TT1cj3QsadHa1uc6BJj8yrNaNh3KJ8d5unoBGAw9kkrYokpqktBXMEnlDK5
+         OdPJgtb0QCRMFyBISOuf4x7legQMyPWpjlIxe9E/GwcJh1ZRZYROOQvKdzjMa1VvAaSC
+         S48f/fQL0s/vdNyg1l/5ZPCohzTtQu/ciYB6EdBFGAhmsprM1yfhO4cOjx3CrzxlslWD
+         Z5IKu1ZjGJut8OOtjBv9npKO1O4O5ItZc6vmJn3YBDVwZ8+eI074N+KO2vOPyHaiXijI
+         TjAZlg01T/cEjpgkHv4zJyedUYpZ9RNcCUxDSI8l2aR9chSPrbnifl+lR82534QeaAeL
+         02JA==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,27 +23,26 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@lin
 
 From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Warning(drivers/pci/setup-bus.c:277): No description found for parameter 'fail_head'
-Warning(drivers/pci/setup-bus.c:277): Excess function parameter 'failed_list' description in 'assign_requested_resources_sorted'
-
 Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
+Acked-by: Minchan Kim <minchan@kernel.org>
+
 ---
- drivers/pci/setup-bus.c |    2 +-
+ include/linux/mmzone.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8fa2d4b..9165d25 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -265,7 +265,7 @@ out:
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-  * @head : head of the list tracking requests for resources
-- * @failed_list : head of the list tracking requests that could
-+ * @fail_head : head of the list tracking requests that could
-  *		not be allocated
-  *
-  * Satisfy resource requests of each element in the list. Add
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 2427706..d6a5f83 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -188,7 +188,7 @@ static inline int is_unevictable_lru(enum lru_list lru)
+ struct zone_reclaim_stat {
+ 	/*
+ 	 * The pageout code in vmscan.c keeps track of how many of the
+-	 * mem/swap backed and file backed pages are refeferenced.
++	 * mem/swap backed and file backed pages are referenced.
+ 	 * The higher the rotated/scanned ratio, the more valuable
+ 	 * that cache is.
+ 	 *
 -- 
 1.7.9.5
 
