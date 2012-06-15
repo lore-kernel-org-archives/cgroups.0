@@ -1,212 +1,32 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH 2/2] memcg: add per cgroup dirty pages accounting
-Date: Fri, 15 Jun 2012 08:32:43 -0700
-Message-ID: <xr93k3z8twtg.fsf@gthelen.mtv.corp.google.com>
-References: <1339761611-29033-1-git-send-email-handai.szj@taobao.com>
-	<1339761717-29070-1-git-send-email-handai.szj@taobao.com>
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Subject: Re: [PATCH 7/7] mm/memory.c : cleanup the coding style issue
+Date: Fri, 15 Jun 2012 15:40:57 -0400
+Message-ID: <4FDB8FC9.2020909@jp.fujitsu.com>
+References: <1339766449-7835-1-git-send-email-liwp.linux@gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:references:date:in-reply-to:message-id
-         :user-agent:mime-version:content-type;
-        bh=3oHOxWGM1Xmg6/I4nHyfw78MYUgIZmHyijiilFdtB9Q=;
-        b=YBzxrHva2JJcG8Aq3gzMNoBBnfwegJA8f6t2DB79CDvbMMKG/3XPUmV91jv/dZRgeQ
-         X1EdQHv3k19DGZ+RAHv6wSaUnQxDHsnUmsg2Zi7NiAf7cUt53CbJ8+MuzYohaODOewH1
-         VE4Y54Bs02gyYaPB2Oxr/K4pP6oAkKUvzEglyXBaBx+1oIegmlp3MxZgrFoGP2zWgbdS
-         LwX9XSaVxzhSuBhaS1atZ6HIE+pydKrKrv4+lCd0gOgzWKI/mXK4Atv/vYMhUbYpOq/O
-         W+nNpF/v6SIhfbCax8i/g6S67uP91Y56LZz+4h+lk+gG4pDFbzuO5ifyNhMH2jsnVo9N
-         G43A==
-In-Reply-To: <1339761717-29070-1-git-send-email-handai.szj@taobao.com> (Sha
-	Zhengju's message of "Fri, 15 Jun 2012 20:01:57 +0800")
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1339766449-7835-1-git-send-email-liwp.linux@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, yinghan@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: liwp.linux@gmail.com
+Cc: trivial@kernel.org, benh@kernel.crashing.org, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org, bhelgaas@google.com, hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, tj@kernel.org, lizefan@huawei.com, cl@linux-foundation.org, paul.gortmaker@windriver.com, jbarnes@virtuousgeek.org, miltonm@bga.com, nacc@us.ibm.com, sfr@canb.auug.org.au, a.p.zijlstra@chello.nl, jason.wessel@windriver.com, jan.kiszka@siemens.com, dhowells@redhat.com, srikar@linux.vnet.ibm.com, akpm@linux-foundation.org, mel@csn.ul.ie, minchan@kernel.org, shangw@linux.vnet.ibm.com, viro@zeniv.linux.org.uk, aarcange@redhat.com, rientjes@google.com, kosaki.motohiro@jp.fujitsu.com, lwoodman@redhat.com, hughd@google.com, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Fri, Jun 15 2012, Sha Zhengju wrote:
-
-> This patch adds memcg routines to count dirty pages. I notice that
-> the list has talked about per-cgroup dirty page limiting
-> (http://lwn.net/Articles/455341/) before, but it did not get merged.
-
-Good timing, I was just about to make another effort to get some of
-these patches upstream.  Like you, I was going to start with some basic
-counters.
-
-Your approach is similar to what I have in mind.  While it is good to
-use the existing PageDirty flag, rather than introducing a new
-page_cgroup flag, there are locking complications (see below) to handle
-races between moving pages between memcg and the pages being {un}marked
-dirty.
-
-> I've no idea how is this going now, but maybe we can add per cgroup
-> dirty pages accounting first. This allows the memory controller to
-> maintain an accurate view of the amount of its memory that is dirty
-> and can provide some infomation while group's direct reclaim is working.
->
-> After commit 89c06bd5 (memcg: use new logic for page stat accounting),
-> we do not need per page_cgroup flag anymore and can directly use
-> struct page flag.
->
->
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> ---
->  include/linux/memcontrol.h |    1 +
->  mm/filemap.c               |    1 +
->  mm/memcontrol.c            |   32 +++++++++++++++++++++++++-------
->  mm/page-writeback.c        |    2 ++
->  mm/truncate.c              |    1 +
->  5 files changed, 30 insertions(+), 7 deletions(-)
->
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index a337c2e..8154ade 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -39,6 +39,7 @@ enum mem_cgroup_stat_index {
->  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
->  	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
->  	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
-> +	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
->  	MEM_CGROUP_STAT_NSTATS,
->  };
->  
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 79c4b2b..5b5c121 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -141,6 +141,7 @@ void __delete_from_page_cache(struct page *page)
->  	 * having removed the page entirely.
->  	 */
->  	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
-> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
-
-You need to use mem_cgroup_{begin,end}_update_page_stat around critical
-sections that:
-1) check PageDirty
-2) update MEM_CGROUP_STAT_FILE_DIRTY counter
-
-This protects against the page from being moved between memcg while
-accounting.  Same comment applies to all of your new calls to
-mem_cgroup_{dec,inc}_page_stat.  For usage pattern, see
-page_add_file_rmap.
-
->  		dec_zone_page_state(page, NR_FILE_DIRTY);
->  		dec_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
->  	}
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 9102b8c..d200ad1 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2548,6 +2548,18 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 1b7dc66..195d6e1 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -2447,7 +2447,8 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
+>  	return same;
 >  }
->  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 >  
-> +static inline
-> +void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
-> +					struct mem_cgroup *to,
-> +					enum mem_cgroup_stat_index idx)
-> +{
-> +	/* Update stat data for mem_cgroup */
-> +	preempt_disable();
-> +	__this_cpu_dec(from->stat->count[idx]);
-> +	__this_cpu_inc(to->stat->count[idx]);
-> +	preempt_enable();
-> +}
-> +
->  /**
->   * mem_cgroup_move_account - move account of the page
->   * @page: the page
-> @@ -2597,13 +2609,14 @@ static int mem_cgroup_move_account(struct page *page,
->  
->  	move_lock_mem_cgroup(from, &flags);
->  
-> -	if (!anon && page_mapped(page)) {
-> -		/* Update mapped_file data for mem_cgroup */
-> -		preempt_disable();
-> -		__this_cpu_dec(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
-> -		__this_cpu_inc(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
-> -		preempt_enable();
-> -	}
-> +	if (!anon && page_mapped(page))
-> +		mem_cgroup_move_account_page_stat(from, to,
-> +					MEM_CGROUP_STAT_FILE_MAPPED);
-> +
-> +	if (PageDirty(page))
-> +		mem_cgroup_move_account_page_stat(from, to,
-> +					MEM_CGROUP_STAT_FILE_DIRTY);
-> +
->  	mem_cgroup_charge_statistics(from, anon, -nr_pages);
->  	if (uncharge)
->  		/* This is not "cancel", but cancel_charge does all we need. */
-> @@ -4023,6 +4036,7 @@ enum {
->  	MCS_SWAP,
->  	MCS_PGFAULT,
->  	MCS_PGMAJFAULT,
-> +	MCS_FILE_DIRTY,
->  	MCS_INACTIVE_ANON,
->  	MCS_ACTIVE_ANON,
->  	MCS_INACTIVE_FILE,
-> @@ -4047,6 +4061,7 @@ struct {
->  	{"swap", "total_swap"},
->  	{"pgfault", "total_pgfault"},
->  	{"pgmajfault", "total_pgmajfault"},
-> +	{"dirty", "total_dirty"},
-
-Please add something to Documentation/cgroups/memory.txt describing this
-new user visible data.  See my previous patch
-http://thread.gmane.org/gmane.linux.kernel.mm/67114 for example text.
-
->  	{"inactive_anon", "total_inactive_anon"},
->  	{"active_anon", "total_active_anon"},
->  	{"inactive_file", "total_inactive_file"},
-> @@ -4080,6 +4095,9 @@ mem_cgroup_get_local_stat(struct mem_cgroup *memcg, struct mcs_total_stat *s)
->  	val = mem_cgroup_read_events(memcg, MEM_CGROUP_EVENTS_PGMAJFAULT);
->  	s->stat[MCS_PGMAJFAULT] += val;
->  
-> +	val = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_FILE_DIRTY);
-> +	s->stat[MCS_FILE_DIRTY] += val * PAGE_SIZE;
-> +
->  	/* per zone stat */
->  	val = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_INACTIVE_ANON));
->  	s->stat[MCS_INACTIVE_ANON] += val * PAGE_SIZE;
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 26adea8..b17c692 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -1936,6 +1936,7 @@ int __set_page_dirty_no_writeback(struct page *page)
->  void account_page_dirtied(struct page *page, struct address_space *mapping)
+> -static inline void cow_user_page(struct page *dst, struct page *src, unsigned long va, struct vm_area_struct *vma)
+> +static inline void cow_user_page(struct page *dst, struct page *src,
+> +		unsigned long va, struct vm_area_struct *vma)
 >  {
->  	if (mapping_cap_account_dirty(mapping)) {
-> +		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
->  		__inc_zone_page_state(page, NR_FILE_DIRTY);
->  		__inc_zone_page_state(page, NR_DIRTIED);
->  		__inc_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
-> @@ -2155,6 +2156,7 @@ int clear_page_dirty_for_io(struct page *page)
->  		 * for more comments.
->  		 */
->  		if (TestClearPageDirty(page)) {
-> +			mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
->  			dec_zone_page_state(page, NR_FILE_DIRTY);
->  			dec_bdi_stat(mapping->backing_dev_info,
->  					BDI_RECLAIMABLE);
-> diff --git a/mm/truncate.c b/mm/truncate.c
-> index 61a183b..fe8363e 100644
-> --- a/mm/truncate.c
-> +++ b/mm/truncate.c
-> @@ -76,6 +76,7 @@ void cancel_dirty_page(struct page *page, unsigned int account_size)
->  	if (TestClearPageDirty(page)) {
->  		struct address_space *mapping = page->mapping;
->  		if (mapping && mapping_cap_account_dirty(mapping)) {
-> +			mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
->  			dec_zone_page_state(page, NR_FILE_DIRTY);
->  			dec_bdi_stat(mapping->backing_dev_info,
->  					BDI_RECLAIMABLE);
+>  	/*
+>  	 * If the source page was a PFN mapping, we don't have
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Nowadays, many developers prefer to declare a function in one line. and we don't think
+this is incorrect anymore. so, I think this is intentional.
