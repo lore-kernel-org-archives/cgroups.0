@@ -1,91 +1,51 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: add per cgroup dirty pages accounting
-Date: Sat, 16 Jun 2012 15:34:24 +0900
-Message-ID: <4FDC28F0.8050805@jp.fujitsu.com>
-References: <1339761611-29033-1-git-send-email-handai.szj@taobao.com> <1339761717-29070-1-git-send-email-handai.szj@taobao.com> <xr93k3z8twtg.fsf@gthelen.mtv.corp.google.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
+Date: Sat, 16 Jun 2012 13:26:51 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206161322310.8407@chino.kir.corp.google.com>
+References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <alpine.DEB.2.00.1205241436180.24113@chino.kir.corp.google.com> <20120527202848.GC7631@skywalker.linux.vnet.ibm.com>
+ <87lik920h8.fsf@skywalker.in.ibm.com> <20120608160612.dea6d1ce.akpm@linux-foundation.org> <4FD56C19.4060307@jp.fujitsu.com> <alpine.DEB.2.00.1206110220290.6843@chino.kir.corp.google.com> <CAGr1F2EzDc3Ypv6twFE8Ua-JZUEkEVQJOPKwLt0O56c2-PycvA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <xr93k3z8twtg.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=bJXjuVUKJDSOAmMfEFJckazlhxZfFF5tTIEN7ksXmQ0=;
+        b=Lrj9d7P96gTB+q01JRlebvMVBCgFKGDpMdZVTy2ESlUwMqn7AEZPXRY1XRoOpQJisc
+         tLeKKj0bLF5PRcNbNAWaBaoNslnsNCSq+bvuKilHb/7gADQzyHpxyvPubBxqMeJpEcKn
+         9IBQWhfk3wPPS8rL+wLfgs1L6yUVn6ezn160L5c9JyqMb4X+/Rz6dWF5ZLilJaIkLm2P
+         QpBYdDm+oDEHTOtzVDQ0557ldOSWhGdE+QR7aoBHkuqVdETE8KMG3jsccKbzcMZg1ton
+         5oebaUljdNQ1mNETO8mUcuPE1Hwq069RDqWHcAxFyZmU+3o8M8Bdyw0ijj7eM8kA0yBx
+         /eOQ==
+In-Reply-To: <CAGr1F2EzDc3Ypv6twFE8Ua-JZUEkEVQJOPKwLt0O56c2-PycvA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-(2012/06/16 0:32), Greg Thelen wrote:
-> On Fri, Jun 15 2012, Sha Zhengju wrote:
->
->> This patch adds memcg routines to count dirty pages. I notice that
->> the list has talked about per-cgroup dirty page limiting
->> (http://lwn.net/Articles/455341/) before, but it did not get merged.
->
-> Good timing, I was just about to make another effort to get some of
-> these patches upstream.  Like you, I was going to start with some basic
-> counters.
->
-> Your approach is similar to what I have in mind.  While it is good to
-> use the existing PageDirty flag, rather than introducing a new
-> page_cgroup flag, there are locking complications (see below) to handle
-> races between moving pages between memcg and the pages being {un}marked
-> dirty.
->
->> I've no idea how is this going now, but maybe we can add per cgroup
->> dirty pages accounting first. This allows the memory controller to
->> maintain an accurate view of the amount of its memory that is dirty
->> and can provide some infomation while group's direct reclaim is working.
->>
->> After commit 89c06bd5 (memcg: use new logic for page stat accounting),
->> we do not need per page_cgroup flag anymore and can directly use
->> struct page flag.
->>
->>
->> Signed-off-by: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->> ---
->>   include/linux/memcontrol.h |    1 +
->>   mm/filemap.c               |    1 +
->>   mm/memcontrol.c            |   32 +++++++++++++++++++++++++-------
->>   mm/page-writeback.c        |    2 ++
->>   mm/truncate.c              |    1 +
->>   5 files changed, 30 insertions(+), 7 deletions(-)
->>
->> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->> index a337c2e..8154ade 100644
->> --- a/include/linux/memcontrol.h
->> +++ b/include/linux/memcontrol.h
->> @@ -39,6 +39,7 @@ enum mem_cgroup_stat_index {
->>   	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
->>   	MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
->>   	MEM_CGROUP_STAT_DATA, /* end of data requires synchronization */
->> +	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
->>   	MEM_CGROUP_STAT_NSTATS,
->>   };
->>
->> diff --git a/mm/filemap.c b/mm/filemap.c
->> index 79c4b2b..5b5c121 100644
->> --- a/mm/filemap.c
->> +++ b/mm/filemap.c
->> @@ -141,6 +141,7 @@ void __delete_from_page_cache(struct page *page)
->>   	 * having removed the page entirely.
->>   	 */
->>   	if (PageDirty(page)&&  mapping_cap_account_dirty(mapping)) {
->> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
->
-> You need to use mem_cgroup_{begin,end}_update_page_stat around critical
-> sections that:
-> 1) check PageDirty
-> 2) update MEM_CGROUP_STAT_FILE_DIRTY counter
->
-> This protects against the page from being moved between memcg while
-> accounting.  Same comment applies to all of your new calls to
-> mem_cgroup_{dec,inc}_page_stat.  For usage pattern, see
-> page_add_file_rmap.
->
+On Fri, 15 Jun 2012, Aditya Kali wrote:
 
-If you feel some difficulty with mem_cgroup_{begin,end}_update_page_stat(),
-please let me know...I hope they should work enough....
+> Based on the usecase at Google, I see a definite value in including
+> hugepage usage in memory.usage_in_bytes as well and having a single
+> limit for memory usage for the job. Our jobs wants to specify only one
+> (total) memory limit (including slab usage, and other kernel memory
+> usage, hugepages, etc.).
+> 
+> The hugepage/smallpage requirements of the job vary during its
+> lifetime. Having two different limits means less flexibility for jobs
+> as they now have to specify their limit as (max_hugepage,
+> max_smallpage) instead of max(hugepage + smallpage). Two limits
+> complicates the API for the users and requires them to over-specify
+> the resources.
+> 
 
-Thanks,
--Kame
-
-
+If a large number of hugepages, for example, are allocated on the command 
+line because there's a lower success rate of dynamic allocation due to 
+fragmentation, with your suggestion it would no longer allow the admin to 
+restrict the use of those hugepages to only a particular set of tasks.  
+Consider especially 1GB hugepagez on x86, your suggestion would treat a 
+single 1GB hugepage which cannot be freed after boot exactly the same as 
+using 1GB of memory which is obviously not the desired behavior of any 
+hugetlb controller.
