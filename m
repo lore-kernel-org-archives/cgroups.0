@@ -1,51 +1,131 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -V6 07/14] memcg: Add HugeTLB extension
-Date: Sat, 16 Jun 2012 13:26:51 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1206161322310.8407@chino.kir.corp.google.com>
-References: <1334573091-18602-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <1334573091-18602-8-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <alpine.DEB.2.00.1205241436180.24113@chino.kir.corp.google.com> <20120527202848.GC7631@skywalker.linux.vnet.ibm.com>
- <87lik920h8.fsf@skywalker.in.ibm.com> <20120608160612.dea6d1ce.akpm@linux-foundation.org> <4FD56C19.4060307@jp.fujitsu.com> <alpine.DEB.2.00.1206110220290.6843@chino.kir.corp.google.com> <CAGr1F2EzDc3Ypv6twFE8Ua-JZUEkEVQJOPKwLt0O56c2-PycvA@mail.gmail.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH 1/2] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Sun, 17 Jun 2012 14:53:22 +0800
+Message-ID: <CAFj3OHUcat5TwAn2FQbJo02sGULmq6r=k3DOkhK6GBXPwOroPw@mail.gmail.com>
+References: <1339761611-29033-1-git-send-email-handai.szj@taobao.com>
+	<xr937gv8vc1y.fsf@gthelen.mtv.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=bJXjuVUKJDSOAmMfEFJckazlhxZfFF5tTIEN7ksXmQ0=;
-        b=Lrj9d7P96gTB+q01JRlebvMVBCgFKGDpMdZVTy2ESlUwMqn7AEZPXRY1XRoOpQJisc
-         tLeKKj0bLF5PRcNbNAWaBaoNslnsNCSq+bvuKilHb/7gADQzyHpxyvPubBxqMeJpEcKn
-         9IBQWhfk3wPPS8rL+wLfgs1L6yUVn6ezn160L5c9JyqMb4X+/Rz6dWF5ZLilJaIkLm2P
-         QpBYdDm+oDEHTOtzVDQ0557ldOSWhGdE+QR7aoBHkuqVdETE8KMG3jsccKbzcMZg1ton
-         5oebaUljdNQ1mNETO8mUcuPE1Hwq069RDqWHcAxFyZmU+3o8M8Bdyw0ijj7eM8kA0yBx
-         /eOQ==
-In-Reply-To: <CAGr1F2EzDc3Ypv6twFE8Ua-JZUEkEVQJOPKwLt0O56c2-PycvA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=Kza7Nkh9CnhaoYBbAU4Vhf2WDufhmaBl4yJb9D3PDLM=;
+        b=yUsxHfmgsUVEjUWUlPz9ig0xjNr0C3EbNNJf97R8q/V1FCFe4DrVy2epO8887auwuu
+         eTa1OJXqG8bio7SRFeJNi/7R38wEGP0qS6/Oe7hUg7DECpUqVONIY+s+6iAyrixYmtmd
+         VDq5g6OcQoqoWG8MqqFllDRchoQXolBabflFDDPAiJ+f6gU/5rOjwKt4x804Osvb5cB3
+         89qTusydzykM8+0FY4H7YrMRvkEnB5uU7gAhADEhFjAhU3+Xf+kF1Qxy388l3hQBh8ch
+         4vv1LsNLEXdeyX9g3H1iP2FDmBny2E0gb0AMhcteGxemUhITpbUR8+FQboE+GV/ee6k5
+         xwaw==
+In-Reply-To: <xr937gv8vc1y.fsf@gthelen.mtv.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Greg Thelen <gthelen@google.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, yinghan@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
 
-On Fri, 15 Jun 2012, Aditya Kali wrote:
+On Fri, Jun 15, 2012 at 11:18 PM, Greg Thelen <gthelen@google.com> wrote:
+> On Fri, Jun 15 2012, Sha Zhengju wrote:
+>
+>> While doing memcg page stat accounting, there's no need to use MEMCG_NR_=
+FILE_MAPPED
+>> as an intermediate, we can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+>>
+>> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+>> ---
+>> =A0include/linux/memcontrol.h | =A0 22 ++++++++++++++++------
+>> =A0mm/memcontrol.c =A0 =A0 =A0 =A0 =A0 =A0| =A0 25 +--------------------=
+----
+>> =A0mm/rmap.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A04 ++--
+>> =A03 files changed, 19 insertions(+), 32 deletions(-)
+>
+> I assume this patch is relative to v3.4.
+>
 
-> Based on the usecase at Google, I see a definite value in including
-> hugepage usage in memory.usage_in_bytes as well and having a single
-> limit for memory usage for the job. Our jobs wants to specify only one
-> (total) memory limit (including slab usage, and other kernel memory
-> usage, hugepages, etc.).
-> 
-> The hugepage/smallpage requirements of the job vary during its
-> lifetime. Having two different limits means less flexibility for jobs
-> as they now have to specify their limit as (max_hugepage,
-> max_smallpage) instead of max(hugepage + smallpage). Two limits
-> complicates the API for the users and requires them to over-specify
-> the resources.
-> 
 
-If a large number of hugepages, for example, are allocated on the command 
-line because there's a lower success rate of dynamic allocation due to 
-fragmentation, with your suggestion it would no longer allow the admin to 
-restrict the use of those hugepages to only a particular set of tasks.  
-Consider especially 1GB hugepagez on x86, your suggestion would treat a 
-single 1GB hugepage which cannot be freed after boot exactly the same as 
-using 1GB of memory which is obviously not the desired behavior of any 
-hugetlb controller.
+Yeah, I cook it based on linux-stable v3.4.
+
+
+>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>> index f94efd2..a337c2e 100644
+>> --- a/include/linux/memcontrol.h
+>> +++ b/include/linux/memcontrol.h
+>> @@ -27,9 +27,19 @@ struct page_cgroup;
+>> =A0struct page;
+>> =A0struct mm_struct;
+>>
+>> -/* Stats that can be updated by kernel. */
+>> -enum mem_cgroup_page_stat_item {
+>> - =A0 =A0 MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
+>> +/*
+>> + * Statistics for memory cgroup.
+>> + */
+>> +enum mem_cgroup_stat_index {
+>> + =A0 =A0 /*
+>> + =A0 =A0 =A0* For MEM_CONTAINER_TYPE_ALL, usage =3D pagecache + rss.
+>> + =A0 =A0 =A0*/
+>> + =A0 =A0 MEM_CGROUP_STAT_CACHE, =A0 =A0 /* # of pages charged as cache =
+*/
+>> + =A0 =A0 MEM_CGROUP_STAT_RSS, =A0 =A0 =A0 /* # of pages charged as anon=
+ rss */
+>> + =A0 =A0 MEM_CGROUP_STAT_FILE_MAPPED, =A0/* # of pages charged as file =
+rss */
+>> + =A0 =A0 MEM_CGROUP_STAT_SWAPOUT, /* # of pages, swapped out */
+>> + =A0 =A0 MEM_CGROUP_STAT_DATA, /* end of data requires synchronization =
+*/
+>> + =A0 =A0 MEM_CGROUP_STAT_NSTATS,
+>> =A0};
+>
+> This has unfortunate side effect of letting code outside of memcontrol.c
+> manipulate memcg internally managed statistics
+> (e.g. MEM_CGROUP_STAT_CACHE) with mem_cgroup_{dec,inc}_page_stat. =A0I
+> think that your change is fine. =A0The complexity and presumed performanc=
+e
+> overhead of the extra layer of indirection was not worth it.
+>
+>> =A0struct mem_cgroup_reclaim_cookie {
+>> @@ -170,17 +180,17 @@ static inline void mem_cgroup_end_update_page_stat=
+(struct page *page,
+>> =A0}
+>>
+>> =A0void mem_cgroup_update_page_stat(struct page *page,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0enum mem_cg=
+roup_page_stat_item idx,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0enum mem_cg=
+roup_stat_index idx,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0int val);
+>>
+>> =A0static inline void mem_cgroup_inc_page_stat(struct page *page,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 enum mem_cgroup_page_stat_item idx)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 enum mem_cgroup_stat_index idx)
+>> =A0{
+>> =A0 =A0 =A0 mem_cgroup_update_page_stat(page, idx, 1);
+>> =A0}
+>>
+>> =A0static inline void mem_cgroup_dec_page_stat(struct page *page,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 enum mem_cgroup_page_stat_item idx)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 enum mem_cgroup_stat_index idx)
+>> =A0{
+>> =A0 =A0 =A0 mem_cgroup_update_page_stat(page, idx, -1);
+>> =A0}
+>
+> You missed two more uses of enum mem_cgroup_page_stat_item in
+> memcontrol.h.
+>
+
+Ah, I find them, thanks for reviewing!
+
+
+Thanks,
+Sha
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
