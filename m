@@ -1,70 +1,60 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: clean up force_empty_list() return value check
-Date: Mon, 18 Jun 2012 15:31:50 +0200
-Message-ID: <20120618133149.GC2313@tiehlicka.suse.cz>
-References: <4FDF17A3.9060202@jp.fujitsu.com>
- <4FDF1830.1000504@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/7][TRIVIAL][resend] drivers/pci: cleanup kernel-doc warning
+Date: Mon, 18 Jun 2012 12:22:53 -0600
+Message-ID: <CAErSpo7REiSBsWP0JNwUGi1m0HdK3H0=e0t2k-3L_Z+b4sMkMw@mail.gmail.com>
+References: <1339766154-7470-1-git-send-email-liwp.linux@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4FDF1830.1000504-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding:x-system-of-record;
+        bh=11fxB32nWcuGBeoN9pge6/q5R4lTclypeEbKbNdL3z4=;
+        b=idSqagGTVmO9e5sR7iCZrFroTftZzSZk5sOJXBWr2LN/VK7yJ7C12Ew9prMSGDaQNg
+         cWf/PlVUabRvSYN4XFREFIXfzTHDGLW/AlUHsErLbMmzEfvdXPOT8Qpu5enMaqGNks5T
+         Sx1AC38faKjeM4exzhWwVvE3uxzyWUCKLkjj4zDc97TmBIrJ+X3362g5+iLYDqSW88f8
+         pB0Q5OqGqAsnPPnoOPK5xKhonB4u9BEah1WJ5DZRTQigjG5mi75NrGQNPSoo1xhC2P+9
+         kqloN0ZnKvCV+nbDJ7LiZGMlKl/3vfIONZryS1I75DB+y3VTeyCWbQ68qcj0E6P26wgZ
+         lkCw==
+In-Reply-To: <1339766154-7470-1-git-send-email-liwp.linux@gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Wanpeng Li <liwp.linux@gmail.com>
+Cc: trivial@kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Christoph Lameter <cl@linux-foundation.org>, Paul Gortmaker <paul.gortmaker@windriver.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Milton Miller <miltonm@bga.com>, Nishanth Aravamudan <nacc@us.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Jason Wessel <jason.wessel@windriver.com>, Jan Kiszka <jan.kiszka@siemens.com>, David Howells <dhowells@redhat.com>, Srikar Dronamraju <srikar@linux.vnet.ibm.com>, Andrew Morton <ak>
 
-On Mon 18-06-12 20:59:44, KAMEZAWA Hiroyuki wrote:
-> 
-> By commit "memcg: move charges to root cgroup if use_hierarchy=0"
-> mem_cgroup_move_parent() only returns -EBUSY, -EINVAL.
-> So, we can remove -ENOMEM and -EINTR checks.
-> 
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
+On Fri, Jun 15, 2012 at 7:15 AM, Wanpeng Li <liwp.linux@gmail.com> wrote:
+> From: Wanpeng Li <liwp@linux.vnet.ibm.com>
+>
+> Warning(drivers/pci/setup-bus.c:277): No description found for parameter =
+'fail_head'
+> Warning(drivers/pci/setup-bus.c:277): Excess function parameter 'failed_l=
+ist' description in 'assign_requested_resources_sorted'
+>
+> Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
 > ---
->  mm/memcontrol.c |    5 -----
->  1 files changed, 0 insertions(+), 5 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index cf8a0f6..726b7c6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3847,8 +3847,6 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
->  		pc = lookup_page_cgroup(page);
->  
->  		ret = mem_cgroup_move_parent(page, pc, memcg, GFP_KERNEL);
-> -		if (ret == -ENOMEM || ret == -EINTR)
-> -			break;
->  
->  		if (ret == -EBUSY || ret == -EINVAL) {
->  			/* found lock contention or "pc" is obsolete. */
-> @@ -3910,9 +3908,6 @@ move_account:
->  		}
->  		mem_cgroup_end_move(memcg);
->  		memcg_oom_recover(memcg);
-> -		/* it seems parent cgroup doesn't have enough mem */
-> -		if (ret == -ENOMEM)
-> -			goto try_to_free;
->  		cond_resched();
->  	/* "ret" should also be checked to ensure all lists are empty. */
->  	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 || ret);
-> -- 
-> 1.7.4.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> =A0drivers/pci/setup-bus.c | =A0 =A02 +-
+> =A01 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 8fa2d4b..9165d25 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -265,7 +265,7 @@ out:
+> =A0* assign_requested_resources_sorted() - satisfy resource requests
+> =A0*
+> =A0* @head : head of the list tracking requests for resources
+> - * @failed_list : head of the list tracking requests that could
+> + * @fail_head : head of the list tracking requests that could
+> =A0* =A0 =A0 =A0 =A0 =A0 =A0 not be allocated
+> =A0*
+> =A0* Satisfy resource requests of each element in the list. Add
 
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+I applied this; it should appear in my "next" branch tomorrow.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
