@@ -1,83 +1,81 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 03/25] slab: move FULL state transition to an initcall
-Date: Mon, 18 Jun 2012 14:27:56 +0400
-Message-ID: <1340015298-14133-4-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 10/25] slab/slub: struct memcg_params
+Date: Mon, 18 Jun 2012 14:28:03 +0400
+Message-ID: <1340015298-14133-11-git-send-email-glommer@parallels.com>
 References: <1340015298-14133-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340015298-14133-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-During kmem_cache_init_late(), we transition to the LATE state,
-and after some more work, to the FULL state, its last state
-
-This is quite different from slub, that will only transition to
-its last state (previously SYSFS), in a (late)initcall, after a lot
-more of the kernel is ready.
-
-This means that in slab, we have no way to taking actions dependent
-on the initialization of other pieces of the kernel that are supposed
-to start way after kmem_init_late(), such as cgroups initialization.
-
-To achieve more consistency in this behavior, that patch only
-transitions to the UP state in kmem_init_late. In my analysis,
-setup_cpu_cache() should be happy to test for >= UP, instead of
-== FULL. It also has passed some tests I've made.
-
-We then only mark FULL state after the reap timers are in place,
-meaning that no further setup is expected.
+For the kmem slab controller, we need to record some extra
+information in the kmem_cache structure.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
-Acked-by: Christoph Lameter <cl@linux.com>
+Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+CC: Christoph Lameter <cl@linux.com>
 CC: Pekka Enberg <penberg@cs.helsinki.fi>
-CC: David Rientjes <rientjes@google.com>
+CC: Michal Hocko <mhocko@suse.cz>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+CC: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/slab.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/linux/slab.h     |    8 ++++++++
+ include/linux/slab_def.h |    4 ++++
+ include/linux/slub_def.h |    3 +++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/mm/slab.c b/mm/slab.c
-index e174e50..2d5fe28 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -1643,9 +1643,6 @@ void __init kmem_cache_init_late(void)
- 			BUG();
- 	mutex_unlock(&slab_mutex);
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 3c2181a..e007cc5 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -177,6 +177,14 @@ unsigned int kmem_cache_size(struct kmem_cache *);
+ #define ARCH_SLAB_MINALIGN __alignof__(unsigned long long)
+ #endif
  
--	/* Done! */
--	slab_state = FULL;
--
- 	/*
- 	 * Register a cpu startup notifier callback that initializes
- 	 * cpu_cache_get for all new cpus
-@@ -1675,6 +1672,9 @@ int __init __kmem_cache_initcall(void)
- 	 */
- 	for_each_online_cpu(cpu)
- 		start_cpu_timer(cpu);
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++struct mem_cgroup_cache_params {
++	struct mem_cgroup *memcg;
++	int id;
++	atomic_t refcnt;
++};
++#endif
 +
-+	/* Done! */
-+	slab_state = FULL;
- 	return 0;
- }
+ /*
+  * Common kmalloc functions provided by all allocators
+  */
+diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
+index 0c634fa..04ca5be 100644
+--- a/include/linux/slab_def.h
++++ b/include/linux/slab_def.h
+@@ -83,6 +83,10 @@ struct kmem_cache {
+ 	int obj_offset;
+ #endif /* CONFIG_DEBUG_SLAB */
  
-@@ -2120,7 +2120,7 @@ static size_t calculate_slab_order(struct kmem_cache *cachep,
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	struct mem_cgroup_cache_params memcg_params;
++#endif
++
+ /* 6) per-cpu/per-node data, touched during every alloc/free */
+ 	/*
+ 	 * We put array[] at the end of kmem_cache, because we want to size
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index df448ad..7637f3b 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -101,6 +101,9 @@ struct kmem_cache {
+ #ifdef CONFIG_SYSFS
+ 	struct kobject kobj;	/* For sysfs */
+ #endif
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	struct mem_cgroup_cache_params memcg_params;
++#endif
  
- static int __init_refok setup_cpu_cache(struct kmem_cache *cachep, gfp_t gfp)
- {
--	if (slab_state == FULL)
-+	if (slab_state >= UP)
- 		return enable_cpucache(cachep, gfp);
- 
- 	if (slab_state == DOWN) {
+ #ifdef CONFIG_NUMA
+ 	/*
 -- 
 1.7.10.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
