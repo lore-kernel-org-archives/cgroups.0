@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 18/25] mm: Allocate kernel pages to the right memcg
-Date: Mon, 18 Jun 2012 14:28:11 +0400
-Message-ID: <1340015298-14133-19-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 24/25] memcg/slub: shrink dead caches
+Date: Mon, 18 Jun 2012 14:28:17 +0400
+Message-ID: <1340015298-14133-25-git-send-email-glommer@parallels.com>
 References: <1340015298-14133-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340015298-14133-1-git-send-email-glommer@parallels.com>
@@ -13,21 +13,22 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-This patch builds on the suggestion previously given by Cristoph, with one
-major difference: it still keeps the cache dispatcher and the cache duplicates.
-But its internals are completely different.
+In the slub allocator, when the last object of a page goes away, we
+don't necessarily free it - there is not necessarily a test for empty
+page in any slab_free path.
 
-I no longer mess with the cache cores when pages are allocated. (except for
-destruction, that happens a bit later, but that's quite simple). All of that
-is done by the page allocator, by recognizing the __GFP_SLABMEMCG flag.
+This means that when we destroy a memcg cache that happened to be empty,
+those caches may take a lot of time to go away: removing the memcg
+reference won't destroy them - because there are pending references,
+and the empty pages will stay there, until a shrinker is called upon
+for any reason.
 
-The catch here is that 99% of the time, the task doing the dispatch will be
-the same allocating the page. It doesn't hold only when tasks are moving around.
-But that's an acceptable price to pay, at least for me. Moving around won't break,
-it will at the most put us on a state where a cache has a page that is acconted
-to a different cgroup. Or, if that cgroups is destroyed, not accounted to anyone.
-If that ever hurts anyone, this is solvable by a reaper, or by a full cache scan
-when the task moves.
+This patch marks all memcg caches as dead. kmem_cache_shrink is called
+for the ones who are not yet dead - this will force internal cache
+reorganization, and then all references to empty pages will be removed.
+
+An unlikely branch is used to make sure this case does not affect
+performance in the usual slab_free path.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
 CC: Christoph Lameter <cl@linux.com>
@@ -37,181 +38,160 @@ CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 CC: Johannes Weiner <hannes@cmpxchg.org>
 CC: Suleiman Souhlal <suleiman@google.com>
 ---
- include/linux/page-flags.h |    2 +-
- include/linux/slub_def.h   |   18 +++++++++++++-----
- mm/memcontrol.c            |    2 ++
- mm/page_alloc.c            |   13 ++++++++++++-
- mm/slab.c                  |    4 ++++
- mm/slub.c                  |    1 +
- 6 files changed, 33 insertions(+), 7 deletions(-)
+ include/linux/slab.h     |    3 +++
+ include/linux/slub_def.h |    8 ++++++++
+ mm/memcontrol.c          |   44 +++++++++++++++++++++++++++++++++++++++++++-
+ mm/slub.c                |    1 +
+ 4 files changed, 55 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-index c88d2a9..9b065d7 100644
---- a/include/linux/page-flags.h
-+++ b/include/linux/page-flags.h
-@@ -201,7 +201,7 @@ PAGEFLAG(Dirty, dirty) TESTSCFLAG(Dirty, dirty) __CLEARPAGEFLAG(Dirty, dirty)
- PAGEFLAG(LRU, lru) __CLEARPAGEFLAG(LRU, lru)
- PAGEFLAG(Active, active) __CLEARPAGEFLAG(Active, active)
- 	TESTCLEARFLAG(Active, active)
--__PAGEFLAG(Slab, slab)
-+__PAGEFLAG(Slab, slab) __TESTCLEARFLAG(Slab, slab)
- PAGEFLAG(Checked, checked)		/* Used by some filesystems */
- PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */
- PAGEFLAG(SavePinned, savepinned);			/* Xen */
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 155d19f..7e13055 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -182,6 +182,8 @@ unsigned int kmem_cache_size(struct kmem_cache *);
+ #endif
+ 
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++#include <linux/workqueue.h>
++
+ struct mem_cgroup_cache_params {
+ 	struct mem_cgroup *memcg;
+ 	struct kmem_cache *parent;
+@@ -190,6 +192,7 @@ struct mem_cgroup_cache_params {
+ 	atomic_t nr_pages;
+ 	struct list_head destroyed_list; /* Used when deleting memcg cache */
+ 	struct list_head sibling_list;
++	struct work_struct cache_shrinker;
+ };
+ #endif
+ 
 diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-index 7637f3b..7183596 100644
+index 7183596..871f82b 100644
 --- a/include/linux/slub_def.h
 +++ b/include/linux/slub_def.h
-@@ -13,6 +13,8 @@
- #include <linux/kobject.h>
+@@ -116,6 +116,14 @@ struct kmem_cache {
+ 	struct kmem_cache_node *node[MAX_NUMNODES];
+ };
  
- #include <linux/kmemleak.h>
-+#include <linux/memcontrol.h>
-+#include <linux/mm.h>
- 
- enum stat_item {
- 	ALLOC_FASTPATH,		/* Allocation from cpu slab */
-@@ -209,14 +211,14 @@ static __always_inline int kmalloc_index(size_t size)
-  * This ought to end up with a global pointer to the right cache
-  * in kmalloc_caches.
-  */
--static __always_inline struct kmem_cache *kmalloc_slab(size_t size)
-+static __always_inline struct kmem_cache *kmalloc_slab(gfp_t flags, size_t size)
- {
- 	int index = kmalloc_index(size);
- 
- 	if (index == 0)
- 		return NULL;
- 
--	return kmalloc_caches[index];
-+	return mem_cgroup_get_kmem_cache(kmalloc_caches[index], flags);
- }
- 
- void *kmem_cache_alloc(struct kmem_cache *, gfp_t);
-@@ -225,7 +227,13 @@ void *__kmalloc(size_t size, gfp_t flags);
- static __always_inline void *
- kmalloc_order(size_t size, gfp_t flags, unsigned int order)
- {
--	void *ret = (void *) __get_free_pages(flags | __GFP_COMP, order);
-+	void *ret;
-+
-+	flags = __GFP_COMP;
++static inline void kmem_cache_verify_dead(struct kmem_cache *cachep)
++{
 +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	flags |= __GFP_SLABMEMCG;
++	if (unlikely(cachep->memcg_params.dead))
++		schedule_work(&cachep->memcg_params.cache_shrinker);
 +#endif
-+	ret = (void *) __get_free_pages(flags, order);
- 	kmemleak_alloc(ret, size, 1, flags);
- 	return ret;
- }
-@@ -274,7 +282,7 @@ static __always_inline void *kmalloc(size_t size, gfp_t flags)
- 			return kmalloc_large(size, flags);
- 
- 		if (!(flags & SLUB_DMA)) {
--			struct kmem_cache *s = kmalloc_slab(size);
-+			struct kmem_cache *s = kmalloc_slab(flags, size);
- 
- 			if (!s)
- 				return ZERO_SIZE_PTR;
-@@ -307,7 +315,7 @@ static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
- {
- 	if (__builtin_constant_p(size) &&
- 		size <= SLUB_MAX_SIZE && !(flags & SLUB_DMA)) {
--			struct kmem_cache *s = kmalloc_slab(size);
-+			struct kmem_cache *s = kmalloc_slab(flags, size);
- 
- 		if (!s)
- 			return ZERO_SIZE_PTR;
++}
++
+ /*
+  * Kmalloc subsystem.
+  */
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 233d3bc..b47ab87 100644
+index 972e83f..c368480 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -524,6 +524,8 @@ static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
+@@ -531,7 +531,7 @@ static char *mem_cgroup_cache_name(struct mem_cgroup *memcg, struct kmem_cache *
  
- 	new = kmem_cache_create_memcg(memcg, name, s->object_size, s->align,
- 				      (s->flags & ~SLAB_PANIC), s->ctor, s);
-+	if (new)
-+		new->allocflags |= __GFP_SLABMEMCG;
+ 	BUG_ON(dentry == NULL);
  
- 	kfree(name);
- 	return new;
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index a884a9c..b4322b7 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2425,6 +2425,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 	struct page *page = NULL;
- 	int migratetype = allocflags_to_migratetype(gfp_mask);
- 	unsigned int cpuset_mems_cookie;
-+	void *handle = NULL;
+-	name = kasprintf(GFP_KERNEL, "%s(%d:%s)",
++	name = kasprintf(GFP_KERNEL, "%s(%d:%s)dead",
+ 	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
  
- 	gfp_mask &= gfp_allowed_mask;
+ 	return name;
+@@ -592,11 +592,24 @@ void mem_cgroup_release_cache(struct kmem_cache *cachep)
  
-@@ -2436,6 +2437,13 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 		return NULL;
- 
- 	/*
-+	 * Will only have any effect when __GFP_SLABMEMCG is set.
-+	 * This is verified in the (always inline) callee
-+	 */
-+	if (!mem_cgroup_new_kmem_page(gfp_mask, &handle, order))
-+		return NULL;
-+
-+	/*
- 	 * Check the zones suitable for the gfp_mask contain at least one
- 	 * valid zone. It's possible to have an empty zonelist as a result
- 	 * of GFP_THISNODE and a memoryless node
-@@ -2474,6 +2482,8 @@ out:
- 	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
- 		goto retry_cpuset;
- 
-+	mem_cgroup_commit_kmem_page(page, handle, order);
-+
- 	return page;
  }
- EXPORT_SYMBOL(__alloc_pages_nodemask);
-@@ -2507,7 +2517,8 @@ EXPORT_SYMBOL(get_zeroed_page);
- void __free_pages(struct page *page, unsigned int order)
+ 
++static void cache_shrinker_work_func(struct work_struct *work)
++{
++	struct mem_cgroup_cache_params *params;
++	struct kmem_cache *cachep;
++
++	params = container_of(work, struct mem_cgroup_cache_params,
++			      cache_shrinker);
++	cachep = container_of(params, struct kmem_cache, memcg_params);
++
++	kmem_cache_shrink(cachep);
++}
++
+ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 						  struct kmem_cache *cachep)
  {
- 	if (put_page_testzero(page)) {
--		__ClearPageSlab(page);
-+		if (__TestClearPageSlab(page))
-+			mem_cgroup_free_kmem_page(page, order);
- 		if (order == 0)
- 			free_hot_cold_page(page, 0);
- 		else
-diff --git a/mm/slab.c b/mm/slab.c
-index e537406..3da5210 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -3313,6 +3313,8 @@ __cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid,
- 	if (slab_should_failslab(cachep, flags))
- 		return NULL;
+ 	struct kmem_cache *new_cachep;
+ 	int idx;
++	char *name;
  
-+	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
+ 	BUG_ON(!mem_cgroup_kmem_enabled(memcg));
+ 
+@@ -616,10 +629,21 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 		goto out;
+ 	}
+ 
++	/*
++	 * Because the cache is expected to duplicate the string,
++	 * we must make sure it has opportunity to copy its full
++	 * name. Only now we can remove the dead part from it
++	 */
++	name = (char *)new_cachep->name;
++	if (name)
++		name[strlen(name) - 4] = '\0';
 +
- 	cache_alloc_debugcheck_before(cachep, flags);
- 	local_irq_save(save_flags);
- 
-@@ -3398,6 +3400,8 @@ __cache_alloc(struct kmem_cache *cachep, gfp_t flags, void *caller)
- 	if (slab_should_failslab(cachep, flags))
- 		return NULL;
- 
-+	cachep = mem_cgroup_get_kmem_cache(cachep, flags);
+ 	mem_cgroup_get(memcg);
+ 	memcg->slabs[idx] = new_cachep;
+ 	new_cachep->memcg_params.memcg = memcg;
+ 	atomic_set(&new_cachep->memcg_params.nr_pages , 0);
++	INIT_WORK(&new_cachep->memcg_params.cache_shrinker,
++		  cache_shrinker_work_func);
+ out:
+ 	mutex_unlock(&memcg_cache_mutex);
+ 	return new_cachep;
+@@ -642,6 +666,21 @@ static void kmem_cache_destroy_work_func(struct work_struct *w)
+ 	struct mem_cgroup_cache_params *p, *tmp;
+ 	unsigned long flags;
+ 	LIST_HEAD(del_unlocked);
++	LIST_HEAD(shrinkers);
 +
- 	cache_alloc_debugcheck_before(cachep, flags);
- 	local_irq_save(save_flags);
- 	objp = __do_cache_alloc(cachep, flags);
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	list_for_each_entry_safe(p, tmp, &destroyed_caches, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		if (atomic_read(&cachep->memcg_params.nr_pages) != 0)
++			list_move(&cachep->memcg_params.destroyed_list, &shrinkers);
++	}
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	list_for_each_entry_safe(p, tmp, &shrinkers, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		list_del(&cachep->memcg_params.destroyed_list);
++		kmem_cache_shrink(cachep);
++	}
+ 
+ 	spin_lock_irqsave(&cache_queue_lock, flags);
+ 	list_for_each_entry_safe(p, tmp, &destroyed_caches, destroyed_list) {
+@@ -719,11 +758,14 @@ static void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
+ 
+ 	spin_lock_irqsave(&cache_queue_lock, flags);
+ 	for (i = 0; i < MAX_KMEM_CACHE_TYPES; i++) {
++		char *name;
+ 		cachep = memcg->slabs[i];
+ 		if (!cachep)
+ 			continue;
+ 
+ 		cachep->memcg_params.dead = true;
++		name = (char *)cachep->name;
++		name[strlen(name)] = 'd';
+ 		__mem_cgroup_destroy_cache(cachep);
+ 	}
+ 	spin_unlock_irqrestore(&cache_queue_lock, flags);
 diff --git a/mm/slub.c b/mm/slub.c
-index 69c5677..77944e2 100644
+index d5b91f4..37ac548 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -2304,6 +2304,7 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
- 	if (slab_pre_alloc_hook(s, gfpflags))
- 		return NULL;
+@@ -2593,6 +2593,7 @@ redo:
+ 	} else
+ 		__slab_free(s, page, x, addr);
  
-+	s = mem_cgroup_get_kmem_cache(s, gfpflags);
- redo:
++	kmem_cache_verify_dead(s);
+ }
  
- 	/*
+ void kmem_cache_free(struct kmem_cache *s, void *x)
 -- 
 1.7.10.2
