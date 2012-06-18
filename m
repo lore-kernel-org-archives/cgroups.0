@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 19/25] memcg: disable kmem code when not in use.
-Date: Mon, 18 Jun 2012 14:28:12 +0400
-Message-ID: <1340015298-14133-20-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 22/25] slab: slab-specific propagation changes.
+Date: Mon, 18 Jun 2012 14:28:15 +0400
+Message-ID: <1340015298-14133-23-git-send-email-glommer@parallels.com>
 References: <1340015298-14133-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340015298-14133-1-git-send-email-glommer@parallels.com>
@@ -13,18 +13,8 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-We can use jump labels to patch the code in or out
-when not used.
-
-Because the assignment: memcg->kmem_accounted = true
-is done after the jump labels increment, we guarantee
-that the root memcg will always be selected until
-all call sites are patched (see mem_cgroup_kmem_enabled).
-This guarantees that no mischarges are applied.
-
-Jump label decrement happens when the last reference
-count from the memcg dies. This will only happen when
-the caches are all dead.
+When a parent cache does tune_cpucache, we need to propagate that to the
+children as well. For that, we unfortunately need to tap into the slab core.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
 CC: Christoph Lameter <cl@linux.com>
@@ -34,101 +24,67 @@ CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 CC: Johannes Weiner <hannes@cmpxchg.org>
 CC: Suleiman Souhlal <suleiman@google.com>
 ---
- include/linux/memcontrol.h |    5 ++++-
- mm/memcontrol.c            |   22 +++++++++++++++++++++-
- 2 files changed, 25 insertions(+), 2 deletions(-)
+ mm/slab.c        |   28 +++++++++++++++++++++++++++-
+ mm/slab_common.c |    1 +
+ 2 files changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 27a3f16..47ccd80 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -22,6 +22,7 @@
- #include <linux/cgroup.h>
- #include <linux/vm_event_item.h>
- #include <linux/hardirq.h>
-+#include <linux/jump_label.h>
+diff --git a/mm/slab.c b/mm/slab.c
+index 4951c81..c280dc6 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -3874,7 +3874,7 @@ static void do_ccupdate_local(void *info)
+ }
  
- struct mem_cgroup;
- struct page_cgroup;
-@@ -451,7 +452,6 @@ bool __mem_cgroup_new_kmem_page(gfp_t gfp, void *handle, int order);
- void __mem_cgroup_commit_kmem_page(struct page *page, void *handle, int order);
- void __mem_cgroup_free_kmem_page(struct page *page, int order);
- 
--#define mem_cgroup_kmem_on 1
- struct kmem_cache *
- __mem_cgroup_get_kmem_cache(struct kmem_cache *cachep, gfp_t gfp);
- 
-@@ -459,6 +459,9 @@ static inline bool has_memcg_flag(gfp_t gfp)
+ /* Always called with the slab_mutex held */
+-static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
++static int __do_tune_cpucache(struct kmem_cache *cachep, int limit,
+ 				int batchcount, int shared, gfp_t gfp)
  {
- 	return gfp & __GFP_SLABMEMCG;
- }
-+
-+extern struct static_key mem_cgroup_kmem_enabled_key;
-+#define mem_cgroup_kmem_on static_key_false(&mem_cgroup_kmem_enabled_key)
- #else
- static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 					     struct kmem_cache *s)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b47ab87..5295ab6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -422,6 +422,10 @@ static void mem_cgroup_put(struct mem_cgroup *memcg);
- #include <net/sock.h>
- #include <net/ip.h>
- 
-+struct static_key mem_cgroup_kmem_enabled_key;
-+/* so modules can inline the checks */
-+EXPORT_SYMBOL(mem_cgroup_kmem_enabled_key);
-+
- static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
- static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, s64 delta);
- static void memcg_uncharge_kmem(struct mem_cgroup *memcg, s64 delta);
-@@ -468,6 +472,12 @@ void sock_release_memcg(struct sock *sk)
- 	}
+ 	struct ccupdate_struct *new;
+@@ -3917,6 +3917,32 @@ static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
+ 	return alloc_kmemlist(cachep, gfp);
  }
  
-+static void disarm_static_keys(struct mem_cgroup *memcg)
++static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
++				int batchcount, int shared, gfp_t gfp)
 +{
-+	if (memcg->kmem_accounted)
-+		static_key_slow_dec(&mem_cgroup_kmem_enabled_key);
++	int ret;
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	struct kmem_cache *c;
++	struct mem_cgroup_cache_params *p;
++#endif
++
++	ret = __do_tune_cpucache(cachep, limit, batchcount, shared, gfp);
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	if (slab_state < FULL)
++		return ret;
++
++	if ((ret < 0) || (cachep->memcg_params.id == -1))
++		return ret;
++
++	list_for_each_entry(p, &cachep->memcg_params.sibling_list, sibling_list) {
++		c = container_of(p, struct kmem_cache, memcg_params);
++		/* return value determined by the parent cache only */
++		__do_tune_cpucache(c, limit, batchcount, shared, gfp);
++	}
++#endif
++	return ret;
 +}
 +
- #ifdef CONFIG_INET
- struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
+ /* Called with slab_mutex held always */
+ static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp)
  {
-@@ -831,6 +841,10 @@ static void memcg_slab_init(struct mem_cgroup *memcg)
- 	for (i = 0; i < MAX_KMEM_CACHE_TYPES; i++)
- 		memcg->slabs[i] = NULL;
- }
-+#else
-+static inline void disarm_static_keys(struct mem_cgroup *memcg)
-+{
-+}
- #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
- 
- static void drain_all_stock_async(struct mem_cgroup *memcg);
-@@ -4344,8 +4358,13 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
- 			 *
- 			 * But it is not worth the trouble
- 			 */
--			if (!memcg->kmem_accounted && val != RESOURCE_MAX)
-+			mutex_lock(&set_limit_mutex);
-+			if (!memcg->kmem_accounted && val != RESOURCE_MAX
-+			    && !memcg->kmem_accounted) {
-+				static_key_slow_inc(&mem_cgroup_kmem_enabled_key);
- 				memcg->kmem_accounted = true;
-+			}
-+			mutex_unlock(&set_limit_mutex);
- 		}
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index b424b28..a8557e8 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -155,6 +155,7 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+ 	s->flags = flags;
+ 	s->align = calculate_alignment(flags, align, size);
+ #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++	s->memcg_params.id = -1; /* not registered yet */
+ 	s->memcg_params.memcg = memcg;
+ 	s->memcg_params.parent = parent_cache;
  #endif
- 		else
-@@ -5285,6 +5304,7 @@ static void free_work(struct work_struct *work)
- 	int size = sizeof(struct mem_cgroup);
- 
- 	memcg = container_of(work, struct mem_cgroup, work_freeing);
-+	disarm_static_keys(memcg);
- 	if (size < PAGE_SIZE)
- 		kfree(memcg);
- 	else
 -- 
 1.7.10.2
