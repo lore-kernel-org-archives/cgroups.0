@@ -1,102 +1,48 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 25/25] Documentation: add documentation for slab tracker for memcg
-Date: Mon, 18 Jun 2012 14:28:18 +0400
-Message-ID: <1340015298-14133-26-git-send-email-glommer@parallels.com>
-References: <1340015298-14133-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1340015298-14133-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH 1/2] memcg: remove -EINTR at rmdir()
+Date: Mon, 18 Jun 2012 20:57:23 +0900
+Message-ID: <4FDF17A3.9060202@jp.fujitsu.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Randy Dunlap <rdunlap@xenotime.net>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-In a separate patch, to aid reviewers.
+2 follow-up patches for "memcg: move charges to root cgroup if use_hierarchy=0",
+developped/tested onto memcg-devel tree. Maybe no HUNK with -next and -mm....
+-Kame
+==
+memcg: remove -EINTR at rmdir()
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Christoph Lameter <cl@linux.com>
-CC: Pekka Enberg <penberg@cs.helsinki.fi>
-CC: Michal Hocko <mhocko@suse.cz>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-CC: Johannes Weiner <hannes@cmpxchg.org>
-CC: Suleiman Souhlal <suleiman@google.com>
-CC: Randy Dunlap <rdunlap@xenotime.net>
+By commit "memcg: move charges to root cgroup if use_hierarchy=0",
+no memory reclaiming will occur at removing memory cgroup.
+
+So, we don't need to take care of user interrupt by signal. This
+patch removes it.
+(*) If -EINTR is returned here, cgroup will show WARNING.
+
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- Documentation/cgroups/memory.txt |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ mm/memcontrol.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index 9b1067a..9ea82b5 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -74,6 +74,12 @@ Brief summary of control files.
-  memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
-  memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
- 
-+ memory.kmem.limit_in_bytes	 # set/show hard limit for general kmem memory
-+ memory.kmem.usage_in_bytes	 # show current general kmem memory allocation
-+ memory.kmem.failcnt		 # show current number of kmem limit hits
-+ memory.kmem.max_usage_in_bytes	 # show max kmem usage
-+ memory.kmem.slabinfo		 # show cgroup-specific slab usage information
-+
- 1. History
- 
- The memory controller has a long history. A request for comments for the memory
-@@ -270,6 +276,14 @@ cgroup may or may not be accounted.
- Currently no soft limit is implemented for kernel memory. It is future work
- to trigger slab reclaim when those limits are reached.
- 
-+Kernel memory is not accounted until it is limited. Users that want to just
-+track kernel memory usage can set the limit value to a big enough value so
-+the limit is guaranteed to never hit. A kernel memory limit bigger than the
-+current memory limit will have this effect as well.
-+
-+This guarantes that this extension is backwards compatible to any previous
-+memory cgroup version.
-+
- 2.7.1 Current Kernel Memory resources accounted
- 
- * sockets memory pressure: some sockets protocols have memory pressure
-@@ -278,6 +292,24 @@ per cgroup, instead of globally.
- 
- * tcp memory pressure: sockets memory pressure for the tcp protocol.
- 
-+* slab/kmalloc:
-+
-+When slab memory is tracked (memory.kmem.limit_in_bytes != -1ULL), both
-+memory.kmem.usage_in_bytes and memory.usage_in_bytes are updated. When
-+memory.kmem.limit_in_bytes is left alone, no tracking of slab caches takes
-+place.
-+
-+Because a slab page is shared among many tasks, it is not possible to take
-+any meaningful action upon task migration. Slabs created in a cgroup stay
-+around until the cgroup is destructed. Information about the slabs used
-+by the cgroup is displayed in the cgroup file memory.kmem.slabinfo. The format
-+of this file is and should remain compatible with /proc/slabinfo.
-+
-+Upon cgroup destruction, slabs that holds no live references are destructed.
-+Workers are fired to destroy the remaining caches as they objects are freed.
-+
-+Memory used by dead caches are shown in the proc file /proc/dead_slabinfo
-+
- 3. User Interface
- 
- 0. Configuration
-@@ -286,6 +318,7 @@ a. Enable CONFIG_CGROUPS
- b. Enable CONFIG_RESOURCE_COUNTERS
- c. Enable CONFIG_CGROUP_MEM_RES_CTLR
- d. Enable CONFIG_CGROUP_MEM_RES_CTLR_SWAP (to use swap extension)
-+d. Enable CONFIG_CGROUP_MEM_RES_CTLR_KMEM (to use experimental kmem extension)
- 
- 1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
- # mount -t tmpfs none /sys/fs/cgroup
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0623300..cf8a0f6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3890,9 +3890,6 @@ move_account:
+ 		ret = -EBUSY;
+ 		if (cgroup_task_count(cgrp) || !list_empty(&cgrp->children))
+ 			goto out;
+-		ret = -EINTR;
+-		if (signal_pending(current))
+-			goto out;
+ 		/* This is for making all *used* pages to be on LRU. */
+ 		lru_add_drain_all();
+ 		drain_all_stock_sync(memcg);
 -- 
-1.7.10.2
+1.7.4.1
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
