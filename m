@@ -1,99 +1,83 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 05/25] memcg: Always free struct memcg through schedule_work()
-Date: Mon, 18 Jun 2012 14:27:58 +0400
-Message-ID: <1340015298-14133-6-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 03/25] slab: move FULL state transition to an initcall
+Date: Mon, 18 Jun 2012 14:27:56 +0400
+Message-ID: <1340015298-14133-4-git-send-email-glommer@parallels.com>
 References: <1340015298-14133-1-git-send-email-glommer@parallels.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1340015298-14133-1-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-Right now we free struct memcg with kfree right after a
-rcu grace period, but defer it if we need to use vfree() to get
-rid of that memory area. We do that by need, because we need vfree
-to be called in a process context.
+During kmem_cache_init_late(), we transition to the LATE state,
+and after some more work, to the FULL state, its last state
 
-This patch unifies this behavior, by ensuring that even kfree will
-happen in a separate thread. The goal is to have a stable place to
-call the upcoming jump label destruction function outside the realm
-of the complicated and quite far-reaching cgroup lock (that can't be
-held when calling neither the cpu_hotplug.lock nor the jump_label_mutex)
+This is quite different from slub, that will only transition to
+its last state (previously SYSFS), in a (late)initcall, after a lot
+more of the kernel is ready.
+
+This means that in slab, we have no way to taking actions dependent
+on the initialization of other pieces of the kernel that are supposed
+to start way after kmem_init_late(), such as cgroups initialization.
+
+To achieve more consistency in this behavior, that patch only
+transitions to the UP state in kmem_init_late. In my analysis,
+setup_cpu_cache() should be happy to test for >= UP, instead of
+== FULL. It also has passed some tests I've made.
+
+We then only mark FULL state after the reap timers are in place,
+meaning that no further setup is expected.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Tejun Heo <tj@kernel.org>
-CC: Li Zefan <lizefan@huawei.com>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-CC: Johannes Weiner <hannes@cmpxchg.org>
-CC: Michal Hocko <mhocko@suse.cz>
+Acked-by: Christoph Lameter <cl@linux.com>
+CC: Pekka Enberg <penberg@cs.helsinki.fi>
+CC: David Rientjes <rientjes@google.com>
 ---
- mm/memcontrol.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ mm/slab.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e3b528e..ce15be4 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -245,8 +245,8 @@ struct mem_cgroup {
- 		 */
- 		struct rcu_head rcu_freeing;
- 		/*
--		 * But when using vfree(), that cannot be done at
--		 * interrupt time, so we must then queue the work.
-+		 * We also need some space for a worker in deferred freeing.
-+		 * By the time we call it, rcu_freeing is not longer in use.
- 		 */
- 		struct work_struct work_freeing;
- 	};
-@@ -4826,23 +4826,28 @@ out_free:
- }
+diff --git a/mm/slab.c b/mm/slab.c
+index e174e50..2d5fe28 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -1643,9 +1643,6 @@ void __init kmem_cache_init_late(void)
+ 			BUG();
+ 	mutex_unlock(&slab_mutex);
  
- /*
-- * Helpers for freeing a vzalloc()ed mem_cgroup by RCU,
-+ * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
-  * but in process context.  The work_freeing structure is overlaid
-  * on the rcu_freeing structure, which itself is overlaid on memsw.
-  */
--static void vfree_work(struct work_struct *work)
-+static void free_work(struct work_struct *work)
- {
- 	struct mem_cgroup *memcg;
-+	int size = sizeof(struct mem_cgroup);
- 
- 	memcg = container_of(work, struct mem_cgroup, work_freeing);
--	vfree(memcg);
-+	if (size < PAGE_SIZE)
-+		kfree(memcg);
-+	else
-+		vfree(memcg);
- }
--static void vfree_rcu(struct rcu_head *rcu_head)
+-	/* Done! */
+-	slab_state = FULL;
+-
+ 	/*
+ 	 * Register a cpu startup notifier callback that initializes
+ 	 * cpu_cache_get for all new cpus
+@@ -1675,6 +1672,9 @@ int __init __kmem_cache_initcall(void)
+ 	 */
+ 	for_each_online_cpu(cpu)
+ 		start_cpu_timer(cpu);
 +
-+static void free_rcu(struct rcu_head *rcu_head)
++	/* Done! */
++	slab_state = FULL;
+ 	return 0;
+ }
+ 
+@@ -2120,7 +2120,7 @@ static size_t calculate_slab_order(struct kmem_cache *cachep,
+ 
+ static int __init_refok setup_cpu_cache(struct kmem_cache *cachep, gfp_t gfp)
  {
- 	struct mem_cgroup *memcg;
+-	if (slab_state == FULL)
++	if (slab_state >= UP)
+ 		return enable_cpucache(cachep, gfp);
  
- 	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
--	INIT_WORK(&memcg->work_freeing, vfree_work);
-+	INIT_WORK(&memcg->work_freeing, free_work);
- 	schedule_work(&memcg->work_freeing);
- }
- 
-@@ -4868,10 +4873,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 		free_mem_cgroup_per_zone_info(memcg, node);
- 
- 	free_percpu(memcg->stat);
--	if (sizeof(struct mem_cgroup) < PAGE_SIZE)
--		kfree_rcu(memcg, rcu_freeing);
--	else
--		call_rcu(&memcg->rcu_freeing, vfree_rcu);
-+	call_rcu(&memcg->rcu_freeing, free_rcu);
- }
- 
- static void mem_cgroup_get(struct mem_cgroup *memcg)
+ 	if (slab_state == DOWN) {
 -- 
 1.7.10.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
