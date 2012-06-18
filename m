@@ -1,60 +1,47 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/7][TRIVIAL][resend] drivers/pci: cleanup kernel-doc warning
-Date: Mon, 18 Jun 2012 12:22:53 -0600
-Message-ID: <CAErSpo7REiSBsWP0JNwUGi1m0HdK3H0=e0t2k-3L_Z+b4sMkMw@mail.gmail.com>
-References: <1339766154-7470-1-git-send-email-liwp.linux@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroups: Account for CSS_DEACT_BIAS in __css_put
+Date: Mon, 18 Jun 2012 15:39:23 -0700
+Message-ID: <20120618223923.GG32733@google.com>
+References: <20120614215530.12092.3543.stgit@dungbeetle.mtv.corp.google.com>
+ <4FDAE23C.2020908@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type:content-transfer-encoding:x-system-of-record;
-        bh=11fxB32nWcuGBeoN9pge6/q5R4lTclypeEbKbNdL3z4=;
-        b=idSqagGTVmO9e5sR7iCZrFroTftZzSZk5sOJXBWr2LN/VK7yJ7C12Ew9prMSGDaQNg
-         cWf/PlVUabRvSYN4XFREFIXfzTHDGLW/AlUHsErLbMmzEfvdXPOT8Qpu5enMaqGNks5T
-         Sx1AC38faKjeM4exzhWwVvE3uxzyWUCKLkjj4zDc97TmBIrJ+X3362g5+iLYDqSW88f8
-         pB0Q5OqGqAsnPPnoOPK5xKhonB4u9BEah1WJ5DZRTQigjG5mi75NrGQNPSoo1xhC2P+9
-         kqloN0ZnKvCV+nbDJ7LiZGMlKl/3vfIONZryS1I75DB+y3VTeyCWbQ68qcj0E6P26wgZ
-         lkCw==
-In-Reply-To: <1339766154-7470-1-git-send-email-liwp.linux@gmail.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=uKGfT0el4tSVN2pRoyHch6HxEM0qXYNUyf85lbY2ImM=;
+        b=xx6GvEXVbVYq5/zhACJs889gZXk9KX0n2pj6nIRtLlteZMprt0yM+QmZPu17KZWkfX
+         PWxtII9k0y0Qjakqeu+EPf5ARnUQ3RUxyq2pp9J3PwoYlf9c8pvMILDviyHB0BNesqIM
+         XK1G/sBWAE1QuOolzFTgCznce5kdwL7Q7Git2BJOREP4huUVqFj+Ni0RhjJTdGeIGWiC
+         H0C54JFyrg7DBnXXJCT11xAp4reaJOQBT2AxpedsJ0N9XkErsoMzFh0cPzISzCWgJUb6
+         vTl+ApDnX+xt+Ozz1wA8MN2OCwOuIKkadqZ1qumSxk9QCWBeyAc+QkYbrsYalvFM4IcC
+         lw3A==
+Content-Disposition: inline
+In-Reply-To: <4FDAE23C.2020908-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Wanpeng Li <liwp.linux@gmail.com>
-Cc: trivial@kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Christoph Lameter <cl@linux-foundation.org>, Paul Gortmaker <paul.gortmaker@windriver.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Milton Miller <miltonm@bga.com>, Nishanth Aravamudan <nacc@us.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Jason Wessel <jason.wessel@windriver.com>, Jan Kiszka <jan.kiszka@siemens.com>, David Howells <dhowells@redhat.com>, Srikar Dronamraju <srikar@linux.vnet.ibm.com>, Andrew Morton <ak>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Jun 15, 2012 at 7:15 AM, Wanpeng Li <liwp.linux@gmail.com> wrote:
-> From: Wanpeng Li <liwp@linux.vnet.ibm.com>
->
-> Warning(drivers/pci/setup-bus.c:277): No description found for parameter =
-'fail_head'
-> Warning(drivers/pci/setup-bus.c:277): Excess function parameter 'failed_l=
-ist' description in 'assign_requested_resources_sorted'
->
-> Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
-> ---
-> =A0drivers/pci/setup-bus.c | =A0 =A02 +-
-> =A01 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 8fa2d4b..9165d25 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -265,7 +265,7 @@ out:
-> =A0* assign_requested_resources_sorted() - satisfy resource requests
-> =A0*
-> =A0* @head : head of the list tracking requests for resources
-> - * @failed_list : head of the list tracking requests that could
-> + * @fail_head : head of the list tracking requests that could
-> =A0* =A0 =A0 =A0 =A0 =A0 =A0 not be allocated
-> =A0*
-> =A0* Satisfy resource requests of each element in the list. Add
+On Fri, Jun 15, 2012 at 03:20:28PM +0800, Li Zefan wrote:
+> On 2012/6/15 5:55, Salman Qazi wrote:
+> 
+> > When we fixed the race between atomic_dec and css_refcnt, we missed
+> > the fact that css_refcnt internally subtracts CSS_DEACT_BIAS to get
+> > the actual reference count.  This can potentially cause a refcount leak
+> > if __css_put races with cgroup_clear_css_refs.
+> > 
+> > Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> 
+> 
+> Hope we've got everything right this time!
+> 
+> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-I applied this; it should appear in my "next" branch tomorrow.
+Applied to for-3.5-fixes.  Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
