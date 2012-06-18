@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 21/25] Track all the memcg children of a kmem_cache.
-Date: Mon, 18 Jun 2012 14:28:14 +0400
-Message-ID: <1340015298-14133-22-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 23/25] memcg: propagate kmem limiting information to children
+Date: Mon, 18 Jun 2012 14:28:16 +0400
+Message-ID: <1340015298-14133-24-git-send-email-glommer@parallels.com>
 References: <1340015298-14133-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1340015298-14133-1-git-send-email-glommer@parallels.com>
@@ -13,142 +13,265 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-This enables us to remove all the children of a kmem_cache being
-destroyed, if for example the kernel module it's being used in
-gets unloaded. Otherwise, the children will still point to the
-destroyed parent.
+The current memcg slab cache management fails to present satisfatory hierarchical
+behavior in the following scenario:
 
-Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+-> /cgroups/memory/A/B/C
+
+* kmem limit set at A
+* A and B empty taskwise
+* bash in C does find /
+
+Because kmem_accounted is a boolean that was not set for C, no accounting
+would be done. This is, however, not what we expect.
+
+The basic idea, is that when a cgroup is limited, we walk the tree
+upwards (something Kame and I already thought about doing for other purposes),
+and make sure that we store the information about the parent being limited in
+kmem_accounted (that is turned into a bitmap: two booleans would not be space
+efficient). The code for that is taken from sched/core.c. My reasons for not
+putting it into a common place is to dodge the type issues that would arise
+from a common implementation between memcg and the scheduler - but I think
+that it should ultimately happen, so if you want me to do it now, let me
+know.
+
+We do the reverse operation when a formerly limited cgroup becomes unlimited.
+
 Signed-off-by: Glauber Costa <glommer@parallels.com>
 CC: Christoph Lameter <cl@linux.com>
 CC: Pekka Enberg <penberg@cs.helsinki.fi>
 CC: Michal Hocko <mhocko@suse.cz>
 CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 CC: Johannes Weiner <hannes@cmpxchg.org>
+CC: Suleiman Souhlal <suleiman@google.com>
 ---
- include/linux/memcontrol.h |    1 +
- include/linux/slab.h       |    1 +
- mm/memcontrol.c            |   16 +++++++++++++++-
- mm/slab_common.c           |   31 +++++++++++++++++++++++++++++++
- 4 files changed, 48 insertions(+), 1 deletion(-)
+ mm/memcontrol.c |  147 +++++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 131 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 8ebbcc9..8884a4e 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -464,6 +464,7 @@ extern struct static_key mem_cgroup_kmem_enabled_key;
- #define mem_cgroup_kmem_on static_key_false(&mem_cgroup_kmem_enabled_key)
- 
- void mem_cgroup_destroy_cache(struct kmem_cache *cachep);
-+void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id);
- #else
- static inline void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 					     struct kmem_cache *s)
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index fb4fb7b..155d19f 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -189,6 +189,7 @@ struct mem_cgroup_cache_params {
- 	bool dead;
- 	atomic_t nr_pages;
- 	struct list_head destroyed_list; /* Used when deleting memcg cache */
-+	struct list_head sibling_list;
- };
- #endif
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e0b79f0..e32b53e 100644
+index e32b53e..972e83f 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -539,8 +539,11 @@ static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
- 
- 	new = kmem_cache_create_memcg(memcg, name, s->object_size, s->align,
- 				      (s->flags & ~SLAB_PANIC), s->ctor, s);
--	if (new)
-+	if (new) {
- 		new->allocflags |= __GFP_SLABMEMCG;
-+		list_add(&new->memcg_params.sibling_list,
-+			 &s->memcg_params.sibling_list);
-+	}
- 
- 	kfree(name);
- 	return new;
-@@ -561,6 +564,7 @@ void mem_cgroup_register_cache(struct mem_cgroup *memcg,
- 	int id = -1;
- 
- 	INIT_LIST_HEAD(&cachep->memcg_params.destroyed_list);
-+	INIT_LIST_HEAD(&cachep->memcg_params.sibling_list);
- 
- 	if (!memcg)
- 		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
-@@ -573,6 +577,9 @@ void mem_cgroup_release_cache(struct kmem_cache *cachep)
- 	mem_cgroup_flush_cache_create_queue();
- 	if (cachep->memcg_params.id != -1)
- 		ida_simple_remove(&cache_types, cachep->memcg_params.id);
-+	else
-+		list_del(&cachep->memcg_params.sibling_list);
+@@ -259,6 +259,9 @@ struct mem_cgroup {
+ 	 * the counter to account for kernel memory usage.
+ 	 */
+ 	struct res_counter kmem;
 +
- }
++	struct list_head children;
++	struct list_head siblings;
+ 	/*
+ 	 * Per cgroup active and inactive list, similar to the
+ 	 * per zone LRU lists.
+@@ -274,7 +277,11 @@ struct mem_cgroup {
+ 	 * Should the accounting and control be hierarchical, per subtree?
+ 	 */
+ 	bool use_hierarchy;
+-	bool kmem_accounted;
++	/*
++	 * bit0: accounted by this cgroup
++	 * bit1: accounted by a parent.
++	 */
++	volatile unsigned long kmem_accounted;
  
- static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
-@@ -776,6 +783,13 @@ static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
- 	schedule_work(&memcg_create_cache_work);
- }
+ 	bool		oom_lock;
+ 	atomic_t	under_oom;
+@@ -332,6 +339,9 @@ struct mem_cgroup {
+ #endif
+ };
  
-+void mem_cgroup_remove_child_kmem_cache(struct kmem_cache *cachep, int id)
-+{
-+	mutex_lock(&memcg_cache_mutex);
-+	cachep->memcg_params.memcg->slabs[id] = NULL;
-+	mutex_unlock(&memcg_cache_mutex);
-+}
++#define KMEM_ACCOUNTED_THIS	0
++#define KMEM_ACCOUNTED_PARENT	1
 +
- /*
-  * Return the kmem_cache we're supposed to use for a slab allocation.
-  * We try to use the current memcg's version of the cache.
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 619d365..b424b28 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -190,8 +190,39 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align
- }
- EXPORT_SYMBOL(kmem_cache_create);
- 
-+static void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
-+{
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+	struct kmem_cache *c;
-+	struct mem_cgroup_cache_params *p, *tmp;
-+	int id = s->memcg_params.id;
-+
-+	if (id == -1)
-+		return;
-+
-+	mutex_lock(&slab_mutex);
-+	list_for_each_entry_safe(p, tmp,
-+	    &s->memcg_params.sibling_list, sibling_list) {
-+		c = container_of(p, struct kmem_cache, memcg_params);
-+		if (WARN_ON(c == s))
-+			continue;
-+
-+		mutex_unlock(&slab_mutex);
-+		BUG_ON(c->memcg_params.id != -1);
-+		mem_cgroup_remove_child_kmem_cache(c, id);
-+		kmem_cache_destroy(c);
-+		mutex_lock(&slab_mutex);
-+	}
-+	mutex_unlock(&slab_mutex);
-+#endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-+}
-+
- void kmem_cache_destroy(struct kmem_cache *s)
+ int memcg_css_id(struct mem_cgroup *memcg)
  {
+ 	return css_id(&memcg->css);
+@@ -474,7 +484,7 @@ void sock_release_memcg(struct sock *sk)
+ 
+ static void disarm_static_keys(struct mem_cgroup *memcg)
+ {
+-	if (memcg->kmem_accounted)
++	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
+ 		static_key_slow_dec(&mem_cgroup_kmem_enabled_key);
+ 	/*
+ 	 * This check can't live in kmem destruction function,
+@@ -4418,6 +4428,110 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+ 	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
+ 	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
+ }
 +
-+	/* Destroy all the children caches if we aren't a memcg cache */
-+	kmem_cache_destroy_memcg_children(s);
++#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
++typedef int (*memcg_visitor)(struct mem_cgroup*, void *);
 +
- 	get_online_cpus();
- 	mutex_lock(&slab_mutex);
- 	list_del(&s->list);
++/*
++ * This is mostly "inspired" by the code in sched/core.c. I decided to copy it,
++ * instead of factoring it, because of all the typing issues we'd run into.
++ * In particular, grabbing the parent is very different for memcg, because we
++ * may or may not have hierarchy, while cpu cgroups always do. That would lead
++ * to either indirect calls - this is not a fast path for us, but can be for
++ * the scheduler - or a big and ugly macro.
++ *
++ * If we ever get rid of hierarchy, we could iterate over struct cgroup, and
++ * then it would cease to be a problem.
++ */
++int walk_tree_from(struct mem_cgroup *from,
++		   memcg_visitor down, memcg_visitor up, void *data)
++{
++	struct mem_cgroup *parent, *child;
++	int ret;
++
++
++	parent = from;
++down:
++	ret = (*down)(parent, data);
++	if (ret)
++		goto out;
++
++	list_for_each_entry_rcu(child, &parent->children, siblings) {
++		parent = child;
++		goto down;
++
++up:
++		continue;
++	}
++	ret = (*up)(parent, data);
++	if (ret || parent == from)
++		goto out;
++
++	child = parent;
++	parent = parent_mem_cgroup(parent);
++	if (parent)
++		goto up;
++out:
++	return ret;
++}
++
++static int memcg_nop(struct mem_cgroup *memcg, void *data)
++{
++	return 0;
++}
++
++static int memcg_parent_account(struct mem_cgroup *memcg, void *data)
++{
++	if (memcg == data)
++		return 0;
++
++	set_bit(KMEM_ACCOUNTED_PARENT, &memcg->kmem_accounted);
++	return 0;
++}
++
++static int memcg_parent_no_account(struct mem_cgroup *memcg, void *data)
++{
++	if (memcg == data)
++		return 0;
++
++	clear_bit(KMEM_ACCOUNTED_PARENT, &memcg->kmem_accounted);
++	/*
++	 * Stop propagation if we are accounted: our children should
++	 * be parent-accounted
++	 */
++	return test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
++}
++
++static void mem_cgroup_update_kmem_limit(struct mem_cgroup *memcg, u64 val)
++{
++	mutex_lock(&set_limit_mutex);
++	if (!test_and_set_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted) &&
++		val != RESOURCE_MAX) {
++
++		/*
++		 * Once enabled, can't be disabled. We could in theory
++		 * disable it if we haven't yet created any caches, or
++		 * if we can shrink them all to death.
++		 *
++		 * But it is not worth the trouble
++		 */
++		static_key_slow_inc(&mem_cgroup_kmem_enabled_key);
++
++		rcu_read_lock();
++		walk_tree_from(memcg, memcg_parent_account, memcg_nop, memcg);
++		rcu_read_unlock();
++	} else if (test_and_clear_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted)
++		&& val == RESOURCE_MAX) {
++
++		rcu_read_lock();
++		walk_tree_from(memcg, memcg_parent_no_account,
++			       memcg_nop, memcg);
++		rcu_read_unlock();
++	}
++
++	mutex_unlock(&set_limit_mutex);
++}
++#endif
+ /*
+  * The user of this function is...
+  * RES_LIMIT.
+@@ -4455,20 +4569,8 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 			ret = res_counter_set_limit(&memcg->kmem, val);
+ 			if (ret)
+ 				break;
+-			/*
+-			 * Once enabled, can't be disabled. We could in theory
+-			 * disable it if we haven't yet created any caches, or
+-			 * if we can shrink them all to death.
+-			 *
+-			 * But it is not worth the trouble
+-			 */
+-			mutex_lock(&set_limit_mutex);
+-			if (!memcg->kmem_accounted && val != RESOURCE_MAX
+-			    && !memcg->kmem_accounted) {
+-				static_key_slow_inc(&mem_cgroup_kmem_enabled_key);
+-				memcg->kmem_accounted = true;
+-			}
+-			mutex_unlock(&set_limit_mutex);
++			mem_cgroup_update_kmem_limit(memcg, val);
++			break;
+ 		}
+ #endif
+ 		else
+@@ -5527,6 +5629,8 @@ err_cleanup:
+ 
+ }
+ 
++static DEFINE_MUTEX(memcg_list_mutex);
++
+ static struct cgroup_subsys_state * __ref
+ mem_cgroup_create(struct cgroup *cont)
+ {
+@@ -5542,6 +5646,7 @@ mem_cgroup_create(struct cgroup *cont)
+ 		if (alloc_mem_cgroup_per_zone_info(memcg, node))
+ 			goto free_out;
+ 
++	INIT_LIST_HEAD(&memcg->children);
+ 	/* root ? */
+ 	if (cont->parent == NULL) {
+ 		int cpu;
+@@ -5580,6 +5685,10 @@ mem_cgroup_create(struct cgroup *cont)
+ 		 * mem_cgroup(see mem_cgroup_put).
+ 		 */
+ 		mem_cgroup_get(parent);
++
++		mutex_lock(&memcg_list_mutex);
++		list_add_rcu(&memcg->siblings, &parent->children);
++		mutex_unlock(&memcg_list_mutex);
+ 	} else {
+ 		res_counter_init(&memcg->res, NULL);
+ 		res_counter_init(&memcg->memsw, NULL);
+@@ -5622,9 +5731,15 @@ static int mem_cgroup_pre_destroy(struct cgroup *cont)
+ static void mem_cgroup_destroy(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
++	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+ 
+ 	kmem_cgroup_destroy(memcg);
+ 
++	mutex_lock(&memcg_list_mutex);
++	if (parent)
++		list_del_rcu(&memcg->siblings);
++	mutex_unlock(&memcg_list_mutex);
++
+ 	mem_cgroup_put(memcg);
+ }
+ 
 -- 
 1.7.10.2
 
