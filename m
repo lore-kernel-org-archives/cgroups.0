@@ -1,68 +1,49 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v4 23/25] memcg: propagate kmem limiting information to
- children
-Date: Mon, 18 Jun 2012 16:43:39 +0400
-Message-ID: <4FDF227B.3080601@parallels.com>
-References: <1340015298-14133-1-git-send-email-glommer@parallels.com> <1340015298-14133-24-git-send-email-glommer@parallels.com> <4FDF20ED.4090401@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] mm/memcg: add unlikely to mercg->move_charge_at_immigrate
+Date: Mon, 18 Jun 2012 21:10:21 +0800
+Message-ID: <1340025022-7272-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FDF20ED.4090401-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=cvh+5MBpYBHsPoqdJjQ41Bl8ey1g9wIyPbXLGHU+QgA=;
+        b=xmMD8x5bL/pTJmhYFJjhrLTwsJhYUsmSOccG2YUt9jnxSLZcbX6Brm7vGvfTCUMRtQ
+         R3YYdKEqiTOMZwMDSigb7Y0RtfOrUO9L3CzuEtNtE6KfbkTTtBmlsTkS1HMR9ELT6ZQX
+         c/UelcWAZahgtPubMU22B3J6N5vpq2Emim37v9Wm2B0EpOCgiUMwF3gyvQFfMbJln0rk
+         T62iQaGCsHJA9dE8Oqd6XnuJ4hQlGba7UAUom65y3tg+m1A1w4fpS5j2gbOED6cHp+Pw
+         jbKRCSIVHZzREmDXdyJohGY1QyIBV/yszqlDRpxId0meRA6QKICfoHeND43xQPKaj191
+         YPVQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cristoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 06/18/2012 04:37 PM, Kamezawa Hiroyuki wrote:
-> (2012/06/18 19:28), Glauber Costa wrote:
->> The current memcg slab cache management fails to present satisfatory hierarchical
->> behavior in the following scenario:
->>
->> ->  /cgroups/memory/A/B/C
->>
->> * kmem limit set at A
->> * A and B empty taskwise
->> * bash in C does find /
->>
->> Because kmem_accounted is a boolean that was not set for C, no accounting
->> would be done. This is, however, not what we expect.
->>
-> 
-> Hmm....do we need this new routines even while we have mem_cgroup_iter() ?
-> 
-> Doesn't this work ?
-> 
-> 	struct mem_cgroup {
-> 		.....
-> 		bool kmem_accounted_this;
-> 		atomic_t kmem_accounted;
-> 		....
-> 	}
-> 
-> at set limit
-> 
-> 	....set_limit(memcg) {
-> 
-> 		if (newly accounted) {
-> 			mem_cgroup_iter() {
-> 				atomic_inc(&iter->kmem_accounted)
-> 			}
-> 		} else {
-> 			mem_cgroup_iter() {
-> 				atomic_dec(&iter->kmem_accounted);
-> 			}
-> 	}
-> 
-> 
-> hm ? Then, you can see kmem is accounted or not by atomic_read(&memcg->kmem_accounted);
-> 
+From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Accounted by itself / parent is still useful, and I see no reason to use
-an atomic + bool if we can use a pair of bits.
+move_charge_at_immigrate feature is disabled by default. Charges
+are moved only when you move mm->owner and it also add additional
+overhead.
 
-As for the routine, I guess mem_cgroup_iter will work... It does a lot
-more than I need, but for the sake of using what's already in there, I
-can switch to it with no problems.
+Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ mm/memcontrol.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a9c3d01..795a00f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5316,7 +5316,7 @@ static int mem_cgroup_can_attach(struct cgroup *cgroup,
+ 	int ret = 0;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
+ 
+-	if (memcg->move_charge_at_immigrate) {
++	if (unlikely(memcg->move_charge_at_immigrate)) {
+ 		struct mm_struct *mm;
+ 		struct mem_cgroup *from = mem_cgroup_from_task(p);
+ 
+-- 
+1.7.9.5
