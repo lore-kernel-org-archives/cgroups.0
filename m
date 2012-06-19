@@ -1,99 +1,69 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v4 23/25] memcg: propagate kmem limiting information to
- children
-Date: Tue, 19 Jun 2012 12:54:35 +0400
-Message-ID: <4FE03E4B.5020809@parallels.com>
-References: <1340015298-14133-1-git-send-email-glommer@parallels.com> <1340015298-14133-24-git-send-email-glommer@parallels.com> <4FDF20ED.4090401@jp.fujitsu.com> <4FDF227B.3080601@parallels.com> <4FDFC4D4.1030303@jp.fujitsu.com> <4FE039B9.3080809@parallels.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 1/2] memcg: remove -EINTR at rmdir()
+Date: Tue, 19 Jun 2012 14:40:36 +0200
+Message-ID: <20120619124036.GB22254@tiehlicka.suse.cz>
+References: <4FDF17A3.9060202@jp.fujitsu.com>
+ <20120618133012.GB2313@tiehlicka.suse.cz>
+ <4FDFC34B.3010003@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FE039B9.3080809-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <4FDFC34B.3010003@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cristoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 06/19/2012 12:35 PM, Glauber Costa wrote:
-> On 06/19/2012 04:16 AM, Kamezawa Hiroyuki wrote:
->> (2012/06/18 21:43), Glauber Costa wrote:
->>> On 06/18/2012 04:37 PM, Kamezawa Hiroyuki wrote:
->>>> (2012/06/18 19:28), Glauber Costa wrote:
->>>>> The current memcg slab cache management fails to present satisfatory hierarchical
->>>>> behavior in the following scenario:
->>>>>
->>>>> ->   /cgroups/memory/A/B/C
->>>>>
->>>>> * kmem limit set at A
->>>>> * A and B empty taskwise
->>>>> * bash in C does find /
->>>>>
->>>>> Because kmem_accounted is a boolean that was not set for C, no accounting
->>>>> would be done. This is, however, not what we expect.
->>>>>
->>>>
->>>> Hmm....do we need this new routines even while we have mem_cgroup_iter() ?
->>>>
->>>> Doesn't this work ?
->>>>
->>>> 	struct mem_cgroup {
->>>> 		.....
->>>> 		bool kmem_accounted_this;
->>>> 		atomic_t kmem_accounted;
->>>> 		....
->>>> 	}
->>>>
->>>> at set limit
->>>>
->>>> 	....set_limit(memcg) {
->>>>
->>>> 		if (newly accounted) {
->>>> 			mem_cgroup_iter() {
->>>> 				atomic_inc(&iter->kmem_accounted)
->>>> 			}
->>>> 		} else {
->>>> 			mem_cgroup_iter() {
->>>> 				atomic_dec(&iter->kmem_accounted);
->>>> 			}
->>>> 	}
->>>>
->>>>
->>>> hm ? Then, you can see kmem is accounted or not by atomic_read(&memcg->kmem_accounted);
->>>>
->>>
->>> Accounted by itself / parent is still useful, and I see no reason to use
->>> an atomic + bool if we can use a pair of bits.
->>>
->>> As for the routine, I guess mem_cgroup_iter will work... It does a lot
->>> more than I need, but for the sake of using what's already in there, I
->>> can switch to it with no problems.
->>>
->>
->> Hmm. please start from reusing existing routines.
->> If it's not enough, some enhancement for generic cgroup  will be welcomed
->> rather than completely new one only for memcg.
->>
+On Tue 19-06-12 09:09:47, KAMEZAWA Hiroyuki wrote:
+> (2012/06/18 22:30), Michal Hocko wrote:
+> > On Mon 18-06-12 20:57:23, KAMEZAWA Hiroyuki wrote:
+> >> 2 follow-up patches for "memcg: move charges to root cgroup if use_hierarchy=0",
+> >> developped/tested onto memcg-devel tree. Maybe no HUNK with -next and -mm....
+> >> -Kame
+> >> ==
+> >> memcg: remove -EINTR at rmdir()
+> >>
+> >> By commit "memcg: move charges to root cgroup if use_hierarchy=0",
+> >> no memory reclaiming will occur at removing memory cgroup.
+> > 
+> > OK, so the there are only 2 reasons why move_parent could fail in this
+> > path. 1) it races with somebody else who is uncharging or moving the
+> > charge and 2) THP split.
+> > 1) works for us and 2) doens't seem to be serious enough to expect that
+> > it would stall rmdir on the group for unbound amount of time so the
+> > change is safe (can we make this into the changelog please?).
+> > 
 > 
-> And now that I am trying to adapt the code to the new function, I
-> remember clearly why I done this way. Sorry for my failed memory.
+> Yes. But the failure of move_parent() (-EBUSY) will be retried.
 > 
-> That has to do with the order of the walk. I need to enforce hierarchy,
-> which means whenever a cgroup has !use_hierarchy, I need to cut out that
-> branch, but continue scanning the tree for other branches.
+> Remaining problems are
+>  - attaching task while pre_destroy() is called.
+>  - creating child cgroup while pre_destroy() is called.
+
+I don't know why but I thought that tasks and subgroups are not alowed
+when pre_destroy is called. If this is possible then we probably want to
+check for pending signals or at least add cond_resched.
+
 > 
-> That is a lot easier to do with depth-search tree walks like the one
-> proposed in this patch. for_each_mem_cgroup() seems to walk the tree in
-> css-creation order. Which means we need to keep track of parents that
-> has hierarchy disabled at all times ( can be many ), and always test for
-> ancestorship - which is expensive, but I don't particularly care.
+> I think I need to make a patch for cgroup layer as I previously posted.
+> I'd like to try again.
 > 
-> But I'll give another shot with this one.
+> Thanks,
+> -Kame
 > 
 
-Humm, silly me. I was believing the hierarchical settings to be more
-flexible than they really are.
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
 
-I thought that it could be possible for a children of a parent with
-use_hierarchy = 1 to have use_hierarchy = 0.
-
-It seems not to be the case. This makes my life a lot easier.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
