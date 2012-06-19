@@ -1,41 +1,51 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: add unlikely to mercg->move_charge_at_immigrate
-Date: Tue, 19 Jun 2012 09:02:01 +0900
-Message-ID: <4FDFC179.3050203@jp.fujitsu.com>
-References: <1340025022-7272-1-git-send-email-liwp.linux@gmail.com> <4FDF2890.3020004@parallels.com> <20120618131918.GA2600@kernel>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH 1/2] memcg: remove -EINTR at rmdir()
+Date: Tue, 19 Jun 2012 09:09:47 +0900
+Message-ID: <4FDFC34B.3010003@jp.fujitsu.com>
+References: <4FDF17A3.9060202@jp.fujitsu.com> <20120618133012.GB2313@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120618131918.GA2600@kernel>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120618133012.GB2313@tiehlicka.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
 
-(2012/06/18 22:19), Wanpeng Li wrote:
-> On Mon, Jun 18, 2012 at 05:09:36PM +0400, Glauber Costa wrote:
->> On 06/18/2012 05:10 PM, Wanpeng Li wrote:
->>> From: Wanpeng Li<liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->>>
->>> move_charge_at_immigrate feature is disabled by default. Charges
->>> are moved only when you move mm->owner and it also add additional
->>> overhead.
+(2012/06/18 22:30), Michal Hocko wrote:
+> On Mon 18-06-12 20:57:23, KAMEZAWA Hiroyuki wrote:
+>> 2 follow-up patches for "memcg: move charges to root cgroup if use_hierarchy=0",
+>> developped/tested onto memcg-devel tree. Maybe no HUNK with -next and -mm....
+>> -Kame
+>> ==
+>> memcg: remove -EINTR at rmdir()
 >>
->> How big is this overhead?
->>
->> That's hardly a fast path. And if it happens to matter, it will be
->> just bigger when you enable it, and the compiler start giving the
->> wrong hints to the code.
->
-> Thank you for your quick response.
->
-> Oh, Maybe I should just write comments "move_charge_at_immigrate feature
-> is disabled by default. So add "unlikely", in order to compiler can optimize."
->
+>> By commit "memcg: move charges to root cgroup if use_hierarchy=0",
+>> no memory reclaiming will occur at removing memory cgroup.
+> 
+> OK, so the there are only 2 reasons why move_parent could fail in this
+> path. 1) it races with somebody else who is uncharging or moving the
+> charge and 2) THP split.
+> 1) works for us and 2) doens't seem to be serious enough to expect that
+> it would stall rmdir on the group for unbound amount of time so the
+> change is safe (can we make this into the changelog please?).
+> 
 
-This doesn't affect the performance. likely/unlikely which doesn't affect
-performance is never welcomed.
+Yes. But the failure of move_parent() (-EBUSY) will be retried.
+
+Remaining problems are
+ - attaching task while pre_destroy() is called.
+ - creating child cgroup while pre_destroy() is called.
+
+I think I need to make a patch for cgroup layer as I previously posted.
+I'd like to try again.
 
 Thanks,
 -Kame
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
