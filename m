@@ -1,51 +1,56 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 1/2] memcg: remove -EINTR at rmdir()
-Date: Tue, 19 Jun 2012 09:09:47 +0900
-Message-ID: <4FDFC34B.3010003@jp.fujitsu.com>
-References: <4FDF17A3.9060202@jp.fujitsu.com> <20120618133012.GB2313@tiehlicka.suse.cz>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH v4 05/25] memcg: Always free struct memcg through schedule_work()
+Date: Tue, 19 Jun 2012 09:11:20 +0900
+Message-ID: <4FDFC3A8.7010301@jp.fujitsu.com>
+References: <1340015298-14133-1-git-send-email-glommer@parallels.com> <1340015298-14133-6-git-send-email-glommer@parallels.com> <4FDF1A0D.6080204@jp.fujitsu.com> <4FDF1AAE.4080209@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120618133012.GB2313@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4FDF1AAE.4080209-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cristoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-(2012/06/18 22:30), Michal Hocko wrote:
-> On Mon 18-06-12 20:57:23, KAMEZAWA Hiroyuki wrote:
->> 2 follow-up patches for "memcg: move charges to root cgroup if use_hierarchy=0",
->> developped/tested onto memcg-devel tree. Maybe no HUNK with -next and -mm....
->> -Kame
->> ==
->> memcg: remove -EINTR at rmdir()
+(2012/06/18 21:10), Glauber Costa wrote:
+> On 06/18/2012 04:07 PM, Kamezawa Hiroyuki wrote:
+>> (2012/06/18 19:27), Glauber Costa wrote:
+>>> Right now we free struct memcg with kfree right after a
+>>> rcu grace period, but defer it if we need to use vfree() to get
+>>> rid of that memory area. We do that by need, because we need vfree
+>>> to be called in a process context.
+>>>
+>>> This patch unifies this behavior, by ensuring that even kfree will
+>>> happen in a separate thread. The goal is to have a stable place to
+>>> call the upcoming jump label destruction function outside the realm
+>>> of the complicated and quite far-reaching cgroup lock (that can't be
+>>> held when calling neither the cpu_hotplug.lock nor the jump_label_mutex)
+>>>
+>>> Signed-off-by: Glauber Costa<glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>>> CC: Tejun Heo<tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>>> CC: Li Zefan<lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>> CC: Kamezawa Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>>> CC: Johannes Weiner<hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>>> CC: Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>
 >>
->> By commit "memcg: move charges to root cgroup if use_hierarchy=0",
->> no memory reclaiming will occur at removing memory cgroup.
+>> How about cut out this patch and merge first as simple cleanu up and
+>> to reduce patch stack on your side ?
+>>
+>> Acked-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > 
-> OK, so the there are only 2 reasons why move_parent could fail in this
-> path. 1) it races with somebody else who is uncharging or moving the
-> charge and 2) THP split.
-> 1) works for us and 2) doens't seem to be serious enough to expect that
-> it would stall rmdir on the group for unbound amount of time so the
-> change is safe (can we make this into the changelog please?).
+> I believe this is already in the -mm tree (from the sock memcg fixes)
+> 
+> But actually, my main trouble with this series here, is that I am basing
+> it on Pekka's tree, while some of the fixes are in -mm already.
+> If I'd base it on -mm I would lose some of the stuff as well.
+> 
+> Maybe Pekka can merge the current -mm with his tree?
+> 
+> So far I am happy with getting comments from people about the code, so I
+> did not get overly concerned about that.
 > 
 
-Yes. But the failure of move_parent() (-EBUSY) will be retried.
-
-Remaining problems are
- - attaching task while pre_destroy() is called.
- - creating child cgroup while pre_destroy() is called.
-
-I think I need to make a patch for cgroup layer as I previously posted.
-I'd like to try again.
-
-Thanks,
+Sure. thank you.
 -Kame
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
