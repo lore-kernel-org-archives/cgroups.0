@@ -1,47 +1,41 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroups: Account for CSS_DEACT_BIAS in __css_put
-Date: Mon, 18 Jun 2012 15:39:23 -0700
-Message-ID: <20120618223923.GG32733@google.com>
-References: <20120614215530.12092.3543.stgit@dungbeetle.mtv.corp.google.com>
- <4FDAE23C.2020908@huawei.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: add unlikely to mercg->move_charge_at_immigrate
+Date: Tue, 19 Jun 2012 09:02:01 +0900
+Message-ID: <4FDFC179.3050203@jp.fujitsu.com>
+References: <1340025022-7272-1-git-send-email-liwp.linux@gmail.com> <4FDF2890.3020004@parallels.com> <20120618131918.GA2600@kernel>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=uKGfT0el4tSVN2pRoyHch6HxEM0qXYNUyf85lbY2ImM=;
-        b=xx6GvEXVbVYq5/zhACJs889gZXk9KX0n2pj6nIRtLlteZMprt0yM+QmZPu17KZWkfX
-         PWxtII9k0y0Qjakqeu+EPf5ARnUQ3RUxyq2pp9J3PwoYlf9c8pvMILDviyHB0BNesqIM
-         XK1G/sBWAE1QuOolzFTgCznce5kdwL7Q7Git2BJOREP4huUVqFj+Ni0RhjJTdGeIGWiC
-         H0C54JFyrg7DBnXXJCT11xAp4reaJOQBT2AxpedsJ0N9XkErsoMzFh0cPzISzCWgJUb6
-         vTl+ApDnX+xt+Ozz1wA8MN2OCwOuIKkadqZ1qumSxk9QCWBeyAc+QkYbrsYalvFM4IcC
-         lw3A==
-Content-Disposition: inline
-In-Reply-To: <4FDAE23C.2020908-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20120618131918.GA2600@kernel>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-On Fri, Jun 15, 2012 at 03:20:28PM +0800, Li Zefan wrote:
-> On 2012/6/15 5:55, Salman Qazi wrote:
-> 
-> > When we fixed the race between atomic_dec and css_refcnt, we missed
-> > the fact that css_refcnt internally subtracts CSS_DEACT_BIAS to get
-> > the actual reference count.  This can potentially cause a refcount leak
-> > if __css_put races with cgroup_clear_css_refs.
-> > 
-> > Signed-off-by: Salman Qazi <sqazi-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> 
-> 
-> Hope we've got everything right this time!
-> 
-> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+(2012/06/18 22:19), Wanpeng Li wrote:
+> On Mon, Jun 18, 2012 at 05:09:36PM +0400, Glauber Costa wrote:
+>> On 06/18/2012 05:10 PM, Wanpeng Li wrote:
+>>> From: Wanpeng Li<liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+>>>
+>>> move_charge_at_immigrate feature is disabled by default. Charges
+>>> are moved only when you move mm->owner and it also add additional
+>>> overhead.
+>>
+>> How big is this overhead?
+>>
+>> That's hardly a fast path. And if it happens to matter, it will be
+>> just bigger when you enable it, and the compiler start giving the
+>> wrong hints to the code.
+>
+> Thank you for your quick response.
+>
+> Oh, Maybe I should just write comments "move_charge_at_immigrate feature
+> is disabled by default. So add "unlikely", in order to compiler can optimize."
+>
 
-Applied to for-3.5-fixes.  Thanks.
+This doesn't affect the performance. likely/unlikely which doesn't affect
+performance is never welcomed.
 
--- 
-tejun
+Thanks,
+-Kame
