@@ -1,87 +1,112 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: clean up force_empty_list() return value check
-Date: Thu, 21 Jun 2012 17:17:01 +0900
-Message-ID: <4FE2D87D.2090500@jp.fujitsu.com>
-References: <4FDF17A3.9060202@jp.fujitsu.com> <4FDF1830.1000504@jp.fujitsu.com> <20120619165815.5ce24be7.akpm@linux-foundation.org> <4FE2D747.20506@jp.fujitsu.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH 1/2] memcg: remove -EINTR at rmdir()
+Date: Thu, 21 Jun 2012 17:26:11 +0900
+Message-ID: <4FE2DAA3.20606@jp.fujitsu.com>
+References: <4FDF17A3.9060202@jp.fujitsu.com> <20120618133012.GB2313@tiehlicka.suse.cz> <4FDFC34B.3010003@jp.fujitsu.com> <20120619124036.GB22254@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FE2D747.20506-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120619124036.GB22254@tiehlicka.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
 
-You're right and I think this will be much cleaner.
-==
+(2012/06/19 21:40), Michal Hocko wrote:
+> On Tue 19-06-12 09:09:47, KAMEZAWA Hiroyuki wrote:
+>> (2012/06/18 22:30), Michal Hocko wrote:
+>>> On Mon 18-06-12 20:57:23, KAMEZAWA Hiroyuki wrote:
+>>>> 2 follow-up patches for "memcg: move charges to root cgroup if use_hierarchy=0",
+>>>> developped/tested onto memcg-devel tree. Maybe no HUNK with -next and -mm....
+>>>> -Kame
+>>>> ==
+>>>> memcg: remove -EINTR at rmdir()
+>>>>
+>>>> By commit "memcg: move charges to root cgroup if use_hierarchy=0",
+>>>> no memory reclaiming will occur at removing memory cgroup.
+>>>
+>>> OK, so the there are only 2 reasons why move_parent could fail in this
+>>> path. 1) it races with somebody else who is uncharging or moving the
+>>> charge and 2) THP split.
+>>> 1) works for us and 2) doens't seem to be serious enough to expect that
+>>> it would stall rmdir on the group for unbound amount of time so the
+>>> change is safe (can we make this into the changelog please?).
+>>>
+>>
+>> Yes. But the failure of move_parent() (-EBUSY) will be retried.
+>>
+>> Remaining problems are
+>>   - attaching task while pre_destroy() is called.
+>>   - creating child cgroup while pre_destroy() is called.
+>
+> I don't know why but I thought that tasks and subgroups are not alowed
+> when pre_destroy is called. If this is possible then we probably want to
+> check for pending signals or at least add cond_resched.
 
- From 9b6224616282d74838b393485eb7c9215f546ec9 Mon Sep 17 00:00:00 2001
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Date: Thu, 21 Jun 2012 17:28:55 +0900
-Subject: [PATCH 2/2] memcg: make mem_cgroup_force_empty_list() as boolean function
 
-Now, mem_cgroup_force_empty_list() just returns 0 or -EBUSY and
--EBUSY is just indicating 'you need to retry.'.
-This patch makes mem_cgroup_force_empty_list() as boolean function and
-make the logic simpler.
+Now, pre_destroy() call is done as
 
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
-  mm/memcontrol.c |   13 +++----------
-  1 files changed, 3 insertions(+), 10 deletions(-)
+	lock_cgroup_mutex();
+	do some pre-check, no child, no tasks.
+	unlock_cgroup_mutex();
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 90a2ad4..767440c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3797,7 +3797,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
-   * This routine traverse page_cgroup in given list and drop them all.
-   * *And* this routine doesn't reclaim page itself, just removes page_cgroup.
-   */
--static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-+static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-  				int node, int zid, enum lru_list lru)
-  {
-  	struct mem_cgroup_per_zone *mz;
-@@ -3805,7 +3805,6 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-  	struct list_head *list;
-  	struct page *busy;
-  	struct zone *zone;
--	int ret = 0;
-  
-  	zone = &NODE_DATA(node)->node_zones[zid];
-  	mz = mem_cgroup_zoneinfo(memcg, node, zid);
-@@ -3819,7 +3818,6 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-  		struct page_cgroup *pc;
-  		struct page *page;
-  
--		ret = 0;
-  		spin_lock_irqsave(&zone->lru_lock, flags);
-  		if (list_empty(list)) {
-  			spin_unlock_irqrestore(&zone->lru_lock, flags);
-@@ -3836,19 +3834,14 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-  
-  		pc = lookup_page_cgroup(page);
-  
--		ret = mem_cgroup_move_parent(page, pc, memcg);
--
--		if (ret == -EBUSY || ret == -EINVAL) {
-+		if (mem_cgroup_move_parent(page, pc, memcg)) {
-  			/* found lock contention or "pc" is obsolete. */
-  			busy = page;
-  			cond_resched();
-  		} else
-  			busy = NULL;
-  	}
--
--	if (!ret && !list_empty(list))
--		return -EBUSY;
--	return ret;
-+	return !list_empty(list);
-  }
-  
-  /*
--- 
-1.7.4.1
+	->pre_destroy()
 
+	lock_cgroup_mutex()
+	check css's refcnt....
+
+What I take care of now is following case.
+		CPU A			    CPU-B
+	unlock_cgroup_mutex()
+	->pre_destroy()
+
+	<delay by something>		attach new task
+					add new charge
+					detach the task
+	lock_cgroup_mutex()
+	check rss' refcnt
+
+This will cause account leak even if I think this will not happen in the real world.
+I'd like to disable attach task.
+
+Now, our ->pre_destroy() is quite fast because we don't have no memory reclaim.
+I believe we can call ->pre_destroy() without dropping cgroup_mutex.
+
+	lock_cgroup_mutex()
+	do pre-check
+
+	->pre_destroy()
+
+	check css's refcnt
+
+I think this is straightforward. I'd like to post a patch.
+Thanks,
+-Kame
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
