@@ -1,104 +1,87 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Subject: Re: [PATCH 2/2] memcg: clean up force_empty_list() return value check
-Date: Thu, 21 Jun 2012 17:11:51 +0900
-Message-ID: <4FE2D747.20506@jp.fujitsu.com>
-References: <4FDF17A3.9060202@jp.fujitsu.com> <4FDF1830.1000504@jp.fujitsu.com> <20120619165815.5ce24be7.akpm@linux-foundation.org>
+Date: Thu, 21 Jun 2012 17:17:01 +0900
+Message-ID: <4FE2D87D.2090500@jp.fujitsu.com>
+References: <4FDF17A3.9060202@jp.fujitsu.com> <4FDF1830.1000504@jp.fujitsu.com> <20120619165815.5ce24be7.akpm@linux-foundation.org> <4FE2D747.20506@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120619165815.5ce24be7.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4FE2D747.20506-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-(2012/06/20 8:58), Andrew Morton wrote:
-> On Mon, 18 Jun 2012 20:59:44 +0900
-> Kamezawa Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>  wrote:
->
->>
->> By commit "memcg: move charges to root cgroup if use_hierarchy=0"
->> mem_cgroup_move_parent() only returns -EBUSY, -EINVAL.
->> So, we can remove -ENOMEM and -EINTR checks.
->>
->> Signed-off-by: KAMEZAWA Hiroyuki<kamezawa.hiroyu@jp.fujitsu.com>
->> ---
->>   mm/memcontrol.c |    5 -----
->>   1 files changed, 0 insertions(+), 5 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index cf8a0f6..726b7c6 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -3847,8 +3847,6 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
->>   		pc = lookup_page_cgroup(page);
->>
->>   		ret = mem_cgroup_move_parent(page, pc, memcg, GFP_KERNEL);
->> -		if (ret == -ENOMEM || ret == -EINTR)
->> -			break;
->>
->>   		if (ret == -EBUSY || ret == -EINVAL) {
->
-> This looks a bit fragile - if mem_cgroup_move_parent() is later changed
-> (intentionally or otherwise!) to return -Esomethingelse then
-> mem_cgroup_force_empty_list() will subtly break.  Why not just do
->
-> 		if (ret<  0)
->
-
-You're right. I'm sorry I haven't done enough clean-ups.
-I made 2 more patches...I'll repost/remake all paches if it's better.
-one more patch will follow this email.
+You're right and I think this will be much cleaner.
 ==
- From eee5f31fc6378da19705de7187bb3f219ef6d7f6 Mon Sep 17 00:00:00 2001
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Date: Thu, 21 Jun 2012 17:25:04 +0900
-Subject: [PATCH 1/2] mem_cgroup_move_parent() doesn't need gfp_mask.
 
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+ From 9b6224616282d74838b393485eb7c9215f546ec9 Mon Sep 17 00:00:00 2001
+From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Date: Thu, 21 Jun 2012 17:28:55 +0900
+Subject: [PATCH 2/2] memcg: make mem_cgroup_force_empty_list() as boolean function
+
+Now, mem_cgroup_force_empty_list() just returns 0 or -EBUSY and
+-EBUSY is just indicating 'you need to retry.'.
+This patch makes mem_cgroup_force_empty_list() as boolean function and
+make the logic simpler.
+
+Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
-  mm/memcontrol.c |    5 ++---
-  1 files changed, 2 insertions(+), 3 deletions(-)
+  mm/memcontrol.c |   13 +++----------
+  1 files changed, 3 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 76d83a5..90a2ad4 100644
+index 90a2ad4..767440c 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2662,8 +2662,7 @@ out:
-  
-  static int mem_cgroup_move_parent(struct page *page,
-  				  struct page_cgroup *pc,
--				  struct mem_cgroup *child,
--				  gfp_t gfp_mask)
-+				  struct mem_cgroup *child)
+@@ -3797,7 +3797,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+   * This routine traverse page_cgroup in given list and drop them all.
+   * *And* this routine doesn't reclaim page itself, just removes page_cgroup.
+   */
+-static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
++static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+  				int node, int zid, enum lru_list lru)
   {
-  	struct mem_cgroup *parent;
-  	unsigned int nr_pages;
-@@ -3837,7 +3836,7 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+  	struct mem_cgroup_per_zone *mz;
+@@ -3805,7 +3805,6 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+  	struct list_head *list;
+  	struct page *busy;
+  	struct zone *zone;
+-	int ret = 0;
+  
+  	zone = &NODE_DATA(node)->node_zones[zid];
+  	mz = mem_cgroup_zoneinfo(memcg, node, zid);
+@@ -3819,7 +3818,6 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+  		struct page_cgroup *pc;
+  		struct page *page;
+  
+-		ret = 0;
+  		spin_lock_irqsave(&zone->lru_lock, flags);
+  		if (list_empty(list)) {
+  			spin_unlock_irqrestore(&zone->lru_lock, flags);
+@@ -3836,19 +3834,14 @@ static int mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
   
   		pc = lookup_page_cgroup(page);
   
--		ret = mem_cgroup_move_parent(page, pc, memcg, GFP_KERNEL);
-+		ret = mem_cgroup_move_parent(page, pc, memcg);
-  
-  		if (ret == -EBUSY || ret == -EINVAL) {
+-		ret = mem_cgroup_move_parent(page, pc, memcg);
+-
+-		if (ret == -EBUSY || ret == -EINVAL) {
++		if (mem_cgroup_move_parent(page, pc, memcg)) {
   			/* found lock contention or "pc" is obsolete. */
+  			busy = page;
+  			cond_resched();
+  		} else
+  			busy = NULL;
+  	}
+-
+-	if (!ret && !list_empty(list))
+-		return -EBUSY;
+-	return ret;
++	return !list_empty(list);
+  }
+  
+  /*
 -- 
 1.7.4.1
 
-
-
-
-
-
-
-
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
