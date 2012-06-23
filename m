@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 3/6] memcg: change mem_control_xxx to mem_cgroup_xxx
-Date: Sat, 23 Jun 2012 14:17:01 +0800
-Message-ID: <1340432221-5268-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH 4/6] memcg: move recent_rotated and recent_scanned informations
+Date: Sat, 23 Jun 2012 14:17:39 +0800
+Message-ID: <1340432259-5317-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=8V6fMKBZR8NYBn1y4RFJ32yw1pDDkVHxFkYH+19lX10=;
-        b=Z4hLJ3UOYpXhEfTqZbZYkZgDf+0vef28YdFV3IrS9v+oo/JWMvbgHCe39QoBofk9Gy
-         4dHebvI8qi9D5X8r5qtTSeh2xvCEjxIIv2ywYjho0CRYrXHZpwINgIt7QuGlNOZH3HgU
-         kI6JIsOTpzv9MM47WQERkiIe0MAHXMT5pDPSiLBAhgTVDItbDM+Wo8KdMbGywqz7rr3o
-         wivlzCWrMB2v+bMI2rSOHbIIqYZo5Oa5/JR/moNkIBk1oRIsHncR9ZqyS8t/ivnl+d/5
-         crztPbwZn/u6LpGRwoZi6UD7xdl272UOOo5RT2qbAGvMsOFu9isnHom4MHgnkYr/m1Ju
-         hEpw==
+        bh=dYUk+hNDmpVOiaNjD+p1mbABtOpzlTwMuJIuFb9a+qU=;
+        b=zqzAhAnV1HXv++mdLb9tLnpt7xyLYVAM/iywdjAS0OC2/YPxHrZolxhBFsA4dTXJwL
+         eNjaGMLzKVxQIvoO/M8eW1HO/vDfSfsOGbUN/0hXTLxIQ/ege5bt5I91zW1hRBBa/XQ8
+         M3XNDImXj96V/+atQuogwF8ohXs4hovBc9CfgALsLkomUvRlf+W617iY1CrGIU1XrvBX
+         l/qk+2EbPHisJDVzIE4/doC608YCrOQ/csJ1kYe82gJNx+m+RojFEaPsKhNgpEpSke55
+         8E0WoNiThrSffWyk7fNCo1BbaaPTKnjB+THYzdwy7WCrgW3NQKfBBGrbrEF1OcNj9DVU
+         YJbQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,52 +23,85 @@ Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-
 
 From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Unify memcg functions to mem_cgroup_xxx.
+Move recent_rotated and recent_scanned prints next to inactive_anon,
+ative_anon, inactive_file, active_file, and unevictable prints to
+save developers' time. Since they have to go a long way(when cat memory.stat)
+to find recent_rotated and recent_scanned prints which has relationship
+with the memory cgroup we care. These prints are behind total_* which
+not just focus on the memory cgroup we care currently.
 
 Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- mm/memcontrol.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ mm/memcontrol.c |   50 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ccda728..2e81328 100644
+index 2e81328..c821e36 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3999,7 +3999,7 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
- #endif
+@@ -4080,6 +4080,31 @@ static int mem_cgroup_stat_show(struct cgroup *cont, struct cftype *cft,
+ 		seq_printf(m, "%s %lu\n", mem_cgroup_lru_names[i],
+ 			   mem_cgroup_nr_lru_pages(memcg, BIT(i)) * PAGE_SIZE);
  
- #ifdef CONFIG_NUMA
--static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
-+static int mem_cgroup_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 				      struct seq_file *m)
- {
- 	int nid;
-@@ -4058,7 +4058,7 @@ static inline void mem_cgroup_lru_names_not_uptodate(void)
- 	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
++#ifdef CONFIG_DEBUG_VM
++	{
++		int nid, zid;
++		struct mem_cgroup_per_zone *mz;
++		struct zone_reclaim_stat *rstat;
++		unsigned long recent_rotated[2] = {0, 0};
++		unsigned long recent_scanned[2] = {0, 0};
++
++		for_each_online_node(nid)
++			for (zid = 0; zid < MAX_NR_ZONES; zid++) {
++				mz = mem_cgroup_zoneinfo(memcg, nid, zid);
++				rstat = &mz->lruvec.reclaim_stat;
++
++				recent_rotated[0] += rstat->recent_rotated[0];
++				recent_rotated[1] += rstat->recent_rotated[1];
++				recent_scanned[0] += rstat->recent_scanned[0];
++				recent_scanned[1] += rstat->recent_scanned[1];
++			}
++		seq_printf(m, "recent_rotated_anon %lu\n", recent_rotated[0]);
++		seq_printf(m, "recent_rotated_file %lu\n", recent_rotated[1]);
++		seq_printf(m, "recent_scanned_anon %lu\n", recent_scanned[0]);
++		seq_printf(m, "recent_scanned_file %lu\n", recent_scanned[1]);
++	}
++#endif
++
+ 	/* Hierarchical information */
+ 	{
+ 		unsigned long long limit, memsw_limit;
+@@ -4117,31 +4142,6 @@ static int mem_cgroup_stat_show(struct cgroup *cont, struct cftype *cft,
+ 		seq_printf(m, "total_%s %llu\n", mem_cgroup_lru_names[i], val);
+ 	}
+ 
+-#ifdef CONFIG_DEBUG_VM
+-	{
+-		int nid, zid;
+-		struct mem_cgroup_per_zone *mz;
+-		struct zone_reclaim_stat *rstat;
+-		unsigned long recent_rotated[2] = {0, 0};
+-		unsigned long recent_scanned[2] = {0, 0};
+-
+-		for_each_online_node(nid)
+-			for (zid = 0; zid < MAX_NR_ZONES; zid++) {
+-				mz = mem_cgroup_zoneinfo(memcg, nid, zid);
+-				rstat = &mz->lruvec.reclaim_stat;
+-
+-				recent_rotated[0] += rstat->recent_rotated[0];
+-				recent_rotated[1] += rstat->recent_rotated[1];
+-				recent_scanned[0] += rstat->recent_scanned[0];
+-				recent_scanned[1] += rstat->recent_scanned[1];
+-			}
+-		seq_printf(m, "recent_rotated_anon %lu\n", recent_rotated[0]);
+-		seq_printf(m, "recent_rotated_file %lu\n", recent_rotated[1]);
+-		seq_printf(m, "recent_scanned_anon %lu\n", recent_scanned[0]);
+-		seq_printf(m, "recent_scanned_file %lu\n", recent_scanned[1]);
+-	}
+-#endif
+-
+ 	return 0;
  }
  
--static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
-+static int mem_cgroup_stat_show(struct cgroup *cont, struct cftype *cft,
- 				 struct seq_file *m)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-@@ -4572,7 +4572,7 @@ static struct cftype mem_cgroup_files[] = {
- 	},
- 	{
- 		.name = "stat",
--		.read_seq_string = mem_control_stat_show,
-+		.read_seq_string = mem_cgroup_stat_show,
- 	},
- 	{
- 		.name = "force_empty",
-@@ -4604,7 +4604,7 @@ static struct cftype mem_cgroup_files[] = {
- #ifdef CONFIG_NUMA
- 	{
- 		.name = "numa_stat",
--		.read_seq_string = mem_control_numa_stat_show,
-+		.read_seq_string = mem_cgroup_numa_stat_show,
- 	},
- #endif
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
 -- 
 1.7.9.5
