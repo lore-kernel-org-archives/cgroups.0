@@ -1,118 +1,121 @@
-From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: Re: [PATCH V2] memcg: cleanup typos in mem cgroup
-Date: Sat, 23 Jun 2012 10:16:01 +0800
-Message-ID: <20120623021547.GA2227@kernel>
-References: <1340369199-29535-1-git-send-email-liwp.linux@gmail.com>
- <20120622150358.GB16628@tiehlicka.suse.cz>
-Reply-To: Wanpeng Li <liwp.linux@gmail.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v4 23/25] memcg: propagate kmem limiting information to
+ children
+Date: Sat, 23 Jun 2012 13:19:37 +0900
+Message-ID: <4FE543D9.2010802@jp.fujitsu.com>
+References: <1340015298-14133-1-git-send-email-glommer@parallels.com> <1340015298-14133-24-git-send-email-glommer@parallels.com> <4FDF20ED.4090401@jp.fujitsu.com> <4FDF227B.3080601@parallels.com> <4FDFC4D4.1030303@jp.fujitsu.com> <4FE039B9.3080809@parallels.com> <4FE03E4B.5020809@parallels.com> <4FE19102.6030704@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=zHRWNeYx4LUxSVYyUvg/2NZXTKJkevPmDC1QF2sgwvc=;
-        b=P3v6PnDXWLRcM/jC/T+/MLDPn2f4htsGK0BSBNMuzXJGSF8i12Pk3828JUeK5yH8CR
-         mwg4eH94uNGtljw341ig5YODhmtTok89KbY5+qdt0bxSC1fgz1whJoP6u3znpebaL/jx
-         Ozjnb7Vpkd0VgpC6vFm3XQ52ShYrIqKIZJPI+i4XJhbawWqEEv3/87c9BaIbyuZbWQWQ
-         W3ENiPIc/k4j5NJwQSkuiV9m/AG7mOlKO05JmVTyqv0hgr3C23dToPUKaSYwf1H1N+IQ
-         xbF1+ZBH3BHS4lptTQN+p6N/broY9Wl+jGS/2M80yRCGj/SnOvBcE70Kx85n54X2gC5W
-         K5zw==
-Content-Disposition: inline
-In-Reply-To: <20120622150358.GB16628@tiehlicka.suse.cz>
+In-Reply-To: <4FE19102.6030704@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Frederic Weisbecker <fweisbec@gmail.com>, Han Ying <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Wanpeng Li <liwp.linux@gmail.com>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, Cristoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, devel@openvz.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Fri, Jun 22, 2012 at 05:03:59PM +0200, Michal Hocko wrote:
->Have you used any tool to find those typos? Have you gone through the
->whole memcontrol.c file?
->I am not agains fixes like this but I would much prefer if it was one
->batch of all fixes. I bet there are more typose ;)
+(2012/06/20 17:59), Glauber Costa wrote:
+> On 06/19/2012 12:54 PM, Glauber Costa wrote:
+>> On 06/19/2012 12:35 PM, Glauber Costa wrote:
+>>> On 06/19/2012 04:16 AM, Kamezawa Hiroyuki wrote:
+>>>> (2012/06/18 21:43), Glauber Costa wrote:
+>>>>> On 06/18/2012 04:37 PM, Kamezawa Hiroyuki wrote:
+>>>>>> (2012/06/18 19:28), Glauber Costa wrote:
+>>>>>>> The current memcg slab cache management fails to present satisfatory hierarchical
+>>>>>>> behavior in the following scenario:
+>>>>>>>
+>>>>>>> ->   /cgroups/memory/A/B/C
+>>>>>>>
+>>>>>>> * kmem limit set at A
+>>>>>>> * A and B empty taskwise
+>>>>>>> * bash in C does find /
+>>>>>>>
+>>>>>>> Because kmem_accounted is a boolean that was not set for C, no accounting
+>>>>>>> would be done. This is, however, not what we expect.
+>>>>>>>
+>>>>>>
+>>>>>> Hmm....do we need this new routines even while we have mem_cgroup_iter() ?
+>>>>>>
+>>>>>> Doesn't this work ?
+>>>>>>
+>>>>>> 	struct mem_cgroup {
+>>>>>> 		.....
+>>>>>> 		bool kmem_accounted_this;
+>>>>>> 		atomic_t kmem_accounted;
+>>>>>> 		....
+>>>>>> 	}
+>>>>>>
+>>>>>> at set limit
+>>>>>>
+>>>>>> 	....set_limit(memcg) {
+>>>>>>
+>>>>>> 		if (newly accounted) {
+>>>>>> 			mem_cgroup_iter() {
+>>>>>> 				atomic_inc(&iter->kmem_accounted)
+>>>>>> 			}
+>>>>>> 		} else {
+>>>>>> 			mem_cgroup_iter() {
+>>>>>> 				atomic_dec(&iter->kmem_accounted);
+>>>>>> 			}
+>>>>>> 	}
+>>>>>>
+>>>>>>
+>>>>>> hm ? Then, you can see kmem is accounted or not by atomic_read(&memcg->kmem_accounted);
+>>>>>>
+>>>>>
+>>>>> Accounted by itself / parent is still useful, and I see no reason to use
+>>>>> an atomic + bool if we can use a pair of bits.
+>>>>>
+>>>>> As for the routine, I guess mem_cgroup_iter will work... It does a lot
+>>>>> more than I need, but for the sake of using what's already in there, I
+>>>>> can switch to it with no problems.
+>>>>>
+>>>>
+>>>> Hmm. please start from reusing existing routines.
+>>>> If it's not enough, some enhancement for generic cgroup  will be welcomed
+>>>> rather than completely new one only for memcg.
+>>>>
+>>>
+>>> And now that I am trying to adapt the code to the new function, I
+>>> remember clearly why I done this way. Sorry for my failed memory.
+>>>
+>>> That has to do with the order of the walk. I need to enforce hierarchy,
+>>> which means whenever a cgroup has !use_hierarchy, I need to cut out that
+>>> branch, but continue scanning the tree for other branches.
+>>>
+>>> That is a lot easier to do with depth-search tree walks like the one
+>>> proposed in this patch. for_each_mem_cgroup() seems to walk the tree in
+>>> css-creation order. Which means we need to keep track of parents that
+>>> has hierarchy disabled at all times ( can be many ), and always test for
+>>> ancestorship - which is expensive, but I don't particularly care.
+>>>
+>>> But I'll give another shot with this one.
+>>>
+>>
+>> Humm, silly me. I was believing the hierarchical settings to be more
+>> flexible than they really are.
+>>
+>> I thought that it could be possible for a children of a parent with
+>> use_hierarchy = 1 to have use_hierarchy = 0.
+>>
+>> It seems not to be the case. This makes my life a lot easier.
+>>
+> 
+> How about the following patch?
+> 
+> It is still expensive in the clear_bit case, because I can't just walk
+> the whole tree flipping the bit down: I need to stop whenever I see a
+> branch whose root is itself accounted - and the ordering of iter forces
+> me to always check the tree up (So we got O(n*h) h being height instead
+> of O(n)).
+> 
+> for flipping the bit up, it is easy enough.
+> 
+> 
+Yes. It seems much nicer.
 
-OK, I will figure out them and resend the patch.
-
-Regards,
-Wanpeng Li
-
->
->On Fri 22-06-12 20:46:39, Wanpeng Li wrote:
->> From: Wanpeng Li <liwp@linux.vnet.ibm.com>
->> 
->> Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
->> ---
->>  mm/memcontrol.c |   11 +++++------
->>  1 file changed, 5 insertions(+), 6 deletions(-)
->> 
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 776fc57..503ddd0 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -115,8 +115,8 @@ static const char * const mem_cgroup_events_names[] = {
->>  
->>  /*
->>   * Per memcg event counter is incremented at every pagein/pageout. With THP,
->> - * it will be incremated by the number of pages. This counter is used for
->> - * for trigger some periodic events. This is straightforward and better
->> + * it will be incremented by the number of pages. This counter is used to
->> + * trigger some periodic events. This is straightforward and better
->>   * than using jiffies etc. to handle periodic memcg event.
->>   */
->>  enum mem_cgroup_events_target {
->> @@ -678,7 +678,7 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
->>   *
->>   * If there are kernel internal actions which can make use of some not-exact
->>   * value, and reading all cpu value can be performance bottleneck in some
->> - * common workload, threashold and synchonization as vmstat[] should be
->> + * common workload, threshold and synchonization as vmstat[] should be
->>   * implemented.
->>   */
->>  static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
->> @@ -2213,7 +2213,6 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->>  	if (mem_cgroup_wait_acct_move(mem_over_limit))
->>  		return CHARGE_RETRY;
->>  
->> -	/* If we don't need to call oom-killer at el, return immediately */
->>  	if (!oom_check)
->>  		return CHARGE_NOMEM;
->>  	/* check OOM */
->> @@ -2291,7 +2290,7 @@ again:
->>  		 * In that case, "memcg" can point to root or p can be NULL with
->>  		 * race with swapoff. Then, we have small risk of mis-accouning.
->>  		 * But such kind of mis-account by race always happens because
->> -		 * we don't have cgroup_mutex(). It's overkill and we allo that
->> +		 * we don't have cgroup_mutex(). It's overkill and we allow that
->>  		 * small race, here.
->>  		 * (*) swapoff at el will charge against mm-struct not against
->>  		 * task-struct. So, mm->owner can be NULL.
->> @@ -2396,7 +2395,7 @@ static void __mem_cgroup_cancel_charge(struct mem_cgroup *memcg,
->>  }
->>  
->>  /*
->> - * Cancel chrages in this cgroup....doesn't propagate to parent cgroup.
->> + * Cancel charges in this cgroup....doesn't propagate to parent cgroup.
->>   * This is useful when moving usage to parent cgroup.
->>   */
->>  static void __mem_cgroup_cancel_local_charge(struct mem_cgroup *memcg,
->> -- 
->> 1.7.9.5
->> 
->> --
->> To unsubscribe, send a message with 'unsubscribe linux-mm' in
->> the body to majordomo@kvack.org.  For more info on Linux MM,
->> see: http://www.linux-mm.org/ .
->> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
->
->-- 
->Michal Hocko
->SUSE Labs
->SUSE LINUX s.r.o.
->Lihovarska 1060/12
->190 00 Praha 9    
->Czech Republic
+Thanks,
+-Kame
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
