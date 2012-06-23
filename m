@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 0/6] memcg: cleanup memory cgroup
-Date: Sat, 23 Jun 2012 14:14:08 +0800
-Message-ID: <1340432054-5053-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH 1/6] memcg: replace unsigned long by u64 to avoid overflow
+Date: Sat, 23 Jun 2012 14:15:34 +0800
+Message-ID: <1340432134-5178-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=kF9Lsghfh8p3L832g+gGGX3tA70EgDBbXA6ez5qZvaY=;
-        b=gaZjcqjqYwK3PtyqSjXQwImAJ9q1ORvJ9ZU6GreM0paz1fKBtMv+L1BdMtTvXwDxVW
-         BR5rcRf38OFkcOqT2EKU6CZgEckwOkw4BGXhYCSFAl+cwE9XwqqUsXDx5g1dluyqhla0
-         MeuSEl63O1kzAM/bYAqr0otqhvgw4wtIccDBK8M2tfNHZ0touwjGcWMaQPj790352xve
-         R13huLEapHB20kaU0BnoYB7BvRuLPjbP06IIBvl95Z4YK7dkSkTFeXqf3z6Q+LCLX6St
-         WU/i2Kc2gag0MqIQBkYWz42j2Jwm50I6cwq0SWiS7625QkoKhlmx0m0M6P3O6tpu0lhm
-         xFNg==
+        bh=t8RLLbteSVG0HSglSsTwL4Cjqoa/oXgIGryK6dw9mm0=;
+        b=sGz2kSPdrCan9ZEh5XMVfRCznfeyxt28M/SE2qDKtVtlwZxvLJN++wVVszeN51hIHs
+         y8YjiwRwmFC7eHaNtKjuDKGoftYX4zmz8jMTc7zkbdBcRAiAmHuqV+cAmRmTxgLdQXXD
+         40Kg8CxiFk1TojVJ5QNRas3pRLBYi4eqiv7SqBqCEwm2Xjb5AokEruLX8rOlXL68T0+g
+         dtywoE4HuexX0hqUCUajnSnwgJSWzSg67gn9rZ4O5s7RIMn0MxXLUHbizJ7GYYPHNple
+         pbWbnZcfNv0AiXB9A2lB+v/sSOkNOSc41rbwl0JmObbyp/chddJuM2EBhUa4agTGoR4C
+         Hfqg==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,20 +23,37 @@ Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-
 
 From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-
-Wanpeng Li (6):
-
-memcg: replace unsigned long by u64 to avoid overflow
-memcg: cleanup useless LRU_ALL_EVICTABLE
-memcg: change mem_control_xxx to mem_cgroup_xxx
-memcg: move recent_rotated and recent_scanned informations
-memcg: optimize memcg_get_hierarchical_limit
-memcg: cleanup all typo in memory cgroup
+Since the return value variable in mem_cgroup_zone_nr_lru_pages and
+mem_cgroup_node_nr_lru_pages functions are u64, so replace the return
+value of funtions by u64 to avoid overflow.
 
 Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/mmzone.h |    2 +-
- mm/memcontrol.c        |   90 +++++++++++++++++++++++-------------------------
- 2 files changed, 45 insertions(+), 47 deletions(-)
+ mm/memcontrol.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a2677e0..724bd02 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -776,8 +776,7 @@ mem_cgroup_zone_nr_lru_pages(struct mem_cgroup *memcg, int nid, int zid,
+ 	return ret;
+ }
+ 
+-static unsigned long
+-mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
++static u64 mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
+ 			int nid, unsigned int lru_mask)
+ {
+ 	u64 total = 0;
+@@ -790,7 +789,7 @@ mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
+ 	return total;
+ }
+ 
+-static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
++static u64 mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
+ 			unsigned int lru_mask)
+ {
+ 	int nid;
 -- 
 1.7.9.5
