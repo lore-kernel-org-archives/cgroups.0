@@ -1,55 +1,85 @@
-From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 4/6] memcg: move recent_rotated and recent_scanned
- informations
-Date: Sat, 23 Jun 2012 18:13:28 +0800
-Message-ID: <20120623101328.GA2153@kernel>
-References: <1340432259-5317-1-git-send-email-liwp.linux@gmail.com>
- <20120623095112.GO27816@cmpxchg.org>
-Reply-To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Wanpeng Li <liwp.linux@gmail.com>
+Subject: [PATCH] mm/memcg: add MAX_CHARGE_BATCH to limit unnecessary charge overhead
+Date: Sun, 24 Jun 2012 10:16:09 +0800
+Message-ID: <1340504169-5344-1-git-send-email-liwp.linux@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Sn9GOfzOmPo/UMq3HYFC9Be7J6+LqIKBc8z0/dV4xv8=;
-        b=ywGcn4+WdrYC4e7iGVfv1Au0NswkuQSSeUrngiBYdRDuJdwt/DElPnD3VSTP1x3axG
-         FlNIk+yJPJK4cI43dX9x7td7UsNQEcVbBu6g54UkCTTJmkrG0D+OLbG9m3DPvSWN2B3z
-         nTd45X5nDV5IGggCZ7xOPUq2+b6Nu7f7iCH/RbPzSFM06NsVGiCXYzgmJgFjf27c5SyK
-         120u2UB5nrTMtqfy7stg791KadtFZwAkBWYgG/BiiLLsHmApGWP2k3EP42Q50UXurnmo
-         yUKlkh1+rwrX22ajpGBo7gMAxouTiSjjG6q8voMxZUvZnw+Bg9qU5j2oT6PSxC9aA/n3
-         Zzsw==
-Content-Disposition: inline
-In-Reply-To: <20120623095112.GO27816-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=U9NFLFxQPwWFROT3mBqRemtzQcUJTkN4b2H4TixIo/s=;
+        b=EgyAhavhQP5xVj8cUpJbacgrQ7DKmfsB5eAMPoWJ/8i8gw6fUx/Y7zN/YYvOiKheEB
+         UvkCC7NmxDSTZUfL86vqwl4OQapeJrlkQjgUTS1c/2FUyIrPNiqLr6OyK4TSwE4umVua
+         IlxQhx29dfLtvLQw9LKg2G4Xs1tSQQrAJtBTJcaaCZ3lC11g/r6uabHEDp7MFoGPK/a9
+         2w5u2EQEzDRCoxL5wsbaFkHXyD06fw2ars+DLdsjXRjFDzNcI+k7H02SESe2PQh70uZD
+         Nw4IjmvJiD4I88dhBZkUP1d/PyCN4T0LsSHvkNx5B/WiYoFktudYrQJKN55nGX7brpK3
+         HklA==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>, Wanpeng Li <liwp.linux@gmail.com>
 
-On Sat, Jun 23, 2012 at 11:51:13AM +0200, Johannes Weiner wrote:
->On Sat, Jun 23, 2012 at 02:17:39PM +0800, Wanpeng Li wrote:
->> From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->> 
->> Move recent_rotated and recent_scanned prints next to inactive_anon,
->> ative_anon, inactive_file, active_file, and unevictable prints to
->> save developers' time. Since they have to go a long way(when cat memory.stat)
->> to find recent_rotated and recent_scanned prints which has relationship
->> with the memory cgroup we care. These prints are behind total_* which
->> not just focus on the memory cgroup we care currently.
->
->The hierarchical stats are about that memcg, too.  And I don't want to
+From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Move recent_rotated and recent_scanned prints next to file lru lists
-just because the pageout code in vmscan.c keeps track of how many of 
-the mem/swap backed and file backed pages are referenced, and the 
-higher the rotated/scanned ratio, the more valuable that cache is. 
-Move five lru lists and associated debug informations together can 
-make things convenience. :-)
+Since exceeded unused cached charges would add pressure to
+mem_cgroup_do_charge, more overhead would burn cpu cycles when
+mem_cgroup_do_charge cause page reclaim or even OOM be triggered
+just for such exceeded unused cached charges. Add MAX_CHARGE_BATCH
+to limit max cached charges.
 
-Regards,
-Wanpeng Li
+Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
+---
+ mm/memcontrol.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
->turn on debugging and then look for the extra information hiding in
->the middle of regular stats.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0e092eb..1ff317a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1954,6 +1954,14 @@ void mem_cgroup_update_page_stat(struct page *page,
+  * TODO: maybe necessary to use big numbers in big irons.
+  */
+ #define CHARGE_BATCH	32U
++
++/*
++ * Max size of charge stock. Since exceeded unused cached charges would
++ * add pressure to mem_cgroup_do_charge which will cause page reclaim or
++ * even oom be triggered.
++ */
++#define MAX_CHARGE_BATCH 1024U
++
+ struct memcg_stock_pcp {
+ 	struct mem_cgroup *cached; /* this never be root cgroup */
+ 	unsigned int nr_pages;
+@@ -2250,6 +2258,7 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
+ 	unsigned int batch = max(CHARGE_BATCH, nr_pages);
+ 	int nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
+ 	struct mem_cgroup *memcg = NULL;
++	struct memcg_stock_pcp *stock;
+ 	int ret;
+ 
+ 	/*
+@@ -2320,6 +2329,13 @@ again:
+ 		rcu_read_unlock();
+ 	}
+ 
++	stock = &get_cpu_var(memcg_stock);
++	if (memcg == stock->cached && stock->nr_pages) {
++		if (stock->nr_pages > MAX_CHARGE_BATCH)
++			batch = nr_pages;
++	}
++	put_cpu_var(memcg_stock);
++
+ 	do {
+ 		bool oom_check;
+ 
+-- 
+1.7.9.5
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
