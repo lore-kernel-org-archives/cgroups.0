@@ -1,12 +1,12 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v3 2/4] memcg: change mem_control_xxx to mem_cgroup_xxx
-Date: Mon, 25 Jun 2012 11:43:41 +0200
-Message-ID: <20120625094341.GE19805@tiehlicka.suse.cz>
-References: <1340613848-9536-1-git-send-email-liwp.linux@gmail.com>
+Subject: Re: [PATCH v3 3/4] memcg: optimize memcg_get_hierarchical_limit
+Date: Mon, 25 Jun 2012 11:46:50 +0200
+Message-ID: <20120625094649.GF19805@tiehlicka.suse.cz>
+References: <1340613872-9581-1-git-send-email-liwp.linux@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1340613848-9536-1-git-send-email-liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <1340613872-9581-1-git-send-email-liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -14,68 +14,37 @@ Content-Transfer-Encoding: 7bit
 To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mike Frysinger <vapier-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>, Arun Sharma <asharma-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 25-06-12 16:44:08, Wanpeng Li wrote:
+On Mon 25-06-12 16:44:32, Wanpeng Li wrote:
 > From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > 
-> Unify memcg functions to mem_cgroup_xxx.
-> 
+> Optimize memcg_get_hierarchical_limit to save cpu cycle.
+
+How did you check that this actually saves some cycles?
+There are no (compiler) barriers here so it should reordered.
+
 > Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-Thanks
 > ---
->  mm/memcontrol.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  mm/memcontrol.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ccda728..2e81328 100644
+> index 2e81328..4520b57 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -3999,7 +3999,7 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
->  #endif
+> @@ -3917,9 +3917,9 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
 >  
->  #ifdef CONFIG_NUMA
-> -static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
-> +static int mem_cgroup_numa_stat_show(struct cgroup *cont, struct cftype *cft,
->  				      struct seq_file *m)
->  {
->  	int nid;
-> @@ -4058,7 +4058,7 @@ static inline void mem_cgroup_lru_names_not_uptodate(void)
->  	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
->  }
+>  	min_limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+>  	min_memsw_limit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+> -	cgroup = memcg->css.cgroup;
+>  	if (!memcg->use_hierarchy)
+>  		goto out;
+> +	cgroup = memcg->css.cgroup;
 >  
-> -static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
-> +static int mem_cgroup_stat_show(struct cgroup *cont, struct cftype *cft,
->  				 struct seq_file *m)
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-> @@ -4572,7 +4572,7 @@ static struct cftype mem_cgroup_files[] = {
->  	},
->  	{
->  		.name = "stat",
-> -		.read_seq_string = mem_control_stat_show,
-> +		.read_seq_string = mem_cgroup_stat_show,
->  	},
->  	{
->  		.name = "force_empty",
-> @@ -4604,7 +4604,7 @@ static struct cftype mem_cgroup_files[] = {
->  #ifdef CONFIG_NUMA
->  	{
->  		.name = "numa_stat",
-> -		.read_seq_string = mem_control_numa_stat_show,
-> +		.read_seq_string = mem_cgroup_numa_stat_show,
->  	},
->  #endif
->  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
+>  	while (cgroup->parent) {
+>  		cgroup = cgroup->parent;
 > -- 
 > 1.7.9.5
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
 Michal Hocko
