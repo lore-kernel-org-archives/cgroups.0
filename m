@@ -1,65 +1,78 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 00/11] kmem controller for memcg: stripped down version
-Date: Mon, 25 Jun 2012 18:15:17 +0400
-Message-ID: <1340633728-12785-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH 01/11] memcg: Make it possible to use the stock for more than one page.
+Date: Mon, 25 Jun 2012 18:15:18 +0400
+Message-ID: <1340633728-12785-2-git-send-email-glommer@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1340633728-12785-1-git-send-email-glommer@parallels.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>
 
-Hi,
+From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
 
-What I am proposing with this series is a stripped down version of the
-kmem controller for memcg that would allow us to merge significant parts
-of the infrastructure, while leaving out, for now, the polemic bits about
-the slab while it is being reworked by Cristoph.
+Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+---
+ mm/memcontrol.c |   21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-Me reasoning for that is that after the last change to introduce a gfp
-flag to mark kernel allocations, it became clear to me that tracking other
-resources like the stack would then follow extremely naturaly. I figured
-that at some point we'd have to solve the issue pointed by David, and avoid
-testing the Slab flag in the page allocator, since it would soon be made
-more generic. I do that by having the callers to explicit mark it.
-
-So to demonstrate how it would work, I am introducing a stack tracker here,
-that is already a functionality per-se: it successfully stops fork bombs to
-happen. (Sorry for doing all your work, Frederic =p ). Note that after all
-memcg infrastructure is deployed, it becomes very easy to track anything.
-The last patch of this series is extremely simple.
-
-The infrastructure is exactly the same we had in memcg, but stripped down
-of the slab parts. And because what we have after those patches is a feature
-per-se, I think it could be considered for merging.
-
-Let me know what you think.
-
-Glauber Costa (9):
-  memcg: change defines to an enum
-  kmem slab accounting basic infrastructure
-  Add a __GFP_KMEMCG flag
-  memcg: kmem controller infrastructure
-  mm: Allocate kernel pages to the right memcg
-  memcg: disable kmem code when not in use.
-  memcg: propagate kmem limiting information to children
-  memcg: allow a memcg with kmem charges to be destructed.
-  protect architectures where THREAD_SIZE >= PAGE_SIZE against fork
-    bombs
-
-Suleiman Souhlal (2):
-  memcg: Make it possible to use the stock for more than one page.
-  memcg: Reclaim when more than one page needed.
-
- include/linux/gfp.h         |   11 +-
- include/linux/memcontrol.h  |   46 +++++
- include/linux/thread_info.h |    6 +
- kernel/fork.c               |    4 +-
- mm/memcontrol.c             |  395 ++++++++++++++++++++++++++++++++++++++++---
- mm/page_alloc.c             |   27 +++
- 6 files changed, 464 insertions(+), 25 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f72b5e5..9304db2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1967,19 +1967,22 @@ static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
+ static DEFINE_MUTEX(percpu_charge_mutex);
+ 
+ /*
+- * Try to consume stocked charge on this cpu. If success, one page is consumed
+- * from local stock and true is returned. If the stock is 0 or charges from a
+- * cgroup which is not current target, returns false. This stock will be
+- * refilled.
++ * Try to consume stocked charge on this cpu. If success, nr_pages pages are
++ * consumed from local stock and true is returned. If the stock is 0 or
++ * charges from a cgroup which is not current target, returns false.
++ * This stock will be refilled.
+  */
+-static bool consume_stock(struct mem_cgroup *memcg)
++static bool consume_stock(struct mem_cgroup *memcg, int nr_pages)
+ {
+ 	struct memcg_stock_pcp *stock;
+ 	bool ret = true;
+ 
++	if (nr_pages > CHARGE_BATCH)
++		return false;
++
+ 	stock = &get_cpu_var(memcg_stock);
+-	if (memcg == stock->cached && stock->nr_pages)
+-		stock->nr_pages--;
++	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
++		stock->nr_pages -= nr_pages;
+ 	else /* need to call res_counter_charge */
+ 		ret = false;
+ 	put_cpu_var(memcg_stock);
+@@ -2278,7 +2281,7 @@ again:
+ 		VM_BUG_ON(css_is_removed(&memcg->css));
+ 		if (mem_cgroup_is_root(memcg))
+ 			goto done;
+-		if (nr_pages == 1 && consume_stock(memcg))
++		if (consume_stock(memcg, nr_pages))
+ 			goto done;
+ 		css_get(&memcg->css);
+ 	} else {
+@@ -2303,7 +2306,7 @@ again:
+ 			rcu_read_unlock();
+ 			goto done;
+ 		}
+-		if (nr_pages == 1 && consume_stock(memcg)) {
++		if (consume_stock(memcg, nr_pages)) {
+ 			/*
+ 			 * It seems dagerous to access memcg without css_get().
+ 			 * But considering how consume_stok works, it's not
 -- 
 1.7.10.2
