@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v4 0/2] memcg: cleanup memory cgroup
-Date: Mon, 25 Jun 2012 19:15:00 +0800
-Message-ID: <1340622900-13034-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH v4 1/2] memcg: cleanup useless LRU_ALL_EVICTABLE
+Date: Mon, 25 Jun 2012 19:15:34 +0800
+Message-ID: <1340622934-13091-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=5DLNR3r8PT0bX9msn+bbxfsGUSPb12Yqbrgt6q9THfU=;
-        b=PZBOQ8pK2E2aLgG/f09+73ICgIdcAPHLTU0/snvhqtgztjGO/9McA5CzAVk8HXJoto
-         RyGqnPdwvZiZAlPeI4EO5ZoHdiQU0kdUQ/n5t2EPa6UpCryJswi0KEQS51IQ86dMUXfx
-         nrBIS+dBP4Qm9lna+2gwmZF3rKloLtzDzTP3LNQMdUa3n/L7hkhEy90h3uJDx/yvsLhE
-         FwYwjfAkuW2ARUf1edgM1gPb11kTODuBoLWV4OAwR0ZpILRmMiXVvAYrupJH0c0dCnfF
-         ucJcEUwyIlpaZOKsYjU0uwE2dvurb4Nn/mdhGh44L2b9KTFPx+U7+Ha+mnQGUNwB3dQ9
-         fZYg==
+        bh=UWs78B+d39xsngFA/KujcHIvQ8UCl/EaTr1CpHyLaDI=;
+        b=mCNIpdPIz08TGEepk6CpSlccSC7q5S/yVcIuf5R212O8UIRZ8iHMfejl5Hgu0Br6yU
+         FnxW9JItfUM3NtO6tnPLHm6FQ46hDbjS2EQNkRVTBK3RrHIeq1gEgtRe2LjSUSINwXm1
+         K0ydFLnOW0dpyRtAh4pHssK30uB/bH8qJv5sGU9r7cAiQXMuF/KUeQaVzCLQMVItnumW
+         IGHRzOxufvyvLwgbI9eoIVDDrQNSru159s0ZTktacwmN68JREle5cmgHsJ7P1kwiDUkD
+         16Ki+fPZKDTwyagujLpFJ8uqxxmC1eGfv1VT3aoASiASAh7fsEJBGCc0o3WjTzDnMcf2
+         P7Vw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,22 +23,24 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA H
 
 From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Changelog:
+Since LRU_ALL_EVICTABLE is useless, just remove it.
 
-* drop memcg: move recent_rotated and recent_scanned informations patch
-* drop memcg: replace unsigned long by u64 to avoid overflow
-* not add Add LRU_ALL_UNEVICTABLE
-* drop memcg: cleanup all typo in memory cgroup, if it really need, I will resend in single patch
-* drop memcg: optimize memcg_get_hierarchical_limit 
-
-Wanpeng Li (2):
-
-memcg: cleanup useless LRU_ALL_EVICTABLE
-memcg: change mem_control_xxx to mem_cgroup_xxx
-
+Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
  include/linux/mmzone.h |    1 -
- mm/memcontrol.c        |   8 +++---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ 1 file changed, 1 deletion(-)
+
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 68c569f..8b10c35 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -209,7 +209,6 @@ struct lruvec {
+ /* Mask used at gathering information at once (see memcontrol.c) */
+ #define LRU_ALL_FILE (BIT(LRU_INACTIVE_FILE) | BIT(LRU_ACTIVE_FILE))
+ #define LRU_ALL_ANON (BIT(LRU_INACTIVE_ANON) | BIT(LRU_ACTIVE_ANON))
+-#define LRU_ALL_EVICTABLE (LRU_ALL_FILE | LRU_ALL_ANON)
+ #define LRU_ALL	     ((1 << NR_LRU_LISTS) - 1)
+ 
+ /* Isolate clean file */
 -- 
 1.7.9.5
