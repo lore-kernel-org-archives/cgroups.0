@@ -1,9 +1,9 @@
 From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 4/4] memcg: cleanup all typo in memory cgroup
-Date: Mon, 25 Jun 2012 18:41:43 +0800
-Message-ID: <20120625104143.GA12148@kernel>
-References: <1340613910-9629-1-git-send-email-liwp.linux@gmail.com>
- <4FE83BE9.7050701@jp.fujitsu.com>
+Subject: Re: [PATCH v3 3/4] memcg: optimize memcg_get_hierarchical_limit
+Date: Mon, 25 Jun 2012 18:43:57 +0800
+Message-ID: <20120625104357.GB12148@kernel>
+References: <1340613872-9581-1-git-send-email-liwp.linux@gmail.com>
+ <4FE834D9.8070903@jp.fujitsu.com>
 Reply-To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,15 +11,15 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=9PyDZurzQ4VVvIyuZXNIaGgsscZAdqDP8mgY0rRmYpE=;
-        b=trLXU/gZe/+SK0Ho46CRbnQtQYfBed7v4V5QcF982YlrfdINsxNDBCm1ZspY1/PqnR
-         plPUIDn28guONbHUdOc5IDlcMp+IShVcJ3UjDqUh0mdaBCpup7qHDl/rhobrTzg5dp4r
-         XSIAhTb5+x2eIXYYPewt92NJaLEL7XveZ6feNnid9Ypc9w1673dmEF1WwNQuVKPJl67X
-         6FJXAi/qcCMNvCXdENC9FfsVIn7OV0UoZ27OGq/AtNCnjp0qabgPdzcwoQCz5Rz1iUUS
-         U4MfVaPUAseehwwE12RwTjxi/Wq+ySrLDrKuiMjfkIw8th0QXkSdoZsUPJL6H8BeQTAR
-         GxEw==
+        bh=NiAHCZSvcJ5wAgNOVGBeRptphGpJ2j/QMYJKvL189CE=;
+        b=wFhCqV3rF1APio/TJkYMFzv8pa2vlaOaEUd0hcUlM75k6E/ntOCRie97Tdw9vQdmBS
+         W+i4FiK4cP2GWRsKdlL6pC5w+M/8jjtXMNEDXKnKHm7xxg754IwRkqrl9PobpvlvgJMt
+         VVL41AQN1Ug6Rxr5dFAJlktAZvtBvxM69aIPUqmej207onWTgBts9OKYyQjiW+p9kJxJ
+         Izic3ZpW4ppA5ByvKa7AKe6+mrzz1Qe9254qALlndljEqWaoj1G91B78zRvcOFnxN7OD
+         IkPV9i+CZe6kJ6u6Q1kBjGymJ/rLPDMA4TNX9ITnldHYQEOAjSw38WFQboXXZy7CO5jX
+         TzIg==
 Content-Disposition: inline
-In-Reply-To: <4FE83BE9.7050701-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <4FE834D9.8070903-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,94 +27,47 @@ Content-Transfer-Encoding: 7bit
 To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mike Frysinger <vapier-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>, Arun Sharma <asharma-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon, Jun 25, 2012 at 07:22:33PM +0900, Kamezawa Hiroyuki wrote:
->(2012/06/25 17:45), Wanpeng Li wrote:
+On Mon, Jun 25, 2012 at 06:52:25PM +0900, Kamezawa Hiroyuki wrote:
+>(2012/06/25 17:44), Wanpeng Li wrote:
 >> From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+>> 
+>> Optimize memcg_get_hierarchical_limit to save cpu cycle.
 >> 
 >> Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 >
->my thunderbird's spell checker founds some more ;)
+>I can't understand the benefit of this patch to the real world...
 >
->> ---
->>   mm/memcontrol.c |   21 ++++++++++-----------
->>   1 file changed, 10 insertions(+), 11 deletions(-)
->> 
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 4520b57..d474bf6 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -115,8 +115,8 @@ static const char * const mem_cgroup_events_names[] = {
->>   
->>   /*
->>    * Per memcg event counter is incremented at every pagein/pageout. With THP,
->> - * it will be incremated by the number of pages. This counter is used for
->> - * for trigger some periodic events. This is straightforward and better
->> + * it will be incremented by the number of pages. This counter is used to
->> + * trigger some periodic events. This is straightforward and better
->>    * than using jiffies etc. to handle periodic memcg event.
->>    */
->>   enum mem_cgroup_events_target {
->> @@ -667,7 +667,7 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
->>    * Both of vmstat[] and percpu_counter has threshold and do periodic
->>    * synchronization to implement "quick" read. There are trade-off between
->>    * reading cost and precision of value. Then, we may have a chance to implement
->> - * a periodic synchronizion of counter in memcg's counter.
->> + * a periodic synchronization of counter in memcg's counter.
->>    *
->>    * But this _read() function is used for user interface now. The user accounts
->>    * memory usage by memory cgroup and he _always_ requires exact value because
->> @@ -677,7 +677,7 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
->>    *
->>    * If there are kernel internal actions which can make use of some not-exact
->>    * value, and reading all cpu value can be performance bottleneck in some
->> - * common workload, threashold and synchonization as vmstat[] should be
->> + * common workload, threshold and synchonization as vmstat[] should be
->
->synchronization
->
->>    * implemented.
->>    */
->>   static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
->> @@ -1304,7 +1304,7 @@ static void mem_cgroup_end_move(struct mem_cgroup *memcg)
->>    *
->>    * mem_cgroup_under_move() - checking a cgroup is mc.from or mc.to or
->>    *			  under hierarchy of moving cgroups. This is for
->> - *			  waiting at hith-memory prressure caused by "move".
->> + *			  waiting at hit-memory pressure caused by "move".
->>    */
->>   
->>   static bool mem_cgroup_stolen(struct mem_cgroup *memcg)
->> @@ -1597,7 +1597,7 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
->>   /*
->>    * Check all nodes whether it contains reclaimable pages or not.
->>    * For quick scan, we make use of scan_nodes. This will allow us to skip
->> - * unused nodes. But scan_nodes is lazily updated and may not cotain
->> + * unused nodes. But scan_nodes is lazily updated and may not contain
->>    * enough new information. We need to do double check.
->>    */
->>   static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
->> @@ -2211,7 +2211,6 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->>   	if (mem_cgroup_wait_acct_move(mem_over_limit))
->>   		return CHARGE_RETRY;
->>   
->> -	/* If we don't need to call oom-killer at el, return immediately */
->>   	if (!oom_check)
->>   		return CHARGE_NOMEM;
->>   	/* check OOM */
->> @@ -2289,7 +2288,7 @@ again:
->>   		 * In that case, "memcg" can point to root or p can be NULL with
->>   		 * race with swapoff. Then, we have small risk of mis-accouning.
->accounting 
->
->Could you update ?
+>So, if you wrote the patch description as "clean up" rather than optimize,
+>ok, I'll agree.
+OK, I will change to "Cleanup". Thank you Kame.
+
+Best Regards,
+Wanpeng Li
+
 >
 >Thanks,
 >-Kame
 >
->(*) In my experience, too rapid update doesn't work well, maintainers cannot review it.
-
-Thank you Kame. Now I will drop disputed patch, if it really need,
-anyone can tell me fix it and resend.
-
-Regards,
-Wanpeng Li 
+>> ---
+>>   mm/memcontrol.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 2e81328..4520b57 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -3917,9 +3917,9 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
+>>   
+>>   	min_limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+>>   	min_memsw_limit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+>> -	cgroup = memcg->css.cgroup;
+>>   	if (!memcg->use_hierarchy)
+>>   		goto out;
+>> +	cgroup = memcg->css.cgroup;
+>>   
+>>   	while (cgroup->parent) {
+>>   		cgroup = cgroup->parent;
+>> 
+>
+>
+>
