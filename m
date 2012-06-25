@@ -1,56 +1,56 @@
-From: Frederic Weisbecker <fweisbec@redhat.com>
-Subject: Re: [PATCH 11/11] protect architectures where THREAD_SIZE >= PAGE_SIZE
- against fork bombs
-Date: Mon, 25 Jun 2012 18:55:35 +0200
-Message-ID: <4FE89807.50708@redhat.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-12-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 01/11] memcg: Make it possible to use the stock for
+ more than one page.
+Date: Mon, 25 Jun 2012 10:44:37 -0700
+Message-ID: <20120625174437.GC3869@google.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
+ <1340633728-12785-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1340633728-12785-12-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=x/yTqJBfEOUJrlQVFZbj8Ye7V0qyhjxOxhypwFryDw4=;
+        b=KBzm3VGM+jkezraAoR+AMtAAx2i1elg0Z/TwlXmx3uZEeLcI+bu9IwmYX0ZUI2J38O
+         Ch3/BcG/NHPCANPfQrrc9FFV29Jv9kGgROUtF+xAswX2E0m7oXNyYV6Z5RxVNlYTAg7U
+         z7TxKcCEIdpRYbta8baeGbpnkUC22EQHhVqGZsomMdmPZbINYAVrj2hrAjlaRPKkMNCc
+         3firKtntY8mXz/QNPX7HXhEqzchBcPOk4iKclPX9juzGwrSnQTA84ckRmnFmhzi7S6Yk
+         1Eb+WPRYqcPa4K/KJMMwqx1BjEx8hisCWoiuLHz90EILX7t79vGKfTpgQDdyahvoGdnu
+         AH/g==
+Content-Disposition: inline
+In-Reply-To: <1340633728-12785-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 06/25/2012 04:15 PM, Glauber Costa wrote:
+Hey, Glauber.
 
-> Because those architectures will draw their stacks directly from
-> the page allocator, rather than the slab cache, we can directly
-> pass __GFP_KMEMCG flag, and issue the corresponding free_pages.
-> 
-> This code path is taken when the architecture doesn't define
-> CONFIG_ARCH_THREAD_INFO_ALLOCATOR (only ia64 seems to), and has
-> THREAD_SIZE >= PAGE_SIZE. Luckily, most - if not all - of the
-> remaining architectures fall in this category.
-> 
-> This will guarantee that every stack page is accounted to the memcg
-> the process currently lives on, and will have the allocations to fail
-> if they go over limit.
-> 
-> For the time being, I am defining a new variant of THREADINFO_GFP, not
-> to mess with the other path. Once the slab is also tracked by memcg,
-> we can get rid of that flag.
-> 
-> Tested to successfully protect against :(){ :|:& };:
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Christoph Lameter <cl@linux.com>
-> CC: Pekka Enberg <penberg@cs.helsinki.fi>
-> CC: Michal Hocko <mhocko@suse.cz>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Suleiman Souhlal <suleiman@google.com>
+Just a couple nits.
 
+On Mon, Jun 25, 2012 at 06:15:18PM +0400, Glauber Costa wrote:
+> From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
 
-Acked-by: Frederic Weisbecker <fweisbec@redhat.com>
+It would be nice to explain why this is being done.  Just a simple
+statement like - "prepare for XXX" or "will be needed by XXX".
 
+>  /*
+> - * Try to consume stocked charge on this cpu. If success, one page is consumed
+> - * from local stock and true is returned. If the stock is 0 or charges from a
+> - * cgroup which is not current target, returns false. This stock will be
+> - * refilled.
+> + * Try to consume stocked charge on this cpu. If success, nr_pages pages are
+> + * consumed from local stock and true is returned. If the stock is 0 or
+> + * charges from a cgroup which is not current target, returns false.
+> + * This stock will be refilled.
 
-Thanks!
+I hope this were converted to proper /** function comment with
+arguments and return value description.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
