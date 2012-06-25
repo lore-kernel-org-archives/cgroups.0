@@ -1,58 +1,94 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 01/11] memcg: Make it possible to use the stock for more
- than one page.
-Date: Mon, 25 Jun 2012 15:33:01 -0700
-Message-ID: <CAOS58YNV+uYbGYweSpQNSaRG8ixTG1ugTn42CfuAMO=S2ch6nw@mail.gmail.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
-	<1340633728-12785-2-git-send-email-glommer@parallels.com>
-	<20120625174437.GC3869@google.com>
-	<4FE8E632.70602@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 09/11] memcg: propagate kmem limiting information to children
+Date: Tue, 26 Jun 2012 02:36:27 +0400
+Message-ID: <4FE8E7EB.2020804@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-10-git-send-email-glommer@parallels.com> <20120625182907.GF3869@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type
-         :content-transfer-encoding;
-        bh=56cTgSX16sEhb3mqi/o6x/zxCYdeAfmIdqnNLspJ1uY=;
-        b=gP3In/NMllr0BqpNDkBcnOx71Kf1Rm7EygWoIGrmXjIRyzaGMPQEV9a0fS/KuRsDmA
-         jDR33NKt79RgzHITW3FAfeis968MpRJ/MTEUn9cuhkTmyBN83dxfWvLyOqvOvhgc9Vns
-         1dUpBpovZvUJE6abbIQ8A2fISkx3u5kul+3auW6RmHWA/3GMEijGUvWZhdl6LkzTXkt3
-         LmQhdEp+Ny9LTteEHwdfiL2H0jl5RqYqfgSYd9J52v6RmDL1GyagzDZFz7avsjJM0dXg
-         Y52mbCkHPcas2s7lx1qKbpn3rMXJfro82k149sV5+jvRlpV9RipHsJwMY1UWAASjc1y2
-         7b8g==
-In-Reply-To: <4FE8E632.70602@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120625182907.GF3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Suleiman Souhlal <suleiman@google.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hello,
-
-On Mon, Jun 25, 2012 at 3:29 PM, Glauber Costa <glommer@parallels.com> wrot=
-e:
->> It would be nice to explain why this is being done. =A0Just a simple
->> statement like - "prepare for XXX" or "will be needed by XXX".
+On 06/25/2012 10:29 PM, Tejun Heo wrote:
+> Feeling like a nit pervert but..
 >
+> On Mon, Jun 25, 2012 at 06:15:26PM +0400, Glauber Costa wrote:
+>> @@ -287,7 +287,11 @@ struct mem_cgroup {
+>>   	 * Should the accounting and control be hierarchical, per subtree?
+>>   	 */
+>>   	bool use_hierarchy;
+>> -	bool kmem_accounted;
+>> +	/*
+>> +	 * bit0: accounted by this cgroup
+>> +	 * bit1: accounted by a parent.
+>> +	 */
+>> +	volatile unsigned long kmem_accounted;
 >
-> I picked this patch from Suleiman Souhlal, and tried to keep it as close =
-as
-> possible to his version.
+> Is the volatile declaration really necessary?  Why is it necessary?
+> Why no comment explaining it?
+
+Seems to be required by set_bit and friends. gcc will complain if it is 
+not volatile (take a look at the bit function headers)
+
+>> +
+>> +		for_each_mem_cgroup_tree(iter, memcg) {
+>> +			struct mem_cgroup *parent;
 >
-> But for the sake of documentation, I can do that, yes.
+> Blank line between decl and body please.
+ok.
 
-Yeah, that would be great. Also, the patch does change behavior,
-right? Explaining / justifying that a bit would be nice too.
+>
+>> +			if (iter == memcg)
+>> +				continue;
+>> +			/*
+>> +			 * We should only have our parent bit cleared if none of
+>> +			 * ouri parents are accounted. The transversal order of
+>
+>                                ^ type
+>
+>> +			 * our iter function forces us to always look at the
+>> +			 * parents.
+>
+> Also, it's okay here but the text filling in comments and patch
+> descriptions tend to be quite inconsistent.  If you're on emacs, alt-q
+> is your friend and I'm sure vim can do text filling pretty nicely too.
+>
+>> +			 */
+>> +			parent = parent_mem_cgroup(iter);
+>> +			while (parent && (parent != memcg)) {
+>> +				if (test_bit(KMEM_ACCOUNTED_THIS, &parent->kmem_accounted))
+>> +					goto noclear;
+>> +					
+>> +				parent = parent_mem_cgroup(parent);
+>> +			}
+>
+> Better written in for (;;)?  Also, if we're breaking on parent ==
+> memcg, can we ever hit NULL parent in the above loop?
 
-Thanks!
+I can simplify to test parent != memcg only, indeed it is not expected 
+to be NULL (but if it happens to be due to any kind of bug, we protect 
+against NULL-dereference, that is why I like to write this way)
 
---=20
-tejun
+>> +			continue;
+>> +		}
+>> +	}
+>> +out:
+>> +	mutex_unlock(&set_limit_mutex);
+>
+> Can we please branch on val != RECOURSE_MAX first?  I'm not even sure
+> whether the above conditionals are correct.  If the user updates an
+> existing kmem limit, the first test_and_set_bit() returns non-zero, so
+> the code proceeds onto clearing KMEM_ACCOUNTED_THIS, which succeeds
+> but val == RESOURCE_MAX fails so it doesn't do anything.  If the user
+> changes it again, it will set ACCOUNTED_THIS again.  So, changing an
+> existing kmem limit toggles KMEM_ACCOUNTED_THIS, which just seems
+> wacky to me.
+>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I will take a look at that tomorrow as well.
+
+
