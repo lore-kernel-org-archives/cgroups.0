@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v3 2/4] memcg: change mem_control_xxx to mem_cgroup_xxx
-Date: Mon, 25 Jun 2012 16:44:08 +0800
-Message-ID: <1340613848-9536-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH v3 3/4] memcg: optimize memcg_get_hierarchical_limit
+Date: Mon, 25 Jun 2012 16:44:32 +0800
+Message-ID: <1340613872-9581-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=/4jXOvjSLQr6pWhC4p+Xt4Y3JglmFzZJPI1DVadYtfo=;
-        b=nSNIvFtCIjCWGSbqXnYtYXBNs/OBcA0rznOqY2j0z2IR3ZNFP6xPbTl4sr6as/wjZ0
-         lbEUF7LB/lU55ooEz0ayO/yj8yC8Q6AJw6ImGJe5m/D+qzaNIWArO6cShTRsfe0Cct06
-         I512cUHcdqaYOHRR5pA9zXVAubQnaUvf94JBzgaoE9cn3Iwj7uDHnew2sQIROwgErATr
-         MMX9TWrubCtoD1UlyR9Y2t1fuHaAVXb8nD3NvoR+9R9/tHHTw5GuZc6drus0PSF3jhlj
-         vGvmiYoeSmx9Vfd6fbgF5mg3RApvIDBaDt/3qW6k1hStZWVXkOGLqo8R48MWs1oGKZOl
-         feIA==
+        bh=0ZYakQ3oelabxHywtNMhVOpQbqbC9UkOwQZG0dU6bV4=;
+        b=sAkQq8wVds9ust6zcYc4t6Hv0FjESUTB1gUXbXSJ7QbKVR59TYF3FQ/vN+fsDDasHU
+         UCM3nPs3zwDfG6cEOoIGMs4vwiKa7CfK7MNxIloFs6Fc3K33hYN6zuxmUKxBAK9okBeC
+         8j4YQgugRuO2t8OmKf9p99hfnpx93XvvTYTk4/UlhHjmsrlY8V4K597ut7wEdtV8zePD
+         zSk2ILazNT4eCtGw6h65Sg7nBSh/sYUAU6sgP5odJ7Tc9o5sM2SvM9LOnlqjARyFt1YG
+         8McjGtvt0HJReQAmM+wId6IJyLt7M8jyv/3ICLV/DWZKrAzGSUCKNbs1KtQhnJVoCCUi
+         240Q==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,53 +23,27 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA H
 
 From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Unify memcg functions to mem_cgroup_xxx.
+Optimize memcg_get_hierarchical_limit to save cpu cycle.
 
 Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- mm/memcontrol.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ mm/memcontrol.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ccda728..2e81328 100644
+index 2e81328..4520b57 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3999,7 +3999,7 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
- #endif
+@@ -3917,9 +3917,9 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
  
- #ifdef CONFIG_NUMA
--static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
-+static int mem_cgroup_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 				      struct seq_file *m)
- {
- 	int nid;
-@@ -4058,7 +4058,7 @@ static inline void mem_cgroup_lru_names_not_uptodate(void)
- 	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
- }
+ 	min_limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+ 	min_memsw_limit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+-	cgroup = memcg->css.cgroup;
+ 	if (!memcg->use_hierarchy)
+ 		goto out;
++	cgroup = memcg->css.cgroup;
  
--static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
-+static int mem_cgroup_stat_show(struct cgroup *cont, struct cftype *cft,
- 				 struct seq_file *m)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-@@ -4572,7 +4572,7 @@ static struct cftype mem_cgroup_files[] = {
- 	},
- 	{
- 		.name = "stat",
--		.read_seq_string = mem_control_stat_show,
-+		.read_seq_string = mem_cgroup_stat_show,
- 	},
- 	{
- 		.name = "force_empty",
-@@ -4604,7 +4604,7 @@ static struct cftype mem_cgroup_files[] = {
- #ifdef CONFIG_NUMA
- 	{
- 		.name = "numa_stat",
--		.read_seq_string = mem_control_numa_stat_show,
-+		.read_seq_string = mem_cgroup_numa_stat_show,
- 	},
- #endif
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
+ 	while (cgroup->parent) {
+ 		cgroup = cgroup->parent;
 -- 
 1.7.9.5
