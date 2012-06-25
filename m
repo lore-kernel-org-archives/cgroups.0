@@ -1,57 +1,80 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v4 07/25] memcg: Reclaim when more than one page needed.
-Date: Mon, 25 Jun 2012 17:13:53 +0400
-Message-ID: <4FE86411.5020708@parallels.com>
-References: <1340015298-14133-1-git-send-email-glommer@parallels.com> <1340015298-14133-8-git-send-email-glommer@parallels.com> <20120620134738.GG5541@tiehlicka.suse.cz> <4FE227F8.3000504@parallels.com> <20120621211923.GC31759@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] fix bad behavior in use_hierarchy file
+Date: Mon, 25 Jun 2012 15:22:05 +0200
+Message-ID: <20120625132205.GN19805@tiehlicka.suse.cz>
+References: <1340616061-1955-1-git-send-email-glommer@parallels.com>
+ <20120625120823.GK19805@tiehlicka.suse.cz>
+ <4FE85555.1010209@parallels.com>
+ <20120625124905.GM19805@tiehlicka.suse.cz>
+ <4FE85FC3.4050908@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120621211923.GC31759-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4FE85FC3.4050908-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cristoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
+On Mon 25-06-12 16:55:31, Glauber Costa wrote:
+> On 06/25/2012 04:49 PM, Michal Hocko wrote:
+> >On Mon 25-06-12 16:11:01, Glauber Costa wrote:
+> >>On 06/25/2012 04:08 PM, Michal Hocko wrote:
+> >>>On Mon 25-06-12 13:21:01, Glauber Costa wrote:
+> >[...]
+> >>>>diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> >>>>index ac35bcc..cccebbc 100644
+> >>>>--- a/mm/memcontrol.c
+> >>>>+++ b/mm/memcontrol.c
+> >>>>@@ -3779,6 +3779,10 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+> >>>>  		parent_memcg = mem_cgroup_from_cont(parent);
+> >>>>
+> >>>>  	cgroup_lock();
+> >>>>+
+> >>>>+	if (memcg->use_hierarchy == val)
+> >>>>+		goto out;
+> >>>>+		
+> >>>
+> >>>Why do you need cgroup_lock to check the value? Even if we have 2
+> >>>CPUs racing (one trying to set to 0 other to 1 with use_hierarchy==0)
+> >>>then the "set to 0" operation might fail depending on who hits the
+> >>>cgroup_lock first anyway.
+> >>>
+> >>>So while this is correct I think there is not much point to take the global
+> >>>cgroup lock in this case.
+> >>>
+> >>Well, no.
+> >>
+> >>All operations will succeed, unless the cgroup breeds new children.
+> >>That's the operation we're racing against.
+> >
+> >I am not sure I understand. The changelog says that you want to handle
+> >a situation where you are copying a hierarchy along with their
+> >attributes and you don't want to fail when setting sane values.
+> >
+> >If we race with a new child creation then the success always depends on
+> >the lock ordering but once the value is set then it is final so the test
+> >will work even outside of the lock. Or am I still missing something?
+> >
+> >Just to make it clear the lock is necessary in the function I just do
+> >not see why it should be held while we are trying to handle no-change
+> >case.
+> >
+> 
+> I think you are right in this specific case. But do you think it is
+> necessary to submit a version of it that tests outside the lock?
+> 
+> We don't gain too much with that anyway.
 
->>>> +
->>>>   	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
->>>>   	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
->>>>   		return CHARGE_RETRY;
->>>> @@ -2234,8 +2235,10 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->>>>   	 * unlikely to succeed so close to the limit, and we fall back
->>>>   	 * to regular pages anyway in case of failure.
->>>>   	 */
->>>> -	if (nr_pages == 1 && ret)
->>>> +	if (nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER) && ret) {
->>>> +		cond_resched();
->>>>   		return CHARGE_RETRY;
->>>> +	}
->>>
->>> What prevents us from looping for unbounded amount of time here?
->>> Maybe you need to consider the number of reclaimed pages here.
->>
->> Why would we even loop here? It will just return CHARGE_RETRY, it is
->> up to the caller to decide whether or not it will retry.
->
-> Yes, but the test was original to prevent oom when we managed to reclaim
-> something. And something might be enough for a single page but now you
-> have high order allocations so we can retry without any success.
->
+Well, it was just a concern that the lock is global and the test doesn't
+seem to need it. But maybe you are right and it is not worth it.
 
-So,
-
-Most of the kmem allocations are likely to be quite small as well. For 
-the slab, we're dealing with the order of 2-3 pages, and for other 
-allocations that may happen, like stack, they will be in the order of 2 
-pages as well.
-
-So one thing I could do here, is define a threshold, say, 3, and only 
-retry for that very low threshold, instead of following COSTLY_ORDER.
-I don't expect two or three pages to be much less likely to be freed 
-than a single page.
-
-I am fine with ripping of the cond_resched as well.
-
-Let me know if you would be okay with that.
-
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
