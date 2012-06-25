@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 09/11] memcg: propagate kmem limiting information to children
-Date: Mon, 25 Jun 2012 18:15:26 +0400
-Message-ID: <1340633728-12785-10-git-send-email-glommer@parallels.com>
+Subject: [PATCH 07/11] mm: Allocate kernel pages to the right memcg
+Date: Mon, 25 Jun 2012 18:15:24 +0400
+Message-ID: <1340633728-12785-8-git-send-email-glommer@parallels.com>
 References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1340633728-12785-1-git-send-email-glommer@parallels.com>
@@ -13,29 +13,16 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
-The current memcg slab cache management fails to present satisfatory hierarchical
-behavior in the following scenario:
+When a process tries to allocate a page with the __GFP_KMEMCG flag,
+the page allocator will call the corresponding memcg functions to
+validate the allocation. Tasks in the root memcg can always proceed.
 
--> /cgroups/memory/A/B/C
-
-* kmem limit set at A
-* A and B empty taskwise
-* bash in C does find /
-
-Because kmem_accounted is a boolean that was not set for C, no accounting
-would be done. This is, however, not what we expect.
-
-The basic idea, is that when a cgroup is limited, we walk the tree
-upwards (something Kame and I already thought about doing for other purposes),
-and make sure that we store the information about the parent being limited in
-kmem_accounted (that is turned into a bitmap: two booleans would not be space
-efficient). The code for that is taken from sched/core.c. My reasons for not
-putting it into a common place is to dodge the type issues that would arise
-from a common implementation between memcg and the scheduler - but I think
-that it should ultimately happen, so if you want me to do it now, let me
-know.
-
-We do the reverse operation when a formerly limited cgroup becomes unlimited.
+To avoid adding markers to the page - and a kmem flag that would
+necessarily follow, as much as doing page_cgroup lookups for no
+reason, whoever is marking its allocations with __GFP_KMEMCG flag
+is responsible for telling the page allocator that this is such an
+allocation at free_pages() time. This is done by the invocation of
+__free_accounted_pages() and free_accounted_pages().
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
 CC: Christoph Lameter <cl@linux.com>
@@ -45,133 +32,82 @@ CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 CC: Johannes Weiner <hannes@cmpxchg.org>
 CC: Suleiman Souhlal <suleiman@google.com>
 ---
- mm/memcontrol.c |   86 +++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 71 insertions(+), 15 deletions(-)
+ include/linux/gfp.h |    3 +++
+ mm/page_alloc.c     |   27 +++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index fe5388e..a6a440b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -287,7 +287,11 @@ struct mem_cgroup {
- 	 * Should the accounting and control be hierarchical, per subtree?
- 	 */
- 	bool use_hierarchy;
--	bool kmem_accounted;
-+	/*
-+	 * bit0: accounted by this cgroup
-+	 * bit1: accounted by a parent.
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+index 8f4079f..4e27cd8 100644
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -368,6 +368,9 @@ extern void free_pages(unsigned long addr, unsigned int order);
+ extern void free_hot_cold_page(struct page *page, int cold);
+ extern void free_hot_cold_page_list(struct list_head *list, int cold);
+ 
++extern void __free_accounted_pages(struct page *page, unsigned int order);
++extern void free_accounted_pages(unsigned long addr, unsigned int order);
++
+ #define __free_page(page) __free_pages((page), 0)
+ #define free_page(addr) free_pages((addr), 0)
+ 
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 4403009..cb8867e 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2479,6 +2479,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 	struct page *page = NULL;
+ 	int migratetype = allocflags_to_migratetype(gfp_mask);
+ 	unsigned int cpuset_mems_cookie;
++	void *handle = NULL;
+ 
+ 	gfp_mask &= gfp_allowed_mask;
+ 
+@@ -2490,6 +2491,13 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 		return NULL;
+ 
+ 	/*
++	 * Will only have any effect when __GFP_KMEMCG is set.
++	 * This is verified in the (always inline) callee
 +	 */
-+	volatile unsigned long kmem_accounted;
- 
- 	bool		oom_lock;
- 	atomic_t	under_oom;
-@@ -340,6 +344,9 @@ struct mem_cgroup {
- #endif
- };
- 
-+#define KMEM_ACCOUNTED_THIS	0
-+#define KMEM_ACCOUNTED_PARENT	1
++	if (!mem_cgroup_new_kmem_page(gfp_mask, &handle, order))
++		return NULL;
 +
- /* Stuffs for move charges at task migration. */
- /*
-  * Types of charges to be moved. "move_charge_at_immitgrate" is treated as a
-@@ -589,7 +596,7 @@ EXPORT_SYMBOL(__mem_cgroup_free_kmem_page);
++	/*
+ 	 * Check the zones suitable for the gfp_mask contain at least one
+ 	 * valid zone. It's possible to have an empty zonelist as a result
+ 	 * of GFP_THISNODE and a memoryless node
+@@ -2528,6 +2536,8 @@ out:
+ 	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
+ 		goto retry_cpuset;
  
- static void disarm_kmem_keys(struct mem_cgroup *memcg)
- {
--	if (memcg->kmem_accounted)
-+	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
- 		static_key_slow_dec(&mem_cgroup_kmem_enabled_key);
- }
- #else
-@@ -4027,6 +4034,66 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
- 	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
- 	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
- }
++	mem_cgroup_commit_kmem_page(page, handle, order);
 +
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-+static void mem_cgroup_update_kmem_limit(struct mem_cgroup *memcg, u64 val)
+ 	return page;
+ }
+ EXPORT_SYMBOL(__alloc_pages_nodemask);
+@@ -2580,6 +2590,23 @@ void free_pages(unsigned long addr, unsigned int order)
+ 
+ EXPORT_SYMBOL(free_pages);
+ 
++void __free_accounted_pages(struct page *page, unsigned int order)
 +{
-+	struct mem_cgroup *iter;
-+
-+	mutex_lock(&set_limit_mutex);
-+	if (!test_and_set_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted) &&
-+		val != RESOURCE_MAX) {
-+
-+		/*
-+		 * Once enabled, can't be disabled. We could in theory
-+		 * disable it if we haven't yet created any caches, or
-+		 * if we can shrink them all to death.
-+		 *
-+		 * But it is not worth the trouble
-+		 */
-+		static_key_slow_inc(&mem_cgroup_kmem_enabled_key);
-+
-+		if (!memcg->use_hierarchy)
-+			goto out;
-+
-+		for_each_mem_cgroup_tree(iter, memcg) {
-+			if (iter == memcg)
-+				continue;
-+			set_bit(KMEM_ACCOUNTED_PARENT, &iter->kmem_accounted);
-+		}
-+
-+	} else if (test_and_clear_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted)
-+		&& val == RESOURCE_MAX) {
-+
-+		if (!memcg->use_hierarchy)
-+			goto out;
-+
-+		for_each_mem_cgroup_tree(iter, memcg) {
-+			struct mem_cgroup *parent;
-+			if (iter == memcg)
-+				continue;
-+			/*
-+			 * We should only have our parent bit cleared if none of
-+			 * ouri parents are accounted. The transversal order of
-+			 * our iter function forces us to always look at the
-+			 * parents.
-+			 */
-+			parent = parent_mem_cgroup(iter);
-+			while (parent && (parent != memcg)) {
-+				if (test_bit(KMEM_ACCOUNTED_THIS, &parent->kmem_accounted))
-+					goto noclear;
-+					
-+				parent = parent_mem_cgroup(parent);
-+			}
-+			clear_bit(KMEM_ACCOUNTED_PARENT, &iter->kmem_accounted);
-+noclear:
-+			continue;
-+		}
-+	}
-+out:
-+	mutex_unlock(&set_limit_mutex);
++	mem_cgroup_free_kmem_page(page, order);
++	__free_pages(page, order);
 +}
-+#endif
- /*
-  * The user of this function is...
-  * RES_LIMIT.
-@@ -4064,19 +4131,8 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
- 			ret = res_counter_set_limit(&memcg->kmem, val);
- 			if (ret)
- 				break;
--			/*
--			 * Once enabled, can't be disabled. We could in theory
--			 * disable it if we haven't yet created any caches, or
--			 * if we can shrink them all to death.
--			 *
--			 * But it is not worth the trouble
--			 */
--			mutex_lock(&set_limit_mutex);
--			if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
--				static_key_slow_inc(&mem_cgroup_kmem_enabled_key);
--				memcg->kmem_accounted = true;
--			}
--			mutex_unlock(&set_limit_mutex);
-+			mem_cgroup_update_kmem_limit(memcg, val);
-+			break;
- 		}
- #endif
- 		else
++EXPORT_SYMBOL(__free_accounted_pages);
++
++void free_accounted_pages(unsigned long addr, unsigned int order)
++{
++	if (addr != 0) {
++		VM_BUG_ON(!virt_addr_valid((void *)addr));
++		mem_cgroup_free_kmem_page(virt_to_page((void *)addr), order);
++		__free_pages(virt_to_page((void *)addr), order);
++	}
++}
++EXPORT_SYMBOL(free_accounted_pages);
++
+ static void *make_alloc_exact(unsigned long addr, unsigned order, size_t size)
+ {
+ 	if (addr) {
 -- 
 1.7.10.2
