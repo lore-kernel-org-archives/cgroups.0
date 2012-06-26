@@ -1,22 +1,22 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH 03/11] memcg: change defines to an enum
-Date: Mon, 25 Jun 2012 21:11:55 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1206252110470.26640@chino.kir.corp.google.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-4-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH 04/11] kmem slab accounting basic infrastructure
+Date: Mon, 25 Jun 2012 21:22:38 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206252121140.26640@chino.kir.corp.google.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=UrWx3zrGtcUkTCI3mVK5kCeuPVd50yN1gWtWlhquiwU=;
-        b=fwExA6lr44ecJy5gXYqGSG5bmzVxnO5Y2Blmjct2MCCMjAKzvWYlYE6/SSQnsSzWtx
-         xuwbxjGnI0y3+7rQppbTfglo2gfEteUEoDjdR04nc3qJfVoGMC/iQtIJHBHcAyYDOT5Y
-         60CdZuL0kHyG84X7tfkIGDJgx0ZvfSY25LuQzt26CV7yjuRjod330/skN7FXEiNvF0gi
-         Z4UGeQIymKCB2rERFP0hVDQR0XmgQOARDhJKp52RSYZ34fsirIYjLADMs4iooEy5Db6B
-         2FBVUsMlde1xotFMy0EJos+3N8sqnLBYmxOjvpUAccgSnMo8P+XnHKZSsicabokXrybK
-         mgrQ==
-In-Reply-To: <1340633728-12785-4-git-send-email-glommer@parallels.com>
+        bh=1NA/21l0j2zsfW2v2gKxMeDYMZf7FpVBszdZXft2S08=;
+        b=KSb++f732UmZPjuRFB/SKS8MV+RzWF0pVbxVQ3XUGmJsumNbGztRGXHUMg+lTzBJBb
+         00x6gDZvNvmG9oUyO7gB67QBwWSWQBhal9TaiywXluYtoCH3WLmC4dN0mcReFyTx0/QA
+         C+Z8z//7DocXF/O17e0TMJd5t6ipzzT7cZZZNub0rdZKA9vHe+DRo69YbwH2VLZbD/XS
+         Ezoy7roZnhFwjFO0fr3IB1A6XigF2Ee+7i4Zr2EMIirOR/cE9Ole5B1iAVT4eDfENEgK
+         MsAfg33S2f6X5CGHQugZL9iHjn0KFGtpRqCFunfR0hOquSHQ5gofm/DKKQjIYRUErv/t
+         ChJA==
+In-Reply-To: <1340633728-12785-5-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -27,28 +27,179 @@ Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-found
 On Mon, 25 Jun 2012, Glauber Costa wrote:
 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8e601e8..9352d40 100644
+> index 9352d40..6f34b77 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -387,9 +387,12 @@ enum charge_type {
+> @@ -265,6 +265,10 @@ struct mem_cgroup {
+>  	};
+>  
+>  	/*
+> +	 * the counter to account for kernel memory usage.
+> +	 */
+> +	struct res_counter kmem;
+> +	/*
+>  	 * Per cgroup active and inactive list, similar to the
+>  	 * per zone LRU lists.
+>  	 */
+> @@ -279,6 +283,7 @@ struct mem_cgroup {
+>  	 * Should the accounting and control be hierarchical, per subtree?
+>  	 */
+>  	bool use_hierarchy;
+> +	bool kmem_accounted;
+>  
+>  	bool		oom_lock;
+>  	atomic_t	under_oom;
+> @@ -391,6 +396,7 @@ enum res_type {
+>  	_MEM,
+>  	_MEMSWAP,
+>  	_OOM_TYPE,
+> +	_KMEM,
 >  };
 >  
->  /* for encoding cft->private value on file */
-> -#define _MEM			(0)
-> -#define _MEMSWAP		(1)
-> -#define _OOM_TYPE		(2)
-> +enum res_type {
-> +	_MEM,
-> +	_MEMSWAP,
-> +	_OOM_TYPE,
+>  #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
+> @@ -1438,6 +1444,10 @@ done:
+>  		res_counter_read_u64(&memcg->memsw, RES_USAGE) >> 10,
+>  		res_counter_read_u64(&memcg->memsw, RES_LIMIT) >> 10,
+>  		res_counter_read_u64(&memcg->memsw, RES_FAILCNT));
+> +	printk(KERN_INFO "kmem: usage %llukB, limit %llukB, failcnt %llu\n",
+> +		res_counter_read_u64(&memcg->kmem, RES_USAGE) >> 10,
+> +		res_counter_read_u64(&memcg->kmem, RES_LIMIT) >> 10,
+> +		res_counter_read_u64(&memcg->kmem, RES_FAILCNT));
+>  }
+>  
+>  /*
+> @@ -3879,6 +3889,11 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+>  		else
+>  			val = res_counter_read_u64(&memcg->memsw, name);
+>  		break;
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +	case _KMEM:
+> +		val = res_counter_read_u64(&memcg->kmem, name);
+> +		break;
+> +#endif
+
+This shouldn't need an #ifdef, ->kmem is available on all 
+CONFIG_CGROUP_MEM_RES_CTLR kernels.  Same with several of the other 
+instances in this patch.
+
+Can't these instances be addressed by not adding kmem_cgroup_files without 
+CONFIG_CGROUP_MEM_RES_CTLR_KMEM?
+
+>  	default:
+>  		BUG();
+>  	}
+> @@ -3916,8 +3931,26 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+>  			break;
+>  		if (type == _MEM)
+>  			ret = mem_cgroup_resize_limit(memcg, val);
+> -		else
+> +		else if (type == _MEMSWAP)
+>  			ret = mem_cgroup_resize_memsw_limit(memcg, val);
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +		else if (type == _KMEM) {
+> +			ret = res_counter_set_limit(&memcg->kmem, val);
+> +			if (ret)
+> +				break;
+> +			/*
+> +			 * Once enabled, can't be disabled. We could in theory
+> +			 * disable it if we haven't yet created any caches, or
+> +			 * if we can shrink them all to death.
+> +			 *
+> +			 * But it is not worth the trouble
+> +			 */
+> +			if (!memcg->kmem_accounted && val != RESOURCE_MAX)
+> +				memcg->kmem_accounted = true;
+> +		}
+> +#endif
+> +		else
+> +			return -EINVAL;
+>  		break;
+>  	case RES_SOFT_LIMIT:
+>  		ret = res_counter_memparse_write_strategy(buffer, &val);
+> @@ -3982,12 +4015,20 @@ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+>  	case RES_MAX_USAGE:
+>  		if (type == _MEM)
+>  			res_counter_reset_max(&memcg->res);
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +		else if (type == _KMEM)
+> +			res_counter_reset_max(&memcg->kmem);
+> +#endif
+>  		else
+>  			res_counter_reset_max(&memcg->memsw);
+>  		break;
+>  	case RES_FAILCNT:
+>  		if (type == _MEM)
+>  			res_counter_reset_failcnt(&memcg->res);
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +		else if (type == _KMEM)
+> +			res_counter_reset_failcnt(&memcg->kmem);
+> +#endif
+>  		else
+>  			res_counter_reset_failcnt(&memcg->memsw);
+>  		break;
+> @@ -4549,6 +4590,33 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+>  }
+>  
+>  #ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +static struct cftype kmem_cgroup_files[] = {
+> +	{
+> +		.name = "kmem.limit_in_bytes",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
+> +		.write_string = mem_cgroup_write,
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{
+> +		.name = "kmem.usage_in_bytes",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_USAGE),
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{
+> +		.name = "kmem.failcnt",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_FAILCNT),
+> +		.trigger = mem_cgroup_reset,
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{
+> +		.name = "kmem.max_usage_in_bytes",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_MAX_USAGE),
+> +		.trigger = mem_cgroup_reset,
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{},
 > +};
 > +
->  #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
->  #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
->  #define MEMFILE_ATTR(val)	((val) & 0xffff)
-
-Shouldn't everything that does MEMFILE_TYPE() now be using type 
-enum res_type rather than int?
+>  static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+>  {
+>  	return mem_cgroup_sockets_init(memcg, ss);
+> @@ -4892,6 +4960,12 @@ mem_cgroup_create(struct cgroup *cont)
+>  		int cpu;
+>  		enable_swap_cgroup();
+>  		parent = NULL;
+> +
+> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+> +		WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys,
+> +					   kmem_cgroup_files));
+> +#endif
+> +
+>  		if (mem_cgroup_soft_limit_tree_init())
+>  			goto free_out;
+>  		root_mem_cgroup = memcg;
+> @@ -4910,6 +4984,7 @@ mem_cgroup_create(struct cgroup *cont)
+>  	if (parent && parent->use_hierarchy) {
+>  		res_counter_init(&memcg->res, &parent->res);
+>  		res_counter_init(&memcg->memsw, &parent->memsw);
+> +		res_counter_init(&memcg->kmem, &parent->kmem);
+>  		/*
+>  		 * We increment refcnt of the parent to ensure that we can
+>  		 * safely access it on res_counter_charge/uncharge.
+> @@ -4920,6 +4995,7 @@ mem_cgroup_create(struct cgroup *cont)
+>  	} else {
+>  		res_counter_init(&memcg->res, NULL);
+>  		res_counter_init(&memcg->memsw, NULL);
+> +		res_counter_init(&memcg->kmem, NULL);
+>  	}
+>  	memcg->last_scanned_node = MAX_NUMNODES;
+>  	INIT_LIST_HEAD(&memcg->oom_notify);
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
