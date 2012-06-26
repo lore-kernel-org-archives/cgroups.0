@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 1/2] fix bad behavior in use_hierarchy file
-Date: Tue, 26 Jun 2012 17:52:29 +0200
-Message-ID: <20120626155229.GH9566@tiehlicka.suse.cz>
+Date: Tue, 26 Jun 2012 17:54:22 +0200
+Message-ID: <20120626155422.GD27816@cmpxchg.org>
 References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
  <1340725634-9017-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
@@ -13,9 +13,9 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Tue 26-06-12 19:47:13, Glauber Costa wrote:
+On Tue, Jun 26, 2012 at 07:47:13PM +0400, Glauber Costa wrote:
 > I have an application that does the following:
 > 
 > * copy the state of all controllers attached to a hierarchy
@@ -48,48 +48,4 @@ On Tue 26-06-12 19:47:13, Glauber Costa wrote:
 > CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-> ---
->  mm/memcontrol.c |    6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index df8c9fb..85f7790 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3989,6 +3989,10 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
->  		parent_memcg = mem_cgroup_from_cont(parent);
->  
->  	cgroup_lock();
-> +
-> +	if (memcg->use_hierarchy == val)
-> +		goto out;
-> +
->  	/*
->  	 * If parent's use_hierarchy is set, we can't make any modifications
->  	 * in the child subtrees. If it is unset, then the change can
-> @@ -4005,6 +4009,8 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
->  			retval = -EBUSY;
->  	} else
->  		retval = -EINVAL;
-> +
-> +out:
->  	cgroup_unlock();
->  
->  	return retval;
-> -- 
-> 1.7.10.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
