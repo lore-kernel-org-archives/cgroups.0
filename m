@@ -1,63 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] fix bad behavior in use_hierarchy file
-Date: Tue, 26 Jun 2012 15:30:43 -0700
-Message-ID: <20120626223043.GC15811@google.com>
-References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
- <1340725634-9017-2-git-send-email-glommer@parallels.com>
- <20120626152522.c7161b5a.akpm@linux-foundation.org>
+From: Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup cgroup]
+Date: Wed, 27 Jun 2012 08:00:17 +0900
+Message-ID: <CALLJCT10NT_s4fbkiFb8k7LQMQW=YH14YgOD6hCRLxVPOPoncg@mail.gmail.com>
+References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=eMkafQ9MeG1S/cgMGQ+AG158Dw2+egmXn//bQUvRQY4=;
-        b=oLcu3DdmFg6pHE2eF/tVPZBMlxihaynfg8G1lKHhetemmw3AZ0J2j1BD375lLmVe+j
-         0XmzleWJO6JPum+oyxkqhHoH9xRJqdoxkIQUArhErqYPOqdtgIoMTygtIHsvmmgzuQeE
-         V9AGQuo9zF3JaZk0Btazw4L0dazhW/Z4hEFOiGRP5VEEK5Jfge0tkcyzoPQtAZw+nOTU
-         rb2VffIZxYTyr1mbMkIFtP7D7VMCfAkmrWWL/jYN3/Xj6H9w8N4fE/vzbj0EPXIU9GKA
-         9SGnK8YQFigBufqzkaNgUvjGwZX1Owv+vQHRaVZx8yin2fh6TuJkzgwuJhpt6E8GLAFJ
-         jmlQ==
-Content-Disposition: inline
-In-Reply-To: <20120626152522.c7161b5a.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=D2yLBDCWXdbgNcoPg9hIMLMl/3Z9CcoXUZq8HA7eMDg=;
+        b=diGZkZAdpmabENvEE+sms86iD9bqEMDN/OFToTRVmb8ZJfsslmvDyUJMC8PhkYvJ05
+         wonljXi3tXw7+gjlEbVcawrPUN2iSmkWvKCdnUBsSlniJCxC9WaCt4vcdOvu08TGa27z
+         FUd4XhFb4+iq48X9caR++oe0blhJyE8JKMWsqH8nLg6cuXpx79yTDJ2r+/sR9pk0NjG+
+         BCaDyeZEPFvyhrgD5ahblc/NZV68fGmHmIhis9ZPFz/7kmzDTo00LmwxaM7Y6qjSTWCI
+         TZbTXeNs5aPXhCO1ZyHW4hiEXkvY2jaKXaxitbHSP3eVoFkmoyPDqoXmEWMClxOhZ3Mm
+         HbUQ==
+In-Reply-To: <E061084CB90FCE4F89232A6CF839683B32B52291-SY/3K1LPFSqBBfbIEMVH7QK1hpo4iccwjNknBlVQO8k@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Dhaval Giani <dhaval.giani@gmail.com>, Li Zefan <lizefan@huawei.com>
+To: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-(cc'ing Li)
+Hello Shyju,
+I have also encountered this symptom since 3.5-rc1.
+Still exist on 3.5-rc4.  The last known working is 3.4.
 
-Hello, Andrew.
+In my case, either "shutdown or reboot" or "service cgroup stop"
+reproduce this symptom.
 
-On Tue, Jun 26, 2012 at 03:25:22PM -0700, Andrew Morton wrote:
-> hm.  The various .write_u64() implementations go and return zero on
-> success and cgroup_write_X64() sees this and rewrites the return value
-> to `nbytes'.
-> 
-> That was a bit naughty of us - it prevents a .write_u64() instance from
-> being able to fully implement a partial write.  We can *partially*
-> implement a partial write, by returning a value between 1 and nbytes-1,
-> but we can't return zero.  It's a weird interface, it's a surprising
-> interface and it was quite unnecessary to do it this way.  Someone
-> please slap Paul.
-> 
-> It's hardly a big problem I, but that's why the unix write() interface
-> was designed the way it is.
+I have opened https://bugzilla.kernel.org/show_bug.cgi?id=43771
 
-The whole file interface is severely over-designed like a lot of other
-things in cgorup.  I'm thinking about consolidating all the different
-read/write methods into one generic pair, likely based on seq_file and
-make all others helpers.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Masanari
