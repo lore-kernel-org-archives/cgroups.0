@@ -1,85 +1,40 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 10/11] memcg: allow a memcg with kmem charges to be destructed.
-Date: Tue, 26 Jun 2012 14:59:56 +0900
-Message-ID: <4FE94FDC.7070105@jp.fujitsu.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-11-git-send-email-glommer@parallels.com>
+From: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch 1/3] mm, oom: move declaration for mem_cgroup_out_of_memory
+ to oom.h
+Date: Tue, 26 Jun 2012 02:04:32 -0400
+Message-ID: <CAHGf_=q5qOudHJoXqCULkNjy_80r8_7UXQnKgYsu9sV8Kn0RPA@mail.gmail.com>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <4FE9289B.2050105@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1340633728-12785-11-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:from:date
+         :x-google-sender-auth:message-id:subject:to:cc:content-type;
+        bh=u5O/QnU9/a1plY6l+68ey18IaPOfbGVOpgY6q0isnJ0=;
+        b=bwyz5sN7S4iAUTrcvRxweSE5SyOoGLyBPpULmtSAuNrb/fyD/ujoNPxEUEAbVCQc9o
+         W3Bd017LyDaJJXXbmbFzCabUUb7ZsnuzUzFoNiZ3hYTe4aMVY+Hz/m9VUWOPw3IzknHZ
+         h8o9RmqKd+Eq1LPpiLVdvdlczZij5NJ4D5NXC++RdTLicPd+SaoTuK1fkCrBt0HZbkYc
+         RYYISbcaAPCpzALP9biOZ/3ZbqO5iVVD3wLOObNs1TpSwDLo6ylOCaCgmNf6CF2G91M1
+         O3oQl1TdGBcY+8cyn0mhT2yujQH8o+IqEUO9Z+NdsOsr5o1/oD2m5CqlCR3dOjTG/oxw
+         aWyg==
+In-Reply-To: <4FE9289B.2050105-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-(2012/06/25 23:15), Glauber Costa wrote:
-> Because the ultimate goal of the kmem tracking in memcg is to
-> track slab pages as well, we can't guarantee that we'll always
-> be able to point a page to a particular process, and migrate
-> the charges along with it - since in the common case, a page
-> will contain data belonging to multiple processes.
-> 
-> Because of that, when we destroy a memcg, we only make sure
-> the destruction will succeed by discounting the kmem charges
-> from the user charges when we try to empty the cgroup.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Christoph Lameter <cl@linux.com>
-> CC: Pekka Enberg <penberg@cs.helsinki.fi>
-> CC: Michal Hocko <mhocko@suse.cz>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Suleiman Souhlal <suleiman@google.com>
-> ---
->   mm/memcontrol.c |   10 +++++++++-
->   1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a6a440b..bb9b6fe 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -598,6 +598,11 @@ static void disarm_kmem_keys(struct mem_cgroup *memcg)
->   {
->   	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
->   		static_key_slow_dec(&mem_cgroup_kmem_enabled_key);
-> +	/*
-> +	 * This check can't live in kmem destruction function,
-> +	 * since the charges will outlive the cgroup
-> +	 */
-> +	BUG_ON(res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0);
->   }
->   #else
->   static void disarm_kmem_keys(struct mem_cgroup *memcg)
-> @@ -3838,6 +3843,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg, bool free_all)
->   	int node, zid, shrink;
->   	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
->   	struct cgroup *cgrp = memcg->css.cgroup;
-> +	u64 usage;
->   
->   	css_get(&memcg->css);
->   
-> @@ -3877,8 +3883,10 @@ move_account:
->   		if (ret == -ENOMEM)
->   			goto try_to_free;
->   		cond_resched();
-> +		usage = res_counter_read_u64(&memcg->res, RES_USAGE) -
-> +			res_counter_read_u64(&memcg->kmem, RES_USAGE);
->   	/* "ret" should also be checked to ensure all lists are empty. */
-> -	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 || ret);
-> +	} while (usage > 0 || ret);
->   out:
->   	css_put(&memcg->css);
->   	return ret;
-> 
-Hm....maybe work enough. Could you add more comments on the code ?
+On Mon, Jun 25, 2012 at 11:12 PM, Kamezawa Hiroyuki
+<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
+> (2012/06/26 10:47), David Rientjes wrote:
+>>
+>> mem_cgroup_out_of_memory() is defined in mm/oom_kill.c, so declare it in
+>> linux/oom.h rather than linux/memcontrol.h.
+>>
+>> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
