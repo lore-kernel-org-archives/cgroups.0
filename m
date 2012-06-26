@@ -1,23 +1,22 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH 01/11] memcg: Make it possible to use the stock for more
- than one page.
-Date: Mon, 25 Jun 2012 21:01:54 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1206252101010.26640@chino.kir.corp.google.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-2-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH 02/11] memcg: Reclaim when more than one page needed.
+Date: Mon, 25 Jun 2012 21:09:11 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206252106430.26640@chino.kir.corp.google.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=nvp/ZYS4USMQnLA2jM9ZxqPPxQ7UxirfSo4/4MjsvZ0=;
-        b=PAZQMoUjv5x/GQertgsiTU4YgxEf9xceBF7jqRMuuJ3pfB1s1ZV3cqLnsv0CQazdo3
-         seL3Z3YS6NofFBSSEvjpiAx0nd917DK0HYY9omC+NmxmzfEbZCckB74PLaOYkGjqyzJp
-         pJgNbClMICYv2mHb+7KoZP0zt6brB9zBJpl1P2JIbAfU2lAYaamECDbTHE0xPpZNn/Pq
-         eaV+lByaMgpA7CHAIhr43bJ9Q5nvH3PYR8yu/aCtQNPc9aFJydIdZ3jstxIIRJH2nCJn
-         M7SciWHyZSHh7URZwiqRtajCg0w0kGhmZ5H+A0vNUDXzBDzlYT79jgEJinOGatUtbJmg
-         ++hQ==
-In-Reply-To: <1340633728-12785-2-git-send-email-glommer@parallels.com>
+        bh=rUZPDnF+YS1XqbFQdmWetFagCyHS3bZNSonvI9RgF9s=;
+        b=EwcwBnBfIyDezA72beK2jjU2Ftvm87zAI7c3gpYWvB/SMlEBpXfyipql/7J/Iq3avx
+         xDXQLVMmQvQAH6lCnqt+dyt/VqgS5XR+h24QFZgwhW+SVIbxBEuPMMmlkjYtDARL3yyn
+         RI7ASPgkFq3Sg67/33DsuLieN/e0R+Qqbbu0J6FZsLyjPbZDcVAoCLxUU0DrlvH5nMj9
+         jSTj5MxGZSAl7g9p2tNBkhIE6RmJHywUEw1yw5qKk928kpugnJ1FF4MQrfCrLf6mMIxc
+         AcU59BWSvYiF868LYk1Cz6F+zG9vGQyg3ByYykXC5AJFbyW4jlJcPC/DpKTmGqoOL8gp
+         417w==
+In-Reply-To: <1340633728-12785-3-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -27,13 +26,77 @@ Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-found
 
 On Mon, 25 Jun 2012, Glauber Costa wrote:
 
-> From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
-> 
-> Signed-off-by: Suleiman Souhlal <suleiman@google.com>
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 9304db2..8e601e8 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2158,8 +2158,16 @@ enum {
+>  	CHARGE_OOM_DIE,		/* the current is killed because of OOM */
+>  };
+>  
+> +/*
+> + * We need a number that is small enough to be likely to have been
+> + * reclaimed even under pressure, but not too big to trigger unnecessary 
 
-Acked-by: David Rientjes <rientjes@google.com>
+Whitespace.
+
+> + * retries
+> + */
+> +#define NR_PAGES_TO_RETRY 2
+> +
+
+Should be 1 << PAGE_ALLOC_COSTLY_ORDER?  Where does this number come from?  
+The changelog doesn't specify.
+
+>  static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> -				unsigned int nr_pages, bool oom_check)
+> +				unsigned int nr_pages, unsigned int min_pages,
+> +				bool oom_check)
+>  {
+>  	unsigned long csize = nr_pages * PAGE_SIZE;
+>  	struct mem_cgroup *mem_over_limit;
+> @@ -2182,18 +2190,18 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	} else
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+>  	/*
+> -	 * nr_pages can be either a huge page (HPAGE_PMD_NR), a batch
+> -	 * of regular pages (CHARGE_BATCH), or a single regular page (1).
+> -	 *
+>  	 * Never reclaim on behalf of optional batching, retry with a
+>  	 * single page instead.
+>  	 */
+> -	if (nr_pages == CHARGE_BATCH)
+> +	if (nr_pages > min_pages)
+>  		return CHARGE_RETRY;
+>  
+>  	if (!(gfp_mask & __GFP_WAIT))
+>  		return CHARGE_WOULDBLOCK;
+>  
+> +	if (gfp_mask & __GFP_NORETRY)
+> +		return CHARGE_NOMEM;
+> +
+>  	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+>  		return CHARGE_RETRY;
+> @@ -2206,7 +2214,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	 * unlikely to succeed so close to the limit, and we fall back
+>  	 * to regular pages anyway in case of failure.
+>  	 */
+> -	if (nr_pages == 1 && ret)
+> +	if (nr_pages <= NR_PAGES_TO_RETRY && ret)
+>  		return CHARGE_RETRY;
+>  
+>  	/*
+> @@ -2341,7 +2349,8 @@ again:
+>  			nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
+>  		}
+>  
+> -		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, oom_check);
+> +		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, nr_pages,
+> +		    oom_check);
+>  		switch (ret) {
+>  		case CHARGE_OK:
+>  			break;
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
