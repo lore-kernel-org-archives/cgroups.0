@@ -1,54 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] memcg: first step towards hierarchical controller
-Date: Tue, 26 Jun 2012 11:12:09 -0700
-Message-ID: <20120626181209.GR3869@google.com>
-References: <1340717428-9009-1-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH 06/11] memcg: kmem controller infrastructure
+Date: Tue, 26 Jun 2012 22:14:51 +0400
+Message-ID: <4FE9FC1B.6080301@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-7-git-send-email-glommer@parallels.com> <20120625161720.ae13ae90.akpm@linux-foundation.org> <4FE9CEBB.80108@parallels.com> <20120626110142.b7cf6d7c.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=0AcnfGkA74hhozMhXy2RWYT+bu3IXrT1sT2F/v9T0lI=;
-        b=mRKELX0GKi9ko3mRmWQ/Vl2RTYuQGq1Yj5/pfRmVoQY64I1y5hTWZlDxVFCB5BEYrI
-         ygKQHC5Tji0LhBIOZ/AhjMkEc3lAdpGF1lJCwwHYM2QdMXYXXGK4FoY/7FDQtRgPh267
-         RU20vXMtC1LqR82PfK5b2+/Wo+uKdU78pQpwq1WzFijm0PcBzhmdmixpqhjLtmg4kgyF
-         JNPDidIig9SuBiB7pT3LpTJdz8EkMdSmF9PQJFbrtJiVHQdZ4/hWVl9xqmqUvwfoJXqc
-         NX1xWDZ4DVdwzbMaKiNi/kh3t7ojli7Zk8uFbER8yIqBVgWDR45+gF4FhG6aQz837Ffg
-         NKQA==
-Content-Disposition: inline
-In-Reply-To: <1340717428-9009-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120626110142.b7cf6d7c.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On Tue, Jun 26, 2012 at 05:30:28PM +0400, Glauber Costa wrote:
-> Okay, so after recent discussions, I am proposing the following
-> patch. It won't remove hierarchy, or anything like that. Just default
-> to true in the root cgroup, and print a warning once if you try
-> to set it back to 0.
-> 
-> I am not adding it to feature-removal-schedule.txt because I don't
-> view it as a consensus. Rather, changing the default would allow us
-> to give it a time around in the open, and see if people complain
-> and what we can learn about that.
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+On 06/26/2012 10:01 PM, Andrew Morton wrote:
+> On Tue, 26 Jun 2012 19:01:15 +0400 Glauber Costa <glommer@parallels.com> wrote:
+>
+>> On 06/26/2012 03:17 AM, Andrew Morton wrote:
+>>>> +	memcg_uncharge_kmem(memcg, size);
+>>>>> +	mem_cgroup_put(memcg);
+>>>>> +}
+>>>>> +EXPORT_SYMBOL(__mem_cgroup_free_kmem_page);
+>>>>>   #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
+>>>>>
+>>>>>   #if defined(CONFIG_INET) && defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
+>>>>> @@ -5645,3 +5751,69 @@ static int __init enable_swap_account(char *s)
+>>>>>   __setup("swapaccount=", enable_swap_account);
+>>>>>
+>>>>>   #endif
+>>>>> +
+>>>>> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
+>>> gargh.  CONFIG_MEMCG_KMEM, please!
+>>>
+>>
+>> Here too. I like it as much as you do.
+>>
+>> But that is consistent with the rest of the file, and I'd rather have
+>> it this way.
+>
+> There's not much point in being consistent with something which is so
+> unpleasant.  I'm on a little campaign to rename
+> CONFIG_CGROUP_MEM_RES_CTLR to CONFIG_MEMCG, only nobody has taken my
+> bait yet.  Be first!
+>
 
-Just in case it wasn't clear in the other posting.
+If you are okay with a preparation mechanical patch to convert the whole 
+file, I can change mine too.
 
- Nacked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+But you'll be responsible for arguing with whoever stepping up opposing 
+this =p
 
-You can't change the default behavior silently.  Not in this scale.
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
