@@ -1,28 +1,30 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 06/11] memcg: kmem controller infrastructure
-Date: Tue, 26 Jun 2012 19:29:44 +0400
-Message-ID: <4FE9D568.4050802@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-7-git-send-email-glommer@parallels.com> <20120625161720.ae13ae90.akpm@linux-foundation.org>
+Subject: Re: [PATCH] memcg: first step towards hierarchical controller
+Date: Tue, 26 Jun 2012 19:31:21 +0400
+Message-ID: <4FE9D5C9.805@parallels.com>
+References: <1340717428-9009-1-git-send-email-glommer@parallels.com> <20120626141127.GA27816@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120625161720.ae13ae90.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <20120626141127.GA27816-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 06/26/2012 03:17 AM, Andrew Morton wrote:
->> +	if (ret == -EINTR)  {
->> >+		nofail = true;
->> >+		/*
->> >+		 * __mem_cgroup_try_charge() chose to bypass to root due
->> >+		 * to OOM kill or fatal signal.
-> Is "bypass" correct?  Maybe "fall back"?
->
+On 06/26/2012 06:11 PM, Johannes Weiner wrote:
+> I find the warning message a bit terse.  Maybe include something like
+> "restructure the cgroup directory structure to match your accounting
+> requirements or complain to (linux-mm, cgroups list etc.)  if not
+> possible"
 
-Heh, forgot this one, sorry =(
+How about:
 
-__mem_cgroup_try_charge does "goto bypass", so I believe the term
-"bypass" is better to allow whoever is following this code to follow it.
+WARN_ONCE(!parent_memcg && memcg->use_hierarchy,
+    "Non-hierarchical memcg is considered for deprecation\n"
+    "Please consider reorganizing your tree to work with hierarchical 
+accounting\n"
+    "If you have any reason not to, let us know at 
+cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org\n");
+
