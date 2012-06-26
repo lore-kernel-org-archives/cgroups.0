@@ -1,55 +1,58 @@
-From: Suleiman Souhlal <suleiman@google.com>
-Subject: Re: [PATCH 02/11] memcg: Reclaim when more than one page needed.
-Date: Mon, 25 Jun 2012 16:33:29 -0700
-Message-ID: <CABCjUKD0h089StLF8BwVRU-St70Ai9PTw-cjis40_aLLG3MAQQ@mail.gmail.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
-	<1340633728-12785-3-git-send-email-glommer@parallels.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch 1/3] mm, oom: move declaration for mem_cgroup_out_of_memory
+ to oom.h
+Date: Mon, 25 Jun 2012 18:47:46 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:x-system-of-record;
-        bh=BMDH8RmoZ6nMXiQq7FllA05j/J7FLJ7zROSYo2ODu2M=;
-        b=EPG3mg0fSLvyYaK43fs3yt2uZbxh8U8AVGPA8sdg9RRHF9CgVkLCEnDLk4LvWtXI/3
-         Eq3fSQqEjQy/QSFsxRquzXZJvrZMdZpKSeNQ7JIM3S5ayUDyqq59SUnSFGfF2Y+juTrA
-         gtRMbrykRbRDmJKQWqcxG/Qv/UdPUcGByoHT7DKEeUOXNpxkhCbrmhXpnlSGZdi+jTt3
-         T7zgWGLue1Q/QPgmPABvodcKVCnhPBROICEBSp8Pu9Kqr/nlKZEf13y/YazGJyc6FLX6
-         Uf1+xCp7oIWh90+xaD0Zl++3wZWwguEo+eHOGRa9gsKoOyzWpTyV/4CZeSf+LOrqYB08
-         LJ+A==
-In-Reply-To: <1340633728-12785-3-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+        h=date:from:x-x-sender:to:cc:subject:message-id:user-agent
+         :mime-version:content-type;
+        bh=nHWaZIPaQa8aOw04idMvARvHvJ0rpPV4JPGIVq5BsAc=;
+        b=djObOHFxaL0mHMmdAsz4UPrwLBpBLkxqYB15qq3sQjNPshyZJRTz0AsPXXWCINt4W2
+         ouZ8OGBFkLWQwNMzupifjEh8e9lhs5HMud92Vqy9rHAGBN87KJiF4cxhv1TG+kW5Jzri
+         E853DO5dxuqSPnUVX22X/lwWFXVXUMhCVE8BXDF4Q86ia0PyDumHTp7zAjFSH/FHa9zX
+         kiUpTE4cqbiM/HeXVVd0oRSkPaNb+QGttHU7LSrVp4C81tJy2IqBtKdPLGp/QKhVd9Vw
+         lx6JuAo+oOeJwCFVJ92/T9VvVP4aLtH9fHj45veLwWjfHJcrRgCWNmLVbPmqG27vF14U
+         pkww==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Jun 25, 2012 at 7:15 AM, Glauber Costa <glommer@parallels.com> wrote:
-> From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
->
-> mem_cgroup_do_charge() was written before slab accounting, and expects
-> three cases: being called for 1 page, being called for a stock of 32 pages,
-> or being called for a hugepage.  If we call for 2 or 3 pages (and several
-> slabs used in process creation are such, at least with the debug options I
-> had), it assumed it's being called for stock and just retried without reclaiming.
->
-> Fix that by passing down a minsize argument in addition to the csize.
->
-> And what to do about that (csize == PAGE_SIZE && ret) retry?  If it's
-> needed at all (and presumably is since it's there, perhaps to handle
-> races), then it should be extended to more than PAGE_SIZE, yet how far?
-> And should there be a retry count limit, of what?  For now retry up to
-> COSTLY_ORDER (as page_alloc.c does), stay safe with a cond_resched(),
-> and make sure not to do it if __GFP_NORETRY.
+mem_cgroup_out_of_memory() is defined in mm/oom_kill.c, so declare it in
+linux/oom.h rather than linux/memcontrol.h.
 
-The commit description mentions COSTLY_ORDER, but it's not actually
-used in the patch.
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/memcontrol.h |    2 --
+ include/linux/oom.h        |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
--- Suleiman
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -72,8 +72,6 @@ extern void mem_cgroup_uncharge_end(void);
+ extern void mem_cgroup_uncharge_page(struct page *page);
+ extern void mem_cgroup_uncharge_cache_page(struct page *page);
+ 
+-extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-				     int order);
+ bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
+ 				  struct mem_cgroup *memcg);
+ int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg);
+diff --git a/include/linux/oom.h b/include/linux/oom.h
+--- a/include/linux/oom.h
++++ b/include/linux/oom.h
+@@ -49,6 +49,8 @@ extern unsigned long oom_badness(struct task_struct *p,
+ extern int try_set_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
+ extern void clear_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
+ 
++extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
++				     int order);
+ extern void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
+ 		int order, nodemask_t *mask, bool force_kill);
+ extern int register_oom_notifier(struct notifier_block *nb);
