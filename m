@@ -1,52 +1,68 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 03/11] memcg: change defines to an enum
-Date: Tue, 26 Jun 2012 12:28:34 +0400
-Message-ID: <4FE972B2.1020509@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-4-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206252110470.26640@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 1/3] mm, oom: move declaration for
+ mem_cgroup_out_of_memory to oom.h
+Date: Tue, 26 Jun 2012 10:34:05 +0200
+Message-ID: <20120626083405.GA9566@tiehlicka.suse.cz>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.00.1206252110470.26640@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1206251846020.24838-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes@google.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 06/26/2012 08:11 AM, David Rientjes wrote:
-> On Mon, 25 Jun 2012, Glauber Costa wrote:
->
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 8e601e8..9352d40 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -387,9 +387,12 @@ enum charge_type {
->>   };
->>
->>   /* for encoding cft->private value on file */
->> -#define _MEM			(0)
->> -#define _MEMSWAP		(1)
->> -#define _OOM_TYPE		(2)
->> +enum res_type {
->> +	_MEM,
->> +	_MEMSWAP,
->> +	_OOM_TYPE,
->> +};
->> +
->>   #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
->>   #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
->>   #define MEMFILE_ATTR(val)	((val) & 0xffff)
->
-> Shouldn't everything that does MEMFILE_TYPE() now be using type
-> enum res_type rather than int?
->
-If you mean the following three fields, no, since they are masks and 
-operations.
+On Mon 25-06-12 18:47:46, David Rientjes wrote:
+> mem_cgroup_out_of_memory() is defined in mm/oom_kill.c, so declare it in
+> linux/oom.h rather than linux/memcontrol.h.
 
-If you mean something else, what do you mean ?
+Makes sense
+> 
+> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+> ---
+>  include/linux/memcontrol.h |    2 --
+>  include/linux/oom.h        |    2 ++
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -72,8 +72,6 @@ extern void mem_cgroup_uncharge_end(void);
+>  extern void mem_cgroup_uncharge_page(struct page *page);
+>  extern void mem_cgroup_uncharge_cache_page(struct page *page);
+>  
+> -extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> -				     int order);
+>  bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
+>  				  struct mem_cgroup *memcg);
+>  int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg);
+> diff --git a/include/linux/oom.h b/include/linux/oom.h
+> --- a/include/linux/oom.h
+> +++ b/include/linux/oom.h
+> @@ -49,6 +49,8 @@ extern unsigned long oom_badness(struct task_struct *p,
+>  extern int try_set_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
+>  extern void clear_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
+>  
+> +extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> +				     int order);
+>  extern void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
+>  		int order, nodemask_t *mask, bool force_kill);
+>  extern int register_oom_notifier(struct notifier_block *nb);
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
