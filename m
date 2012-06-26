@@ -1,58 +1,58 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: "Regression" with cd3d09527537
-Date: Tue, 26 Jun 2012 16:43:03 +0400
-Message-ID: <4FE9AE57.4090007@parallels.com>
+Subject: Re: [PATCH 11/11] protect architectures where THREAD_SIZE >= PAGE_SIZE
+ against fork bombs
+Date: Tue, 26 Jun 2012 16:48:08 +0400
+Message-ID: <4FE9AF88.5070803@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-12-git-send-email-glommer@parallels.com> <4FE89807.50708@redhat.com> <20120625183818.GH3869@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120625183818.GH3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hi,
+On 06/25/2012 10:38 PM, Tejun Heo wrote:
+> On Mon, Jun 25, 2012 at 06:55:35PM +0200, Frederic Weisbecker wrote:
+>> On 06/25/2012 04:15 PM, Glauber Costa wrote:
+>>
+>>> Because those architectures will draw their stacks directly from
+>>> the page allocator, rather than the slab cache, we can directly
+>>> pass __GFP_KMEMCG flag, and issue the corresponding free_pages.
+>>>
+>>> This code path is taken when the architecture doesn't define
+>>> CONFIG_ARCH_THREAD_INFO_ALLOCATOR (only ia64 seems to), and has
+>>> THREAD_SIZE >= PAGE_SIZE. Luckily, most - if not all - of the
+>>> remaining architectures fall in this category.
+>>>
+>>> This will guarantee that every stack page is accounted to the memcg
+>>> the process currently lives on, and will have the allocations to fail
+>>> if they go over limit.
+>>>
+>>> For the time being, I am defining a new variant of THREADINFO_GFP, not
+>>> to mess with the other path. Once the slab is also tracked by memcg,
+>>> we can get rid of that flag.
+>>>
+>>> Tested to successfully protect against :(){ :|:& };:
+>>>
+>>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>>> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+>>> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+>>> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>>> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>>> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>
+>>
+>> Acked-by: Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>
+> Frederic, does this (with proper slab accounting added later) achieve
+> what you wanted with the task counter?
+>
 
-I've recently started seeing a lockdep warning at the end of *every* 
-"init 0" issued in my machine. Actually, reboots are fine, and that's 
-probably why I've never seen it earlier. The log is quite extensively, 
-but shows the following dependency chain:
+A note: Frederic may confirm, but I think he doesn't even need
+the slab accounting to follow to achieve that goal.
 
-[   83.982111] -> #4 (cpu_hotplug.lock){+.+.+.}:
-[...]
-[   83.982111] -> #3 (jump_label_mutex){+.+...}:
-[...]
-[   83.982111] -> #2 (sk_lock-AF_INET){+.+.+.}:
-[...]
-[   83.982111] -> #1 (&sig->cred_guard_mutex){+.+.+.}:
-[...]
-[   83.982111] -> #0 (cgroup_mutex){+.+.+.}:
 
-I've recently fixed bugs with the lock ordering imposed by cpusets
-on cpu_hotplug.lock through jump_label_mutex, and initially thought it 
-to be the same kind of issue. But that was not the case.
-
-I've omitted the full backtrace for readability, but I run this with all 
-cgroups disabled but the cpuset, so it can't be sock memcg (after my 
-initial reaction of "oh, fuck, not again"). That jump_label is there for 
-years, and it comes from the code that disables socket timestamps.
-(net_enable_timestamp)
-
-After a couple of days of extensive debugging, with git bisect failing 
-to pinpoint a culprit, I've got to that patch
-"cgroup: always lock threadgroup during migration" as the one that would
-trigger the bug.
-
-The problem is, what this patch does is start calling threadgroup_lock
-everytime, instead of conditionally. In that sense, it of course did not 
-create the bug, only made it (fortunately) always visible.
-
-Thing is, I honestly don't know what would be a fix for this bug.
-We could hold the threadgroup_lock before the cgroup_lock, but that 
-would hold it for way too long.
-
-This is just another incarnation of the cgroup_lock creating nasty 
-dependencies with virtually everything else, because we hold it for 
-everything we do. I fear we'll fix this, and another one will just wake 
-up any time.
-
-What do you think, Tejun?
