@@ -1,68 +1,48 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 1/3] mm, oom: move declaration for
- mem_cgroup_out_of_memory to oom.h
-Date: Tue, 26 Jun 2012 10:34:05 +0200
-Message-ID: <20120626083405.GA9566@tiehlicka.suse.cz>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH 02/11] memcg: Reclaim when more than one page needed.
+Date: Tue, 26 Jun 2012 12:39:55 +0400
+Message-ID: <4FE9755B.1040905@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-3-git-send-email-glommer@parallels.com> <CABCjUKD0h089StLF8BwVRU-St70Ai9PTw-cjis40_aLLG3MAQQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1206251846020.24838-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <CABCjUKD0h089StLF8BwVRU-St70Ai9PTw-cjis40_aLLG3MAQQ@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Suleiman Souhlal <suleiman@google.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
 
-On Mon 25-06-12 18:47:46, David Rientjes wrote:
-> mem_cgroup_out_of_memory() is defined in mm/oom_kill.c, so declare it in
-> linux/oom.h rather than linux/memcontrol.h.
+On 06/26/2012 03:33 AM, Suleiman Souhlal wrote:
+> On Mon, Jun 25, 2012 at 7:15 AM, Glauber Costa <glommer@parallels.com> wrote:
+>> From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+>>
+>> mem_cgroup_do_charge() was written before slab accounting, and expects
+>> three cases: being called for 1 page, being called for a stock of 32 pages,
+>> or being called for a hugepage.  If we call for 2 or 3 pages (and several
+>> slabs used in process creation are such, at least with the debug options I
+>> had), it assumed it's being called for stock and just retried without reclaiming.
+>>
+>> Fix that by passing down a minsize argument in addition to the csize.
+>>
+>> And what to do about that (csize == PAGE_SIZE && ret) retry?  If it's
+>> needed at all (and presumably is since it's there, perhaps to handle
+>> races), then it should be extended to more than PAGE_SIZE, yet how far?
+>> And should there be a retry count limit, of what?  For now retry up to
+>> COSTLY_ORDER (as page_alloc.c does), stay safe with a cond_resched(),
+>> and make sure not to do it if __GFP_NORETRY.
+>
+> The commit description mentions COSTLY_ORDER, but it's not actually
+> used in the patch.
+>
+> -- Suleiman
+>
+Yeah, forgot to update the changelog =(
 
-Makes sense
-> 
-> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+But much more importantly, are you still happy with those changes?
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-> ---
->  include/linux/memcontrol.h |    2 --
->  include/linux/oom.h        |    2 ++
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -72,8 +72,6 @@ extern void mem_cgroup_uncharge_end(void);
->  extern void mem_cgroup_uncharge_page(struct page *page);
->  extern void mem_cgroup_uncharge_cache_page(struct page *page);
->  
-> -extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> -				     int order);
->  bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
->  				  struct mem_cgroup *memcg);
->  int task_in_mem_cgroup(struct task_struct *task, const struct mem_cgroup *memcg);
-> diff --git a/include/linux/oom.h b/include/linux/oom.h
-> --- a/include/linux/oom.h
-> +++ b/include/linux/oom.h
-> @@ -49,6 +49,8 @@ extern unsigned long oom_badness(struct task_struct *p,
->  extern int try_set_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
->  extern void clear_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
->  
-> +extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> +				     int order);
->  extern void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
->  		int order, nodemask_t *mask, bool force_kill);
->  extern int register_oom_notifier(struct notifier_block *nb);
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
