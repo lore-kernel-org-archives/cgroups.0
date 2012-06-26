@@ -1,46 +1,96 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH 06/11] memcg: kmem controller infrastructure
-Date: Tue, 26 Jun 2012 11:01:42 -0700
-Message-ID: <20120626110142.b7cf6d7c.akpm@linux-foundation.org>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
-	<1340633728-12785-7-git-send-email-glommer@parallels.com>
-	<20120625161720.ae13ae90.akpm@linux-foundation.org>
-	<4FE9CEBB.80108@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
+Date: Tue, 26 Jun 2012 11:04:51 -0700
+Message-ID: <20120626180451.GP3869@google.com>
+References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
+ <1340725634-9017-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FE9CEBB.80108-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=E1CbvPXDKkOCcmRu4KVXcAOsrnh8qZysYbA5QnD7P+c=;
+        b=zkNGGrIw2ncq1i/dkKt0mvtNTkxWKIPcGbnhgmVFxca2M/0zCHe0Hdw2hB3ViXiqDI
+         eWl3fOndVTfMGXjl+b+HskTTdC2m/z6+3zwG9R65prEwdcoqi0FTcS4QTTTr1iVFEtjF
+         jPzXHi1TqgnBDnrpsfjek1mi1kA1biFj34pdNAEOyWuHPM7rJ9eH45ofSi7KmcqRODJ7
+         i45u/Y4MMBKphkj0PgLcy8ss6tcQxbbSUbMYjkZLgHnjs2KnlARIiCQcRALH8RUjR/vk
+         de5+KUVo/HNNGMuPWdFs/0aUxGUW7mvU6+cy++28wdDzNd8M9w5QzuLuUHeH+NulJEym
+         iRXQ==
+Content-Disposition: inline
+In-Reply-To: <1340725634-9017-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, 26 Jun 2012 19:01:15 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-
-> On 06/26/2012 03:17 AM, Andrew Morton wrote:
-> >> +	memcg_uncharge_kmem(memcg, size);
-> >> >+	mem_cgroup_put(memcg);
-> >> >+}
-> >> >+EXPORT_SYMBOL(__mem_cgroup_free_kmem_page);
-> >> >  #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
-> >> >
-> >> >  #if defined(CONFIG_INET) && defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
-> >> >@@ -5645,3 +5751,69 @@ static int __init enable_swap_account(char *s)
-> >> >  __setup("swapaccount=", enable_swap_account);
-> >> >
-> >> >  #endif
-> >> >+
-> >> >+#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
-> > gargh.  CONFIG_MEMCG_KMEM, please!
-> >
+On Tue, Jun 26, 2012 at 07:47:14PM +0400, Glauber Costa wrote:
+> Okay, so after recent discussions, I am proposing the following
+> patch. It won't remove hierarchy, or anything like that. Just default
+> to true in the root cgroup, and print a warning once if you try
+> to set it back to 0.
 > 
-> Here too. I like it as much as you do.
+> I am not adding it to feature-removal-schedule.txt because I don't
+> view it as a consensus. Rather, changing the default would allow us
+> to give it a time around in the open, and see if people complain
+> and what we can learn about that.
 > 
-> But that is consistent with the rest of the file, and I'd rather have
-> it this way.
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+>  mm/memcontrol.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 85f7790..c37e4c1 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3993,6 +3993,10 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+>  	if (memcg->use_hierarchy == val)
+>  		goto out;
+>  
+> +	WARN_ONCE(!parent_memcg && memcg->use_hierarchy,
+> +	"Non-hierarchical memcg is considered for deprecation\n"
+> +	"Please consider reorganizing your tree to work with hierarchical accounting\n"
+> +	"If you have any reason not to, let us know at cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org\n");
+>  	/*
+>  	 * If parent's use_hierarchy is set, we can't make any modifications
+>  	 * in the child subtrees. If it is unset, then the change can
+> @@ -5221,6 +5225,7 @@ mem_cgroup_create(struct cgroup *cont)
+>  			INIT_WORK(&stock->work, drain_local_stock);
+>  		}
+>  		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
+> +		memcg->use_hierarchy = true;
+>  	} else {
+>  		parent = mem_cgroup_from_cont(cont->parent);
+>  		memcg->use_hierarchy = parent->use_hierarchy;
 
-There's not much point in being consistent with something which is so
-unpleasant.  I'm on a little campaign to rename
-CONFIG_CGROUP_MEM_RES_CTLR to CONFIG_MEMCG, only nobody has taken my
-bait yet.  Be first!
+So, ummm, I don't think we can do this.  We CAN NOT silently flip the
+default behavior like this.  Hell, no.  What we can do is something
+like the following.
+
+1. Make .use_hierarchy a global property and convert .use_hierarchy
+   file to reject writes to the setting which is different from the
+   global one.  Rip out partial hierarchy related code (how little
+   they may be).  Note that the default should still be flat
+   hierarchy.
+
+2. Mark flat hierarchy deprecated and produce a warning message if
+   memcg is mounted w/o hierarchy option for a year or two.
+
+3. After the existing users had enough chance to move away from flat
+   hierarchy, rip out flat hierarchy code and error if hierarchy
+   option is not specified.
+
+Later on, we may decide to get rid of the hierarchy mount option but I
+don't think that matters all that much.
+
+Thanks.
+
+-- 
+tejun
