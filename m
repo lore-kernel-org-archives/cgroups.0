@@ -1,57 +1,62 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 06/11] memcg: kmem controller infrastructure
-Date: Tue, 26 Jun 2012 22:14:51 +0400
-Message-ID: <4FE9FC1B.6080301@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-7-git-send-email-glommer@parallels.com> <20120625161720.ae13ae90.akpm@linux-foundation.org> <4FE9CEBB.80108@parallels.com> <20120626110142.b7cf6d7c.akpm@linux-foundation.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH] memcg: first step towards hierarchical controller
+Date: Tue, 26 Jun 2012 22:22:04 +0400
+Message-ID: <4FE9FDCC.80000@parallels.com>
+References: <1340717428-9009-1-git-send-email-glommer@parallels.com> <20120626181209.GR3869@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120626110142.b7cf6d7c.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120626181209.GR3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 06/26/2012 10:01 PM, Andrew Morton wrote:
-> On Tue, 26 Jun 2012 19:01:15 +0400 Glauber Costa <glommer@parallels.com> wrote:
->
->> On 06/26/2012 03:17 AM, Andrew Morton wrote:
->>>> +	memcg_uncharge_kmem(memcg, size);
->>>>> +	mem_cgroup_put(memcg);
->>>>> +}
->>>>> +EXPORT_SYMBOL(__mem_cgroup_free_kmem_page);
->>>>>   #endif /* CONFIG_CGROUP_MEM_RES_CTLR_KMEM */
->>>>>
->>>>>   #if defined(CONFIG_INET) && defined(CONFIG_CGROUP_MEM_RES_CTLR_KMEM)
->>>>> @@ -5645,3 +5751,69 @@ static int __init enable_swap_account(char *s)
->>>>>   __setup("swapaccount=", enable_swap_account);
->>>>>
->>>>>   #endif
->>>>> +
->>>>> +#ifdef CONFIG_CGROUP_MEM_RES_CTLR_KMEM
->>> gargh.  CONFIG_MEMCG_KMEM, please!
->>>
+On 06/26/2012 10:12 PM, Tejun Heo wrote:
+> On Tue, Jun 26, 2012 at 05:30:28PM +0400, Glauber Costa wrote:
+>> Okay, so after recent discussions, I am proposing the following
+>> patch. It won't remove hierarchy, or anything like that. Just default
+>> to true in the root cgroup, and print a warning once if you try
+>> to set it back to 0.
 >>
->> Here too. I like it as much as you do.
+>> I am not adding it to feature-removal-schedule.txt because I don't
+>> view it as a consensus. Rather, changing the default would allow us
+>> to give it a time around in the open, and see if people complain
+>> and what we can learn about that.
 >>
->> But that is consistent with the rest of the file, and I'd rather have
->> it this way.
+>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 >
-> There's not much point in being consistent with something which is so
-> unpleasant.  I'm on a little campaign to rename
-> CONFIG_CGROUP_MEM_RES_CTLR to CONFIG_MEMCG, only nobody has taken my
-> bait yet.  Be first!
+> Just in case it wasn't clear in the other posting.
 >
+>   Nacked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>
+> You can't change the default behavior silently.  Not in this scale.
+>
+> Thanks.
+>
+I certainly don't share your views of the matter here.
 
-If you are okay with a preparation mechanical patch to convert the whole 
-file, I can change mine too.
+I would agree with you if we were changing a fundamental algorithm,
+with no way to resort back to a default setup. We are not removing any
+functionality whatsoever here.
 
-But you'll be responsible for arguing with whoever stepping up opposing 
-this =p
+I would agree with you if we were actually documenting explicitly
+that this is an expected default behavior.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+But we never made the claim that use_hierarchy would default to 0.
+
+Well, we seldom make claims about default values of any tunables. We 
+just expect them to be reasonable values, and we seem to agree that this 
+is, indeed, reasonable.
+
+I personally consider this even better than a mount option. It doesn't 
+add or remove any new interface, since use_hierarchy was already there.
+
+It doesn't change the behavior of any interface. What would happen for 
+instance if I rely on a multitude of use_hierarchy = 0 and 1 and 
+suddenly a mount option would override that?
