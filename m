@@ -1,80 +1,103 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [rfc][patch 3/3] mm, memcg: introduce own oom handler to iterate
- only over its own threads
-Date: Tue, 26 Jun 2012 13:38:12 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1206261323260.8673@chino.kir.corp.google.com>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206251847180.24838@chino.kir.corp.google.com> <4FE94968.6010500@jp.fujitsu.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
+Date: Tue, 26 Jun 2012 22:59:24 +0200
+Message-ID: <20120626205924.GH27816@cmpxchg.org>
+References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
+ <1340725634-9017-3-git-send-email-glommer@parallels.com>
+ <20120626180451.GP3869@google.com>
+ <20120626185542.GE27816@cmpxchg.org>
+ <20120626191450.GT3869@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=I50Ib3My8uLgDOcx2vQ31JRIrHRJglU6lIu55HE9wJg=;
-        b=gcWYIaiJQGfebRxSt7oAguLCwiPUDbq1wBn8XqbEDkJIAAGH32cwb/W6NWSlNRIlCC
-         TrCnh4lX0LL1esm6Du1RkpRSpyZtRK8AnjEu3K7QU3AMPNUDLN2EFRGCq1kaAEuj+3H1
-         a8alQjMjWS7l+ueeruhOmghdyNWUhaqiDCHxnXB5fAu4Llx2kNXXhZNoWTZGpLmd4AEc
-         +BJ79zu/lQ9SG1f0HX1gT25yfNHZEmZdulnB0m4Q/dLHLSuLuzmYyUAu7u3JVYPeUR4E
-         1+pGxmBcpcojoFiHd9A5YKKpXwARG12Y3A00qQyqqaxrUbtY1nOIUVybUlTcsJBMFcUn
-         Hpsw==
-In-Reply-To: <4FE94968.6010500@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120626191450.GT3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, 26 Jun 2012, Kamezawa Hiroyuki wrote:
-
-> > This still requires tasklist_lock for the tasklist dump, iterating
-> > children of the selected process, and killing all other threads on the
-> > system sharing the same memory as the selected victim.  So while this
-> > isn't a complete solution to tasklist_lock starvation, it significantly
-> > reduces the amount of time that it is held.
+On Tue, Jun 26, 2012 at 12:14:50PM -0700, Tejun Heo wrote:
+> Hello, Johannes.
+> 
+> On Tue, Jun 26, 2012 at 08:55:42PM +0200, Johannes Weiner wrote:
+> > > 2. Mark flat hierarchy deprecated and produce a warning message if
+> > >    memcg is mounted w/o hierarchy option for a year or two.
 > > 
-> > Signed-off-by: David Rientjes <rientjes@google.com>
+> > I think most of us assume that the common case is either not nesting
+> > directories or still working with hierarchy support actually enabled.
 > 
-> This seems good. Thank you!
+> How do we know that?  At least from what I see from blkcg usage,
+> people do crazy stuff when given crazy interface and we've been
+> providing completely crazy interface for years.  We cannot switch that
+> implicitly - the changed default behavior is drastically different and
+> even could be difficult to chase down.  Transitions towards good
+> behavior are good but they have to be explicit.
+
+I can't really argue against this because this can't be anything but a
+handwaving contest.  We simply have no data.
+
+Backward compatibility is a really good idea but I think it depends on
+the situation:
+
+  I don't expect such a configuration to happen by accident because
+  this behaviour is against fundamental expectations users have toward
+  a filesystem, which is the hierarchical nature of nested entities.
+
+  I also don't expect it to happen intentionnaly, simply because there
+  is nothing to gain from a more complicated nested setup.
+
+  And because there is nothing to gain, it is in addition really
+  trivial to fix the insane setups by simply undoing the nesting,
+  there is no downside for them.
+
+The only point where I agree with you is that it may indeed be
+non-obvious to detect in case you were relying on the filesystem
+hierarchy not being reflected in the controller hierarchy.  But even
+that depends on the usecase, whether it's a subtle performance
+regression or a total failure to execute a previously supported
+workload, which would be pretty damn obvious.
+
+> > I would hate if people had to jump through hoops to get the only
+> > behaviour we want to end up supporting and to not get yelled at, it
+> > sends all the wrong signals.
 > 
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> It is inconvenient but that's the price that we have to pay for having
+> been stupid.  Kernel flipping behavior implicitly is far worse than
+> any such inconvenience.
+
+That's a matter of taste.  It's not inconvenient for us, but for every
+normal person trying to use the feature in a sane way, just to support
+hypothetical crazy people when there is a really trivial solution for
+the crazy people's problem.
+
+> These default behavior flips are something is better handled by
+> distros / admins than kernel itself.  They can orchestrate the
+> userland infrastructure and handle and communicate these flips far
+> better than kernel alone can do.  We can't send out mails to flat
+> hierarchy users after all.  That's the reason why I'm suggesting mount
+> option which can't be flipped (sans remount but that's going away too)
+> once the system is configured by the distro or admin.
 > 
+> The kernel should nudge mainline users towards new behavior while
+> providing distros / admins a way to move to the new behavior.  The
+> kernel itself can't flip it like that.
 
-Thanks for the ack!
+I thought it was the kernel's job to provide sensible defaults and the
+distro's job to ease transitions...
 
-It's still not a perfect solution for the above reason.  We need 
-tasklist_lock for oom_kill_process() for a few reasons:
+> > > 3. After the existing users had enough chance to move away from flat
+> > >    hierarchy, rip out flat hierarchy code and error if hierarchy
+> > >    option is not specified.
+> > 
+> > This description sounds much more sane than what we are actually
+> > trying to ban, which is not a flat structure, but treating groups with
+> > nested directories as equal siblings.
+> 
+> Ah... yeah, flat hierarchy probably is the wrong way to describe it.
+> I don't know.  Superficial hierarchy?
 
- (1) if /proc/sys/vm/oom_dump_tasks is enabled, which is the default, 
-     to iterate the tasklist
-
- (2) to iterate the selected process's children, and
-
- (3) to iterate the tasklist to kill all other processes sharing the 
-     same memory.
-
-I'm hoping we can avoid taking tasklist_lock entirely for memcg ooms to 
-avoid the starvation problem at all.  We definitely still need to do (3) 
-to avoid mm->mmap_sem deadlock if another thread sharing the same memory 
-is holding the semaphore trying to allocate memory and waiting for current 
-to exit, which needs the semaphore itself.  That can be done with 
-rcu_read_lock(), however, and doesn't require tasklist_lock.
-
-(1) can be done with rcu_read_lock() as well but I'm wondering if there 
-would be a significant advantage doing this by a cgroup iterator as well.  
-It may not be worth it just for the sanity of the code.
-
-We can do (2) if we change to list_for_each_entry_rcu().
-
-So I think I'll add another patch on top of this series to split up 
-tasklist_lock handling even for the global oom killer and take references 
-on task_struct like it is done in this patchset which should make avoiding 
-taking tasklist_lock at all for memcg ooms much easier.
-
-Comments?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Not sure there really is an appropriate two-word name for this
+artifact.  How about, pardon my German,
+Cgroupfilesystemcontrollerhierarchysemanticsdiscrepancy?
