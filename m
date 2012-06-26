@@ -1,63 +1,31 @@
-From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Subject: Re: [rfc][patch 2/3] mm, oom: introduce helper function to process
- threads during scan
-Date: Tue, 26 Jun 2012 02:05:04 -0400
-Message-ID: <CAHGf_=pOvakOtZA9fWRGchgSb8k80O0Y8D-yUrmFWuoQOqkePQ@mail.gmail.com>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
- <alpine.DEB.2.00.1206251846450.24838@chino.kir.corp.google.com> <4FE92AF9.4050309@jp.fujitsu.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH 05/11] Add a __GFP_KMEMCG flag
+Date: Tue, 26 Jun 2012 11:08:32 +0400
+Message-ID: <4FE95FF0.3000300@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206252123230.26640@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:from:date
-         :x-google-sender-auth:message-id:subject:to:cc:content-type
-         :content-transfer-encoding;
-        bh=u2v4ypFOKM8Uz8Lss2JviWSleOzF/LAixwP7jLwjc5o=;
-        b=SwSO6JCXmV0t1dkcnn1URXvG2abZYz7sMNWsNXq/6X08SjFzIEKSiLcJhVYP8XuHKP
-         tR1BItmcEvPjNglfUhvdD1qWeuM/obinb3feSRZ0s0pjEF9ARsxf0hOARo9U/Di4e1m5
-         eDxeTEkBdDTVDjNfuEAe1uo6XvqA7AH4DpkiyFeKFKs9Ma96LTwHmtkXfkj+nkxkiWzO
-         cwAeGAvJxm274MfnM7Q16nUCiU3k8aQ8NFZqA/t2yhwltdkWSn4I1hF65oVHwSMXH6Ix
-         mB6P70FRqkSYiMxtSaQeU+mwd89Jm4J3q+8vDJzfnXk4lCLd7YWoziYUEX69BMOFNPOG
-         YgMg==
-In-Reply-To: <4FE92AF9.4050309@jp.fujitsu.com>
+In-Reply-To: <alpine.DEB.2.00.1206252123230.26640@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes@google.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
-On Mon, Jun 25, 2012 at 11:22 PM, Kamezawa Hiroyuki
-<kamezawa.hiroyu@jp.fujitsu.com> wrote:
-> (2012/06/26 10:47), David Rientjes wrote:
->>
->> This patch introduces a helper function to process each thread during th=
-e
->> iteration over the tasklist. =A0A new return type, enum oom_scan_t, is
->> defined to determine the future behavior of the iteration:
->>
->> =A0- OOM_SCAN_OK: continue scanning the thread and find its badness,
->>
->> =A0- OOM_SCAN_CONTINUE: do not consider this thread for oom kill, it's
->> =A0 =A0ineligible,
->>
->> =A0- OOM_SCAN_ABORT: abort the iteration and return, or
->>
->> =A0- OOM_SCAN_SELECT: always select this thread with the highest badness
->> =A0 =A0possible.
->>
->> There is no functional change with this patch. =A0This new helper functi=
-on
->> will be used in the next patch in the memory controller.
->>
->> Signed-off-by: David Rientjes <rientjes@google.com>
+On 06/26/2012 08:25 AM, David Rientjes wrote:
+> On Mon, 25 Jun 2012, Glauber Costa wrote:
 >
+>> >This flag is used to indicate to the callees that this allocation will be
+>> >serviced to the kernel. It is not supposed to be passed by the callers
+>> >of kmem_cache_alloc, but rather by the cache core itself.
+>> >
+> Not sure what "serviced to the kernel" means, does this mean that the
+> memory will not be accounted for to the root memcg?
 >
-> I like this.
->
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-
-Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+In this context, it means that is a kernel allocation, not a userspace 
+one (but in process context, of course), *and* it is to be accounted a
+specific memcg.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
