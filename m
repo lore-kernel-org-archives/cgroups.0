@@ -1,44 +1,52 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] fix bad behavior in use_hierarchy file
-Date: Tue, 26 Jun 2012 09:56:53 +0200
-Message-ID: <20120626075653.GD6713@tiehlicka.suse.cz>
-References: <1340616061-1955-1-git-send-email-glommer@parallels.com>
- <20120625204908.GL3869@google.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH 03/11] memcg: change defines to an enum
+Date: Tue, 26 Jun 2012 12:28:34 +0400
+Message-ID: <4FE972B2.1020509@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-4-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206252110470.26640@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120625204908.GL3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1206252110470.26640@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes@google.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
 
-[Adding Ying to CC - they are using hierarchies AFAIU in their workloads]
+On 06/26/2012 08:11 AM, David Rientjes wrote:
+> On Mon, 25 Jun 2012, Glauber Costa wrote:
+>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 8e601e8..9352d40 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -387,9 +387,12 @@ enum charge_type {
+>>   };
+>>
+>>   /* for encoding cft->private value on file */
+>> -#define _MEM			(0)
+>> -#define _MEMSWAP		(1)
+>> -#define _OOM_TYPE		(2)
+>> +enum res_type {
+>> +	_MEM,
+>> +	_MEMSWAP,
+>> +	_OOM_TYPE,
+>> +};
+>> +
+>>   #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
+>>   #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
+>>   #define MEMFILE_ATTR(val)	((val) & 0xffff)
+>
+> Shouldn't everything that does MEMFILE_TYPE() now be using type
+> enum res_type rather than int?
+>
+If you mean the following three fields, no, since they are masks and 
+operations.
 
-On Mon 25-06-12 13:49:08, Tejun Heo wrote:
-[...]
-> A bit of delta but is there any chance we can either deprecate
-> .use_hierarhcy or at least make it global toggle instead of subtree
-> thing?  
+If you mean something else, what do you mean ?
 
-So what you are proposing is to have all subtrees of the root either
-hierarchical or not, right?
-
-> This seems needlessly complicated. :(
-
-Toggle wouldn't help much I am afraid. We would still have to
-distinguish (non)hierarchical cases. And I am not sure we can make
-everything hierarchical easily. 
-Most users (from my experience) ignored use_hierarchy for some reasons
-and the end results might be really unexpected for them if they used
-deeper subtrees (which might be needed due to combination with other
-controller(s)).
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
