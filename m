@@ -1,52 +1,22 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 Subject: Re: [PATCH] memcg: first step towards hierarchical controller
-Date: Tue, 26 Jun 2012 18:38:25 +0400
-Message-ID: <4FE9C961.4030507@parallels.com>
-References: <1340717428-9009-1-git-send-email-glommer@parallels.com> <20120626141127.GA27816@cmpxchg.org> <1340720366.21991.84.camel@twins> <20120626143818.GB27816@cmpxchg.org>
+Date: Tue, 26 Jun 2012 16:41:09 +0200
+Message-ID: <1340721669.21991.85.camel@twins>
+References: <1340717428-9009-1-git-send-email-glommer@parallels.com>
+	 <20120626141127.GA27816@cmpxchg.org> <1340720366.21991.84.camel@twins>
+	 <20120626143818.GB27816@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120626143818.GB27816@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120626143818.GB27816-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, cgroups@vger.kernel.org, linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 06/26/2012 06:38 PM, Johannes Weiner wrote:
-> On Tue, Jun 26, 2012 at 04:19:26PM +0200, Peter Zijlstra wrote:
->> On Tue, 2012-06-26 at 16:11 +0200, Johannes Weiner wrote:
->>>
->>> Should the warning be emitted for any memcg, not just the parent?  If
->>> somebody takes notice of the changed semantics, it's better to print
->>> the warning on the first try to disable hierarchies instead of holding
->>> back until they walk up the tree and try to change it in the root.
->>> Still forbid disabling at lower levels, just be more eager to inform
->>> the people trying it.
->>
->> *blink* You mean you can mix-and-match use_hierarchy over the hierarchy?
->> Can I have some of those drugs? It must be strong and powerful stuff
->> that.
->
-> You can create root/a/b/c/d/e and enable hierarchy in b, which ends up
-> treating (a) and (b+children) like siblings even though they nest in
-> the cgroup fs.
->
-> Yes, drugs.
->
+On Tue, 2012-06-26 at 16:38 +0200, Johannes Weiner wrote:
 > But you can't disable the hierarchy if you have a hierarchy-enabled
-> parent, which we try to make the new default.  So in case somebody has
-> an existing setup that happened to nest group directories without
-> hierarchy and so never used memory.use_hierarchy before, they'll
-> probably try to disable it where it bothers them,
+> parent, which we try to make the new default. 
 
-The only problem is that it was already disallowed way before, since as
-you said yourself, you can't disable hierarchy if you have a hierarchy
-enabled parent.
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Ah ok.. so still crazy, but slightly less insane ;-)
