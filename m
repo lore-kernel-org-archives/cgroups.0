@@ -1,36 +1,80 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v4 2/2] memcg: change mem_control_xxx to mem_cgroup_xxx
-Date: Tue, 26 Jun 2012 12:54:37 -0700
-Message-ID: <20120626125437.26050bb0.akpm@linux-foundation.org>
-References: <1340622959-13136-1-git-send-email-liwp.linux@gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [rfc][patch 3/3] mm, memcg: introduce own oom handler to iterate
+ only over its own threads
+Date: Tue, 26 Jun 2012 13:38:12 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206261323260.8673@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206251847180.24838@chino.kir.corp.google.com> <4FE94968.6010500@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1340622959-13136-1-git-send-email-liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=I50Ib3My8uLgDOcx2vQ31JRIrHRJglU6lIu55HE9wJg=;
+        b=gcWYIaiJQGfebRxSt7oAguLCwiPUDbq1wBn8XqbEDkJIAAGH32cwb/W6NWSlNRIlCC
+         TrCnh4lX0LL1esm6Du1RkpRSpyZtRK8AnjEu3K7QU3AMPNUDLN2EFRGCq1kaAEuj+3H1
+         a8alQjMjWS7l+ueeruhOmghdyNWUhaqiDCHxnXB5fAu4Llx2kNXXhZNoWTZGpLmd4AEc
+         +BJ79zu/lQ9SG1f0HX1gT25yfNHZEmZdulnB0m4Q/dLHLSuLuzmYyUAu7u3JVYPeUR4E
+         1+pGxmBcpcojoFiHd9A5YKKpXwARG12Y3A00qQyqqaxrUbtY1nOIUVybUlTcsJBMFcUn
+         Hpsw==
+In-Reply-To: <4FE94968.6010500@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Mon, 25 Jun 2012 19:15:59 +0800
-Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Tue, 26 Jun 2012, Kamezawa Hiroyuki wrote:
 
-> From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> > This still requires tasklist_lock for the tasklist dump, iterating
+> > children of the selected process, and killing all other threads on the
+> > system sharing the same memory as the selected victim.  So while this
+> > isn't a complete solution to tasklist_lock starvation, it significantly
+> > reduces the amount of time that it is held.
+> > 
+> > Signed-off-by: David Rientjes <rientjes@google.com>
 > 
-> Unify memcg functions to mem_cgroup_xxx.
+> This seems good. Thank you!
+> 
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> 
 
-How about we unify memcg functions to memcg_xxx?
+Thanks for the ack!
 
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3999,7 +3999,7 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
->  #endif
->  
->  #ifdef CONFIG_NUMA
-> -static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
-> +static int mem_cgroup_numa_stat_show(struct cgroup *cont, struct cftype *cft,
->  				      struct seq_file *m)
+It's still not a perfect solution for the above reason.  We need 
+tasklist_lock for oom_kill_process() for a few reasons:
 
-memcg_numa_stat_show(), etc.
+ (1) if /proc/sys/vm/oom_dump_tasks is enabled, which is the default, 
+     to iterate the tasklist
 
+ (2) to iterate the selected process's children, and
+
+ (3) to iterate the tasklist to kill all other processes sharing the 
+     same memory.
+
+I'm hoping we can avoid taking tasklist_lock entirely for memcg ooms to 
+avoid the starvation problem at all.  We definitely still need to do (3) 
+to avoid mm->mmap_sem deadlock if another thread sharing the same memory 
+is holding the semaphore trying to allocate memory and waiting for current 
+to exit, which needs the semaphore itself.  That can be done with 
+rcu_read_lock(), however, and doesn't require tasklist_lock.
+
+(1) can be done with rcu_read_lock() as well but I'm wondering if there 
+would be a significant advantage doing this by a cgroup iterator as well.  
+It may not be worth it just for the sanity of the code.
+
+We can do (2) if we change to list_for_each_entry_rcu().
+
+So I think I'll add another patch on top of this series to split up 
+tasklist_lock handling even for the global oom killer and take references 
+on task_struct like it is done in this patchset which should make avoiding 
+taking tasklist_lock at all for memcg ooms much easier.
+
+Comments?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
