@@ -1,85 +1,113 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH 00/11] kmem controller for memcg: stripped down version
-Date: Tue, 26 Jun 2012 14:55:39 -0700
-Message-ID: <20120626145539.eeeab909.akpm@linux-foundation.org>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
-	<20120625162745.eabe4f03.akpm@linux-foundation.org>
-	<4FE9621D.2050002@parallels.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
+Date: Wed, 27 Jun 2012 00:08:09 +0200
+Message-ID: <20120626220809.GA4653@tiehlicka.suse.cz>
+References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
+ <1340725634-9017-3-git-send-email-glommer@parallels.com>
+ <20120626180451.GP3869@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FE9621D.2050002-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120626180451.GP3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, 26 Jun 2012 11:17:49 +0400
-Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-
-> On 06/26/2012 03:27 AM, Andrew Morton wrote:
-> > On Mon, 25 Jun 2012 18:15:17 +0400
-> > Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> >
-> >> What I am proposing with this series is a stripped down version of the
-> >> kmem controller for memcg that would allow us to merge significant parts
-> >> of the infrastructure, while leaving out, for now, the polemic bits about
-> >> the slab while it is being reworked by Cristoph.
-> >>
-> >> Me reasoning for that is that after the last change to introduce a gfp
-> >> flag to mark kernel allocations, it became clear to me that tracking other
-> >> resources like the stack would then follow extremely naturaly. I figured
-> >> that at some point we'd have to solve the issue pointed by David, and avoid
-> >> testing the Slab flag in the page allocator, since it would soon be made
-> >> more generic. I do that by having the callers to explicit mark it.
-> >>
-> >> So to demonstrate how it would work, I am introducing a stack tracker here,
-> >> that is already a functionality per-se: it successfully stops fork bombs to
-> >> happen. (Sorry for doing all your work, Frederic =p ). Note that after all
-> >> memcg infrastructure is deployed, it becomes very easy to track anything.
-> >> The last patch of this series is extremely simple.
-> >>
-> >> The infrastructure is exactly the same we had in memcg, but stripped down
-> >> of the slab parts. And because what we have after those patches is a feature
-> >> per-se, I think it could be considered for merging.
-> >
-> > hm.  None of this new code makes the kernel smaller, faster, easier to
-> > understand or more fun to read!
-> Not sure if this is a general comment - in case I agree - or if targeted 
-> to my statement that this is "stripped down". If so, it is of course 
-> smaller relative to my previous slab accounting patches.
-
-It's a general comment.  The patch adds overhead: runtime costs and
-maintenance costs.  Do its benefits justify that cost?
-
-> The infrastructure is largely common, but I realized that a future user,
-> tracking the stack, would be a lot simpler and could be done first.
+On Tue 26-06-12 11:04:51, Tejun Heo wrote:
+> On Tue, Jun 26, 2012 at 07:47:14PM +0400, Glauber Costa wrote:
+[...]
+> > @@ -5221,6 +5225,7 @@ mem_cgroup_create(struct cgroup *cont)
+> >  			INIT_WORK(&stock->work, drain_local_stock);
+> >  		}
+> >  		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
+> > +		memcg->use_hierarchy = true;
+> >  	} else {
+> >  		parent = mem_cgroup_from_cont(cont->parent);
+> >  		memcg->use_hierarchy = parent->use_hierarchy;
 > 
-> > Presumably we're getting some benefit for all the downside.  When the
-> > time is appropriate, please do put some time into explaining that
-> > benefit, so that others can agree that it is a worthwhile tradeoff.
-> >
+> So, ummm, I don't think we can do this.  We CAN NOT silently flip the
+> default behavior like this.  Hell, no.  What we can do is something
+> like the following.
 > 
-> Well, for one thing, we stop fork bombs for processes inside cgroups.
+> 1. Make .use_hierarchy a global property and convert .use_hierarchy
+>    file to reject writes to the setting which is different from the
+>    global one. 
 
-"inside cgroups" is a significant limitation!  Is this capability
-important enough to justify adding the new code?  That's unobvious
-(to me).
+Yes, that's how I understood your global knob suggestion and I liked it
+in the beginning but then I realized that this would just mean "tweak it
+to work and don't report anything because that's easy to find in forums"
+for most users, which is not good because we would end up stuck in this
+half (not)hierarchical state for ever which is not a desirable state -
+at least from my POV.
 
-Are there any other user-facing things which we can do with this
-feature?  Present, or planned?
+According to my experience, people usually create deeper subtrees
+just because they want to have memcg hierarchy together with other
+controller(s) and the other controller requires a different topology
+but then they do not care about memory.* attributes in parents.
+Those cases are not affected by this change because parents are
+unlimited by default.
+Deeper subtrees without hierarchy and independent limits are usually
+mis-configurations, and we would like to hear about those to help to fix
+them, or they are unfixable usecases which we want to know about as well
+(because then we have a blocker for the unified cgroup hierarchy, don't
+we).
 
-> I can't speak for everybody here, but AFAIK, tracking the stack through
-> the memory it used, therefore using my proposed kmem controller, was an
-> idea that good quite a bit of traction with the memcg/memory people. 
-> So here you have something that people already asked a lot for, in a
-> shape and interface that seem to be acceptable.
+>    Rip out partial hierarchy related code (how little
+>    they may be).
 
-mm, maybe.  Kernel developers tend to look at code from the point of
-view "does it work as designed", "is it clean", "is it efficient", "do
-I understand it", etc.  We often forget to step back and really
-consider whether or not it should be merged at all.
+I double checked this and it's really a surprisingly small amount of
+code (I expected much more, to be honest).
+The only interesting parts are mem_cgroup_swappiness_write and
+mem_cgroup_oom_control_write which don't allow the value setting if
+the parent is hierarchical (the values are consistent throughout the
+hierarchy). This will need to be changed and it is definitely required
+before this change can be introduced (sorry I should have noticed
+that sooner). 
+Anyway, both changes should be OK to ignore parent's use_hierarchy
+because both the reclaim and oom happens on the root of the subtree
+which hit the limit (and the global vm_swapiness resp. global OOM will
+be used if we get up to root).
+So what is the result in the end? We will reduce few annoying
+use_hierarchy checks in the end but I guess that the more important
+part is a reasonable semantic. Does it really make sense to build non
+hierarchical subtrees? How does it work along with other controllers
+which are hierarchical?
+The original implementation enabled that, all right, but we know that
+many things were over-designed in this area (and in cgroups in general)
+and we should rather fix them.
 
-I mean, unless the code is an explicit simplification, we should have
-a very strong bias towards "don't merge".
+>   Note that the default should still be flat hierarchy.
+> 
+> 2. Mark flat hierarchy deprecated and produce a warning message if
+>    memcg is mounted w/o hierarchy option for a year or two.
+
+I would agree with you on this with many kernel configurables but
+this one doesn't fall in. There is a trivial fallback (set root to
+use_hierarchy=0) so the mount option seems like an overkill - yet
+another API to keep for some time...
+
+So in short, I do think we should go the sanity path and end up
+with hierarchical trees and sooner we start the better.
+
+> 3. After the existing users had enough chance to move away from flat
+>    hierarchy, rip out flat hierarchy code and error if hierarchy
+>    option is not specified.
+> 
+> Later on, we may decide to get rid of the hierarchy mount option but I
+> don't think that matters all that much.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
