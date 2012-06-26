@@ -1,62 +1,57 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] memcg: first step towards hierarchical controller
-Date: Tue, 26 Jun 2012 22:22:04 +0400
-Message-ID: <4FE9FDCC.80000@parallels.com>
-References: <1340717428-9009-1-git-send-email-glommer@parallels.com> <20120626181209.GR3869@google.com>
+Date: Tue, 26 Jun 2012 11:32:52 -0700
+Message-ID: <20120626183252.GS3869@google.com>
+References: <1340717428-9009-1-git-send-email-glommer@parallels.com>
+ <20120626181209.GR3869@google.com>
+ <4FE9FDCC.80000@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120626181209.GR3869-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=LkUt0CP11MfMauLep+Zsj+5vuOlljC2CDI0ajmZ2CDE=;
+        b=q8JXLdmtZAcUbTYmNDXJzpiMWdy7Uo16L8f+cS4OwnbOGffk8t2ekeArKbxqpBtSo4
+         t5kixvpweWyB3nSliENmbLqNo4BXS2ZpX4Bh4uRpwsx71fAEibIHd/oW+sQhrqimo/7W
+         2tVaMCJ8Ym/cztzUTG7KLMcdytgFiBYiBVhQo7MRaZVqeRd0D+wTBErXjDdEt7gJb2Ro
+         YgtIICctOHsKu30QfilVE5ntRFFk+V+5yUYqb/P5YFZCo8ruwEFp6a9+VhjLbe16q25Y
+         y7eUaAQvU/WUvEt7q11GQGFxihX6Jhpg5OvbgrtXkuY8x8y4msTO/dwFLDR01LHTmbBK
+         0l6w==
+Content-Disposition: inline
+In-Reply-To: <4FE9FDCC.80000-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 06/26/2012 10:12 PM, Tejun Heo wrote:
-> On Tue, Jun 26, 2012 at 05:30:28PM +0400, Glauber Costa wrote:
->> Okay, so after recent discussions, I am proposing the following
->> patch. It won't remove hierarchy, or anything like that. Just default
->> to true in the root cgroup, and print a warning once if you try
->> to set it back to 0.
->>
->> I am not adding it to feature-removal-schedule.txt because I don't
->> view it as a consensus. Rather, changing the default would allow us
->> to give it a time around in the open, and see if people complain
->> and what we can learn about that.
->>
->> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
->> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->
-> Just in case it wasn't clear in the other posting.
->
->   Nacked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->
-> You can't change the default behavior silently.  Not in this scale.
->
-> Thanks.
->
-I certainly don't share your views of the matter here.
+On Tue, Jun 26, 2012 at 10:22:04PM +0400, Glauber Costa wrote:
+> I would agree with you if we were changing a fundamental algorithm,
+> with no way to resort back to a default setup. We are not removing any
+> functionality whatsoever here.
+> 
+> I would agree with you if we were actually documenting explicitly
+> that this is an expected default behavior.
+> 
+> But we never made the claim that use_hierarchy would default to 0.
+> 
+> Well, we seldom make claims about default values of any tunables. We
+> just expect them to be reasonable values, and we seem to agree that
+> this is, indeed, reasonable.
 
-I would agree with you if we were changing a fundamental algorithm,
-with no way to resort back to a default setup. We are not removing any
-functionality whatsoever here.
+No, we can't change behavior in this major way silently.  Any change
+of this scale must be explicit.  The behavior change is not only major
+but also subtle at the same time.  If a user is using flat hierarchy
+and then boot a new kernel, the user suddenly gets hierarchical
+accounting which may or may not cause noticeable problem immediately
+and would be difficult like hell to chase down and diagnose.
 
-I would agree with you if we were actually documenting explicitly
-that this is an expected default behavior.
+I don't mind how global switch is implemented but the flip should be
+explicit no matter what.  This is something we simply CAN NOT do.
 
-But we never made the claim that use_hierarchy would default to 0.
+Thanks.
 
-Well, we seldom make claims about default values of any tunables. We 
-just expect them to be reasonable values, and we seem to agree that this 
-is, indeed, reasonable.
-
-I personally consider this even better than a mount option. It doesn't 
-add or remove any new interface, since use_hierarchy was already there.
-
-It doesn't change the behavior of any interface. What would happen for 
-instance if I rely on a multitude of use_hierarchy = 0 and 1 and 
-suddenly a mount option would override that?
+-- 
+tejun
