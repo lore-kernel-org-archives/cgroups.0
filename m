@@ -1,69 +1,91 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: first step towards hierarchical controller
-Date: Tue, 26 Jun 2012 17:50:12 +0200
-Message-ID: <20120626155012.GG9566@tiehlicka.suse.cz>
-References: <1340717428-9009-1-git-send-email-glommer@parallels.com>
- <20120626152711.GF9566@tiehlicka.suse.cz>
- <4FE9D501.3050004@parallels.com>
+Subject: Re: [PATCH 1/2] fix bad behavior in use_hierarchy file
+Date: Tue, 26 Jun 2012 17:52:29 +0200
+Message-ID: <20120626155229.GH9566@tiehlicka.suse.cz>
+References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
+ <1340725634-9017-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4FE9D501.3050004-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1340725634-9017-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Tue 26-06-12 19:28:01, Glauber Costa wrote:
-[...]
-> >>diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> >>index 9e710bc..037ddd4 100644
-> >>--- a/mm/memcontrol.c
-> >>+++ b/mm/memcontrol.c
-> >>@@ -3949,6 +3949,8 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
-> >>  	if (memcg->use_hierarchy == val)
-> >>  		goto out;
-> >>
-> >>+	WARN_ONCE((!parent_memcg && memcg->use_hierarchy && val == false),
-> >>+		"Non-hierarchical memcg is considered for deprecation");
-> >>  	/*
-> >>  	 * If parent's use_hierarchy is set, we can't make any modifications
-> >>  	 * in the child subtrees. If it is unset, then the change can
-> >>@@ -5175,6 +5177,7 @@ mem_cgroup_create(struct cgroup *cont)
-> >>  			INIT_WORK(&stock->work, drain_local_stock);
-> >>  		}
-> >>  		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
-> >>+		memcg->use_hierarchy = true;
-> >
-> >So the only way to disable hierarchies is to do it on the root first
-> >(before any children exist) and then start creating your groups?
+On Tue 26-06-12 19:47:13, Glauber Costa wrote:
+> I have an application that does the following:
 > 
-> Yes.
+> * copy the state of all controllers attached to a hierarchy
+> * replicate it as a child of the current level.
 > 
-> This is true after my patch.
-> This is also true before my patch, if you set it to 1 in the root,
-> and then tries to flip it back.
+> I would expect writes to the files to mostly succeed, since they
+> are inheriting sane values from parents.
+> 
+> But that is not the case for use_hierarchy. If it is set to 0, we
+> succeed ok. If we're set to 1, the value of the file is automatically
+> set to 1 in the children, but if userspace tries to write the
+> very same 1, it will fail. That same situation happens if we
+> set use_hierarchy, create a child, and then try to write 1 again.
+> 
+> Now, there is no reason whatsoever for failing to write a value
+> that is already there. It doesn't even match the comments, that
+> states:
+> 
+>  /* If parent's use_hierarchy is set, we can't make any modifications
+>   * in the child subtrees...
+> 
+> since we are not changing anything.
+> 
+> The following patch tests the new value against the one we're storing,
+> and automatically return 0 if we're not proposing a change.
+> 
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-OK, fair enough. Having another tweaks for the 1st level cgroups would
-change the behavior from the current state which is bad (so it wouldn't
-be just hackish but stupid as well...).
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Just make sure we are warning also deeper in the hierarchy (for cgconfig
-cases) suggested by Johannes and you can add my Acked-by.
+> ---
+>  mm/memcontrol.c |    6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index df8c9fb..85f7790 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3989,6 +3989,10 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+>  		parent_memcg = mem_cgroup_from_cont(parent);
+>  
+>  	cgroup_lock();
+> +
+> +	if (memcg->use_hierarchy == val)
+> +		goto out;
+> +
+>  	/*
+>  	 * If parent's use_hierarchy is set, we can't make any modifications
+>  	 * in the child subtrees. If it is unset, then the change can
+> @@ -4005,6 +4009,8 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+>  			retval = -EBUSY;
+>  	} else
+>  		retval = -EINVAL;
+> +
+> +out:
+>  	cgroup_unlock();
+>  
+>  	return retval;
+> -- 
+> 1.7.10.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Please also mention that if anybody is really interested in the original
-behavior, for what ever reasons, then the following cgconfig.conf should
-do the trick
-
-group . {
-	memory {
-		memory.use_hierarchy = 0;
-	}
-}
-
-Thanks
 -- 
 Michal Hocko
 SUSE Labs
