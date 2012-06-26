@@ -1,72 +1,82 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 00/11] kmem controller for memcg: stripped down version
-Date: Tue, 26 Jun 2012 11:17:49 +0400
-Message-ID: <4FE9621D.2050002@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <20120625162745.eabe4f03.akpm@linux-foundation.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 10/11] memcg: allow a memcg with kmem charges to be destructed.
+Date: Tue, 26 Jun 2012 11:21:22 +0400
+Message-ID: <4FE962F2.2050701@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-11-git-send-email-glommer@parallels.com> <4FE94FDC.7070105@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120625162745.eabe4f03.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4FE94FDC.7070105-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 06/26/2012 03:27 AM, Andrew Morton wrote:
-> On Mon, 25 Jun 2012 18:15:17 +0400
-> Glauber Costa <glommer@parallels.com> wrote:
->
->> What I am proposing with this series is a stripped down version of the
->> kmem controller for memcg that would allow us to merge significant parts
->> of the infrastructure, while leaving out, for now, the polemic bits about
->> the slab while it is being reworked by Cristoph.
+On 06/26/2012 09:59 AM, Kamezawa Hiroyuki wrote:
+> (2012/06/25 23:15), Glauber Costa wrote:
+>> Because the ultimate goal of the kmem tracking in memcg is to
+>> track slab pages as well, we can't guarantee that we'll always
+>> be able to point a page to a particular process, and migrate
+>> the charges along with it - since in the common case, a page
+>> will contain data belonging to multiple processes.
 >>
->> Me reasoning for that is that after the last change to introduce a gfp
->> flag to mark kernel allocations, it became clear to me that tracking other
->> resources like the stack would then follow extremely naturaly. I figured
->> that at some point we'd have to solve the issue pointed by David, and avoid
->> testing the Slab flag in the page allocator, since it would soon be made
->> more generic. I do that by having the callers to explicit mark it.
+>> Because of that, when we destroy a memcg, we only make sure
+>> the destruction will succeed by discounting the kmem charges
+>> from the user charges when we try to empty the cgroup.
 >>
->> So to demonstrate how it would work, I am introducing a stack tracker here,
->> that is already a functionality per-se: it successfully stops fork bombs to
->> happen. (Sorry for doing all your work, Frederic =p ). Note that after all
->> memcg infrastructure is deployed, it becomes very easy to track anything.
->> The last patch of this series is extremely simple.
+>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+>> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+>> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>    mm/memcontrol.c |   10 +++++++++-
+>>    1 file changed, 9 insertions(+), 1 deletion(-)
 >>
->> The infrastructure is exactly the same we had in memcg, but stripped down
->> of the slab parts. And because what we have after those patches is a feature
->> per-se, I think it could be considered for merging.
->
-> hm.  None of this new code makes the kernel smaller, faster, easier to
-> understand or more fun to read!
-Not sure if this is a general comment - in case I agree - or if targeted 
-to my statement that this is "stripped down". If so, it is of course 
-smaller relative to my previous slab accounting patches.
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index a6a440b..bb9b6fe 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -598,6 +598,11 @@ static void disarm_kmem_keys(struct mem_cgroup *memcg)
+>>    {
+>>    	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
+>>    		static_key_slow_dec(&mem_cgroup_kmem_enabled_key);
+>> +	/*
+>> +	 * This check can't live in kmem destruction function,
+>> +	 * since the charges will outlive the cgroup
+>> +	 */
+>> +	BUG_ON(res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0);
+>>    }
+>>    #else
+>>    static void disarm_kmem_keys(struct mem_cgroup *memcg)
+>> @@ -3838,6 +3843,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg, bool free_all)
+>>    	int node, zid, shrink;
+>>    	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+>>    	struct cgroup *cgrp = memcg->css.cgroup;
+>> +	u64 usage;
+>>    
+>>    	css_get(&memcg->css);
+>>    
+>> @@ -3877,8 +3883,10 @@ move_account:
+>>    		if (ret == -ENOMEM)
+>>    			goto try_to_free;
+>>    		cond_resched();
+>> +		usage = res_counter_read_u64(&memcg->res, RES_USAGE) -
+>> +			res_counter_read_u64(&memcg->kmem, RES_USAGE);
+>>    	/* "ret" should also be checked to ensure all lists are empty. */
+>> -	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 || ret);
+>> +	} while (usage > 0 || ret);
+>>    out:
+>>    	css_put(&memcg->css);
+>>    	return ret;
+>>
+> Hm....maybe work enough. Could you add more comments on the code ?
+> 
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> 
 
-The infrastructure is largely common, but I realized that a future user,
-tracking the stack, would be a lot simpler and could be done first.
+I always can.
 
-> Presumably we're getting some benefit for all the downside.  When the
-> time is appropriate, please do put some time into explaining that
-> benefit, so that others can agree that it is a worthwhile tradeoff.
->
-
-Well, for one thing, we stop fork bombs for processes inside cgroups.
-I think the justification for that was already given when you asked 
-people about reasoning for merging Frederic's process tracking cgroup.
-
-Just that wasn't merged because people were largely unhappy with the 
-form it took. I can't speak for everybody here, but AFAIK, tracking the 
-stack through the memory it used, therefore using my proposed kmem 
-controller, was an idea that good quite a bit of traction with the 
-memcg/memory people. So here you have something that people already 
-asked a lot for, in a shape and interface that seem to be acceptable.
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
