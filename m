@@ -1,39 +1,29 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v3 3/4] memcg: optimize memcg_get_hierarchical_limit
-Date: Tue, 26 Jun 2012 11:45:44 +0900
-Message-ID: <4FE92258.4040900@jp.fujitsu.com>
-References: <1340613872-9581-1-git-send-email-liwp.linux@gmail.com> <4FE834D9.8070903@jp.fujitsu.com> <20120625104357.GB12148@kernel> <20120625110926.GJ19805@tiehlicka.suse.cz>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [patch 1/3] mm, oom: move declaration for mem_cgroup_out_of_memory
+ to oom.h
+Date: Tue, 26 Jun 2012 12:12:27 +0900
+Message-ID: <4FE9289B.2050105@jp.fujitsu.com>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120625110926.GJ19805-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mike Frysinger <vapier-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>, Arun Sharma <asharma-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-(2012/06/25 20:09), Michal Hocko wrote:
-> On Mon 25-06-12 18:43:57, Wanpeng Li wrote:
->> On Mon, Jun 25, 2012 at 06:52:25PM +0900, Kamezawa Hiroyuki wrote:
->>> (2012/06/25 17:44), Wanpeng Li wrote:
->>>> From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->>>>
->>>> Optimize memcg_get_hierarchical_limit to save cpu cycle.
->>>>
->>>> Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>>
->>> I can't understand the benefit of this patch to the real world...
->>>
->>> So, if you wrote the patch description as "clean up" rather than optimize,
->>> ok, I'll agree.
->> OK, I will change to "Cleanup". Thank you Kame.
+(2012/06/26 10:47), David Rientjes wrote:
+> mem_cgroup_out_of_memory() is defined in mm/oom_kill.c, so declare it in
+> linux/oom.h rather than linux/memcontrol.h.
 >
-> Does this really clean something up?
->
+> Signed-off-by: David Rientjes <rientjes@google.com>
 
-I just thought unused variable is trash even if it disappears after complie.
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Thanks,
--Kame
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
