@@ -1,73 +1,53 @@
-From: Frederic Weisbecker <fweisbec@gmail.com>
-Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem
- controller for memcg: stripped down version
-Date: Wed, 27 Jun 2012 14:29:27 +0200
-Message-ID: <20120627122924.GD20638@somewhere.redhat.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
- <20120625162745.eabe4f03.akpm@linux-foundation.org>
- <4FE9621D.2050002@parallels.com>
- <20120626145539.eeeab909.akpm@linux-foundation.org>
- <4FEAD260.4000603@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem controller
+ for memcg: stripped down version
+Date: Wed, 27 Jun 2012 16:28:14 +0400
+Message-ID: <4FEAFC5E.4050104@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <20120625162745.eabe4f03.akpm@linux-foundation.org> <4FE9621D.2050002@parallels.com> <20120626145539.eeeab909.akpm@linux-foundation.org> <4FEAD260.4000603@parallels.com> <20120627122924.GD20638@somewhere.redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=AXulrdhMGqxFOwZ3Kq/sMrK2P/rrBAkMNAc0sCrEd6I=;
-        b=ERCrCUyesqo79ZFQD0ZICOIzds528vg4HxgxVUJStTs0v8Q3s8w+xZKvm8S/gMYaYk
-         NbQjQ38u4H7xv6XQUbaJPpKO35n28jd5fkcSJjPdNCjuILyqyMV9HhSqbN7PcsEiqxYL
-         T8StPCalPWlzw2JVukWDidOIf4mSjUah/4oYQFBDBnfUvctqqFIN2Ti3lsWrco4N7Dhs
-         0bcB1PJsegkFz0+zlgKW4I7IWf+Lzjs6MyXhgfDzWA92lwRol2tbsFV89D1QJ6el1Mfy
-         Ou8ovqwlSwmMvMKWHW1BA0OXfQqKGGlbcOkL1seLi6kElc6hQCp3T/5Z/aTgP/0cmrRd
-         kftw==
-Content-Disposition: inline
-In-Reply-To: <4FEAD260.4000603@parallels.com>
+In-Reply-To: <20120627122924.GD20638@somewhere.redhat.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
+To: Frederic Weisbecker <fweisbec@gmail.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Rik van Riel <riel@redhat.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kir Kolyshkin <kir@parallels.com>
 
-On Wed, Jun 27, 2012 at 01:29:04PM +0400, Glauber Costa wrote:
-> On 06/27/2012 01:55 AM, Andrew Morton wrote:
-> >>I can't speak for everybody here, but AFAIK, tracking the stack through
-> >>the memory it used, therefore using my proposed kmem controller, was an
-> >>idea that good quite a bit of traction with the memcg/memory people.
-> >>So here you have something that people already asked a lot for, in a
-> >>shape and interface that seem to be acceptable.
-> >
-> >mm, maybe.  Kernel developers tend to look at code from the point of
-> >view "does it work as designed", "is it clean", "is it efficient", "do
-> >I understand it", etc.  We often forget to step back and really
-> >consider whether or not it should be merged at all.
-> >
-> >I mean, unless the code is an explicit simplification, we should have
-> >a very strong bias towards "don't merge".
+On 06/27/2012 04:29 PM, Frederic Weisbecker wrote:
+> On Wed, Jun 27, 2012 at 01:29:04PM +0400, Glauber Costa wrote:
+>> On 06/27/2012 01:55 AM, Andrew Morton wrote:
+>>>> I can't speak for everybody here, but AFAIK, tracking the stack through
+>>>> the memory it used, therefore using my proposed kmem controller, was an
+>>>> idea that good quite a bit of traction with the memcg/memory people.
+>>>> So here you have something that people already asked a lot for, in a
+>>>> shape and interface that seem to be acceptable.
+>>>
+>>> mm, maybe.  Kernel developers tend to look at code from the point of
+>>> view "does it work as designed", "is it clean", "is it efficient", "do
+>>> I understand it", etc.  We often forget to step back and really
+>>> consider whether or not it should be merged at all.
+>>>
+>>> I mean, unless the code is an explicit simplification, we should have
+>>> a very strong bias towards "don't merge".
+>>
+>> Well, simplifications are welcome - this series itself was
+>> simplified beyond what I thought initially possible through the
+>> valuable comments
+>> of other people.
+>>
+>> But of course, this adds more complexity to the kernel as a whole.
+>> And this is true to every single new feature we may add, now or in
+>> the
+>> future.
+>>
+>> What I can tell you about this particular one, is that the justification
+>> for it doesn't come out of nowhere, but from a rather real use case that
+>> we support and maintain in OpenVZ and our line of products for years.
 > 
-> Well, simplifications are welcome - this series itself was
-> simplified beyond what I thought initially possible through the
-> valuable comments
-> of other people.
-> 
-> But of course, this adds more complexity to the kernel as a whole.
-> And this is true to every single new feature we may add, now or in
-> the
-> future.
-> 
-> What I can tell you about this particular one, is that the justification
-> for it doesn't come out of nowhere, but from a rather real use case that
-> we support and maintain in OpenVZ and our line of products for years.
+> Right and we really need a solution to protect against forkbombs in LXC.
+Small correction: In containers. LXC is not the only one out there =p
 
-Right and we really need a solution to protect against forkbombs in LXC.
-The task counter was more simple but only useful for our usecase and
-defining the number of tasks as a resource was considered unnatural.
-
-So limiting kernel stack allocations works for us. This patchset implements
-this so I'm happy with it. If this is more broadly useful by limiting
-resources others are interested in, that's even better. I doubt we are
-interested in a solution that only concerns kernel stack allocation.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
