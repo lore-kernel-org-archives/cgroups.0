@@ -1,102 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
-Date: Wed, 27 Jun 2012 10:33:36 -0700
-Message-ID: <20120627173336.GJ15811@google.com>
-References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
- <1340725634-9017-3-git-send-email-glommer@parallels.com>
- <20120626180451.GP3869@google.com>
- <20120626220809.GA4653@tiehlicka.suse.cz>
- <20120626221452.GA15811@google.com>
- <20120627125119.GE5683@tiehlicka.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3][0/6] memcg: prevent -ENOMEM in pre_destroy()
+Date: Wed, 27 Jun 2012 10:58:18 -0700
+Message-ID: <20120627175818.GM15811@google.com>
+References: <4FACDED0.3020400@jp.fujitsu.com>
+ <20120621202043.GD4642@google.com>
+ <4FE3ADDD.9060908@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=fU4E5AYM8+bHQvt2A5QUjb9QjZSwmtar7ef9+nrBIyg=;
-        b=p79ZU4Cwma96fyx1KdS22O1UGTu+PEGGCuRfd0qYuU3tWye/B1SfZVsx4CFkQvDwDU
-         WXoQGnByzepsAwnCX9NArIMdJb2DpClbta/OMjDRX+FMequYuJW4zsxsiewNrk+xs9W0
-         1SImtCX+5zTgdxFbWP31sFeOkgC4kpkpbQYglxBf14Hfft3yRV84wT2a1S59CvE20vZX
-         tJGJ7L6C8nucIv+ijXRAlyLKq1e2O2iEXxz5YjWpUUUwthszVh7+AIXhrrBUy2evScfC
-         SVDhxum4nHiNx35Fgf8Aonla/toMweNkEmwT6p9Kg1tEIQ66Fw4acHboJUdTNtdOuOmR
-         dJgg==
+        bh=BvGNjhjFiY2RuozkWfHPfl35I+ZtANO4KfPH/AklT7w=;
+        b=a+AVO7JLsGP4JCWspWTVM1oI6RZQbrZv5SUMYOUoDsZT+JqV4N6cpOo4mNHB2kB9/d
+         XFY71MXhFsRm3R9cbvd7yeaxzo0zfaC2ZzWlye9X5v1fnKXA47RxuEU2kRcFHuoVGe5k
+         s3xbO4f4grttZvSsSifN732yawfUcd6ZEjFL0TghqKw+t+h72q4XFDiMMujZw690BKlM
+         zteFLjuj1TgeTBpVbHLzvCNClJCv4j4tB0FYp3lCleo04Hpg3xQGNG5VuWmFuRdlcjnr
+         fML7SsJabnKpbJ0y0GxVuF8wYvPMYJdI6d5Ce6hjW9N3Av9yjyjk3iBKB3OoMMkAIl+4
+         7SoQ==
 Content-Disposition: inline
-In-Reply-To: <20120627125119.GE5683@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <4FE3ADDD.9060908-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Michal.
+Hello, KAME.
 
-On Wed, Jun 27, 2012 at 02:51:19PM +0200, Michal Hocko wrote:
-> > Yeah, this is something I'm seriously considering doing from cgroup
-> > core.  ie. generating a warning message if the user nests cgroups w/
-> > controllers which don't support full hierarchy.
+On Fri, Jun 22, 2012 at 08:27:25AM +0900, Kamezawa Hiroyuki wrote:
+> Remaining 20% of work is based on a modification to cgroup layer
 > 
-> This is a good idea.
-
-And I want each controller either to do proper hierarchy or not at all
-and disallow switching the behavior while mounted - at least disallow
-switching off hierarchy support dynamically.
-
-> > Just disallow clearing .use_hierarchy if it was mounted with the
-> > option? 
+> How do you think this patch ? (This patch is not tested yet...so
+> may have troubles...) I think callers of pre_destory() is not so many...
 > 
-> Dunno, mount option just doesn't feel right. We do not offer other
-> attributes to be set by them so it would be just confusing. Besides that
-> it would require an integration into existing tools like cgconfig which
-> is yet another pain just because of something that we never promissed to
-> keep a certain way. There are many people who don't work with mount&fs
-> cgroups directly but rather use libcgroup for that...
+> ==
+> From a28db946f91f3509d25779e8c5db249506cc4b07 Mon Sep 17 00:00:00 2001
+> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Date: Fri, 22 Jun 2012 08:38:38 +0900
+> Subject: [PATCH] cgroup: keep cgroup_mutex() while calling ->pre_destroy()
+> 
+> In past, memcg's pre_destroy() was verrry slow because of the possibility
+> of page reclaiming in it. So, cgroup_mutex() was released before calling
+> pre_destroy() callbacks. Now, it's enough fast. memcg just scans the list
+> and move pages to other cgroup, no memory reclaim happens.
+> Then, we can keep cgroup_mutex() there.
+> 
+> By holding looks, we can avoid following cases
+>    1. new task is attached while rmdir().
+>    2. new child cgroup is created while rmdir()
+>    3. new task is attached to cgroup and removed from cgroup before
+>       checking css's count. So, ->destroy() will be called even if
+>       some trashes by the task remains
+> 
+> (3. is terrible case...even if I think it will not happen in real world..)
 
-If the default behavior has to be switched without extra input from
-userland, that should be noisy like hell and slow.  e.g. generate
-warning messages whenever userland does something which is to be
-deprecated - nesting when .use_hierarchy == 0, mixing .use_hierarchy
-== 0 / 1, and maybe later on, using .use_hierarchy == 0 at all.
-
-Hmm.... we need to switch other controllers over to hierarchical
-behavior too.  We may as well just do it from cgroup core.  Once we
-rule out all users of pseudo hierarchy - nesting with controllers
-which don't support hierarchy - switching on hierarchy support
-per-controller shouldn't cause much problem.
-
-How about the following then?
-
-* I'll add a way for controllers to tell cgroup core that full
-  hierarchy support is supported and a cgroup mount option to enable
-  hierarchy (cgroup core itself already uses a number of mount options
-  and libgroup or whatever should be able to deal with it).
-
-  cgroup will refuse to mount if the hierarchy option is specified
-  with a controller which doesn't support hierarchy and it will also
-  whine like crazy if the userland tries to nest without the mount
-  option specified.
-
-  Each controller must enforce hierarchy once so directed by cgroup
-  mount option.
-
-* While doing that, all applicable controllers will be updated to
-  support hierarchy.
-
-* After sufficient time has passed, nesting without the mount option
-  specified will be failed by cgroup core.
-
-As for memcg's .use_hierarchy, make it RO 1 if the cgroup indicates
-that hierarchy should be used.  Otherwise, I don't know but make sure
-it gets phased out out use somehow.
+Ooh, once memcg drops the __DEPRECATED_clear_css_refs, cgroup_rmdir()
+will mark the cgroup dead before start calling pre_destroy() and none
+of the above will happen.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
