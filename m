@@ -1,53 +1,55 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 02/11] memcg: Reclaim when more than one page needed.
-Date: Thu, 28 Jun 2012 00:47:24 +0400
-Message-ID: <4FEB715C.3090102@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-3-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206252106430.26640@chino.kir.corp.google.com> <4FEADA55.4060409@parallels.com> <alpine.DEB.2.00.1206271246380.22162@chino.kir.corp.google.com>
+From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup
+ cgroup]
+Date: Wed, 27 Jun 2012 16:02:30 -0700
+Message-ID: <20120627230230.GT15811@google.com>
+References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com>
+ <20120627182903.GP15811@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.00.1206271246380.22162@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=cNdIi+XGR2adaE9sd621UAKaK9bu88bAZxhJagXeYII=;
+        b=oIAdJkY7Mraa021AHtQowl83p4lDkGNBRrcasgBVrXTWzcPe2d5wPhcuRSO9gBjWkz
+         Z0tEda9P0JTuKFizk8T2M/b52LVBtF6HKslku+YhofkDSRBRcy82A7SuvUQ4yYhTgbwO
+         fEPxDdvGyrDomTJZiYy606DmTn5DhdPcPdJh4HyCg0OgqNRoeIvYjf9wEnKP0fNPh9Yx
+         w38XFCW0csNriLbqwFUCGqo4lp//nlrZ2LeQTVWwzSQsYFX8e8RfPNDM8ZlINZ8jfJ3H
+         vzupPeHT6zk2sSIT6R37Jo+OWYHncgKftVw9S7cWi1O69O+ZizicRi0NgQFQ3iwy2Va6
+         yWWQ==
+Content-Disposition: inline
+In-Reply-To: <20120627182903.GP15811-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes@google.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Suleiman Souhlal <suleiman@google.com>
+Content-Transfer-Encoding: 7bit
+To: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On 06/27/2012 11:48 PM, David Rientjes wrote:
-> On Wed, 27 Jun 2012, Glauber Costa wrote:
-> 
->>> @@ -2206,7 +2214,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup
->>> *memcg, gfp_t gfp_mask,
->>>>  	 * unlikely to succeed so close to the limit, and we fall back
->>>>  	 * to regular pages anyway in case of failure.
->>>>  	 */
->>>> -	if (nr_pages == 1 && ret)
->>>> +	if (nr_pages <= NR_PAGES_TO_RETRY && ret)
->>>>  		return CHARGE_RETRY;
->>
->> Changed to costly order.
->>
-> 
-> 1 << PAGE_ALLOC_COSTLY_ORDER was the suggestion.
+Hello,
 
-That is what I meant - to the costly order suggestion - , should have
-been more explicit.
+Does the following patch make the problem go away?
 
->> One more thing. The original version of this patch included
->> a cond_resched() here, that was also removed. From my re-reading
->> of the code in page_alloc.c and vmscan.c now, I tend to think
->> this is indeed not needed, since any cond_resched()s that might
->> be needed to ensure the safety of the code will be properly
->> inserted by the reclaim code itself, so there is no need for us
->> to include any when we signal that a retry is needed.
->>
-> 
-> For __GFP_WAIT, that sounds like a safe guarantee.
-> 
+Thank you.
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2097684..f9556cf 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3644,6 +3644,7 @@ static void cgroup_event_remove(struct work_struct *work)
+ 	eventfd_ctx_put(event->eventfd);
+ 	kfree(event);
+ 	dput(cgrp->dentry);
++	deactivate_super(cgrp->root->sb);
+ }
+ 
+ /*
+@@ -3770,6 +3771,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	 * destroying subsystem state objects. Let's take reference to cgroup
+ 	 * directory dentry to do that.
+ 	 */
++	atomic_inc(&cgrp->root->sb->s_active);
+ 	dget(cgrp->dentry);
+ 
+ 	spin_lock(&cgrp->event_list_lock);
