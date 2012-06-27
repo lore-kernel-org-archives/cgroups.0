@@ -1,74 +1,77 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
-Date: Wed, 27 Jun 2012 09:58:41 -0700
-Message-ID: <20120627165841.GH15811@google.com>
+Date: Wed, 27 Jun 2012 10:07:34 -0700
+Message-ID: <20120627170734.GI15811@google.com>
 References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
  <1340725634-9017-3-git-send-email-glommer@parallels.com>
  <20120626180451.GP3869@google.com>
- <20120626220809.GA4653@tiehlicka.suse.cz>
- <20120626221452.GA15811@google.com>
- <4FEAC9CB.2010800@parallels.com>
+ <20120626185542.GE27816@cmpxchg.org>
+ <20120626191450.GT3869@google.com>
+ <20120626205924.GH27816@cmpxchg.org>
+ <20120626211907.GX3869@google.com>
+ <4FEACAE8.6000500@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=WAGOVGd+ppfMT4sfRyb+Hh+UjrNnAJi+j32++o1rIyY=;
-        b=joXgKC4ustL6fVWhadHcvvK2TZQMfYAAC4cIvODu6qiQtKjxaemcBiIZHa9LRTA3RY
-         xJnPE05heN+MLv+nAZ9ywnK+HX5R2Z5kPVl9G2SBBYr5aBVJWIY+fakwIBK2wEUU7Uy+
-         VJgc0nifk6oqtwKoiLyEjL0498XqT+Cwbd1rke0U31r6dJsWeR0AoHOMV1pYpqFydbRR
-         EGVOF9w7ZC/wCnoj8c/Q5+5/RblizfEafoQd4TcbQ2+HrPumBfKx9n+VkYRJSIfJ9GIt
-         krUk7zXlk3wNtoWsYXQcVQfHbVgUXL/aRePgYKXODwmJl2KVb8GeeiohN2WJT2vlvYU8
-         uUWw==
+        bh=W4EhdxWUdEHDkk/eEDyG3YUOvWT+QaMY0JEtOEVrIso=;
+        b=C+HKKTBIHf07dpNIOEx8yodMcGgvtZqG5lfVLAixQuEYGSa/EGg3VL7osbYKM2hjfZ
+         JYRwlKQM7lNnbY3x+uBARXb3DmRoTxmGOYDwmP1Qg2EzpaEgZJ3VsOMoKbvp7Yb/l8Qv
+         gyOmraG3tUGHhs9N2z+VKBvUWH8r0IP/4Q/pjZvW9w7XOjagx3DhpvdipSLZ+i8FmwIV
+         D4qFKa7yDW110My71eNPyuBZKxpHuMnaRl+n8STMWj9RslQZbt41NO1cwl+nLceiGMUQ
+         MDHkZpweTrlTmWHD2VirRMyYniWQceNRcspijE74o2IpKjYb4okgsjQcaQ5pZjFhDR2x
+         ObCw==
 Content-Disposition: inline
-In-Reply-To: <4FEAC9CB.2010800-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <4FEACAE8.6000500@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>
 
-Hello, Glauber.
-
-On Wed, Jun 27, 2012 at 12:52:27PM +0400, Glauber Costa wrote:
-> >Just disallow clearing .use_hierarchy if it was mounted with the
-> >option?  We can later either make the file RO 1 for compatibility's
-> >sake or remove it.
+On Wed, Jun 27, 2012 at 12:57:12PM +0400, Glauber Costa wrote:
+> >I have to disagree with that.  Deployment sometimes can be very
+> >painful.  In some cases, even flipping single parameter in sysfs
+> >depending on kernel version takes considerable effort.  The behavior
+> >has been the contract that we offered userland for quite some time
+> >now.  We shouldn't be changing that underneath them without any clear
+> >way for them to notice it.
 > 
-> How will it buy us anything, if it is clear by default??
+> Yes, and that's why once you deploy, you keep your updates to a
+> minimum. Because hell, even *perfectly legitimate bug fixes* can
+> change your behavior in a way you don't want. And you don't expect
+> people to refrain from fixing bugs because of that.
 
-With the mount option specified, why would it be clear by default?
+Dude, there are numerous organizations running all types of
+infrastructures.  I personally know some running debian + mainline
+kernel with regular kernel refresh (no, they aren't small).  Silent
+behavior switches like this will be a big glowing fuck-you to those
+people and I don't wanna do that.  And then there are infrastructures
+where new machines are continuously deployed and you know what? new
+machines often require new kernels.  What are you gonna tell them?
+Don't cycle-upgrade your machines once you're in production?
 
-> The problem is that we may differ in what means "default behavior".
-> 
-> It is very clear in a system call, API, or any documented feature.
-> We never made the guarantee, *ever*, that non-hierarchical might be
-> the default.
-> 
-> I understand that users may have grown accustomed to it. But users
-> grow accustomed to bugs as well! Bugs change behaviors. In fact, in
-> hardware emulation - where it matters, because it is harder to
-> change it - we have emulator people actually emulating bugs -
-> because that is what software expects.
-> 
-> Is this reason for us to keep bugs around, because people grew
-> accustomed to it? Hell no. Well, it might be: If we have a proven
-> user base that is big and solid on top of that, it may be fair to
-> say: "Well, this is unfortunate, but this is how it plays".
+Please stop trying to argue that silently switching major behavior
+like this is okay.  It simply isn't.  This is breaching one of the
+most basic assumptions that our direct users make.  NONONONONONONO.
 
-You're just playing with semantics now.  Hey, who guarantees anything?
-I don't find anything inscribed in stone or with hundred goverment
-stamps which legally forbids me from "rm -rf"ing the whole cgroup.
+> That is precisely why people in serious environments tend to run
+> -stable, distro LTSes, or anything like that. Because they don't
+> want any change, however minor, to potentially affect their stamped
+> behavior. I am not proposing this patch to -stable, btw...
 
-Gees...  If we've shipped kernel versions with certain major behavior
-for years, that frigging is the guarantee we've been making to the
-userland.
-
-Of course, nothing is absolute and everything is subject to trade off,
-but, come on, we're talking about major SILENT behavior switch.  No,
-nobody gets away with that.
+Yeah, because once an environment is in prod, the only update they
+need is -stable and we can switch behaviors willy-nilly on any
+release.  Ugh......
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
