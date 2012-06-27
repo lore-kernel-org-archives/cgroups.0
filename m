@@ -1,79 +1,69 @@
-From: Frederic Weisbecker <fweisbec@gmail.com>
-Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem
- controller for memcg: stripped down version
-Date: Wed, 27 Jun 2012 14:35:47 +0200
-Message-ID: <20120627123544.GE20638@somewhere.redhat.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
- <20120625162745.eabe4f03.akpm@linux-foundation.org>
- <4FE9621D.2050002@parallels.com>
- <20120626145539.eeeab909.akpm@linux-foundation.org>
- <4FEAD260.4000603@parallels.com>
- <20120627122924.GD20638@somewhere.redhat.com>
- <4FEAFC5E.4050104@parallels.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
+Date: Wed, 27 Jun 2012 14:51:19 +0200
+Message-ID: <20120627125119.GE5683@tiehlicka.suse.cz>
+References: <1340725634-9017-1-git-send-email-glommer@parallels.com>
+ <1340725634-9017-3-git-send-email-glommer@parallels.com>
+ <20120626180451.GP3869@google.com>
+ <20120626220809.GA4653@tiehlicka.suse.cz>
+ <20120626221452.GA15811@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=SVk2AaCQPhxEF+Z2i3yEBgKB4PSY6DcawulkedsNpW0=;
-        b=t1ZaS+MEgkyRKJQuLcV2RI81vEOq0CSzgcw7PNMdk1FrU0jRmAMMdAp0csrFaiobiI
-         OSfDIPSwLP73uVCu3xDS4JB5ax+fM/MtLwKw1PDdFg05NC1hMpQSu7OPdx7NC1/CFRnG
-         j71d4zSGz2xpQ6Sjfdqa12sHpIChz/n5p+GyasaJ60iC9e7EbsAYfu6s2gtugAendMac
-         5PBwwPrPNar9pURN5BGii4OFnLoKqQ/VUb6lUZV4G16SPfCJFUFs5PnaWW10BLPsZhO2
-         eg8dvCmnmVcvii2WZx6EJxvPeC88ynoEMt5Z4Rulvcr5KBf/v0ubkvJ7WbtEGIbwYuTn
-         h09Q==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4FEAFC5E.4050104@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20120626221452.GA15811-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Rik van Riel <riel@redhat.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kir Kolyshkin <kir@parallels.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Wed, Jun 27, 2012 at 04:28:14PM +0400, Glauber Costa wrote:
-> On 06/27/2012 04:29 PM, Frederic Weisbecker wrote:
-> > On Wed, Jun 27, 2012 at 01:29:04PM +0400, Glauber Costa wrote:
-> >> On 06/27/2012 01:55 AM, Andrew Morton wrote:
-> >>>> I can't speak for everybody here, but AFAIK, tracking the stack through
-> >>>> the memory it used, therefore using my proposed kmem controller, was an
-> >>>> idea that good quite a bit of traction with the memcg/memory people.
-> >>>> So here you have something that people already asked a lot for, in a
-> >>>> shape and interface that seem to be acceptable.
-> >>>
-> >>> mm, maybe.  Kernel developers tend to look at code from the point of
-> >>> view "does it work as designed", "is it clean", "is it efficient", "do
-> >>> I understand it", etc.  We often forget to step back and really
-> >>> consider whether or not it should be merged at all.
-> >>>
-> >>> I mean, unless the code is an explicit simplification, we should have
-> >>> a very strong bias towards "don't merge".
-> >>
-> >> Well, simplifications are welcome - this series itself was
-> >> simplified beyond what I thought initially possible through the
-> >> valuable comments
-> >> of other people.
-> >>
-> >> But of course, this adds more complexity to the kernel as a whole.
-> >> And this is true to every single new feature we may add, now or in
-> >> the
-> >> future.
-> >>
-> >> What I can tell you about this particular one, is that the justification
-> >> for it doesn't come out of nowhere, but from a rather real use case that
-> >> we support and maintain in OpenVZ and our line of products for years.
+On Tue 26-06-12 15:14:52, Tejun Heo wrote:
+> Hello, Michal.
+> 
+> On Wed, Jun 27, 2012 at 12:08:09AM +0200, Michal Hocko wrote:
+> > According to my experience, people usually create deeper subtrees
+> > just because they want to have memcg hierarchy together with other
+> > controller(s) and the other controller requires a different topology
+> > but then they do not care about memory.* attributes in parents.
+> > Those cases are not affected by this change because parents are
+> > unlimited by default.
+> > Deeper subtrees without hierarchy and independent limits are usually
+> > mis-configurations, and we would like to hear about those to help to fix
+> > them, or they are unfixable usecases which we want to know about as well
+> > (because then we have a blocker for the unified cgroup hierarchy, don't
+> > we).
+> 
+> Yeah, this is something I'm seriously considering doing from cgroup
+> core.  ie. generating a warning message if the user nests cgroups w/
+> controllers which don't support full hierarchy.
+
+This is a good idea.
+
+> > >   Note that the default should still be flat hierarchy.
+> > > 
+> > > 2. Mark flat hierarchy deprecated and produce a warning message if
+> > >    memcg is mounted w/o hierarchy option for a year or two.
 > > 
-> > Right and we really need a solution to protect against forkbombs in LXC.
-> Small correction: In containers. LXC is not the only one out there =p
+> > I would agree with you on this with many kernel configurables but
+> > this one doesn't fall in. There is a trivial fallback (set root to
+> > use_hierarchy=0) so the mount option seems like an overkill - yet
+> > another API to keep for some time...
+> 
+> Just disallow clearing .use_hierarchy if it was mounted with the
+> option? 
 
-Sure. I was just speaking for the specific project I'm working on :)
-But I'm definetly interested in solutions that work for everyone in containers in
-general. And if Openvz is also interested in forkbombs protection that's even
-better.
+Dunno, mount option just doesn't feel right. We do not offer other
+attributes to be set by them so it would be just confusing. Besides that
+it would require an integration into existing tools like cgconfig which
+is yet another pain just because of something that we never promissed to
+keep a certain way. There are many people who don't work with mount&fs
+cgroups directly but rather use libcgroup for that...
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
