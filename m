@@ -1,50 +1,52 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH 06/11] memcg: kmem controller infrastructure
-Date: Wed, 27 Jun 2012 12:46:08 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1206271239340.22162@chino.kir.corp.google.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-7-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206260210200.16020@chino.kir.corp.google.com> <4FE97E31.3010201@parallels.com>
- <alpine.DEB.2.00.1206262100320.24245@chino.kir.corp.google.com> <4FEAD351.2030203@parallels.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 02/11] memcg: Reclaim when more than one page needed.
+Date: Wed, 27 Jun 2012 12:48:41 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206271246380.22162@chino.kir.corp.google.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <1340633728-12785-3-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206252106430.26640@chino.kir.corp.google.com> <4FEADA55.4060409@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=yo893/iIUFbjfpQwc0RjQbg9OEC1/cj9gNBjG/tusWE=;
-        b=A7DdW5aGrSEeCRZAf9LEjM5oi6LDSBkJ8lmsfolH3je0CqRqYM0Q4wamBWORI7cNBj
-         gTTHUoyjME1PqLj38gHBe/tPxwQYMeryGbANBGPIdxwHmsV+35Jwv335eG84Kzu6OwOA
-         VMeU+Y7RD8L557PMVFSuV1pwIQfoBMW93kVFLTh/+ogIF7GxWRgKklJaCrNS6MpkiGhV
-         8nijtEr+3wGOFVpg6Rm25TWIBAz4DVARjeXoRAzmu440szMc2txqhC9+8tWqf+VoeJ6y
-         Gsumpry9o6l+uwiej2MUXQn4fjWDr96l5e9Kry2CqUHsFwa94fo8iaWFhhF2iTsZlIpQ
-         ZbKA==
-In-Reply-To: <4FEAD351.2030203@parallels.com>
-Sender: owner-linux-mm@kvack.org
+        bh=lBemeYq6NH3OsMePqas9zAa6pdBiuhmpgdAVajHQHSM=;
+        b=gdciyxc/k963n5TssKHf1l0msVAd4f/YiCCA9fd3kGFJD1jmQ/Eu8xpnt1ofS//p0i
+         +ydnL/A4JYs7rM4cBZkgaca9JKKQeC6jrFdSE5s9m4oZIvVV4tum4lHYUZvUamWSDBG/
+         aybaWlkZoWQMNyp9Ognl9N7E04qjf1CKP6+8MywlujkIUM8NDVDcWmJF5PrIYQEVsnlf
+         27U8IRChy+zxkLlOecDMf1wWProxHTizccfkgKrKzv3QXVftmew6ehj6Dr7TrfYYTPXo
+         AI8SGzKV5A05QNZkLxOf/xTyzMgmIwJTTyeqJLg6JEumDN8IYQnuWYXyWViCESfS8WkM
+         YqCg==
+In-Reply-To: <4FEADA55.4060409-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
 On Wed, 27 Jun 2012, Glauber Costa wrote:
 
-> > > Nothing, but I also don't see how to prevent that.
-> > 
-> > You can test for current->flags & PF_KTHREAD following the check for
-> > in_interrupt() and return true, it's what you were trying to do with the
-> > check for !current->mm.
-> > 
+> > @@ -2206,7 +2214,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup
+> > *memcg, gfp_t gfp_mask,
+> > >  	 * unlikely to succeed so close to the limit, and we fall back
+> > >  	 * to regular pages anyway in case of failure.
+> > >  	 */
+> > > -	if (nr_pages == 1 && ret)
+> > > +	if (nr_pages <= NR_PAGES_TO_RETRY && ret)
+> > >  		return CHARGE_RETRY;
 > 
-> am I right to believe that if not in interrupt context - already ruled out -
-> and !(current->flags & PF_KTHREAD), I am guaranteed to have a mm context, and
-> thus, don't need to test against it ?
+> Changed to costly order.
 > 
 
-No, because an mm may have been detached in the exit path by running 
-exit_mm().  We'd certainly hope that there are no slab allocations 
-following that point, though, but you'd still need to test current->mm.
+1 << PAGE_ALLOC_COSTLY_ORDER was the suggestion.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> One more thing. The original version of this patch included
+> a cond_resched() here, that was also removed. From my re-reading
+> of the code in page_alloc.c and vmscan.c now, I tend to think
+> this is indeed not needed, since any cond_resched()s that might
+> be needed to ensure the safety of the code will be properly
+> inserted by the reclaim code itself, so there is no need for us
+> to include any when we signal that a retry is needed.
+> 
+
+For __GFP_WAIT, that sounds like a safe guarantee.
