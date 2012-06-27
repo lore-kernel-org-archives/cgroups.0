@@ -1,83 +1,49 @@
-From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2] memcg: unify mem_control_xxx to memcg_xxx
-Date: Wed, 27 Jun 2012 08:16:15 +0800
-Message-ID: <1340756175-3420-1-git-send-email-liwp.linux@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH 00/11] kmem controller for memcg: stripped down version
+Date: Tue, 26 Jun 2012 18:08:13 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206261804160.11287@chino.kir.corp.google.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <20120625162745.eabe4f03.akpm@linux-foundation.org> <4FE9621D.2050002@parallels.com> <20120626145539.eeeab909.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=KXYUBnaFaJcLo+I39FTUQS0r4+aEBIxnNEH9eYp4AXY=;
-        b=tAmRBWC7/Adxnp9s3C0p/e/YoCYwrcvJyn/Ws/Y9XHXwPzbCYlSJl170N+IWMqPCEd
-         LLKDpxp1olf6hMHHiAFYE7B4BCsHpL+f6iGGBOe/BRyqPwP7Aa5kuSphq9KA4uPcgG25
-         6kO5OwCL0Dko37Ak+CosSSipRmlQDrXkmXiB9wgYfdIgwlfdAtr6ULdGo/TtDr1W3E6n
-         7vwFksOoLbTZ7s6El6BKP2JD3ThgPxHqSTEXJPL6goEfnRZMNlUDP+4P4wZxXpcVzPaw
-         2/vy2FARvnWuNSnU8KmgxaW4imf1ofqBRkheuXftlRAClbyxzlm2zA6qhFsq6Lou76rO
-         0AbQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=kqYf94TO9vpyB3OX6ugnp4UpRScKgmJQjACNVYEBJ7k=;
+        b=mtVrtMlfuvovmUBY01tvng69nQ12ZdRVMdZRomCCe1YyzyuKiDH6m7JfSqQYOIRLxT
+         bJQzYpjaHMMRDCGRyPqrDB5T429vMFiZwBBjIUF6xfeF4fngTn2r6VL+tM8J4GMTHtGC
+         IkNavthhBiJryvrwnIAC5mMtAClNghlVmjN5AyjY4tUGrMNOtRbNr7zb+Tyul0qe0ExS
+         u042oyZYNvw4wNOXGFnC7VHR4ngbRoOuhdfP+2114P5r8HEFzRb/Xbn3KYWyxzwzguJd
+         /r9GE/YD7V5W5qSe1v+Uyd6td6xNoZLcKrURAaupPHRROEJvCEITVvEWjpJII0W2qZW/
+         JdTQ==
+In-Reply-To: <20120626145539.eeeab909.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>
 
-From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+On Tue, 26 Jun 2012, Andrew Morton wrote:
 
-Changelog:
+> mm, maybe.  Kernel developers tend to look at code from the point of
+> view "does it work as designed", "is it clean", "is it efficient", "do
+> I understand it", etc.  We often forget to step back and really
+> consider whether or not it should be merged at all.
+> 
 
-V2 -> V1:
+It's appropriate for true memory isolation so that applications cannot 
+cause an excess of slab to be consumed.  This allows other applications to 
+have higher reservations without the risk of incurring a global oom 
+condition as the result of the usage of other memcgs.
 
-* replace memory_cgroup_xxx by memcg_xxx
+I'm not sure whether it would ever be appropriate to limit the amount of 
+slab for an individual slab cache, however, instead of limiting the sum of 
+all slab for a set of processes.  With cache merging in slub this would 
+seem to be difficult to do correctly.
 
-Unify memcg functions to memcg_xxx.
-
-Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- mm/memcontrol.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ccda728..2e81328 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3999,7 +3999,7 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
- #endif
- 
- #ifdef CONFIG_NUMA
--static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
-+static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 				      struct seq_file *m)
- {
- 	int nid;
-@@ -4058,7 +4058,7 @@ static inline void mem_cgroup_lru_names_not_uptodate(void)
- 	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
- }
- 
--static int mem_control_stat_show(struct cgroup *cont, struct cftype *cft,
-+static int memcg_stat_show(struct cgroup *cont, struct cftype *cft,
- 				 struct seq_file *m)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-@@ -4572,7 +4572,7 @@ static struct cftype mem_cgroup_files[] = {
- 	},
- 	{
- 		.name = "stat",
--		.read_seq_string = mem_control_stat_show,
-+		.read_seq_string = memcg_stat_show,
- 	},
- 	{
- 		.name = "force_empty",
-@@ -4604,7 +4604,7 @@ static struct cftype mem_cgroup_files[] = {
- #ifdef CONFIG_NUMA
- 	{
- 		.name = "numa_stat",
--		.read_seq_string = mem_control_numa_stat_show,
-+		.read_seq_string = memcg_numa_stat_show,
- 	},
- #endif
- #ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
--- 
-1.7.9.5
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
