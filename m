@@ -1,125 +1,138 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem controller
- for memcg: stripped down version
-Date: Thu, 28 Jun 2012 13:01:23 +0400
-Message-ID: <4FEC1D63.6000903@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <20120625162745.eabe4f03.akpm@linux-foundation.org> <4FE9621D.2050002@parallels.com> <20120626145539.eeeab909.akpm@linux-foundation.org> <4FEAD260.4000603@parallels.com> <alpine.DEB.2.00.1206271233080.22162@chino.kir.corp.google.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
+Date: Thu, 28 Jun 2012 13:12:17 +0400
+Message-ID: <4FEC1FF1.4020300@parallels.com>
+References: <1340725634-9017-1-git-send-email-glommer@parallels.com> <1340725634-9017-3-git-send-email-glommer@parallels.com> <20120626180451.GP3869@google.com> <20120626220809.GA4653@tiehlicka.suse.cz> <20120626221452.GA15811@google.com> <20120627125119.GE5683@tiehlicka.suse.cz> <20120627173336.GJ15811@google.com> <4FEC19C9.4090708@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.00.1206271233080.22162@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4FEC19C9.4090708-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Rik van Riel <riel@redhat.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kir Kolyshkin <kir@parallels.com>
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 06/27/2012 11:38 PM, David Rientjes wrote:
-> On Wed, 27 Jun 2012, Glauber Costa wrote:
-> 
->> fork bombs are a way bad behaved processes interfere with the rest of
->> the system. In here, I propose fork bomb stopping as a natural
->> consequence of the fact that the amount of kernel memory can be limited,
->> and each process uses 1 or 2 pages for the stack, that are freed when the
->> process goes away.
+On 06/28/2012 12:46 PM, Kamezawa Hiroyuki wrote:
+> (2012/06/28 2:33), Tejun Heo wrote:
+>> Hello, Michal.
+>>
+>> On Wed, Jun 27, 2012 at 02:51:19PM +0200, Michal Hocko wrote:
+>>>> Yeah, this is something I'm seriously considering doing from cgroup
+>>>> core.  ie. generating a warning message if the user nests cgroups w/
+>>>> controllers which don't support full hierarchy.
+>>>
+>>> This is a good idea.
+>>
+>> And I want each controller either to do proper hierarchy or not at all
+>> and disallow switching the behavior while mounted - at least disallow
+>> switching off hierarchy support dynamically.
+>>
+>>>> Just disallow clearing .use_hierarchy if it was mounted with the
+>>>> option?
+>>>
+>>> Dunno, mount option just doesn't feel right. We do not offer other
+>>> attributes to be set by them so it would be just confusing. Besides that
+>>> it would require an integration into existing tools like cgconfig which
+>>> is yet another pain just because of something that we never promissed to
+>>> keep a certain way. There are many people who don't work with mount&fs
+>>> cgroups directly but rather use libcgroup for that...
+>>
+>> If the default behavior has to be switched without extra input from
+>> userland, that should be noisy like hell and slow.  e.g. generate
+>> warning messages whenever userland does something which is to be
+>> deprecated - nesting when .use_hierarchy == 0, mixing .use_hierarchy
+>> == 0 / 1, and maybe later on, using .use_hierarchy == 0 at all.
+>>
+>> Hmm.... we need to switch other controllers over to hierarchical
+>> behavior too.  We may as well just do it from cgroup core.  Once we
+>> rule out all users of pseudo hierarchy - nesting with controllers
+>> which don't support hierarchy - switching on hierarchy support
+>> per-controller shouldn't cause much problem.
+>>
+>> How about the following then?
+>>
+>> * I'll add a way for controllers to tell cgroup core that full
+>>    hierarchy support is supported and a cgroup mount option to enable
+>>    hierarchy (cgroup core itself already uses a number of mount options
+>>    and libgroup or whatever should be able to deal with it).
+>>
+>>    cgroup will refuse to mount if the hierarchy option is specified
+>>    with a controller which doesn't support hierarchy and it will also
+>>    whine like crazy if the userland tries to nest without the mount
+>>    option specified.
+>>
+>>    Each controller must enforce hierarchy once so directed by cgroup
+>>    mount option.
+>>
+>> * While doing that, all applicable controllers will be updated to
+>>    support hierarchy.
+>>
+>> * After sufficient time has passed, nesting without the mount option
+>>    specified will be failed by cgroup core.
+>>
+>> As for memcg's .use_hierarchy, make it RO 1 if the cgroup indicates
+>> that hierarchy should be used.  Otherwise, I don't know but make sure
+>> it gets phased out out use somehow.
 >>
 > 
-> The obvious disadvantage is that if you use the full-featured kmem 
-> controller that builds upon this patchset, then you're limiting the about 
-> of all kmem, not just the stack that this particular set limits.  I hope 
-> you're not proposing it to go upstream before full support for the kmem 
-> controller is added so that users who use it only to protect again 
-> forkbombs soon realize that's no longer possible if your applications do 
-> any substantial slab allocations, particularly anything that does a lot of 
-> I/O.
-
-Point by point:
-
-1) This is not a disadvantage. The whole point of implementing it as
-kmem, not as a "fork controller" or anything in the like, was our
-understanding that people should not be "protecting against a x number
-of processes". Because this is unnatural. All you have is total of
-kernel memory, because that's what the interface gives you. If you can
-overuse memory, you can't fork bomb. But that's a consequence.
-
-I'll grant that maybe it was a mistake of mine to try to sell it this
-way here, because it may give the wrong idea. In this case I welcome
-your comment because it will allow me to be more careful in future
-communications. But this was just me trying to show off the feature.
-
-2) No admin should never, ever tune the system to a particular kmem
-limit value. And again, this is the whole point of not limiting "number
-of processes". I agree that adding slab tracking will raise kernel
-memory consumption by a reasonable amount. But reality is that even if
-this controller is totally stable, that not only can, but will happen.
-
-Unlike user memory, where whoever writes the application control its
-behavior (forget about the libraries for a moment), users never really
-control the internals of the kernel. If you ever rely on the fact that
-you are currently using X Gb of kmem, and that should be enough, your
-setup will break when the data structure grows - as they do - when the
-kernel memory consumption rises naturally by algorithms - as it does,
-and so on.
-
-3) Agreeing that of course, preventing disruption if we can help it is
-good, this feature is not only marked experimental, but default of. This
-was done precisely not to disrupt the amount of *user* memory used,
-where I actually think it makes a lot of sense ("My application
-allocates 4G, that's what I'll give it!"). Even if support is compiled
-in, it won't be until you start limiting it that anything will happen.
-Kernel Memory won't even be tracked until then. And I also understand
-that our use case here may be quite unique: We want the kernel memory
-limit to be way lower than the user limit (like 20 % - but that's still
-a percentage, not a tune!). When I discussed this around with other
-people, the vast majority of them wanted to set kmem = umem. Which
-basically means "user memory is the limit, but we want the kernel memory
-to be accounted as well".
-
-So yes, although I understand your point - but not fully agree, I would
-like to get it merged as is. I don't believe adding slab memory later
-will be disruptive, in the same way I didn't believe adding stack later
-- in my original slab tracking patch - would be. As I originally stated,
-this would allow me to greatly simplify the slab tracking patches, since
-we'll be able to focus on that only, instead of a gigantic patch that
-does a lot.
-
-Other people have interest in this, so this would allow them to start
-building on it as well. That said, I won't oppose adding more code if
-you suggest so to make sure people rely less on the accidental fact that
-we're only tracking a part of what we will, even if they shouldn't.
-
- - It's already experimental
- - It's already default off.
- - I could add a warn message first time it is set.
- - I could add a boot option.
-
-Or anything like this.
-
-Last, but not least, note that it is totally within my interests to
-merge the slab tracking as fast as we can. it'll be a matter of going
-back to it, and agreeing in the final form.
-
 > 
-> In other words, if I want to run netperf in a memcg with the full-featured 
-> kmem controller enabled, then its kmem limit must be high enough so that 
-> it doesn't degrade performance that any limitation on stack allocations 
-> would be too high to effectively stop forkbombs.
+>  The reason for use_hierarchy file was just _performance_, it _was_
+> terrible.
+>  Now it's not very good but not terrible.
+> 
+> 
+> You all may think this as crazy idea. How about versioning ?
+> 
+> Creating 'memory2'(memory cgroup v2) cgroup and mark 'memory' cgroup as
+> deprecated,
+> and put it to feature-removal-list.
+> 
+> Of course, memory2 cgroup doesn't have use_hierarchy file and have kmem
+> accounting.
+> We should disallow to use memory and memory2 at the same time.
+> 
+> Or, add version file to cgroup subsys ? select v2 as default...user can
+> choose v1
+> with mount option if necessary, but it will not be maintained.
+> Is it too difficult or messy ?
+> 
+> To keep user experience, versioning is a way. And we can see how the
+> changes
+> affects users.
 > 
 
-That is a user setup problem. As I explained before, That's exactly what
-we want to discourage by exposing "kernel memory" instead of a
-particular tunable.
+I think it needs more consideration.
 
-As it is, I agree, it will stop fork bombs but will take a lot more time
-for it than it should. But this only makes it analogous to the
-evolutionary precursors to the human eye: It's not perfect, but will
-achieve something that may be already of great value for a class of
-users. Improvements are certain to follow.
+Let's consider the following points:
 
-Thank you David!
+* We are having a hard time getting rid of a file we know we hurt us.
+* We can identify at least a bazillion other points in which we suck.
+  Some of them may be user visible, and we'll have an equally hard time
+  fixing it
+* People like Michal and David are raising points on the lines of
+  "I have this setup working, everything we add or remove may break it"
+  I agree with it sometimes, disagree at others(*).
+* I really doubt memcg as it is now - even considered kmem in, is
+  "finished". This means more additions are likely to follow, and
+  waiting for it to ever be "finished" would be waiting forever.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I don't necessarily agree with versioning. Mainly, because we have no
+one in the other end negotiating the features. Versioning makes more
+sense in those environments, where you can actually adapt your
+application to whatever you see in the version field, and conversely
+request a version you are safe with.
+
+But the point I want to make here is that whatever we agree on, we
+should work towards something that will allow us to more freely change
+and fix memcg in the future, without going through this discussion every
+single time.
+
+
+
+(*) Please note that I am not saying it is okay to break setups!!! I am
+only saying that I disagree that some actions will break setups that are
+used within reasonability.
+
+
+
