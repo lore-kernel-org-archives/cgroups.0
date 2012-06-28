@@ -1,107 +1,78 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: first step towards hierarchical controller
-Date: Thu, 28 Jun 2012 17:46:01 +0900
-Message-ID: <4FEC19C9.4090708@jp.fujitsu.com>
-References: <1340725634-9017-1-git-send-email-glommer@parallels.com> <1340725634-9017-3-git-send-email-glommer@parallels.com> <20120626180451.GP3869@google.com> <20120626220809.GA4653@tiehlicka.suse.cz> <20120626221452.GA15811@google.com> <20120627125119.GE5683@tiehlicka.suse.cz> <20120627173336.GJ15811@google.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [rfc][patch 3/3] mm, memcg: introduce own oom handler to iterate
+ only over its own threads
+Date: Thu, 28 Jun 2012 17:52:49 +0900
+Message-ID: <4FEC1B61.3010006@jp.fujitsu.com>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206251847180.24838@chino.kir.corp.google.com> <4FE94968.6010500@jp.fujitsu.com> <alpine.DEB.2.00.1206261323260.8673@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120627173336.GJ15811-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1206261323260.8673@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-(2012/06/28 2:33), Tejun Heo wrote:
-> Hello, Michal.
+(2012/06/27 5:38), David Rientjes wrote:
+> On Tue, 26 Jun 2012, Kamezawa Hiroyuki wrote:
 >
-> On Wed, Jun 27, 2012 at 02:51:19PM +0200, Michal Hocko wrote:
->>> Yeah, this is something I'm seriously considering doing from cgroup
->>> core.  ie. generating a warning message if the user nests cgroups w/
->>> controllers which don't support full hierarchy.
+>>> This still requires tasklist_lock for the tasklist dump, iterating
+>>> children of the selected process, and killing all other threads on the
+>>> system sharing the same memory as the selected victim.  So while this
+>>> isn't a complete solution to tasklist_lock starvation, it significantly
+>>> reduces the amount of time that it is held.
+>>>
+>>> Signed-off-by: David Rientjes <rientjes@google.com>
 >>
->> This is a good idea.
->
-> And I want each controller either to do proper hierarchy or not at all
-> and disallow switching the behavior while mounted - at least disallow
-> switching off hierarchy support dynamically.
->
->>> Just disallow clearing .use_hierarchy if it was mounted with the
->>> option?
+>> This seems good. Thank you!
 >>
->> Dunno, mount option just doesn't feel right. We do not offer other
->> attributes to be set by them so it would be just confusing. Besides that
->> it would require an integration into existing tools like cgconfig which
->> is yet another pain just because of something that we never promissed to
->> keep a certain way. There are many people who don't work with mount&fs
->> cgroups directly but rather use libcgroup for that...
+>> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>>
 >
-> If the default behavior has to be switched without extra input from
-> userland, that should be noisy like hell and slow.  e.g. generate
-> warning messages whenever userland does something which is to be
-> deprecated - nesting when .use_hierarchy == 0, mixing .use_hierarchy
-> == 0 / 1, and maybe later on, using .use_hierarchy == 0 at all.
+> Thanks for the ack!
 >
-> Hmm.... we need to switch other controllers over to hierarchical
-> behavior too.  We may as well just do it from cgroup core.  Once we
-> rule out all users of pseudo hierarchy - nesting with controllers
-> which don't support hierarchy - switching on hierarchy support
-> per-controller shouldn't cause much problem.
+> It's still not a perfect solution for the above reason.  We need
+> tasklist_lock for oom_kill_process() for a few reasons:
 >
-> How about the following then?
+>   (1) if /proc/sys/vm/oom_dump_tasks is enabled, which is the default,
+>       to iterate the tasklist
 >
-> * I'll add a way for controllers to tell cgroup core that full
->    hierarchy support is supported and a cgroup mount option to enable
->    hierarchy (cgroup core itself already uses a number of mount options
->    and libgroup or whatever should be able to deal with it).
+>   (2) to iterate the selected process's children, and
 >
->    cgroup will refuse to mount if the hierarchy option is specified
->    with a controller which doesn't support hierarchy and it will also
->    whine like crazy if the userland tries to nest without the mount
->    option specified.
+>   (3) to iterate the tasklist to kill all other processes sharing the
+>       same memory.
 >
->    Each controller must enforce hierarchy once so directed by cgroup
->    mount option.
+> I'm hoping we can avoid taking tasklist_lock entirely for memcg ooms to
+> avoid the starvation problem at all.  We definitely still need to do (3)
+> to avoid mm->mmap_sem deadlock if another thread sharing the same memory
+> is holding the semaphore trying to allocate memory and waiting for current
+> to exit, which needs the semaphore itself.  That can be done with
+> rcu_read_lock(), however, and doesn't require tasklist_lock.
 >
-> * While doing that, all applicable controllers will be updated to
->    support hierarchy.
+> (1) can be done with rcu_read_lock() as well but I'm wondering if there
+> would be a significant advantage doing this by a cgroup iterator as well.
+> It may not be worth it just for the sanity of the code.
 >
-> * After sufficient time has passed, nesting without the mount option
->    specified will be failed by cgroup core.
+> We can do (2) if we change to list_for_each_entry_rcu().
 >
-> As for memcg's .use_hierarchy, make it RO 1 if the cgroup indicates
-> that hierarchy should be used.  Otherwise, I don't know but make sure
-> it gets phased out out use somehow.
+> So I think I'll add another patch on top of this series to split up
+> tasklist_lock handling even for the global oom killer and take references
+> on task_struct like it is done in this patchset which should make avoiding
+> taking tasklist_lock at all for memcg ooms much easier.
+>
+> Comments?
 >
 
-
-  The reason for use_hierarchy file was just _performance_, it _was_ terrible.
-  Now it's not very good but not terrible.
-
-
-You all may think this as crazy idea. How about versioning ?
-
-Creating 'memory2'(memory cgroup v2) cgroup and mark 'memory' cgroup as deprecated,
-and put it to feature-removal-list.
-
-Of course, memory2 cgroup doesn't have use_hierarchy file and have kmem accounting.
-We should disallow to use memory and memory2 at the same time.
-
-Or, add version file to cgroup subsys ? select v2 as default...user can choose v1
-with mount option if necessary, but it will not be maintained.
-Is it too difficult or messy ?
-
-To keep user experience, versioning is a way. And we can see how the changes
-affects users.
+sounds reasonable to me.
 
 Thanks,
 -Kame
 
 
 
-
-
-
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
