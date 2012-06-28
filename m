@@ -1,52 +1,179 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 1/7] memcg: update cgroup memory document
-Date: Thu, 28 Jun 2012 18:57:35 +0800
-Message-ID: <1340881055-5511-1-git-send-email-handai.szj@taobao.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH 2/7] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Thu, 28 Jun 2012 18:58:31 +0800
+Message-ID: <1340881111-5576-1-git-send-email-handai.szj@taobao.com>
 References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=VIz9CCJWCk9Ip6ao9lt+oJOB7pNPPqphlBhYWIrR63I=;
-        b=rWIgxu2sTBjjZH+wmIuhkBF2taAQ8IDGpYORBb44AcwJHLdA4n2+a3UhB35QUQ/WpM
-         dmuPv8QMY7L/d+op42aIcx4rS3tqRZvb+aU6/QDbVSYXGWRpUObCENa164Xm5WAkKiso
-         J65/NtcgnmQtaaoZF9i3fZ5l6bzA8bS/qnNj/SgyvMhrPSohI3+LwSOOZPCfQQ3u+/pn
-         ugVNZ0EQCijgKp6tXq8FTx1khhyEbrHTJZuCJPDpt7Pks2VZGKBOpcvDAOx6r3evnDbf
-         nYTsQiPv7nJVdqobXAadCYKuhRL/2HmabeSjvqLZNQYfzBtuoqRTkv+2yvPI8oB2FO5A
-         R05A==
-In-Reply-To: <1340880885-5427-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=SwfI81DcJIFAboPOhoef4hVVgyKXPLfdLhGh6DFigG0=;
+        b=wlh8xoL9m0oGXW3fvFWU0ao59XHq2yPxeXPVx3lY2uiS9gSoThG0oZj/2Does54e6d
+         hHRxsEmlK5jrDZOnP6kJVthD7zlz1fMoUMIy6Mjz5dTodMwEeBis8fh/TN4CASvEtwGQ
+         VXjofF3I4p0zTT+vXICPUG/K2a51yz2H0p9VYxcKDgz7AcMz3lrabdjx3ooTQzJdpFw2
+         dW4ppasU4VT7gj3khtbRm3R8XMuxxsWCCtvRjvRRgNUVwFyiD2tWTUnIpg7G1tw/IHtg
+         WXIMUy6/OZFC52zzTxn2Yua4rPuu3C446HS7mNf0PjKHwtF01Q5ngmlslNEq80M88Xuc
+         St2w==
+In-Reply-To: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
 
-From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+From: Sha Zhengju <handai.szj@taobao.com>
 
-Document cgroup dirty/writeback memory statistics.
+While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
+as an extra layer of indirection because of the complexity and presumed
+performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
 
-The implementation for these new interface routines come in a series
-of following patches.
-
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
 ---
- Documentation/cgroups/memory.txt |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ include/linux/memcontrol.h |   25 +++++++++++++++++--------
+ mm/memcontrol.c            |   24 +-----------------------
+ mm/rmap.c                  |    4 ++--
+ 3 files changed, 20 insertions(+), 33 deletions(-)
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index dd88540..24d7e3c 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -420,6 +420,8 @@ pgpgin		- # of charging events to the memory cgroup. The charging
- pgpgout		- # of uncharging events to the memory cgroup. The uncharging
- 		event happens each time a page is unaccounted from the cgroup.
- swap		- # of bytes of swap usage
-+dirty		- # of bytes that are waiting to get written back to the disk.
-+writeback	- # of bytes that are actively being written back to the disk.
- inactive_anon	- # of bytes of anonymous memory and swap cache memory on
- 		LRU list.
- active_anon	- # of bytes of anonymous and swap cache memory on active
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 83e7ba9..20b0f2d 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -27,9 +27,18 @@ struct page_cgroup;
+ struct page;
+ struct mm_struct;
+ 
+-/* Stats that can be updated by kernel. */
+-enum mem_cgroup_page_stat_item {
+-	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
++/*
++ * Statistics for memory cgroup.
++ */
++enum mem_cgroup_stat_index {
++	/*
++	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
++	 */
++	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
++	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
++	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
++	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
++	MEM_CGROUP_STAT_NSTATS,
+ };
+ 
+ struct mem_cgroup_reclaim_cookie {
+@@ -164,17 +173,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+ }
+ 
+ void mem_cgroup_update_page_stat(struct page *page,
+-				 enum mem_cgroup_page_stat_item idx,
++				 enum mem_cgroup_stat_index idx,
+ 				 int val);
+ 
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ 	mem_cgroup_update_page_stat(page, idx, 1);
+ }
+ 
+ static inline void mem_cgroup_dec_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ 	mem_cgroup_update_page_stat(page, idx, -1);
+ }
+@@ -349,12 +358,12 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+ }
+ 
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ }
+ 
+ static inline void mem_cgroup_dec_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a2677e0..ebed1ca 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -77,20 +77,6 @@ static int really_do_swap_account __initdata = 0;
+ #endif
+ 
+ 
+-/*
+- * Statistics for memory cgroup.
+- */
+-enum mem_cgroup_stat_index {
+-	/*
+-	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+-	 */
+-	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
+-	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
+-	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+-	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
+-	MEM_CGROUP_STAT_NSTATS,
+-};
+-
+ static const char * const mem_cgroup_stat_names[] = {
+ 	"cache",
+ 	"rss",
+@@ -1926,7 +1912,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
+ }
+ 
+ void mem_cgroup_update_page_stat(struct page *page,
+-				 enum mem_cgroup_page_stat_item idx, int val)
++				 enum mem_cgroup_stat_index idx, int val)
+ {
+ 	struct mem_cgroup *memcg;
+ 	struct page_cgroup *pc = lookup_page_cgroup(page);
+@@ -1939,14 +1925,6 @@ void mem_cgroup_update_page_stat(struct page *page,
+ 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+ 		return;
+ 
+-	switch (idx) {
+-	case MEMCG_NR_FILE_MAPPED:
+-		idx = MEM_CGROUP_STAT_FILE_MAPPED;
+-		break;
+-	default:
+-		BUG();
+-	}
+-
+ 	this_cpu_add(memcg->stat->count[idx], val);
+ }
+ 
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 2144160..d6b93df 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1148,7 +1148,7 @@ void page_add_file_rmap(struct page *page)
+ 	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+ 	if (atomic_inc_and_test(&page->_mapcount)) {
+ 		__inc_zone_page_state(page, NR_FILE_MAPPED);
+-		mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED);
++		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+ 	}
+ 	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+ }
+@@ -1202,7 +1202,7 @@ void page_remove_rmap(struct page *page)
+ 					      NR_ANON_TRANSPARENT_HUGEPAGES);
+ 	} else {
+ 		__dec_zone_page_state(page, NR_FILE_MAPPED);
+-		mem_cgroup_dec_page_stat(page, MEMCG_NR_FILE_MAPPED);
++		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+ 	}
+ 	/*
+ 	 * It would be tidy to reset the PageAnon mapping here,
 -- 
 1.7.1
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
