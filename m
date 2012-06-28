@@ -1,52 +1,87 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3][0/6] memcg: prevent -ENOMEM in pre_destroy()
-Date: Thu, 28 Jun 2012 09:06:25 -0700
-Message-ID: <CAOS58YNuSMjDB00UgOPjGCSFcRx-gjvMrW+e4uW0ug8WMsuFSw@mail.gmail.com>
-References: <4FACDED0.3020400@jp.fujitsu.com>
-	<20120621202043.GD4642@google.com>
-	<4FE3ADDD.9060908@jp.fujitsu.com>
-	<20120627175818.GM15811@google.com>
-	<4FEC16EF.40408@jp.fujitsu.com>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [rfc][patch 3/3] mm, memcg: introduce own oom handler to
+	iterate only over its own threads
+Date: Thu, 28 Jun 2012 19:16:18 +0200
+Message-ID: <20120628171618.GA27089@redhat.com>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206251847180.24838@chino.kir.corp.google.com> <4FE94968.6010500@jp.fujitsu.com> <alpine.DEB.2.00.1206261323260.8673@chino.kir.corp.google.com> <alpine.DEB.2.00.1206262229380.32567@chino.kir.corp.google.com> <alpine.DEB.2.00.1206271837460.14446@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-        bh=b3b4O12XEJWuFRHHalByHKk8e0oFVYKwImxpVPbB2UA=;
-        b=MBDN++kNwl7NrV6wYG0vWJoHogPHoCQaDG+YnfQH4Od3ce7XK9vQg0jZ5jfA6e+EXZ
-         UJJbuXY4fnTRmpjrd1DZMlMIstAHSwjJAKtM7nsWX4UhHMhDYK/wFLyTXhoCSerFSKyp
-         CMRz2eSuAsock6JUhnQibcz+OII7Z1lOErbDtRF+TsumtkJXB/3+Hh4VxpL4KnUoELcI
-         dxNZIGjOG/PB00hK10m0wa3xQkhJl184y9jXoFO7puEq4OHgslmad3lDdBUCJK616ru6
-         CF02+ubpSlV8Z+pGNeCghppwjXO4sWjQlgcNgimAFUaLPNQj2r2GnT+9cuvYUPr1nZtv
-         au7A==
-In-Reply-To: <4FEC16EF.40408-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1206271837460.14446@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Han Ying <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hiroyuki Kamezawa <kamezawa.hiroyuki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Hello, KAME.
-
-On Thu, Jun 28, 2012 at 1:33 AM, Kamezawa Hiroyuki
-<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
->> Ooh, once memcg drops the __DEPRECATED_clear_css_refs, cgroup_rmdir()
->> will mark the cgroup dead before start calling pre_destroy() and none
->> of the above will happen.
->>
+On 06/27, David Rientjes wrote:
 >
-> Hm, threads which touches memcg should hold memcg's reference count rather
-> than css.
-> Right ? IIUC, one of reason is a reference from kswapd etc...hm. I'll check
-> it.
+> On Tue, 26 Jun 2012, David Rientjes wrote:
+>
+> > It turns out that task->children is not an rcu-protected list so this
+> > doesn't work.
 
-Not sure I'm following. I meant that css_tryget() will always fail
-once pre_destroy() calls being for the cgroup, so no new child or
-reference can be created for it after that point.
+Yes. And just in case, we can't rcuify ->children because of re-parenting.
 
-Thanks.
+> It's a tough patch to review, but the basics are that
+>
+>  - oom_kill_process() is made to no longer need tasklist_lock; it's only
+>    taken for the iteration over children and everything else, including
+>    dump_header() is protected by rcu_read_lock() for kernels enabling
+>    /proc/sys/vm/oom_dump_tasks,
+>
+>  - oom_kill_process() assumes that we have a reference to p, the victim,
+>    when it's called.  It can release this reference and grab a child's
+>    reference if necessary and drops it before returning, and
+>
+>  - select_bad_process() does not require tasklist_lock, it gets
+>    protected by rcu_read_lock() as well.
 
--- 
-tejun
+Looks correct at first glance... (ignoring the fact we need the fixes
+in while_each_thread/rcu interaction but this is off-topic and should
+be fixed anyway).
+
+> @@ -348,6 +348,7 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
+>  	struct task_struct *chosen = NULL;
+>  	unsigned long chosen_points = 0;
+>
+> +	rcu_read_lock();
+>  	do_each_thread(g, p) {
+>  		unsigned int points;
+>
+> @@ -370,6 +371,9 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
+>  			chosen_points = points;
+>  		}
+>  	} while_each_thread(g, p);
+> +	if (chosen)
+> +		get_task_struct(chosen);
+
+OK, so the caller should do put_task_struct().
+
+But, unless I misread the patch,
+
+> @@ -454,6 +458,7 @@ void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
+> ...
+> +	rcu_read_lock();
+> +	p = find_lock_task_mm(victim);
+> +	if (!p) {
+> +		rcu_read_unlock();
+> +		put_task_struct(victim);
+>  		return;
+> +	} else
+> +		victim = p;
+
+And, before return,
+
+> +	put_task_struct(victim);
+
+Doesn't look right if victim != p.
+
+Oleg.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
