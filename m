@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan@huawei.com>
 Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup cgroup]
-Date: Thu, 28 Jun 2012 14:07:51 +0800
-Message-ID: <4FEBF4B7.2070105@huawei.com>
+Date: Thu, 28 Jun 2012 14:07:28 +0800
+Message-ID: <4FEBF4A0.3040303@huawei.com>
 References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com> <20120627182903.GP15811@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -51,5 +51,4 @@ mkdir /mnt/sub
 sleep 100 < /mnt/sub &
 kill $!
 wait $!
-rmdir /mnt/sub
 umount /mnt
