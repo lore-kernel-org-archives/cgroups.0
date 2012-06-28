@@ -1,29 +1,29 @@
-From: Sha Zhengju <handai.szj@gmail.com>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: [PATCH 6/7] memcg: add per cgroup writeback pages accounting
-Date: Thu, 28 Jun 2012 19:05:25 +0800
-Message-ID: <1340881525-5835-1-git-send-email-handai.szj@taobao.com>
+Date: Thu, 28 Jun 2012 19:06:02 +0800
+Message-ID: <1340881562-5900-1-git-send-email-handai.szj@taobao.com>
 References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
         bh=AqLTcrK+il38/zOhsSI6zRdWzp3gZ5JohkMgZLhsz3k=;
-        b=Uval7iHiCre2yH3Lw2qPuzQ1kI0AAGafvUgCJwzi7fy++3GB1VSaOu+euHsCrp51Hw
-         UU/mukeK2YIdoW7X1nKYkpuYSMCByEgh4snPMQuA1IrdYbXfhdRXHgNLuE4R5WtRj7Ym
-         cgOOM5vESqLZOuR2TtdU+tCJ0fFYV7/rcWK4l5CpGqgo0kQeaLqBpx5JzlZ5GmYC8dZQ
-         3CQbGivvovJ271vd+ldK2usD1PBRJZHo2udpN48wXuUn+hwkX+bQAgzEzBtg+ETlaLQX
-         nsR4STkA8T/8MaRlkz66SrPQkubuIeJHd0Ej8ikkBeSm/6oTtjgUVUiUZiI1mxX613Ec
-         KYJg==
-In-Reply-To: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+        b=0fJUMRcl2pcby/DdQz/pGCVqcurbkcC7fkFE6AVeBby6TSZ+FQ/b7EEv1w48EZ10m8
+         n4fe2k4rL1lXvULpOvITMNbJgcOY1w3A+CziGFaHPOl3ausqRFwZ4IfVHGtn5rT3ZNhj
+         U4T9lEM803N4w7YPiRteHdLjsAgTxEhwPE/497ab8gNH7zBU+nJcRIl3MQqBzoNsmvaO
+         XkenzDDF5L3DPH42Q1IIgyDBZrqJwDD5/8qJeqok4cc/vskP+zg0sYJRBsIu6z2zaBz1
+         7Syz1FdhhX1YQ5ZGeooy4/VfmpD4cAw/46FtTgLiP2fDfbaZ1xBbdfyjHyRwCIsr1khY
+         F0eA==
+In-Reply-To: <1340880885-5427-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-From: Sha Zhengju <handai.szj@taobao.com>
+From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
 Similar to dirty page, we add per cgroup writeback pages accounting. The lock
 rule still is:
@@ -34,7 +34,7 @@ rule still is:
 
 There're two writeback interface to modify: test_clear/set_page_writeback.
 
-Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 ---
  include/linux/memcontrol.h |    1 +
  mm/memcontrol.c            |    5 +++++
@@ -134,9 +134,3 @@ index e79a2f7..7398836 100644
  }
 -- 
 1.7.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
