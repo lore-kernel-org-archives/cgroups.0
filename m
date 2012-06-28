@@ -1,87 +1,69 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [rfc][patch 3/3] mm, memcg: introduce own oom handler to
-	iterate only over its own threads
-Date: Thu, 28 Jun 2012 19:16:18 +0200
-Message-ID: <20120628171618.GA27089@redhat.com>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206251847180.24838@chino.kir.corp.google.com> <4FE94968.6010500@jp.fujitsu.com> <alpine.DEB.2.00.1206261323260.8673@chino.kir.corp.google.com> <alpine.DEB.2.00.1206262229380.32567@chino.kir.corp.google.com> <alpine.DEB.2.00.1206271837460.14446@chino.kir.corp.google.com>
+From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup
+ cgroup]
+Date: Thu, 28 Jun 2012 11:07:12 -0700
+Message-ID: <20120628180712.GC22641@google.com>
+References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com>
+ <20120627182903.GP15811@google.com>
+ <4FEBF4B7.2070105@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=WpTIe/xK6vs53lk/C5dZgBO7HTgjlGDrgBYSFpLKzqo=;
+        b=rzQy17Ow2Ot/Z3n8bAV+2C3afnELBMDlHm/2EmTLFwSi0thZoU/TURvRswKsc9C1Qw
+         E4SWdd1rgjx8rVvK4G+s+38YN1+tZzusSVt1Aq1ZgoeV1sAOQBl3uQnEACv80Vy1CvLa
+         LH4yPdpHkKuY8CSDUw2ASC0bdTsQgdlaBPz5hrFBvguW0qdfdorLWWstFlEqX/NAhOhl
+         9lS/U4MiaNUWISwT6LjeQVPbqz/GOXhlbYbZPaIhcxR8SUvJymTacO0iqaJTH8CZtuB5
+         KJK6nF3CKrwVMGvTS+nIvvFXDBjLWngkyMaXubYL89wnJ80z7XsR5vyzOvUIUTeYIccl
+         CygQ==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1206271837460.14446@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <4FEBF4B7.2070105-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 06/27, David Rientjes wrote:
->
-> On Tue, 26 Jun 2012, David Rientjes wrote:
->
-> > It turns out that task->children is not an rcu-protected list so this
-> > doesn't work.
+Hello, Li.
 
-Yes. And just in case, we can't rcuify ->children because of re-parenting.
+On Thu, Jun 28, 2012 at 02:07:51PM +0800, Li Zefan wrote:
+> > Hmm... fa980ca87d "cgroup: superblock can't be released with active
+> > dentries" is supposed to have fixed that.  Looking into it.
+> > 
+> 
+> 
+> I think I know what happened here:
+> 
+> umount
+>   deativate_super(sb)
+>                        dput(subdir)
+>                          subdir->d_count--
+>                          d_release(subdir)
+>                            deactivate_super(sb)
+>                              shrink_dcache_for_umount(sb)
+>                                BUG(root->d_count)!!
+>                          root->d_count--
 
-> It's a tough patch to review, but the basics are that
->
->  - oom_kill_process() is made to no longer need tasklist_lock; it's only
->    taken for the iteration over children and everything else, including
->    dump_header() is protected by rcu_read_lock() for kernels enabling
->    /proc/sys/vm/oom_dump_tasks,
->
->  - oom_kill_process() assumes that we have a reference to p, the victim,
->    when it's called.  It can release this reference and grab a child's
->    reference if necessary and drops it before returning, and
->
->  - select_bad_process() does not require tasklist_lock, it gets
->    protected by rcu_read_lock() as well.
+Can you please elaborate a bit?  I'm not really following?  Where does
+the last root->d_count-- come from?
 
-Looks correct at first glance... (ignoring the fact we need the fixes
-in while_each_thread/rcu interaction but this is off-topic and should
-be fixed anyway).
+> I use this script to reproduce the bug:
+> 
+> mount -t cgroup -o cpu xxx /mnt
+> mkdir /mnt/sub
+> sleep 100 < /mnt/sub &
+> kill $!
+> wait $!
+> rmdir /mnt/sub
+> umount /mnt
 
-> @@ -348,6 +348,7 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
->  	struct task_struct *chosen = NULL;
->  	unsigned long chosen_points = 0;
->
-> +	rcu_read_lock();
->  	do_each_thread(g, p) {
->  		unsigned int points;
->
-> @@ -370,6 +371,9 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
->  			chosen_points = points;
->  		}
->  	} while_each_thread(g, p);
-> +	if (chosen)
-> +		get_task_struct(chosen);
+Unfortunately, this doesn't reproduce the bug here either. :(
 
-OK, so the caller should do put_task_struct().
+Thanks.
 
-But, unless I misread the patch,
-
-> @@ -454,6 +458,7 @@ void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
-> ...
-> +	rcu_read_lock();
-> +	p = find_lock_task_mm(victim);
-> +	if (!p) {
-> +		rcu_read_unlock();
-> +		put_task_struct(victim);
->  		return;
-> +	} else
-> +		victim = p;
-
-And, before return,
-
-> +	put_task_struct(victim);
-
-Doesn't look right if victim != p.
-
-Oleg.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
