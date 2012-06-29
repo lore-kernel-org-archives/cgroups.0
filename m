@@ -1,78 +1,69 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 0/7] Per-cgroup page stat accounting
-Date: Fri, 29 Jun 2012 17:23:32 +0900
-Message-ID: <4FED6604.9080603@jp.fujitsu.com>
-References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
+From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup
+ cgroup]
+Date: Fri, 29 Jun 2012 09:58:09 -0700
+Message-ID: <20120629165809.GB21048@google.com>
+References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com>
+ <20120627182903.GP15811@google.com>
+ <4FEBF4B7.2070105@huawei.com>
+ <20120628180712.GC22641@google.com>
+ <4FED10DB.7040500@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=08VqMkp1TUDKF/LhbRf3RGujq+ubnGZ8OhK0BrL+EBg=;
+        b=hDeL3/HwEiDa/uuPenrW8pupXsailZLDoP1u1stBkJqd6ycYeVcP2voEd4rVFbUKJc
+         ++XZEdudb54cYEHCyD3OPA8LGPV4/2MpDpfJPpRgqkE4Q4fCtrvJAYsv3XRJC1RBv/93
+         IXsqJRm77OUtPshwTHjsja1TL5akFolWS5M/o/t3ljyJzzuVP1G+VCN8DdtkeBu7j7Vz
+         B6BBgFpaEWhrn6a1qoSNecb8xwZ0T79zfhd4DQflUuhRxPP5x7nEY9NctFxjTC7SySTT
+         ELagA7KWk+Z6HM1KtJeBJtNZFK93S2VNj1uf3VWmEF7jQpit6SiELJIUG1Z8/2H5CtMW
+         wuqw==
+Content-Disposition: inline
+In-Reply-To: <4FED10DB.7040500-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-(2012/06/28 19:54), Sha Zhengju wrote:
-> This patch series provide the ability for each memory cgroup to have independent
-> dirty/writeback page stats. This can provide some information for per-cgroup direct
-> reclaim. Meanwhile, we add more detailed dump messages for memcg OOMs.
+Hey,
+
+On Fri, Jun 29, 2012 at 10:20:11AM +0800, Li Zefan wrote:
+> > Can you please elaborate a bit?  I'm not really following?  Where does
+> > the last root->d_count-- come from?
 > 
-> Three features are included in this patch series:
->   (0).prepare patches for page accounting
->    1. memcg dirty page accounting
->    2. memcg writeback page accounting
->    3. memcg OOMs dump info
 > 
-> In (0) prepare patches, we have reworked vfs set page dirty routines to make "modify
-> page info" and "dirty page accouting" stay in one function as much as possible for
-> the sake of memcg bigger lock.
+> From my limited knowledge about vfs internal, seems the parent's refcnt won't go down
+> to 0 before its children. When mkdir, the parent's refcnt will be incremented, and
+> after rmdir, dput(subdir) will drop subdir's refcnt and then drop parent's.
 > 
-> These patches are cooked based on Andrew's akpm tree.
+> So when dropping the subdir's refcnt and leading the superblock to be killed, the root's
+> dentry is still > 0.
+
+Heh, yeah, I thought you found who was holding out on the refcnt. :)
+
+> >> I use this script to reproduce the bug:
+> >>
+> >> mount -t cgroup -o cpu xxx /mnt
+> >> mkdir /mnt/sub
+> >> sleep 100 < /mnt/sub &
+> >> kill $!
+> >> wait $!
+> >> rmdir /mnt/sub
+> >> umount /mnt
+> > Unfortunately, this doesn't reproduce the bug here either. :(
 > 
+> I can reproduce the bug reliably.. Try s/cpu/perf or s/cpu/net_cls, which have fewer
+> cgroup files?
 
-Thank you !, it seems good in general. I'll review in detail, later.
+Hmm... weird.  Maybe some debug config option I have is preventing the
+race from occurring as reliably?  Can you please attach your .config?
 
-Do you have any performance comparison between before/after the series ?
-I mean, set_page_dirty() is the hot-path and we should be careful to add a new accounting.
+Thanks.
 
-Thanks,
--Kame
-
-
-
-> Sha Zhengju (7):
-> 	memcg-update-cgroup-memory-document.patch
-> 	memcg-remove-MEMCG_NR_FILE_MAPPED.patch
-> 	Make-TestSetPageDirty-and-dirty-page-accounting-in-o.patch
-> 	Use-vfs-__set_page_dirty-interface-instead-of-doing-.patch
-> 	memcg-add-per-cgroup-dirty-pages-accounting.patch
-> 	memcg-add-per-cgroup-writeback-pages-accounting.patch
-> 	memcg-print-more-detailed-info-while-memcg-oom-happe.patch	
-> 
->   Documentation/cgroups/memory.txt |    2 +
->   fs/buffer.c                      |   36 +++++++++-----
->   fs/ceph/addr.c                   |   20 +-------
->   include/linux/buffer_head.h      |    2 +
->   include/linux/memcontrol.h       |   27 +++++++---
->   mm/filemap.c                     |    5 ++
->   mm/memcontrol.c                  |   99 +++++++++++++++++++++++--------------
->   mm/page-writeback.c              |   42 ++++++++++++++--
->   mm/rmap.c                        |    4 +-
->   mm/truncate.c                    |    6 ++
->   10 files changed, 159 insertions(+), 84 deletions(-)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
