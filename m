@@ -1,65 +1,132 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup cgroup]
-Date: Fri, 29 Jun 2012 10:20:11 +0800
-Message-ID: <4FED10DB.7040500@huawei.com>
-References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com> <20120627182903.GP15811@google.com> <4FEBF4B7.2070105@huawei.com> <20120628180712.GC22641@google.com>
+From: Sage Weil <sage-4GqslpFJ+cxBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH 4/7] Use vfs __set_page_dirty interface instead of doing
+ it inside filesystem
+Date: Thu, 28 Jun 2012 22:21:48 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.1206282218260.18049@cobra.newdream.net>
+References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
+ <1340881423-5703-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120628180712.GC22641-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1340881423-5703-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sage-BnTBU8nroG7k1uMJSBkQmQ@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On 2012/6/29 2:07, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org wrote:
+On Thu, 28 Jun 2012, Sha Zhengju wrote:
 
-> Hello, Li.
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > 
-> On Thu, Jun 28, 2012 at 02:07:51PM +0800, Li Zefan wrote:
->>> Hmm... fa980ca87d "cgroup: superblock can't be released with active
->>> dentries" is supposed to have fixed that.  Looking into it.
->>>
->>
->>
->> I think I know what happened here:
->>
->> umount
->>   deativate_super(sb)
->>                        dput(subdir)
->>                          subdir->d_count--
->>                          d_release(subdir)
->>                            deactivate_super(sb)
->>                              shrink_dcache_for_umount(sb)
->>                                BUG(root->d_count)!!
->>                          root->d_count--
+> Following we will treat SetPageDirty and dirty page accounting as an integrated
+> operation. Filesystems had better use vfs interface directly to avoid those details.
 > 
-> Can you please elaborate a bit?  I'm not really following?  Where does
-> the last root->d_count-- come from?
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  fs/buffer.c                 |    2 +-
+>  fs/ceph/addr.c              |   20 ++------------------
+>  include/linux/buffer_head.h |    2 ++
+>  3 files changed, 5 insertions(+), 19 deletions(-)
 > 
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index e8d96b8..55522dd 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -610,7 +610,7 @@ EXPORT_SYMBOL(mark_buffer_dirty_inode);
+>   * If warn is true, then emit a warning if the page is not uptodate and has
+>   * not been truncated.
+>   */
+> -static int __set_page_dirty(struct page *page,
+> +int __set_page_dirty(struct page *page,
+>  		struct address_space *mapping, int warn)
+>  {
+>  	if (unlikely(!mapping))
 
+This also needs an EXPORT_SYMBOL(__set_page_dirty) to allow ceph to 
+continue to build as a module.
 
-From my limited knowledge about vfs internal, seems the parent's refcnt won't go down
-to 0 before its children. When mkdir, the parent's refcnt will be incremented, and
-after rmdir, dput(subdir) will drop subdir's refcnt and then drop parent's.
+With that fixed, the ceph bits are a welcome cleanup!
 
-So when dropping the subdir's refcnt and leading the superblock to be killed, the root's
-dentry is still > 0.
+Acked-by: Sage Weil <sage-4GqslpFJ+cxBDgjK7y7TUQ@public.gmane.org>
 
->> I use this script to reproduce the bug:
->>
->> mount -t cgroup -o cpu xxx /mnt
->> mkdir /mnt/sub
->> sleep 100 < /mnt/sub &
->> kill $!
->> wait $!
->> rmdir /mnt/sub
->> umount /mnt
+> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
+> index 8b67304..d028fbe 100644
+> --- a/fs/ceph/addr.c
+> +++ b/fs/ceph/addr.c
+> @@ -5,6 +5,7 @@
+>  #include <linux/mm.h>
+>  #include <linux/pagemap.h>
+>  #include <linux/writeback.h>	/* generic_writepages */
+> +#include <linux/buffer_head.h>
+>  #include <linux/slab.h>
+>  #include <linux/pagevec.h>
+>  #include <linux/task_io_accounting_ops.h>
+> @@ -73,14 +74,8 @@ static int ceph_set_page_dirty(struct page *page)
+>  	int undo = 0;
+>  	struct ceph_snap_context *snapc;
+>  
+> -	if (unlikely(!mapping))
+> -		return !TestSetPageDirty(page);
+> -
+> -	if (TestSetPageDirty(page)) {
+> -		dout("%p set_page_dirty %p idx %lu -- already dirty\n",
+> -		     mapping->host, page, page->index);
+> +	if (!__set_page_dirty(page, mapping, 1))
+>  		return 0;
+> -	}
+>  
+>  	inode = mapping->host;
+>  	ci = ceph_inode(inode);
+> @@ -107,14 +102,7 @@ static int ceph_set_page_dirty(struct page *page)
+>  	     snapc, snapc->seq, snapc->num_snaps);
+>  	spin_unlock(&ci->i_ceph_lock);
+>  
+> -	/* now adjust page */
+> -	spin_lock_irq(&mapping->tree_lock);
+>  	if (page->mapping) {	/* Race with truncate? */
+> -		WARN_ON_ONCE(!PageUptodate(page));
+> -		account_page_dirtied(page, page->mapping);
+> -		radix_tree_tag_set(&mapping->page_tree,
+> -				page_index(page), PAGECACHE_TAG_DIRTY);
+> -
+>  		/*
+>  		 * Reference snap context in page->private.  Also set
+>  		 * PagePrivate so that we get invalidatepage callback.
+> @@ -126,14 +114,10 @@ static int ceph_set_page_dirty(struct page *page)
+>  		undo = 1;
+>  	}
+>  
+> -	spin_unlock_irq(&mapping->tree_lock);
+> -
+>  	if (undo)
+>  		/* whoops, we failed to dirty the page */
+>  		ceph_put_wrbuffer_cap_refs(ci, 1, snapc);
+>  
+> -	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+> -
+>  	BUG_ON(!PageDirty(page));
+>  	return 1;
+>  }
+> diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+> index 458f497..0a331a8 100644
+> --- a/include/linux/buffer_head.h
+> +++ b/include/linux/buffer_head.h
+> @@ -336,6 +336,8 @@ static inline void lock_buffer(struct buffer_head *bh)
+>  }
+>  
+>  extern int __set_page_dirty_buffers(struct page *page);
+> +extern int __set_page_dirty(struct page *page,
+> +		struct address_space *mapping, int warn);
+>  
+>  #else /* CONFIG_BLOCK */
+>  
+> -- 
+> 1.7.1
 > 
-> Unfortunately, this doesn't reproduce the bug here either. :(
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-
-
-I can reproduce the bug reliably.. Try s/cpu/perf or s/cpu/net_cls, which have fewer
-cgroup files?
+> 
