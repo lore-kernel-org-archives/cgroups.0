@@ -1,47 +1,65 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem
- controller for memcg: stripped down version
-Date: Thu, 28 Jun 2012 15:25:40 -0700
-Message-ID: <20120628152540.cc13a735.akpm@linux-foundation.org>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
-	<20120625162745.eabe4f03.akpm@linux-foundation.org>
-	<4FE9621D.2050002@parallels.com>
-	<20120626145539.eeeab909.akpm@linux-foundation.org>
-	<4FEAD260.4000603@parallels.com>
-	<alpine.DEB.2.00.1206271233080.22162@chino.kir.corp.google.com>
-	<4FEC1D63.6000903@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: 3.5-rc3: BUG: Dentry still in use (1) [unmount of cgroup cgroup]
+Date: Fri, 29 Jun 2012 10:20:11 +0800
+Message-ID: <4FED10DB.7040500@huawei.com>
+References: <E061084CB90FCE4F89232A6CF839683B32B52291@SZXEML507-MBS.china.huawei.com> <20120627182903.GP15811@google.com> <4FEBF4B7.2070105@huawei.com> <20120628180712.GC22641@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4FEC1D63.6000903@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120628180712.GC22641-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Rik van Riel <riel@redhat.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kir Kolyshkin <kir@parallels.com>
+To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Thu, 28 Jun 2012 13:01:23 +0400
-Glauber Costa <glommer@parallels.com> wrote:
+On 2012/6/29 2:07, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org wrote:
 
->
-> ...
->
+> Hello, Li.
+> 
+> On Thu, Jun 28, 2012 at 02:07:51PM +0800, Li Zefan wrote:
+>>> Hmm... fa980ca87d "cgroup: superblock can't be released with active
+>>> dentries" is supposed to have fixed that.  Looking into it.
+>>>
+>>
+>>
+>> I think I know what happened here:
+>>
+>> umount
+>>   deativate_super(sb)
+>>                        dput(subdir)
+>>                          subdir->d_count--
+>>                          d_release(subdir)
+>>                            deactivate_super(sb)
+>>                              shrink_dcache_for_umount(sb)
+>>                                BUG(root->d_count)!!
+>>                          root->d_count--
+> 
+> Can you please elaborate a bit?  I'm not really following?  Where does
+> the last root->d_count-- come from?
+> 
 
-OK, that all sounds convincing ;) Please summarise and capture this
-discussion in the [patch 0/n] changelog so we (or others) don't have to
-go through this all again.  And let's remember this in the next
-patchset!
 
-> Last, but not least, note that it is totally within my interests to
-> merge the slab tracking as fast as we can. it'll be a matter of going
-> back to it, and agreeing in the final form.
+From my limited knowledge about vfs internal, seems the parent's refcnt won't go down
+to 0 before its children. When mkdir, the parent's refcnt will be incremented, and
+after rmdir, dput(subdir) will drop subdir's refcnt and then drop parent's.
 
-Yes, I'd very much like to have the whole slab implementation in a
-reasonably mature state before proceeding too far with this base
-patchset.
+So when dropping the subdir's refcnt and leading the superblock to be killed, the root's
+dentry is still > 0.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>> I use this script to reproduce the bug:
+>>
+>> mount -t cgroup -o cpu xxx /mnt
+>> mkdir /mnt/sub
+>> sleep 100 < /mnt/sub &
+>> kill $!
+>> wait $!
+>> rmdir /mnt/sub
+>> umount /mnt
+> 
+> Unfortunately, this doesn't reproduce the bug here either. :(
+> 
+
+
+I can reproduce the bug reliably.. Try s/cpu/perf or s/cpu/net_cls, which have fewer
+cgroup files?
