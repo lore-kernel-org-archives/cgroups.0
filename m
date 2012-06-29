@@ -1,8 +1,7 @@
 From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [patch 3/5] mm, memcg: introduce own oom handler to iterate only
- over its own threads
-Date: Fri, 29 Jun 2012 14:06:56 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1206291405500.6040@chino.kir.corp.google.com>
+Subject: [patch 5/5] mm, memcg: move all oom handling to memcontrol.c
+Date: Fri, 29 Jun 2012 14:07:01 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1206291406270.6040@chino.kir.corp.google.com>
 References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291404530.6040@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -10,13 +9,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=0sEGUm1h4tj/oW6HywlCYx+E7gIBgs3XoSEuIFKl1QQ=;
-        b=UgwRNBCSocyjvGy5FGmg6S+nOouL0tgQnKuo2HSzYTE7P3CI77r+fQP7Ek4Db99t0B
-         qJauZQong6yRq+0qBqnln9I5x4bH5y+xFadkomtab4xePSKzVYAzvvOdIWMsd87I7MIM
-         cZwDj7yz/WXVjUAho7IMD0CqtzuAy6CyAmLVaIRM8RQ6Ui/03JSUYXJxenSPy2ce1dw4
-         t5jsw37Fz9HYKkKnd8kSZQHW3BegDzOL1WuhNr4CdQWt4qgiQrBicl9j5J2W5QSzLUam
-         i/WGcgd2vq2lMeKDx9zBT1oLvWlms8BQpzwsZVKxYTpwRlp5xmjvGGCkrBfAAvPvs5Uq
-         U+fg==
+        bh=fojq8+YprCuqiKPrweO6fgThxuxW4eth+LVw+gyFfwM=;
+        b=TBCZ0gRihTezv5/0QpbMzJih8VOdt9Q0fELiAUrp7CgiDXm/nFsUD2RSanJZ9ebK+E
+         Fia6WUJGhFCNztNldugyEaf8kSJ/13CBaKTa0NXcqZQTlidBvl9d9vC9fNJ9JM0ySh+h
+         PDjG6mF4epPCtiT3ElnGg6HY0CTmpwutEcMGwY0rMjsz8qzl8TsU4TIDMsL9zharvOum
+         2qGtGqsByclRmWCTVISfIMwS08MD1fBbA0w1sotlYmQDTg6K3HHhf6CVZwj6gEfzqP3N
+         YBa+HKWWwMxtmrtQ+H6tYCf3cTttzLtdG14JLxQqRHwCBhXqtOOEYS+Z1Ix1BsCpU05z
+         RFkw==
 In-Reply-To: <alpine.DEB.2.00.1206291404530.6040-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,305 +24,112 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The global oom killer is serialized by the zonelist being used in the
-page allocation.  Concurrent oom kills are thus a rare event and only
-occur in systems using mempolicies and with a large number of nodes.
+By globally defining check_panic_on_oom(), the memcg oom handler can be
+moved entirely to mm/memcontrol.c.  This removes the ugly #ifdef in the
+oom killer and cleans up the code.
 
-Memory controller oom kills, however, can frequently be concurrent since
-there is no serialization once the oom killer is called for oom
-conditions in several different memcgs in parallel.
-
-This creates a massive contention on tasklist_lock since the oom killer
-requires the readside for the tasklist iteration.  If several memcgs are
-calling the oom killer, this lock can be held for a substantial amount of
-time, especially if threads continue to enter it as other threads are
-exiting.
-
-Since the exit path grabs the writeside of the lock with irqs disabled in
-a few different places, this can cause a soft lockup on cpus as a result
-of tasklist_lock starvation.
-
-The kernel lacks unfair writelocks, and successful calls to the oom
-killer usually result in at least one thread entering the exit path, so
-an alternative solution is needed.
-
-This patch introduces a seperate oom handler for memcgs so that they do
-not require tasklist_lock for as much time.  Instead, it iterates only
-over the threads attached to the oom memcg and grabs a reference to the
-selected thread before calling oom_kill_process() to ensure it doesn't
-prematurely exit.
-
-This still requires tasklist_lock for the tasklist dump, iterating
-children of the selected process, and killing all other threads on the
-system sharing the same memory as the selected victim.  So while this
-isn't a complete solution to tasklist_lock starvation, it significantly
-reduces the amount of time that it is held.
-
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> 
 ---
- include/linux/memcontrol.h |    9 +-----
- include/linux/oom.h        |   16 +++++++++++
- mm/memcontrol.c            |   61 +++++++++++++++++++++++++++++++++++++++++++-
- mm/oom_kill.c              |   48 +++++++++++-----------------------
- 4 files changed, 93 insertions(+), 41 deletions(-)
+ include/linux/memcontrol.h |    2 --
+ include/linux/oom.h        |    3 +++
+ mm/memcontrol.c            |   15 +++++++++++++--
+ mm/oom_kill.c              |   23 ++---------------------
+ 4 files changed, 18 insertions(+), 25 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -180,7 +180,8 @@ static inline void mem_cgroup_dec_page_stat(struct page *page,
+@@ -180,8 +180,6 @@ static inline void mem_cgroup_dec_page_stat(struct page *page,
  unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
  						gfp_t gfp_mask,
  						unsigned long *total_scanned);
--u64 mem_cgroup_get_limit(struct mem_cgroup *memcg);
-+extern void __mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
-+				       int order);
+-extern void __mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-				       int order);
  
  void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-@@ -364,12 +365,6 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
- 	return 0;
- }
- 
--static inline
--u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
--{
--	return 0;
--}
--
- static inline void mem_cgroup_split_huge_fixup(struct page *head)
- {
- }
 diff --git a/include/linux/oom.h b/include/linux/oom.h
 --- a/include/linux/oom.h
 +++ b/include/linux/oom.h
-@@ -40,17 +40,33 @@ enum oom_constraint {
- 	CONSTRAINT_MEMCG,
- };
- 
-+enum oom_scan_t {
-+	OOM_SCAN_OK,		/* scan thread and find its badness */
-+	OOM_SCAN_CONTINUE,	/* do not consider thread for oom kill */
-+	OOM_SCAN_ABORT,		/* abort the iteration and return */
-+	OOM_SCAN_SELECT,	/* always select this thread first */
-+};
-+
- extern void compare_swap_oom_score_adj(int old_val, int new_val);
- extern int test_set_oom_score_adj(int new_val);
- 
- extern unsigned long oom_badness(struct task_struct *p,
- 		struct mem_cgroup *memcg, const nodemask_t *nodemask,
- 		unsigned long totalpages);
-+extern void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
-+			     unsigned int points, unsigned long totalpages,
-+			     struct mem_cgroup *memcg, nodemask_t *nodemask,
-+			     const char *message);
-+
+@@ -61,6 +61,9 @@ extern void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
  extern int try_set_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
  extern void clear_zonelist_oom(struct zonelist *zonelist, gfp_t gfp_flags);
  
-+extern enum oom_scan_t oom_scan_process_thread(struct task_struct *task,
-+		unsigned long totalpages, const nodemask_t *nodemask,
-+		bool force_kill);
- extern void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 				     int order);
++extern void check_panic_on_oom(enum oom_constraint constraint, gfp_t gfp_mask,
++			       int order, const nodemask_t *nodemask);
 +
- extern void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
- 		int order, nodemask_t *mask, bool force_kill);
- extern int register_oom_notifier(struct notifier_block *nb);
+ extern enum oom_scan_t oom_scan_process_thread(struct task_struct *task,
+ 		unsigned long totalpages, const nodemask_t *nodemask,
+ 		bool force_kill);
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1453,7 +1453,7 @@ static int mem_cgroup_count_children(struct mem_cgroup *memcg)
- /*
-  * Return the memory (and swap, if configured) limit for a memcg.
-  */
--u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
-+static u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
- {
- 	u64 limit;
- 	u64 memsw;
-@@ -1469,6 +1469,65 @@ u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
+@@ -1469,8 +1469,8 @@ static u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
  	return min(limit, memsw);
  }
  
-+void __mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
-+				int order)
-+{
-+	struct mem_cgroup *iter;
-+	unsigned long chosen_points = 0;
-+	unsigned long totalpages;
-+	unsigned int points = 0;
-+	struct task_struct *chosen = NULL;
-+
-+	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
-+	for_each_mem_cgroup_tree(iter, memcg) {
-+		struct cgroup *cgroup = iter->css.cgroup;
-+		struct cgroup_iter it;
-+		struct task_struct *task;
-+
-+		cgroup_iter_start(cgroup, &it);
-+		while ((task = cgroup_iter_next(cgroup, &it))) {
-+			switch (oom_scan_process_thread(task, totalpages, NULL,
-+							false)) {
-+			case OOM_SCAN_SELECT:
-+				if (chosen)
-+					put_task_struct(chosen);
-+				chosen = task;
-+				chosen_points = ULONG_MAX;
-+				get_task_struct(chosen);
-+				/* fall through */
-+			case OOM_SCAN_CONTINUE:
-+				continue;
-+			case OOM_SCAN_ABORT:
-+				cgroup_iter_end(cgroup, &it);
-+				mem_cgroup_iter_break(memcg, iter);
-+				if (chosen)
-+					put_task_struct(chosen);
-+				return;
-+			case OOM_SCAN_OK:
-+				break;
-+			};
-+			points = oom_badness(task, memcg, NULL, totalpages);
-+			if (points > chosen_points) {
-+				if (chosen)
-+					put_task_struct(chosen);
-+				chosen = task;
-+				chosen_points = points;
-+				get_task_struct(chosen);
-+			}
-+		}
-+		cgroup_iter_end(cgroup, &it);
+-void __mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-				int order)
++void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
++			      int order)
+ {
+ 	struct mem_cgroup *iter;
+ 	unsigned long chosen_points = 0;
+@@ -1478,6 +1478,17 @@ void __mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	unsigned int points = 0;
+ 	struct task_struct *chosen = NULL;
+ 
++	/*
++	 * If current has a pending SIGKILL, then automatically select it.  The
++	 * goal is to allow it to allocate so that it may quickly exit and free
++	 * its memory.
++	 */
++	if (fatal_signal_pending(current)) {
++		set_thread_flag(TIF_MEMDIE);
++		return;
 +	}
 +
-+	if (!chosen)
-+		return;
-+	points = chosen_points * 1000 / totalpages;
-+	read_lock(&tasklist_lock);
-+	oom_kill_process(chosen, gfp_mask, order, points, totalpages, memcg,
-+			 NULL, "Memory cgroup out of memory");
-+	read_unlock(&tasklist_lock);
-+	put_task_struct(chosen);
-+}
-+
- static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
- 					gfp_t gfp_mask,
- 					unsigned long flags)
++	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
+ 	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
+ 	for_each_mem_cgroup_tree(iter, memcg) {
+ 		struct cgroup *cgroup = iter->css.cgroup;
 diff --git a/mm/oom_kill.c b/mm/oom_kill.c
 --- a/mm/oom_kill.c
 +++ b/mm/oom_kill.c
-@@ -288,20 +288,13 @@ static enum oom_constraint constrained_alloc(struct zonelist *zonelist,
- }
- #endif
- 
--enum oom_scan_t {
--	OOM_SCAN_OK,		/* scan thread and find its badness */
--	OOM_SCAN_CONTINUE,	/* do not consider thread for oom kill */
--	OOM_SCAN_ABORT,		/* abort the iteration and return */
--	OOM_SCAN_SELECT,	/* always select this thread first */
--};
--
--static enum oom_scan_t oom_scan_process_thread(struct task_struct *task,
--		struct mem_cgroup *memcg, unsigned long totalpages,
--		const nodemask_t *nodemask, bool force_kill)
-+enum oom_scan_t oom_scan_process_thread(struct task_struct *task,
-+		unsigned long totalpages, const nodemask_t *nodemask,
-+		bool force_kill)
- {
- 	if (task->exit_state)
- 		return OOM_SCAN_CONTINUE;
--	if (oom_unkillable_task(task, memcg, nodemask))
-+	if (oom_unkillable_task(task, NULL, nodemask))
- 		return OOM_SCAN_CONTINUE;
- 
- 	/*
-@@ -348,8 +341,8 @@ static enum oom_scan_t oom_scan_process_thread(struct task_struct *task,
-  * (not docbooked, we don't want this one cluttering up the manual)
+@@ -554,8 +554,8 @@ void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
+ /*
+  * Determines whether the kernel must panic because of the panic_on_oom sysctl.
   */
- static struct task_struct *select_bad_process(unsigned int *ppoints,
--		unsigned long totalpages, struct mem_cgroup *memcg,
--		const nodemask_t *nodemask, bool force_kill)
-+		unsigned long totalpages, const nodemask_t *nodemask,
-+		bool force_kill)
+-static void check_panic_on_oom(enum oom_constraint constraint, gfp_t gfp_mask,
+-				int order, const nodemask_t *nodemask)
++void check_panic_on_oom(enum oom_constraint constraint, gfp_t gfp_mask,
++			int order, const nodemask_t *nodemask)
  {
- 	struct task_struct *g, *p;
- 	struct task_struct *chosen = NULL;
-@@ -358,7 +351,7 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
- 	do_each_thread(g, p) {
- 		unsigned int points;
- 
--		switch (oom_scan_process_thread(p, memcg, totalpages, nodemask,
-+		switch (oom_scan_process_thread(p, totalpages, nodemask,
- 						force_kill)) {
- 		case OOM_SCAN_SELECT:
- 			chosen = p;
-@@ -371,7 +364,7 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
- 		case OOM_SCAN_OK:
- 			break;
- 		};
--		points = oom_badness(p, memcg, nodemask, totalpages);
-+		points = oom_badness(p, NULL, nodemask, totalpages);
- 		if (points > chosen_points) {
- 			chosen = p;
- 			chosen_points = points;
-@@ -442,10 +435,10 @@ static void dump_header(struct task_struct *p, gfp_t gfp_mask, int order,
+ 	if (likely(!sysctl_panic_on_oom))
+ 		return;
+@@ -573,25 +573,6 @@ static void check_panic_on_oom(enum oom_constraint constraint, gfp_t gfp_mask,
+ 		sysctl_panic_on_oom == 2 ? "compulsory" : "system-wide");
  }
  
- #define K(x) ((x) << (PAGE_SHIFT-10))
--static void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
--			     unsigned int points, unsigned long totalpages,
--			     struct mem_cgroup *memcg, nodemask_t *nodemask,
--			     const char *message)
-+void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
-+		      unsigned int points, unsigned long totalpages,
-+		      struct mem_cgroup *memcg, nodemask_t *nodemask,
-+		      const char *message)
- {
- 	struct task_struct *victim = p;
- 	struct task_struct *child;
-@@ -563,10 +556,6 @@ static void check_panic_on_oom(enum oom_constraint constraint, gfp_t gfp_mask,
- void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 			      int order)
- {
--	unsigned long limit;
--	unsigned int points = 0;
--	struct task_struct *p;
+-#ifdef CONFIG_CGROUP_MEM_RES_CTLR
+-void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-			      int order)
+-{
+-	/*
+-	 * If current has a pending SIGKILL, then automatically select it.  The
+-	 * goal is to allow it to allocate so that it may quickly exit and free
+-	 * its memory.
+-	 */
+-	if (fatal_signal_pending(current)) {
+-		set_thread_flag(TIF_MEMDIE);
+-		return;
+-	}
 -
- 	/*
- 	 * If current has a pending SIGKILL, then automatically select it.  The
- 	 * goal is to allow it to allocate so that it may quickly exit and free
-@@ -578,13 +567,7 @@ void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	}
+-	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
+-	__mem_cgroup_out_of_memory(memcg, gfp_mask, order);
+-}
+-#endif
+-
+ static BLOCKING_NOTIFIER_HEAD(oom_notify_list);
  
- 	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
--	limit = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
--	read_lock(&tasklist_lock);
--	p = select_bad_process(&points, limit, memcg, NULL, false);
--	if (p && PTR_ERR(p) != -1UL)
--		oom_kill_process(p, gfp_mask, order, points, limit, memcg, NULL,
--				 "Memory cgroup out of memory");
--	read_unlock(&tasklist_lock);
-+	__mem_cgroup_out_of_memory(memcg, gfp_mask, order);
- }
- #endif
- 
-@@ -709,7 +692,7 @@ void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
- 	struct task_struct *p;
- 	unsigned long totalpages;
- 	unsigned long freed = 0;
--	unsigned int points;
-+	unsigned int uninitialized_var(points);
- 	enum oom_constraint constraint = CONSTRAINT_NONE;
- 	int killed = 0;
- 
-@@ -747,8 +730,7 @@ void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
- 		goto out;
- 	}
- 
--	p = select_bad_process(&points, totalpages, NULL, mpol_mask,
--			       force_kill);
-+	p = select_bad_process(&points, totalpages, mpol_mask, force_kill);
- 	/* Found nothing?!?! Either we hang forever, or we panic. */
- 	if (!p) {
- 		dump_header(NULL, gfp_mask, order, NULL, mpol_mask);
+ int register_oom_notifier(struct notifier_block *nb)
