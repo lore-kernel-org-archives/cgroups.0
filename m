@@ -1,30 +1,39 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 4/4] make CFLGS_OFF_SLAB visible for all slabs
-Date: Mon, 2 Jul 2012 14:57:01 +0400
-Message-ID: <4FF17E7D.5020302@parallels.com>
-References: <1339676244-27967-1-git-send-email-glommer@parallels.com> <1339676244-27967-5-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1206141019010.32075@router.home>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 3/7] Make TestSetPageDirty and dirty page accounting in
+ one func
+Date: Mon, 02 Jul 2012 20:14:02 +0900
+Message-ID: <4FF1827A.7060806@jp.fujitsu.com>
+References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com> <1340881275-5651-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1206141019010.32075-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
+In-Reply-To: <1340881275-5651-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On 06/14/2012 07:19 PM, Christoph Lameter wrote:
-> On Thu, 14 Jun 2012, Glauber Costa wrote:
+(2012/06/28 20:01), Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > 
->> Since we're now moving towards a unified slab allocator interface,
->> make CFLGS_OFF_SLAB visible to all allocators, even though SLAB keeps
->> being its only users. Also, make the name consistent with the other
->> flags, that start with SLAB_xx.
+> Commit a8e7d49a(Fix race in create_empty_buffers() vs __set_page_dirty_buffers())
+> extracts TestSetPageDirty from __set_page_dirty and is far away from
+> account_page_dirtied.But it's better to make the two operations in one single
+> function to keep modular.So in order to avoid the potential race mentioned in
+> commit a8e7d49a, we can hold private_lock until __set_page_dirty completes.
+> I guess there's no deadlock between ->private_lock and ->tree_lock by quick look.
 > 
-> What is the significance of knowledge about internal slab structures (such
-> as the CFGLFS_OFF_SLAB) outside of the allocators?
+> It's a prepare patch for following memcg dirty page accounting patches.
 > 
-Pekka, please note this comment when you are scanning through the series
-(which you seem to be doing now).
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-This one is better left off for now.
+I think there is no problem with the lock order.
+
+My small concern is the impact on the performance. IIUC, lock contention here can be
+seen if multiple threads write to the same file in parallel.
+Do you have any numbers before/after the patch ?
+
+
+Thanks,
+-Kmae
