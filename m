@@ -1,42 +1,48 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 6/7] memcg: add per cgroup writeback pages accounting
-Date: Tue, 03 Jul 2012 15:31:26 +0900
-Message-ID: <4FF291BE.7030509@jp.fujitsu.com>
-References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com> <1340881525-5835-1-git-send-email-handai.szj@taobao.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem controller
+ for memcg: stripped down version
+Date: Tue, 3 Jul 2012 15:38:39 +0400
+Message-ID: <4FF2D9BF.20800@parallels.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <20120625162745.eabe4f03.akpm@linux-foundation.org> <4FE9621D.2050002@parallels.com> <20120626145539.eeeab909.akpm@linux-foundation.org> <4FEAD260.4000603@parallels.com> <alpine.DEB.2.00.1206271233080.22162@chino.kir.corp.google.com> <4FEC1D63.6000903@parallels.com> <20120628152540.cc13a735.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1340881525-5835-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120628152540.cc13a735.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Kir Kolyshkin <kir-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-(2012/06/28 20:05), Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
+On 06/29/2012 02:25 AM, Andrew Morton wrote:
+> On Thu, 28 Jun 2012 13:01:23 +0400
+> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 > 
-> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
-> rule still is:
-> 	mem_cgroup_begin_update_page_stat()
-> 	modify page WRITEBACK stat
-> 	mem_cgroup_update_page_stat()
-> 	mem_cgroup_end_update_page_stat()
+>>
+>> ...
+>>
 > 
-> There're two writeback interface to modify: test_clear/set_page_writeback.
+> OK, that all sounds convincing ;) Please summarise and capture this
+> discussion in the [patch 0/n] changelog so we (or others) don't have to
+> go through this all again.  And let's remember this in the next
+> patchset!
+
+Thanks, will surely do.
+
+>> Last, but not least, note that it is totally within my interests to
+>> merge the slab tracking as fast as we can. it'll be a matter of going
+>> back to it, and agreeing in the final form.
 > 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> Yes, I'd very much like to have the whole slab implementation in a
+> reasonably mature state before proceeding too far with this base
+> patchset.
 
-Seems good to me. BTW, you named macros as MEM_CGROUP_STAT_FILE_XXX
-but I wonder these counters will be used for accounting swap-out's dirty pages..
+Does that means that you want to merge them together? I am more than
+happy to post the slab part again ontop of that to have people reviewing it.
 
-STAT_DIRTY, STAT_WRITEBACK ? do you have better name ?
+But if possible, I believe that merging this part first would help us to
+split up testing in a beneficial way, in the sense that if it breaks, we
+know at least in which part it is. Not to mention, of course, that
+reviewers will have an easier time reviewing it as two pieces.
 
-Thanks,
--Kame
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
