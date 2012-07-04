@@ -1,79 +1,299 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 4/7] Use vfs __set_page_dirty interface instead of doing
- it inside filesystem
-Date: Wed, 4 Jul 2012 16:27:24 +0200
-Message-ID: <20120704142724.GK29842@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 5/7] memcg: add per cgroup dirty pages accounting
+Date: Wed, 4 Jul 2012 18:11:44 +0200
+Message-ID: <20120704161144.GL29842@tiehlicka.suse.cz>
 References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
- <1340881423-5703-1-git-send-email-handai.szj@taobao.com>
+ <1340881486-5770-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1340881423-5703-1-git-send-email-handai.szj@taobao.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+In-Reply-To: <1340881486-5770-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, sage@newdream.net, ceph-devel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 28-06-12 19:03:43, Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
+I guess you should CC vfs people
+
+On Thu 28-06-12 19:04:46, Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > 
-> Following we will treat SetPageDirty and dirty page accounting as an integrated
-> operation. Filesystems had better use vfs interface directly to avoid those details.
+> This patch adds memcg routines to count dirty pages, which allows memory controller
+> to maintain an accurate view of the amount of its dirty memory and can provide some
+> info for users while group's direct reclaim is working.
 > 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> After Kame's commit 89c06bd5(memcg: use new logic for page stat accounting), we can
+> use 'struct page' flag to test page state instead of per page_cgroup flag. But memcg
+> has a feature to move a page from a cgroup to another one and may have race between
+> "move" and "page stat accounting". So in order to avoid the race we have designed a
+> bigger lock:
+> 
+>          mem_cgroup_begin_update_page_stat()
+>          modify page information	-->(a)
+>          mem_cgroup_update_page_stat()  -->(b)
+>          mem_cgroup_end_update_page_stat()
+> 
+> It requires (a) and (b)(dirty pages accounting) can stay close enough.
+> 
+> In the previous two prepare patches, we have reworked the vfs set page dirty routines
+> and now the interfaces are more explicit:
+> 	incrementing (2):
+> 		__set_page_dirty
+> 		__set_page_dirty_nobuffers
+> 	decrementing (2):
+> 		clear_page_dirty_for_io
+> 		cancel_dirty_page
+
+The patch seems correct at first glance (I have to look closer but I am
+in rush at the momemnt and will be back next week).
+
+I was just thinking that memcg is enabled by most distributions these
+days but not that many people use it. So it would be probably good to
+think how to reduce an overhead if !mem_cgroup_disabled && no cgroups.
+
+Something similar Glauber did for the kmem accounting.
+
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > ---
->  fs/buffer.c                 |    2 +-
->  fs/ceph/addr.c              |   20 ++------------------
->  include/linux/buffer_head.h |    2 ++
->  3 files changed, 5 insertions(+), 19 deletions(-)
+>  fs/buffer.c                |   17 ++++++++++++++---
+>  include/linux/memcontrol.h |    1 +
+>  mm/filemap.c               |    5 +++++
+>  mm/memcontrol.c            |   28 +++++++++++++++++++++-------
+>  mm/page-writeback.c        |   30 ++++++++++++++++++++++++------
+>  mm/truncate.c              |    6 ++++++
+>  6 files changed, 71 insertions(+), 16 deletions(-)
 > 
 > diff --git a/fs/buffer.c b/fs/buffer.c
-> index e8d96b8..55522dd 100644
+> index 55522dd..d3714cc 100644
 > --- a/fs/buffer.c
 > +++ b/fs/buffer.c
-> @@ -610,7 +610,7 @@ EXPORT_SYMBOL(mark_buffer_dirty_inode);
->   * If warn is true, then emit a warning if the page is not uptodate and has
->   * not been truncated.
->   */
-> -static int __set_page_dirty(struct page *page,
-> +int __set_page_dirty(struct page *page,
+> @@ -613,11 +613,19 @@ EXPORT_SYMBOL(mark_buffer_dirty_inode);
+>  int __set_page_dirty(struct page *page,
 >  		struct address_space *mapping, int warn)
 >  {
+> +	bool locked;
+> +	unsigned long flags;
+> +	int ret = 0;
+> +
 >  	if (unlikely(!mapping))
-> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-> index 8b67304..d028fbe 100644
-> --- a/fs/ceph/addr.c
-> +++ b/fs/ceph/addr.c
-> @@ -5,6 +5,7 @@
->  #include <linux/mm.h>
->  #include <linux/pagemap.h>
->  #include <linux/writeback.h>	/* generic_writepages */
-> +#include <linux/buffer_head.h>
->  #include <linux/slab.h>
->  #include <linux/pagevec.h>
->  #include <linux/task_io_accounting_ops.h>
-> @@ -73,14 +74,8 @@ static int ceph_set_page_dirty(struct page *page)
->  	int undo = 0;
->  	struct ceph_snap_context *snapc;
+>  		return !TestSetPageDirty(page);
 >  
-> -	if (unlikely(!mapping))
-> -		return !TestSetPageDirty(page);
-> -
-> -	if (TestSetPageDirty(page)) {
-> -		dout("%p set_page_dirty %p idx %lu -- already dirty\n",
-> -		     mapping->host, page, page->index);
-
-I am not familiar with the code but this looks we loose an information
-about something bad(?) is going on?
-
-> +	if (!__set_page_dirty(page, mapping, 1))
->  		return 0;
+> -	if (TestSetPageDirty(page))
+> -		return 0;
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+> +
+> +	if (TestSetPageDirty(page)) {
+> +		ret = 0;
+> +		goto out;
+> +	}
+>  
+>  	spin_lock_irq(&mapping->tree_lock);
+>  	if (page->mapping) {	/* Race with truncate? */
+> @@ -629,7 +637,10 @@ int __set_page_dirty(struct page *page,
+>  	spin_unlock_irq(&mapping->tree_lock);
+>  	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+>  
+> -	return 1;
+> +	ret = 1;
+> +out:
+> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+> +	return ret;
+>  }
+>  
+>  /*
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 20b0f2d..ad37b59 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -38,6 +38,7 @@ enum mem_cgroup_stat_index {
+>  	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
+>  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+>  	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
+> +	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
+>  	MEM_CGROUP_STAT_NSTATS,
+>  };
+>  
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 1f19ec3..5159a49 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -140,6 +140,11 @@ void __delete_from_page_cache(struct page *page)
+>  	 * having removed the page entirely.
+>  	 */
+>  	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
+> +		/*
+> +		 * Do not change page state, so no need to use mem_cgroup_
+> +		 * {begin, end}_update_page_stat to get lock.
+> +		 */
+> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
+>  		dec_zone_page_state(page, NR_FILE_DIRTY);
+>  		dec_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
+>  	}
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ebed1ca..90e2946 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -82,6 +82,7 @@ static const char * const mem_cgroup_stat_names[] = {
+>  	"rss",
+>  	"mapped_file",
+>  	"swap",
+> +	"dirty",
+>  };
+>  
+>  enum mem_cgroup_events_index {
+> @@ -2538,6 +2539,18 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+>  }
+>  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+>  
+> +static inline
+> +void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
+> +					struct mem_cgroup *to,
+> +					enum mem_cgroup_stat_index idx)
+> +{
+> +	/* Update stat data for mem_cgroup */
+> +	preempt_disable();
+> +	__this_cpu_dec(from->stat->count[idx]);
+> +	__this_cpu_inc(to->stat->count[idx]);
+> +	preempt_enable();
+> +}
+> +
+>  /**
+>   * mem_cgroup_move_account - move account of the page
+>   * @page: the page
+> @@ -2583,13 +2596,14 @@ static int mem_cgroup_move_account(struct page *page,
+>  
+>  	move_lock_mem_cgroup(from, &flags);
+>  
+> -	if (!anon && page_mapped(page)) {
+> -		/* Update mapped_file data for mem_cgroup */
+> -		preempt_disable();
+> -		__this_cpu_dec(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
+> -		__this_cpu_inc(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
+> -		preempt_enable();
 > -	}
+> +	if (!anon && page_mapped(page))
+> +		mem_cgroup_move_account_page_stat(from, to,
+> +				MEM_CGROUP_STAT_FILE_MAPPED);
+> +
+> +	if (PageDirty(page))
+> +		mem_cgroup_move_account_page_stat(from, to,
+> +				MEM_CGROUP_STAT_FILE_DIRTY);
+> +
+>  	mem_cgroup_charge_statistics(from, anon, -nr_pages);
 >  
->  	inode = mapping->host;
->  	ci = ceph_inode(inode);
+>  	/* caller should have done css_get */
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index e5363f3..e79a2f7 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -1962,6 +1962,7 @@ int __set_page_dirty_no_writeback(struct page *page)
+>  void account_page_dirtied(struct page *page, struct address_space *mapping)
+>  {
+>  	if (mapping_cap_account_dirty(mapping)) {
+> +		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
+>  		__inc_zone_page_state(page, NR_FILE_DIRTY);
+>  		__inc_zone_page_state(page, NR_DIRTIED);
+>  		__inc_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
+> @@ -2001,12 +2002,20 @@ EXPORT_SYMBOL(account_page_writeback);
+>   */
+>  int __set_page_dirty_nobuffers(struct page *page)
+>  {
+> +	bool locked;
+> +	unsigned long flags;
+> +	int ret = 0;
+> +
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+> +
+>  	if (!TestSetPageDirty(page)) {
+>  		struct address_space *mapping = page_mapping(page);
+>  		struct address_space *mapping2;
+>  
+> -		if (!mapping)
+> -			return 1;
+> +		if (!mapping) {
+> +			ret = 1;
+> +			goto out;
+> +		}
+>  
+>  		spin_lock_irq(&mapping->tree_lock);
+>  		mapping2 = page_mapping(page);
+> @@ -2022,9 +2031,12 @@ int __set_page_dirty_nobuffers(struct page *page)
+>  			/* !PageAnon && !swapper_space */
+>  			__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+>  		}
+> -		return 1;
+> +		ret = 1;
+>  	}
+> -	return 0;
+> +
+> +out:
+> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(__set_page_dirty_nobuffers);
+>  
+> @@ -2139,6 +2151,9 @@ EXPORT_SYMBOL(set_page_dirty_lock);
+>  int clear_page_dirty_for_io(struct page *page)
+>  {
+>  	struct address_space *mapping = page_mapping(page);
+> +	bool locked;
+> +	unsigned long flags;
+> +	int ret = 0;
+>  
+>  	BUG_ON(!PageLocked(page));
+>  
+> @@ -2180,13 +2195,16 @@ int clear_page_dirty_for_io(struct page *page)
+>  		 * the desired exclusion. See mm/memory.c:do_wp_page()
+>  		 * for more comments.
+>  		 */
+> +		mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>  		if (TestClearPageDirty(page)) {
+> +			mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
+>  			dec_zone_page_state(page, NR_FILE_DIRTY);
+>  			dec_bdi_stat(mapping->backing_dev_info,
+>  					BDI_RECLAIMABLE);
+> -			return 1;
+> +			ret = 1;
+>  		}
+> -		return 0;
+> +		mem_cgroup_end_update_page_stat(page, &locked, &flags);
+> +		return ret;
+>  	}
+>  	return TestClearPageDirty(page);
+>  }
+> diff --git a/mm/truncate.c b/mm/truncate.c
+> index 75801ac..052016a 100644
+> --- a/mm/truncate.c
+> +++ b/mm/truncate.c
+> @@ -73,9 +73,14 @@ static inline void truncate_partial_page(struct page *page, unsigned partial)
+>   */
+>  void cancel_dirty_page(struct page *page, unsigned int account_size)
+>  {
+> +	bool locked;
+> +	unsigned long flags;
+> +
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>  	if (TestClearPageDirty(page)) {
+>  		struct address_space *mapping = page->mapping;
+>  		if (mapping && mapping_cap_account_dirty(mapping)) {
+> +			mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
+>  			dec_zone_page_state(page, NR_FILE_DIRTY);
+>  			dec_bdi_stat(mapping->backing_dev_info,
+>  					BDI_RECLAIMABLE);
+> @@ -83,6 +88,7 @@ void cancel_dirty_page(struct page *page, unsigned int account_size)
+>  				task_io_account_cancelled_write(account_size);
+>  		}
+>  	}
+> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>  }
+>  EXPORT_SYMBOL(cancel_dirty_page);
+>  
+> -- 
+> 1.7.1
+> 
+
 -- 
 Michal Hocko
 SUSE Labs
