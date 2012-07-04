@@ -1,42 +1,212 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix dentry still in use bug when dropping css
- refs after umount
-Date: Wed, 4 Jul 2012 14:19:15 +0800
-Message-ID: <4FF3E063.5010604@huawei.com>
-References: <4FEEA5CB.8070809@huawei.com> <20120703170317.GB555@google.com> <20120703225218.GF555@google.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH 4/7] Use vfs __set_page_dirty interface instead of doing
+ it inside filesystem
+Date: Wed, 04 Jul 2012 16:11:48 +0800
+Message-ID: <4FF3FAC4.1000005@gmail.com>
+References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com> <1340881423-5703-1-git-send-email-handai.szj@taobao.com> <Pine.LNX.4.64.1206282218260.18049@cobra.newdream.net> <4FF15782.5090807@gmail.com> <Pine.LNX.4.64.1207020745180.23342@cobra.newdream.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120703225218.GF555-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=C0HrjOy8hmrOGRzEoesuJUMERIIYnOcMg3kmI/Lj8R0=;
+        b=Xna40FKo74878/pHlpgaa16tvMt5fLpn6+7dTfUtpOW7BfbJpasqkgAUSb8OlQRHJJ
+         pxoGO5Dkx5qxnO3BxUdizLFPnNt/B+kgMNasYALaU9YkUmTonZn3a0kx8EScm3Vjcda7
+         PT9Uc+Setd92n8HXvtrrvsdIfHpsL1ifJ/nZv95U14RKsJeNzeeJWG/ZSkUa/jwf2a/F
+         pDrX2cnra0bsloPlxA5Fc90o/gB94R0/Dgt9U5gTyxilHUvYKZYPQ2a1Ln4vtZ5ZsSya
+         GxBskPPTEHI4XsE5c9l9n8N2T9aQPVmnpb1fPKYM5APJxkuzL1QI4fRAqcq3dohOnGf2
+         zJyg==
+In-Reply-To: <Pine.LNX.4.64.1207020745180.23342@cobra.newdream.net>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Sage Weil <sage@inktank.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, sage@newdream.net, ceph-devel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
 
-On 2012/7/4 6:52, Tejun Heo wrote:
+On 07/02/2012 10:49 PM, Sage Weil wrote:
+> On Mon, 2 Jul 2012, Sha Zhengju wrote:
+>> On 06/29/2012 01:21 PM, Sage Weil wrote:
+>>> On Thu, 28 Jun 2012, Sha Zhengju wrote:
+>>>
+>>>> From: Sha Zhengju<handai.szj@taobao.com>
+>>>>
+>>>> Following we will treat SetPageDirty and dirty page accounting as an
+>>>> integrated
+>>>> operation. Filesystems had better use vfs interface directly to avoid
+>>>> those details.
+>>>>
+>>>> Signed-off-by: Sha Zhengju<handai.szj@taobao.com>
+>>>> ---
+>>>>    fs/buffer.c                 |    2 +-
+>>>>    fs/ceph/addr.c              |   20 ++------------------
+>>>>    include/linux/buffer_head.h |    2 ++
+>>>>    3 files changed, 5 insertions(+), 19 deletions(-)
+>>>>
+>>>> diff --git a/fs/buffer.c b/fs/buffer.c
+>>>> index e8d96b8..55522dd 100644
+>>>> --- a/fs/buffer.c
+>>>> +++ b/fs/buffer.c
+>>>> @@ -610,7 +610,7 @@ EXPORT_SYMBOL(mark_buffer_dirty_inode);
+>>>>     * If warn is true, then emit a warning if the page is not uptodate and
+>>>> has
+>>>>     * not been truncated.
+>>>>     */
+>>>> -static int __set_page_dirty(struct page *page,
+>>>> +int __set_page_dirty(struct page *page,
+>>>>    		struct address_space *mapping, int warn)
+>>>>    {
+>>>>    	if (unlikely(!mapping))
+>>> This also needs an EXPORT_SYMBOL(__set_page_dirty) to allow ceph to
+>>> continue to build as a module.
+>>>
+>>> With that fixed, the ceph bits are a welcome cleanup!
+>>>
+>>> Acked-by: Sage Weil<sage@inktank.com>
+>> Further, I check the path again and may it be reworked as follows to avoid
+>> undo?
+>>
+>> __set_page_dirty();
+>> __set_page_dirty();
+>> ceph operations;                ==>                     if (page->mapping)
+>> if (page->mapping)                                            ceph operations;
+>>      ;
+>> else
+>>      undo = 1;
+>> if (undo)
+>>      xxx;
+> Yep.  Taking another look at the original code, though, I'm worried that
+> one reason the __set_page_dirty() actions were spread out the way they are
+> is because we wanted to ensure that the ceph operations were always
+> performed when PagePrivate was set.
+>
 
-> Hello,
-> 
-> Shyju, can you please test the following patch?
-> 
-> Sasha, can you please re-test your test case with this patch?  I don't
-> think fa980ca87d "cgroup: superblock can't be released with active
-> dentries" did anything useful.  cgroup always calls d_iput() and
-> d_release() in succession from the same context.  It may just have
-> stretched the timing a bit to hide the race.
-> 
-> Li, this patch reverts fa980ca87d and wraps dput() in css_dput_fn()
-> with s_active refs.  Positive dentry ref means that we have active ref
-> on sb, so wrapping the final dput() with extra s_active ref should
-> avoid premature super destruction. 
+Sorry, I've lost something:
+
+__set_page_dirty();                        __set_page_dirty();
+ceph operations;
+if(page->mapping)         ==>      if(page->mapping) {
+        SetPagePrivate;                            SetPagePrivate;
+else                                                      ceph operations;
+     undo = 1;                                  }
+
+if (undo)
+     XXX;
+
+I think this can ensure that ceph operations are performed together with
+SetPagePrivate.
+
+> It looks like invalidatepage won't get called if private isn't set, and
+> presumably it handles the truncate race with __set_page_dirty() properly
+> (right?).  What about writeback?  Do we need to worry about writepage[s]
+> getting called with a NULL page->private?
+
+__set_page_dirty does handle racing conditions with truncate and
+writeback writepage[s] also take page->private into consideration
+which is done inside specific filesystems. I notice that ceph has handled
+this in ceph_writepage().
+Sorry, not vfs expert and maybe I've not caught your point...
 
 
-> I think we're horridly broken for
+Thanks,
+Sha
 
-> root cgroup tho - and it has been broken for very long time.  I think
-> it's mostly hidden because most (all?) controllers short-circuit root
-> cgroup.  Eh, well....
-> 
+> Thanks!
+> sage
+>
+>
+>
+>>
+>>
+>> Thanks,
+>> Sha
+>>
+>>>> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
+>>>> index 8b67304..d028fbe 100644
+>>>> --- a/fs/ceph/addr.c
+>>>> +++ b/fs/ceph/addr.c
+>>>> @@ -5,6 +5,7 @@
+>>>>    #include<linux/mm.h>
+>>>>    #include<linux/pagemap.h>
+>>>>    #include<linux/writeback.h>	/* generic_writepages */
+>>>> +#include<linux/buffer_head.h>
+>>>>    #include<linux/slab.h>
+>>>>    #include<linux/pagevec.h>
+>>>>    #include<linux/task_io_accounting_ops.h>
+>>>> @@ -73,14 +74,8 @@ static int ceph_set_page_dirty(struct page *page)
+>>>>    	int undo = 0;
+>>>>    	struct ceph_snap_context *snapc;
+>>>>
+>>>> -	if (unlikely(!mapping))
+>>>> -		return !TestSetPageDirty(page);
+>>>> -
+>>>> -	if (TestSetPageDirty(page)) {
+>>>> -		dout("%p set_page_dirty %p idx %lu -- already dirty\n",
+>>>> -		     mapping->host, page, page->index);
+>>>> +	if (!__set_page_dirty(page, mapping, 1))
+>>>>    		return 0;
+>>>> -	}
+>>>>
+>>>>    	inode = mapping->host;
+>>>>    	ci = ceph_inode(inode);
+>>>> @@ -107,14 +102,7 @@ static int ceph_set_page_dirty(struct page *page)
+>>>>    	     snapc, snapc->seq, snapc->num_snaps);
+>>>>    	spin_unlock(&ci->i_ceph_lock);
+>>>>
+>>>> -	/* now adjust page */
+>>>> -	spin_lock_irq(&mapping->tree_lock);
+>>>>    	if (page->mapping) {	/* Race with truncate? */
+>>>> -		WARN_ON_ONCE(!PageUptodate(page));
+>>>> -		account_page_dirtied(page, page->mapping);
+>>>> -		radix_tree_tag_set(&mapping->page_tree,
+>>>> -				page_index(page), PAGECACHE_TAG_DIRTY);
+>>>> -
+>>>>    		/*
+>>>>    		 * Reference snap context in page->private.  Also set
+>>>>    		 * PagePrivate so that we get invalidatepage callback.
+>>>> @@ -126,14 +114,10 @@ static int ceph_set_page_dirty(struct page *page)
+>>>>    		undo = 1;
+>>>>    	}
+>>>>
+>>>> -	spin_unlock_irq(&mapping->tree_lock);
+>>>> -
+>>>>    	if (undo)
+>>>>    		/* whoops, we failed to dirty the page */
+>>>>    		ceph_put_wrbuffer_cap_refs(ci, 1, snapc);
+>>>>
+>>>> -	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+>>>> -
+>>>>    	BUG_ON(!PageDirty(page));
+>>>>    	return 1;
+>>>>    }
+>>>> diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+>>>> index 458f497..0a331a8 100644
+>>>> --- a/include/linux/buffer_head.h
+>>>> +++ b/include/linux/buffer_head.h
+>>>> @@ -336,6 +336,8 @@ static inline void lock_buffer(struct buffer_head *bh)
+>>>>    }
+>>>>
+>>>>    extern int __set_page_dirty_buffers(struct page *page);
+>>>> +extern int __set_page_dirty(struct page *page,
+>>>> +		struct address_space *mapping, int warn);
+>>>>
+>>>>    #else /* CONFIG_BLOCK */
+>>>>
+>>>> -- 
+>>>> 1.7.1
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel"
+>>>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>>
+>>
 
-Could you elaborate a bit on what's broken for root cgroup?
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
