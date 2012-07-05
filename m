@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 03/11] mm: shmem: do not try to uncharge known swapcache pages
-Date: Thu,  5 Jul 2012 02:44:55 +0200
-Message-ID: <1341449103-1986-4-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 06/11] mm: memcg: move swapin charge functions above callsites
+Date: Thu,  5 Jul 2012 02:44:58 +0200
+Message-ID: <1341449103-1986-7-git-send-email-hannes@cmpxchg.org>
 References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
@@ -13,48 +13,110 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Once charged, swapcache pages can only be uncharged after they are
-removed from swapcache again.
-
-Do not try to uncharge pages that are known to be in the swapcache, to
-allow future patches to remove checks for that in the uncharge code.
+Charging cache pages may require swapin in the shmem case.  Save the
+forward declaration and just move the swapin functions above the cache
+charging functions.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/shmem.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+ mm/memcontrol.c |   68 +++++++++++++++++++++++++-----------------------------
+ 1 files changed, 32 insertions(+), 36 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index ee1c5a2..d12b705 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -302,8 +302,6 @@ static int shmem_add_to_page_cache(struct page *page,
- 		if (!expected)
- 			radix_tree_preload_end();
- 	}
--	if (error)
--		mem_cgroup_uncharge_cache_page(page);
- 	return error;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3d56b4e..4a41b55 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2729,37 +2729,6 @@ int mem_cgroup_newpage_charge(struct page *page,
+ 					MEM_CGROUP_CHARGE_TYPE_ANON);
  }
  
-@@ -1184,11 +1182,14 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 		__set_page_locked(page);
- 		error = mem_cgroup_cache_charge(page, current->mm,
- 						gfp & GFP_RECLAIM_MASK);
--		if (!error)
--			error = shmem_add_to_page_cache(page, mapping, index,
--						gfp, NULL);
- 		if (error)
- 			goto decused;
-+		error = shmem_add_to_page_cache(page, mapping, index,
-+						gfp, NULL);
-+		if (error) {
-+			mem_cgroup_uncharge_cache_page(page);
-+			goto decused;
-+		}
- 		lru_cache_add_anon(page);
+-static void
+-__mem_cgroup_commit_charge_swapin(struct page *page, struct mem_cgroup *ptr,
+-					enum charge_type ctype);
+-
+-int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
+-				gfp_t gfp_mask)
+-{
+-	struct mem_cgroup *memcg = NULL;
+-	enum charge_type type = MEM_CGROUP_CHARGE_TYPE_CACHE;
+-	int ret;
+-
+-	if (mem_cgroup_disabled())
+-		return 0;
+-	if (PageCompound(page))
+-		return 0;
+-
+-	if (unlikely(!mm))
+-		mm = &init_mm;
+-	if (!page_is_file_cache(page))
+-		type = MEM_CGROUP_CHARGE_TYPE_SHMEM;
+-
+-	if (!PageSwapCache(page))
+-		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
+-	else { /* page is swapcache/shmem */
+-		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
+-		if (!ret)
+-			__mem_cgroup_commit_charge_swapin(page, memcg, type);
+-	}
+-	return ret;
+-}
+-
+ /*
+  * While swap-in, try_charge -> commit or cancel, the page is locked.
+  * And when try_charge() successfully returns, one refcnt to memcg without
+@@ -2806,6 +2775,15 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+ 	return ret;
+ }
  
- 		spin_lock(&info->lock);
++void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg)
++{
++	if (mem_cgroup_disabled())
++		return;
++	if (!memcg)
++		return;
++	__mem_cgroup_cancel_charge(memcg, 1);
++}
++
+ static void
+ __mem_cgroup_commit_charge_swapin(struct page *page, struct mem_cgroup *memcg,
+ 					enum charge_type ctype)
+@@ -2843,13 +2821,31 @@ void mem_cgroup_commit_charge_swapin(struct page *page,
+ 					  MEM_CGROUP_CHARGE_TYPE_ANON);
+ }
+ 
+-void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg)
++int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
++				gfp_t gfp_mask)
+ {
++	struct mem_cgroup *memcg = NULL;
++	enum charge_type type = MEM_CGROUP_CHARGE_TYPE_CACHE;
++	int ret;
++
+ 	if (mem_cgroup_disabled())
+-		return;
+-	if (!memcg)
+-		return;
+-	__mem_cgroup_cancel_charge(memcg, 1);
++		return 0;
++	if (PageCompound(page))
++		return 0;
++
++	if (unlikely(!mm))
++		mm = &init_mm;
++	if (!page_is_file_cache(page))
++		type = MEM_CGROUP_CHARGE_TYPE_SHMEM;
++
++	if (!PageSwapCache(page))
++		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
++	else { /* page is swapcache/shmem */
++		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
++		if (!ret)
++			__mem_cgroup_commit_charge_swapin(page, memcg, type);
++	}
++	return ret;
+ }
+ 
+ static void mem_cgroup_do_uncharge(struct mem_cgroup *memcg,
 -- 
 1.7.7.6
 
