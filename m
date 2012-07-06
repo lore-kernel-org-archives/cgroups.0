@@ -1,18 +1,18 @@
 From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: [PATCH] mm/memcg: add BUG() to mem_cgroup_reset
-Date: Fri,  6 Jul 2012 11:44:57 +0800
-Message-ID: <1341546297-6223-1-git-send-email-liwp.linux@gmail.com>
+Subject: [PATCH] mm/memcg: swappiness should between 0 and 100
+Date: Fri,  6 Jul 2012 12:51:52 +0800
+Message-ID: <1341550312-6815-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=fdw6PmMyDltchoAoJJwk3bwfLSHMd++8asW1RQ9aABM=;
-        b=izMWzGOg/2VkHSMhewqTT2VMMII4pj8e8S9x7BUC9HDSy6+0svyU+wZIhKTayS+v/I
-         o5u1ImwfyJDL28iuC8pHxSspaMWoUxmNXn4pj+fz2I/+FcFZLTWwLSZPS0eYc/LYlIBA
-         VHgMw5t3w0IKfhgYJYvET4Hz8dFRllf4BK1xwyLlJQU4KUMm32oFNMeByrtYtbWJkFhr
-         VHAuTCKdwzWdRvW40ctpPUnw4dBMtzb5gsZZV2Awekoi9oRRDUUHgJ75DY9cnPPVlJcB
-         9M/bMw7eXnnEgGX3RUc7lDj8sfuFWnumWji8WDHsX9NOuYV9tnmC92OBnuSDVi+x3Sqb
-         n4Ng==
+        bh=AkwTclw8GnJUtH1YeFsqPty7/21gwZoRLsvuK1dfkik=;
+        b=ea0vqoUC5s5hXZKV2efj6FBDAiupRnD9rkHGIkzFkO1bOdWw8O1gXfaG8nw2PfT7FO
+         89q5zOh53L8r7DIDiX7bcbKJJxla2tQ6g6X2vxPqTv0VC8LTssTkPET+D2AaW/txjpYx
+         l8UtV0hBAyTXncNsRKYrXRIrOQjWhKi/AfWaISyJLlDdBHxUxSpHM7Yy+oOH99/gDJPC
+         JUWRmoBdhYShV9gmOgFUP/DjGHhiUES+JcmyZeYHKvCdQqYyPNjHpLRZ7gEsFRFB7k4K
+         PgAU2/8t7rG/3NOIFc/GZkjovcDf6vH9G8usfqpdn2UxW3LL6xRqhEOKoAAkvI0G9en8
+         neMQ==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -23,26 +23,24 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAW
 
 From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Branch in mem_cgroup_reset only can be RES_MAX_USAGE, RES_FAILCNT.
-
 Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
 ---
- mm/memcontrol.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ mm/memcontrol.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a501660..5e4d1ab 100644
+index 5e4d1ab..69a7d45 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3976,6 +3976,8 @@ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
- 		else
- 			res_counter_reset_failcnt(&memcg->memsw);
- 		break;
-+	default:
-+		BUG();
- 	}
+@@ -4176,7 +4176,7 @@ static int mem_cgroup_swappiness_write(struct cgroup *cgrp, struct cftype *cft,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup *parent;
  
- 	return 0;
+-	if (val > 100)
++	if (val > 100 || val < 0)
+ 		return -EINVAL;
+ 
+ 	if (cgrp->parent == NULL)
 -- 
 1.7.5.4
 
