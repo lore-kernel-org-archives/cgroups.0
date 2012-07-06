@@ -1,59 +1,53 @@
-From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2] mm/memcg: mem_cgroup_resize_xxx_limit can guarantee memcg->res.limit <= memcg->memsw.limit
-Date: Fri,  6 Jul 2012 11:24:15 +0800
-Message-ID: <1341545055-5830-1-git-send-email-liwp.linux@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Wanpeng Li <liwp.linux@gmail.com>
+Subject: [PATCH] mm/memcg: add BUG() to mem_cgroup_reset
+Date: Fri,  6 Jul 2012 11:44:57 +0800
+Message-ID: <1341546297-6223-1-git-send-email-liwp.linux@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=r04RqSlgWX97CJFkBgtRPr06dCtpWXxydAZZTIDn7kI=;
-        b=foj+ysW6m+yqh/BqCfM72ei5hcE3SnRjeq+XnzWbTotn5iwX8d/3NsH56k1wb4oHVN
-         7oV5/bRub075Od42IfrePg3ftbRco/UKnBrhNBdBX9kdAT1q5o7iyp9voPU3CI9ZzL+x
-         WmQnhNtggjrTrmrOG/zh0Hh289l6+jyjuX4A8vjLLMCZ1QpNeZbQAP+UvInEYgvZ2a3d
-         U86RrT9Lwur/4WK0/aXKu5A7NVyGGlaOi7ZAiVhF0k7PnHO64yBAUjXQnCFnmhzWhrKo
-         bhEfW5qztabkUTP9jjS0zFHOVcqUczEW8olCcEyNPyZbYEfcYO0SUyqRdI85Pixc6koo
-         sP0Q==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=fdw6PmMyDltchoAoJJwk3bwfLSHMd++8asW1RQ9aABM=;
+        b=izMWzGOg/2VkHSMhewqTT2VMMII4pj8e8S9x7BUC9HDSy6+0svyU+wZIhKTayS+v/I
+         o5u1ImwfyJDL28iuC8pHxSspaMWoUxmNXn4pj+fz2I/+FcFZLTWwLSZPS0eYc/LYlIBA
+         VHgMw5t3w0IKfhgYJYvET4Hz8dFRllf4BK1xwyLlJQU4KUMm32oFNMeByrtYtbWJkFhr
+         VHAuTCKdwzWdRvW40ctpPUnw4dBMtzb5gsZZV2Awekoi9oRRDUUHgJ75DY9cnPPVlJcB
+         9M/bMw7eXnnEgGX3RUc7lDj8sfuFWnumWji8WDHsX9NOuYV9tnmC92OBnuSDVi+x3Sqb
+         n4Ng==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
 
-From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Changlog:
+Branch in mem_cgroup_reset only can be RES_MAX_USAGE, RES_FAILCNT.
 
-V2:
-* correct title 
-
-Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
 ---
- mm/memcontrol.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ mm/memcontrol.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4b64fe0..a501660 100644
+index a501660..5e4d1ab 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3418,7 +3418,7 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
- 		/*
- 		 * Rather than hide all in some function, I do this in
- 		 * open coded manner. You see what this really does.
--		 * We have to guarantee memcg->res.limit < memcg->memsw.limit.
-+		 * We have to guarantee memcg->res.limit <= memcg->memsw.limit.
- 		 */
- 		mutex_lock(&set_limit_mutex);
- 		memswlimit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
-@@ -3479,7 +3479,7 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
- 		/*
- 		 * Rather than hide all in some function, I do this in
- 		 * open coded manner. You see what this really does.
--		 * We have to guarantee memcg->res.limit < memcg->memsw.limit.
-+		 * We have to guarantee memcg->res.limit <= memcg->memsw.limit.
- 		 */
- 		mutex_lock(&set_limit_mutex);
- 		memlimit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+@@ -3976,6 +3976,8 @@ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+ 		else
+ 			res_counter_reset_failcnt(&memcg->memsw);
+ 		break;
++	default:
++		BUG();
+ 	}
+ 
+ 	return 0;
 -- 
 1.7.5.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
