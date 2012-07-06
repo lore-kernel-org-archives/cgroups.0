@@ -1,53 +1,48 @@
 From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: Re: [PATCH] mm/memcg: add BUG() to mem_cgroup_reset
-Date: Fri, 6 Jul 2012 16:44:15 +0800
-Message-ID: <20120706084415.GB9319@kernel>
-References: <1341546297-6223-1-git-send-email-liwp.linux@gmail.com>
- <20120706082242.GA1230@cmpxchg.org>
-Reply-To: Wanpeng Li <liwp.linux@gmail.com>
-Mime-Version: 1.0
+Subject: [PATCH] mm/memcg: complete documentation for tcp memcg files
+Date: Fri,  6 Jul 2012 17:15:48 +0800
+Message-ID: <1341566148-10198-1-git-send-email-liwp.linux@gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=oLDndfmynmxOXFiG56AiMBYKaob9VgxKZMstDTE5tI8=;
-        b=PW2L221psA/vuy7Fu0ICdZlEtrmyvO5UMK7qpIpP3FzsUYLoEb+Ki8DFNv3Wv+38ch
-         P0MjybXMMmDntSXzS1eVembM/cagrIp5KTM9lzpz/AK/XwutEb2OABxz3SSHbE3evyZT
-         UjjlOAy6ZDK5FNFXKbPF3LlzbfBzCVfLvIzeB4ukSgk7eX/enbnA9RL6AM67AnQc0HC3
-         IqXwILuVwQXjG4Bc1lJezGw6aiwb4lkINudHBCJiN31KyKZdBGpNXVWjqkRl5fl8tR1y
-         9AcIpPnB33+XIQSEmeoh9yovkXkj2WBnoLiSMwjMd4bpJa0CAFi9bOo64T3yPY9WGFoh
-         bNKQ==
-Content-Disposition: inline
-In-Reply-To: <20120706082242.GA1230@cmpxchg.org>
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=15WDwpktPnJfDcwbbrWyxM+GP9+Eu5PL7TVHGcVP7Gk=;
+        b=j9P/rUqPij2xcHQsvehHG49TWpJhym9+f8HeFfXE9rDkHrNxDOVWLfi4icw6cnesX0
+         Whtuncij+grLWS3IXgcnulamKwSgmJvyfZ9gHxkdaySkS9ky4i936nEqHr4EfYf6pKL0
+         BOnf2zI5GQXxs1oQqLKewQ4QZjhEkNWacBTuX/j6DNpjL1QICZQhWY2kJ06aQ+7l5ICv
+         x1hhDKlbthjqLMzgS9FuR0BfQPc/pY6yOyPu+s/LaiBwZ5aP7ZStElij//oPyByG6t2j
+         l+c0yk25RV9WDN/18w56FicbXatgDIOygjDXhGGcI43QAuZmD8+oDoTDX4kxaOclxwm9
+         bxaA==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
 
-On Fri, Jul 06, 2012 at 10:22:42AM +0200, Johannes Weiner wrote:
->On Fri, Jul 06, 2012 at 11:44:57AM +0800, Wanpeng Li wrote:
->> From: Wanpeng Li <liwp@linux.vnet.ibm.com>
->> 
->> Branch in mem_cgroup_reset only can be RES_MAX_USAGE, RES_FAILCNT.
->
->And nobody is passing anything else.  Which is easy to prove as this
->is a private function.  And there wouldn't even be any harm passing
->something else.  Please don't add stuff like this.
+From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Ok, thank you for your comment.
+Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
+---
+ Documentation/cgroups/memory.txt |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-I also have another two patches, title:
-
-clarify type in memory cgroups
-return -EBUSY when oom-kill-disable modified and memcg use_hierarchy, has children
-
-Hopefully, you can review. Thank you Johannes! :-)
-
-Regards,
-Wanpeng Li 
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index dd88540..b388e4a 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -73,6 +73,8 @@ Brief summary of control files.
+ 
+  memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
+  memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
++ memory.kmem.tcp.failcnt            # show the number of tcp buf memory usage hits limits
++ memory.kmem.tcp.max_usage_in_bytes # show max tcp buf memory usage recorded
+ 
+ 1. History
+ 
+-- 
+1.7.5.4
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
