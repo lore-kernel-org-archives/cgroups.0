@@ -1,86 +1,106 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH 3/7] Make TestSetPageDirty and dirty page accounting in
- one func
-Date: Sat, 7 Jul 2012 22:42:28 +0800
-Message-ID: <20120707144228.GA24329@localhost>
-References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
- <1340881275-5651-1-git-send-email-handai.szj@taobao.com>
- <4FF1827A.7060806@jp.fujitsu.com>
+From: 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 1/2] Revert "cgroup: superblock can't be released with
+ active dentries"
+Date: Sat, 7 Jul 2012 16:46:34 -0700
+Message-ID: <20120707234634.GC16783@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <4FEEA5CB.8070809@huawei.com>
+ <20120703170317.GB555@google.com>
+ <20120703225218.GF555@google.com>
+ <4ff55c60.27da440a.65ec.ffff83dfSMTPIN_ADDED@mx.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=TzhXnhhBlsUVW/K5QRhRwAMivkgZIM0Xklu17hI7lhA=;
+        b=N1uxE2xVBJqMqq6ixI4M7C17PJghrD2pF9QMmlsoLA5KLwFSohvoIwAUOwrnIi402y
+         hylACc+418MTC054IhzH5TRFbJb+5boB5/kBYxwvSw7qncuk58qTVfH8hHqjy77Awsb2
+         USF0qdQzsPSJPaFmTfTuwltZcNNwEz3MV/l1QCn7Zj8ehboxMLAH5rE8q9LRQk621MgQ
+         mSNJRfS7nSMZHnpVV1EAw/JaY9iY3g9heEEIruwknkuFmxz6CoDbx9wAjk3fu7EwX3JL
+         ZAah2nCTssrKqOEHcPJv2A2nTBKaaXFv6XMzXr1uFudOMIpWzjeiqKFsDxqdxQN1oo2b
+         Dy/g==
 Content-Disposition: inline
-In-Reply-To: <4FF1827A.7060806@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <4ff55c60.27da440a.65ec.ffff83dfSMTPIN_ADDED-ATjtLOhZ0NVl57MIdRCFDg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Sha Zhengju <handai.szj@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: Shyju PV <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: 'Li Zefan' <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, 'Sanil kumar' <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, 'Masanari Iida' <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, 'LKML' <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, 'Cgroups' <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, nagamani.mantha-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Mon, Jul 02, 2012 at 08:14:02PM +0900, KAMEZAWA Hiroyuki wrote:
-> (2012/06/28 20:01), Sha Zhengju wrote:
-> > From: Sha Zhengju <handai.szj@taobao.com>
-> > 
-> > Commit a8e7d49a(Fix race in create_empty_buffers() vs __set_page_dirty_buffers())
-> > extracts TestSetPageDirty from __set_page_dirty and is far away from
-> > account_page_dirtied.But it's better to make the two operations in one single
-> > function to keep modular.So in order to avoid the potential race mentioned in
-> > commit a8e7d49a, we can hold private_lock until __set_page_dirty completes.
-> > I guess there's no deadlock between ->private_lock and ->tree_lock by quick look.
-> > 
-> > It's a prepare patch for following memcg dirty page accounting patches.
-> > 
-> > Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> 
-> I think there is no problem with the lock order.
+From 7db5b3ca0ecdb2e8fad52a4770e4e320e61c77a6 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Sat, 7 Jul 2012 15:55:47 -0700
 
-Me think so, too.
+This reverts commit fa980ca87d15bb8a1317853f257a505990f3ffde.  The
+commit was an attempt to fix a race condition where a cgroup hierarchy
+may be unmounted with positive dentry reference on root cgroup.  While
+the commit made the race condition slightly more difficult to trigger,
+the race was still there and could be reliably triggered using a
+different test case.
 
-> My small concern is the impact on the performance. IIUC, lock contention here can be
-> seen if multiple threads write to the same file in parallel.
-> Do you have any numbers before/after the patch ?
+Revert the incorrect fix.  The next commit will describe the race and
+fix it correctly.
 
-That would be a worthwhile test. The patch moves ->tree_lock and
-->i_lock into ->private_lock, these are often contented locks..
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+LKML-Reference: <4FEEA5CB.8070809-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Reported-by: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+Sorry about the delay.  Was on vacation.  Will soon push these two
+patches to Linus.
 
-For example, in the below case of 12 hard disks, each running 1 dd
-write, the ->tree_lock and ->private_lock have the top #1 and #2
-contentions.
+(Shyju, didn't realize I was replying to private reply, resending)
 
-lkp-nex04/JBOD-12HDD-thresh=1000M/ext4-1dd-1-3.3.0/lock_stat
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                              class name    con-bounces    contentions   waittime-min   waittime-max waittime-total    acq-bounces   acquisitions   holdtime-min   holdtime-max holdtime-total
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Thanks.
 
-           &(&mapping->tree_lock)->rlock:      18629034       19138284           0.09        1029.32    24353812.07       49650988      482883410           0.11         186.88   260706119.09
-           -----------------------------
-           &(&mapping->tree_lock)->rlock            783          [<ffffffff81109267>] tag_pages_for_writeback+0x2b/0x9d
-           &(&mapping->tree_lock)->rlock        3195817          [<ffffffff81100d6c>] add_to_page_cache_locked+0xa3/0x119
-           &(&mapping->tree_lock)->rlock        3863710          [<ffffffff81108df7>] test_set_page_writeback+0x63/0x140
-           &(&mapping->tree_lock)->rlock        3311518          [<ffffffff81172ade>] __set_page_dirty+0x25/0xa5
-           -----------------------------
-           &(&mapping->tree_lock)->rlock        3450725          [<ffffffff81100d6c>] add_to_page_cache_locked+0xa3/0x119
-           &(&mapping->tree_lock)->rlock        3225542          [<ffffffff81172ade>] __set_page_dirty+0x25/0xa5
-           &(&mapping->tree_lock)->rlock        2241958          [<ffffffff81108df7>] test_set_page_writeback+0x63/0x140
-           &(&mapping->tree_lock)->rlock        7339603          [<ffffffff8110ac33>] test_clear_page_writeback+0x64/0x155
+ kernel/cgroup.c |   17 +++--------------
+ 1 files changed, 3 insertions(+), 14 deletions(-)
 
-...............................................................................................................................................................................................
-
-        &(&mapping->private_lock)->rlock:       1165199        1191201           0.11        2843.25     1621608.38       13341420      152761848           0.10        3727.92    33559035.07
-        --------------------------------
-        &(&mapping->private_lock)->rlock              1          [<ffffffff81172913>] __find_get_block_slow+0x5a/0x135
-        &(&mapping->private_lock)->rlock         385576          [<ffffffff811735d6>] create_empty_buffers+0x48/0xbf
-        &(&mapping->private_lock)->rlock         805624          [<ffffffff8117346d>] try_to_free_buffers+0x57/0xaa
-        --------------------------------
-        &(&mapping->private_lock)->rlock              1          [<ffffffff811746dd>] __getblk+0x1b8/0x257
-        &(&mapping->private_lock)->rlock         952718          [<ffffffff8117346d>] try_to_free_buffers+0x57/0xaa
-        &(&mapping->private_lock)->rlock         238482          [<ffffffff811735d6>] create_empty_buffers+0x48/0xbf
-
-Thanks,
-Fengguang
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2097684..5f134a0 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -901,13 +901,10 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+ 		mutex_unlock(&cgroup_mutex);
+ 
+ 		/*
+-		 * We want to drop the active superblock reference from the
+-		 * cgroup creation after all the dentry refs are gone -
+-		 * kill_sb gets mighty unhappy otherwise.  Mark
+-		 * dentry->d_fsdata with cgroup_diput() to tell
+-		 * cgroup_d_release() to call deactivate_super().
++		 * Drop the active superblock reference that we took when we
++		 * created the cgroup
+ 		 */
+-		dentry->d_fsdata = cgroup_diput;
++		deactivate_super(cgrp->root->sb);
+ 
+ 		/*
+ 		 * if we're getting rid of the cgroup, refcount should ensure
+@@ -933,13 +930,6 @@ static int cgroup_delete(const struct dentry *d)
+ 	return 1;
+ }
+ 
+-static void cgroup_d_release(struct dentry *dentry)
+-{
+-	/* did cgroup_diput() tell me to deactivate super? */
+-	if (dentry->d_fsdata == cgroup_diput)
+-		deactivate_super(dentry->d_sb);
+-}
+-
+ static void remove_dir(struct dentry *d)
+ {
+ 	struct dentry *parent = dget(d->d_parent);
+@@ -1547,7 +1537,6 @@ static int cgroup_get_rootdir(struct super_block *sb)
+ 	static const struct dentry_operations cgroup_dops = {
+ 		.d_iput = cgroup_diput,
+ 		.d_delete = cgroup_delete,
+-		.d_release = cgroup_d_release,
+ 	};
+ 
+ 	struct inode *inode =
+-- 
+1.7.7.3
