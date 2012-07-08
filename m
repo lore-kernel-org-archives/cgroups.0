@@ -1,64 +1,42 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH 5/7] memcg: add per cgroup dirty pages accounting
-Date: Sun, 8 Jul 2012 22:45:38 +0800
-Message-ID: <20120708144538.GB18272@localhost>
+From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 6/7] memcg: add per cgroup writeback pages accounting
+Date: Sun, 8 Jul 2012 22:53:09 +0800
+Message-ID: <20120708145309.GC18272@localhost>
 References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
- <1340881486-5770-1-git-send-email-handai.szj@taobao.com>
- <4FF289B4.3060706@jp.fujitsu.com>
+ <1340881562-5900-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4FF289B4.3060706@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1340881562-5900-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Sha Zhengju <handai.szj@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, gthelen@google.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Jul 03, 2012 at 02:57:08PM +0900, KAMEZAWA Hiroyuki wrote:
-> (2012/06/28 20:04), Sha Zhengju wrote:
-> > From: Sha Zhengju <handai.szj@taobao.com>
-> > 
-> > This patch adds memcg routines to count dirty pages, which allows memory controller
-> > to maintain an accurate view of the amount of its dirty memory and can provide some
-> > info for users while group's direct reclaim is working.
-> > 
-> > After Kame's commit 89c06bd5(memcg: use new logic for page stat accounting), we can
-> > use 'struct page' flag to test page state instead of per page_cgroup flag. But memcg
-> > has a feature to move a page from a cgroup to another one and may have race between
-> > "move" and "page stat accounting". So in order to avoid the race we have designed a
-> > bigger lock:
-> > 
-> >           mem_cgroup_begin_update_page_stat()
-> >           modify page information	-->(a)
-> >           mem_cgroup_update_page_stat()  -->(b)
-> >           mem_cgroup_end_update_page_stat()
-> > 
-> > It requires (a) and (b)(dirty pages accounting) can stay close enough.
-> > 
-> > In the previous two prepare patches, we have reworked the vfs set page dirty routines
-> > and now the interfaces are more explicit:
-> > 	incrementing (2):
-> > 		__set_page_dirty
-> > 		__set_page_dirty_nobuffers
-> > 	decrementing (2):
-> > 		clear_page_dirty_for_io
-> > 		cancel_dirty_page
-> > 
-> > 
-> > Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> 
-> Thank you. This seems much cleaner than expected ! very good.
-> 
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujtisu.com>
+> @@ -2245,7 +2252,10 @@ int test_set_page_writeback(struct page *page)
+>  {
+>  	struct address_space *mapping = page_mapping(page);
+>  	int ret;
+> +	bool locked;
+> +	unsigned long flags;
+>  
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>  	if (mapping) {
+>  		struct backing_dev_info *bdi = mapping->backing_dev_info;
+>  		unsigned long flags;
+> @@ -2272,6 +2282,8 @@ int test_set_page_writeback(struct page *page)
+>  	}
+>  	if (!ret)
+>  		account_page_writeback(page);
+> +
+> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>  	return ret;
+>  
+>  }
 
-I have the same good feelings :)
+Where is the MEM_CGROUP_STAT_FILE_WRITEBACK increased?
 
-Acked-by: Fengguang Wu <fengguang.wu@intel.com>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+Fengguang
