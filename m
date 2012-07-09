@@ -1,55 +1,77 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [patch 03/11] mm: shmem: do not try to uncharge known swapcache
- pages
-Date: Mon, 9 Jul 2012 13:37:39 -0700 (PDT)
-Message-ID: <alpine.LSU.2.00.1207091311300.1842@eggly.anvils>
-References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-4-git-send-email-hannes@cmpxchg.org> <20120709144657.GF4627@tiehlicka.suse.cz>
+From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/7] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Mon, 09 Jul 2012 14:01:21 -0700
+Message-ID: <xr93ehok1wf2.fsf@gthelen.mtv.corp.google.com>
+References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
+	<1340881111-5576-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=4JbofggH4u4dIvCrWHLrosWp2Ihb6tOZgaeuFguX1OE=;
-        b=NvOPdYFXPeRrQyi8vgGcYTHpULpdVbXVPmkNCH0rxoN1cDHwO+3LUmUHPJrg9uqY7F
-         HPcMtt/kNwXT1rc24zu+TsITdkXcvScXykpuC0MuOVfs1+hrK/CcmbagKB0iwheXIJVk
-         bWaLv4qNdTMhGstNx531vcXFRJqdCxn8Lc/IvZuNBPEdJMk24BkfKub6YQqGvolpo9Hp
-         sxaHTUjvawqVFpATHaZe4/ak+yaC3erdplnO5wqg6JcNoYhvp0TcRzU+Tb+h/kPf/mQf
-         xu2oKKIph3QmDcay8V/DuM0E+DGwzmhJxrt794tz+0kWfumRaIQNpNscgdRqvYcWMIOd
-         nHqA==
-In-Reply-To: <20120709144657.GF4627@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+        h=from:to:cc:subject:references:date:message-id:user-agent
+         :mime-version:content-type;
+        bh=BFlyZiPIjdfXtBUwxw+xYKpSx57CbFTngLgZ1nF1T4k=;
+        b=ZnU9cDIBdqVmvN2y/mWSWpj11rbu88aRBPxaCyZCtQT1s2zcrb9jPay68dbI+IodqE
+         iR0mgdwAWutTNtax9oWl9LSBDoPiqRD+OxJZgTaEU2+NKjlM7qUhua3gI4ayGbJ2yVbd
+         GUGV0tMdxfntudYQisJ1KGjlXeteeXahRkpcqlDuu9atYws1rYFY+VtU1YjGhyEh5XEv
+         MCKrObX1oRS55F7dbjRejRtFvRf0fJxbMZJ/k4nJ8eApxDLfS2GvigTCg5fycdwUSy7c
+         JagqbNewNzQC6oSTAABTHz2q8I3C77LYM/8Lbp6Ac/TqJeNFo8GLImDXW3ohf6tOVnKr
+         SK2w==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, 9 Jul 2012, Michal Hocko wrote:
-> 
-> Maybe I am missing something but who does the uncharge from:
-> shmem_unuse
->   mem_cgroup_cache_charge
->   shmem_unuse_inode
->     shmem_add_to_page_cache
+On Thu, Jun 28 2012, Sha Zhengju wrote:
 
-There isn't any special uncharge for shmem_unuse(): once the swapcache
-page is matched up with its memcg, it will get uncharged by one of the
-usual routes to swapcache_free() when the page is freed: maybe in the
-call from __remove_mapping(), maybe when free_page_and_swap_cache()
-ends up calling it.
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+>
+> While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
+> as an extra layer of indirection because of the complexity and presumed
+> performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+>
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  include/linux/memcontrol.h |   25 +++++++++++++++++--------
+>  mm/memcontrol.c            |   24 +-----------------------
+>  mm/rmap.c                  |    4 ++--
+>  3 files changed, 20 insertions(+), 33 deletions(-)
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 83e7ba9..20b0f2d 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -27,9 +27,18 @@ struct page_cgroup;
+>  struct page;
+>  struct mm_struct;
+>  
+> -/* Stats that can be updated by kernel. */
+> -enum mem_cgroup_page_stat_item {
+> -	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
+> +/*
+> + * Statistics for memory cgroup.
+> + */
+> +enum mem_cgroup_stat_index {
+> +	/*
+> +	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+> +	 */
+> +	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
+> +	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
+> +	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+> +	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
+> +	MEM_CGROUP_STAT_NSTATS,
+>  };
 
-Perhaps you're worrying about error (or unfound) paths in shmem_unuse()?
-By the time we make the charge, we know for sure that it's a shmem page,
-and make the charge appropriately; in racy cases it might get uncharged
-again in the delete_from_swap_cache().  Can the unfound case occur these
-days?  I'd have to think more deeply to answer that, but the charge will
-not go missing.
+Nit.  Moving mem_cgroup_stat_index from memcontrol.c to memcontrol.h is
+fine with me.  But this does increase the distance between related
+defintions of definition mem_cgroup_stat_index and
+mem_cgroup_stat_names.  These two lists have to be kept in sync.  So it
+might help to add a comment to both indicating their relationship so we
+don't accidentally modify the enum without updating the dependent string
+table.
 
-Hugh
+Otherwise, looks good.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
