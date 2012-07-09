@@ -1,130 +1,78 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 06/11] mm: memcg: move swapin charge functions above
- callsites
-Date: Mon, 9 Jul 2012 17:10:30 +0200
-Message-ID: <20120709151029.GI4627@tiehlicka.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 07/11] mm: memcg: remove unneeded shmem charge type
+Date: Mon, 9 Jul 2012 17:17:52 +0200
+Message-ID: <20120709151752.GJ4627@tiehlicka.suse.cz>
 References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
- <1341449103-1986-7-git-send-email-hannes@cmpxchg.org>
+ <1341449103-1986-8-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1341449103-1986-7-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1341449103-1986-8-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 05-07-12 02:44:58, Johannes Weiner wrote:
-> Charging cache pages may require swapin in the shmem case.  Save the
-> forward declaration and just move the swapin functions above the cache
-> charging functions.
+On Thu 05-07-12 02:44:59, Johannes Weiner wrote:
+> shmem page charges have not needed a separate charge type to tell them
+> from regular file pages since 08e552c 'memcg: synchronized LRU'.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-OK
-Acked-by: Michal Hocko <mhocko@suse.cz>
+Yes, MEM_CGROUP_CHARGE_TYPE_SHMEM has been quite confusing.
+
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
 > ---
->  mm/memcontrol.c |   68 +++++++++++++++++++++++++-----------------------------
->  1 files changed, 32 insertions(+), 36 deletions(-)
+>  mm/memcontrol.c |   11 +----------
+>  1 files changed, 1 insertions(+), 10 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 3d56b4e..4a41b55 100644
+> index 4a41b55..418b47d 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -2729,37 +2729,6 @@ int mem_cgroup_newpage_charge(struct page *page,
->  					MEM_CGROUP_CHARGE_TYPE_ANON);
->  }
+> @@ -379,7 +379,6 @@ static bool move_file(void)
+>  enum charge_type {
+>  	MEM_CGROUP_CHARGE_TYPE_CACHE = 0,
+>  	MEM_CGROUP_CHARGE_TYPE_ANON,
+> -	MEM_CGROUP_CHARGE_TYPE_SHMEM,	/* used by page migration of shmem */
+>  	MEM_CGROUP_CHARGE_TYPE_SWAPOUT,	/* for accounting swapcache */
+>  	MEM_CGROUP_CHARGE_TYPE_DROP,	/* a page was unused swap cache */
+>  	NR_CHARGE_TYPE,
+> @@ -2835,8 +2834,6 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
 >  
-> -static void
-> -__mem_cgroup_commit_charge_swapin(struct page *page, struct mem_cgroup *ptr,
-> -					enum charge_type ctype);
-> -
-> -int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
-> -				gfp_t gfp_mask)
-> -{
-> -	struct mem_cgroup *memcg = NULL;
-> -	enum charge_type type = MEM_CGROUP_CHARGE_TYPE_CACHE;
-> -	int ret;
-> -
-> -	if (mem_cgroup_disabled())
-> -		return 0;
-> -	if (PageCompound(page))
-> -		return 0;
-> -
-> -	if (unlikely(!mm))
-> -		mm = &init_mm;
+>  	if (unlikely(!mm))
+>  		mm = &init_mm;
 > -	if (!page_is_file_cache(page))
 > -		type = MEM_CGROUP_CHARGE_TYPE_SHMEM;
+>  
+>  	if (!PageSwapCache(page))
+>  		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
+> @@ -3243,10 +3240,8 @@ void mem_cgroup_prepare_migration(struct page *page, struct page *newpage,
+>  	 */
+>  	if (PageAnon(page))
+>  		ctype = MEM_CGROUP_CHARGE_TYPE_ANON;
+> -	else if (page_is_file_cache(page))
+> -		ctype = MEM_CGROUP_CHARGE_TYPE_CACHE;
+>  	else
+> -		ctype = MEM_CGROUP_CHARGE_TYPE_SHMEM;
+> +		ctype = MEM_CGROUP_CHARGE_TYPE_CACHE;
+>  	/*
+>  	 * The page is committed to the memcg, but it's not actually
+>  	 * charged to the res_counter since we plan on replacing the
+> @@ -3340,10 +3335,6 @@ void mem_cgroup_replace_page_cache(struct page *oldpage,
+>  	 */
+>  	if (!memcg)
+>  		return;
 > -
-> -	if (!PageSwapCache(page))
-> -		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
-> -	else { /* page is swapcache/shmem */
-> -		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
-> -		if (!ret)
-> -			__mem_cgroup_commit_charge_swapin(page, memcg, type);
-> -	}
-> -	return ret;
-> -}
+> -	if (PageSwapBacked(oldpage))
+> -		type = MEM_CGROUP_CHARGE_TYPE_SHMEM;
 > -
->  /*
->   * While swap-in, try_charge -> commit or cancel, the page is locked.
->   * And when try_charge() successfully returns, one refcnt to memcg without
-> @@ -2806,6 +2775,15 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
->  	return ret;
->  }
->  
-> +void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg)
-> +{
-> +	if (mem_cgroup_disabled())
-> +		return;
-> +	if (!memcg)
-> +		return;
-> +	__mem_cgroup_cancel_charge(memcg, 1);
-> +}
-> +
->  static void
->  __mem_cgroup_commit_charge_swapin(struct page *page, struct mem_cgroup *memcg,
->  					enum charge_type ctype)
-> @@ -2843,13 +2821,31 @@ void mem_cgroup_commit_charge_swapin(struct page *page,
->  					  MEM_CGROUP_CHARGE_TYPE_ANON);
->  }
->  
-> -void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg)
-> +int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
-> +				gfp_t gfp_mask)
->  {
-> +	struct mem_cgroup *memcg = NULL;
-> +	enum charge_type type = MEM_CGROUP_CHARGE_TYPE_CACHE;
-> +	int ret;
-> +
->  	if (mem_cgroup_disabled())
-> -		return;
-> -	if (!memcg)
-> -		return;
-> -	__mem_cgroup_cancel_charge(memcg, 1);
-> +		return 0;
-> +	if (PageCompound(page))
-> +		return 0;
-> +
-> +	if (unlikely(!mm))
-> +		mm = &init_mm;
-> +	if (!page_is_file_cache(page))
-> +		type = MEM_CGROUP_CHARGE_TYPE_SHMEM;
-> +
-> +	if (!PageSwapCache(page))
-> +		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
-> +	else { /* page is swapcache/shmem */
-> +		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
-> +		if (!ret)
-> +			__mem_cgroup_commit_charge_swapin(page, memcg, type);
-> +	}
-> +	return ret;
->  }
->  
->  static void mem_cgroup_do_uncharge(struct mem_cgroup *memcg,
+>  	/*
+>  	 * Even if newpage->mapping was NULL before starting replacement,
+>  	 * the newpage may be on LRU(or pagevec for LRU) already. We lock
 > -- 
 > 1.7.7.6
 > 
@@ -136,9 +84,3 @@ SUSE LINUX s.r.o.
 Lihovarska 1060/12
 190 00 Praha 9    
 Czech Republic
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
