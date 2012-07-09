@@ -1,92 +1,66 @@
-From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 6/7] memcg: add per cgroup writeback pages accounting
-Date: Mon, 9 Jul 2012 13:28:13 +0800
-Message-ID: <20120709052813.GB11126@localhost>
-References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
- <1340881562-5900-1-git-send-email-handai.szj@taobao.com>
- <20120708145309.GC18272@localhost>
- <4FFA51AB.30203@gmail.com>
- <20120709041437.GA10180@localhost>
- <4FFA5B7F.8030403@jp.fujitsu.com>
- <4FFA6AAE.8030700@gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 04/11] mm: memcg: push down PageSwapCache check into
+ uncharge entry functions
+Date: Mon, 9 Jul 2012 09:36:14 +0200
+Message-ID: <20120709073614.GB1779@cmpxchg.org>
+References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
+ <1341449103-1986-5-git-send-email-hannes@cmpxchg.org>
+ <4FFA4504.4040408@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4FFA6AAE.8030700-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <4FFA4504.4040408-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Jul 09, 2012 at 01:22:54PM +0800, Sha Zhengju wrote:
-> On 07/09/2012 12:18 PM, Kamezawa Hiroyuki wrote:
-> >(2012/07/09 13:14), Fengguang Wu wrote:
-> >>On Mon, Jul 09, 2012 at 11:36:11AM +0800, Sha Zhengju wrote:
-> >>>On 07/08/2012 10:53 PM, Fengguang Wu wrote:
-> >>>>>@@ -2245,7 +2252,10 @@ int test_set_page_writeback(struct page *page)
-> >>>>>  {
-> >>>>>      struct address_space *mapping = page_mapping(page);
-> >>>>>      int ret;
-> >>>>>+    bool locked;
-> >>>>>+    unsigned long flags;
-> >>>>>
-> >>>>>+    mem_cgroup_begin_update_page_stat(page,&locked,&flags);
-> >>>>>      if (mapping) {
-> >>>>>          struct backing_dev_info *bdi = mapping->backing_dev_info;
-> >>>>>          unsigned long flags;
-> >>>>>@@ -2272,6 +2282,8 @@ int test_set_page_writeback(struct page *page)
-> >>>>>      }
-> >>>>>      if (!ret)
-> >>>>>          account_page_writeback(page);
-> >>>>>+
-> >>>>>+    mem_cgroup_end_update_page_stat(page,&locked,&flags);
-> >>>>>      return ret;
-> >>>>>
-> >>>>>  }
-> >>>>Where is the MEM_CGROUP_STAT_FILE_WRITEBACK increased?
-> >>>>
-> >>>
-> >>>It's in account_page_writeback().
-> >>>
-> >>>  void account_page_writeback(struct page *page)
-> >>>  {
-> >>>+    mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_WRITEBACK);
-> >>>      inc_zone_page_state(page, NR_WRITEBACK);
-> >>>  }
-> >>
-> >>I didn't find that chunk, perhaps it's lost due to rebase..
-> >>
-> >>>There isn't a unified interface to dec/inc writeback accounting, so
-> >>>I just follow that.
-> >>>Maybe we can rework account_page_writeback() to also account
-> >>>dec in?
-> >>
-> >>The current seperate inc/dec paths are fine. It sounds like
-> >>over-engineering if going any further.
-> >>
-> >>I'm a bit worried about some 3rd party kernel module to call
-> >>account_page_writeback() without
-> >>mem_cgroup_begin/end_update_page_stat().
-> >>Will that lead to serious locking issues, or merely inaccurate
-> >>accounting?
-> >>
-> >
-> >Ah, Hm. Maybe it's better to add some debug check in
-> > mem_cgroup_update_page_stat(). rcu_read_lock_held() or some.
-> >
+On Mon, Jul 09, 2012 at 11:42:12AM +0900, Kamezawa Hiroyuki wrote:
+> (2012/07/05 9:44), Johannes Weiner wrote:
+> > @@ -3278,10 +3283,11 @@ void mem_cgroup_end_migration(struct mem_cgroup *memcg,
+> >   		unused = oldpage;
+> >   	}
+> >   	anon = PageAnon(used);
+> > -	__mem_cgroup_uncharge_common(unused,
+> > -		anon ? MEM_CGROUP_CHARGE_TYPE_ANON
+> > -		     : MEM_CGROUP_CHARGE_TYPE_CACHE,
+> > -		true);
+> > +	if (!PageSwapCache(page))
+> > +		__mem_cgroup_uncharge_common(unused,
+> > +					     anon ? MEM_CGROUP_CHARGE_TYPE_ANON
+> > +					     : MEM_CGROUP_CHARGE_TYPE_CACHE,
+> > +					     true);
 > 
-> This also apply to account_page_dirtied()... But as an "range" lock,
-> I think it's common
-> in current kernel: just as set_page_dirty(), the caller should call
-> it under the page lock
-> (in most cases) and it's his responsibility to guarantee
-> correctness. I can add some
-> comments or debug check as reminding but I think i can only do so...
+> !PageSwapCache(unused) ?
 
-Yeah, it helps to add some brief comment on the locking rule in
-account_page_*().
+Argh, right.
 
-Thanks,
-Fengguang
+> But I think unused page's PG_swapcache is always dropped. So, the check is
+> not necessary.
+
+Oh, this is intentional: the check was in __mem_cgroup_uncharge_common
+before, which means it applied to this entry point as well.  This is
+supposed to be a mechanical change that does not change any logic.
+The check is then removed in the next patch.
+
+---
+Subject: mm: memcg: push down PageSwapCache check into uncharge entry functions fix
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a3bf414..f4ff18a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3283,7 +3283,7 @@ void mem_cgroup_end_migration(struct mem_cgroup *memcg,
+ 		unused = oldpage;
+ 	}
+ 	anon = PageAnon(used);
+-	if (!PageSwapCache(page))
++	if (!PageSwapCache(unused))
+ 		__mem_cgroup_uncharge_common(unused,
+ 					     anon ? MEM_CGROUP_CHARGE_TYPE_ANON
+ 					     : MEM_CGROUP_CHARGE_TYPE_CACHE,
