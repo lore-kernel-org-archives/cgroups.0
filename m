@@ -1,34 +1,102 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [patch 03/11] mm: shmem: do not try to uncharge known swapcache
- pages
-Date: Mon, 09 Jul 2012 11:33:08 +0900
-Message-ID: <4FFA42E4.1000003@jp.fujitsu.com>
-References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-4-git-send-email-hannes@cmpxchg.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch 04/11] mm: memcg: push down PageSwapCache check into uncharge
+ entry functions
+Date: Mon, 09 Jul 2012 11:42:12 +0900
+Message-ID: <4FFA4504.4040408@jp.fujitsu.com>
+References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-5-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1341449103-1986-4-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1341449103-1986-5-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 (2012/07/05 9:44), Johannes Weiner wrote:
-> Once charged, swapcache pages can only be uncharged after they are
-> removed from swapcache again.
+> Not all uncharge paths need to check if the page is swapcache, some of
+> them can know for sure.
 > 
-> Do not try to uncharge pages that are known to be in the swapcache, to
-> allow future patches to remove checks for that in the uncharge code.
+> Push down the check into all callsites of uncharge_common() so that
+> the patch that removes some of them is more obvious.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > ---
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+some nitpick.
+
+>   mm/memcontrol.c |   18 ++++++++++++------
+>   1 files changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 4ea19c6..a3bf414 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2920,8 +2920,7 @@ __mem_cgroup_uncharge_common(struct page *page, enum charge_type ctype,
+>   	if (mem_cgroup_disabled())
+>   		return NULL;
+>   
+> -	if (PageSwapCache(page))
+> -		return NULL;
+> +	VM_BUG_ON(PageSwapCache(page));
+>   
+>   	if (PageTransHuge(page)) {
+>   		nr_pages <<= compound_order(page);
+> @@ -3018,6 +3017,8 @@ void mem_cgroup_uncharge_page(struct page *page)
+>   	if (page_mapped(page))
+>   		return;
+>   	VM_BUG_ON(page->mapping && !PageAnon(page));
+> +	if (PageSwapCache(page))
+> +		return;
+>   	__mem_cgroup_uncharge_common(page, MEM_CGROUP_CHARGE_TYPE_ANON, false);
+>   }
+>   
+> @@ -3025,6 +3026,8 @@ void mem_cgroup_uncharge_cache_page(struct page *page)
+>   {
+>   	VM_BUG_ON(page_mapped(page));
+>   	VM_BUG_ON(page->mapping);
+> +	if (PageSwapCache(page))
+> +		return;
+>   	__mem_cgroup_uncharge_common(page, MEM_CGROUP_CHARGE_TYPE_CACHE, false);
+>   }
+>   
+> @@ -3089,6 +3092,8 @@ mem_cgroup_uncharge_swapcache(struct page *page, swp_entry_t ent, bool swapout)
+>   	if (!swapout) /* this was a swap cache but the swap is unused ! */
+>   		ctype = MEM_CGROUP_CHARGE_TYPE_DROP;
+>   
+> +	if (PageSwapCache(page))
+> +		return;
+>   	memcg = __mem_cgroup_uncharge_common(page, ctype, false);
+>   
+>   	/*
+> @@ -3278,10 +3283,11 @@ void mem_cgroup_end_migration(struct mem_cgroup *memcg,
+>   		unused = oldpage;
+>   	}
+>   	anon = PageAnon(used);
+> -	__mem_cgroup_uncharge_common(unused,
+> -		anon ? MEM_CGROUP_CHARGE_TYPE_ANON
+> -		     : MEM_CGROUP_CHARGE_TYPE_CACHE,
+> -		true);
+> +	if (!PageSwapCache(page))
+> +		__mem_cgroup_uncharge_common(unused,
+> +					     anon ? MEM_CGROUP_CHARGE_TYPE_ANON
+> +					     : MEM_CGROUP_CHARGE_TYPE_CACHE,
+> +					     true);
+
+!PageSwapCache(unused) ?
+
+But I think unused page's PG_swapcache is always dropped. So, the check is
+not necessary.
+
+Thanks,
+-Kame
 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
+
+
+
+
+
