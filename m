@@ -1,66 +1,51 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 04/11] mm: memcg: push down PageSwapCache check into
- uncharge entry functions
-Date: Mon, 9 Jul 2012 09:36:14 +0200
-Message-ID: <20120709073614.GB1779@cmpxchg.org>
-References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
- <1341449103-1986-5-git-send-email-hannes@cmpxchg.org>
- <4FFA4504.4040408@jp.fujitsu.com>
-Mime-Version: 1.0
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: [PATCH] cgroup: Remove populate() documentation
+Date: Mon,  9 Jul 2012 15:54:08 +0200
+Message-ID: <1341842048-14831-1-git-send-email-wagi@monom.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4FFA4504.4040408-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Mon, Jul 09, 2012 at 11:42:12AM +0900, Kamezawa Hiroyuki wrote:
-> (2012/07/05 9:44), Johannes Weiner wrote:
-> > @@ -3278,10 +3283,11 @@ void mem_cgroup_end_migration(struct mem_cgroup *memcg,
-> >   		unused = oldpage;
-> >   	}
-> >   	anon = PageAnon(used);
-> > -	__mem_cgroup_uncharge_common(unused,
-> > -		anon ? MEM_CGROUP_CHARGE_TYPE_ANON
-> > -		     : MEM_CGROUP_CHARGE_TYPE_CACHE,
-> > -		true);
-> > +	if (!PageSwapCache(page))
-> > +		__mem_cgroup_uncharge_common(unused,
-> > +					     anon ? MEM_CGROUP_CHARGE_TYPE_ANON
-> > +					     : MEM_CGROUP_CHARGE_TYPE_CACHE,
-> > +					     true);
-> 
-> !PageSwapCache(unused) ?
+From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-Argh, right.
+This function was removed by 86f82d561864e902c70282b6f17cf590c0f34691.
 
-> But I think unused page's PG_swapcache is always dropped. So, the check is
-> not necessary.
-
-Oh, this is intentional: the check was in __mem_cgroup_uncharge_common
-before, which means it applied to this entry point as well.  This is
-supposed to be a mechanical change that does not change any logic.
-The check is then removed in the next patch.
-
+Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
-Subject: mm: memcg: push down PageSwapCache check into uncharge entry functions fix
+ Documentation/cgroups/cgroups.txt | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a3bf414..f4ff18a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3283,7 +3283,7 @@ void mem_cgroup_end_migration(struct mem_cgroup *memcg,
- 		unused = oldpage;
- 	}
- 	anon = PageAnon(used);
--	if (!PageSwapCache(page))
-+	if (!PageSwapCache(unused))
- 		__mem_cgroup_uncharge_common(unused,
- 					     anon ? MEM_CGROUP_CHARGE_TYPE_ANON
- 					     : MEM_CGROUP_CHARGE_TYPE_CACHE,
+diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
+index 8e74980..ed2ba6c 100644
+--- a/Documentation/cgroups/cgroups.txt
++++ b/Documentation/cgroups/cgroups.txt
+@@ -637,16 +637,6 @@ void exit(struct task_struct *task)
+ 
+ Called during task exit.
+ 
+-int populate(struct cgroup *cgrp)
+-(cgroup_mutex held by caller)
+-
+-Called after creation of a cgroup to allow a subsystem to populate
+-the cgroup directory with file entries.  The subsystem should make
+-calls to cgroup_add_file() with objects of type cftype (see
+-include/linux/cgroup.h for details).  Note that although this
+-method can return an error code, the error code is currently not
+-always handled well.
+-
+ void post_clone(struct cgroup *cgrp)
+ (cgroup_mutex held by caller)
+ 
+-- 
+1.7.11.1.104.ge7b44f1
