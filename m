@@ -1,51 +1,105 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: [PATCH] cgroup: Remove populate() documentation
-Date: Mon,  9 Jul 2012 15:54:08 +0200
-Message-ID: <1341842048-14831-1-git-send-email-wagi@monom.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 01/11] mm: memcg: fix compaction/migration failing due to
+ memcg limits
+Date: Mon, 9 Jul 2012 16:15:54 +0200
+Message-ID: <20120709141554.GD4627@tiehlicka.suse.cz>
+References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
+ <1341449103-1986-2-git-send-email-hannes@cmpxchg.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1341449103-1986-2-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+[CCing Ingo for the memcg-devel vs tip/sched/numa inter tree dependency
+ - see bellow]
 
-This function was removed by 86f82d561864e902c70282b6f17cf590c0f34691.
+On Thu 05-07-12 02:44:53, Johannes Weiner wrote:
+> Compaction (and page migration in general) can currently be hindered
+> through pages being owned by memory cgroups that are at their limits
+> and unreclaimable.
+> 
+> The reason is that the replacement page is being charged against the
+> limit while the page being replaced is also still charged.  But this
+> seems unnecessary, given that only one of the two pages will still be
+> in use after migration finishes.
+> 
+> This patch changes the memcg migration sequence so that the
+> replacement page is not charged.  Whatever page is still in use after
+> successful or failed migration gets to keep the charge of the page
+> that was going to be replaced.
 
-Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Cc: Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- Documentation/cgroups/cgroups.txt | 10 ----------
- 1 file changed, 10 deletions(-)
+Could you mention the side effect on the stat vs charges discrepancy,
+please?
 
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index 8e74980..ed2ba6c 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -637,16 +637,6 @@ void exit(struct task_struct *task)
- 
- Called during task exit.
- 
--int populate(struct cgroup *cgrp)
--(cgroup_mutex held by caller)
--
--Called after creation of a cgroup to allow a subsystem to populate
--the cgroup directory with file entries.  The subsystem should make
--calls to cgroup_add_file() with objects of type cftype (see
--include/linux/cgroup.h for details).  Note that although this
--method can return an error code, the error code is currently not
--always handled well.
--
- void post_clone(struct cgroup *cgrp)
- (cgroup_mutex held by caller)
- 
+> Reported-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+[...]
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index 8137aea..aa06bf4 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+[...]
+> @@ -1519,10 +1512,9 @@ migrate_misplaced_page(struct page *page, struct mm_struct *mm, int node)
+>  {
+>  	struct page *oldpage = page, *newpage;
+>  	struct address_space *mapping = page_mapping(page);
+> -	struct mem_cgroup *mcg;
+> +	struct mem_cgroup *memcg;
+>  	unsigned int gfp;
+>  	int rc = 0;
+> -	int charge = -ENOMEM;
+>  
+>  	VM_BUG_ON(!PageLocked(page));
+>  	VM_BUG_ON(page_mapcount(page));
+> @@ -1556,12 +1548,7 @@ migrate_misplaced_page(struct page *page, struct mm_struct *mm, int node)
+>  	if (!trylock_page(newpage))
+>  		BUG();		/* new page should be unlocked!!! */
+>  
+> -	// XXX hnaz, is this right?
+> -	charge = mem_cgroup_prepare_migration(page, newpage, &mcg, gfp);
+> -	if (charge == -ENOMEM) {
+> -		rc = charge;
+> -		goto out;
+> -	}
+> +	mem_cgroup_prepare_migration(page, newpage, &memcg);
+>  
+>  	newpage->index = page->index;
+>  	newpage->mapping = page->mapping;
+> @@ -1581,11 +1568,9 @@ migrate_misplaced_page(struct page *page, struct mm_struct *mm, int node)
+>  		page = newpage;
+>  	}
+>  
+> +	mem_cgroup_end_migration(memcg, oldpage, newpage, !rc);
+>  out:
+> -	if (!charge)
+> -		mem_cgroup_end_migration(mcg, oldpage, newpage, !rc);
+> -
+> -       if (oldpage != page)
+> +	if (oldpage != page)
+>                 put_page(oldpage);
+>  
+>  	if (rc) {
+
+Hmm, this depends on 4783af47 (mm: Migrate misplaced page) from
+tip/sched/numa which adds an inter tree dependency which is quite
+unfortunate from memcg-devel (aka mmotm git tree) tree POV. 
+I can cherry-pick this patch into memcg-devel but I am not sure what
+is the merging status of the patch (XXX sounds like it is going to be
+updated later). Ingo?
+
 -- 
-1.7.11.1.104.ge7b44f1
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
