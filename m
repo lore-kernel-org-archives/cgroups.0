@@ -1,44 +1,67 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Remove populate() documentation
-Date: Mon, 9 Jul 2012 09:56:43 -0700
-Message-ID: <20120709165643.GA1341@google.com>
-References: <1341842048-14831-1-git-send-email-wagi@monom.org>
+Subject: Re: [PATCH] cgroup: cgroup_rm_files() was calling simple_unlink()
+ with the wrong inode
+Date: Mon, 9 Jul 2012 10:11:07 -0700
+Message-ID: <20120709171107.GC1341@google.com>
+References: <20120628180712.GC22641@google.com>
+ <4FED10DB.7040500@huawei.com>
+ <20120629165809.GB21048@google.com>
+ <4FEE98EE.1050409@huawei.com>
+ <20120630064724.GC14083@ZenIV.linux.org.uk>
+ <CAOS58YNnU3J+c2ZQcRCesSoxn0dSJjDLBsZ2qzZ09X6N-ky0fQ@mail.gmail.com>
+ <20120630083421.GD14083@ZenIV.linux.org.uk>
+ <20120703171033.GC555@google.com>
+ <20120703173806.GD555@google.com>
+ <4FF3D757.9060905@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=1Otfb69q22KvXhZjFo7ViQfBFOhaEOj8duQz/hgovMI=;
-        b=NTPV5U9wLWFNi9keUTH5z3+S5rY0w1IY7xftkIZJahFyAYeFraSxrQHVRki8RkDjYv
-         DIsI8YkORxBNnM2rieMoSQbceJwbbN8D8oGNbTw6MJR7RcqZ3VCK7XyHaMI1pQkogRY9
-         bCPhW5yz7L+mPnoIaYrrfIwvybuYX42flhOfXWPCYSvWK9lj99v2tjDRQ6ZYBDm/8YVh
-         q/hwfhoc9b5cuqh+TS1Yk7mKHNRxgFjo3JEYtRzHS50ah96G3yiKDkbyldZbrzQjIgbq
-         AcWgTdiTPGff3UH4EwQd+z599hrXCqk7SZfRBbByEd0g2Yglf2FznSXuoDdlcDcbcBY6
-         sKKg==
+        bh=ua+NDJLgCqmkg/NwM974ODH5tlMRjSYZjGEyGKh4AiU=;
+        b=fGsF6yx/HqiCKtXgWSL1CO/tNKor/3DYUTobNpbVmicN6flaJtkUgyPHxElMdbcC/2
+         Hnh2vghqD2uMChI11NFi6Z6Yco8Yt2nDPx+qHSpvZPWg9OYY6SCFc9AbB7fH7wCKEUda
+         aJbJXrHNMfrNIZ7SmgdgJMYm0cL9tqrI85qOsUvZg0l6VAimL5nStJWUwlLMvPxwLLvj
+         vZkqFx6ILdgeflouT+jjWPRsUxt/7kUh0r6962SsQJcGK1wBlB3jVT3YTjLu5oHNFFCb
+         OA1BMuRroVuymoTHx/wDkcnt+CpY7qeo/++oBpRycE6Rol8p/r/6tZ5ngqP9jUjWlbjl
+         JmRg==
 Content-Disposition: inline
-In-Reply-To: <1341842048-14831-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+In-Reply-To: <4FF3D757.9060905-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon, Jul 09, 2012 at 03:54:08PM +0200, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+On Wed, Jul 04, 2012 at 01:40:39PM +0800, Li Zefan wrote:
+> Tejun Heo wrote:
 > 
-> This function was removed by 86f82d561864e902c70282b6f17cf590c0f34691.
+> >>From 6da2689412c78b97716ec524cc30baf7b46508cd Mon Sep 17 00:00:00 2001
+> > From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Date: Tue, 3 Jul 2012 10:32:26 -0700
+> > 
+> > While refactoring cgroup file removal path, 05ef1d7c4a "cgroup:
+> > introduce struct cfent" incorrectly changed the @dir argument of
+> > simple_unlink() to the inode of the file being deleted instead of that
+> > of the containing directory.
+> > 
+> > The effect of this bug is minor - ctime and mtime of the parent
+> > weren't properly updated on file deletion.
+> > 
+> > Fix it by using @cgrp->dentry->d_inode instead.
+> > 
+> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Reported-by: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 > 
-> Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> Cc: Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-> Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> 
+> Acked-By: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Applied to cgroup/for-3.6.  Thanks!
+I think it's now a bit too late for for-3.5-fixes and the effect of
+the bug is rather minor.  Applied to cgroup/for-3.6 w/ stable cc'd.
+
+Thanks.
 
 -- 
 tejun
