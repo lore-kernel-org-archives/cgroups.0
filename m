@@ -1,30 +1,29 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [patch 08/11] mm: memcg: remove needless !mm fixup to init_mm
- when charging
-Date: Mon, 09 Jul 2012 11:53:01 +0900
-Message-ID: <4FFA478D.4030007@jp.fujitsu.com>
-References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-9-git-send-email-hannes@cmpxchg.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch 09/11] mm: memcg: split swapin charge function into private
+ and public part
+Date: Mon, 09 Jul 2012 11:55:26 +0900
+Message-ID: <4FFA481E.7010602@jp.fujitsu.com>
+References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-10-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1341449103-1986-9-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1341449103-1986-10-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 (2012/07/05 9:45), Johannes Weiner wrote:
-> It does not matter to __mem_cgroup_try_charge() if the passed mm is
-> NULL or init_mm, it will charge the root memcg in either case.
+> When shmem is charged upon swapin, it does not need to check twice
+> whether the memory controller is enabled.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Also, shmem pages do not have to be checked for everything that
+> regular anon pages have to be checked for, so let shmem use the
+> internal version directly and allow future patches to move around
+> checks that are only required when swapping in anon pages.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
