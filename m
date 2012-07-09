@@ -1,35 +1,32 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch 01/11] mm: memcg: fix compaction/migration failing due
- to memcg limits
-Date: Mon, 09 Jul 2012 11:27:53 +0900
-Message-ID: <4FFA41A9.2030806@jp.fujitsu.com>
-References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-2-git-send-email-hannes@cmpxchg.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [patch 02/11] mm: swapfile: clean up unuse_pte race handling
+Date: Mon, 09 Jul 2012 11:29:27 +0900
+Message-ID: <4FFA4207.4060406@jp.fujitsu.com>
+References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org> <1341449103-1986-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1341449103-1986-2-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1341449103-1986-3-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 (2012/07/05 9:44), Johannes Weiner wrote:
-> Compaction (and page migration in general) can currently be hindered
-> through pages being owned by memory cgroups that are at their limits
-> and unreclaimable.
+> The conditional mem_cgroup_cancel_charge_swapin() is a leftover from
+> when the function would continue to reestablish the page even after
+> mem_cgroup_try_charge_swapin() failed.  After 85d9fc8 "memcg: fix
+> refcnt handling at swapoff", the condition is always true when this
+> code is reached.
 > 
-> The reason is that the replacement page is being charged against the
-> limit while the page being replaced is also still charged.  But this
-> seems unnecessary, given that only one of the two pages will still be
-> in use after migration finishes.
-> 
-> This patch changes the memcg migration sequence so that the
-> replacement page is not charged.  Whatever page is still in use after
-> successful or failed migration gets to keep the charge of the page
-> that was going to be replaced.
-> 
-> Reported-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
