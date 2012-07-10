@@ -1,66 +1,63 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: [PATCH] cgroup: Update remount documentation
-Date: Tue, 10 Jul 2012 10:49:18 +0200
-Message-ID: <1341910158-8994-1-git-send-email-wagi@monom.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Wanpeng Li <liwp.linux@gmail.com>
+Subject: [PATCH RFC] mm/hugetlb_cgroup: Add huge_page_order check to avoid incorrectly uncharge
+Date: Tue, 10 Jul 2012 18:05:12 +0800
+Message-ID: <1341914712-4588-1-git-send-email-liwp.linux@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=952hGRuFsSMU/KvNjjBQxfYQEhX/q+Z8pFyzOL7ihcI=;
+        b=U+gvvnbq8HLbHMyHtXtm2cPVvoXhsSXsUJ99AdBKskH50tQzifztigVGvOciPSbs+I
+         UgUwdQCN+sHmSdT7qSHY4Pey95nycyLvAT4OBOZidNHLXbPqdBS55gYN0AQKdDxV1uyt
+         suLYDYwa+GH2PD+oQy+f9bf8HhjW78uWJDBkf0PP57bZicyt0D7P7WxiMpBuZsZPDSr5
+         3eR2g0RAint7LavohX7YF40QEGmcmqkPL6xSh9xwXI3V3XKJYoTdwgeXVHLu8XXOzgwP
+         +CYZgmOrfbkPsbw5O1ZMRZOJ2uBXG0b6J5sAzNJQRInh4yKU4WVK4ZCf2T8Fh76/FVsx
+         l0Lg==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
 
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Remounting support will be removed in the future
-(see feature-removal-schedule.txt). Discourage users to use it.
+Against linux-next:
 
-Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Cc: Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Function alloc_huge_page will call hugetlb_cgroup_charge_cgroup
+to charge pages, the compound page have less than 3 pages will not
+charge to hugetlb cgroup. When alloc_huge_page fails it will call
+hugetlb_cgroup_uncharge_cgroup to uncharge pages, however,
+hugetlb_cgroup_uncharge_cgroup doesn't have huge_page_order check.
+That means it will uncharge pages even if the compound page have less
+than 3 pages. Add huge_page_order check to avoid this incorrectly
+uncharge.
+
+Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
 ---
-Hi,
+ mm/hugetlb_cgroup.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-while I am at it, the remount stuff should propapbly be removed
-from the docucmetation as well.
-
-cheers,
-daniel
-
-
- Documentation/cgroups/cgroups.txt | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index ed2ba6c..d12f2d0 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -370,15 +370,12 @@ To mount a cgroup hierarchy with just the cpuset and memory
- subsystems, type:
- # mount -t cgroup -o cpuset,memory hier1 /sys/fs/cgroup/rg1
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index b834e8d..2b9e214 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -252,6 +252,9 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
  
--To change the set of subsystems bound to a mounted hierarchy, just
--remount with different options:
--# mount -o remount,cpuset,blkio hier1 /sys/fs/cgroup/rg1
--
--Now memory is removed from the hierarchy and blkio is added.
--
--Note this will add blkio to the hierarchy but won't remove memory or
--cpuset, because the new options are appended to the old ones:
--# mount -o remount,blkio /sys/fs/cgroup/rg1
-+While remounting cgroups is currently supported, it is not recommend
-+to use it. Remounting allows changing bound subsystems and
-+release_agent. Rebinding is hardly useful as it only works when the
-+hierarchy is empty and release_agent itself should be replaced with
-+conventional fsnotify. The support for remounting will be removed in
-+the future.
+ 	if (hugetlb_cgroup_disabled() || !h_cg)
+ 		return;
++
++	if (huge_page_order(&hstates[idx]) < HUGETLB_CGROUP_MIN_ORDER)
++		return;
  
- To Specify a hierarchy's release_agent:
- # mount -t cgroup -o cpuset,release_agent="/sbin/cpuset_release_agent" \
+ 	res_counter_uncharge(&h_cg->hugepage[idx], csize);
+ 	return;
 -- 
-1.7.11.1.104.ge7b44f1
+1.7.5.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
