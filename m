@@ -1,148 +1,45 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH 6/7] memcg: add per cgroup writeback pages accounting
-Date: Mon, 09 Jul 2012 14:02:32 -0700
-Message-ID: <xr93zk78zlzr.fsf@gthelen.mtv.corp.google.com>
-References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>
-	<1340881562-5900-1-git-send-email-handai.szj@taobao.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix dentry still in use bug when dropping css
+ refs after umount
+Date: Tue, 10 Jul 2012 10:11:05 +0800
+Message-ID: <4FFB8F39.9030209@huawei.com>
+References: <4FEEA5CB.8070809@huawei.com> <20120703170317.GB555@google.com> <20120703225218.GF555@google.com> <4FF3E063.5010604@huawei.com> <20120708063536.GB19021@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:references:date:message-id:user-agent
-         :mime-version:content-type;
-        bh=dny5WENMfTOd5dJhFNt5XBMnIKBPTgQJCSGlyJ6ePRo=;
-        b=CnnHeSJXkR0pGRimJGAVv7nyrIbvRMPTY4j1J4dIlTqV5rIWyB4ncxs+e7WgPu50oX
-         JkhlmXxLQFseiHdeVlFVILyNRqhUgafbMyQaANfknChfpcLfJvcnRrVhJWCsbyg4nHa1
-         x7Sk/TiYewfuVARwwiGkgbYRw/K9Ukad56aIiZ0+7WY+hZY1Izf5f3jF353ecS8wqlK9
-         M9S1w3AvQ4/sV2GNmIQUvNf7nOJ7rFNVmmkqwF152CANr7o9PgdazPtjWlwvXesTO9nz
-         iE7RQ7uYQbXKfMhsAcFDrs3A+yo2N8Ns4fVK2ILqN6qv8sPX+dQu8i25F0EJ7SOX8ywK
-         KPrw==
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120708063536.GB19021-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Thu, Jun 28 2012, Sha Zhengju wrote:
+On 2012/7/8 14:35, Tejun Heo wrote:
 
-> From: Sha Zhengju <handai.szj@taobao.com>
->
-> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
-> rule still is:
-> 	mem_cgroup_begin_update_page_stat()
-> 	modify page WRITEBACK stat
-> 	mem_cgroup_update_page_stat()
-> 	mem_cgroup_end_update_page_stat()
->
-> There're two writeback interface to modify: test_clear/set_page_writeback.
->
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> ---
->  include/linux/memcontrol.h |    1 +
->  mm/memcontrol.c            |    5 +++++
->  mm/page-writeback.c        |   12 ++++++++++++
->  3 files changed, 18 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index ad37b59..9193d93 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -39,6 +39,7 @@ enum mem_cgroup_stat_index {
->  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
->  	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
->  	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
-> +	MEM_CGROUP_STAT_FILE_WRITEBACK,  /* # of pages under writeback */
->  	MEM_CGROUP_STAT_NSTATS,
->  };
->  
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 90e2946..8493119 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -83,6 +83,7 @@ static const char * const mem_cgroup_stat_names[] = {
->  	"mapped_file",
->  	"swap",
->  	"dirty",
-> +	"writeback",
->  };
->  
->  enum mem_cgroup_events_index {
-> @@ -2604,6 +2605,10 @@ static int mem_cgroup_move_account(struct page *page,
->  		mem_cgroup_move_account_page_stat(from, to,
->  				MEM_CGROUP_STAT_FILE_DIRTY);
->  
-> +	if (PageWriteback(page))
-> +		mem_cgroup_move_account_page_stat(from, to,
-> +				MEM_CGROUP_STAT_FILE_WRITEBACK);
-> +
->  	mem_cgroup_charge_statistics(from, anon, -nr_pages);
->  
->  	/* caller should have done css_get */
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index e79a2f7..7398836 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -1981,6 +1981,7 @@ EXPORT_SYMBOL(account_page_dirtied);
->   */
->  void account_page_writeback(struct page *page)
->  {
-> +	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_WRITEBACK);
+> Hello, Li.
+> 
+> On Wed, Jul 04, 2012 at 02:19:15PM +0800, Li Zefan wrote:
+>>> I think we're horridly broken for
+>>> root cgroup tho - and it has been broken for very long time.  I think
+>>> it's mostly hidden because most (all?) controllers short-circuit root
+>>> cgroup.  Eh, well....
+>>>
+>>
+>> Could you elaborate a bit on what's broken for root cgroup?
+> 
+> If someone holds css ref of a root cgroup, AFAICS nothing is
+> preventing the cgroup hierarchy from being unmounted and root cgroup
+> destroyed.
+> 
 
-As already mentioned, I'd also like to see a comment added to
-account_page_writeback() describing the new locking requirements
-(specifically mem_cgroup_begin_update_page_stat being held by caller).
 
->  	inc_zone_page_state(page, NR_WRITEBACK);
->  }
->  EXPORT_SYMBOL(account_page_writeback);
-> @@ -2214,7 +2215,10 @@ int test_clear_page_writeback(struct page *page)
->  {
->  	struct address_space *mapping = page_mapping(page);
->  	int ret;
-> +	bool locked;
-> +	unsigned long flags;
->  
-> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
->  	if (mapping) {
->  		struct backing_dev_info *bdi = mapping->backing_dev_info;
->  		unsigned long flags;
-> @@ -2235,9 +2239,12 @@ int test_clear_page_writeback(struct page *page)
->  		ret = TestClearPageWriteback(page);
->  	}
->  	if (ret) {
-> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_WRITEBACK);
->  		dec_zone_page_state(page, NR_WRITEBACK);
->  		inc_zone_page_state(page, NR_WRITTEN);
->  	}
-> +
-> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
->  	return ret;
->  }
->  
-> @@ -2245,7 +2252,10 @@ int test_set_page_writeback(struct page *page)
->  {
->  	struct address_space *mapping = page_mapping(page);
->  	int ret;
-> +	bool locked;
-> +	unsigned long flags;
->  
-> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
->  	if (mapping) {
->  		struct backing_dev_info *bdi = mapping->backing_dev_info;
->  		unsigned long flags;
-> @@ -2272,6 +2282,8 @@ int test_set_page_writeback(struct page *page)
->  	}
->  	if (!ret)
->  		account_page_writeback(page);
-> +
-> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
->  	return ret;
->  
->  }
+Right, but that should be safe. The css objects of the root cgroup are
+allocated at boot, and won't be destroyed at umount.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Furthermore when a cgroup hierarchy is going to be unmounted, those css's
+will be made to point to a cgroup named dummytop in rebind_subsystems(),
+and there's a syncronize_rcu() in the end of the function, so accessing
+css->cgroup is always safe.
+
+In this case, dummytop->dentry is NULL, and that's safe too, because
+cgroup_path() is aware of this case.
