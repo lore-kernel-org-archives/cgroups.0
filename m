@@ -1,63 +1,68 @@
-From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: [PATCH RFC] mm/hugetlb_cgroup: Add huge_page_order check to avoid incorrectly uncharge
-Date: Tue, 10 Jul 2012 18:05:12 +0800
-Message-ID: <1341914712-4588-1-git-send-email-liwp.linux@gmail.com>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=952hGRuFsSMU/KvNjjBQxfYQEhX/q+Z8pFyzOL7ihcI=;
-        b=U+gvvnbq8HLbHMyHtXtm2cPVvoXhsSXsUJ99AdBKskH50tQzifztigVGvOciPSbs+I
-         UgUwdQCN+sHmSdT7qSHY4Pey95nycyLvAT4OBOZidNHLXbPqdBS55gYN0AQKdDxV1uyt
-         suLYDYwa+GH2PD+oQy+f9bf8HhjW78uWJDBkf0PP57bZicyt0D7P7WxiMpBuZsZPDSr5
-         3eR2g0RAint7LavohX7YF40QEGmcmqkPL6xSh9xwXI3V3XKJYoTdwgeXVHLu8XXOzgwP
-         +CYZgmOrfbkPsbw5O1ZMRZOJ2uBXG0b6J5sAzNJQRInh4yKU4WVK4ZCf2T8Fh76/FVsx
-         l0Lg==
-Sender: owner-linux-mm@kvack.org
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH RFC] mm/hugetlb_cgroup: Add huge_page_order check to
+ avoid incorrectly uncharge
+Date: Tue, 10 Jul 2012 15:39:58 +0200
+Message-ID: <20120710133958.GA20833@tiehlicka.suse.cz>
+References: <1341914712-4588-1-git-send-email-liwp.linux@gmail.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1341914712-4588-1-git-send-email-liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
+To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Wanpeng Li <liwp@linux.vnet.ibm.com>
+On Tue 10-07-12 18:05:12, Wanpeng Li wrote:
+> From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> Against linux-next:
+> 
+> Function alloc_huge_page will call hugetlb_cgroup_charge_cgroup
+> to charge pages, the compound page have less than 3 pages will not
+> charge to hugetlb cgroup. When alloc_huge_page fails it will call
+> hugetlb_cgroup_uncharge_cgroup to uncharge pages, however,
+> hugetlb_cgroup_uncharge_cgroup doesn't have huge_page_order check.
+> That means it will uncharge pages even if the compound page have less
+> than 3 pages. Add huge_page_order check to avoid this incorrectly
+> uncharge.
+> 
+> Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Against linux-next:
+Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Function alloc_huge_page will call hugetlb_cgroup_charge_cgroup
-to charge pages, the compound page have less than 3 pages will not
-charge to hugetlb cgroup. When alloc_huge_page fails it will call
-hugetlb_cgroup_uncharge_cgroup to uncharge pages, however,
-hugetlb_cgroup_uncharge_cgroup doesn't have huge_page_order check.
-That means it will uncharge pages even if the compound page have less
-than 3 pages. Add huge_page_order check to avoid this incorrectly
-uncharge.
+> ---
+>  mm/hugetlb_cgroup.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+> index b834e8d..2b9e214 100644
+> --- a/mm/hugetlb_cgroup.c
+> +++ b/mm/hugetlb_cgroup.c
+> @@ -252,6 +252,9 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>  
+>  	if (hugetlb_cgroup_disabled() || !h_cg)
+>  		return;
+> +
+> +	if (huge_page_order(&hstates[idx]) < HUGETLB_CGROUP_MIN_ORDER)
+> +		return;
+>  
+>  	res_counter_uncharge(&h_cg->hugepage[idx], csize);
+>  	return;
+> -- 
+> 1.7.5.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
----
- mm/hugetlb_cgroup.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index b834e8d..2b9e214 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -252,6 +252,9 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
- 
- 	if (hugetlb_cgroup_disabled() || !h_cg)
- 		return;
-+
-+	if (huge_page_order(&hstates[idx]) < HUGETLB_CGROUP_MIN_ORDER)
-+		return;
- 
- 	res_counter_uncharge(&h_cg->hugepage[idx], csize);
- 	return;
 -- 
-1.7.5.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
