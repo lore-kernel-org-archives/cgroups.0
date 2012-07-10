@@ -1,45 +1,87 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix dentry still in use bug when dropping css
- refs after umount
-Date: Tue, 10 Jul 2012 10:11:05 +0800
-Message-ID: <4FFB8F39.9030209@huawei.com>
-References: <4FEEA5CB.8070809@huawei.com> <20120703170317.GB555@google.com> <20120703225218.GF555@google.com> <4FF3E063.5010604@huawei.com> <20120708063536.GB19021@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch 08/11] mm: memcg: remove needless !mm fixup to init_mm
+ when charging
+Date: Tue, 10 Jul 2012 14:10:21 +0800
+Message-ID: <20120710061021.GA6096@kernel>
+References: <1341449103-1986-1-git-send-email-hannes@cmpxchg.org>
+ <1341449103-1986-9-git-send-email-hannes@cmpxchg.org>
+ <20120709152058.GK4627@tiehlicka.suse.cz>
+Reply-To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120708063536.GB19021-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=k+G4GdLxOw1da0kuIVrk1Pu2E8/bG12ZdSc4pYbDaHI=;
+        b=UwkqHcCGaVtXWfaYIQY005Qw7WxglA0s9nz6uJGVCc30QMVbMYfjl+pRFqhkOWksNB
+         IGLtb9pb5c2rXaHQdUL7QKOCUtkYPcusNQoF2QqoSPuonFyrXFDHlJp4CYrbNAk90RKo
+         iV8EHVMtAd478wx51hoNLe0ti1FhVXwgva1t5NjcyKAiVyN9DW+YcsQkYPRZalLdE+Sx
+         NFtL3QgIZ77xkUn71w0c+rv5bdDkJkcAJIPbX0sXI0l1Oo1aC6tDqA1uUh8X9l2spu33
+         T4MVXuuau2UcZIVIkx6lKh5ImxJQGvBUWIGLrPUFpdrqLnWWBwG46c3mXP75bBr2yjYh
+         ak4Q==
+Content-Disposition: inline
+In-Reply-To: <20120709152058.GK4627-VqjxzfR4DlwKmadIfiO5sKVXKuFTiq87@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: shyju pv <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Sanil kumar <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 2012/7/8 14:35, Tejun Heo wrote:
+On Mon, Jul 09, 2012 at 05:20:58PM +0200, Michal Hocko wrote:
+>On Thu 05-07-12 02:45:00, Johannes Weiner wrote:
+>> It does not matter to __mem_cgroup_try_charge() if the passed mm is
+>> NULL or init_mm, it will charge the root memcg in either case.
 
-> Hello, Li.
-> 
-> On Wed, Jul 04, 2012 at 02:19:15PM +0800, Li Zefan wrote:
->>> I think we're horridly broken for
->>> root cgroup tho - and it has been broken for very long time.  I think
->>> it's mostly hidden because most (all?) controllers short-circuit root
->>> cgroup.  Eh, well....
->>>
->>
->> Could you elaborate a bit on what's broken for root cgroup?
-> 
-> If someone holds css ref of a root cgroup, AFAICS nothing is
-> preventing the cgroup hierarchy from being unmounted and root cgroup
-> destroyed.
-> 
+You can also change the comment in __mem_cgroup_try_charge :
 
+"if so charge the init_mm" => "if so charge the root memcg"
 
-Right, but that should be safe. The css objects of the root cgroup are
-allocated at boot, and won't be destroyed at umount.
-
-Furthermore when a cgroup hierarchy is going to be unmounted, those css's
-will be made to point to a cgroup named dummytop in rebind_subsystems(),
-and there's a syncronize_rcu() in the end of the function, so accessing
-css->cgroup is always safe.
-
-In this case, dummytop->dentry is NULL, and that's safe too, because
-cgroup_path() is aware of this case.
+>> 
+>> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>
+>Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>
+>> ---
+>>  mm/memcontrol.c |    5 -----
+>>  1 files changed, 0 insertions(+), 5 deletions(-)
+>> 
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 418b47d..6fe4101 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -2766,8 +2766,6 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+>>  		ret = 0;
+>>  	return ret;
+>>  charge_cur_mm:
+>> -	if (unlikely(!mm))
+>> -		mm = &init_mm;
+>>  	ret = __mem_cgroup_try_charge(mm, mask, 1, memcgp, true);
+>>  	if (ret == -EINTR)
+>>  		ret = 0;
+>> @@ -2832,9 +2830,6 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
+>>  	if (PageCompound(page))
+>>  		return 0;
+>>  
+>> -	if (unlikely(!mm))
+>> -		mm = &init_mm;
+>> -
+>>  	if (!PageSwapCache(page))
+>>  		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
+>>  	else { /* page is swapcache/shmem */
+>> -- 
+>> 1.7.7.6
+>> 
+>
+>-- 
+>Michal Hocko
+>SUSE Labs
+>SUSE LINUX s.r.o.
+>Lihovarska 1060/12
+>190 00 Praha 9    
+>Czech Republic
+>--
+>To unsubscribe from this list: send the line "unsubscribe cgroups" in
+>the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
