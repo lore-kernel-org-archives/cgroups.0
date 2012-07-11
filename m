@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 07/10] mm: memcg: remove needless !mm fixup to init_mm when charging
-Date: Wed, 11 Jul 2012 19:02:19 +0200
-Message-ID: <1342026142-7284-8-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 09/10] mm: memcg: only check swap cache pages for repeated charging
+Date: Wed, 11 Jul 2012 19:02:21 +0200
+Message-ID: <1342026142-7284-10-git-send-email-hannes@cmpxchg.org>
 References: <1342026142-7284-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1342026142-7284-1-git-send-email-hannes@cmpxchg.org>
@@ -13,53 +13,59 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, Wanpeng Li <liwp.linux@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-It does not matter to __mem_cgroup_try_charge() if the passed mm is
-NULL or init_mm, it will charge the root memcg in either case.
+Only anon and shmem pages in the swap cache are attempted to be
+charged multiple times, from every swap pte fault or from
+shmem_unuse().  No other pages require checking PageCgroupUsed().
 
-Also fix up the comment in __mem_cgroup_try_charge() that claimed the
-init_mm would be charged when no mm was passed.  It's not really
-incorrect, but confusing.  Clarify that the root memcg is charged in
-this case.
+Charging pages in the swap cache is also serialized by the page lock,
+and since both the try_charge and commit_charge are called under the
+same page lock section, the PageCgroupUsed() check might as well
+happen before the counter charging, let alone reclaim.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Acked-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+ mm/memcontrol.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2c7d164c..c6bcaaa 100644
+index 36e6d73..9433bff 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2334,7 +2334,7 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
- 	 * We always charge the cgroup the mm_struct belongs to.
- 	 * The mm_struct's mem_cgroup changes on task migration if the
- 	 * thread group leader migrates. It's possible that mm is not
--	 * set, if so charge the init_mm (happens for pagecache usage).
-+	 * set, if so charge the root memcg (happens for pagecache usage).
- 	 */
- 	if (!*ptr && !mm)
- 		*ptr = root_mem_cgroup;
-@@ -2834,8 +2834,6 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
- 		ret = 0;
- 	return ret;
- charge_cur_mm:
--	if (unlikely(!mm))
--		mm = &init_mm;
- 	ret = __mem_cgroup_try_charge(mm, mask, 1, memcgp, true);
- 	if (ret == -EINTR)
- 		ret = 0;
-@@ -2900,9 +2898,6 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
- 	if (PageCompound(page))
- 		return 0;
+@@ -2539,11 +2539,7 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+ 	bool anon;
  
--	if (unlikely(!mm))
--		mm = &init_mm;
--
- 	if (!PageSwapCache(page))
- 		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
- 	else { /* page is swapcache/shmem */
+ 	lock_page_cgroup(pc);
+-	if (unlikely(PageCgroupUsed(pc))) {
+-		unlock_page_cgroup(pc);
+-		__mem_cgroup_cancel_charge(memcg, nr_pages);
+-		return;
+-	}
++	VM_BUG_ON(PageCgroupUsed(pc));
+ 	/*
+ 	 * we don't need page_cgroup_lock about tail pages, becase they are not
+ 	 * accessed by any other context at this point.
+@@ -2808,8 +2804,19 @@ static int __mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+ 					  struct mem_cgroup **memcgp)
+ {
+ 	struct mem_cgroup *memcg;
++	struct page_cgroup *pc;
+ 	int ret;
+ 
++	pc = lookup_page_cgroup(page);
++	/*
++	 * Every swap fault against a single page tries to charge the
++	 * page, bail as early as possible.  shmem_unuse() encounters
++	 * already charged pages, too.  The USED bit is protected by
++	 * the page lock, which serializes swap cache removal, which
++	 * in turn serializes uncharging.
++	 */
++	if (PageCgroupUsed(pc))
++		return 0;
+ 	if (!do_swap_account)
+ 		goto charge_cur_mm;
+ 	/*
 -- 
 1.7.7.6
 
