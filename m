@@ -1,54 +1,86 @@
-From: Wanpeng Li <liwp.linux@gmail.com>
-Subject: [PATCH] mm/hugetlb_cgroup: Add list_del to remove unused page from hugepage_activelist when hugepage migration
-Date: Wed, 11 Jul 2012 11:51:58 +0800
-Message-ID: <1341978718-6423-1-git-send-email-liwp.linux@gmail.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH 2/7] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Wed, 11 Jul 2012 16:00:43 +0800
+Message-ID: <4FFD32AB.8090704@gmail.com>
+References: <1340880885-5427-1-git-send-email-handai.szj@taobao.com>	<1340881111-5576-1-git-send-email-handai.szj@taobao.com> <xr93ehok1wf2.fsf@gthelen.mtv.corp.google.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=3XgEXIISozfxfXrGC11Bn86OxxMHA+1MNQQiGffGSEU=;
-        b=j6a7h4jOYFXXayPaIhW7SVJY8HnydRqOVQ4Qbhha7DSvRopahKiFpyGcWUa8DQhpby
-         yuBuzfM3ZPgHd8HSng3RxYpQP9RxrlAl9NLWzW+NgIDboyu9UwYma/NT2+s3yQCR/TQb
-         +wjKeysbCZbt92tBzuyfJ4OgS6Kssm8qbPCCNcU5xc8xyScspbc1ohVC13CdcX1Rk1tR
-         bmeXD2Mhj9e8MLbgBtHwLwMk1sorhGkJPJrWfLsGkSnJPsnN0LDjC5NISrWPHsAROw3m
-         aGiVz4G8X1jZB+3KaMTBECcfqgSTQ4JWzwPBK4/cJ5YmAGx4SusWLrjbs0jFl25FERWE
-         9Pfg==
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=2ZFkRFP58C1MVi8MBcqPNhvMfU96FxNalgJzegQmxaY=;
+        b=RA6gyobDGiGzmiP+uhtNjewV3PMk9jOuObjI3KNRj0hlwgXbBW0ZGb1f7eZGB1r7Eq
+         FhR0sKanod+f43J8QGoqUu1rxB2Y0+Dh94bc9Gej1AFd9xkWEnizZqFjHufI8mhusc2G
+         jud9Tz4BdqCXEyLtgDnj5w6azQZPBsKoE9l7OTyzpa1h8/M8MYKSOs0ZBrbCOs0ij4E9
+         BxOy+RJxQcvsXM8+2k/VTF2hg1GTR83bxNhsMwSwKPmGW9Fg5vEnBbcAL5/6U5v8I9NT
+         039PL3x7lAM31zNnQKGiLKqXZ9Pu5NENwyWjlCFcE0Jbyo/4Wh3IgeCETUU+rkb02Z3x
+         el6g==
+In-Reply-To: <xr93ehok1wf2.fsf@gthelen.mtv.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Greg Thelen <gthelen@google.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, yinghan@google.com, akpm@linux-foundation.org, mhocko@suse.cz, linux-kernel@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>
 
-From: Wanpeng Li <liwp@linux.vnet.ibm.com>
+On 07/10/2012 05:01 AM, Greg Thelen wrote:
+> On Thu, Jun 28 2012, Sha Zhengju wrote:
+>
+>> From: Sha Zhengju<handai.szj@taobao.com>
+>>
+>> While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
+>> as an extra layer of indirection because of the complexity and presumed
+>> performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+>>
+>> Signed-off-by: Sha Zhengju<handai.szj@taobao.com>
+>> ---
+>>   include/linux/memcontrol.h |   25 +++++++++++++++++--------
+>>   mm/memcontrol.c            |   24 +-----------------------
+>>   mm/rmap.c                  |    4 ++--
+>>   3 files changed, 20 insertions(+), 33 deletions(-)
+>>
+>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>> index 83e7ba9..20b0f2d 100644
+>> --- a/include/linux/memcontrol.h
+>> +++ b/include/linux/memcontrol.h
+>> @@ -27,9 +27,18 @@ struct page_cgroup;
+>>   struct page;
+>>   struct mm_struct;
+>>
+>> -/* Stats that can be updated by kernel. */
+>> -enum mem_cgroup_page_stat_item {
+>> -	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
+>> +/*
+>> + * Statistics for memory cgroup.
+>> + */
+>> +enum mem_cgroup_stat_index {
+>> +	/*
+>> +	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+>> +	 */
+>> +	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
+>> +	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
+>> +	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+>> +	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
+>> +	MEM_CGROUP_STAT_NSTATS,
+>>   };
+> Nit.  Moving mem_cgroup_stat_index from memcontrol.c to memcontrol.h is
+> fine with me.  But this does increase the distance between related
+> defintions of definition mem_cgroup_stat_index and
+> mem_cgroup_stat_names.  These two lists have to be kept in sync.  So it
+> might help to add a comment to both indicating their relationship so we
+> don't accidentally modify the enum without updating the dependent string
+> table.
+>
+> Otherwise, looks good.
+>
+> Reviewed-by: Greg Thelen<gthelen@google.com>
 
-hugepage_activelist is used to track currently used HugeTLB pages.
-We can find the in-use HugeTLB pages to support HugeTLB cgroup
-removal. Don't keep unused page in hugetlb_activelist too long.
-Otherwise, on cgroup removal we should update the unused page's 
-charge to parent count. To reduce this overhead, remove unused page 
-from hugepage_activelist immediately.
+Sorry for the delay.
+OK, I'll add some comment here. Thanks for reminding!
 
-Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
----
- mm/hugetlb_cgroup.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index b834e8d..d819d66 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -398,6 +398,7 @@ void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
- 	spin_lock(&hugetlb_lock);
- 	h_cg = hugetlb_cgroup_from_page(oldhpage);
- 	set_hugetlb_cgroup(oldhpage, NULL);
-+	list_del(&oldhpage->lru);
- 
- 	/* move the h_cg details to new cgroup */
- 	set_hugetlb_cgroup(newhpage, h_cg);
--- 
-1.7.5.4
+Thanks,
+Sha
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
