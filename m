@@ -1,91 +1,81 @@
-From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm/hugetlb_cgroup: Add list_del to remove unused page
- from hugepage_activelist when hugepage migration
-Date: Wed, 11 Jul 2012 18:16:18 +0800
-Message-ID: <20120711101618.GA12033@kernel>
-References: <1341978718-6423-1-git-send-email-liwp.linux@gmail.com>
- <87wr2aitpk.fsf@skywalker.in.ibm.com>
- <20120711091648.GA10841@kernel>
- <87txxeiqc0.fsf@skywalker.in.ibm.com>
-Reply-To: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Wanpeng Li <liwp.linux@gmail.com>
+Subject: [PATCH RFC] mm/memcg: calculate max hierarchy limit number instead of min
+Date: Wed, 11 Jul 2012 21:24:41 +0800
+Message-ID: <1342013081-4096-1-git-send-email-liwp.linux@gmail.com>
+References: <a>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=72ZaxE9L4TheX4kfxeLxOlgBSmkoBKafDR0UVjD6XQ4=;
-        b=atq/NjLATX9B+UlsrmgUAF/yOKND8ymO9zwAn//0xWeqgmdmBzqU2lTgfDovvVyT4c
-         x/qJ+0YQ/nSLAmRN36EUIYuYJ0LxTQQjDj9wi4C4lbq5Lw9g29NkxD2VcraD/ZhFf2Is
-         Dea5aSUmFL2QjdHk5A4kw3MSK2VEOBMRBXBRgx80PpLU2SdGDjzHN4Y0MpJx+5MYg3LQ
-         x1B077xBtXmLfVEDW+An4klBVCY0jqSPUlPodOKmMMNOEG79SApZ2JFN7ity2ZNz51U1
-         PdfTGIT5v98RfT++lxpfOtiIS3Evqk79vAsLMKkRoZsMMYpuJ7kdkpQzGtghoGqbnHg7
-         S30w==
-Content-Disposition: inline
-In-Reply-To: <87txxeiqc0.fsf-6yE53ggjAfyqSkle7U1LjlaTQe2KTcn/@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
+        bh=pPpdAEiBhMV66R+esQphDwFibNx8MqmmxlvstCNHypo=;
+        b=CDaON2O3H6VkOc+hhZCV8TbM1OR+LTXZWSRUY0yrJtgjX/M+iRjpGZ/PSy7HM1CGkL
+         jdimPsyv1788vMFJVWL+EW/TKd9gjpV8ej7sKTpoz0RV3P59aCfa0PPPeRgstVNsnS3F
+         VNVtRO5Py3TWL13cjjTJMfsOo3GXZHnrBM5u4wk3vcYYPwZwM8taVNj9Hnfhnihxj2cI
+         QZxbu04aZ/UMXtqoVQcliNMD+1F6hkNwy9kfU49aB2mMzEyo5FPsd6p5sIkLSH5CYMNj
+         9tsGjr6Rx/TNnGa7CPpTybtfbH0UACrWPbWAF2+M2ZSI++gG8h3INAxjtdKH8bZOesRF
+         Bv8g==
+In-Reply-To: <a>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Wanpeng Li <liwp.linux@gmail.com>
 
-On Wed, Jul 11, 2012 at 03:15:19PM +0530, Aneesh Kumar K.V wrote:
->Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> writes:
->
->> On Wed, Jul 11, 2012 at 02:02:23PM +0530, Aneesh Kumar K.V wrote:
->>>Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> writes:
->>>
->>>> From: Wanpeng Li <liwp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->>>>
->>>> hugepage_activelist is used to track currently used HugeTLB pages.
->>>> We can find the in-use HugeTLB pages to support HugeTLB cgroup
->>>> removal. Don't keep unused page in hugetlb_activelist too long.
->>>> Otherwise, on cgroup removal we should update the unused page's 
->>>> charge to parent count. To reduce this overhead, remove unused page 
->>>> from hugepage_activelist immediately.
->>>>
->>>> Signed-off-by: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>>> ---
->>>>  mm/hugetlb_cgroup.c |    1 +
->>>>  1 files changed, 1 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
->>>> index b834e8d..d819d66 100644
->>>> --- a/mm/hugetlb_cgroup.c
->>>> +++ b/mm/hugetlb_cgroup.c
->>>> @@ -398,6 +398,7 @@ void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
->>>>  	spin_lock(&hugetlb_lock);
->>>>  	h_cg = hugetlb_cgroup_from_page(oldhpage);
->>>>  	set_hugetlb_cgroup(oldhpage, NULL);
->>>> +	list_del(&oldhpage->lru);
->>>>
->>>>  	/* move the h_cg details to new cgroup */
->>>>  	set_hugetlb_cgroup(newhpage, h_cg);
->>>
->>>put_page on the oldhpage will do that. If we do list_del here
->>>free_huge_page() will have error list_move().
->>
->> I don't know if move the page to other lists when migration in order 
->> to reduce overhead I mentioned make sense. :-)
->>
->
->Even if we are in the active_list, we don't get anything wrong because
->hugetlb cgroup is set to NULL for the old hugetlb page. The above patch is
->wrong and will result in crash when we try to put_page the oldhpage.
+From: Wanpeng Li <liwp@linux.vnet.ibm.com>
 
-Hi aneesh, I am happy we are in the same company. I am a guy in LTC
-China. I want to know if there any features or works about hugetlb
-cgroup I can do with you!
+Since hierachical_memory_limit shows "of bytes of memory limit with
+regard to hierarchy under which the memory cgroup is", the count should
+calculate max hierarchy limit when use_hierarchy in order to show hierarchy
+subtree limit. hierachical_memsw_limit is the same case.
 
-Regards,
-Wanpeng Li
+Signed-off-by: Wanpeng Li <liwp.linux@gmail.com>
+---
+ mm/memcontrol.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
->
->-aneesh
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 69a7d45..6392c0a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3929,10 +3929,10 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
+ 		unsigned long long *mem_limit, unsigned long long *memsw_limit)
+ {
+ 	struct cgroup *cgroup;
+-	unsigned long long min_limit, min_memsw_limit, tmp;
++	unsigned long long max_limit, max_memsw_limit, tmp;
+ 
+-	min_limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+-	min_memsw_limit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
++	max_limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
++	max_memsw_limit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+ 	cgroup = memcg->css.cgroup;
+ 	if (!memcg->use_hierarchy)
+ 		goto out;
+@@ -3943,13 +3943,13 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
+ 		if (!memcg->use_hierarchy)
+ 			break;
+ 		tmp = res_counter_read_u64(&memcg->res, RES_LIMIT);
+-		min_limit = min(min_limit, tmp);
++		max_limit = max(max_limit, tmp);
+ 		tmp = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+-		min_memsw_limit = min(min_memsw_limit, tmp);
++		max_memsw_limit = max(max_memsw_limit, tmp);
+ 	}
+ out:
+-	*mem_limit = min_limit;
+-	*memsw_limit = min_memsw_limit;
++	*mem_limit = max_limit;
++	*memsw_limit = max_memsw_limit;
+ }
+ 
+ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+-- 
+1.7.5.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
