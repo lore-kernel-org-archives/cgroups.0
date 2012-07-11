@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 10/10] mm: memcg: only check anon swapin page charges for swap cache
-Date: Wed, 11 Jul 2012 19:02:22 +0200
-Message-ID: <1342026142-7284-11-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 08/10] mm: memcg: split swapin charge function into private and public part
+Date: Wed, 11 Jul 2012 19:02:20 +0200
+Message-ID: <1342026142-7284-9-git-send-email-hannes@cmpxchg.org>
 References: <1342026142-7284-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1342026142-7284-1-git-send-email-hannes@cmpxchg.org>
@@ -13,63 +13,74 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, Wanpeng Li <liwp.linux@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-shmem knows for sure that the page is in swap cache when attempting to
-charge a page, because the cache charge entry function has a check for
-it.  Only anon pages may be removed from swap cache already when
-trying to charge their swapin.
+When shmem is charged upon swapin, it does not need to check twice
+whether the memory controller is enabled.
 
-Adjust the comment, though: '4969c11 mm: fix swapin race condition'
-added a stable PageSwapCache check under the page lock in the
-do_swap_page() before calling the memory controller, so it's
-unuse_pte()'s pte_same() that may fail.
+Also, shmem pages do not have to be checked for everything that
+regular anon pages have to be checked for, so let shmem use the
+internal version directly and allow future patches to move around
+checks that are only required when swapping in anon pages.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Acked-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c |   22 ++++++++++++++--------
- 1 files changed, 14 insertions(+), 8 deletions(-)
+ mm/memcontrol.c |   24 +++++++++++++++---------
+ 1 files changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9433bff..ffd9323 100644
+index c6bcaaa..36e6d73 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2819,14 +2819,6 @@ static int __mem_cgroup_try_charge_swapin(struct mm_struct *mm,
- 		return 0;
+@@ -2802,18 +2802,14 @@ int mem_cgroup_newpage_charge(struct page *page,
+  * struct page_cgroup is acquired. This refcnt will be consumed by
+  * "commit()" or removed by "cancel()"
+  */
+-int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+-				 struct page *page,
+-				 gfp_t mask, struct mem_cgroup **memcgp)
++static int __mem_cgroup_try_charge_swapin(struct mm_struct *mm,
++					  struct page *page,
++					  gfp_t mask,
++					  struct mem_cgroup **memcgp)
+ {
+ 	struct mem_cgroup *memcg;
+ 	int ret;
+ 
+-	*memcgp = NULL;
+-
+-	if (mem_cgroup_disabled())
+-		return 0;
+-
  	if (!do_swap_account)
  		goto charge_cur_mm;
--	/*
--	 * A racing thread's fault, or swapoff, may have already updated
--	 * the pte, and even removed page from swap cache: in those cases
--	 * do_swap_page()'s pte_same() test will fail; but there's also a
--	 * KSM case which does need to charge the page.
--	 */
--	if (!PageSwapCache(page))
--		goto charge_cur_mm;
- 	memcg = try_get_mem_cgroup_from_page(page);
- 	if (!memcg)
- 		goto charge_cur_mm;
-@@ -2849,6 +2841,20 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm, struct page *page,
- 	*memcgp = NULL;
- 	if (mem_cgroup_disabled())
- 		return 0;
-+	/*
-+	 * A racing thread's fault, or swapoff, may have already
-+	 * updated the pte, and even removed page from swap cache: in
-+	 * those cases unuse_pte()'s pte_same() test will fail; but
-+	 * there's also a KSM case which does need to charge the page.
-+	 */
-+	if (!PageSwapCache(page)) {
-+		int ret;
-+
-+		ret = __mem_cgroup_try_charge(mm, gfp_mask, 1, memcgp, true);
-+		if (ret == -EINTR)
-+			ret = 0;
-+		return ret;
-+	}
- 	return __mem_cgroup_try_charge_swapin(mm, page, gfp_mask, memcgp);
+ 	/*
+@@ -2840,6 +2836,15 @@ int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+ 	return ret;
  }
  
++int mem_cgroup_try_charge_swapin(struct mm_struct *mm, struct page *page,
++				 gfp_t gfp_mask, struct mem_cgroup **memcgp)
++{
++	*memcgp = NULL;
++	if (mem_cgroup_disabled())
++		return 0;
++	return __mem_cgroup_try_charge_swapin(mm, page, gfp_mask, memcgp);
++}
++
+ void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg)
+ {
+ 	if (mem_cgroup_disabled())
+@@ -2901,7 +2906,8 @@ int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
+ 	if (!PageSwapCache(page))
+ 		ret = mem_cgroup_charge_common(page, mm, gfp_mask, type);
+ 	else { /* page is swapcache/shmem */
+-		ret = mem_cgroup_try_charge_swapin(mm, page, gfp_mask, &memcg);
++		ret = __mem_cgroup_try_charge_swapin(mm, page,
++						     gfp_mask, &memcg);
+ 		if (!ret)
+ 			__mem_cgroup_commit_charge_swapin(page, memcg, type);
+ 	}
 -- 
 1.7.7.6
 
