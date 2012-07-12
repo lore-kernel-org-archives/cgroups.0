@@ -1,46 +1,52 @@
-From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: containers and cgroups mini-summit @ Linux Plumbers
-Date: Wed, 11 Jul 2012 22:47:41 -0500
-Message-ID: <20120712034741.GA13247@amd1>
-References: <4FFDF321.4030103@openvz.org>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch 2/5] mm, oom: introduce helper function to process threads
+ during scan
+Date: Thu, 12 Jul 2012 15:18:21 +0800
+Message-ID: <4FFE7A3D.3010908@gmail.com>
+References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291404530.6040@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291405360.6040@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4FFDF321.4030103-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=Ja5xe0rHWVRq28Qbhm9WrwHNFYBgqSrRW81LV3JD2ig=;
+        b=i9gzSDhFcjSa0BqnqDu/TINe/J+a9Wnppt8gQg69AC481x0AsSTf5fBh51eFqzb0/8
+         /WY0ceGtYwIyBGtswkcE0g/pIihMsem5Un0EdWe8RonEfzdeBE6++3yBDadHQ5PG6f66
+         uX1inONrWNTDy7fUkCMzve42wMvpwO7OB8Jtp0mgFYHn+3LKYZ2q0UnGWu5AjdAg8MH2
+         iRSLEiZSLNNNWfZUw5gVK+7+6hSCHuOeT8v2auBC9HHFAhGNbegfVRLaRk9duIjfzN4M
+         t9fcGWaxlSMgVXEKWtn+8rs1BSXT3FWGxr+9LnQAxzIkynelG2JLbteN7CWuiNTnNFBM
+         OIig==
+In-Reply-To: <alpine.DEB.2.00.1206291405360.6040-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kir Kolyshkin <kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Balbir Singh <balbir-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Maxim Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stephane.graber-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Kir Kolyshkin (kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org):
-> Gentlemen,
-> 
-> We are organizing containers mini-summit during next Linux Plumbers
-> (San Diego, August 29-31).
-> The idea is to gather and discuss everything relevant to namespaces,
-> cgroups, resource management,
-> checkpoint-restore and so on.
+On 06/30/2012 05:06 AM, David Rientjes wrote:
+> This patch introduces a helper function to process each thread during the
+> iteration over the tasklist.  A new return type, enum oom_scan_t, is
+> defined to determine the future behavior of the iteration:
+>
+>   - OOM_SCAN_OK: continue scanning the thread and find its badness,
+>
+>   - OOM_SCAN_CONTINUE: do not consider this thread for oom kill, it's
+>     ineligible,
+>
+>   - OOM_SCAN_ABORT: abort the iteration and return, or
+>
+>   - OOM_SCAN_SELECT: always select this thread with the highest badness
+>     possible.
+>
+> There is no functional change with this patch.  This new helper function
+> will be used in the next patch in the memory controller.
+>
 
-> We are trying to come up with a list of topics to discuss, so please
-> reply with topic suggestions, and
-> let me know if you are going to come.
+Looks good to me.
+You can add  Reviewed-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org> :-)
 
-I won't be there.  I hope it'll be possible to call in remotely one way or
-another.
 
-Topics I'm most interested in right now, beside completion of user
-namespace (if anything needs to be discussed there), is syslog
-namespace and what to do about loop devices and udev/uevents (devices
-namespace?).  Checkpoint/restart is moving along nicely, perhaps only
-a progress update and discussion of any limitations?
-
-> I probably forgot a few more people (such as, I am not sure who else
-> from Google is working
-> on cgroups stuff), so fill free to forward this to anyone you
-> believe should go,
-> or just let me know whom I missed.
-> 
-> Regards,
->   Kir.
+Thanks,
+Sha
