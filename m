@@ -1,68 +1,75 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [patch 3/5] mm, memcg: introduce own oom handler to iterate only
- over its own threads
-Date: Thu, 12 Jul 2012 22:50:58 +0800
-Message-ID: <4FFEE452.40300@gmail.com>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291404530.6040@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291405500.6040@chino.kir.corp.google.com>
+From: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem
+ controller for memcg: stripped down version
+Date: Thu, 12 Jul 2012 17:40:11 +0200
+Message-ID: <20120712154008.GB2185@somewhere.redhat.com>
+References: <1340633728-12785-1-git-send-email-glommer@parallels.com>
+ <20120625162745.eabe4f03.akpm@linux-foundation.org>
+ <4FE9621D.2050002@parallels.com>
+ <20120626145539.eeeab909.akpm@linux-foundation.org>
+ <4FEAD260.4000603@parallels.com>
+ <alpine.DEB.2.00.1206271233080.22162@chino.kir.corp.google.com>
+ <4FEC1D63.6000903@parallels.com>
+ <20120628152540.cc13a735.akpm@linux-foundation.org>
+ <4FF2D9BF.20800@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=POjd8j115rdPFZgoHXLoLq9xwLKqMbhncB1w9NJpr/Q=;
-        b=ZUq1HO+TA+L/SWjTNsKjl0OyGQMIDR8Xbym+0xZaEtN8ESIbsspXZHLXsJ5W/sUqgC
-         SuYU4rBgOi/psDCvh0Bwf7iPAxRhrgMPJgJJEZyhQzICtffAE9RJna74n7lxFiMnQUGG
-         JubhA0oFjlGnEspxQBLMZyu1mxyIot9uI/Pa/28H9t8tSEOFLOFEYBgJh3lQQ5khNBmQ
-         ob19tP/EvT1vMMCQfQm655zKl76u9lEKf90UO+9yUY5IPYmDtc06ZOMWUimFSIU64BV5
-         VX1hR+9oDpEXY159srT1gwzb8lJ1+biz0KYzrWj3JGLp+XEhJnE3ll1Zg+2BOeOKGrfr
-         DVnw==
-In-Reply-To: <alpine.DEB.2.00.1206291405500.6040-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=1DUb4sf8lK6vCDFCXmv/hymV8oZ5GUt1lO2qr5YgTio=;
+        b=QaHssktejNjSyd7YVItmhUwuBd1Viiad0V/RYcOx+1sgusLA1BDxBgtfKofKxzH5IJ
+         t7q6EsasKwqt1fdtQcrdq/3dOZ7B3Oug29NSQykUCXR3u3jvy9vw7PIuYF+HtLQy3JSt
+         RE9/f09n9dPjxaNzzPjZ0mMFpoEDl56P53TXZK3plBfRtH/IvM73+9HkJ9x1SEZrxIdp
+         X+Rpk8ehhjoC//gc5NT+BMSBsxlXXSOVXKCqszs8WYYbj94//HYd0e7SIWIob2bJIKj5
+         ljdDvgkfTGWdqrc7s+f0Du/fdyB0VAOc4F+rbT0l/R0lptR6mvq4qSPwqogU2isjtg7W
+         i6BA==
+Content-Disposition: inline
+In-Reply-To: <4FF2D9BF.20800@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, devel@openvz.org, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Rik van Riel <riel@redhat.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <lennart@poettering.net>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kir Kolyshkin <kir@parallels.com>
 
-On 06/30/2012 05:06 AM, David Rientjes wrote:
-> The global oom killer is serialized by the zonelist being used in the
-> page allocation.  Concurrent oom kills are thus a rare event and only
-> occur in systems using mempolicies and with a large number of nodes.
->
-> Memory controller oom kills, however, can frequently be concurrent since
-> there is no serialization once the oom killer is called for oom
-> conditions in several different memcgs in parallel.
->
-> This creates a massive contention on tasklist_lock since the oom killer
-> requires the readside for the tasklist iteration.  If several memcgs are
-> calling the oom killer, this lock can be held for a substantial amount of
-> time, especially if threads continue to enter it as other threads are
-> exiting.
->
-> Since the exit path grabs the writeside of the lock with irqs disabled in
-> a few different places, this can cause a soft lockup on cpus as a result
-> of tasklist_lock starvation.
->
-> The kernel lacks unfair writelocks, and successful calls to the oom
-> killer usually result in at least one thread entering the exit path, so
-> an alternative solution is needed.
->
-> This patch introduces a seperate oom handler for memcgs so that they do
-> not require tasklist_lock for as much time.  Instead, it iterates only
-> over the threads attached to the oom memcg and grabs a reference to the
-> selected thread before calling oom_kill_process() to ensure it doesn't
-> prematurely exit.
->
-> This still requires tasklist_lock for the tasklist dump, iterating
-> children of the selected process, and killing all other threads on the
-> system sharing the same memory as the selected victim.  So while this
-> isn't a complete solution to tasklist_lock starvation, it significantly
-> reduces the amount of time that it is held.
->
+On Tue, Jul 03, 2012 at 03:38:39PM +0400, Glauber Costa wrote:
+> On 06/29/2012 02:25 AM, Andrew Morton wrote:
+> > On Thu, 28 Jun 2012 13:01:23 +0400
+> > Glauber Costa <glommer@parallels.com> wrote:
+> > 
+> >>
+> >> ...
+> >>
+> > 
+> > OK, that all sounds convincing ;) Please summarise and capture this
+> > discussion in the [patch 0/n] changelog so we (or others) don't have to
+> > go through this all again.  And let's remember this in the next
+> > patchset!
+> 
+> Thanks, will surely do.
+> 
+> >> Last, but not least, note that it is totally within my interests to
+> >> merge the slab tracking as fast as we can. it'll be a matter of going
+> >> back to it, and agreeing in the final form.
+> > 
+> > Yes, I'd very much like to have the whole slab implementation in a
+> > reasonably mature state before proceeding too far with this base
+> > patchset.
+> 
+> Does that means that you want to merge them together? I am more than
+> happy to post the slab part again ontop of that to have people reviewing it.
+> 
+> But if possible, I believe that merging this part first would help us to
+> split up testing in a beneficial way, in the sense that if it breaks, we
+> know at least in which part it is. Not to mention, of course, that
+> reviewers will have an easier time reviewing it as two pieces.
 
-Looks good.
-You can add Reviewed-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Definetly yeah. This makes the review easier for this tricky chunk.
 
-Thanks,
-Sha
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
