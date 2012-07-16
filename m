@@ -1,52 +1,70 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH mmotm] mm, oom: reduce dependency on tasklist_lock: fix
-Date: Mon, 16 Jul 2012 11:27:19 +0200
-Message-ID: <20120716092719.GD14664@tiehlicka.suse.cz>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com>
- <alpine.DEB.2.00.1206291404530.6040@chino.kir.corp.google.com>
- <alpine.DEB.2.00.1206291406110.6040@chino.kir.corp.google.com>
- <20120713143206.GA4511@tiehlicka.suse.cz>
- <alpine.LSU.2.00.1207160039120.3936@eggly.anvils>
- <20120716080603.GA14664@tiehlicka.suse.cz>
- <alpine.LSU.2.00.1207160200200.4056@eggly.anvils>
+From: 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: fix cgroup hierarchy umount race
+Date: Mon, 16 Jul 2012 09:44:45 -0700
+Message-ID: <20120716164445.GA30872@google.com>
+References: <4FEEA5CB.8070809@huawei.com>
+ <20120703170317.GB555@google.com>
+ <20120703225218.GF555@google.com>
+ <4ff55c60.27da440a.65ec.ffff83dfSMTPIN_ADDED@mx.google.com>
+ <20120707234634.GC16783@dhcp-172-17-108-109.mtv.corp.google.com>
+ <20120707234659.GD16783@dhcp-172-17-108-109.mtv.corp.google.com>
+ <20120714120852.GK22927@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=PNdkR9xiOpx5Fr7zY4cxQT7xhCTItpq3PmDthScKmK8=;
+        b=o2Fytrud9mY10s9kjNOxLs2qRJqE47lcQXxwaz9fwG7SVzpPH0Pmi1Lh/bnS2PRVrC
+         7lEyQK9vCxfLolN5On2QwypM32YsQxgzJlklXiLPTQpgJ1B/JosMYJjc3/jgQigVZY/a
+         t3YWo+Sf7xY3wSWV4wPPadviuQDgSDhjVv5WVdqCjyPK23C8BQ9qLuhstYlwQKA53HCq
+         FPFXzhSWIcZ9x+gCBVxSHj16AOFEXjcVV/MNzPk0y/EtZy+UXzxIGjY4fqI3/YURRIWa
+         5XhAu4/8BPRMlCzXT6bKP5CQ1tIhUVkXfXf5a7mZ9h0roAJC0jrBGo+eaBhpLavEBZlc
+         S/rQ==
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.1207160200200.4056@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20120714120852.GK22927-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Minchan Kim <minchan@kernel.org>, Oleg Nesterov <oleg@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: Shyju PV <shyju.pv-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, 'Li Zefan' <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, 'Sanil kumar' <sanil.kumar-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, 'Masanari Iida' <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, 'LKML' <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, 'Cgroups' <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, nagamani.mantha-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Mon 16-07-12 02:01:55, Hugh Dickins wrote:
-> On Mon, 16 Jul 2012, Michal Hocko wrote:
-> > On Mon 16-07-12 00:42:37, Hugh Dickins wrote:
-> > > Slab poisoning gave me a General Protection Fault on the
-> > > 	atomic_dec(&__task_cred(p)->user->processes);
-> > > line of release_task() called from wait_task_zombie(),
-> > > every time my dd to USB testing generated a memcg OOM.
-> > 
-> > Just curious, was it with the wait-on-pagereclaim patch?
+Hello, Al.
+
+On Sat, Jul 14, 2012 at 01:08:52PM +0100, Al Viro wrote:
+> On Sat, Jul 07, 2012 at 04:46:59PM -0700, 'Tejun Heo' wrote:
+> > Fix it by holding an extra superblock->s_active reference across
+> > dput() from css release, which is the dput() path added by 48ddbe1946
+> > and the only one which doesn't hold an extra s_active ref across the
+> > final cgroup dput().
 > 
-> Yes, that's what I was trying to test.
-
-I have noticed the other email already. Sorry for the noise.
-
+> > @@ -3883,8 +3883,12 @@ static void css_dput_fn(struct work_struct *work)
+> >  {
+> >  	struct cgroup_subsys_state *css =
+> >  		container_of(work, struct cgroup_subsys_state, dput_work);
+> > +	struct dentry *dentry = css->cgroup->dentry;
+> > +	struct super_block *sb = dentry->d_sb;
+> >  
+> > -	dput(css->cgroup->dentry);
+> > +	atomic_inc(&sb->s_active);
+> > +	dput(dentry);
+> > +	deactivate_super(sb);
+> >  }
 > 
-> Hugh
+> While we are at it, what guarantees that css->dput_work will complete before
+> css->cgroup or the object containing css get freed under us?
+
+css's are tied to the cgroup.  They are created on cgroup creation and
+destroyed together with cgroup, which is controlled by the dentry
+refcnt.  css refcnts are relaying reference to cgroup dentry refcnt.
+
+The reason why css needs this finer grained refcnts instead of
+directly using cgroup dentry refcnt is that for some subsystems cgroup
+removal tries to drain all css refcnts before proceeding with removal.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
