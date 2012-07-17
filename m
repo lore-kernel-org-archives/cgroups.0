@@ -1,52 +1,40 @@
-From: Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: containers and cgroups mini-summit @ Linux Plumbers
-Date: Tue, 17 Jul 2012 09:26:08 +0200
-Message-ID: <50051390.7010109@linaro.org>
-References: <4FFDF321.4030103@openvz.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Wanpeng Li <liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH] mm/memcg: remove redundant checking on root memcg
+Date: Tue, 17 Jul 2012 17:42:27 +0800
+Message-ID: <1342518147-10406-1-git-send-email-liwanp@linux.vnet.ibm.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4FFDF321.4030103-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Kir Kolyshkin <kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Balbir Singh <balbir-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Maxim Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Wanpeng Li <liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-On 07/11/2012 11:41 PM, Kir Kolyshkin wrote:
-> Gentlemen,
->=20
-> We are organizing containers mini-summit during next Linux Plumbers (=
-San
-> Diego, August 29-31).
-> The idea is to gather and discuss everything relevant to namespaces,
-> cgroups, resource management,
-> checkpoint-restore and so on.
->=20
-> We are trying to come up with a list of topics to discuss, so please
-> reply with topic suggestions, and
-> let me know if you are going to come.
->=20
-> I probably forgot a few more people (such as, I am not sure who else
-> from Google is working
-> on cgroups stuff), so fill free to forward this to anyone you believe
-> should go,
-> or just let me know whom I missed.
+Function __mem_cgroup_cancel_local_charge is only called by
+mem_cgroup_move_parent. For this case, root memcg has been
+checked by mem_cgroup_move_parent. So we needn't check that
+again in function __mem_cgroup_cancel_local_charge and just
+remove the check in function __mem_cgroup_cancel_local_charge.
 
-Hi Kir,
+Signed-off-by: Wanpeng Li <liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+---
+ mm/memcontrol.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-I have a presentation for LPC and I am awaiting the approval for the
-funding. If it is accepted I will be there.
-
-One point to address could be the time virtualization.
-
-Thanks
-  -- Daniel
-
---=20
- <http://www.linaro.org/> Linaro.org =E2=94=82 Open source software for=
- ARM SoCs
-
-=46ollow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
-<http://twitter.com/#!/linaroorg> Twitter |
-<http://www.linaro.org/linaro-blog/> Blog
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6392c0a..d346347 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2404,9 +2404,6 @@ static void __mem_cgroup_cancel_local_charge(struct mem_cgroup *memcg,
+ {
+ 	unsigned long bytes = nr_pages * PAGE_SIZE;
+ 
+-	if (mem_cgroup_is_root(memcg))
+-		return;
+-
+ 	res_counter_uncharge_until(&memcg->res, memcg->res.parent, bytes);
+ 	if (do_swap_account)
+ 		res_counter_uncharge_until(&memcg->memsw,
+-- 
+1.7.5.4
