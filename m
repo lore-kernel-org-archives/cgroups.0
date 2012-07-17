@@ -1,68 +1,45 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] mm/memcg: remove redundant checking on root memcg
-Date: Tue, 17 Jul 2012 12:56:40 +0200
-Message-ID: <20120717105640.GB25435@tiehlicka.suse.cz>
-References: <1342518147-10406-1-git-send-email-liwanp@linux.vnet.ibm.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Update remount documentation
+Date: Tue, 17 Jul 2012 11:13:49 -0700
+Message-ID: <20120717181349.GC2878@google.com>
+References: <1341910158-8994-1-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=J5vYC1jIThHECXi3WK/9YDqxYK7f6F0p8xtd6ztuN2E=;
+        b=Dclng3r4lZ3UEgiRNi3yt4Ui74nNHhiSaDyzCwE6VnseV6+M4a/W3VpiiT+P+bT5Uo
+         jZ0+OFiSyO4RxJkRIuZ4sCFledwkb/KOgYEm8XhFSTMwdMPQsMWCVHOS14S1DsOjAnEY
+         Ymcw1jSYYIykJB5zMcwBZxVyzrYVUJJf8CGUlnycksX165AxhKPbo5Y2RuMWVhsY+FMa
+         UB/HyF/oV3SyKC0dZkbDkyHrUX4Sw/K/mDbgjD0zXdAaAYfeqDMiuMUy76LfiJnpvATl
+         cC9KxRvihqhLeASoLcDl78f4Zps4KqtV1YrFajkKmI/DI4Y+IxPXBgDAYSlOWqmWcV3u
+         DDhA==
 Content-Disposition: inline
-In-Reply-To: <1342518147-10406-1-git-send-email-liwanp@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1341910158-8994-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wanpeng Li <liwanp@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Tue 17-07-12 17:42:27, Wanpeng Li wrote:
-> Function __mem_cgroup_cancel_local_charge is only called by
-> mem_cgroup_move_parent. For this case, root memcg has been
-> checked by mem_cgroup_move_parent. So we needn't check that
-> again in function __mem_cgroup_cancel_local_charge and just
-> remove the check in function __mem_cgroup_cancel_local_charge.
-
-It's true that the check is not necessary but on the other hand
-__mem_cgroup_cancel_charge does check it and it would be unfortunate to
-have two very similar functions with different expectations (one can be
-called for the root cgroup while other one cannot).
-
-> Signed-off-by: Wanpeng Li <liwanp@linux.vnet.ibm.com>
-> ---
->  mm/memcontrol.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
+On Tue, Jul 10, 2012 at 10:49:18AM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6392c0a..d346347 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2404,9 +2404,6 @@ static void __mem_cgroup_cancel_local_charge(struct mem_cgroup *memcg,
->  {
->  	unsigned long bytes = nr_pages * PAGE_SIZE;
->  
-> -	if (mem_cgroup_is_root(memcg))
-> -		return;
-> -
->  	res_counter_uncharge_until(&memcg->res, memcg->res.parent, bytes);
->  	if (do_swap_account)
->  		res_counter_uncharge_until(&memcg->memsw,
-> -- 
-> 1.7.5.4
+> Remounting support will be removed in the future
+> (see feature-removal-schedule.txt). Discourage users to use it.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Cc: Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+
+Applied to cgroup/for-3.6.  Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
