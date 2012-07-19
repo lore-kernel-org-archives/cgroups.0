@@ -1,32 +1,40 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH mmotm] mm, oom: reduce dependency on tasklist_lock: fix
-Date: Thu, 19 Jul 2012 19:11:07 +0900
-Message-ID: <5007DD3B.8030703@jp.fujitsu.com>
-References: <alpine.DEB.2.00.1206251846020.24838@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291404530.6040@chino.kir.corp.google.com> <alpine.DEB.2.00.1206291406110.6040@chino.kir.corp.google.com> <20120713143206.GA4511@tiehlicka.suse.cz> <alpine.LSU.2.00.1207160039120.3936@eggly.anvils>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v2] mm/memcg: use exist interface to get css from memcg
+Date: Thu, 19 Jul 2012 19:23:07 +0900
+Message-ID: <5007E00B.6000802@jp.fujitsu.com>
+References: <1342609734-22437-1-git-send-email-liwanp@linux.vnet.ibm.com> <20120719092928.GA2864@tiehlicka.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LSU.2.00.1207160039120.3936-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120719092928.GA2864@tiehlicka.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Wanpeng Li <liwanp@linux.vnet.ibm.com>, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>, Bob Liu <lliubbo@gmail.com>
 
-(2012/07/16 16:42), Hugh Dickins wrote:
-> Slab poisoning gave me a General Protection Fault on the
-> 	atomic_dec(&__task_cred(p)->user->processes);
-> line of release_task() called from wait_task_zombie(),
-> every time my dd to USB testing generated a memcg OOM.
+(2012/07/19 18:29), Michal Hocko wrote:
+> On Wed 18-07-12 19:08:54, Wanpeng Li wrote:
+>> use exist interface mem_cgroup_css instead of &mem->css.
 >
-> oom_kill_process() now does the put_task_struct(),
-> mem_cgroup_out_of_memory() should not repeat it.
+> This interface has been added to enable mem->css outside of
+> mm/memcontrol.c (where we define struct mem_cgroup). There is one user
+> left (hwpoison_filter_task) after recent clean ups.
 >
-> Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> I think we shouldn't spread the usage inside the mm/memcontrol.c. The
+> compiler inlines the function for all callers added by this patch but I
+> wouldn't rely on it. It is also unfortunate that we cannot convert all
+> dereferences (e.g. const mem_cgroup).
+> Moreover it doesn't add any additional type safety. So I would vote for
+> not taking the patch but if others like it I will not block it.
+>
 
-Thank you for catching !
+Agreed.
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+-Kame
 
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
