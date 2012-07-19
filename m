@@ -1,22 +1,26 @@
-From: Wanpeng Li <liwanp@linux.vnet.ibm.com>
-Subject: [PATCH v2] mm/memcg: use exist interface to get css from memcg
-Date: Wed, 18 Jul 2012 19:08:54 +0800
-Message-ID: <1342609734-22437-1-git-send-email-liwanp@linux.vnet.ibm.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: Wanpeng Li <liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH v2][resend] mm/memcg: use exist interface to get css from memcg
+Date: Thu, 19 Jul 2012 08:37:11 +0800
+Message-ID: <1342658231-8933-1-git-send-email-liwanp@linux.vnet.ibm.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>, Wanpeng Li <liwanp@linux.vnet.ibm.com>, Bob Liu <lliubbo@gmail.com>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Wanpeng Li <liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Bob Liu <lliubbo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+From: Wanpeng Li <liwp.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+[Ccing Andrew]
 
 use exist interface mem_cgroup_css instead of &mem->css.
 
 V2->V1:
 * restore the mistake modify in mem_cgroup_css
 
-Signed-off-by: Wanpeng Li <liwanp@linux.vnet.ibm.com>
+Signed-off-by: Wanpeng Li <liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 ---
  mm/memcontrol.c |   89 ++++++++++++++++++++++++++++--------------------------
  1 files changed, 46 insertions(+), 43 deletions(-)
@@ -61,7 +65,7 @@ index f72b5e5..f27084c 100644
  
  		rcu_read_lock();
 -		css = css_get_next(&mem_cgroup_subsys, id + 1, &root->css, &id);
-+		css = css_get_next(&mem_cgroup_subsys, id + 1,
++		css = css_get_next(&mem_cgroup_subsys, id + 1, 
 +					mem_cgroup_css(root), &id);
  		if (css) {
 -			if (css == &root->css || css_tryget(css))
@@ -83,7 +87,7 @@ index f72b5e5..f27084c 100644
  	if (!root_memcg->use_hierarchy || !memcg)
  		return false;
 -	return css_is_ancestor(&memcg->css, &root_memcg->css);
-+	return css_is_ancestor(mem_cgroup_css(memcg),
++	return css_is_ancestor(mem_cgroup_css(memcg), 
 +				&root_memcg->css);
  }
  
@@ -372,16 +376,10 @@ index f72b5e5..f27084c 100644
  	/* There is a swap entry and a page doesn't exist or isn't charged */
  	if (ent.val && !ret &&
 -			css_id(&mc.from->css) == lookup_swap_cgroup_id(ent)) {
-+			css_id(mem_cgroup_css(mc.from)) ==
++			css_id(mem_cgroup_css(mc.from)) == 
 +					lookup_swap_cgroup_id(ent)) {
  		ret = MC_TARGET_SWAP;
  		if (target)
  			target->ent = ent;
 -- 
 1.7.7.6
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
