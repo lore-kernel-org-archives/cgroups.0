@@ -1,98 +1,55 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: + hugetlb-cgroup-simplify-pre_destroy-callback.patch added to -mm tree
-Date: Sat, 21 Jul 2012 00:48:34 +0530
-Message-ID: <87d33qmeb9.fsf@skywalker.in.ibm.com>
-References: <20120718212637.133475C0050@hpza9.eem.corp.google.com> <20120719113915.GC2864@tiehlicka.suse.cz> <87r4s8gcwe.fsf@skywalker.in.ibm.com> <20120719123820.GG2864@tiehlicka.suse.cz> <87ipdjc15j.fsf@skywalker.in.ibm.com> <20120720080639.GC12434@tiehlicka.suse.cz>
+From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Don't drop the cgroup_mutex in cgroup_rmdir
+Date: Fri, 20 Jul 2012 12:49:20 -0700
+Message-ID: <20120720194920.GB21218@google.com>
+References: <87ipdjc15j.fsf@skywalker.in.ibm.com>
+ <1342706972-10912-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120720080639.GC12434@tiehlicka.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=vZEVey+j9uRCXPBIJm/aJx3P5SRQPcSvP+g03ZmceGs=;
+        b=p4sS9kBrULIAPeTVWRmQWwMiPpea+WlkYg0LiMAYaXxi7UQatxOG7MoQFr1XiQ3VRP
+         6tpt8MsW5ROTbn65mseraud6bur8B+UNcRXmtzf7N4wmjaLS+jO66pT8BiI0pUU/oAnK
+         QcQEgh6w3KVO45+1hE3hv0XjW6k8nKQsXh0D4Ojo+NVbGk0rdkXPeQcbT33hgqYY6WZy
+         3Dc3oS/8CZSVWshzgy4sGLaGFeXQMucIwLTwR6spqRTXh5V9TJkJXD5MpMyTcdyFVEF+
+         dFvHsywaN2OcQMpB/C7PXsJ9tzddI1rXs9e80hKAf8eKgg7GxxEpI6+8b/B0s8+M5aBR
+         3pMQ==
+Content-Disposition: inline
+In-Reply-To: <1342706972-10912-1-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: akpm@linux-foundation.org, mm-commits@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, liwanp@linux.vnet.ibm.com, Tejun Heo <htejun@gmail.com>, Li Zefan <lizefan@huawei.com>, cgroups mailinglist <cgroups@vger.kernel.org>, linux-mm@kvack.org
+To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Michal Hocko <mhocko@suse.cz> writes:
+On Thu, Jul 19, 2012 at 07:39:32PM +0530, Aneesh Kumar K.V wrote:
+> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> We dropped cgroup mutex, because of a deadlock between memcg and cpuset.
+> cpuset took hotplug lock followed by cgroup_mutex, where as memcg pre_destroy
+> did lru_add_drain_all() which took hotplug lock while already holding
+> cgroup_mutex. The deadlock is explained in 3fa59dfbc3b223f02c26593be69ce6fc9a940405
+> But dropping cgroup_mutex in cgroup_rmdir also means tasks could get
+> added to cgroup while we are in pre_destroy. This makes error handling in
+> pre_destroy complex. So move the unlock/lock to memcg pre_destroy callback.
+> Core cgroup will now call pre_destroy with cgroup_mutex held.
+> 
+> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-> On Thu 19-07-12 19:18:24, Aneesh Kumar K.V wrote:
->> Michal Hocko <mhocko@suse.cz> writes:
->> 
->> > On Thu 19-07-12 17:51:05, Aneesh Kumar K.V wrote:
->> >> Michal Hocko <mhocko@suse.cz> writes:
->> >> 
->> >> > From 621ed1c9dab63bd82205bd5266eb9974f86a0a3f Mon Sep 17 00:00:00 2001
->> >> > From: Michal Hocko <mhocko@suse.cz>
->> >> > Date: Thu, 19 Jul 2012 13:23:23 +0200
->> >> > Subject: [PATCH] cgroup: keep cgroup_mutex locked for pre_destroy
->> >> >
->> >> > 3fa59dfb (cgroup: fix potential deadlock in pre_destroy) dropped the
->> >> > cgroup_mutex lock while calling pre_destroy callbacks because memory
->> >> > controller could deadlock because force_empty triggered reclaim.
->> >> > Since "memcg: move charges to root cgroup if use_hierarchy=0" there is
->> >> > no reclaim going on from mem_cgroup_force_empty though so we can safely
->> >> > keep the cgroup_mutex locked. This has an advantage that no tasks might
->> >> > be added during pre_destroy callback and so the handlers don't have to
->> >> > consider races when new tasks add new charges. This simplifies the
->> >> > implementation.
->> >> > ---
->> >> >  kernel/cgroup.c |    2 --
->> >> >  1 file changed, 2 deletions(-)
->> >> >
->> >> > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> >> > index 0f3527d..9dba05d 100644
->> >> > --- a/kernel/cgroup.c
->> >> > +++ b/kernel/cgroup.c
->> >> > @@ -4181,7 +4181,6 @@ again:
->> >> >  		mutex_unlock(&cgroup_mutex);
->> >> >  		return -EBUSY;
->> >> >  	}
->> >> > -	mutex_unlock(&cgroup_mutex);
->> >> >
->> >> >  	/*
->> >> >  	 * In general, subsystem has no css->refcnt after pre_destroy(). But
->> >> > @@ -4204,7 +4203,6 @@ again:
->> >> >  		return ret;
->> >> >  	}
->> >> >
->> >> > -	mutex_lock(&cgroup_mutex);
->> >> >  	parent = cgrp->parent;
->> >> >  	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children)) {
->> >> >  		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
->> >> 
->> >> mem_cgroup_force_empty still calls 
->> >> 
->> >> lru_add_drain_all 
->> >>    ->schedule_on_each_cpu
->> >>         -> get_online_cpus
->> >>            ->mutex_lock(&cpu_hotplug.lock);
->> >> 
->> >> So wont we deadlock ?
->> >
->> > Yes you are right. I got it wrong. I thought that the reclaim is the
->> > main problem. It won't be that easy then and the origin mm patch
->> > (hugetlb-cgroup-simplify-pre_destroy-callback.patch) still needs a fix
->> > or to be dropped.
->> 
->> We just need to remove the VM_BUG_ON() right ? The rest of the patch is
->> good right ? Otherwise how about the below
->
-> You can keep VM_BUG_ON with the patch below and also remove the check
-> for cgroup_task_count || &cgroup->children because that is checked in
-> cgroup_rmdir already.
->
+So, umm, let's not do this at this point.  Please just fix memcg such
+that it doesn't fail ->pre_destroy() and drop
+subsys->__DEPRECATED_clear_css_refs.  cgroup core won't give away new
+references during or after pre_destroy that way and memcg is the ONLY
+subsystem needing the deprecated behavior so it's rather
+counter-productive to implement work-around at this point.
 
-Does cgroup_rmdir do a cgroup_task_count check ? I do see that it check
-cgroup->childern and cgroup->count. But cgroup->count is not same as
-task_count right ?
+ Nacked-And-Please-Drop-The-DEPRECATED-Behavior-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-May be we need to push the task_count check also to rmdir so that
-pre_destory doesn't need to check this 
+Thanks.
 
--aneesh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
