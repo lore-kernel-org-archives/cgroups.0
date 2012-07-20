@@ -1,55 +1,57 @@
-From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Don't drop the cgroup_mutex in cgroup_rmdir
-Date: Fri, 20 Jul 2012 12:49:20 -0700
-Message-ID: <20120720194920.GB21218@google.com>
-References: <87ipdjc15j.fsf@skywalker.in.ibm.com>
- <1342706972-10912-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: + hugetlb-cgroup-simplify-pre_destroy-callback.patch added to
+ -mm tree
+Date: Fri, 20 Jul 2012 12:56:43 -0700
+Message-ID: <20120720195643.GC21218@google.com>
+References: <20120718212637.133475C0050@hpza9.eem.corp.google.com>
+ <20120719113915.GC2864@tiehlicka.suse.cz>
+ <87r4s8gcwe.fsf@skywalker.in.ibm.com>
+ <20120719123820.GG2864@tiehlicka.suse.cz>
+ <87ipdjc15j.fsf@skywalker.in.ibm.com>
+ <20120720080639.GC12434@tiehlicka.suse.cz>
+ <87d33qmeb9.fsf@skywalker.in.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=vZEVey+j9uRCXPBIJm/aJx3P5SRQPcSvP+g03ZmceGs=;
-        b=p4sS9kBrULIAPeTVWRmQWwMiPpea+WlkYg0LiMAYaXxi7UQatxOG7MoQFr1XiQ3VRP
-         6tpt8MsW5ROTbn65mseraud6bur8B+UNcRXmtzf7N4wmjaLS+jO66pT8BiI0pUU/oAnK
-         QcQEgh6w3KVO45+1hE3hv0XjW6k8nKQsXh0D4Ojo+NVbGk0rdkXPeQcbT33hgqYY6WZy
-         3Dc3oS/8CZSVWshzgy4sGLaGFeXQMucIwLTwR6spqRTXh5V9TJkJXD5MpMyTcdyFVEF+
-         dFvHsywaN2OcQMpB/C7PXsJ9tzddI1rXs9e80hKAf8eKgg7GxxEpI6+8b/B0s8+M5aBR
-         3pMQ==
+        bh=VHiTUpi7Ryd8EH/23o+oQhe9eCyGl8/cotb9z9UU3JI=;
+        b=H5QmYcu5NhGCEob9jNPVOBPXtZPXF5U6y10yvUw25Bfm6vPcwgdCRQZa6gwpzOzyP8
+         SD/8SLeJWOs8HQs0r4xhhsgYwpmSX1Auf+evaHyCGTfFkqRE2iduSn2OA0+SUxvxKye8
+         I9xxyfh0gaUrhnMmB9mN2ikXzKoJoVTJ0CgVlR3GtqqwAPFI3sIM/JeGl3lTxE9nwE7c
+         MKvo9+aMdvpLkA2hSYyIbRHciLPeb0oD1CEp+mDAezAwipTyPTtTUQ7ZKLfNAi/y03H5
+         XYYfMaqtAMEEQrVhnkHAxp3ZO2S2LTIRG7h6HPOCdtW8njOsawRoB6XWmwlmWSPgFUlc
+         wXnw==
 Content-Disposition: inline
-In-Reply-To: <1342706972-10912-1-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <87d33qmeb9.fsf@skywalker.in.ibm.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: Michal Hocko <mhocko@suse.cz>, akpm@linux-foundation.org, mm-commits@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, liwanp@linux.vnet.ibm.com, Li Zefan <lizefan@huawei.com>, cgroups mailinglist <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-On Thu, Jul 19, 2012 at 07:39:32PM +0530, Aneesh Kumar K.V wrote:
-> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+On Sat, Jul 21, 2012 at 12:48:34AM +0530, Aneesh Kumar K.V wrote:
+> Does cgroup_rmdir do a cgroup_task_count check ? I do see that it check
+> cgroup->childern and cgroup->count. But cgroup->count is not same as
+> task_count right ?
 > 
-> We dropped cgroup mutex, because of a deadlock between memcg and cpuset.
-> cpuset took hotplug lock followed by cgroup_mutex, where as memcg pre_destroy
-> did lru_add_drain_all() which took hotplug lock while already holding
-> cgroup_mutex. The deadlock is explained in 3fa59dfbc3b223f02c26593be69ce6fc9a940405
-> But dropping cgroup_mutex in cgroup_rmdir also means tasks could get
-> added to cgroup while we are in pre_destroy. This makes error handling in
-> pre_destroy complex. So move the unlock/lock to memcg pre_destroy callback.
-> Core cgroup will now call pre_destroy with cgroup_mutex held.
-> 
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> May be we need to push the task_count check also to rmdir so that
+> pre_destory doesn't need to check this 
 
-So, umm, let's not do this at this point.  Please just fix memcg such
-that it doesn't fail ->pre_destroy() and drop
-subsys->__DEPRECATED_clear_css_refs.  cgroup core won't give away new
-references during or after pre_destroy that way and memcg is the ONLY
-subsystem needing the deprecated behavior so it's rather
-counter-productive to implement work-around at this point.
-
- Nacked-And-Please-Drop-The-DEPRECATED-Behavior-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+task_count implies cgroup refcnt which cgroup core does check.  No
+need to worry about that, ->children or whatever from memcg.  As soon
+as the deprecated behavior is gone, everything will be okay;
+otherwise, it's a bug in cgroup core.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
