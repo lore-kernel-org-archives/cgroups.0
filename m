@@ -1,97 +1,43 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Don't drop the cgroup_mutex in cgroup_rmdir
-Date: Fri, 20 Jul 2012 09:51:12 +0200
-Message-ID: <20120720075112.GA12434@tiehlicka.suse.cz>
-References: <87ipdjc15j.fsf@skywalker.in.ibm.com>
- <1342706972-10912-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: + hugetlb-cgroup-simplify-pre_destroy-callback.patch added to
+ -mm tree
+Date: Fri, 20 Jul 2012 10:01:36 +0200
+Message-ID: <20120720080136.GB12434@tiehlicka.suse.cz>
+References: <20120718212637.133475C0050@hpza9.eem.corp.google.com>
+ <20120719113915.GC2864@tiehlicka.suse.cz>
+ <87r4s8gcwe.fsf@skywalker.in.ibm.com>
+ <20120719123820.GG2864@tiehlicka.suse.cz>
+ <87ipdjc15j.fsf@skywalker.in.ibm.com>
+ <5008AEC2.9090707@jp.fujitsu.com>
+ <5008B25D.5000902@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1342706972-10912-1-git-send-email-aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <5008B25D.5000902-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mm-commits-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu 19-07-12 19:39:32, Aneesh Kumar K.V wrote:
-> From: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+On Fri 20-07-12 10:20:29, KAMEZAWA Hiroyuki wrote:
+[...]
+> Hmm, can't cgroup_lock() be implemented as
 > 
-> We dropped cgroup mutex, because of a deadlock between memcg and cpuset.
-> cpuset took hotplug lock followed by cgroup_mutex, where as memcg pre_destroy
-> did lru_add_drain_all() which took hotplug lock while already holding
-> cgroup_mutex. The deadlock is explained in 3fa59dfbc3b223f02c26593be69ce6fc9a940405
-> But dropping cgroup_mutex in cgroup_rmdir also means tasks could get
-> added to cgroup while we are in pre_destroy. This makes error handling in
-> pre_destroy complex. So move the unlock/lock to memcg pre_destroy callback.
-> Core cgroup will now call pre_destroy with cgroup_mutex held.
-
-OK, this should be good for now but we should definitely work towards
-not messing with cgroup_mutex like that and remove the hack from memcg
-callback in the long term.
-
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-> ---
->  kernel/cgroup.c |    3 +--
->  mm/memcontrol.c |   11 ++++++++++-
->  2 files changed, 11 insertions(+), 3 deletions(-)
 > 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 7981850..01c67f4 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -4151,7 +4151,6 @@ again:
->  		mutex_unlock(&cgroup_mutex);
->  		return -EBUSY;
->  	}
-> -	mutex_unlock(&cgroup_mutex);
->  
->  	/*
->  	 * In general, subsystem has no css->refcnt after pre_destroy(). But
-> @@ -4171,10 +4170,10 @@ again:
->  	ret = cgroup_call_pre_destroy(cgrp);
->  	if (ret) {
->  		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-> +		mutex_unlock(&cgroup_mutex);
->  		return ret;
->  	}
->  
-> -	mutex_lock(&cgroup_mutex);
->  	parent = cgrp->parent;
->  	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children)) {
->  		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e8ddc00..9bd56ee 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4993,9 +4993,18 @@ free_out:
->  
->  static int mem_cgroup_pre_destroy(struct cgroup *cont)
->  {
-> +	int ret;
->  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
->  
-> -	return mem_cgroup_force_empty(memcg, false);
-> +	cgroup_unlock();
-> +	/*
-> +	 * we call lru_add_drain_all, which end up taking
-> +	 * mutex_lock(&cpu_hotplug.lock), But cpuset have
-> +	 * the reverse order. So drop the cgroup lock
-> +	 */
-> +	ret = mem_cgroup_force_empty(memcg, false);
-> +	cgroup_lock();
-> +	return ret;
->  }
->  
->  static void mem_cgroup_destroy(struct cgroup *cont)
-> -- 
-> 1.7.10
-> 
+> void cgroup_lock()
+> {
+> 	get_online_cpus()
+> 	lock_memory_hotplug()
+> 	mutex_lock(&cgroup_mutex);
+> }
 
+This is really ugly and it wouldn't help much anyway. Notifier which
+takes the cgroup_lock is called when cpu_hotplug.lock is held already.
+You would need to call cgroup_lock() before taking the cpu_hotplug.lock
+and remove it from notifiers. I think this should be doable but I didn't
+have too much time to look deeper into it.
 -- 
 Michal Hocko
 SUSE Labs
