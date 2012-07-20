@@ -1,82 +1,30 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH] cgroup: Don't drop the cgroup_mutex in cgroup_rmdir
-Date: Fri, 20 Jul 2012 17:45:40 +0200
-Message-ID: <1342799140.2583.6.camel@twins>
-References: <87ipdjc15j.fsf@skywalker.in.ibm.com>
-	 <1342706972-10912-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
-	 <20120719165046.GO24336@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: containers and cgroups mini-summit @ Linux Plumbers
+Date: Fri, 20 Jul 2012 18:30:29 +0200
+Message-ID: <20120720163029.GC1426@cmpxchg.org>
+References: <4FFDF321.4030103@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120719165046.GO24336@google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4FFDF321.4030103-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, akpm@linux-foundation.org, mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, liwanp@linux.vnet.ibm.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, glommer@parallels.com
+Content-Transfer-Encoding: 7bit
+To: Kir Kolyshkin <kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Balbir Singh <balbir-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Maxim Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Thu, 2012-07-19 at 09:50 -0700, Tejun Heo wrote:
-> On Thu, Jul 19, 2012 at 07:39:32PM +0530, Aneesh Kumar K.V wrote:
-> > From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-> >=20
-> > We dropped cgroup mutex, because of a deadlock between memcg and cpuset=
-.
-> > cpuset took hotplug lock followed by cgroup_mutex, where as memcg pre_d=
-estroy
-> > did lru_add_drain_all() which took hotplug lock while already holding
-> > cgroup_mutex. The deadlock is explained in 3fa59dfbc3b223f02c26593be69c=
-e6fc9a940405
-> > But dropping cgroup_mutex in cgroup_rmdir also means tasks could get
-> > added to cgroup while we are in pre_destroy. This makes error handling =
-in
-> > pre_destroy complex. So move the unlock/lock to memcg pre_destroy callb=
-ack.
-> > Core cgroup will now call pre_destroy with cgroup_mutex held.
-> >=20
-> > Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
->=20
-> I generally think cgroup_mutex shouldn't be dropped across any cgroup
-> hierarchy changing operation and thus agree with the cgroup core
-> change.
->=20
-> >  static int mem_cgroup_pre_destroy(struct cgroup *cont)
-> >  {
-> > +	int ret;
-> >  	struct mem_cgroup *memcg =3D mem_cgroup_from_cont(cont);
-> > =20
-> > -	return mem_cgroup_force_empty(memcg, false);
-> > +	cgroup_unlock();
-> > +	/*
-> > +	 * we call lru_add_drain_all, which end up taking
-> > +	 * mutex_lock(&cpu_hotplug.lock), But cpuset have
-> > +	 * the reverse order. So drop the cgroup lock
-> > +	 */
-> > +	ret =3D mem_cgroup_force_empty(memcg, false);
-> > +	cgroup_lock();
-> > +	return ret;
-> >  }
->=20
-> This reverse dependency from cpuset is the same problem Glauber
-> reported a while ago.  I don't know why / how cgroup_mutex got
-> exported to outside world but this is asking for trouble.  cgroup
-> mutex protects cgroup hierarchies.  There are many core subsystems
-> which implement cgroup controllers.  Controller callbacks for
-> hierarchy changing oeprations need to synchronize with the rest of the
-> core subsystems.  So, by design, in locking hierarchy, cgroup_mutex
-> has to be one of the outermost locks.  If somebody tries to grab it
-> from inside other core subsystem locks, there of course will be
-> circular locking dependencies.
->=20
-> So, Peter, why does cpuset mangle with cgroup_mutex?  What guarantees
-> does it need?  Why can't it work on "changed" notification while
-> caching the current css like blkcg does?
+On Thu, Jul 12, 2012 at 01:41:53AM +0400, Kir Kolyshkin wrote:
+> Gentlemen,
+> 
+> We are organizing containers mini-summit during next Linux Plumbers
+> (San Diego, August 29-31).
+> The idea is to gather and discuss everything relevant to namespaces,
+> cgroups, resource management,
+> checkpoint-restore and so on.
+> 
+> We are trying to come up with a list of topics to discuss, so please
+> reply with topic suggestions, and
+> let me know if you are going to come.
 
-I've no clue sorry.. /me goes stare at this stuff.. Looks like something
-Paul Menage did when he created cgroups. I'll have to have a hard look
-at all that to untangle this. Not something obvious to me.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I'll be there.
