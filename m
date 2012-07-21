@@ -1,85 +1,70 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Subject: Re: + hugetlb-cgroup-simplify-pre_destroy-callback.patch added to
  -mm tree
-Date: Fri, 20 Jul 2012 19:46:57 -0700
-Message-ID: <20120721024657.GA7962@dhcp-172-17-108-109.mtv.corp.google.com>
-References: <20120718212637.133475C0050@hpza9.eem.corp.google.com>
- <20120719113915.GC2864@tiehlicka.suse.cz>
- <87r4s8gcwe.fsf@skywalker.in.ibm.com>
- <20120719123820.GG2864@tiehlicka.suse.cz>
- <87ipdjc15j.fsf@skywalker.in.ibm.com>
- <20120720080639.GC12434@tiehlicka.suse.cz>
- <87d33qmeb9.fsf@skywalker.in.ibm.com>
- <20120720195643.GC21218@google.com>
- <500A107D.9060404@jp.fujitsu.com>
+Date: Sat, 21 Jul 2012 13:05:13 +0900
+Message-ID: <500A2A79.5030705@jp.fujitsu.com>
+References: <20120718212637.133475C0050@hpza9.eem.corp.google.com> <20120719113915.GC2864@tiehlicka.suse.cz> <87r4s8gcwe.fsf@skywalker.in.ibm.com> <20120719123820.GG2864@tiehlicka.suse.cz> <87ipdjc15j.fsf@skywalker.in.ibm.com> <20120720080639.GC12434@tiehlicka.suse.cz> <87d33qmeb9.fsf@skywalker.in.ibm.com> <20120720195643.GC21218@google.com> <500A107D.9060404@jp.fujitsu.com> <20120721024657.GA7962@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=eCjBAr53N8yG+7W9agQNq+GoP0ijadBFNFM2o2HHpqQ=;
-        b=hWKOHmGSOR+gUN7QOtkbejvhldWAhfW1+BSZpmW8VfZv4gSicj8NNlYMt1RtANBZUc
-         H8liHAfRrD76x+NaVmhGYfyhmkzg8ylvfgnoKGPgxxj0VmvrBlXd9Y2Xno6Sx9VoMJu1
-         UWCFdGEXhlhoRsNenold8GwaLMCU7hXxxBcJEen1MBGN9OSJSNmc3WTFHaGweJrn+mMM
-         fItlGINQ/T5HDXAug8BxQZph1I3/wTp7qbjZZP8YgmDE7xS91mhIhp1PlZIe/X/3T+/f
-         USSqVgsRZtToYfOn3VtPhSTIJPjRLfLfL8br1z1OVGnuBiBen3hkQDx/IWHkbRfJxVaa
-         9tug==
-Content-Disposition: inline
-In-Reply-To: <500A107D.9060404@jp.fujitsu.com>
+In-Reply-To: <20120721024657.GA7962@dhcp-172-17-108-109.mtv.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <htejun@gmail.com>
 Cc: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Michal Hocko <mhocko@suse.cz>, akpm@linux-foundation.org, mm-commits@vger.kernel.org, liwanp@linux.vnet.ibm.com, Li Zefan <lizefan@huawei.com>, cgroups mailinglist <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-Hello, Kamezawa-san.
+(2012/07/21 11:46), Tejun Heo wrote:
+> Hello, Kamezawa-san.
+>
+> On Sat, Jul 21, 2012 at 11:14:21AM +0900, Kamezawa Hiroyuki wrote:
+>> I'm sorry I misunderstand. The problem is following.
+>>
+>>          CPU A                       CPU B
+>>      mutex_unlock()
+>>                                  mutex_lock()
+>>      ->pre_destroy()             attach task
+>>        commit res->usage=0       mutex_unlock()
+>>                                  increase res->usage
+>>                                  detach task
+>>      mutex_lock()
+>>      check css's refcount=0
+>>       ....continue destroy.
+>>
+>> Now, I thinks memcg's check is not enough but putting the -EBUSY there
+>> not to forget this race.
+>>
+>>
+>> I think a patch to stop task-attach and create child cgroup if  CGRP_WAIT_ON_RMDIR
+>> is set is required. And that's enough..
+>
+> The *ONLY* reason we're not marking the cgroup dead after the checking
+> whether the cgroup has children or task at the top of cgroup_rmdir()
+> is because memcg might fail ->pre_destroy() and cancel the cgroup
+> removal.  We can't commit to removal because memcg might fail.
+>
+> Now, if memcg drops the deprecated behavior, we can simply commit to
+> removal *before* starting calling pre_destroy() and it doesn't matter
+> at all whether we hold cgroup_mutex across pre_destroy or not and
+> cgroup core will simply deny any addition to the cgroup committed to
+> death.  (and remove a handsome amount of ugly code in the process)
+>
+> So, the *ONLY* reason this can't be fixed properly from cgroup core is
+> because memcg's pre_destory() might fail and it doesn't make much
+> sense to me to implement add a workaround at this point when the whole
+> problem will go away once memcg's pre_destroy() is updated.
+>
+> So, please update memcg and drop the __DEPRECATED flag, so that the
+> cgroup core can drop at least this particular part of misdesign. :(
+>
 
-On Sat, Jul 21, 2012 at 11:14:21AM +0900, Kamezawa Hiroyuki wrote:
-> I'm sorry I misunderstand. The problem is following.
-> 
->         CPU A                       CPU B
->     mutex_unlock()
->                                 mutex_lock()
->     ->pre_destroy()             attach task
->       commit res->usage=0       mutex_unlock()
->                                 increase res->usage
->                                 detach task
->     mutex_lock()
->     check css's refcount=0
->      ....continue destroy.
-> 
-> Now, I thinks memcg's check is not enough but putting the -EBUSY there
-> not to forget this race.
-> 
-> 
-> I think a patch to stop task-attach and create child cgroup if  CGRP_WAIT_ON_RMDIR
-> is set is required. And that's enough..
+Maybe it's better to remove memcg's pre_destroy() at all and do the job
+in asynchronus thread called by ->destroy().
 
-The *ONLY* reason we're not marking the cgroup dead after the checking
-whether the cgroup has children or task at the top of cgroup_rmdir()
-is because memcg might fail ->pre_destroy() and cancel the cgroup
-removal.  We can't commit to removal because memcg might fail.
+I'll cook a patch again.
 
-Now, if memcg drops the deprecated behavior, we can simply commit to
-removal *before* starting calling pre_destroy() and it doesn't matter
-at all whether we hold cgroup_mutex across pre_destroy or not and
-cgroup core will simply deny any addition to the cgroup committed to
-death.  (and remove a handsome amount of ugly code in the process)
+-Kame
 
-So, the *ONLY* reason this can't be fixed properly from cgroup core is
-because memcg's pre_destory() might fail and it doesn't make much
-sense to me to implement add a workaround at this point when the whole
-problem will go away once memcg's pre_destroy() is updated.
-
-So, please update memcg and drop the __DEPRECATED flag, so that the
-cgroup core can drop at least this particular part of misdesign. :(
-
-Thanks.
-
--- 
-tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
