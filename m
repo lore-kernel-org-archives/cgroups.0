@@ -1,57 +1,88 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: + hugetlb-cgroup-simplify-pre_destroy-callback.patch added to
  -mm tree
-Date: Sat, 21 Jul 2012 11:14:21 +0900
-Message-ID: <500A107D.9060404@jp.fujitsu.com>
-References: <20120718212637.133475C0050@hpza9.eem.corp.google.com> <20120719113915.GC2864@tiehlicka.suse.cz> <87r4s8gcwe.fsf@skywalker.in.ibm.com> <20120719123820.GG2864@tiehlicka.suse.cz> <87ipdjc15j.fsf@skywalker.in.ibm.com> <20120720080639.GC12434@tiehlicka.suse.cz> <87d33qmeb9.fsf@skywalker.in.ibm.com> <20120720195643.GC21218@google.com>
+Date: Fri, 20 Jul 2012 19:46:57 -0700
+Message-ID: <20120721024657.GA7962@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <20120718212637.133475C0050@hpza9.eem.corp.google.com>
+ <20120719113915.GC2864@tiehlicka.suse.cz>
+ <87r4s8gcwe.fsf@skywalker.in.ibm.com>
+ <20120719123820.GG2864@tiehlicka.suse.cz>
+ <87ipdjc15j.fsf@skywalker.in.ibm.com>
+ <20120720080639.GC12434@tiehlicka.suse.cz>
+ <87d33qmeb9.fsf@skywalker.in.ibm.com>
+ <20120720195643.GC21218@google.com>
+ <500A107D.9060404@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120720195643.GC21218-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=eCjBAr53N8yG+7W9agQNq+GoP0ijadBFNFM2o2HHpqQ=;
+        b=hWKOHmGSOR+gUN7QOtkbejvhldWAhfW1+BSZpmW8VfZv4gSicj8NNlYMt1RtANBZUc
+         H8liHAfRrD76x+NaVmhGYfyhmkzg8ylvfgnoKGPgxxj0VmvrBlXd9Y2Xno6Sx9VoMJu1
+         UWCFdGEXhlhoRsNenold8GwaLMCU7hXxxBcJEen1MBGN9OSJSNmc3WTFHaGweJrn+mMM
+         fItlGINQ/T5HDXAug8BxQZph1I3/wTp7qbjZZP8YgmDE7xS91mhIhp1PlZIe/X/3T+/f
+         USSqVgsRZtToYfOn3VtPhSTIJPjRLfLfL8br1z1OVGnuBiBen3hkQDx/IWHkbRfJxVaa
+         9tug==
+Content-Disposition: inline
+In-Reply-To: <500A107D.9060404@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mm-commits-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Michal Hocko <mhocko@suse.cz>, akpm@linux-foundation.org, mm-commits@vger.kernel.org, liwanp@linux.vnet.ibm.com, Li Zefan <lizefan@huawei.com>, cgroups mailinglist <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-(2012/07/21 4:56), Tejun Heo wrote:
-> On Sat, Jul 21, 2012 at 12:48:34AM +0530, Aneesh Kumar K.V wrote:
->> Does cgroup_rmdir do a cgroup_task_count check ? I do see that it check
->> cgroup->childern and cgroup->count. But cgroup->count is not same as
->> task_count right ?
->>
->> May be we need to push the task_count check also to rmdir so that
->> pre_destory doesn't need to check this
->
-> task_count implies cgroup refcnt which cgroup core does check.  No
-> need to worry about that, ->children or whatever from memcg.  As soon
-> as the deprecated behavior is gone, everything will be okay;
-> otherwise, it's a bug in cgroup core.
->
+Hello, Kamezawa-san.
 
-I'm sorry I misunderstand. The problem is following.
+On Sat, Jul 21, 2012 at 11:14:21AM +0900, Kamezawa Hiroyuki wrote:
+> I'm sorry I misunderstand. The problem is following.
+> 
+>         CPU A                       CPU B
+>     mutex_unlock()
+>                                 mutex_lock()
+>     ->pre_destroy()             attach task
+>       commit res->usage=0       mutex_unlock()
+>                                 increase res->usage
+>                                 detach task
+>     mutex_lock()
+>     check css's refcount=0
+>      ....continue destroy.
+> 
+> Now, I thinks memcg's check is not enough but putting the -EBUSY there
+> not to forget this race.
+> 
+> 
+> I think a patch to stop task-attach and create child cgroup if  CGRP_WAIT_ON_RMDIR
+> is set is required. And that's enough..
 
-         CPU A                       CPU B
-     mutex_unlock()
-                                 mutex_lock()
-     ->pre_destroy()             attach task
-       commit res->usage=0       mutex_unlock()
-                                 increase res->usage
-                                 detach task
-     mutex_lock()
-     check css's refcount=0
-      ....continue destroy.
+The *ONLY* reason we're not marking the cgroup dead after the checking
+whether the cgroup has children or task at the top of cgroup_rmdir()
+is because memcg might fail ->pre_destroy() and cancel the cgroup
+removal.  We can't commit to removal because memcg might fail.
 
-Now, I thinks memcg's check is not enough but putting the -EBUSY there
-not to forget this race.
+Now, if memcg drops the deprecated behavior, we can simply commit to
+removal *before* starting calling pre_destroy() and it doesn't matter
+at all whether we hold cgroup_mutex across pre_destroy or not and
+cgroup core will simply deny any addition to the cgroup committed to
+death.  (and remove a handsome amount of ugly code in the process)
 
+So, the *ONLY* reason this can't be fixed properly from cgroup core is
+because memcg's pre_destory() might fail and it doesn't make much
+sense to me to implement add a workaround at this point when the whole
+problem will go away once memcg's pre_destroy() is updated.
 
-I think a patch to stop task-attach and create child cgroup if  CGRP_WAIT_ON_RMDIR
-is set is required. And that's enough..
-Thanks,
--Kame
+So, please update memcg and drop the __DEPRECATED flag, so that the
+cgroup core can drop at least this particular part of misdesign. :(
 
+Thanks.
 
+-- 
+tejun
 
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
