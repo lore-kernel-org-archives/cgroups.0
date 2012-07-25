@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 05/10] slab: allow enable_cpu_cache to use preset values for its tunables
-Date: Wed, 25 Jul 2012 18:38:16 +0400
-Message-ID: <1343227101-14217-6-git-send-email-glommer@parallels.com>
+Subject: [PATCH 07/10] memcg: destroy memcg caches
+Date: Wed, 25 Jul 2012 18:38:18 +0400
+Message-ID: <1343227101-14217-8-git-send-email-glommer@parallels.com>
 References: <1343227101-14217-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1343227101-14217-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,18 +13,14 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-SLAB allows us to tune a particular cache behavior with tunables.
-When creating a new memcg cache copy, we'd like to preserve any tunables
-the parent cache already had.
+This patch implements destruction of memcg caches. Right now,
+only caches where our reference counter is the last remaining are
+deleted. If there are any other reference counters around, we just
+leave the caches lying around until they go away.
 
-This could be done by an explicit call to do_tune_cpucache() after the
-cache is created. But this is not very convenient now that the caches are
-created from common code, since this function is SLAB-specific.
-
-Another method of doing that is taking advantage of the fact that
-do_tune_cpucache() is always called from enable_cpucache(), which is
-called at cache initialization. We can just preset the values, and
-then things work as expected.
+When that happen, a destruction function is called from the cache
+code. Caches are only destroyed in process context, so we queue them
+up for later processing in the general case.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
@@ -34,116 +30,273 @@ CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/slab.h |    3 ++-
- mm/memcontrol.c      |    2 +-
- mm/slab.c            |   19 ++++++++++++++++---
- mm/slab_common.c     |    7 ++++---
- 4 files changed, 23 insertions(+), 8 deletions(-)
+ include/linux/memcontrol.h |    1 +
+ include/linux/slab.h       |    3 ++
+ mm/memcontrol.c            |   84 ++++++++++++++++++++++++++++++++++++++++++++
+ mm/slab.c                  |    4 +++
+ mm/slab.h                  |   21 +++++++++++
+ mm/slub.c                  |    7 +++-
+ 6 files changed, 119 insertions(+), 1 deletion(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index bd1f34b..247019f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -425,6 +425,7 @@ void memcg_register_cache(struct mem_cgroup *memcg,
+ void memcg_release_cache(struct kmem_cache *cachep);
+ struct kmem_cache *
+ __memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp);
++void mem_cgroup_destroy_cache(struct kmem_cache *cachep);
+ #else
+ static inline void memcg_register_cache(struct mem_cgroup *memcg,
+ 					     struct kmem_cache *s)
 diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 9d3fd56..249a0d3 100644
+index 249a0d3..b9310a4 100644
 --- a/include/linux/slab.h
 +++ b/include/linux/slab.h
-@@ -128,7 +128,7 @@ struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
- 			void (*)(void *));
- struct kmem_cache *
- kmem_cache_create_memcg(struct mem_cgroup *, const char *, size_t, size_t,
--			unsigned long, void (*)(void *));
-+			unsigned long, void (*)(void *), struct kmem_cache *);
- void kmem_cache_destroy(struct kmem_cache *);
- int kmem_cache_shrink(struct kmem_cache *);
- void kmem_cache_free(struct kmem_cache *, void *);
-@@ -184,6 +184,7 @@ unsigned int kmem_cache_size(struct kmem_cache *);
- #ifdef CONFIG_MEMCG_KMEM
- struct mem_cgroup_cache_params {
+@@ -186,6 +186,9 @@ struct mem_cgroup_cache_params {
  	struct mem_cgroup *memcg;
-+	struct kmem_cache *parent;
+ 	struct kmem_cache *parent;
  	int id;
++	bool dead;
++	atomic_t nr_pages;
++	struct list_head destroyed_list; /* Used when deleting memcg cache */
  };
  #endif
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 854f6cc..b933474 100644
+index 2cc3acf..1231d86 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -585,7 +585,7 @@ static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
- 		return NULL;
+@@ -599,6 +599,8 @@ void memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+ {
+ 	int id = -1;
  
- 	new = kmem_cache_create_memcg(memcg, name, s->object_size, s->align,
--				      (s->flags & ~SLAB_PANIC), s->ctor);
-+				      (s->flags & ~SLAB_PANIC), s->ctor, s);
++	INIT_LIST_HEAD(&cachep->memcg_params.destroyed_list);
++
+ 	if (!memcg)
+ 		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
+ 				    GFP_KERNEL);
+@@ -768,6 +770,7 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 	mem_cgroup_get(memcg);
+ 	memcg->slabs[idx] = new_cachep;
+ 	new_cachep->memcg_params.memcg = memcg;
++	atomic_set(&new_cachep->memcg_params.nr_pages , 0);
+ out:
+ 	mutex_unlock(&memcg_cache_mutex);
+ 	return new_cachep;
+@@ -782,6 +785,55 @@ struct create_work {
+ /* Use a single spinlock for destruction and creation, not a frequent op */
+ static DEFINE_SPINLOCK(cache_queue_lock);
+ static LIST_HEAD(create_queue);
++static LIST_HEAD(destroyed_caches);
++
++static void kmem_cache_destroy_work_func(struct work_struct *w)
++{
++	struct kmem_cache *cachep;
++	struct mem_cgroup_cache_params *p, *tmp;
++	unsigned long flags;
++	LIST_HEAD(del_unlocked);
++
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	list_for_each_entry_safe(p, tmp, &destroyed_caches, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		list_move(&cachep->memcg_params.destroyed_list, &del_unlocked);
++	}
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	list_for_each_entry_safe(p, tmp, &del_unlocked, destroyed_list) {
++		cachep = container_of(p, struct kmem_cache, memcg_params);
++		list_del(&cachep->memcg_params.destroyed_list);
++		if (!atomic_read(&cachep->memcg_params.nr_pages)) {
++			mem_cgroup_put(cachep->memcg_params.memcg);
++			kmem_cache_destroy(cachep);
++		}
++	}
++}
++static DECLARE_WORK(kmem_cache_destroy_work, kmem_cache_destroy_work_func);
++
++static void __mem_cgroup_destroy_cache(struct kmem_cache *cachep)
++{
++	BUG_ON(cachep->memcg_params.id != -1);
++	list_add(&cachep->memcg_params.destroyed_list, &destroyed_caches);
++}
++
++void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
++{
++	unsigned long flags;
++
++	if (!cachep->memcg_params.dead)
++		return;
++	/*
++	 * We have to defer the actual destroying to a workqueue, because
++	 * we might currently be in a context that cannot sleep.
++	 */
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	__mem_cgroup_destroy_cache(cachep);
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	schedule_work(&kmem_cache_destroy_work);
++}
  
- 	kfree(name);
- 	return new;
+ /*
+  * Flush the queue of kmem_caches to create, because we're creating a cgroup.
+@@ -803,6 +855,33 @@ void memcg_flush_cache_create_queue(void)
+ 	spin_unlock_irqrestore(&cache_queue_lock, flags);
+ }
+ 
++static void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
++{
++	struct kmem_cache *cachep;
++	unsigned long flags;
++	int i;
++
++	/*
++	 * pre_destroy() gets called with no tasks in the cgroup.
++	 * this means that after flushing the create queue, no more caches
++	 * will appear
++	 */
++	memcg_flush_cache_create_queue();
++
++	spin_lock_irqsave(&cache_queue_lock, flags);
++	for (i = 0; i < MAX_KMEM_CACHE_TYPES; i++) {
++		cachep = memcg->slabs[i];
++		if (!cachep)
++			continue;
++
++		cachep->memcg_params.dead = true;
++		__mem_cgroup_destroy_cache(cachep);
++	}
++	spin_unlock_irqrestore(&cache_queue_lock, flags);
++
++	schedule_work(&kmem_cache_destroy_work);
++}
++
+ static void memcg_create_cache_work_func(struct work_struct *w)
+ {
+ 	struct create_work *cw, *tmp;
+@@ -914,6 +993,10 @@ EXPORT_SYMBOL(__memcg_kmem_get_cache);
+ static void disarm_kmem_keys(struct mem_cgroup *memcg)
+ {
+ }
++
++static inline void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
++{
++}
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+ #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
+@@ -5517,6 +5600,7 @@ static int mem_cgroup_pre_destroy(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 
++	mem_cgroup_destroy_all_caches(memcg);
+ 	return mem_cgroup_force_empty(memcg, false);
+ }
+ 
 diff --git a/mm/slab.c b/mm/slab.c
-index 7e7ec59..76bc98f 100644
+index ddc60a4..21d7cf7 100644
 --- a/mm/slab.c
 +++ b/mm/slab.c
-@@ -3916,8 +3916,19 @@ static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
- static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp)
- {
- 	int err;
--	int limit, shared;
--
-+	int limit = 0;
-+	int shared = 0;
-+	int batchcount = 0;
+@@ -1769,6 +1769,8 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
+ 	for (i = 0; i < nr_pages; i++)
+ 		__SetPageSlab(page + i);
+ 
++	mem_cgroup_bind_pages(cachep, cachep->gfporder);
 +
-+#ifdef CONFIG_MEMCG_KMEM
-+        if (cachep->memcg_params.parent) {
-+                limit = cachep->memcg_params.parent->limit;
-+                shared = cachep->memcg_params.parent->shared;
-+                batchcount = cachep->memcg_params.parent->batchcount;
-+        }
-+#endif
-+	if (limit && shared && batchcount)
-+		goto skip_setup;
- 	/*
- 	 * The head array serves three purposes:
- 	 * - create a LIFO ordering, i.e. return objects that are cache-warm
-@@ -3959,7 +3970,9 @@ static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp)
- 	if (limit > 32)
- 		limit = 32;
- #endif
--	err = do_tune_cpucache(cachep, limit, (limit + 1) / 2, shared, gfp);
-+	batchcount = (limit + 1) / 2;
-+skip_setup:
-+	err = do_tune_cpucache(cachep, limit, batchcount, shared, gfp);
- 	if (err)
- 		printk(KERN_ERR "enable_cpucache failed for %s, error %d.\n",
- 		       cachep->name, -err);
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 1080ef2..562146b 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -80,7 +80,8 @@ unsigned long calculate_alignment(unsigned long flags,
+ 	if (kmemcheck_enabled && !(cachep->flags & SLAB_NOTRACK)) {
+ 		kmemcheck_alloc_shadow(page, cachep->gfporder, flags, nodeid);
  
- struct kmem_cache *
- kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
--			size_t align, unsigned long flags, void (*ctor)(void *))
-+			size_t align, unsigned long flags, void (*ctor)(void *),
-+			struct kmem_cache *parent_cache)
- {
- 	struct kmem_cache *s = NULL;
- 	char *n;
-@@ -149,9 +150,9 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
- 	s->ctor = ctor;
- 	s->flags = flags;
- 	s->align = calculate_alignment(flags, align, size);
--
- #ifdef CONFIG_MEMCG_KMEM
- 	s->memcg_params.memcg = memcg;
-+	s->memcg_params.parent = parent_cache;
- #endif
- 
- 	r = __kmem_cache_create(s);
-@@ -184,7 +185,7 @@ out:
- struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align,
- 		unsigned long flags, void (*ctor)(void *))
- {
--	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor);
-+	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
+@@ -1803,6 +1805,8 @@ static void kmem_freepages(struct kmem_cache *cachep, void *addr)
+ 		__ClearPageSlab(page);
+ 		page++;
+ 	}
++
++	mem_cgroup_release_pages(cachep, cachep->gfporder);
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += nr_freed;
+ 	free_pages((unsigned long)addr, cachep->gfporder);
+diff --git a/mm/slab.h b/mm/slab.h
+index 3c637d2..d9df178 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -1,5 +1,6 @@
+ #ifndef MM_SLAB_H
+ #define MM_SLAB_H
++#include <linux/memcontrol.h>
+ /*
+  * Internal slab definitions
+  */
+@@ -66,6 +67,19 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
+         return cachep->memcg_params.memcg == memcg;
  }
- EXPORT_SYMBOL(kmem_cache_create);
  
++static inline void mem_cgroup_bind_pages(struct kmem_cache *s, int order)
++{
++	if (s->memcg_params.id == -1)
++		atomic_add(1 << order, &s->memcg_params.nr_pages);
++}
++
++static inline void mem_cgroup_release_pages(struct kmem_cache *s, int order)
++{
++	if (s->memcg_params.id != -1)
++		return;
++	if (atomic_sub_and_test((1 << order), &s->memcg_params.nr_pages))
++		mem_cgroup_destroy_cache(s);
++}
+ #else
+ static inline bool slab_is_parent(struct kmem_cache *s, struct kmem_cache *p)
+ {
+@@ -77,4 +91,11 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
+ {
+         return true;
+ }
++
++static inline void mem_cgroup_bind_pages(struct kmem_cache *s, int order)
++{
++}
++static inline void mem_cgroup_release_pages(struct kmem_cache *s, int order)
++{
++}
+ #endif
+diff --git a/mm/slub.c b/mm/slub.c
+index 6175a72..fdb1a0d 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1344,6 +1344,7 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
+ 	void *start;
+ 	void *last;
+ 	void *p;
++	int order;
+ 
+ 	BUG_ON(flags & GFP_SLAB_BUG_MASK);
+ 
+@@ -1352,14 +1353,16 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
+ 	if (!page)
+ 		goto out;
+ 
++	order = compound_order(page);
+ 	inc_slabs_node(s, page_to_nid(page), page->objects);
++	mem_cgroup_bind_pages(s, order);
+ 	page->slab = s;
+ 	__SetPageSlab(page);
+ 
+ 	start = page_address(page);
+ 
+ 	if (unlikely(s->flags & SLAB_POISON))
+-		memset(start, POISON_INUSE, PAGE_SIZE << compound_order(page));
++		memset(start, POISON_INUSE, PAGE_SIZE << order);
+ 
+ 	last = start;
+ 	for_each_object(p, s, start, page->objects) {
+@@ -1399,6 +1402,8 @@ static void __free_slab(struct kmem_cache *s, struct page *page)
+ 		-pages);
+ 
+ 	__ClearPageSlab(page);
++
++	mem_cgroup_release_pages(s, order);
+ 	reset_page_mapcount(page);
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += pages;
 -- 
 1.7.10.4
