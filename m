@@ -1,28 +1,60 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 05/10] slab: allow enable_cpu_cache to use preset values
- for its tunables
-Date: Wed, 25 Jul 2012 13:33:16 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1207251331480.4995@router.home>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1207251204450.3543@router.home> <501039F9.7040309@parallels.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH 01/10] slab/slub: struct memcg_params
+Date: Wed, 25 Jul 2012 22:26:50 +0300
+Message-ID: <20120725192650.GA5163@shutemov.name>
+References: <1343227101-14217-1-git-send-email-glommer@parallels.com>
+ <1343227101-14217-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1343241201; bh=EahNliTBt/Ins8JQ3ucTLMG4iPVhEpktBHsohpDzFMo=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=qVbjsuCZ8frZMNTCoLV23XLqGcuCq10A8667PlDSW8CRwWV/BsoprKe8CUKPMLjHQnpDDyruGZO5jN8VgYOVv1AA4y+lgMMZHluFmfOoN9T1pMW3KcZ2VgOADWgUOtHtFA0h/fDz0SGdE0NMBQ2WsQt7E9YzJO1KcBF0pMGPy7I=
-In-Reply-To: <501039F9.7040309-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1343227101-14217-2-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, devel@openvz.org, cgroups@vger.kernel.org, Suleiman Souhlal <suleiman@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Wed, 25 Jul 2012, Glauber Costa wrote:
+On Wed, Jul 25, 2012 at 06:38:12PM +0400, Glauber Costa wrote:
+> For the kmem slab controller, we need to record some extra
+> information in the kmem_cache structure.
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+> CC: Christoph Lameter <cl@linux.com>
+> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  include/linux/slab.h     |    7 +++++++
+>  include/linux/slab_def.h |    4 ++++
+>  include/linux/slub_def.h |    3 +++
+>  3 files changed, 14 insertions(+)
+> 
+> diff --git a/include/linux/slab.h b/include/linux/slab.h
+> index 0dd2dfa..3152bcd 100644
+> --- a/include/linux/slab.h
+> +++ b/include/linux/slab.h
+> @@ -177,6 +177,13 @@ unsigned int kmem_cache_size(struct kmem_cache *);
+>  #define ARCH_SLAB_MINALIGN __alignof__(unsigned long long)
+>  #endif
+>  
+> +#ifdef CONFIG_MEMCG_KMEM
+> +struct mem_cgroup_cache_params {
+> +	struct mem_cgroup *memcg;
+> +	int id;
+> +};
 
-> It is certainly not through does the same method as SLAB, right ?
-> Writing to /proc/slabinfo gives me an I/O error
-> I assume it is something through sysfs, but schiming through the code
-> now, I can't find any per-cache tunables. Would you mind pointing me to
-> them?
+IIUC, we only need the id to make slab name unique.  Why can't we embed
+the id to struct mem_cgroup? Is it possible to have multiple slabs with
+the same combination of type, size, and memcg?
 
-The slab attributes in /sys/kernel/slab/<slabname>/<attr> can be modified
-for some values. I think that could be the default method for the future
-since it allows easy addition of new tunables as needed.
+-- 
+ Kirill A. Shutemov
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
