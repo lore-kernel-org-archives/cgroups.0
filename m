@@ -1,33 +1,64 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 10/10] memcg/sl[au]b: shrink dead caches
-Date: Wed, 25 Jul 2012 12:13:23 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1207251207180.3543@router.home>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-11-git-send-email-glommer@parallels.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH 02/10] consider a memcg parameter in kmem_create_cache
+Date: Wed, 25 Jul 2012 21:10:18 +0300
+Message-ID: <20120725181018.GA4921@shutemov.name>
+References: <1343227101-14217-1-git-send-email-glommer@parallels.com>
+ <1343227101-14217-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1343236407; bh=4QWFT1FhWWV8cXfecctzYfzDeNLETfd527t/PZHArb8=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=54gbcVoegTWxslDQEf3TLg/zOlvH4Urtq1d6rhpOYEwWbYaggdWH07Tu5BeO6WDnIl++apH1iM0Qzl8yzXt5VjP5RFjwsNHLjQ4ulRxP4K/ry0/+QdY7TC+4UzkK5MjuzfO485PVvOzKPsV4rGdLp7P3U2xAe7RNI+RRxLIH+RA=
-In-Reply-To: <1343227101-14217-11-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1343227101-14217-3-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, devel@openvz.org, cgroups@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <suleiman@google.com>
 
-On Wed, 25 Jul 2012, Glauber Costa wrote:
+On Wed, Jul 25, 2012 at 06:38:13PM +0400, Glauber Costa wrote:
 
-> In the slub allocator, when the last object of a page goes away, we
-> don't necessarily free it - there is not necessarily a test for empty
-> page in any slab_free path.
+...
 
-That is true for the slab allocator as well. In either case calling
-kmem_cache_shrink() will make the objects go away by draining the cached
-objects and freeing the pages used for the objects back to the page
-allocator. You do not need this patch. Just call the proper functions to
-drop the objecgts in the caches in either allocator.
+> @@ -337,6 +341,12 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
+>  	__kmalloc(size, flags)
+>  #endif /* DEBUG_SLAB */
+>  
+> +#ifdef CONFIG_MEMCG_KMEM
+> +#define MAX_KMEM_CACHE_TYPES 400
+> +#else
+> +#define MAX_KMEM_CACHE_TYPES 0
+> +#endif /* CONFIG_MEMCG_KMEM */
+> +
+>  #ifdef CONFIG_NUMA
+>  /*
+>   * kmalloc_node_track_caller is a special version of kmalloc_node that
 
-> The slab allocator has a time based reaper that would eventually get rid
-> of the objects, but we can also call it explicitly, since dead caches
-> are not a likely event.
+...
 
-So this is already for both allocators?
+> @@ -527,6 +532,24 @@ static inline bool memcg_kmem_enabled(struct mem_cgroup *memcg)
+>  		memcg->kmem_accounted;
+>  }
+>  
+> +struct ida cache_types;
+> +
+> +void memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+> +{
+> +	int id = -1;
+> +
+> +	if (!memcg)
+> +		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
+> +				    GFP_KERNEL);
+
+MAX_KMEM_CACHE_TYPES is 0 if CONFIG_MEMCG_KMEM undefined.
+If 'end' parameter of ida_simple_get() is 0 it will use default max value
+which is 0x80000000.
+I guess you want MAX_KMEM_CACHE_TYPES to be 1 for !CONFIG_MEMCG_KMEM.
+
+-- 
+ Kirill A. Shutemov
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
