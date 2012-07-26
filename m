@@ -1,72 +1,51 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 02/10] consider a memcg parameter in kmem_create_cache
-Date: Thu, 26 Jul 2012 14:27:15 +0400
-Message-ID: <50111B83.2010105@parallels.com>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-3-git-send-email-glommer@parallels.com> <20120725181018.GA4921@shutemov.name> <501110ED.9030400@parallels.com> <20120726100111.GA7447@shutemov.name>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: Re: [Devel] Re: containers and cgroups mini-summit @ Linux Plumbers
+Date: Thu, 26 Jul 2012 03:42:50 -0700
+Message-ID: <874nou6bx1.fsf@xmission.com>
+References: <4FFDF321.4030103@openvz.org> <500FD022.6000608@parallels.com>
+	<877gtr6uo5.fsf@xmission.com> <50110AE6.2080701@parallels.com>
+	<50110D53.2090407@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120726100111.GA7447@shutemov.name>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50110D53.2090407-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> (Glauber Costa's message of
+	"Thu, 26 Jul 2012 13:26:43 +0400")
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, devel@openvz.org, cgroups@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <suleiman@google.com>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Suleiman-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Maxim-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On 07/26/2012 02:01 PM, Kirill A. Shutemov wrote:
-> On Thu, Jul 26, 2012 at 01:42:05PM +0400, Glauber Costa wrote:
->> On 07/25/2012 10:10 PM, Kirill A. Shutemov wrote:
->>> On Wed, Jul 25, 2012 at 06:38:13PM +0400, Glauber Costa wrote:
->>>
->>> ...
->>>
->>>> @@ -337,6 +341,12 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
->>>>  	__kmalloc(size, flags)
->>>>  #endif /* DEBUG_SLAB */
->>>>  
->>>> +#ifdef CONFIG_MEMCG_KMEM
->>>> +#define MAX_KMEM_CACHE_TYPES 400
->>>> +#else
->>>> +#define MAX_KMEM_CACHE_TYPES 0
->>>> +#endif /* CONFIG_MEMCG_KMEM */
->>>> +
->>>>  #ifdef CONFIG_NUMA
->>>>  /*
->>>>   * kmalloc_node_track_caller is a special version of kmalloc_node that
->>>
->>> ...
->>>
->>>> @@ -527,6 +532,24 @@ static inline bool memcg_kmem_enabled(struct mem_cgroup *memcg)
->>>>  		memcg->kmem_accounted;
->>>>  }
->>>>  
->>>> +struct ida cache_types;
->>>> +
->>>> +void memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *cachep)
->>>> +{
->>>> +	int id = -1;
->>>> +
->>>> +	if (!memcg)
->>>> +		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
->>>> +				    GFP_KERNEL);
->>>
->>> MAX_KMEM_CACHE_TYPES is 0 if CONFIG_MEMCG_KMEM undefined.
->>> If 'end' parameter of ida_simple_get() is 0 it will use default max value
->>> which is 0x80000000.
->>> I guess you want MAX_KMEM_CACHE_TYPES to be 1 for !CONFIG_MEMCG_KMEM.
->>>
->> ida_simple_get will not, and should never be called for !CONFIG_MEMCG_KMEM.
-> 
-> Okay. Is there an user for MAX_KMEM_CACHE_TYPES if !CONFIG_MEMCG_KMEM?
-> 
+Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> writes:
 
-Actually, not anymore. I will just remove it then, instead of forcing it
-to 0.
+>>>
+>>> Another old issue is that unless I have missed something control groups
+>>> are still broken for generic use in containers.  Does anyone care?
+>>> Are there any plans on fixing this issue?
+>>>
+>
+> What is "generic use in containers" ? I am using them alright, but not
+> sure if this counts as generic or specific =)
 
-Thanks!
+The general container use case would be.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+- Create a new mount namespace.
+- Create fresh mounts of all of the control groups like I would do at
+  boot, with no consideration to any other control group state.
+- Start forking processes.
+
+The expected semantics would be something like chroot for control
+groups, where all of the control groups that are created by fresh mounts
+are relative to whatever state the process of being in a control group
+that the process that mounted them was in.
+
+Last I looked the closest you could come to that was bind mounts, and
+even with bind mounts you get into weird things where control groups are
+bound into hierarchies and you may be running a distribution that wants
+it's control groups bound into different hierarchies.
+
+Last I looked this was just about a total disaster, and the only thing
+that allowed systemd to run in containers was the fact that systemd did
+not user controllers.
+
+Eric
