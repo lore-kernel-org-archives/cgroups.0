@@ -1,82 +1,92 @@
-From: Andrea Righi <andrea-oIIqvOZpAevzfdHfmsDf5w@public.gmane.org>
-Subject: Re: containers and cgroups mini-summit @ Linux Plumbers
-Date: Thu, 26 Jul 2012 13:16:44 +0200
-Message-ID: <20120726111644.GB2024@thinkpad>
-References: <4FFDF321.4030103@openvz.org>
- <500FB473.3090606@parallels.com>
- <871uk0b1p4.fsf@xmission.com>
- <500FC3C9.4010005@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 05/10] slab: allow enable_cpu_cache to use preset values
+ for its tunables
+Date: Thu, 26 Jul 2012 18:02:45 +0400
+Message-ID: <50114E05.1040201@parallels.com>
+References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1207251204450.3543@router.home> <501039F9.7040309@parallels.com> <alpine.DEB.2.00.1207251331480.4995@router.home>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="------------010800000600070305040105"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=betterlinux.com;
-	s=default; t=1343301412;
-	bh=kS6QZSkChvZMCAOo7J8XUcFPZgorTXbwhEdK8+EnalU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:In-Reply-To;
-	b=BTNRKdwbkP2gMEKsoJQoDA94k/Bx9UTsZBIlhZUQTrFzPZp3Ab4edzb5qWaNJynvA
-	 SrEOh2jbIaiCILTnUejf4UwQqrTko3fjjOpxxFOoI4iVmnaeQ0KekftUetY3gfClF7
-	 BYSwcZpKTeaZx7UG/TR0UxJ9wCKg0Qe38ygW1nrU=
-Content-Disposition: inline
-In-Reply-To: <500FC3C9.4010005-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.00.1207251331480.4995-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+--------------010800000600070305040105
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Kir Kolyshkin <kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Maxim Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Wed, Jul 25, 2012 at 02:00:41PM +0400, Glauber Costa wrote:
-> On 07/25/2012 02:00 PM, Eric W. Biederman wrote:
-> > Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> writes:
-> > 
-> >> On 07/12/2012 01:41 AM, Kir Kolyshkin wrote:
-> >>> Gentlemen,
-> >>>
-> >>> We are organizing containers mini-summit during next Linux Plumbers (San
-> >>> Diego, August 29-31).
-> >>> The idea is to gather and discuss everything relevant to namespaces,
-> >>> cgroups, resource management,
-> >>> checkpoint-restore and so on.
-> >>>
-> >>> We are trying to come up with a list of topics to discuss, so please
-> >>> reply with topic suggestions, and
-> >>> let me know if you are going to come.
-> >>>
-> >>> I probably forgot a few more people (such as, I am not sure who else
-> >>> from Google is working
-> >>> on cgroups stuff), so fill free to forward this to anyone you believe
-> >>> should go,
-> >>> or just let me know whom I missed.
-> >>>
-> >>> Regards,
-> >>>   Kir.
-> >>
-> >> BTW, sorry for not replying before (vacations + post-vacations laziness)
-> >>
-> >> I would be interested in adding /proc virtualization to the discussion.
-> >> By now it seems userspace would be the best place for that to happen, in
-> >> a fuse overlay. I know Daniel has an initial implementation of that, and
-> >> it would be good to have it as library that both OpenVZ and LXC (and
-> >> whoever else wants) can use.
-> >>
-> >> Shouldn't take much time...
-> > 
-> > What would you need proc virtualization for?
-> > 
+On 07/25/2012 10:33 PM, Christoph Lameter wrote:
+> On Wed, 25 Jul 2012, Glauber Costa wrote:
 > 
-> proc provides a lot of information that userspace tools rely upon.
-> For instance, when running top, you can draw per-process figures from
-> what we have now, but you can't make sense of percentages without
-> aggregating container-wide information.
+>> It is certainly not through does the same method as SLAB, right ?
+>> Writing to /proc/slabinfo gives me an I/O error
+>> I assume it is something through sysfs, but schiming through the code
+>> now, I can't find any per-cache tunables. Would you mind pointing me to
+>> them?
 > 
-> When you read /proc/cpuinfo, as well, you would expect to see something
-> that matches your container configuration.
+> The slab attributes in /sys/kernel/slab/<slabname>/<attr> can be modified
+> for some values. I think that could be the default method for the future
+> since it allows easy addition of new tunables as needed.
 > 
-> "free" is another example. The list go on.
 
-Another interesting feature IMHO would be the per-cgroup loadavg. A
-typical use case could be a monitoring system that wants to know which
-containers are more overloaded than others, instead of using a single
-system-wide measure in /proc/loadavg.
+Christoph, would the following PoC patch be enough?
 
--Andrea
+
+
+--------------010800000600070305040105
+Content-Type: text/x-patch; name="0001-slub-propagation.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="0001-slub-propagation.patch"
+
+From 7c582c5c6321cbde93c5e73c6c2096b4432a2a04 Mon Sep 17 00:00:00 2001
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Date: Thu, 26 Jul 2012 15:19:08 +0400
+Subject: [PATCH] slub propagation
+
+---
+ mm/slub.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/mm/slub.c b/mm/slub.c
+index 55946c3..a136a75 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -5130,6 +5130,10 @@ static ssize_t slab_attr_store(struct kobject *kobj,
+ 	struct slab_attribute *attribute;
+ 	struct kmem_cache *s;
+ 	int err;
++#ifdef CONFIG_MEMCG_KMEM
++	struct kmem_cache *c;
++	struct mem_cgroup_cache_params *p;
++#endif
+ 
+ 	attribute = to_slab_attr(attr);
+ 	s = to_slab(kobj);
+@@ -5138,7 +5142,19 @@ static ssize_t slab_attr_store(struct kobject *kobj,
+ 		return -EIO;
+ 
+ 	err = attribute->store(s, buf, len);
++#ifdef CONFIG_MEMCG_KMEM
++	if (slab_state < FULL)
++		return err;
+ 
++	if ((err < 0) || (s->memcg_params.id == -1))
++		return err;
++
++	list_for_each_entry(p, &s->memcg_params.sibling_list, sibling_list) {
++		c = container_of(p, struct kmem_cache, memcg_params);
++		/* return value determined by the parent cache only */
++		attribute->store(c, buf, len);
++	}
++#endif
+ 	return err;
+ }
+ 
+-- 
+1.7.10.4
+
+
+--------------010800000600070305040105--
