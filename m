@@ -1,24 +1,56 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [Devel] Re: containers and cgroups mini-summit @ Linux Plumbers
-Date: Thu, 26 Jul 2012 13:26:43 +0400
-Message-ID: <50110D53.2090407@parallels.com>
-References: <4FFDF321.4030103@openvz.org> <500FD022.6000608@parallels.com> <877gtr6uo5.fsf@xmission.com> <50110AE6.2080701@parallels.com>
+Subject: Re: [PATCH 02/10] consider a memcg parameter in kmem_create_cache
+Date: Thu, 26 Jul 2012 13:42:05 +0400
+Message-ID: <501110ED.9030400@parallels.com>
+References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-3-git-send-email-glommer@parallels.com> <20120725181018.GA4921@shutemov.name>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50110AE6.2080701-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20120725181018.GA4921-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Suleiman-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Maxim-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-
->>
->> Another old issue is that unless I have missed something control groups
->> are still broken for generic use in containers.  Does anyone care?
->> Are there any plans on fixing this issue?
->>
-
-What is "generic use in containers" ? I am using them alright, but not
-sure if this counts as generic or specific =)
+On 07/25/2012 10:10 PM, Kirill A. Shutemov wrote:
+> On Wed, Jul 25, 2012 at 06:38:13PM +0400, Glauber Costa wrote:
+> 
+> ...
+> 
+>> @@ -337,6 +341,12 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
+>>  	__kmalloc(size, flags)
+>>  #endif /* DEBUG_SLAB */
+>>  
+>> +#ifdef CONFIG_MEMCG_KMEM
+>> +#define MAX_KMEM_CACHE_TYPES 400
+>> +#else
+>> +#define MAX_KMEM_CACHE_TYPES 0
+>> +#endif /* CONFIG_MEMCG_KMEM */
+>> +
+>>  #ifdef CONFIG_NUMA
+>>  /*
+>>   * kmalloc_node_track_caller is a special version of kmalloc_node that
+> 
+> ...
+> 
+>> @@ -527,6 +532,24 @@ static inline bool memcg_kmem_enabled(struct mem_cgroup *memcg)
+>>  		memcg->kmem_accounted;
+>>  }
+>>  
+>> +struct ida cache_types;
+>> +
+>> +void memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+>> +{
+>> +	int id = -1;
+>> +
+>> +	if (!memcg)
+>> +		id = ida_simple_get(&cache_types, 0, MAX_KMEM_CACHE_TYPES,
+>> +				    GFP_KERNEL);
+> 
+> MAX_KMEM_CACHE_TYPES is 0 if CONFIG_MEMCG_KMEM undefined.
+> If 'end' parameter of ida_simple_get() is 0 it will use default max value
+> which is 0x80000000.
+> I guess you want MAX_KMEM_CACHE_TYPES to be 1 for !CONFIG_MEMCG_KMEM.
+> 
+ida_simple_get will not, and should never be called for !CONFIG_MEMCG_KMEM.
