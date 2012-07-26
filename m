@@ -1,92 +1,54 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 05/10] slab: allow enable_cpu_cache to use preset values
- for its tunables
-Date: Thu, 26 Jul 2012 18:02:45 +0400
-Message-ID: <50114E05.1040201@parallels.com>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-6-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1207251204450.3543@router.home> <501039F9.7040309@parallels.com> <alpine.DEB.2.00.1207251331480.4995@router.home>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: containers and cgroups mini-summit @ Linux Plumbers
+Date: Thu, 26 Jul 2012 13:09:08 -0500
+Message-ID: <20120726180908.GA17824@serge-laptop>
+References: <4FFDF321.4030103@openvz.org>
+ <500FD022.6000608@parallels.com>
+ <877gtr6uo5.fsf@xmission.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="------------010800000600070305040105"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1207251331480.4995-sBS69tsa9Uj/9pzu0YdTqQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <877gtr6uo5.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-
---------------010800000600070305040105
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Kir Kolyshkin <kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Maxim Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On 07/25/2012 10:33 PM, Christoph Lameter wrote:
-> On Wed, 25 Jul 2012, Glauber Costa wrote:
+Quoting Eric W. Biederman (ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org):
+> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> writes:
 > 
->> It is certainly not through does the same method as SLAB, right ?
->> Writing to /proc/slabinfo gives me an I/O error
->> I assume it is something through sysfs, but schiming through the code
->> now, I can't find any per-cache tunables. Would you mind pointing me to
->> them?
+> > I just came up with the following preliminary list of sessions:
+> >
+> > http://wiki.linuxplumbersconf.org/2012:containers
+> >
+> > Since people mostly said what they wanted to talk about, but without
+> > extensive descriptions, I took the liberty of coming up with a small
+> > text for each in the blueprints. If you believe this is inaccurate, or
+> > would like to see it extended (although I personally don't see the point
+> > about going into very formal and deep details here), just let me know
+> > and I will edit it.
+> >
+> > This is all still subject to change.
 > 
-> The slab attributes in /sys/kernel/slab/<slabname>/<attr> can be modified
-> for some values. I think that could be the default method for the future
-> since it allows easy addition of new tunables as needed.
+> Something that just came up recently and worth looking at if it hasn't
+> already be resolved.
 > 
+> The network namespace, the user namespace, and the memory control group
+> are not meshing well.
+> 
+> In particular we need some additional checks for an unprivileged user
+> who can set tcp_mem.  If you are the creator of a network namespace you
+> should at least be able to set the values down.  I don't know at all
+> about increasing the amount of memory consumed by the tcp stack.
+> 
+> The non-nesting nature of memory control groups with respect to the
+> network stack also seems very bizarre.
+> 
+> 
+> Another old issue is that unless I have missed something control groups
+> are still broken for generic use in containers.  Does anyone care?
+> Are there any plans on fixing this issue?
 
-Christoph, would the following PoC patch be enough?
-
-
-
---------------010800000600070305040105
-Content-Type: text/x-patch; name="0001-slub-propagation.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="0001-slub-propagation.patch"
-
-From 7c582c5c6321cbde93c5e73c6c2096b4432a2a04 Mon Sep 17 00:00:00 2001
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Date: Thu, 26 Jul 2012 15:19:08 +0400
-Subject: [PATCH] slub propagation
-
----
- mm/slub.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/mm/slub.c b/mm/slub.c
-index 55946c3..a136a75 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -5130,6 +5130,10 @@ static ssize_t slab_attr_store(struct kobject *kobj,
- 	struct slab_attribute *attribute;
- 	struct kmem_cache *s;
- 	int err;
-+#ifdef CONFIG_MEMCG_KMEM
-+	struct kmem_cache *c;
-+	struct mem_cgroup_cache_params *p;
-+#endif
- 
- 	attribute = to_slab_attr(attr);
- 	s = to_slab(kobj);
-@@ -5138,7 +5142,19 @@ static ssize_t slab_attr_store(struct kobject *kobj,
- 		return -EIO;
- 
- 	err = attribute->store(s, buf, len);
-+#ifdef CONFIG_MEMCG_KMEM
-+	if (slab_state < FULL)
-+		return err;
- 
-+	if ((err < 0) || (s->memcg_params.id == -1))
-+		return err;
-+
-+	list_for_each_entry(p, &s->memcg_params.sibling_list, sibling_list) {
-+		c = container_of(p, struct kmem_cache, memcg_params);
-+		/* return value determined by the parent cache only */
-+		attribute->store(c, buf, len);
-+	}
-+#endif
- 	return err;
- }
- 
--- 
-1.7.10.4
-
-
---------------010800000600070305040105--
+Can you elaborate?  Which specific breakages are you thinking of?
