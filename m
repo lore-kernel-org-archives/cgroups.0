@@ -1,152 +1,50 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH V2 5/6] memcg: add per cgroup writeback pages accounting
-Date: Fri, 27 Jul 2012 18:28:51 +0800
-Message-ID: <1343384931-20202-1-git-send-email-handai.szj@taobao.com>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH V2 6/6] memcg: Document cgroup dirty/writeback memory statistics
+Date: Fri, 27 Jul 2012 18:31:42 +0800
+Message-ID: <1343385102-20282-1-git-send-email-handai.szj@taobao.com>
 References: <1343384432-19903-1-git-send-email-handai.szj@taobao.com>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=gMCN0w665ynQP0sQFRtAxcPb/uKG7hSihmQCRJEjSTw=;
-        b=ONBbJb0pRpXZmLBPu01BFeQq474FshpwOTJiaScFMaumhiCfSFlYaotj7qDAEwEEee
-         7s0wGIiIOqk9c1Fm0r/x/qcJWRGL2mrGOrCiTn9t782Jkt0a85nojUjXXheeJDmOjkW2
-         iRgmbjSDhjP7iM/gGsZ53kTecB6lGbr/7fhorcLjpv7JQrS6TZLedVkMiyjk2otkpSO2
-         Po+WWhOFSsu3YNDMMQAsRaaTQCy5lyd3Hmpw8QJ+l2GP1d4LI5rrQM+apVI5ymRvORwU
-         p0EPtA0JGzzk9Ja9KevkKMHcyJJ/OFrrssAcJd3qYwL2thLVXT7M2zsst46NHtXH9OVt
-         ax8A==
-In-Reply-To: <1343384432-19903-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+        bh=XEnx6ZzSgJQqctt1W9Q2vJ4QvB65BE/UR02eCimgh4c=;
+        b=SU3FIEDb2NluTW51xYOhEM667w+p9nT+j91D5S4QTW7Tak3VWH2T5mM8Z00+BkbsSb
+         jRP7f1UkPJRcrlmQ6JkSwJHd5aEpFzkkdtue0nI13B/LJXLizUsklnQQL2bA6up5nfZL
+         CU1+J+nNtPu3kktfF1+2vHlRIgg7ScJdDWlyhfXEZCFSEIlek/DsdqC71sc4qP23hxI0
+         D7n88N6aukbg/aQR6b0vPv52VBXYdY+trxP/J01FwL/yiM0OqUIOQKAoYEcA+dcifvpX
+         lGGlBspeBhgY9nUSKqfAVtWJlUGTJbadgaMt+WKuk0sDVQtvb2Zx39MTJ+xW/9UOYL/E
+         PAuQ==
+In-Reply-To: <1343384432-19903-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: fengguang.wu@intel.com, gthelen@google.com, akpm@linux-foundation.org, yinghan@google.com, mhocko@suse.cz, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Sha Zhengju <handai.szj@taobao.com>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-From: Sha Zhengju <handai.szj@taobao.com>
+From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Similar to dirty page, we add per cgroup writeback pages accounting. The lock
-rule still is:
-        mem_cgroup_begin_update_page_stat()
-        modify page WRITEBACK stat
-        mem_cgroup_update_page_stat()
-        mem_cgroup_end_update_page_stat()
-
-There're two writeback interface to modify: test_clear/set_page_writeback.
-
-Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Ackedy-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Acked-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/memcontrol.h |    1 +
- mm/memcontrol.c            |    5 +++++
- mm/page-writeback.c        |   17 +++++++++++++++++
- 3 files changed, 23 insertions(+), 0 deletions(-)
+ Documentation/cgroups/memory.txt |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 8c6b8ca..0c8a699 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -42,6 +42,7 @@ enum mem_cgroup_stat_index {
- 	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
- 	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
- 	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
-+	MEM_CGROUP_STAT_WRITEBACK,  /* # of pages under writeback */
- 	MEM_CGROUP_STAT_NSTATS,
- };
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index cdcd547..de91d3d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -86,6 +86,7 @@ static const char * const mem_cgroup_stat_names[] = {
- 	"mapped_file",
- 	"swap",
- 	"dirty",
-+	"writeback",
- };
- 
- enum mem_cgroup_events_index {
-@@ -2607,6 +2608,10 @@ static int mem_cgroup_move_account(struct page *page,
- 		mem_cgroup_move_account_page_stat(from, to,
- 				MEM_CGROUP_STAT_FILE_DIRTY);
- 
-+	if (PageWriteback(page))
-+		mem_cgroup_move_account_page_stat(from, to,
-+				MEM_CGROUP_STAT_WRITEBACK);
-+
- 	mem_cgroup_charge_statistics(from, anon, -nr_pages);
- 
- 	/* caller should have done css_get */
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 233e7ac..6b06d5e 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1956,11 +1956,17 @@ EXPORT_SYMBOL(account_page_dirtied);
- 
- /*
-  * Helper function for set_page_writeback family.
-+ *
-+ * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
-+ * while modifying struct page state and accounting writeback pages.
-+ * See test_set_page_writeback for example.
-+ *
-  * NOTE: Unlike account_page_dirtied this does not rely on being atomic
-  * wrt interrupts.
-  */
- void account_page_writeback(struct page *page)
- {
-+	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
- 	inc_zone_page_state(page, NR_WRITEBACK);
- }
- EXPORT_SYMBOL(account_page_writeback);
-@@ -2192,7 +2198,10 @@ int test_clear_page_writeback(struct page *page)
- {
- 	struct address_space *mapping = page_mapping(page);
- 	int ret;
-+	bool locked;
-+	unsigned long flags;
- 
-+	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
- 	if (mapping) {
- 		struct backing_dev_info *bdi = mapping->backing_dev_info;
- 		unsigned long flags;
-@@ -2213,9 +2222,12 @@ int test_clear_page_writeback(struct page *page)
- 		ret = TestClearPageWriteback(page);
- 	}
- 	if (ret) {
-+		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
- 		dec_zone_page_state(page, NR_WRITEBACK);
- 		inc_zone_page_state(page, NR_WRITTEN);
- 	}
-+
-+	mem_cgroup_end_update_page_stat(page, &locked, &flags);
- 	return ret;
- }
- 
-@@ -2223,7 +2235,10 @@ int test_set_page_writeback(struct page *page)
- {
- 	struct address_space *mapping = page_mapping(page);
- 	int ret;
-+	bool locked;
-+	unsigned long flags;
- 
-+	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
- 	if (mapping) {
- 		struct backing_dev_info *bdi = mapping->backing_dev_info;
- 		unsigned long flags;
-@@ -2250,6 +2265,8 @@ int test_set_page_writeback(struct page *page)
- 	}
- 	if (!ret)
- 		account_page_writeback(page);
-+
-+	mem_cgroup_end_update_page_stat(page, &locked, &flags);
- 	return ret;
- 
- }
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index dd88540..f4b5778 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -420,6 +420,8 @@ pgpgin		- # of charging events to the memory cgroup. The charging
+ pgpgout		- # of uncharging events to the memory cgroup. The uncharging
+ 		event happens each time a page is unaccounted from the cgroup.
+ swap		- # of bytes of swap usage
++dirty		- # of bytes of file cache that are not in sync with the disk copy.
++writeback	- # of bytes of file/anon cache that are queued for syncing to disk.
+ inactive_anon	- # of bytes of anonymous memory and swap cache memory on
+ 		LRU list.
+ active_anon	- # of bytes of anonymous and swap cache memory on active
 -- 
 1.7.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
