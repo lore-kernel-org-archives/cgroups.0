@@ -1,116 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Devel] Re: containers and cgroups mini-summit @ Linux Plumbers
-Date: Thu, 26 Jul 2012 12:44:41 -0700
-Message-ID: <20120726194441.GB25660@google.com>
-References: <4FFDF321.4030103@openvz.org>
- <500FD022.6000608@parallels.com>
- <877gtr6uo5.fsf@xmission.com>
- <50110AE6.2080701@parallels.com>
- <50110D53.2090407@parallels.com>
- <874nou6bx1.fsf@xmission.com>
- <20120726181528.GA25660@google.com>
- <87a9ymwcsv.fsf@xmission.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Don't drop the cgroup_mutex in cgroup_rmdir
+Date: Fri, 27 Jul 2012 14:15:12 +0800
+Message-ID: <501231F0.8050505@huawei.com>
+References: <87ipdjc15j.fsf@skywalker.in.ibm.com> <1342706972-10912-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com> <20120719165046.GO24336@google.com> <1342799140.2583.6.camel@twins> <20120720200542.GD21218@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=CqdNwoP+1WX2bBQyw13ipvrkvUuHvyR/tFCIrXf3YBw=;
-        b=jwPNA0zWYeAhazMd4mn7/gWEAuLsUW5tmvTncJ8qOBO6RdSEzNdcu3zzBlypOwpy34
-         ti3LZB4U7MP7ZIcYR8swg0eBm7PTvftgk2k0naVh2DWkH01sQA49ik1R7ZCReAklr7pA
-         93UMhUFd4a7tKelUGb9QTtqnn30UN/V4QIChVhH/5z44vkup2ZMCfMtTMuGZe936YrcC
-         pLrobP5DbagDmqK/o/SRj0NjbLb4exNwbB6tKyjl8mPsAoKiyjDBBdn68bbtrgH8fXkI
-         89KdVlHZZX9/qcG0B/s7PooJ+seZdrc1TzAWAxMirwAlXPyW+E5k/yrO6goF2XDUI4Ii
-         lYBw==
-Content-Disposition: inline
-In-Reply-To: <87a9ymwcsv.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+In-Reply-To: <20120720200542.GD21218-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Suleiman-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Maxim-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
 
-Hey, Eric.
+On 2012/7/21 4:05, Tejun Heo wrote:
 
-On Thu, Jul 26, 2012 at 12:19:12PM -0700, Eric W. Biederman wrote:
-> > No, any attempt to build namespace support into cgroup core code will
-> > be nacked with strong prejudice.
+> Hey, Peter.
 > 
-> The cgroup code was only merged with the understanding that this support
-> was simple to add and it would be added.  I am sorry that no one had
-> the sense to follow up and make certain that promise was not fullfilled.
-
-Good chunk of cgroup is messy and I'm likely to continue to break a
-lot of whatever promises that have been made. :)
-
-> > Thankfully, procfs is going the FUSE way.
+> On Fri, Jul 20, 2012 at 05:45:40PM +0200, Peter Zijlstra wrote:
+>>> So, Peter, why does cpuset mangle with cgroup_mutex?  What guarantees
+>>> does it need?  Why can't it work on "changed" notification while
+>>> caching the current css like blkcg does?
+>>
+>> I've no clue sorry.. /me goes stare at this stuff.. Looks like something
+>> Paul Menage did when he created cgroups. I'll have to have a hard look
+>> at all that to untangle this. Not something obvious to me.
 > 
-> No procfs is not going the FUSE way.  Hacks for programs that misuse
-> information in procfs is going the FUSE way.
-
-All those were proposed to be solved by "teaching" kernel procfs how
-to present itself differently.
-
-> The best example is there currently is not a good method for programs
-> to figure out how parellel it is productive to be so the programs
-> read /proc/cpuinfo and get the count of cpus.  Control groups can
-> limit you to fewer cpus but those programs have figured that out yet.
-
-Yeah, and you can handle that too nicely with FUSE.  More on this
-later.
-
-> But ultimately fuse for procfs is about the rare case where people
-> want to lie to applications, because it is easier to lie to applications
-> then to disabuse the applications of their mistaken asumptions.
-
-I don't think so.  They are necessary parts of representing a properly
-scoped environment.
-
-> I have not seen a single suggest that any of the other procfs bits
-> can go away.
-
-I think I made that a couple times now.  I definitely intend to push
-things that way.  Or, at least, I'll bark as hard as I can against
-adding more namespace stuff to system pseudo filesystems.
-
-> > and I hope in time we could convert sysfs to a similar mechanism and
-> > deprecate the in-kernel support.
+> Yeah, it would be great if this can be untangled.  I really don't see
+> any other reasonable way out of this circular locking mess.  If cpuset
+> needs stable css association across certain period, the RTTD is
+> caching the css by holding its ref and synchronize modifications to
+> that cache, rather than synchronizing cgroup operations themselves.
 > 
-> I have nothing that even suggests there is a reasonable possibility of
-> using fuse to deprecate any of the proc or sysfs support.
 
-Why not?  If there's some deficiency in FUSE or notification
-mechanisms in pseudo FSes, let's fix them.
 
-> > So, no, no, no, no, no, no, no, no, no, no, no, no. :P
-> 
-> Bahahahahahahaha! :P
+The cgroup core was extracted from cpuset, so they are deeply tangled.
 
-:)
+There are several issues to resolve with regard to removing cgroup lock from cpuset.
 
-> I sort of wish I had the energy to tackle this.  As it is control groups
-> hierarchies have very severe usablilty problems supporting one of their
-> core use cases.
-> 
-> We should have our interfaces designed such that it is possible to run
-> nested init's without hacks, and the only significant piece left on the
-> hacks pile is control groups.
-> 
-> Control group hiearchies are are really strange piece of work whose
-> design makes very little sense to me.
+- there are places that the cgroup hierarchy is travelled. This should be
+easy, as cpuset can be made to maintain its hierarchy.
 
-cgroupfs is riddled with confused designs but this is not it.  The
-confusion is that namespace should play a major role in the design of
-system pseudo filesystems and that it can be achieved by playing
-peekaboo with dentries.
+- cpuset disallows clearing cpuset.mems/cpuset.cpus if the cgroup is not empty,
+which can be guaranteed only by cgroup lock.
 
-It obfuscates the code for niche use case - which in itself could be
-acceptable if that's the only / best way to achieve that - while not
-even being able to serve the said use case properly.
+- cpuset disallows a task be attached to a cgroup with empty cpuset.mems/cpuset.cpus,
+which again can be guarantted only by cgroup lock.
 
-Thanks.
+- cpuset may move tasks from a cgroup to another cgroup (Glauber mentioned this).
 
--- 
-tejun
+- maybe other cases I overlooked..
