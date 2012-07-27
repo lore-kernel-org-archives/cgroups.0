@@ -1,19 +1,19 @@
 From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH V2 1/6] memcg: remove MEMCG_NR_FILE_MAPPED
-Date: Fri, 27 Jul 2012 18:23:05 +0800
-Message-ID: <1343384585-20046-1-git-send-email-handai.szj@taobao.com>
+Subject: [PATCH V2 2/6] Make TestSetPageDirty and dirty page accounting in one func
+Date: Fri, 27 Jul 2012 18:25:20 +0800
+Message-ID: <1343384720-20084-1-git-send-email-handai.szj@taobao.com>
 References: <1343384432-19903-1-git-send-email-handai.szj@taobao.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=8mYACVsAwrDccPvZv6GxvQ2TdSKKLOKPQNw76LGm7Vs=;
-        b=nrVwtoeXzH25BZlW6hXtRQHVU8mmPYNl5AVHfCYyo+HH6tcyYSnsatPxoQQkoqf++5
-         uM7w2alU2OHgi5m2XetesmucCm7mvKZIWRYD2ksqXcBe+0OBYAEBGeR0pqX7NebKM79G
-         ukjxOjBVMnzlJ+qupJz0crtKHFj3BlMxO/v/cmALaFJ3MAu/qVZ+iHr1VLzG8iGB7rV6
-         Noc/U+2HYB0myyOD5YXnNLZYFlpfrlOubTa9jIGtgXp5CpFXSLUaUPCynStyG51AJJnF
-         7g/bXjoLtYlCvl+JtDFlR9auJzhYagD4bbH5H2Y5s0JjEyIg029L0AJNbIBneA7c+h92
-         QrVQ==
+        bh=mzI4mSJubgLKKSxgAmGnvM7bEVij0Qpibp6z+T6HmJ8=;
+        b=Wxuk3aKie1gdZkp6lbQBqXyXFQJnqELzaS/Weh4uYuk1XTc0KQnQCDl81DxM0xgcwt
+         2RCmWXAsUcOMplBuWZ41PnimKdJj8R0YJaRTmcfJG0KGLZkvywVfukRZnTXI55nGv6ZK
+         c+8jlCDXhIZS8K+KcN55hBwifzhOpfVKaI+m3UY4j1oEWDQtbubG+lWKvjYbpbNB3H6N
+         G9UHVK2vWOeArBKh0V+vzNcBPb8adMKyTkcLu1hA2s70z51mVYQ5WKEINCItAk05lFWz
+         PVM42u/49whoGUAH3tBdNDk9Z76UvYMPKGDD88er6aFX6QeJhzytngFm5Oh3iqEI4/NM
+         cR7Q==
 In-Reply-To: <1343384432-19903-1-git-send-email-handai.szj@taobao.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,164 +21,102 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: fengguang.wu@intel.com, gthelen@google.com, akpm@linux-foundation.org, yinghan@google.com, mhocko@suse.cz, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Sha Zhengju <handai.szj@taobao.com>
+Cc: fengguang.wu@intel.com, gthelen@google.com, akpm@linux-foundation.org, yinghan@google.com, mhocko@suse.cz, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, npiggin@kernel.dk, Sha Zhengju <handai.szj@taobao.com>
 
 From: Sha Zhengju <handai.szj@taobao.com>
 
-While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
-as an extra layer of indirection because of the complexity and presumed
-performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+Commit a8e7d49a(Fix race in create_empty_buffers() vs __set_page_dirty_buffers())
+extracts TestSetPageDirty from __set_page_dirty and is far away from
+account_page_dirtied.But it's better to make the two operations in one single
+function to keep modular.So in order to avoid the potential race mentioned in
+commit a8e7d49a, we can hold private_lock until __set_page_dirty completes.
+I guess there's no deadlock between ->private_lock and ->tree_lock by quick look.
+It's a prepare patch for following memcg dirty page accounting patches.
+
+
+Here is some test numbers that before/after this patch:
+
+Test steps(Mem-24g, ext4):
+drop_cache; sync
+fio (buffered/randwrite/bs=4k/size=128m/filesize=1g/numjobs=8/sync)
+
+We test it for 10 times and get the average numbers:
+Before:
+write: io=1024.0MB, bw=334678 KB/s, iops=83669.2 , runt=  3136 msec
+lat (usec): min=1 , max=26203.1 , avg=81.473, stdev=275.754
+After:
+write: io=1024.0MB, bw=331583 KB/s, iops=82895.3 , runt=  3164.4 msec
+lat (usec): min=1.1 , max=19001.6 , avg=83.544, stdev=272.704
+
+Note that the impact is little(~1%).
 
 Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Acked-by: Fengguang Wu <fengguang.wu@intel.com>
-Reviewed-by: Greg Thelen <gthelen@google.com>
+Reviewed-by: Michal Hocko <mhocko@suse.cz>
 ---
- include/linux/memcontrol.h |   28 ++++++++++++++++++++--------
- mm/memcontrol.c            |   25 +++----------------------
- mm/rmap.c                  |    4 ++--
- 3 files changed, 25 insertions(+), 32 deletions(-)
+ fs/buffer.c |   25 +++++++++++++------------
+ 1 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 83e7ba9..c1e2617 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -27,9 +27,21 @@ struct page_cgroup;
- struct page;
- struct mm_struct;
- 
--/* Stats that can be updated by kernel. */
--enum mem_cgroup_page_stat_item {
--	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
-+/*
-+ * Statistics for memory cgroup.
-+ *
-+ * The corresponding mem_cgroup_stat_names is defined in mm/memcontrol.c,
-+ * These two lists should keep in accord with each other.
-+ */
-+enum mem_cgroup_stat_index {
-+	/*
-+	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
-+	 */
-+	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
-+	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
-+	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
-+	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
-+	MEM_CGROUP_STAT_NSTATS,
- };
- 
- struct mem_cgroup_reclaim_cookie {
-@@ -164,17 +176,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
- }
- 
- void mem_cgroup_update_page_stat(struct page *page,
--				 enum mem_cgroup_page_stat_item idx,
-+				 enum mem_cgroup_stat_index idx,
- 				 int val);
- 
- static inline void mem_cgroup_inc_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- 	mem_cgroup_update_page_stat(page, idx, 1);
- }
- 
- static inline void mem_cgroup_dec_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- 	mem_cgroup_update_page_stat(page, idx, -1);
- }
-@@ -349,12 +361,12 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
- }
- 
- static inline void mem_cgroup_inc_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- }
- 
- static inline void mem_cgroup_dec_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- }
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1940ba8..aef9fb0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -76,21 +76,10 @@ static int really_do_swap_account __initdata = 0;
- #define do_swap_account		0
- #endif
- 
--
- /*
-- * Statistics for memory cgroup.
-+ * The corresponding mem_cgroup_stat_index is defined in include/linux/memcontrol.h,
-+ * These two lists should keep in accord with each other.
+diff --git a/fs/buffer.c b/fs/buffer.c
+index c7062c8..5e0b0d2 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -610,9 +610,15 @@ EXPORT_SYMBOL(mark_buffer_dirty_inode);
+  * If warn is true, then emit a warning if the page is not uptodate and has
+  * not been truncated.
   */
--enum mem_cgroup_stat_index {
--	/*
--	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
--	 */
--	MEM_CGROUP_STAT_CACHE, 	   /* # of pages charged as cache */
--	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
--	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
--	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
--	MEM_CGROUP_STAT_NSTATS,
--};
--
- static const char * const mem_cgroup_stat_names[] = {
- 	"cache",
- 	"rss",
-@@ -1926,7 +1915,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
- }
- 
- void mem_cgroup_update_page_stat(struct page *page,
--				 enum mem_cgroup_page_stat_item idx, int val)
-+				 enum mem_cgroup_stat_index idx, int val)
+-static void __set_page_dirty(struct page *page,
++static int __set_page_dirty(struct page *page,
+ 		struct address_space *mapping, int warn)
  {
- 	struct mem_cgroup *memcg;
- 	struct page_cgroup *pc = lookup_page_cgroup(page);
-@@ -1939,14 +1928,6 @@ void mem_cgroup_update_page_stat(struct page *page,
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
- 		return;
++	if (unlikely(!mapping))
++		return !TestSetPageDirty(page);
++
++	if (TestSetPageDirty(page))
++		return 0;
++
+ 	spin_lock_irq(&mapping->tree_lock);
+ 	if (page->mapping) {	/* Race with truncate? */
+ 		WARN_ON_ONCE(warn && !PageUptodate(page));
+@@ -622,6 +628,8 @@ static void __set_page_dirty(struct page *page,
+ 	}
+ 	spin_unlock_irq(&mapping->tree_lock);
+ 	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
++
++	return 1;
+ }
  
--	switch (idx) {
--	case MEMCG_NR_FILE_MAPPED:
--		idx = MEM_CGROUP_STAT_FILE_MAPPED;
--		break;
--	default:
--		BUG();
+ /*
+@@ -667,11 +675,9 @@ int __set_page_dirty_buffers(struct page *page)
+ 			bh = bh->b_this_page;
+ 		} while (bh != head);
+ 	}
+-	newly_dirty = !TestSetPageDirty(page);
++	newly_dirty = __set_page_dirty(page, mapping, 1);
+ 	spin_unlock(&mapping->private_lock);
+ 
+-	if (newly_dirty)
+-		__set_page_dirty(page, mapping, 1);
+ 	return newly_dirty;
+ }
+ EXPORT_SYMBOL(__set_page_dirty_buffers);
+@@ -1119,14 +1125,9 @@ void mark_buffer_dirty(struct buffer_head *bh)
+ 			return;
+ 	}
+ 
+-	if (!test_set_buffer_dirty(bh)) {
+-		struct page *page = bh->b_page;
+-		if (!TestSetPageDirty(page)) {
+-			struct address_space *mapping = page_mapping(page);
+-			if (mapping)
+-				__set_page_dirty(page, mapping, 0);
+-		}
 -	}
--
- 	this_cpu_add(memcg->stat->count[idx], val);
++	if (!test_set_buffer_dirty(bh))
++		__set_page_dirty(bh->b_page, page_mapping(bh->b_page), 0);
++
  }
+ EXPORT_SYMBOL(mark_buffer_dirty);
  
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 0f3b7cd..cd7e54e 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1148,7 +1148,7 @@ void page_add_file_rmap(struct page *page)
- 	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
- 	if (atomic_inc_and_test(&page->_mapcount)) {
- 		__inc_zone_page_state(page, NR_FILE_MAPPED);
--		mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED);
-+		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
- 	}
- 	mem_cgroup_end_update_page_stat(page, &locked, &flags);
- }
-@@ -1202,7 +1202,7 @@ void page_remove_rmap(struct page *page)
- 					      NR_ANON_TRANSPARENT_HUGEPAGES);
- 	} else {
- 		__dec_zone_page_state(page, NR_FILE_MAPPED);
--		mem_cgroup_dec_page_stat(page, MEMCG_NR_FILE_MAPPED);
-+		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
- 	}
- 	/*
- 	 * It would be tidy to reset the PageAnon mapping here,
 -- 
 1.7.1
 
