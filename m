@@ -1,50 +1,54 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH V2 6/6] memcg: Document cgroup dirty/writeback memory statistics
-Date: Fri, 27 Jul 2012 18:31:42 +0800
-Message-ID: <1343385102-20282-1-git-send-email-handai.szj@taobao.com>
-References: <1343384432-19903-1-git-send-email-handai.szj@taobao.com>
+From: John Marshall <John.Marshall-5jPdWwX6g8k@public.gmane.org>
+Subject: permissions bug?
+Date: Fri, 27 Jul 2012 17:01:36 +0000
+Message-ID: <5012C970.6050607@ec.gc.ca>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=XEnx6ZzSgJQqctt1W9Q2vJ4QvB65BE/UR02eCimgh4c=;
-        b=SU3FIEDb2NluTW51xYOhEM667w+p9nT+j91D5S4QTW7Tak3VWH2T5mM8Z00+BkbsSb
-         jRP7f1UkPJRcrlmQ6JkSwJHd5aEpFzkkdtue0nI13B/LJXLizUsklnQQL2bA6up5nfZL
-         CU1+J+nNtPu3kktfF1+2vHlRIgg7ScJdDWlyhfXEZCFSEIlek/DsdqC71sc4qP23hxI0
-         D7n88N6aukbg/aQR6b0vPv52VBXYdY+trxP/J01FwL/yiM0OqUIOQKAoYEcA+dcifvpX
-         lGGlBspeBhgY9nUSKqfAVtWJlUGTJbadgaMt+WKuk0sDVQtvb2Zx39MTJ+xW/9UOYL/E
-         PAuQ==
-In-Reply-To: <1343384432-19903-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
-Cc: fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Hi,
 
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Ackedy-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
- Documentation/cgroups/memory.txt |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I think there is a permissions bug with cgroups.
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index dd88540..f4b5778 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -420,6 +420,8 @@ pgpgin		- # of charging events to the memory cgroup. The charging
- pgpgout		- # of uncharging events to the memory cgroup. The uncharging
- 		event happens each time a page is unaccounted from the cgroup.
- swap		- # of bytes of swap usage
-+dirty		- # of bytes of file cache that are not in sync with the disk copy.
-+writeback	- # of bytes of file/anon cache that are queued for syncing to disk.
- inactive_anon	- # of bytes of anonymous memory and swap cache memory on
- 		LRU list.
- active_anon	- # of bytes of anonymous and swap cache memory on active
--- 
-1.7.1
+In the example below, I am able to create a cgroup directory under /cgroups/jobs
+as a non-root user (starting out as root and then calling setgid and setuid, both of
+which are effective) without sufficient permissions. Then, if I change the group
+write permission to off, I am denied.
+
+Note: when I try mkdir in a regular login shell as myself, the permissions seem to
+work correctly as I am denied, whether on not to group write bit is set.
+
+This happens on 2.6.32 (ubuntu 10.04) and 3.2.0 (ubuntu 12.04).
+
+Thanks,
+John
+
+root@mel-fe01:/cgroups# ls -ld /cgroups/jobs
+drwxrwxr-x 2 root root 0 Jul 27 15:20 /cgroups/jobs
+root@mel-fe01:/cgroups# python
+Python 2.6.5 (r265:79063, Apr 16 2010, 13:57:41)
+[GCC 4.4.3] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import os
+>>> os.setgid(108)
+>>> os.setuid(859)
+>>> os.mkdir("/cgroups/jobs/1")
+>>> os.rmdir("/cgroups/jobs/1")
+>>>
+[1]+  Stopped                 python
+root@mel-fe01:/cgroups# chmod g-w /cgroups/jobs
+root@mel-fe01:/cgroups# fg
+python
+
+
+>>> os.mkdir("/cgroups/jobs/1")
+Traceback (most recent call last):
+   File "<stdin>", line 1, in <module>
+OSError: [Errno 13] Permission denied: '/cgroups/jobs/1'
+>>>
+root@mel-fe01:/cgroups# uname -a
+Linux mel-fe01 2.6.32-38-server #83-Ubuntu SMP Wed Jan 4 11:26:59 UTC 2012 x86_64 GNU/Linux
