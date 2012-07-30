@@ -1,153 +1,64 @@
-From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V2 5/6] memcg: add per cgroup writeback pages accounting
-Date: Mon, 30 Jul 2012 08:02:21 -0700
-Message-ID: <xr93k3xl9ts2.fsf@gthelen.mtv.corp.google.com>
-References: <1343384432-19903-1-git-send-email-handai.szj@taobao.com>
-	<1343384931-20202-1-git-send-email-handai.szj@taobao.com>
+From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Don't drop the cgroup_mutex in cgroup_rmdir
+Date: Mon, 30 Jul 2012 11:25:13 -0700
+Message-ID: <20120730182513.GC20067@google.com>
+References: <87ipdjc15j.fsf@skywalker.in.ibm.com>
+ <1342706972-10912-1-git-send-email-aneesh.kumar@linux.vnet.ibm.com>
+ <20120719165046.GO24336@google.com>
+ <1342799140.2583.6.camel@twins>
+ <20120720200542.GD21218@google.com>
+ <501231F0.8050505@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:references:date:in-reply-to:message-id
-         :user-agent:mime-version:content-type;
-        bh=TeFQZb1LcCP+iHjl1BY141exdOUHTeHOeWHtobVqHd4=;
-        b=HJFJLEqbte4ShM9QHpuBSZ6aB7RsHqs1yymDbFs7FD0a08rDASGJXIFNaqXwtzLV4z
-         8Hj5WbGWUGODMJiZ5DwOf2blrHCS07OQk5qspsclcDSwjnX0BvbEUibLWsmqmZ19PYP+
-         cuezSls1IB6BWo+V0RVdZ9FB0kxLk+qIgtohnEUvwZrJVghj4VaLh1pYFMNMHXAIDpGk
-         MStnJ04222dNkKtCygO8dPA5SUoBCHdrMsZqfdVZCRXZa9Koru32wtvv/hGbovpl+oBc
-         a1oDHegU1TL7CvbO05o3ng07OweGPZCVWX5R5vvNrWszv7IZIxg9FTaC15HtuVkvwFBS
-         OcuA==
-In-Reply-To: <1343384931-20202-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org> (Sha
-	Zhengju's message of "Fri, 27 Jul 2012 18:28:51 +0800")
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=H0W3Oyb7ap39oAs7ZOlGdiUeYEzTjzWc3+sgcAJvTrQ=;
+        b=pO2KB/OvZbAv+Sek+G4KzK+gPFfT/8sYkNnZ6garaNTbfFdDMNVodSzIuYzTIjxyGZ
+         sX1MCYDoeIomeGOSfYQ5dHJAjtwLOxF7W69afKERmpO8i80HAJ7m8w4cYj7nyJnp7+BM
+         zhGZk9zW7GUcBiwgMsAJzNEgzMQ9VDQHN0rWz1UkoqMI465hrYwdlY6fCzormA0WYckz
+         dO7UvOTpMuUr2fVCfGc5JR0wlllv+TdAMX73YSg/GacynrhllVwikxbwZaFXq8jHD73w
+         Ls5S9eWEk9UTkaj7cLJzoAc9vyXKp2lZiVFc+suOHBs+/aPI2XMST8pjIjGuoFIsrPoR
+         fR6w==
+Content-Disposition: inline
+In-Reply-To: <501231F0.8050505-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, liwanp-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
 
-On Fri, Jul 27 2012, Sha Zhengju wrote:
+Hello,
 
-> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->
-> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
-> rule still is:
->         mem_cgroup_begin_update_page_stat()
->         modify page WRITEBACK stat
->         mem_cgroup_update_page_stat()
->         mem_cgroup_end_update_page_stat()
->
-> There're two writeback interface to modify: test_clear/set_page_writeback.
->
-> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-> ---
->  include/linux/memcontrol.h |    1 +
->  mm/memcontrol.c            |    5 +++++
->  mm/page-writeback.c        |   17 +++++++++++++++++
->  3 files changed, 23 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 8c6b8ca..0c8a699 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -42,6 +42,7 @@ enum mem_cgroup_stat_index {
->  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
->  	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
->  	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
-> +	MEM_CGROUP_STAT_WRITEBACK,  /* # of pages under writeback */
->  	MEM_CGROUP_STAT_NSTATS,
->  };
->  
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index cdcd547..de91d3d 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -86,6 +86,7 @@ static const char * const mem_cgroup_stat_names[] = {
->  	"mapped_file",
->  	"swap",
->  	"dirty",
-> +	"writeback",
->  };
->  
->  enum mem_cgroup_events_index {
-> @@ -2607,6 +2608,10 @@ static int mem_cgroup_move_account(struct page *page,
->  		mem_cgroup_move_account_page_stat(from, to,
->  				MEM_CGROUP_STAT_FILE_DIRTY);
->  
-> +	if (PageWriteback(page))
-> +		mem_cgroup_move_account_page_stat(from, to,
-> +				MEM_CGROUP_STAT_WRITEBACK);
-> +
->  	mem_cgroup_charge_statistics(from, anon, -nr_pages);
->  
->  	/* caller should have done css_get */
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 233e7ac..6b06d5e 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -1956,11 +1956,17 @@ EXPORT_SYMBOL(account_page_dirtied);
->  
->  /*
->   * Helper function for set_page_writeback family.
-> + *
-> + * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
-> + * while modifying struct page state and accounting writeback pages.
-> + * See test_set_page_writeback for example.
-> + *
->   * NOTE: Unlike account_page_dirtied this does not rely on being atomic
->   * wrt interrupts.
->   */
->  void account_page_writeback(struct page *page)
->  {
-> +	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
->  	inc_zone_page_state(page, NR_WRITEBACK);
->  }
->  EXPORT_SYMBOL(account_page_writeback);
-> @@ -2192,7 +2198,10 @@ int test_clear_page_writeback(struct page *page)
->  {
->  	struct address_space *mapping = page_mapping(page);
->  	int ret;
-> +	bool locked;
-> +	unsigned long flags;
->  
-> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+On Fri, Jul 27, 2012 at 02:15:12PM +0800, Li Zefan wrote:
+> The cgroup core was extracted from cpuset, so they are deeply tangled.
+> 
+> There are several issues to resolve with regard to removing cgroup lock from cpuset.
+> 
+> - there are places that the cgroup hierarchy is travelled. This should be
+> easy, as cpuset can be made to maintain its hierarchy.
 
-Reusing a variable name (flags) in the same function can cause
-confusion.  Please use a different name.  Maybe memcg_flags.
+Or we can expose limited interface for traversal while protecting
+hierarchy itself with smaller lock or make the hierarchy safe to
+traverse with RCU read lock.
 
->  	if (mapping) {
->  		struct backing_dev_info *bdi = mapping->backing_dev_info;
->  		unsigned long flags;
-> @@ -2213,9 +2222,12 @@ int test_clear_page_writeback(struct page *page)
->  		ret = TestClearPageWriteback(page);
->  	}
->  	if (ret) {
-> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
->  		dec_zone_page_state(page, NR_WRITEBACK);
->  		inc_zone_page_state(page, NR_WRITTEN);
->  	}
-> +
-> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
->  	return ret;
->  }
->  
-> @@ -2223,7 +2235,10 @@ int test_set_page_writeback(struct page *page)
->  {
->  	struct address_space *mapping = page_mapping(page);
->  	int ret;
-> +	bool locked;
-> +	unsigned long flags;
->  
-> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
->  	if (mapping) {
->  		struct backing_dev_info *bdi = mapping->backing_dev_info;
->  		unsigned long flags;
-> @@ -2250,6 +2265,8 @@ int test_set_page_writeback(struct page *page)
->  	}
->  	if (!ret)
->  		account_page_writeback(page);
-> +
-> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
->  	return ret;
->  
->  }
+> - cpuset disallows clearing cpuset.mems/cpuset.cpus if the cgroup is not empty,
+> which can be guaranteed only by cgroup lock.
+>
+> - cpuset disallows a task be attached to a cgroup with empty cpuset.mems/cpuset.cpus,
+> which again can be guarantted only by cgroup lock.
+
+Why can't callbacks enforce the above two?  We can keep track of the
+number of tasks in the cgroup and reject operations as necessary.
+What's missing?
+
+> - cpuset may move tasks from a cgroup to another cgroup (Glauber mentioned this).
+
+No idea about this one.  Why / how does this happen?
+
+Thanks.
+
+-- 
+tejun
