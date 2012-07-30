@@ -1,97 +1,39 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 06/10] sl[au]b: Allocate objects from memcg cache
-Date: Mon, 30 Jul 2012 17:11:06 +0400
-Message-ID: <501687EA.5050401@parallels.com>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-7-git-send-email-glommer@parallels.com> <20120730125851.GB27293@shutemov.name>
+Subject: Re: [PATCH 04/10] memcg: skip memcg kmem allocations in specified
+ code regions
+Date: Mon, 30 Jul 2012 18:09:23 +0400
+Message-ID: <50169593.5020506@parallels.com>
+References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-5-git-send-email-glommer@parallels.com> <20120730125004.GA27293@shutemov.name>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120730125851.GB27293@shutemov.name>
+In-Reply-To: <20120730125004.GA27293@shutemov.name>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: "Kirill A. Shutemov" <kirill@shutemov.name>
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, devel@openvz.org, cgroups@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <suleiman@google.com>
 
-On 07/30/2012 04:58 PM, Kirill A. Shutemov wrote:
-> On Wed, Jul 25, 2012 at 06:38:17PM +0400, Glauber Costa wrote:
->> We are able to match a cache allocation to a particular memcg.  If the
->> task doesn't change groups during the allocation itself - a rare event,
->> this will give us a good picture about who is the first group to touch a
->> cache page.
+On 07/30/2012 04:50 PM, Kirill A. Shutemov wrote:
+> On Wed, Jul 25, 2012 at 06:38:15PM +0400, Glauber Costa wrote:
+>> This patch creates a mechanism that skip memcg allocations during
+>> certain pieces of our core code. It basically works in the same way
+>> as preempt_disable()/preempt_enable(): By marking a region under
+>> which all allocations will be accounted to the root memcg.
 >>
->> This patch uses the now available infrastructure by calling
->> memcg_kmem_get_cache() before all the cache allocations.
->>
->> Signed-off-by: Glauber Costa <glommer@parallels.com>
->> CC: Christoph Lameter <cl@linux.com>
->> CC: Pekka Enberg <penberg@cs.helsinki.fi>
->> CC: Michal Hocko <mhocko@suse.cz>
->> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
->> CC: Johannes Weiner <hannes@cmpxchg.org>
->> CC: Suleiman Souhlal <suleiman@google.com>
->> ---
->>  include/linux/slub_def.h |   18 +++++++++++++-----
->>  mm/memcontrol.c          |    2 ++
->>  mm/slab.c                |    4 ++++
->>  mm/slub.c                |    1 +
->>  4 files changed, 20 insertions(+), 5 deletions(-)
->>
->> diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
->> index 8bb8ad2..148000a 100644
->> --- a/include/linux/slub_def.h
->> +++ b/include/linux/slub_def.h
->> @@ -13,6 +13,8 @@
->>  #include <linux/kobject.h>
->>  
->>  #include <linux/kmemleak.h>
->> +#include <linux/memcontrol.h>
->> +#include <linux/mm.h>
->>  
->>  enum stat_item {
->>  	ALLOC_FASTPATH,		/* Allocation from cpu slab */
->> @@ -209,14 +211,14 @@ static __always_inline int kmalloc_index(size_t size)
->>   * This ought to end up with a global pointer to the right cache
->>   * in kmalloc_caches.
->>   */
->> -static __always_inline struct kmem_cache *kmalloc_slab(size_t size)
->> +static __always_inline struct kmem_cache *kmalloc_slab(gfp_t flags, size_t size)
->>  {
->>  	int index = kmalloc_index(size);
->>  
->>  	if (index == 0)
->>  		return NULL;
->>  
->> -	return kmalloc_caches[index];
->> +	return memcg_kmem_get_cache(kmalloc_caches[index], flags);
->>  }
->>  
->>  void *kmem_cache_alloc(struct kmem_cache *, gfp_t);
->> @@ -225,7 +227,13 @@ void *__kmalloc(size_t size, gfp_t flags);
->>  static __always_inline void *
->>  kmalloc_order(size_t size, gfp_t flags, unsigned int order)
->>  {
->> -	void *ret = (void *) __get_free_pages(flags | __GFP_COMP, order);
->> +	void *ret;
->> +
->> +	flags = __GFP_COMP;
->> +#ifdef CONFIG_MEMCG_KMEM
->> +	flags |= __GFP_KMEMCG;
->> +#endif
+>> We need this to prevent races in early cache creation, when we
+>> allocate data using caches that are not necessarily created already.
 > 
-> Em.. I don't see where __GFP_KMEMCG is defined.
-> It should be 0 for !CONFIG_MEMCG_KMEM.
+> Why not a GFP_* flag?
 > 
-It is not, sorry.
 
-As I said, this is dependent on another patch series.
-My main goal while sending this was to get the slab part - that will
-eventually come ontop of that - discussed. Because they are both quite
-complex, I believe they benefit from being discussed separately.
+The main reason for this is to prevent nested calls of
+kmem_cache_create(), since they could create (and in my tests, do
+create) funny circular dependencies with each other. So the cache
+creation itself would proceed without involving memcg.
 
-You can find the latest version of that here:
-
-https://lkml.org/lkml/2012/6/25/251
+At first, it is a bit weird to have cache creation itself depending on a
+allocation flag test.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
