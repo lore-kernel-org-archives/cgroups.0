@@ -1,42 +1,35 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 04/10] memcg: skip memcg kmem allocations in specified
- code regions
-Date: Mon, 30 Jul 2012 18:09:23 +0400
-Message-ID: <50169593.5020506@parallels.com>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <1343227101-14217-5-git-send-email-glommer@parallels.com> <20120730125004.GA27293@shutemov.name>
+From: Aristeu Rozanski <aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [PATCH 0/4] device_cgroup: replace internally whitelist with
+ exception list
+Date: Mon, 30 Jul 2012 10:51:37 -0400
+Message-ID: <20120730145137.GA13180@jake.ruivo.org>
+References: <20120724220333.966415895@muttley.lan.cathedral>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120730125004.GA27293@shutemov.name>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120724220333.966415895-+5JutNtNrJPwzbzh4h2Q61C45dnP8DBc@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, devel@openvz.org, cgroups@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Suleiman Souhlal <suleiman@google.com>
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On 07/30/2012 04:50 PM, Kirill A. Shutemov wrote:
-> On Wed, Jul 25, 2012 at 06:38:15PM +0400, Glauber Costa wrote:
->> This patch creates a mechanism that skip memcg allocations during
->> certain pieces of our core code. It basically works in the same way
->> as preempt_disable()/preempt_enable(): By marking a region under
->> which all allocations will be accounted to the root memcg.
->>
->> We need this to prevent races in early cache creation, when we
->> allocate data using caches that are not necessarily created already.
+On Tue, Jul 24, 2012 at 06:03:33PM -0400, Aristeu Rozanski wrote:
+> The original model of device_cgroup is having a whitelist where all the
+> allowed devices are listed. The problem with this approach is that is
+> impossible to have the case of allowing everything but few devices.
 > 
-> Why not a GFP_* flag?
+> The reason for that lies in the way the whitelist is handled internally:
+> since there's only a whitelist, the "all devices" entry would have to be
+> removed and replaced by the entire list of possible devices but the ones
+> that are being denied.  Since dev_t is 32 bits long, representing the allowed
+> devices as a bitfield is not memory efficient.
 > 
+> This patch replaces the "whitelist" by a "exceptions" list and the default
+> policy is kept as "deny_all" variable in dev_cgroup structure.
 
-The main reason for this is to prevent nested calls of
-kmem_cache_create(), since they could create (and in my tests, do
-create) funny circular dependencies with each other. So the cache
-creation itself would proceed without involving memcg.
+Any comments on these patches?
 
-At first, it is a bit weird to have cache creation itself depending on a
-allocation flag test.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Aristeu
