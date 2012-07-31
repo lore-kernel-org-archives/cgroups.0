@@ -1,58 +1,68 @@
-From: richard -rw- weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Cyrill Gorcunov <gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Subject: Re: [Announce] Checkpoint-restore tool v0.1
-Date: Tue, 31 Jul 2012 12:08:22 +0200
-Message-ID: <CAFLxGvwu8-ii7hDbDfco3JrgKgOK+hsdTN_Q--AHbom0Ni8WYA@mail.gmail.com>
-References: <500D09C9.7060903@parallels.com> <500D1116.7070301@parallels.com>
-	<CAFLxGvwUhEPNdQvUnue2QFu_EipmBKD3nf0MfMWkqwLTf7jd5Q@mail.gmail.com>
-	<50179CF0.7050200@parallels.com>
-	<CAFLxGvygCxER3gHfj-onwnm_m6xugOVkynGyJU2CDheD3A2HOQ@mail.gmail.com>
-	<5017A053.9000206@parallels.com>
-	<CAFLxGvy396+BfYSaSnvAwJb0GO4WZCKbPXSbU7YfrOJTo6zk6A@mail.gmail.com>
-	<5017AB41.60700@parallels.com>
+Date: Tue, 31 Jul 2012 14:16:03 +0400
+Message-ID: <20120731101603.GD2007@moon>
+References: <500D09C9.7060903@parallels.com>
+ <500D1116.7070301@parallels.com>
+ <CAFLxGvwUhEPNdQvUnue2QFu_EipmBKD3nf0MfMWkqwLTf7jd5Q@mail.gmail.com>
+ <50179CF0.7050200@parallels.com>
+ <CAFLxGvygCxER3gHfj-onwnm_m6xugOVkynGyJU2CDheD3A2HOQ@mail.gmail.com>
+ <5017A053.9000206@parallels.com>
+ <CAFLxGvy396+BfYSaSnvAwJb0GO4WZCKbPXSbU7YfrOJTo6zk6A@mail.gmail.com>
+ <5017AB41.60700@parallels.com>
+ <CAFLxGvwu8-ii7hDbDfco3JrgKgOK+hsdTN_Q--AHbom0Ni8WYA@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=hdciFt6HKgOyOlWVDKerMyXP3eB/IoC7c5EMLJhayDo=;
+        b=mW29iO6Zqog6U3F3Uqr3tyOxq00nZmfRjyExabaeUe4VIIkQLXa7ynOhT934GvURQr
+         xmum5iHEnJYorlc6xI5FroTdUn0JmPQyxSSIEHqfo9Y5dohov7VewVOufxN7axTMXr8g
+         pL/2A4Q0M9ev4EFndKwYqHtEjUMoYi9uT1jpDpfY792Z4v9AM2fhNu22fNR71sTp/187
+         ejZvc6In+/pX7Oyj7xxbQU67X0BwfLU8RQLsMxteDOaDKX9R1QYu+BdFcXuADS69xOrz
+         nGCTlAkEb+TZMC4xDPi+aPFHT/RhPTvQJSkIbKPyUC1Kc1ZTKpJY9lLR+AxZzjXeDnNH
+         KxZw==
+Content-Disposition: inline
+In-Reply-To: <CAFLxGvwu8-ii7hDbDfco3JrgKgOK+hsdTN_Q--AHbom0Ni8WYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-	:cc:content-type;
-	bh=sR0k/xjIIFV1P6JopRau3mLH5x6c62OOMWyV/TUIYNM=;
-	b=EpJyzE7tYJM950yyOsr8G1SijKgTP/9TTZTLTWxBpLuXlqcvp8BquAH80ihTG4pyJ8
-	s4tlr8RUB4pKzccf71SHqVOMatTE5uJzvPKBQ4QlYCalzqKXE8yVRGOQnpcqSuCejJjC
-	HMeypaWODFChu8TAigptl5Hr7WD4NGf1G/ZSxq5dNbDGV12FXGppe2a9ParYmLG93oOK
-	TNq+r6K2XjRHDZFGt3GpvI3OAUvJbIakuBtST7sO14Qb7AX6+EQSJFCZjzoiwyaMUd4Y
-	ip6beo8JXYx+QWZ+488t8wl6ZoEMtF1WrOI4tPegx+5Je1eVgURVa8w8ZQJpj/mNth7j
-	enLA==
-In-Reply-To: <5017AB41.60700-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: "users-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <users-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "lwn-T1hC0tSOHrs@public.gmane.org" <lwn-T1hC0tSOHrs@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: richard -rw- weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lwn-T1hC0tSOHrs@public.gmane.org" <lwn-T1hC0tSOHrs@public.gmane.org>, "criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "users-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <users-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Jul 31, 2012 at 11:54 AM, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
->> Yeah, but I fear it's not that easy.
->> We'd have to change crtools to work without ptrace().
->
-> Well, this is hard. Using ptrace saved us from having many special-purpose
-> APIs for dumping various stuff (there will be an article about it). Thus I
-> don't know which way is simpler -- stop using ptrace or teach ptrece to allow
-> several tracers to attach to one task %)
+On Tue, Jul 31, 2012 at 12:08:22PM +0200, richard -rw- weinberger wrote:
+> On Tue, Jul 31, 2012 at 11:54 AM, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> >> Yeah, but I fear it's not that easy.
+> >> We'd have to change crtools to work without ptrace().
+> >
+> > Well, this is hard. Using ptrace saved us from having many special-purpose
+> > APIs for dumping various stuff (there will be an article about it). Thus I
+> > don't know which way is simpler -- stop using ptrace or teach ptrece to allow
+> > several tracers to attach to one task %)
+> 
+> Allowing multiple tracers in a safe way is IMHO even more harder.
+> 
+> BTW:  While reading prctl_set_mm() I noticed two things.
+> 1.  Why isn't the return value of find_vma() verified?
 
-Allowing multiple tracers in a safe way is IMHO even more harder.
+prctl_set_mm
+	vma = find_vma(mm, addr);
+	...
+	if (!vma) {
+		error = -EFAULT;
+		goto out;
+	}
 
-BTW:  While reading prctl_set_mm() I noticed two things.
-1.  Why isn't the return value of find_vma() verified?
-It looks like one can set an addr which does not belong to any vma.
-2. What will happen if addr is not page aligned?
+these values are used in procfs statistics only. So I don't get
+which verify you mean here.
 
--- 
-Thanks,
-//richard
+> It looks like one can set an addr which does not belong to any vma.
+> 2. What will happen if addr is not page aligned?
+
+you'll have a bit weird output in procfs stat (probably I should add
+page alignment check here).
+
+	Cyrill
