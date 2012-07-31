@@ -1,44 +1,44 @@
-From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Subject: Re: Getting notifications of the tasks file
-Date: Tue, 31 Jul 2012 17:14:13 +0300
-Message-ID: <20120731141413.GA3200@shutemov.name>
-References: <5486539.IgfTNnpt1m@valencia>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 00/10] memcg kmem limitation - slab.
+Date: Tue, 31 Jul 2012 18:30:31 +0200
+Message-ID: <20120731163027.GE17078@somewhere.redhat.com>
+References: <1343227101-14217-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=nmdNQNGr0nfV8Do7/qRmH1rU3mccD737lGBW3enPVqc=;
+        b=cTkG0dtjifgXKw+krniYwr9QrRBZRMxuIDUwxcMpCwOa1/iO9ANTmJnbOPD6eN6dHh
+         FbSZEz0G0n96M/WcoFM2kNtnAx6GNM5ouofG52KyZmpOgbV2OCmuhckEAkyecKSBM/EB
+         IDfukbHE9HjkzQ0raYPYELa3D3cen0htoWNtDPPiAOlW283MD+I1/H6WVvr3UieMs6vs
+         eF1mrTfM5z77PUFTmI8n2PWoOWj/LIyD8yM7ozTmtvEa0wyjFsm66b2szBGqwW770voQ
+         fhVuWYNLVj/8rbXXYqcyzoo2dX3YZ67DABCtrGsThuIbWoZ/tMbKS9U7ZbeYNs6Iinzq
+         Y9Kg==
 Content-Disposition: inline
-In-Reply-To: <5486539.IgfTNnpt1m@valencia>
+In-Reply-To: <1343227101-14217-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?iso-8859-1?Q?V=EDctor_Fern=E1ndez_Mart=EDnez?= <vfernandez-JE8hqn47KVKB+jHODAdFcQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jul 31, 2012 at 11:42:06AM +0200, V=C3=ADctor Fern=C3=A1ndez Ma=
-rt=C3=ADnez wrote:
-> =EF=BB=BFI'm trying to use the eventfd notification API to get notifi=
-ed when the tasks=20
-> file changes. This way I would like to know when child processes are =
-spawned=20
-> and when they exit. However, I always get EINVAL when writing to=20
-> cgroup.event_control. Even cgroup_event_listener.c returns that error=
-:
->=20
-> # cat /sys/fs/cgroup/memory/grp0/tasks=20
-> 3590
-> 23902
-> # ./cgroup_event_listener /sys/fs/cgroup/memory/grp0/tasks 0
-> Cannot write to cgroup.event_control: Invalid argument
->=20
-> I have also tried to monitor cgroup.procs.
->=20
-> Is it possible to monitor the tasks file at all or is this a bug? If =
-0 is a=20
-> wrong argument, which argument should I use instead?
+On Wed, Jul 25, 2012 at 06:38:11PM +0400, Glauber Costa wrote:
+> Hi,
+> 
+> This is the slab part of the kmem limitation mechanism in its last form.  I
+> would like to have comments on it to see if we can agree in its form. I
+> consider it mature, since it doesn't change much in essence over the last
+> forms. However, I would still prefer to defer merging it and merge the
+> stack-only patchset first (even if inside the same merge window). That patchset
+> contains most of the infrastructure needed here, and merging them separately
+> would not only reduce the complexity for reviewers, but allow us a chance to
+> have independent testing on them both. I would also likely benefit from some
+> extra testing, to make sure the recent changes didn't introduce anything bad.
 
-Currently, you can only listen for events from memory.usage_in_bytes,
-memory.memsw.usage_in_bytes and memory.oom_control.
-It's not implemented for any other cgroup files yet.
+What is the status of the stack-only limitation patchset BTW? Does anybody oppose
+to its merging?
 
---=20
- Kirill A. Shutemov
+Thanks.
