@@ -1,64 +1,58 @@
-From: =?ISO-8859-1?Q?V=EDctor_Fern=E1ndez_Mart=EDnez?= 
-	<vfernandez-JE8hqn47KVKB+jHODAdFcQ@public.gmane.org>
-Subject: Getting notifications of the tasks file
-Date: Tue, 31 Jul 2012 11:42:06 +0200
-Message-ID: <5486539.IgfTNnpt1m@valencia>
+From: richard -rw- weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Announce] Checkpoint-restore tool v0.1
+Date: Tue, 31 Jul 2012 12:08:22 +0200
+Message-ID: <CAFLxGvwu8-ii7hDbDfco3JrgKgOK+hsdTN_Q--AHbom0Ni8WYA@mail.gmail.com>
+References: <500D09C9.7060903@parallels.com> <500D1116.7070301@parallels.com>
+	<CAFLxGvwUhEPNdQvUnue2QFu_EipmBKD3nf0MfMWkqwLTf7jd5Q@mail.gmail.com>
+	<50179CF0.7050200@parallels.com>
+	<CAFLxGvygCxER3gHfj-onwnm_m6xugOVkynGyJU2CDheD3A2HOQ@mail.gmail.com>
+	<5017A053.9000206@parallels.com>
+	<CAFLxGvy396+BfYSaSnvAwJb0GO4WZCKbPXSbU7YfrOJTo6zk6A@mail.gmail.com>
+	<5017AB41.60700@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8-sig"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+	:cc:content-type;
+	bh=sR0k/xjIIFV1P6JopRau3mLH5x6c62OOMWyV/TUIYNM=;
+	b=EpJyzE7tYJM950yyOsr8G1SijKgTP/9TTZTLTWxBpLuXlqcvp8BquAH80ihTG4pyJ8
+	s4tlr8RUB4pKzccf71SHqVOMatTE5uJzvPKBQ4QlYCalzqKXE8yVRGOQnpcqSuCejJjC
+	HMeypaWODFChu8TAigptl5Hr7WD4NGf1G/ZSxq5dNbDGV12FXGppe2a9ParYmLG93oOK
+	TNq+r6K2XjRHDZFGt3GpvI3OAUvJbIakuBtST7sO14Qb7AX6+EQSJFCZjzoiwyaMUd4Y
+	ip6beo8JXYx+QWZ+488t8wl6ZoEMtF1WrOI4tPegx+5Je1eVgURVa8w8ZQJpj/mNth7j
+	enLA==
+In-Reply-To: <5017AB41.60700-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: "users-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <users-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "lwn-T1hC0tSOHrs@public.gmane.org" <lwn-T1hC0tSOHrs@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-=EF=BB=BFI'm trying to use the eventfd notification API to get notified=
- when the tasks=20
-file changes. This way I would like to know when child processes are sp=
-awned=20
-and when they exit. However, I always get EINVAL when writing to=20
-cgroup.event_control. Even cgroup_event_listener.c returns that error:
+On Tue, Jul 31, 2012 at 11:54 AM, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+>> Yeah, but I fear it's not that easy.
+>> We'd have to change crtools to work without ptrace().
+>
+> Well, this is hard. Using ptrace saved us from having many special-purpose
+> APIs for dumping various stuff (there will be an article about it). Thus I
+> don't know which way is simpler -- stop using ptrace or teach ptrece to allow
+> several tracers to attach to one task %)
 
-# cat /sys/fs/cgroup/memory/grp0/tasks=20
-3590
-23902
-# ./cgroup_event_listener /sys/fs/cgroup/memory/grp0/tasks 0
-Cannot write to cgroup.event_control: Invalid argument
+Allowing multiple tracers in a safe way is IMHO even more harder.
 
-I have also tried to monitor cgroup.procs.
+BTW:  While reading prctl_set_mm() I noticed two things.
+1.  Why isn't the return value of find_vma() verified?
+It looks like one can set an addr which does not belong to any vma.
+2. What will happen if addr is not page aligned?
 
-Is it possible to monitor the tasks file at all or is this a bug? If 0 =
-is a=20
-wrong argument, which argument should I use instead?
-
-
-Thanks.
-
-
-Barracuda Networks AG
-Vorsitzender des Aufsichtsrates/ Chairman of the supervisory board: Dea=
-n Drako
-Vorstand/ Executive Board: Dr. Wieland Alge, Mag. Guenter Klausner
-Sitz der Gesellschaft/ Registered office: 6020 Innsbruck, Austria
-Handelsgericht Innsbruck Firmenbuch/ Registration Number: 184392s
-UID-Nr/ VAT Number: ATU47509003
-
-Diese Nachricht und allfaellige angehaengte Dokumente sind vertraulich =
-und nur fuer den/die Adressaten bestimmt. Sollten Sie nicht der beabsic=
-htigte Adressat sein, ist jede Offenlegung, Weiterleitung oder sonstige=
- Verwendung dieser Information nicht gestattet. In diesem Fall bitten w=
-ir, den Absender zu verstaendigen und die Information zu vernichten. Fu=
-er Uebermittlungsfehler oder sonstige Irrtuemer bei Uebermittlung beste=
-ht keine Haftung.
-
-This message and any attached files are confidential and intended solel=
-y for the addressee(s). Any publication, transmission or other use of t=
-he information by a person or entity other than the intended addressee =
-is prohibited. If you receive this in error please contact the sender a=
-nd delete the material. The sender does not accept liability for any er=
-rors or omissions as a result of the transmission.
-
-
-'Like' us on Facebook for exclusive content and other resources on all =
-Barracuda Networks solutions.=0D
-Visit http://barracudanetworks.com/facebook=0D
-=0D
+-- 
+Thanks,
+//richard
