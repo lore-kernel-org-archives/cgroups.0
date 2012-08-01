@@ -1,43 +1,49 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 00/10] memcg kmem limitation - slab.
-Date: Tue, 31 Jul 2012 20:39:30 +0400
-Message-ID: <50180A42.2050806@parallels.com>
-References: <1343227101-14217-1-git-send-email-glommer@parallels.com> <20120731163027.GE17078@somewhere.redhat.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH 2/2] memcg, oom: Clarify some oom dump messages
+Date: Tue, 31 Jul 2012 20:55:01 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1207312052070.20073@chino.kir.corp.google.com>
+References: <1343146160-15012-1-git-send-email-handai.szj@taobao.com> <1343146334-15161-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120731163027.GE17078-oHC15RC7JGTpAmv0O++HtFaTQe2KTcn/@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=dmHXdvINuDIUO8AvKv5AgNzCTHz8/3bIkuOjL/woRfY=;
+        b=jM390Ih1gNvUBii0Oy1Y4TGOcXOrgM4l8lfqE8KU1R7TXnx3dsqQAdZgk+1WeopcZb
+         s5IEIVp6Ug0WAfACBodHU3P1JhLHg3Ii0G1lCni/KTJPBlxEaplrZdbb4xIktKuLEnfN
+         sfrUl7NrCbXcb3FsRRQzQIMIzoMdQvt+iOn1fE5j5pNM6khgB1WBOUZY2a9pwJpTvF+e
+         o+zV1SCI6XH1FuWNpAwWvuBkZEvrmvpdBLG9Utl+42RuipB5PzSR63dkYELHmpWEVFa+
+         UMKlkriPL+B36TgAaqnsu7DYACfxi8qRB/rv5yVN2cKWJk5E7OeMm7swQ9j6pYEayGlW
+         +zxA==
+In-Reply-To: <1343146334-15161-1-git-send-email-handai.szj@taobao.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, mhocko@suse.cz, gthelen@google.com, hannes@cmpxchg.org
 
-On 07/31/2012 08:30 PM, Frederic Weisbecker wrote:
-> On Wed, Jul 25, 2012 at 06:38:11PM +0400, Glauber Costa wrote:
->> Hi,
->>
->> This is the slab part of the kmem limitation mechanism in its last form.  I
->> would like to have comments on it to see if we can agree in its form. I
->> consider it mature, since it doesn't change much in essence over the last
->> forms. However, I would still prefer to defer merging it and merge the
->> stack-only patchset first (even if inside the same merge window). That patchset
->> contains most of the infrastructure needed here, and merging them separately
->> would not only reduce the complexity for reviewers, but allow us a chance to
->> have independent testing on them both. I would also likely benefit from some
->> extra testing, to make sure the recent changes didn't introduce anything bad.
-> 
-> What is the status of the stack-only limitation patchset BTW? Does anybody oppose
-> to its merging?
-> 
-> Thanks.
-> 
-Andrew said he would like to see the slab patches in a relatively mature
-state first.
+On Wed, 25 Jul 2012, Sha Zhengju wrote:
 
-I do believe they are in such a state. There are bugs, that I am working
-on - but I don't see anything that would change them significantly at
-this point.
+> From: Sha Zhengju <handai.szj@taobao.com>
+> 
+> Revise some oom dump messages to avoid misleading admin.
+> 
 
-If Andrew is happy with what he saw in this thread, I could post those
-again.
+The only place the oom killer emits information on what it does via the 
+kernel log so changing this has the potential for messing up a number of 
+scripts that people are using for parsing it (this would break some of our 
+log scraping code, for instance).
+
+This adds nothing except a bogus message that is emitted when 
+select_bad_process() races with oom_kill_process() and no kill occurs 
+because all threads of the selected process have detached their mm.
+
+Nack.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
