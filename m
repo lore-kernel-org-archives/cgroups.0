@@ -1,51 +1,30 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: containers and cgroups mini-summit @ Linux Plumbers
-Date: Thu, 02 Aug 2012 11:42:53 +0200
-Message-ID: <501A4B9D.50606@monom.org>
-References: <4FFDF321.4030103@openvz.org> <501A3C48.6060607@monom.org> <501A3C4D.1020101@parallels.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [RFC PATCH 01/23 V2] node_states: introduce N_MEMORY
+Date: Thu, 2 Aug 2012 11:01:00 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1208021100230.23049@router.home>
+References: <1343875991-7533-1-git-send-email-laijs@cn.fujitsu.com> <1343875991-7533-2-git-send-email-laijs@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <501A3C4D.1020101-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1343923273; bh=gFHbtHTlKH/sHVT+fnwIq9aKVvuILdRXmRHWzyGd7Bo=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=J3G9xzrsxFGT0l2hlqxhR9cVSPoWbIinWCgHvM88jB77vZOn/tNvMrrYgm+OYQ9yuViPD+moi0IUP9z4jPHP/4Lh0O3arAgTlX9ak9YRYwvmMvFJUpjjUec8y7Gtu/Q5p4e64It0uErfhR9XlgPMtKtu/kSHAGV4BrYGvQAYuQo=
+In-Reply-To: <1343875991-7533-2-git-send-email-laijs@cn.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Kir Kolyshkin <kir-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rohit Seth <rohitseth-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Balbir Singh <balbir-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>, Dave Kleikamp <dave.kleikamp-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Maxim Patlasov <MPatlasov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Lai Jiangshan <laijs@cn.fujitsu.com>
+Cc: Mel Gorman <mel@csn.ul.ie>, Paul Menage <paul@paulmenage.org>, Rob Landley <rob@landley.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Pekka Enberg <penberg@kernel.org>, Matt Mackall <mpm@selenic.com>, Jarkko Sakkinen <jarkko.sakkinen@intel.com>, Matt Fleming <matt.fleming@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yinghai@kernel.org>, David Rientjes <rientjes@google.com>, Bjorn Helgaas <bhelgaas@google.com>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Petr Holasek <pholasek@redhat.com>, Djalal
 
-Hi Glauber,
+On Thu, 2 Aug 2012, Lai Jiangshan wrote:
 
-On 02.08.2012 10:37, Glauber Costa wrote:
-> On 08/02/2012 12:37 PM, Daniel Wagner wrote:
->> Hi,
->>
->> On 11.07.2012 23:41, Kir Kolyshkin wrote:
->>> Gentlemen,
->>>
->>> We are organizing containers mini-summit during next Linux Plumbers (San
->>> Diego, August 29-31).
->>> The idea is to gather and discuss everything relevant to namespaces,
->>> cgroups, resource management,
->>> checkpoint-restore and so on.
->>>
->>> We are trying to come up with a list of topics to discuss, so please
->>> reply with topic suggestions, and
->>> let me know if you are going to come.
->>
->> I'd like to give a short presentation on what we would like to do with
->> cgroups and ConnMan including a demonstration. The demo will show what
->> will happpen when orthogonal cgroup hierarchies are getting used by more
->> than just systemd. Also I'd like to trigger some discussion on the
->> future of the networking controllers (net_prio, net_cls).
->>
->
-> Daniel, could you fill up the details of this proposal in the plumbers
-> system? I believe kir sent out the details on how to do it somewhere
-> down this thread...
+> In one word, we need a N_MEMORY. We just intrude it as an alias to
+> N_HIGH_MEMORY and fix all im-proper usages of N_HIGH_MEMORY in late patches.
 
-Thanks, just added this one here:
+Good idea to clean this up.
 
-https://blueprints.launchpad.net/lpc/+spec/lpc2012-cont-network
+Acked-by: Christoph Lameter <cl@linux.com>
 
-cheers,
-daniel
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
