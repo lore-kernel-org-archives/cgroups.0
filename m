@@ -1,39 +1,35 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH 14/23 V2] slub, hotplug: ignore unrelated node's
-	hot-adding and hot-removing
-Date: Thu, 2 Aug 2012 11:04:46 -0500 (CDT)
-Message-ID: <alpine.DEB.2.00.1208021102560.23049@router.home>
-References: <1343875991-7533-1-git-send-email-laijs@cn.fujitsu.com>
-	<1343875991-7533-15-git-send-email-laijs@cn.fujitsu.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [RFC PATCH 16/23 V2] numa: add CONFIG_MOVABLE_NODE for
+ movable-dedicated node
+Date: Thu, 2 Aug 2012 11:06:32 -0500 (CDT)
+Message-ID: <alpine.DEB.2.00.1208021105540.23049@router.home>
+References: <1343875991-7533-1-git-send-email-laijs@cn.fujitsu.com> <1343875991-7533-17-git-send-email-laijs@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024; t=1343923606; bh=h4OWc4FK9uuTIB37huR9w6sLT6XwjzKZSHwqxln5G4o=; h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type; b=j9uyeuuvL6+ZrSkvm0zPV/0sExeW+4bTf0vewh1cowSq57KLtVE2cPjaNq2lovdNlHsuiCTkcVmwjgyJM+qlYnjhNgNEJd21dIeSg7rktzTCL81le+BlatSLIBjesImgiFSikO0Jn8on56gkpzaxgNLbTux/oXtOmLqWaVBv8Y0=
+In-Reply-To: <1343875991-7533-17-git-send-email-laijs@cn.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s1024;
-	t=1343923500; bh=2nHyvE8O50iW8CAuTuIOqnBKGsUipvOYDoffqcrijB4=;
-	h=X-Yahoo-Newman-Property:X-YMail-OSG:X-Yahoo-SMTP:Received:Received:Date:From:X-X-Sender:To:cc:Subject:In-Reply-To:Message-ID:References:User-Agent:MIME-Version:Content-Type;
-	b=uL28B9jfZEy2OU+9Xzgkywt0xHhkN5FYTnn2TMARpoDFg4wQEo8jvsHY2HatQ26b6gSydN/mE0QxuWvB+Ca/mtd+XjD0rm66NiISNSVcr6eDNCCs7Exji9qB8ypjHHCnvt3d9WJlp3AHqYkoMwBJkSN64udjxi5o50PnMIJhLKA=
-In-Reply-To: <1343875991-7533-15-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Dan Magenheimer <dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org>, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Petr Holasek <pholasek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Wanlong Gao <gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Djalal Harouni <tixxdz-Umm1ozX2/EEdnm+yROfE0A@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Me
+To: Lai Jiangshan <laijs@cn.fujitsu.com>
+Cc: Mel Gorman <mel@csn.ul.ie>, Paul Menage <paul@paulmenage.org>, Rob Landley <rob@landley.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Pekka Enberg <penberg@kernel.org>, Matt Mackall <mpm@selenic.com>, Jarkko Sakkinen <jarkko.sakkinen@intel.com>, Matt Fleming <matt.fleming@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yinghai@kernel.org>, David Rientjes <rientjes@google.com>, Bjorn Helgaas <bhelgaas@google.com>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Petr Holasek <pholasek@redhat.com>, Djalal
 
 On Thu, 2 Aug 2012, Lai Jiangshan wrote:
 
-> SLUB only fucus on the nodes which has normal memory, so ignore the other
-> node's hot-adding and hot-removing.
+> +++ b/include/linux/nodemask.h
+> @@ -380,7 +380,11 @@ enum node_states {
+>  #else
+>  	N_HIGH_MEMORY = N_NORMAL_MEMORY,
+>  #endif
+> +#ifdef CONFIG_MOVABLE_NODE
+> +	N_MEMORY,		/* The node has memory(regular, high, movable) */
 
-You would need to do the same for SLAB. SLAB has an easier time with
-falling back to other nodes (and therefore does not show up in your
-tests) but as a result SLAB will be quite ineffective
-because it created bogus structures that are never used yet constantly
-traversed.
+I like these comments. Could you add some to each of the different node
+states and defined their purpose?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
