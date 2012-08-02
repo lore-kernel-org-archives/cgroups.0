@@ -1,49 +1,49 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH 2/2] memcg, oom: Clarify some oom dump messages
-Date: Tue, 31 Jul 2012 20:55:01 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1207312052070.20073@chino.kir.corp.google.com>
-References: <1343146160-15012-1-git-send-email-handai.szj@taobao.com> <1343146334-15161-1-git-send-email-handai.szj@taobao.com>
+From: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [RFC PATCH 05/23 V2] mm,migrate: use N_MEMORY instead N_HIGH_MEMORY
+Date: Thu, 2 Aug 2012 10:52:53 +0800
+Message-ID: <1343875991-7533-6-git-send-email-laijs@cn.fujitsu.com>
+References: <1343875991-7533-1-git-send-email-laijs@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=dmHXdvINuDIUO8AvKv5AgNzCTHz8/3bIkuOjL/woRfY=;
-        b=jM390Ih1gNvUBii0Oy1Y4TGOcXOrgM4l8lfqE8KU1R7TXnx3dsqQAdZgk+1WeopcZb
-         s5IEIVp6Ug0WAfACBodHU3P1JhLHg3Ii0G1lCni/KTJPBlxEaplrZdbb4xIktKuLEnfN
-         sfrUl7NrCbXcb3FsRRQzQIMIzoMdQvt+iOn1fE5j5pNM6khgB1WBOUZY2a9pwJpTvF+e
-         o+zV1SCI6XH1FuWNpAwWvuBkZEvrmvpdBLG9Utl+42RuipB5PzSR63dkYELHmpWEVFa+
-         UMKlkriPL+B36TgAaqnsu7DYACfxi8qRB/rv5yVN2cKWJk5E7OeMm7swQ9j6pYEayGlW
-         +zxA==
-In-Reply-To: <1343146334-15161-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Sha Zhengju <handai.szj@taobao.com>, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, mhocko@suse.cz, gthelen@google.com, hannes@cmpxchg.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1343875991-7533-1-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mel Gorman <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>
+Cc: Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Dan Magenheimer <dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org>, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Petr Holasek <pholasek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Wanlong Gao <gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Djalal Harouni <tixxdz-Umm1ozX2/EEdnm+yROfE0A@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra@ch>
 
-On Wed, 25 Jul 2012, Sha Zhengju wrote:
+N_HIGH_MEMORY stands for the nodes that has normal or high memory.
+N_MEMORY stands for the nodes that has any memory.
 
-> From: Sha Zhengju <handai.szj@taobao.com>
-> 
-> Revise some oom dump messages to avoid misleading admin.
-> 
+The code here need to handle with the nodes which have memory, we should
+use N_MEMORY instead.
 
-The only place the oom killer emits information on what it does via the 
-kernel log so changing this has the potential for messing up a number of 
-scripts that people are using for parsing it (this would break some of our 
-log scraping code, for instance).
+Signed-off-by: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ mm/migrate.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This adds nothing except a bogus message that is emitted when 
-select_bad_process() races with oom_kill_process() and no kill occurs 
-because all threads of the selected process have detached their mm.
-
-Nack.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/mm/migrate.c b/mm/migrate.c
+index be26d5c..dbe4f86 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -1226,7 +1226,7 @@ static int do_pages_move(struct mm_struct *mm, nodemask_t task_nodes,
+ 			if (node < 0 || node >= MAX_NUMNODES)
+ 				goto out_pm;
+ 
+-			if (!node_state(node, N_HIGH_MEMORY))
++			if (!node_state(node, N_MEMORY))
+ 				goto out_pm;
+ 
+ 			err = -EACCES;
+-- 
+1.7.1
