@@ -1,64 +1,74 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [RFC PATCH 04/23 V2] oom: use N_MEMORY instead N_HIGH_MEMORY
-Date: Sat, 4 Aug 2012 21:54:57 +0800
-Message-ID: <CAJd=RBCuXo_rFNGcSu7U9O6cSRNxZi0pWtB1GSUxCBD=uT-GJg@mail.gmail.com>
+From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH 12/23 V2] vmscan: use N_MEMORY instead N_HIGH_MEMORY
+Date: Sat, 4 Aug 2012 21:55:59 +0800
+Message-ID: <CAJd=RBAbzxoH4eH=A3PhQuDO2W7hEkN=FeShQ3KnMh5sg7Wu6w@mail.gmail.com>
 References: <1343875991-7533-1-git-send-email-laijs@cn.fujitsu.com>
-	<1343875991-7533-5-git-send-email-laijs@cn.fujitsu.com>
+	<1343875991-7533-13-git-send-email-laijs@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=toK21rJ5W61tlR9FUOK8qpGptMnssd1FvYxiO6ZBEAk=;
-        b=ZC7Zm/1B8kFLYOgm2A+jFE8IsLM26nP81MhXDZL6c7gyk+NgaGydI2xuI54xcY74vE
-         scQYiIbRfh2mj/EFLo+OkQPSRWZIkm+k397+YxmzCALE0LvIco9OQ/Lpy5CaOnAvBoZ8
-         ny+AQmfwAMhvTjX1VCz8sclIvK5tyt0p6s3fQrqNQZOm8F51YMEjb0oVGvRWkjE9iokO
-         OyNczmAeMbIpT7Dhu1tK6gndjPNrvIWoECb8xjvSU9bm5fLqxBDUiQGMONOLRs6HrfSe
-         MQ9dyj3dk/+xhLBu/4sLfphOa+cxptymgA8hdzfi+b5cb8AEXOTuGX7ZbBhHZeo3t+Kh
-         y8eg==
-In-Reply-To: <1343875991-7533-5-git-send-email-laijs@cn.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Lai Jiangshan <laijs@cn.fujitsu.com>
-Cc: Mel Gorman <mel@csn.ul.ie>, Paul Menage <paul@paulmenage.org>, Rob Landley <rob@landley.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Matt Mackall <mpm@selenic.com>, Jarkko Sakkinen <jarkko.sakkinen@intel.com>, Matt Fleming <matt.fleming@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yinghai@kernel.org>, David Rientjes <rientjes@google.com>, Bjorn Helgaas <bhelgaas@google.com>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Petr
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+	:cc:content-type;
+	bh=T4jSW8DbSuko2l5jdnrwiX6zDpyzVJrUb3CudblyxzY=;
+	b=aaypI+B4VJytTYxdXbJNoKi65YeWwlZ/DogsJ6Tv0g+kWa+qHlu4IkLK+JKl2SZY1n
+	sXbbGyla09OORfEl6GkrfsU6AmgXB6ORLmwhy5VfD7/iiZPHlY+8inbuPKqtIsy6O7Od
+	3Qe8wjWT8mpPkJS44D9YJXqhHLIqZxQRs3BF67RU0aFkpIB40H+lZeZbm3cTrda/CkRZ
+	v+Z/IhTf+TLPiwaZk1pFqIv9YVY8q9ltohVDdnP2S4uy4SD+jRkjQEXoRpv7+TbyRCrj
+	lQ+M9ESE+J7mKSaqI0NzKBmdVBbrk6NRaN88OnIfhQvr+vfKV2+ThRhtYuwazuyruwGL
+	HsIw==
+In-Reply-To: <1343875991-7533-13-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Dan Magenheimer <dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org>, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Petr Holasek <pholasek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Wanlong Gao <gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Djalal Harouni <tixxdz-Umm1ozX2/EEdnm+yROfE0A@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra@ch>
 
-On Thu, Aug 2, 2012 at 10:52 AM, Lai Jiangshan <laijs@cn.fujitsu.com> wrote:
+On Thu, Aug 2, 2012 at 10:53 AM, Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> wrote:
 > N_HIGH_MEMORY stands for the nodes that has normal or high memory.
 > N_MEMORY stands for the nodes that has any memory.
 >
 > The code here need to handle with the nodes which have memory, we should
 > use N_MEMORY instead.
 >
-> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+> Signed-off-by: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 > ---
 
-Acked-by: Hillf Danton <dhillf@gmail.com>
+Acked-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
->  mm/oom_kill.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  mm/vmscan.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 >
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index ac300c9..1e58f12 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -257,7 +257,7 @@ static enum oom_constraint constrained_alloc(struct zonelist *zonelist,
->          * the page allocator means a mempolicy is in effect.  Cpuset policy
->          * is enforced in get_page_from_freelist().
->          */
-> -       if (nodemask && !nodes_subset(node_states[N_HIGH_MEMORY], *nodemask)) {
-> +       if (nodemask && !nodes_subset(node_states[N_MEMORY], *nodemask)) {
->                 *totalpages = total_swap_pages;
->                 for_each_node_mask(nid, *nodemask)
->                         *totalpages += node_spanned_pages(nid);
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 66e4310..1888026 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2921,7 +2921,7 @@ static int __devinit cpu_callback(struct notifier_block *nfb,
+>         int nid;
+>
+>         if (action == CPU_ONLINE || action == CPU_ONLINE_FROZEN) {
+> -               for_each_node_state(nid, N_HIGH_MEMORY) {
+> +               for_each_node_state(nid, N_MEMORY) {
+>                         pg_data_t *pgdat = NODE_DATA(nid);
+>                         const struct cpumask *mask;
+>
+> @@ -2976,7 +2976,7 @@ static int __init kswapd_init(void)
+>         int nid;
+>
+>         swap_setup();
+> -       for_each_node_state(nid, N_HIGH_MEMORY)
+> +       for_each_node_state(nid, N_MEMORY)
+>                 kswapd_run(nid);
+>         hotcpu_notifier(cpu_callback, 0);
+>         return 0;
 > --
 > 1.7.1
 >
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
