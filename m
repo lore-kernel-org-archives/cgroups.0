@@ -1,89 +1,64 @@
-From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH 03/23 V2] procfs: use N_MEMORY instead N_HIGH_MEMORY
-Date: Sat, 4 Aug 2012 21:53:31 +0800
-Message-ID: <CAJd=RBB_jwSEHWKBs+dNoVafa8CFux5MYRShFBoppmx9tgfARg@mail.gmail.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: Re: [RFC PATCH 04/23 V2] oom: use N_MEMORY instead N_HIGH_MEMORY
+Date: Sat, 4 Aug 2012 21:54:57 +0800
+Message-ID: <CAJd=RBCuXo_rFNGcSu7U9O6cSRNxZi0pWtB1GSUxCBD=uT-GJg@mail.gmail.com>
 References: <1343875991-7533-1-git-send-email-laijs@cn.fujitsu.com>
-	<1343875991-7533-4-git-send-email-laijs@cn.fujitsu.com>
+	<1343875991-7533-5-git-send-email-laijs@cn.fujitsu.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=toK21rJ5W61tlR9FUOK8qpGptMnssd1FvYxiO6ZBEAk=;
+        b=ZC7Zm/1B8kFLYOgm2A+jFE8IsLM26nP81MhXDZL6c7gyk+NgaGydI2xuI54xcY74vE
+         scQYiIbRfh2mj/EFLo+OkQPSRWZIkm+k397+YxmzCALE0LvIco9OQ/Lpy5CaOnAvBoZ8
+         ny+AQmfwAMhvTjX1VCz8sclIvK5tyt0p6s3fQrqNQZOm8F51YMEjb0oVGvRWkjE9iokO
+         OyNczmAeMbIpT7Dhu1tK6gndjPNrvIWoECb8xjvSU9bm5fLqxBDUiQGMONOLRs6HrfSe
+         MQ9dyj3dk/+xhLBu/4sLfphOa+cxptymgA8hdzfi+b5cb8AEXOTuGX7ZbBhHZeo3t+Kh
+         y8eg==
+In-Reply-To: <1343875991-7533-5-git-send-email-laijs@cn.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-	:cc:content-type;
-	bh=PjcNGRoXKmLNrsxxD0QibQnrBl7YnfPRJ7bawG01bW8=;
-	b=JkfnwShPdtNXTTpMJB0BQRH4GUafd3Jt0JvUVceOYztCRS8zcRZrfVWkBPGVFqrNw/
-	FODhrGh1IhvP94GYqmBIcMtn52y2wP/kBrrUGJSEmVv9wb3QKqPrW2ZcehxuTXUqUwaa
-	F21zQKpEcAM6VOsDE8WXRSygy2C6NsfeAMqOW8Aa4HvkKSMmw/IkOipT+3piCs3TBSnD
-	cVZwZZ0dGmfiAi1dLvpsyK16kLhnQJIUsvaWt4eMMlqjIFwDN2kx9uyXmowH7Uqbv3IN
-	vYXr/SzMWDgi2Be5217Vr54FHib4ysj39dvRvofSdzSu4mOe2qIs+7r2NCIJYy5L/Rxo
-	gylg==
-In-Reply-To: <1343875991-7533-4-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Dan Magenheimer <dan.magenheimer-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org>, Gavin Shan <shangw-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Petr Holasek <pholasek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Wanlong Gao <gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Djalal Harouni <tixxdz-Umm1ozX2/EEdnm+yROfE0A@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra@ch>
+To: Lai Jiangshan <laijs@cn.fujitsu.com>
+Cc: Mel Gorman <mel@csn.ul.ie>, Paul Menage <paul@paulmenage.org>, Rob Landley <rob@landley.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Matt Mackall <mpm@selenic.com>, Jarkko Sakkinen <jarkko.sakkinen@intel.com>, Matt Fleming <matt.fleming@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yinghai@kernel.org>, David Rientjes <rientjes@google.com>, Bjorn Helgaas <bhelgaas@google.com>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Petr
 
-On Thu, Aug 2, 2012 at 10:52 AM, Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> wrote:
+On Thu, Aug 2, 2012 at 10:52 AM, Lai Jiangshan <laijs@cn.fujitsu.com> wrote:
 > N_HIGH_MEMORY stands for the nodes that has normal or high memory.
 > N_MEMORY stands for the nodes that has any memory.
 >
 > The code here need to handle with the nodes which have memory, we should
 > use N_MEMORY instead.
 >
-> Signed-off-by: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
 > ---
 
-Acked-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Hillf Danton <dhillf@gmail.com>
 
-
->  fs/proc/kcore.c    |    2 +-
->  fs/proc/task_mmu.c |    4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
+>  mm/oom_kill.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >
-> diff --git a/fs/proc/kcore.c b/fs/proc/kcore.c
-> index 86c67ee..e96d4f1 100644
-> --- a/fs/proc/kcore.c
-> +++ b/fs/proc/kcore.c
-> @@ -249,7 +249,7 @@ static int kcore_update_ram(void)
->         /* Not inialized....update now */
->         /* find out "max pfn" */
->         end_pfn = 0;
-> -       for_each_node_state(nid, N_HIGH_MEMORY) {
-> +       for_each_node_state(nid, N_MEMORY) {
->                 unsigned long node_end;
->                 node_end  = NODE_DATA(nid)->node_start_pfn +
->                         NODE_DATA(nid)->node_spanned_pages;
-> diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-> index 4540b8f..ed3d381 100644
-> --- a/fs/proc/task_mmu.c
-> +++ b/fs/proc/task_mmu.c
-> @@ -1080,7 +1080,7 @@ static struct page *can_gather_numa_stats(pte_t pte, struct vm_area_struct *vma,
->                 return NULL;
->
->         nid = page_to_nid(page);
-> -       if (!node_isset(nid, node_states[N_HIGH_MEMORY]))
-> +       if (!node_isset(nid, node_states[N_MEMORY]))
->                 return NULL;
->
->         return page;
-> @@ -1232,7 +1232,7 @@ static int show_numa_map(struct seq_file *m, void *v, int is_pid)
->         if (md->writeback)
->                 seq_printf(m, " writeback=%lu", md->writeback);
->
-> -       for_each_node_state(n, N_HIGH_MEMORY)
-> +       for_each_node_state(n, N_MEMORY)
->                 if (md->node[n])
->                         seq_printf(m, " N%d=%lu", n, md->node[n]);
->  out:
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index ac300c9..1e58f12 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -257,7 +257,7 @@ static enum oom_constraint constrained_alloc(struct zonelist *zonelist,
+>          * the page allocator means a mempolicy is in effect.  Cpuset policy
+>          * is enforced in get_page_from_freelist().
+>          */
+> -       if (nodemask && !nodes_subset(node_states[N_HIGH_MEMORY], *nodemask)) {
+> +       if (nodemask && !nodes_subset(node_states[N_MEMORY], *nodemask)) {
+>                 *totalpages = total_swap_pages;
+>                 for_each_node_mask(nid, *nodemask)
+>                         *totalpages += node_spanned_pages(nid);
 > --
 > 1.7.1
 >
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
