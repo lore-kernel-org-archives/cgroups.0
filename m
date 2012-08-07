@@ -1,130 +1,89 @@
-From: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [RFC V3 PATCH 08/25] memcontrol: use N_MEMORY instead N_HIGH_MEMORY
-Date: Mon, 6 Aug 2012 17:23:02 +0800
-Message-ID: <1344244999-5081-9-git-send-email-laijs@cn.fujitsu.com>
-References: <1343887288-8866-1-git-send-email-laijs@cn.fujitsu.com>
-	<1344244999-5081-1-git-send-email-laijs@cn.fujitsu.com>
+From: Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Getting notifications of the tasks file
+Date: Tue, 7 Aug 2012 19:33:02 +0800
+Message-ID: <CAC8teKU92-+XecOgTzeD7kt4VfKREqtOoih-qpvMSMt77Qextg@mail.gmail.com>
+References: <5486539.IgfTNnpt1m@valencia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1344244999-5081-1-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Mel Gorman <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding;
+        bh=6vcm3GVXhQ7lTfQgNIa2XfRic+ea83YWV422sDXqaao=;
+        b=hQpe34hEViKNolg/bmzNZF94EJXV5v/KuGHnbpZOlo0R2rKNhRQxkoLSHQD+0/MKYE
+         EhKfsnV6c2hxEFwaLXpdMrQuijQfZLsGhkO6YOrgo0gO2Kuev2wX984CbSvVYvINouTw
+         0vcjVvM5P8oHvFBUDzbkhiEP5eYRytM8+6Jzp5AV1qANDZfWa3zrqARsqQrGzZBNDgU3
+         aSx09dvR/edao7g3vMdtuFMkykAqiIMQq77ImQqL3DdUKVuNIMk8ZSqed9psCHQmFSeU
+         T8uJf3+NuASl2Smmf38HNsz/UABKkKp3MnCbpuTO/YORpcFOn6kuMEjMGXrtrlPcJW3T
+         bvDQ==
+In-Reply-To: <5486539.IgfTNnpt1m@valencia>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?B?VsOtY3RvciBGZXJuw6FuZGV6IE1hcnTDrW5leg==?= <vfernandez-JE8hqn47KVKB+jHODAdFcQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-N_HIGH_MEMORY stands for the nodes that has normal or high memory.
-N_MEMORY stands for the nodes that has any memory.
+Did you try inotify() ?
 
-The code here need to handle with the nodes which have memory, we should
-use N_MEMORY instead.
+-zyh
 
-Signed-off-by: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
----
- mm/memcontrol.c  |   18 +++++++++---------
- mm/page_cgroup.c |    2 +-
- 2 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f72b5e5..4402c2e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -797,7 +797,7 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
- 	int nid;
- 	u64 total = 0;
- 
--	for_each_node_state(nid, N_HIGH_MEMORY)
-+	for_each_node_state(nid, N_MEMORY)
- 		total += mem_cgroup_node_nr_lru_pages(memcg, nid, lru_mask);
- 	return total;
- }
-@@ -1549,9 +1549,9 @@ static void mem_cgroup_may_update_nodemask(struct mem_cgroup *memcg)
- 		return;
- 
- 	/* make a nodemask where this memcg uses memory from */
--	memcg->scan_nodes = node_states[N_HIGH_MEMORY];
-+	memcg->scan_nodes = node_states[N_MEMORY];
- 
--	for_each_node_mask(nid, node_states[N_HIGH_MEMORY]) {
-+	for_each_node_mask(nid, node_states[N_MEMORY]) {
- 
- 		if (!test_mem_cgroup_node_reclaimable(memcg, nid, false))
- 			node_clear(nid, memcg->scan_nodes);
-@@ -1622,7 +1622,7 @@ static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
- 	/*
- 	 * Check rest of nodes.
- 	 */
--	for_each_node_state(nid, N_HIGH_MEMORY) {
-+	for_each_node_state(nid, N_MEMORY) {
- 		if (node_isset(nid, memcg->scan_nodes))
- 			continue;
- 		if (test_mem_cgroup_node_reclaimable(memcg, nid, noswap))
-@@ -3700,7 +3700,7 @@ move_account:
- 		drain_all_stock_sync(memcg);
- 		ret = 0;
- 		mem_cgroup_start_move(memcg);
--		for_each_node_state(node, N_HIGH_MEMORY) {
-+		for_each_node_state(node, N_MEMORY) {
- 			for (zid = 0; !ret && zid < MAX_NR_ZONES; zid++) {
- 				enum lru_list lru;
- 				for_each_lru(lru) {
-@@ -4025,7 +4025,7 @@ static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 
- 	total_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL);
- 	seq_printf(m, "total=%lu", total_nr);
--	for_each_node_state(nid, N_HIGH_MEMORY) {
-+	for_each_node_state(nid, N_MEMORY) {
- 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid, LRU_ALL);
- 		seq_printf(m, " N%d=%lu", nid, node_nr);
- 	}
-@@ -4033,7 +4033,7 @@ static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 
- 	file_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_FILE);
- 	seq_printf(m, "file=%lu", file_nr);
--	for_each_node_state(nid, N_HIGH_MEMORY) {
-+	for_each_node_state(nid, N_MEMORY) {
- 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
- 				LRU_ALL_FILE);
- 		seq_printf(m, " N%d=%lu", nid, node_nr);
-@@ -4042,7 +4042,7 @@ static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 
- 	anon_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_ANON);
- 	seq_printf(m, "anon=%lu", anon_nr);
--	for_each_node_state(nid, N_HIGH_MEMORY) {
-+	for_each_node_state(nid, N_MEMORY) {
- 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
- 				LRU_ALL_ANON);
- 		seq_printf(m, " N%d=%lu", nid, node_nr);
-@@ -4051,7 +4051,7 @@ static int mem_control_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 
- 	unevictable_nr = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_UNEVICTABLE));
- 	seq_printf(m, "unevictable=%lu", unevictable_nr);
--	for_each_node_state(nid, N_HIGH_MEMORY) {
-+	for_each_node_state(nid, N_MEMORY) {
- 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
- 				BIT(LRU_UNEVICTABLE));
- 		seq_printf(m, " N%d=%lu", nid, node_nr);
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index eb750f8..e775239 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -271,7 +271,7 @@ void __init page_cgroup_init(void)
- 	if (mem_cgroup_disabled())
- 		return;
- 
--	for_each_node_state(nid, N_HIGH_MEMORY) {
-+	for_each_node_state(nid, N_MEMORY) {
- 		unsigned long start_pfn, end_pfn;
- 
- 		start_pfn = node_start_pfn(nid);
--- 
-1.7.4.4
+2012/7/31 V=C3=ADctor Fern=C3=A1ndez Mart=C3=ADnez <vfernandez@barracud=
+a.com>:
+> I'm trying to use the eventfd notification API to get notified when t=
+he tasks
+> file changes. This way I would like to know when child processes are =
+spawned
+> and when they exit. However, I always get EINVAL when writing to
+> cgroup.event_control. Even cgroup_event_listener.c returns that error=
+:
+>
+> # cat /sys/fs/cgroup/memory/grp0/tasks
+> 3590
+> 23902
+> # ./cgroup_event_listener /sys/fs/cgroup/memory/grp0/tasks 0
+> Cannot write to cgroup.event_control: Invalid argument
+>
+> I have also tried to monitor cgroup.procs.
+>
+> Is it possible to monitor the tasks file at all or is this a bug? If =
+0 is a
+> wrong argument, which argument should I use instead?
+>
+>
+> Thanks.
+>
+>
+> Barracuda Networks AG
+> Vorsitzender des Aufsichtsrates/ Chairman of the supervisory board: D=
+ean Drako
+> Vorstand/ Executive Board: Dr. Wieland Alge, Mag. Guenter Klausner
+> Sitz der Gesellschaft/ Registered office: 6020 Innsbruck, Austria
+> Handelsgericht Innsbruck Firmenbuch/ Registration Number: 184392s
+> UID-Nr/ VAT Number: ATU47509003
+>
+> Diese Nachricht und allfaellige angehaengte Dokumente sind vertraulic=
+h und nur fuer den/die Adressaten bestimmt. Sollten Sie nicht der beabs=
+ichtigte Adressat sein, ist jede Offenlegung, Weiterleitung oder sonsti=
+ge Verwendung dieser Information nicht gestattet. In diesem Fall bitten=
+ wir, den Absender zu verstaendigen und die Information zu vernichten. =
+=46uer Uebermittlungsfehler oder sonstige Irrtuemer bei Uebermittlung b=
+esteht keine Haftung.
+>
+> This message and any attached files are confidential and intended sol=
+ely for the addressee(s). Any publication, transmission or other use of=
+ the information by a person or entity other than the intended addresse=
+e is prohibited. If you receive this in error please contact the sender=
+ and delete the material. The sender does not accept liability for any =
+errors or omissions as a result of the transmission.
+>
+>
+> 'Like' us on Facebook for exclusive content and other resources on al=
+l Barracuda Networks solutions.
+> Visit http://barracudanetworks.com/facebook
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
