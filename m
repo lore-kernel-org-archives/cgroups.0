@@ -1,47 +1,48 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: Fork bomb limitation in memcg WAS: Re: [PATCH 00/11] kmem controller
- for memcg: stripped down version
-Date: Tue, 7 Aug 2012 17:59:25 +0400
-Message-ID: <50211F3D.2000008@parallels.com>
-References: <1340633728-12785-1-git-send-email-glommer@parallels.com> <20120625162745.eabe4f03.akpm@linux-foundation.org> <4FE9621D.2050002@parallels.com> <20120626145539.eeeab909.akpm@linux-foundation.org> <4FEAD260.4000603@parallels.com> <alpine.DEB.2.00.1206271233080.22162@chino.kir.corp.google.com> <4FEC1D63.6000903@parallels.com> <20120628152540.cc13a735.akpm@linux-foundation.org>
+From: Vecu BOSSEUR <vecu.bosseur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Limiting CPU resources of a cgroup (how do I) HELP REQUESTED
+Date: Wed, 8 Aug 2012 14:24:13 +0200
+Message-ID: <CACivvv0G3CspFnFud569vgdh=_2sofb4P3f2sfdFRuu2XSvRaQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120628152540.cc13a735.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=BmSUavpSD/vXvLyyIhUN8pf5QAhpExfJwodE92PrC3k=;
+        b=XU1AiLChVv0GR14gEus+sHpnCGZAyHJXxy/A7c1o04QChCFx4+wXtVKnGOHdtuOSz+
+         4kxPELVbZwKl9kQ1cGjFAK0A571zZIwNkynzHqeMSYhN9l0qevmavJDcfqlKSL6vhSn5
+         dXPisQ0A9w2qzikK/Pb3Q6o9Mfi+0vk2P6XEsNZDx33F67bgFUEbtMtqyCSSRmwg+79w
+         Dssf7PibwIhOojLbf6PhbIoB2fNPdYc4hQ/gb/N/ltdkx6vnsklnlBzGHgmCMA08UOJv
+         rMLnI5pxx5LTV0nEI4FXM1uQxDY8TO2L8/k/17UEcqnoewY9L8MPcWPLgBy3TjmlJxqX
+         F4ow==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Lezcano <daniel.lezcano-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Kir Kolyshkin <kir-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 06/29/2012 02:25 AM, Andrew Morton wrote:
-> On Thu, 28 Jun 2012 13:01:23 +0400
-> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> 
->>
->> ...
->>
-> 
-> OK, that all sounds convincing ;) Please summarise and capture this
-> discussion in the [patch 0/n] changelog so we (or others) don't have to
-> go through this all again.  And let's remember this in the next
-> patchset!
-> 
->> Last, but not least, note that it is totally within my interests to
->> merge the slab tracking as fast as we can. it'll be a matter of going
->> back to it, and agreeing in the final form.
-> 
-> Yes, I'd very much like to have the whole slab implementation in a
-> reasonably mature state before proceeding too far with this base
-> patchset.
-> 
-So, that was posted separately as well.
+Dear Friends or Foes ;-)
 
-Although there is a thing to fix here and there - all of them I am
-working on already - I believe that to be mature enough.
 
-Do you have any comments on that? Would you be willing to take this
-first part (modified with the comments on this thread itself) and let it
-start sitting in the tree?
+It is quite some time now that I first tried to find an adequate
+solution to my problem; none managed to get me right yet :=-(
 
-Thanks!
+Basically, I would like to limit CPU resource usage (i.e. ~= time
+share) allocated to a said cgroup to let's say 30% of the machine
+processing power, or 30 % of time.
+( SMP and HyperThreading technologies will change the interpretation
+of that goal; regardless, please read on. )
+
+I am in the very need to throttle some cgroup's CPU usage, regardless
+the overall machine CPU utilisation. I mean that I need to cap the
+processing power dedicated and allowed to some cgroup, whether the
+CPU(s) is(are) otherwise IDLE or BUSY (with respect to other tasks or
+groups).
+
+Any hint on how to accomplish this?
+
+All that I happend to do was to create a renice-boosted daemon that
+alternately froze then unfroze the said cgroup (using a calculated
+time ratio between running/frozen states) to keep the cgroup's CPU
+usage under control.
+
+You can ea
