@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 04/11] kmem accounting basic infrastructure
-Date: Thu,  9 Aug 2012 17:01:12 +0400
-Message-ID: <1344517279-30646-5-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 09/11] memcg: propagate kmem limiting information to children
+Date: Thu,  9 Aug 2012 17:01:17 +0400
+Message-ID: <1344517279-30646-10-git-send-email-glommer@parallels.com>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1344517279-30646-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,198 +11,167 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-This patch adds the basic infrastructure for the accounting of the slab
-caches. To control that, the following files are created:
+The current memcg slab cache management fails to present satisfatory
+hierarchical behavior in the following scenario:
 
- * memory.kmem.usage_in_bytes
- * memory.kmem.limit_in_bytes
- * memory.kmem.failcnt
- * memory.kmem.max_usage_in_bytes
+-> /cgroups/memory/A/B/C
 
-They have the same meaning of their user memory counterparts. They
-reflect the state of the "kmem" res_counter.
+* kmem limit set at A,
+* A and B have no tasks,
+* span a new task in in C.
 
-The code is not enabled until a limit is set. This can be tested by the
-flag "kmem_accounted". This means that after the patch is applied, no
-behavioral changes exists for whoever is still using memcg to control
-their memory usage.
+Because kmem_accounted is a boolean that was not set for C, no
+accounting would be done. This is, however, not what we expect.
 
-We always account to both user and kernel resource_counters. This
-effectively means that an independent kernel limit is in place when the
-limit is set to a lower value than the user memory. A equal or higher
-value means that the user limit will always hit first, meaning that kmem
-is effectively unlimited.
+The basic idea, is that when a cgroup is limited, we walk the tree
+upwards (something Kame and I already thought about doing for other
+purposes), and make sure that we store the information about the parent
+being limited in kmem_accounted (that is turned into a bitmap: two
+booleans would not be space efficient). The code for that is taken from
+sched/core.c. My reasons for not putting it into a common place is to
+dodge the type issues that would arise from a common implementation
+between memcg and the scheduler - but I think that it should ultimately
+happen, so if you want me to do it now, let me know.
 
-People who want to track kernel memory but not limit it, can set this
-limit to a very high number (like RESOURCE_MAX - 1page - that no one
-will ever hit, or equal to the user memory)
+We do the reverse operation when a formerly limited cgroup becomes
+unlimited.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- mm/memcontrol.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 68 insertions(+), 1 deletion(-)
+ mm/memcontrol.c | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 79 insertions(+), 9 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b0e29f4..54e93de 100644
+index 3216292..3d30b79 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -273,6 +273,10 @@ struct mem_cgroup {
- 	};
- 
- 	/*
-+	 * the counter to account for kernel memory usage.
-+	 */
-+	struct res_counter kmem;
-+	/*
- 	 * Per cgroup active and inactive list, similar to the
- 	 * per zone LRU lists.
- 	 */
-@@ -287,6 +291,7 @@ struct mem_cgroup {
+@@ -295,7 +295,8 @@ struct mem_cgroup {
  	 * Should the accounting and control be hierarchical, per subtree?
  	 */
  	bool use_hierarchy;
-+	bool kmem_accounted;
+-	bool kmem_accounted;
++
++	unsigned long kmem_accounted; /* See KMEM_ACCOUNTED_*, below */
  
  	bool		oom_lock;
  	atomic_t	under_oom;
-@@ -397,6 +402,7 @@ enum res_type {
- 	_MEM,
- 	_MEMSWAP,
- 	_OOM_TYPE,
-+	_KMEM,
+@@ -348,6 +349,38 @@ struct mem_cgroup {
+ #endif
  };
  
- #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
-@@ -1499,6 +1505,10 @@ done:
- 		res_counter_read_u64(&memcg->memsw, RES_USAGE) >> 10,
- 		res_counter_read_u64(&memcg->memsw, RES_LIMIT) >> 10,
- 		res_counter_read_u64(&memcg->memsw, RES_FAILCNT));
-+	printk(KERN_INFO "kmem: usage %llukB, limit %llukB, failcnt %llu\n",
-+		res_counter_read_u64(&memcg->kmem, RES_USAGE) >> 10,
-+		res_counter_read_u64(&memcg->kmem, RES_LIMIT) >> 10,
-+		res_counter_read_u64(&memcg->kmem, RES_FAILCNT));
- 
- 	mem_cgroup_print_oom_stat(memcg);
- }
-@@ -4008,6 +4018,9 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
- 		else
- 			val = res_counter_read_u64(&memcg->memsw, name);
- 		break;
-+	case _KMEM:
-+		val = res_counter_read_u64(&memcg->kmem, name);
-+		break;
- 	default:
- 		BUG();
- 	}
-@@ -4046,8 +4059,23 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
- 			break;
- 		if (type == _MEM)
- 			ret = mem_cgroup_resize_limit(memcg, val);
--		else
-+		else if (type == _MEMSWAP)
- 			ret = mem_cgroup_resize_memsw_limit(memcg, val);
-+		else if (type == _KMEM) {
-+			ret = res_counter_set_limit(&memcg->kmem, val);
-+			if (ret)
-+				break;
-+			/*
-+			 * Once enabled, can't be disabled. We could in theory
-+			 * disable it if we haven't yet created any caches, or
-+			 * if we can shrink them all to death.
-+			 *
-+			 * But it is not worth the trouble
-+			 */
-+			if (!memcg->kmem_accounted && val != RESOURCE_MAX)
-+				memcg->kmem_accounted = true;
-+		} else
-+			return -EINVAL;
- 		break;
- 	case RES_SOFT_LIMIT:
- 		ret = res_counter_memparse_write_strategy(buffer, &val);
-@@ -4113,12 +4141,16 @@ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
- 	case RES_MAX_USAGE:
- 		if (type == _MEM)
- 			res_counter_reset_max(&memcg->res);
-+		else if (type == _KMEM)
-+			res_counter_reset_max(&memcg->kmem);
- 		else
- 			res_counter_reset_max(&memcg->memsw);
- 		break;
- 	case RES_FAILCNT:
- 		if (type == _MEM)
- 			res_counter_reset_failcnt(&memcg->res);
-+		else if (type == _KMEM)
-+			res_counter_reset_failcnt(&memcg->kmem);
- 		else
- 			res_counter_reset_failcnt(&memcg->memsw);
- 		break;
-@@ -4672,6 +4704,33 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
- }
- 
- #ifdef CONFIG_MEMCG_KMEM
-+static struct cftype kmem_cgroup_files[] = {
-+	{
-+		.name = "kmem.limit_in_bytes",
-+		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
-+		.write_string = mem_cgroup_write,
-+		.read = mem_cgroup_read,
-+	},
-+	{
-+		.name = "kmem.usage_in_bytes",
-+		.private = MEMFILE_PRIVATE(_KMEM, RES_USAGE),
-+		.read = mem_cgroup_read,
-+	},
-+	{
-+		.name = "kmem.failcnt",
-+		.private = MEMFILE_PRIVATE(_KMEM, RES_FAILCNT),
-+		.trigger = mem_cgroup_reset,
-+		.read = mem_cgroup_read,
-+	},
-+	{
-+		.name = "kmem.max_usage_in_bytes",
-+		.private = MEMFILE_PRIVATE(_KMEM, RES_MAX_USAGE),
-+		.trigger = mem_cgroup_reset,
-+		.read = mem_cgroup_read,
-+	},
-+	{},
++enum {
++	KMEM_ACCOUNTED_THIS, /* accounted by this cgroup itself */
++	KMEM_ACCOUNTED_PARENT, /* accounted by any of its parents. */
 +};
 +
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return mem_cgroup_sockets_init(memcg, ss);
-@@ -5015,6 +5074,12 @@ mem_cgroup_create(struct cgroup *cont)
- 		int cpu;
- 		enable_swap_cgroup();
- 		parent = NULL;
-+
 +#ifdef CONFIG_MEMCG_KMEM
-+		WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys,
-+					   kmem_cgroup_files));
-+#endif
++static bool memcg_kmem_account(struct mem_cgroup *memcg)
++{
++	return !test_and_set_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
++}
 +
- 		if (mem_cgroup_soft_limit_tree_init())
- 			goto free_out;
- 		root_mem_cgroup = memcg;
-@@ -5033,6 +5098,7 @@ mem_cgroup_create(struct cgroup *cont)
- 	if (parent && parent->use_hierarchy) {
- 		res_counter_init(&memcg->res, &parent->res);
- 		res_counter_init(&memcg->memsw, &parent->memsw);
-+		res_counter_init(&memcg->kmem, &parent->kmem);
- 		/*
- 		 * We increment refcnt of the parent to ensure that we can
- 		 * safely access it on res_counter_charge/uncharge.
-@@ -5043,6 +5109,7 @@ mem_cgroup_create(struct cgroup *cont)
- 	} else {
- 		res_counter_init(&memcg->res, NULL);
- 		res_counter_init(&memcg->memsw, NULL);
-+		res_counter_init(&memcg->kmem, NULL);
++static bool memcg_kmem_clear_account(struct mem_cgroup *memcg)
++{
++	return test_and_clear_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
++}
++
++static bool memcg_kmem_is_accounted(struct mem_cgroup *memcg)
++{
++	return test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
++}
++
++static void memcg_kmem_account_parent(struct mem_cgroup *memcg)
++{
++	set_bit(KMEM_ACCOUNTED_PARENT, &memcg->kmem_accounted);
++}
++
++static void memcg_kmem_clear_account_parent(struct mem_cgroup *memcg)
++{
++	clear_bit(KMEM_ACCOUNTED_PARENT, &memcg->kmem_accounted);
++}
++#endif /* CONFIG_MEMCG_KMEM */
++
+ /* Stuffs for move charges at task migration. */
+ /*
+  * Types of charges to be moved. "move_charge_at_immitgrate" is treated as a
+@@ -614,7 +647,7 @@ EXPORT_SYMBOL(__memcg_kmem_free_page);
+ 
+ static void disarm_kmem_keys(struct mem_cgroup *memcg)
+ {
+-	if (memcg->kmem_accounted)
++	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
+ 		static_key_slow_dec(&memcg_kmem_enabled_key);
+ }
+ #else
+@@ -4171,17 +4204,54 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+ static void memcg_update_kmem_limit(struct mem_cgroup *memcg, u64 val)
+ {
+ #ifdef CONFIG_MEMCG_KMEM
+-	/*
+-	 * Once enabled, can't be disabled. We could in theory disable it if we
+-	 * haven't yet created any caches, or if we can shrink them all to
+-	 * death. But it is not worth the trouble.
+-	 */
++	struct mem_cgroup *iter;
++
+ 	mutex_lock(&set_limit_mutex);
+-	if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
++	if ((val != RESOURCE_MAX) && memcg_kmem_account(memcg)) {
++
++		/*
++		 * Once enabled, can't be disabled. We could in theory disable
++		 * it if we haven't yet created any caches, or if we can shrink
++		 * them all to death. But it is not worth the trouble
++		 */
+ 		static_key_slow_inc(&memcg_kmem_enabled_key);
+-		memcg->kmem_accounted = true;
++
++		if (!memcg->use_hierarchy)
++			goto out;
++
++		for_each_mem_cgroup_tree(iter, memcg) {
++			if (iter == memcg)
++				continue;
++			memcg_kmem_account_parent(iter);
++		}
++	} else if ((val == RESOURCE_MAX) && memcg_kmem_clear_account(memcg)) {
++
++		if (!memcg->use_hierarchy)
++			goto out;
++
++		for_each_mem_cgroup_tree(iter, memcg) {
++			struct mem_cgroup *parent;
++
++			if (iter == memcg)
++				continue;
++			/*
++			 * We should only have our parent bit cleared if none
++			 * of our parents are accounted. The transversal order
++			 * of our iter function forces us to always look at the
++			 * parents.
++			 */
++			parent = parent_mem_cgroup(iter);
++			for (; parent != memcg; parent = parent_mem_cgroup(iter))
++				if (memcg_kmem_is_accounted(parent))
++					goto noclear;
++			memcg_kmem_clear_account_parent(iter);
++noclear:
++			continue;
++		}
  	}
- 	memcg->last_scanned_node = MAX_NUMNODES;
- 	INIT_LIST_HEAD(&memcg->oom_notify);
++out:
+ 	mutex_unlock(&set_limit_mutex);
++
+ #endif
+ }
+ 
 -- 
 1.7.11.2
