@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 07/11] mm: Allocate kernel pages to the right memcg
-Date: Thu,  9 Aug 2012 17:01:15 +0400
-Message-ID: <1344517279-30646-8-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 10/11] memcg: allow a memcg with kmem charges to be destructed.
+Date: Thu,  9 Aug 2012 17:01:18 +0400
+Message-ID: <1344517279-30646-11-git-send-email-glommer@parallels.com>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1344517279-30646-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,112 +13,69 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-When a process tries to allocate a page with the __GFP_KMEMCG flag, the
-page allocator will call the corresponding memcg functions to validate
-the allocation. Tasks in the root memcg can always proceed.
+Because the ultimate goal of the kmem tracking in memcg is to track slab
+pages as well, we can't guarantee that we'll always be able to point a
+page to a particular process, and migrate the charges along with it -
+since in the common case, a page will contain data belonging to multiple
+processes.
 
-To avoid adding markers to the page - and a kmem flag that would
-necessarily follow, as much as doing page_cgroup lookups for no reason,
-whoever is marking its allocations with __GFP_KMEMCG flag is responsible
-for telling the page allocator that this is such an allocation at
-free_pages() time. This is done by the invocation of
-__free_accounted_pages() and free_accounted_pages().
+Because of that, when we destroy a memcg, we only make sure the
+destruction will succeed by discounting the kmem charges from the user
+charges when we try to empty the cgroup.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/gfp.h |  3 +++
- mm/page_alloc.c     | 38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 41 insertions(+)
+ mm/memcontrol.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index d8eae4d..029570f 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -370,6 +370,9 @@ extern void free_pages(unsigned long addr, unsigned int order);
- extern void free_hot_cold_page(struct page *page, int cold);
- extern void free_hot_cold_page_list(struct list_head *list, int cold);
- 
-+extern void __free_accounted_pages(struct page *page, unsigned int order);
-+extern void free_accounted_pages(unsigned long addr, unsigned int order);
-+
- #define __free_page(page) __free_pages((page), 0)
- #define free_page(addr) free_pages((addr), 0)
- 
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index b956cec..da341dc 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2532,6 +2532,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 	struct page *page = NULL;
- 	int migratetype = allocflags_to_migratetype(gfp_mask);
- 	unsigned int cpuset_mems_cookie;
-+	void *handle = NULL;
- 
- 	gfp_mask &= gfp_allowed_mask;
- 
-@@ -2543,6 +2544,13 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 		return NULL;
- 
- 	/*
-+	 * Will only have any effect when __GFP_KMEMCG is set.
-+	 * This is verified in the (always inline) callee
-+	 */
-+	if (!memcg_kmem_new_page(gfp_mask, &handle, order))
-+		return NULL;
-+
-+	/*
- 	 * Check the zones suitable for the gfp_mask contain at least one
- 	 * valid zone. It's possible to have an empty zonelist as a result
- 	 * of GFP_THISNODE and a memoryless node
-@@ -2583,6 +2591,8 @@ out:
- 	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
- 		goto retry_cpuset;
- 
-+	memcg_kmem_commit_page(page, handle, order);
-+
- 	return page;
- }
- EXPORT_SYMBOL(__alloc_pages_nodemask);
-@@ -2635,6 +2645,34 @@ void free_pages(unsigned long addr, unsigned int order)
- 
- EXPORT_SYMBOL(free_pages);
- 
-+/*
-+ * __free_accounted_pages and free_accounted_pages will free pages allocated
-+ * with __GFP_KMEMCG.
-+ *
-+ * Those pages are accounted to a particular memcg, embedded in the
-+ * corresponding page_cgroup. To avoid adding a hit in the allocator to search
-+ * for that information only to find out that it is NULL for users who have no
-+ * interest in that whatsoever, we provide these functions.
-+ *
-+ * The caller knows better which flags it relies on.
-+ */
-+void __free_accounted_pages(struct page *page, unsigned int order)
-+{
-+	memcg_kmem_free_page(page, order);
-+	__free_pages(page, order);
-+}
-+EXPORT_SYMBOL(__free_accounted_pages);
-+
-+void free_accounted_pages(unsigned long addr, unsigned int order)
-+{
-+	if (addr != 0) {
-+		VM_BUG_ON(!virt_addr_valid((void *)addr));
-+		memcg_kmem_free_page(virt_to_page((void *)addr), order);
-+		__free_pages(virt_to_page((void *)addr), order);
-+	}
-+}
-+EXPORT_SYMBOL(free_accounted_pages);
-+
- static void *make_alloc_exact(unsigned long addr, unsigned order, size_t size)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3d30b79..7c1ea49 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -649,6 +649,11 @@ static void disarm_kmem_keys(struct mem_cgroup *memcg)
  {
- 	if (addr) {
+ 	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
+ 		static_key_slow_dec(&memcg_kmem_enabled_key);
++	/*
++	 * This check can't live in kmem destruction function,
++	 * since the charges will outlive the cgroup
++	 */
++	WARN_ON(res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0);
+ }
+ #else
+ static void disarm_kmem_keys(struct mem_cgroup *memcg)
+@@ -4005,6 +4010,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg, bool free_all)
+ 	int node, zid, shrink;
+ 	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+ 	struct cgroup *cgrp = memcg->css.cgroup;
++	u64 usage;
+ 
+ 	css_get(&memcg->css);
+ 
+@@ -4038,8 +4044,17 @@ move_account:
+ 		mem_cgroup_end_move(memcg);
+ 		memcg_oom_recover(memcg);
+ 		cond_resched();
++		/*
++		 * Kernel memory may not necessarily be trackable to a specific
++		 * process. So they are not migrated, and therefore we can't
++		 * expect their value to drop to 0 here.
++		 *
++		 * having res filled up with kmem only is enough
++		 */
++		usage = res_counter_read_u64(&memcg->res, RES_USAGE) -
++			res_counter_read_u64(&memcg->kmem, RES_USAGE);
+ 	/* "ret" should also be checked to ensure all lists are empty. */
+-	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0 || ret);
++	} while (usage > 0 || ret);
+ out:
+ 	css_put(&memcg->css);
+ 	return ret;
 -- 
 1.7.11.2
