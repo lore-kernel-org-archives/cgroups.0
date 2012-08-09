@@ -1,80 +1,66 @@
-From: aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org
-Subject: [PATCH RESEND 0/4] device_cgroup: replace internally whitelist with exception list
-Date: Thu, 09 Aug 2012 15:04:14 -0400
-Message-ID: <20120809190414.773462171@muttley.lan.cathedral>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: aris@ruivo.org
+Subject: [PATCH RESEND 1/4] device_cgroup: add "deny_all" in dev_cgroup structure
+Date: Thu, 09 Aug 2012 15:04:15 -0400
+Message-ID: <20120809190415.021701086@muttley.lan.cathedral>
+References: <20120809190414.773462171@muttley.lan.cathedral>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=deny_all.patch
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="utf-8"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>
 
-The original model of device_cgroup is having a whitelist where all the
-allowed devices are listed. The problem with this approach is that is
-impossible to have the case of allowing everything but few devices.
+deny_all will determine if the default policy is to deny all device access
+unless for the ones in the exception list.
 
-The reason for that lies in the way the whitelist is handled internally=
-:
-since there's only a whitelist, the "all devices" entry would have to b=
-e
-removed and replaced by the entire list of possible devices but the one=
-s
-that are being denied.  Since dev_t is 32 bits long, representing the a=
-llowed
-devices as a bitfield is not memory efficient.
+This variable will be used in the next patches to convert device_cgroup
+internally into a default policy + rules.
 
-This patch replaces the "whitelist" by a "exceptions" list and the defa=
-ult
-policy is kept as "deny_all" variable in dev_cgroup structure.
+Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 
-The current interface determines that whenever "a" is written to device=
-s.allow
-or devices.deny, the entry masking all devices will be added or removed=
-,
-respectively. This behavior is kept and it's what will determine the de=
-fault
-policy:
+---
+ security/device_cgroup.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-	# cat devices.list=20
-	a *:* rwm
-	# echo a >devices.deny
-	# cat devices.list=20
-	# echo a >devices.allow
-	# cat devices.list=20
-	a *:* rwm
-
-The interface is also preserved. For example, if one wants to block onl=
-y access
-to /dev/null:
-	# ls -l /dev/null
-	crw-rw-rw- 1 root root 1, 3 Jul 24 16:17 /dev/null
-	# echo a >devices.allow
-	# echo "c 1:3 rwm" >devices.deny
-	# cat /dev/null
-	cat: /dev/null: Operation not permitted
-	# echo >/dev/null
-	bash: /dev/null: Operation not permitted
-	mknod /tmp/null c 1 3
-	mknod: =E2=80=98/tmp/null=E2=80=99: Operation not permitted
-	# echo "c 1:3 r" >devices.allow
-	# cat /dev/null
-	# echo >/dev/null
-	bash: /dev/null: Operation not permitted
-	mknod /tmp/null c 1 3
-	mknod: =E2=80=98/tmp/null=E2=80=99: Operation not permitted
-	# echo "c 1:3 rw" >devices.allow
-	# echo >/dev/null
-	# cat /dev/null
-	# mknod /tmp/null c 1 3
-	mknod: =E2=80=98/tmp/null=E2=80=99: Operation not permitted
-	# echo "c 1:3 rwm" >devices.allow
-	# echo >/dev/null
-	# cat /dev/null
-	# mknod /tmp/null c 1 3
-	#
-
- device_cgroup.c |  371 ++++++++++++++++++++++++++++++++---------------=
----------
- 1 file changed, 212 insertions(+), 159 deletions(-)
+Index: github/security/device_cgroup.c
+===================================================================
+--- github.orig/security/device_cgroup.c	2012-07-24 17:15:58.277108951 -0400
++++ github/security/device_cgroup.c	2012-07-24 17:16:00.085156162 -0400
+@@ -42,6 +42,7 @@
+ struct dev_cgroup {
+ 	struct cgroup_subsys_state css;
+ 	struct list_head whitelist;
++	bool deny_all;
+ };
+ 
+ static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+@@ -178,12 +179,14 @@
+ 		wh->minor = wh->major = ~0;
+ 		wh->type = DEV_ALL;
+ 		wh->access = ACC_MASK;
++		dev_cgroup->deny_all = false;
+ 		list_add(&wh->list, &dev_cgroup->whitelist);
+ 	} else {
+ 		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+ 		mutex_lock(&devcgroup_mutex);
+ 		ret = dev_whitelist_copy(&dev_cgroup->whitelist,
+ 				&parent_dev_cgroup->whitelist);
++		dev_cgroup->deny_all = parent_dev_cgroup->deny_all;
+ 		mutex_unlock(&devcgroup_mutex);
+ 		if (ret) {
+ 			kfree(dev_cgroup);
+@@ -409,9 +412,11 @@
+ 	case DEVCG_ALLOW:
+ 		if (!parent_has_perm(devcgroup, &wh))
+ 			return -EPERM;
++		devcgroup->deny_all = false;
+ 		return dev_whitelist_add(devcgroup, &wh);
+ 	case DEVCG_DENY:
+ 		dev_whitelist_rm(devcgroup, &wh);
++		devcgroup->deny_all = true;
+ 		break;
+ 	default:
+ 		return -EINVAL;
