@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 09/11] memcg: propagate kmem limiting information to children
-Date: Thu,  9 Aug 2012 17:01:17 +0400
-Message-ID: <1344517279-30646-10-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 03/11] memcg: change defines to an enum
+Date: Thu,  9 Aug 2012 17:01:11 +0400
+Message-ID: <1344517279-30646-4-git-send-email-glommer@parallels.com>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1344517279-30646-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,167 +11,106 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-The current memcg slab cache management fails to present satisfatory
-hierarchical behavior in the following scenario:
+This is just a cleanup patch for clarity of expression.  In earlier
+submissions, people asked it to be in a separate patch, so here it is.
 
--> /cgroups/memory/A/B/C
-
-* kmem limit set at A,
-* A and B have no tasks,
-* span a new task in in C.
-
-Because kmem_accounted is a boolean that was not set for C, no
-accounting would be done. This is, however, not what we expect.
-
-The basic idea, is that when a cgroup is limited, we walk the tree
-upwards (something Kame and I already thought about doing for other
-purposes), and make sure that we store the information about the parent
-being limited in kmem_accounted (that is turned into a bitmap: two
-booleans would not be space efficient). The code for that is taken from
-sched/core.c. My reasons for not putting it into a common place is to
-dodge the type issues that would arise from a common implementation
-between memcg and the scheduler - but I think that it should ultimately
-happen, so if you want me to do it now, let me know.
-
-We do the reverse operation when a formerly limited cgroup becomes
-unlimited.
+[ v2: use named enum as type throughout the file as well ]
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- mm/memcontrol.c | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 79 insertions(+), 9 deletions(-)
+ mm/memcontrol.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3216292..3d30b79 100644
+index 2cef99a..b0e29f4 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -295,7 +295,8 @@ struct mem_cgroup {
- 	 * Should the accounting and control be hierarchical, per subtree?
- 	 */
- 	bool use_hierarchy;
--	bool kmem_accounted;
-+
-+	unsigned long kmem_accounted; /* See KMEM_ACCOUNTED_*, below */
- 
- 	bool		oom_lock;
- 	atomic_t	under_oom;
-@@ -348,6 +349,38 @@ struct mem_cgroup {
- #endif
+@@ -393,9 +393,12 @@ enum charge_type {
  };
  
-+enum {
-+	KMEM_ACCOUNTED_THIS, /* accounted by this cgroup itself */
-+	KMEM_ACCOUNTED_PARENT, /* accounted by any of its parents. */
+ /* for encoding cft->private value on file */
+-#define _MEM			(0)
+-#define _MEMSWAP		(1)
+-#define _OOM_TYPE		(2)
++enum res_type {
++	_MEM,
++	_MEMSWAP,
++	_OOM_TYPE,
 +};
 +
-+#ifdef CONFIG_MEMCG_KMEM
-+static bool memcg_kmem_account(struct mem_cgroup *memcg)
-+{
-+	return !test_and_set_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
-+}
-+
-+static bool memcg_kmem_clear_account(struct mem_cgroup *memcg)
-+{
-+	return test_and_clear_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
-+}
-+
-+static bool memcg_kmem_is_accounted(struct mem_cgroup *memcg)
-+{
-+	return test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted);
-+}
-+
-+static void memcg_kmem_account_parent(struct mem_cgroup *memcg)
-+{
-+	set_bit(KMEM_ACCOUNTED_PARENT, &memcg->kmem_accounted);
-+}
-+
-+static void memcg_kmem_clear_account_parent(struct mem_cgroup *memcg)
-+{
-+	clear_bit(KMEM_ACCOUNTED_PARENT, &memcg->kmem_accounted);
-+}
-+#endif /* CONFIG_MEMCG_KMEM */
-+
- /* Stuffs for move charges at task migration. */
- /*
-  * Types of charges to be moved. "move_charge_at_immitgrate" is treated as a
-@@ -614,7 +647,7 @@ EXPORT_SYMBOL(__memcg_kmem_free_page);
+ #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
+ #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
+ #define MEMFILE_ATTR(val)	((val) & 0xffff)
+@@ -3983,7 +3986,8 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 	char str[64];
+ 	u64 val;
+-	int type, name, len;
++	int name, len;
++	enum res_type type;
  
- static void disarm_kmem_keys(struct mem_cgroup *memcg)
+ 	type = MEMFILE_TYPE(cft->private);
+ 	name = MEMFILE_ATTR(cft->private);
+@@ -4019,7 +4023,8 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 			    const char *buffer)
  {
--	if (memcg->kmem_accounted)
-+	if (test_bit(KMEM_ACCOUNTED_THIS, &memcg->kmem_accounted))
- 		static_key_slow_dec(&memcg_kmem_enabled_key);
- }
- #else
-@@ -4171,17 +4204,54 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
- static void memcg_update_kmem_limit(struct mem_cgroup *memcg, u64 val)
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int type, name;
++	enum res_type type;
++	int name;
+ 	unsigned long long val;
+ 	int ret;
+ 
+@@ -4095,7 +4100,8 @@ out:
+ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
  {
- #ifdef CONFIG_MEMCG_KMEM
--	/*
--	 * Once enabled, can't be disabled. We could in theory disable it if we
--	 * haven't yet created any caches, or if we can shrink them all to
--	 * death. But it is not worth the trouble.
--	 */
-+	struct mem_cgroup *iter;
-+
- 	mutex_lock(&set_limit_mutex);
--	if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
-+	if ((val != RESOURCE_MAX) && memcg_kmem_account(memcg)) {
-+
-+		/*
-+		 * Once enabled, can't be disabled. We could in theory disable
-+		 * it if we haven't yet created any caches, or if we can shrink
-+		 * them all to death. But it is not worth the trouble
-+		 */
- 		static_key_slow_inc(&memcg_kmem_enabled_key);
--		memcg->kmem_accounted = true;
-+
-+		if (!memcg->use_hierarchy)
-+			goto out;
-+
-+		for_each_mem_cgroup_tree(iter, memcg) {
-+			if (iter == memcg)
-+				continue;
-+			memcg_kmem_account_parent(iter);
-+		}
-+	} else if ((val == RESOURCE_MAX) && memcg_kmem_clear_account(memcg)) {
-+
-+		if (!memcg->use_hierarchy)
-+			goto out;
-+
-+		for_each_mem_cgroup_tree(iter, memcg) {
-+			struct mem_cgroup *parent;
-+
-+			if (iter == memcg)
-+				continue;
-+			/*
-+			 * We should only have our parent bit cleared if none
-+			 * of our parents are accounted. The transversal order
-+			 * of our iter function forces us to always look at the
-+			 * parents.
-+			 */
-+			parent = parent_mem_cgroup(iter);
-+			for (; parent != memcg; parent = parent_mem_cgroup(iter))
-+				if (memcg_kmem_is_accounted(parent))
-+					goto noclear;
-+			memcg_kmem_clear_account_parent(iter);
-+noclear:
-+			continue;
-+		}
- 	}
-+out:
- 	mutex_unlock(&set_limit_mutex);
-+
- #endif
- }
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int type, name;
++	int name;
++	enum res_type type;
+ 
+ 	type = MEMFILE_TYPE(event);
+ 	name = MEMFILE_ATTR(event);
+@@ -4423,7 +4429,7 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 	u64 threshold, usage;
+ 	int i, size, ret;
+ 
+@@ -4506,7 +4512,7 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 	u64 usage;
+ 	int i, j, size;
+ 
+@@ -4584,7 +4590,7 @@ static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_eventfd_list *event;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 
+ 	BUG_ON(type != _OOM_TYPE);
+ 	event = kmalloc(sizeof(*event),	GFP_KERNEL);
+@@ -4609,7 +4615,7 @@ static void mem_cgroup_oom_unregister_event(struct cgroup *cgrp,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_eventfd_list *ev, *tmp;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 
+ 	BUG_ON(type != _OOM_TYPE);
  
 -- 
 1.7.11.2
