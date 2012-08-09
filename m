@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 08/11] memcg: disable kmem code when not in use.
-Date: Thu,  9 Aug 2012 17:01:16 +0400
-Message-ID: <1344517279-30646-9-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 11/11] protect architectures where THREAD_SIZE >= PAGE_SIZE against fork bombs
+Date: Thu,  9 Aug 2012 17:01:19 +0400
+Message-ID: <1344517279-30646-12-git-send-email-glommer@parallels.com>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1344517279-30646-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,146 +13,72 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-We can use jump labels to patch the code in or out when not used.
+Because those architectures will draw their stacks directly from the
+page allocator, rather than the slab cache, we can directly pass
+__GFP_KMEMCG flag, and issue the corresponding free_pages.
 
-Because the assignment: memcg->kmem_accounted = true is done after the
-jump labels increment, we guarantee that the root memcg will always be
-selected until all call sites are patched (see memcg_kmem_enabled).
-This guarantees that no mischarges are applied.
+This code path is taken when the architecture doesn't define
+CONFIG_ARCH_THREAD_INFO_ALLOCATOR (only ia64 seems to), and has
+THREAD_SIZE >= PAGE_SIZE. Luckily, most - if not all - of the remaining
+architectures fall in this category.
 
-Jump label decrement happens when the last reference count from the
-memcg dies. This will only happen when the caches are all dead.
+This will guarantee that every stack page is accounted to the memcg the
+process currently lives on, and will have the allocations to fail if
+they go over limit.
+
+For the time being, I am defining a new variant of THREADINFO_GFP, not
+to mess with the other path. Once the slab is also tracked by memcg, we
+can get rid of that flag.
+
+Tested to successfully protect against :(){ :|:& };:
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Acked-by: Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h |  5 ++++-
- mm/memcontrol.c            | 50 ++++++++++++++++++++++++++++++++++++----------
- 2 files changed, 44 insertions(+), 11 deletions(-)
+ include/linux/thread_info.h | 2 ++
+ kernel/fork.c               | 4 ++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 75b247e..f39d933 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -22,6 +22,7 @@
- #include <linux/cgroup.h>
- #include <linux/vm_event_item.h>
- #include <linux/hardirq.h>
-+#include <linux/jump_label.h>
- 
- struct mem_cgroup;
- struct page_cgroup;
-@@ -401,7 +402,9 @@ struct sock;
- void sock_update_memcg(struct sock *sk);
- void sock_release_memcg(struct sock *sk);
- 
--#define memcg_kmem_on 1
-+extern struct static_key memcg_kmem_enabled_key;
-+#define memcg_kmem_on static_key_false(&memcg_kmem_enabled_key)
-+
- bool __memcg_kmem_new_page(gfp_t gfp, void *handle, int order);
- void __memcg_kmem_commit_page(struct page *page, void *handle, int order);
- void __memcg_kmem_free_page(struct page *page, int order);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e9824c1..3216292 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -437,6 +437,10 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
- #include <net/sock.h>
- #include <net/ip.h>
- 
-+struct static_key memcg_kmem_enabled_key;
-+/* so modules can inline the checks */
-+EXPORT_SYMBOL(memcg_kmem_enabled_key);
-+
- static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
- static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, s64 delta);
- static void memcg_uncharge_kmem(struct mem_cgroup *memcg, s64 delta);
-@@ -607,6 +611,16 @@ void __memcg_kmem_free_page(struct page *page, int order)
- 	mem_cgroup_put(memcg);
- }
- EXPORT_SYMBOL(__memcg_kmem_free_page);
-+
-+static void disarm_kmem_keys(struct mem_cgroup *memcg)
-+{
-+	if (memcg->kmem_accounted)
-+		static_key_slow_dec(&memcg_kmem_enabled_key);
-+}
-+#else
-+static void disarm_kmem_keys(struct mem_cgroup *memcg)
-+{
-+}
- #endif /* CONFIG_MEMCG_KMEM */
- 
- #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
-@@ -622,6 +636,12 @@ static void disarm_sock_keys(struct mem_cgroup *memcg)
- }
+diff --git a/include/linux/thread_info.h b/include/linux/thread_info.h
+index ccc1899..e7e0473 100644
+--- a/include/linux/thread_info.h
++++ b/include/linux/thread_info.h
+@@ -61,6 +61,8 @@ extern long do_no_restart_syscall(struct restart_block *parm);
+ # define THREADINFO_GFP		(GFP_KERNEL | __GFP_NOTRACK)
  #endif
  
-+static void disarm_static_keys(struct mem_cgroup *memcg)
-+{
-+	disarm_sock_keys(memcg);
-+	disarm_kmem_keys(memcg);
-+}
-+
- static void drain_all_stock_async(struct mem_cgroup *memcg);
- 
- static struct mem_cgroup_per_zone *
-@@ -4147,6 +4167,24 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
- 	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
- 	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
- }
-+
-+static void memcg_update_kmem_limit(struct mem_cgroup *memcg, u64 val)
-+{
-+#ifdef CONFIG_MEMCG_KMEM
-+	/*
-+	 * Once enabled, can't be disabled. We could in theory disable it if we
-+	 * haven't yet created any caches, or if we can shrink them all to
-+	 * death. But it is not worth the trouble.
-+	 */
-+	mutex_lock(&set_limit_mutex);
-+	if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
-+		static_key_slow_inc(&memcg_kmem_enabled_key);
-+		memcg->kmem_accounted = true;
-+	}
-+	mutex_unlock(&set_limit_mutex);
-+#endif
-+}
++#define THREADINFO_GFP_ACCOUNTED (THREADINFO_GFP | __GFP_KMEMCG)
 +
  /*
-  * The user of this function is...
-  * RES_LIMIT.
-@@ -4184,15 +4222,7 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
- 			ret = res_counter_set_limit(&memcg->kmem, val);
- 			if (ret)
- 				break;
--			/*
--			 * Once enabled, can't be disabled. We could in theory
--			 * disable it if we haven't yet created any caches, or
--			 * if we can shrink them all to death.
--			 *
--			 * But it is not worth the trouble
--			 */
--			if (!memcg->kmem_accounted && val != RESOURCE_MAX)
--				memcg->kmem_accounted = true;
-+			memcg_update_kmem_limit(memcg, val);
- 		} else
- 			return -EINVAL;
- 		break;
-@@ -5054,7 +5084,7 @@ static void free_work(struct work_struct *work)
- 	 * to move this code around, and make sure it is outside
- 	 * the cgroup_lock.
- 	 */
--	disarm_sock_keys(memcg);
-+	disarm_static_keys(memcg);
- 	if (size < PAGE_SIZE)
- 		kfree(memcg);
- 	else
+  * flag set/clear/test wrappers
+  * - pass TIF_xxxx constants to these functions
+diff --git a/kernel/fork.c b/kernel/fork.c
+index dc3ff16..b0b90c3 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -142,7 +142,7 @@ void __weak arch_release_thread_info(struct thread_info *ti) { }
+ static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
+ 						  int node)
+ {
+-	struct page *page = alloc_pages_node(node, THREADINFO_GFP,
++	struct page *page = alloc_pages_node(node, THREADINFO_GFP_ACCOUNTED,
+ 					     THREAD_SIZE_ORDER);
+ 
+ 	return page ? page_address(page) : NULL;
+@@ -151,7 +151,7 @@ static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
+ static inline void free_thread_info(struct thread_info *ti)
+ {
+ 	arch_release_thread_info(ti);
+-	free_pages((unsigned long)ti, THREAD_SIZE_ORDER);
++	free_accounted_pages((unsigned long)ti, THREAD_SIZE_ORDER);
+ }
+ # else
+ static struct kmem_cache *thread_info_cache;
 -- 
 1.7.11.2
