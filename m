@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v2 01/11] memcg: Make it possible to use the stock for more than one page.
-Date: Thu,  9 Aug 2012 17:01:09 +0400
-Message-ID: <1344517279-30646-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH v2 07/11] mm: Allocate kernel pages to the right memcg
+Date: Thu,  9 Aug 2012 17:01:15 +0400
+Message-ID: <1344517279-30646-8-git-send-email-glommer@parallels.com>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1344517279-30646-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,86 +11,114 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+When a process tries to allocate a page with the __GFP_KMEMCG flag, the
+page allocator will call the corresponding memcg functions to validate
+the allocation. Tasks in the root memcg can always proceed.
 
-We currently have a percpu stock cache scheme that charges one page at a
-time from memcg->res, the user counter. When the kernel memory
-controller comes into play, we'll need to charge more than that.
+To avoid adding markers to the page - and a kmem flag that would
+necessarily follow, as much as doing page_cgroup lookups for no reason,
+whoever is marking its allocations with __GFP_KMEMCG flag is responsible
+for telling the page allocator that this is such an allocation at
+free_pages() time. This is done by the invocation of
+__free_accounted_pages() and free_accounted_pages().
 
-This is because kernel memory allocations will also draw from the user
-counter, and can be bigger than a single page, as it is the case with
-the stack (usually 2 pages) or some higher order slabs.
-
-[ glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org: added a changelog ]
-
-Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- mm/memcontrol.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ include/linux/gfp.h |  3 +++
+ mm/page_alloc.c     | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 95162c9..bc7bfa7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2096,20 +2096,28 @@ struct memcg_stock_pcp {
- static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
- static DEFINE_MUTEX(percpu_charge_mutex);
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+index d8eae4d..029570f 100644
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -370,6 +370,9 @@ extern void free_pages(unsigned long addr, unsigned int order);
+ extern void free_hot_cold_page(struct page *page, int cold);
+ extern void free_hot_cold_page_list(struct list_head *list, int cold);
  
--/*
-- * Try to consume stocked charge on this cpu. If success, one page is consumed
-- * from local stock and true is returned. If the stock is 0 or charges from a
-- * cgroup which is not current target, returns false. This stock will be
-- * refilled.
-+/**
-+ * consume_stock: Try to consume stocked charge on this cpu.
-+ * @memcg: memcg to consume from.
-+ * @nr_pages: how many pages to charge.
-+ *
-+ * The charges will only happen if @memcg matches the current cpu's memcg
-+ * stock, and at least @nr_pages are available in that stock.  Failure to
-+ * service an allocation will refill the stock.
-+ *
-+ * returns true if succesfull, false otherwise.
-  */
--static bool consume_stock(struct mem_cgroup *memcg)
-+static bool consume_stock(struct mem_cgroup *memcg, int nr_pages)
- {
- 	struct memcg_stock_pcp *stock;
- 	bool ret = true;
- 
-+	if (nr_pages > CHARGE_BATCH)
-+		return false;
++extern void __free_accounted_pages(struct page *page, unsigned int order);
++extern void free_accounted_pages(unsigned long addr, unsigned int order);
 +
- 	stock = &get_cpu_var(memcg_stock);
--	if (memcg == stock->cached && stock->nr_pages)
--		stock->nr_pages--;
-+	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
-+		stock->nr_pages -= nr_pages;
- 	else /* need to call res_counter_charge */
- 		ret = false;
- 	put_cpu_var(memcg_stock);
-@@ -2408,7 +2416,7 @@ again:
- 		VM_BUG_ON(css_is_removed(&memcg->css));
- 		if (mem_cgroup_is_root(memcg))
- 			goto done;
--		if (nr_pages == 1 && consume_stock(memcg))
-+		if (consume_stock(memcg, nr_pages))
- 			goto done;
- 		css_get(&memcg->css);
- 	} else {
-@@ -2433,7 +2441,7 @@ again:
- 			rcu_read_unlock();
- 			goto done;
- 		}
--		if (nr_pages == 1 && consume_stock(memcg)) {
-+		if (consume_stock(memcg, nr_pages)) {
- 			/*
- 			 * It seems dagerous to access memcg without css_get().
- 			 * But considering how consume_stok works, it's not
+ #define __free_page(page) __free_pages((page), 0)
+ #define free_page(addr) free_pages((addr), 0)
+ 
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index b956cec..da341dc 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2532,6 +2532,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 	struct page *page = NULL;
+ 	int migratetype = allocflags_to_migratetype(gfp_mask);
+ 	unsigned int cpuset_mems_cookie;
++	void *handle = NULL;
+ 
+ 	gfp_mask &= gfp_allowed_mask;
+ 
+@@ -2543,6 +2544,13 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 		return NULL;
+ 
+ 	/*
++	 * Will only have any effect when __GFP_KMEMCG is set.
++	 * This is verified in the (always inline) callee
++	 */
++	if (!memcg_kmem_new_page(gfp_mask, &handle, order))
++		return NULL;
++
++	/*
+ 	 * Check the zones suitable for the gfp_mask contain at least one
+ 	 * valid zone. It's possible to have an empty zonelist as a result
+ 	 * of GFP_THISNODE and a memoryless node
+@@ -2583,6 +2591,8 @@ out:
+ 	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
+ 		goto retry_cpuset;
+ 
++	memcg_kmem_commit_page(page, handle, order);
++
+ 	return page;
+ }
+ EXPORT_SYMBOL(__alloc_pages_nodemask);
+@@ -2635,6 +2645,34 @@ void free_pages(unsigned long addr, unsigned int order)
+ 
+ EXPORT_SYMBOL(free_pages);
+ 
++/*
++ * __free_accounted_pages and free_accounted_pages will free pages allocated
++ * with __GFP_KMEMCG.
++ *
++ * Those pages are accounted to a particular memcg, embedded in the
++ * corresponding page_cgroup. To avoid adding a hit in the allocator to search
++ * for that information only to find out that it is NULL for users who have no
++ * interest in that whatsoever, we provide these functions.
++ *
++ * The caller knows better which flags it relies on.
++ */
++void __free_accounted_pages(struct page *page, unsigned int order)
++{
++	memcg_kmem_free_page(page, order);
++	__free_pages(page, order);
++}
++EXPORT_SYMBOL(__free_accounted_pages);
++
++void free_accounted_pages(unsigned long addr, unsigned int order)
++{
++	if (addr != 0) {
++		VM_BUG_ON(!virt_addr_valid((void *)addr));
++		memcg_kmem_free_page(virt_to_page((void *)addr), order);
++		__free_pages(virt_to_page((void *)addr), order);
++	}
++}
++EXPORT_SYMBOL(free_accounted_pages);
++
+ static void *make_alloc_exact(unsigned long addr, unsigned order, size_t size)
+ {
+ 	if (addr) {
 -- 
 1.7.11.2
