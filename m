@@ -1,480 +1,423 @@
-From: aris@ruivo.org
-Subject: [PATCH RESEND 4/4] device_cgroup: rename whitelist to exception list
-Date: Thu, 09 Aug 2012 15:04:18 -0400
-Message-ID: <20120809190415.739709152@muttley.lan.cathedral>
+From: aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org
+Subject: [PATCH RESEND 3/4] device_cgroup: convert device_cgroup internally to policy + exceptions
+Date: Thu, 09 Aug 2012 15:04:17 -0400
+Message-ID: <20120809190415.512140707@muttley.lan.cathedral>
 References: <20120809190414.773462171@muttley.lan.cathedral>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=rename.patch
-Sender: linux-kernel-owner@vger.kernel.org
+Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline; filename=handle_whitelist_as_exceptions.patch
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>
+Content-Type: TEXT/PLAIN; charset="utf-8"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-This patch replaces the "whitelist" usage in the code and comments and replace
-them by exception list related information.
+The original model of device_cgroup is having a whitelist where all the
+allowed devices are listed. The problem with this approach is that is
+impossible to have the case of allowing everything but few devices.
 
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+The reason for that lies in the way the whitelist is handled internally=
+:
+since there's only a whitelist, the "all devices" entry would have to b=
+e
+removed and replaced by the entire list of possible devices but the one=
+s
+that are being denied.  Since dev_t is 32 bits long, representing the a=
+llowed
+devices as a bitfield is not memory efficient.
+
+This patch replaces the "whitelist" by a "exceptions" list and the defa=
+ult
+policy is kept as "deny_all" variable in dev_cgroup structure.
+
+The current interface determines that whenever "a" is written to device=
+s.allow
+or devices.deny, the entry masking all devices will be added or removed=
+,
+respectively. This behavior is kept and it's what will determine the de=
+fault
+policy:
+
+	# cat devices.list=20
+	a *:* rwm
+	# echo a >devices.deny
+	# cat devices.list=20
+	# echo a >devices.allow
+	# cat devices.list=20
+	a *:* rwm
+
+The interface is also preserved. For example, if one wants to block onl=
+y access
+to /dev/null:
+	# ls -l /dev/null
+	crw-rw-rw- 1 root root 1, 3 Jul 24 16:17 /dev/null
+	# echo a >devices.allow
+	# echo "c 1:3 rwm" >devices.deny
+	# cat /dev/null
+	cat: /dev/null: Operation not permitted
+	# echo >/dev/null
+	bash: /dev/null: Operation not permitted
+	mknod /tmp/null c 1 3
+	mknod: =E2=80=98/tmp/null=E2=80=99: Operation not permitted
+	# echo "c 1:3 r" >devices.allow
+	# cat /dev/null
+	# echo >/dev/null
+	bash: /dev/null: Operation not permitted
+	mknod /tmp/null c 1 3
+	mknod: =E2=80=98/tmp/null=E2=80=99: Operation not permitted
+	# echo "c 1:3 rw" >devices.allow
+	# echo >/dev/null
+	# cat /dev/null
+	# mknod /tmp/null c 1 3
+	mknod: =E2=80=98/tmp/null=E2=80=99: Operation not permitted
+	# echo "c 1:3 rwm" >devices.allow
+	# echo >/dev/null
+	# cat /dev/null
+	# mknod /tmp/null c 1 3
+	#
+
+Note that I didn't rename the functions/variables in this patch, but in=
+ the
+next one to make reviewing easier.
+
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 ---
- security/device_cgroup.c |  198 +++++++++++++++++++++++------------------------
- 1 file changed, 99 insertions(+), 99 deletions(-)
+ security/device_cgroup.c |  228 +++++++++++++++++++++++++++-----------=
+---------
+ 1 file changed, 132 insertions(+), 96 deletions(-)
 
 Index: github/security/device_cgroup.c
-===================================================================
---- github.orig/security/device_cgroup.c	2012-07-24 17:50:14.000000000 -0400
-+++ github/security/device_cgroup.c	2012-07-24 17:50:48.343663036 -0400
-@@ -26,12 +26,12 @@
- static DEFINE_MUTEX(devcgroup_mutex);
- 
- /*
-- * whitelist locking rules:
-+ * exception list locking rules:
-  * hold devcgroup_mutex for update/read.
-  * hold rcu_read_lock() for read.
-  */
- 
--struct dev_whitelist_item {
-+struct dev_exception_item {
- 	u32 major, minor;
- 	short type;
- 	short access;
-@@ -41,7 +41,7 @@
- 
- struct dev_cgroup {
- 	struct cgroup_subsys_state css;
--	struct list_head whitelist;
-+	struct list_head exceptions;
- 	bool deny_all;
- };
- 
-@@ -75,12 +75,12 @@
- /*
-  * called under devcgroup_mutex
-  */
--static int dev_whitelist_copy(struct list_head *dest, struct list_head *orig)
-+static int dev_exceptions_copy(struct list_head *dest, struct list_head *orig)
- {
--	struct dev_whitelist_item *wh, *tmp, *new;
-+	struct dev_exception_item *ex, *tmp, *new;
- 
--	list_for_each_entry(wh, orig, list) {
--		new = kmemdup(wh, sizeof(*wh), GFP_KERNEL);
-+	list_for_each_entry(ex, orig, list) {
-+		new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
- 		if (!new)
- 			goto free_and_exit;
- 		list_add_tail(&new->list, dest);
-@@ -89,9 +89,9 @@
- 	return 0;
- 
- free_and_exit:
--	list_for_each_entry_safe(wh, tmp, dest, list) {
--		list_del(&wh->list);
--		kfree(wh);
-+	list_for_each_entry_safe(ex, tmp, dest, list) {
-+		list_del(&ex->list);
-+		kfree(ex);
- 	}
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- github.orig/security/device_cgroup.c	2012-07-24 17:58:42.984081909 =
+-0400
++++ github/security/device_cgroup.c	2012-07-24 17:59:11.324823460 -0400
+@@ -96,7 +96,6 @@
  	return -ENOMEM;
  }
-@@ -99,50 +99,50 @@
+=20
+-/* Stupid prototype - don't bother combining existing entries */
  /*
   * called under devcgroup_mutex
   */
--static int dev_whitelist_add(struct dev_cgroup *dev_cgroup,
--			struct dev_whitelist_item *wh)
-+static int dev_exception_add(struct dev_cgroup *dev_cgroup,
-+			     struct dev_exception_item *ex)
- {
--	struct dev_whitelist_item *whcopy, *walk;
-+	struct dev_exception_item *excopy, *walk;
- 
--	whcopy = kmemdup(wh, sizeof(*wh), GFP_KERNEL);
--	if (!whcopy)
-+	excopy = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
-+	if (!excopy)
- 		return -ENOMEM;
- 
--	list_for_each_entry(walk, &dev_cgroup->whitelist, list) {
--		if (walk->type != wh->type)
-+	list_for_each_entry(walk, &dev_cgroup->exceptions, list) {
-+		if (walk->type != ex->type)
+@@ -136,16 +135,13 @@
+ 	struct dev_whitelist_item *walk, *tmp;
+=20
+ 	list_for_each_entry_safe(walk, tmp, &dev_cgroup->whitelist, list) {
+-		if (walk->type =3D=3D DEV_ALL)
+-			goto remove;
+ 		if (walk->type !=3D wh->type)
  			continue;
--		if (walk->major != wh->major)
-+		if (walk->major != ex->major)
+-		if (walk->major !=3D ~0 && walk->major !=3D wh->major)
++		if (walk->major !=3D wh->major)
  			continue;
--		if (walk->minor != wh->minor)
-+		if (walk->minor != ex->minor)
+-		if (walk->minor !=3D ~0 && walk->minor !=3D wh->minor)
++		if (walk->minor !=3D wh->minor)
  			continue;
- 
--		walk->access |= wh->access;
--		kfree(whcopy);
--		whcopy = NULL;
-+		walk->access |= ex->access;
-+		kfree(excopy);
-+		excopy = NULL;
- 	}
- 
--	if (whcopy != NULL)
--		list_add_tail_rcu(&whcopy->list, &dev_cgroup->whitelist);
-+	if (excopy != NULL)
-+		list_add_tail_rcu(&excopy->list, &dev_cgroup->exceptions);
- 	return 0;
- }
- 
- /*
-  * called under devcgroup_mutex
-  */
--static void dev_whitelist_rm(struct dev_cgroup *dev_cgroup,
--			struct dev_whitelist_item *wh)
-+static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
-+			     struct dev_exception_item *ex)
- {
--	struct dev_whitelist_item *walk, *tmp;
-+	struct dev_exception_item *walk, *tmp;
- 
--	list_for_each_entry_safe(walk, tmp, &dev_cgroup->whitelist, list) {
--		if (walk->type != wh->type)
-+	list_for_each_entry_safe(walk, tmp, &dev_cgroup->exceptions, list) {
-+		if (walk->type != ex->type)
- 			continue;
--		if (walk->major != wh->major)
-+		if (walk->major != ex->major)
- 			continue;
--		if (walk->minor != wh->minor)
-+		if (walk->minor != ex->minor)
- 			continue;
- 
--		walk->access &= ~wh->access;
-+		walk->access &= ~ex->access;
+=20
+-remove:
+ 		walk->access &=3D ~wh->access;
  		if (!walk->access) {
  			list_del_rcu(&walk->list);
- 			kfree_rcu(walk, rcu);
-@@ -151,18 +151,18 @@
- }
- 
- /**
-- * dev_whitelist_clean - frees all entries of the whitelist
-- * @dev_cgroup: dev_cgroup with the whitelist to be cleaned
-+ * dev_exception_clean - frees all entries of the exception list
-+ * @dev_cgroup: dev_cgroup with the exception list to be cleaned
-  *
-  * called under devcgroup_mutex
-  */
--static void dev_whitelist_clean(struct dev_cgroup *dev_cgroup)
-+static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
- {
--	struct dev_whitelist_item *wh, *tmp;
-+	struct dev_exception_item *ex, *tmp;
- 
--	list_for_each_entry_safe(wh, tmp, &dev_cgroup->whitelist, list) {
--		list_del(&wh->list);
--		kfree(wh);
-+	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
-+		list_del(&ex->list);
-+		kfree(ex);
- 	}
- }
- 
-@@ -178,7 +178,7 @@
- 	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
- 	if (!dev_cgroup)
- 		return ERR_PTR(-ENOMEM);
--	INIT_LIST_HEAD(&dev_cgroup->whitelist);
-+	INIT_LIST_HEAD(&dev_cgroup->exceptions);
- 	parent_cgroup = cgroup->parent;
- 
- 	if (parent_cgroup == NULL)
-@@ -186,8 +186,8 @@
- 	else {
- 		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+@@ -185,19 +181,9 @@
+ 	INIT_LIST_HEAD(&dev_cgroup->whitelist);
+ 	parent_cgroup =3D cgroup->parent;
+=20
+-	if (parent_cgroup =3D=3D NULL) {
+-		struct dev_whitelist_item *wh;
+-		wh =3D kmalloc(sizeof(*wh), GFP_KERNEL);
+-		if (!wh) {
+-			kfree(dev_cgroup);
+-			return ERR_PTR(-ENOMEM);
+-		}
+-		wh->minor =3D wh->major =3D ~0;
+-		wh->type =3D DEV_ALL;
+-		wh->access =3D ACC_MASK;
++	if (parent_cgroup =3D=3D NULL)
+ 		dev_cgroup->deny_all =3D false;
+-		list_add(&wh->list, &dev_cgroup->whitelist);
+-	} else {
++	else {
+ 		parent_dev_cgroup =3D cgroup_to_devcgroup(parent_cgroup);
  		mutex_lock(&devcgroup_mutex);
--		ret = dev_whitelist_copy(&dev_cgroup->whitelist,
--				&parent_dev_cgroup->whitelist);
-+		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
-+					  &parent_dev_cgroup->exceptions);
- 		dev_cgroup->deny_all = parent_dev_cgroup->deny_all;
- 		mutex_unlock(&devcgroup_mutex);
- 		if (ret) {
-@@ -204,7 +204,7 @@
- 	struct dev_cgroup *dev_cgroup;
- 
- 	dev_cgroup = cgroup_to_devcgroup(cgroup);
--	dev_whitelist_clean(dev_cgroup);
-+	dev_exception_clean(dev_cgroup);
- 	kfree(dev_cgroup);
- }
- 
-@@ -250,7 +250,7 @@
- 				struct seq_file *m)
- {
- 	struct dev_cgroup *devcgroup = cgroup_to_devcgroup(cgroup);
--	struct dev_whitelist_item *wh;
-+	struct dev_exception_item *ex;
+ 		ret =3D dev_whitelist_copy(&dev_cgroup->whitelist,
+@@ -268,33 +254,48 @@
  	char maj[MAJMINLEN], min[MAJMINLEN], acc[ACCLEN];
- 
+=20
  	rcu_read_lock();
-@@ -267,11 +267,11 @@
- 		seq_printf(m, "%c %s:%s %s\n", type_to_char(DEV_ALL),
+-	list_for_each_entry_rcu(wh, &devcgroup->whitelist, list) {
+-		set_access(acc, wh->access);
+-		set_majmin(maj, wh->major);
+-		set_majmin(min, wh->minor);
+-		seq_printf(m, "%c %s:%s %s\n", type_to_char(wh->type),
++	/*
++	 * To preserve the compatibility:
++	 * - Only show the "all devices" when the default policy is to allow
++	 * - List the exceptions in case the default policy is to deny
++	 * This way, the file remains as a "whitelist of devices"
++	 */
++	if (devcgroup->deny_all =3D=3D false) {
++		set_access(acc, ACC_MASK);
++		set_majmin(maj, ~0);
++		set_majmin(min, ~0);
++		seq_printf(m, "%c %s:%s %s\n", type_to_char(DEV_ALL),
  			   maj, min, acc);
- 	} else {
--		list_for_each_entry_rcu(wh, &devcgroup->whitelist, list) {
--			set_access(acc, wh->access);
--			set_majmin(maj, wh->major);
--			set_majmin(min, wh->minor);
--			seq_printf(m, "%c %s:%s %s\n", type_to_char(wh->type),
-+		list_for_each_entry_rcu(ex, &devcgroup->exceptions, list) {
-+			set_access(acc, ex->access);
-+			set_majmin(maj, ex->major);
-+			set_majmin(min, ex->minor);
-+			seq_printf(m, "%c %s:%s %s\n", type_to_char(ex->type),
- 				   maj, min, acc);
- 		}
++	} else {
++		list_for_each_entry_rcu(wh, &devcgroup->whitelist, list) {
++			set_access(acc, wh->access);
++			set_majmin(maj, wh->major);
++			set_majmin(min, wh->minor);
++			seq_printf(m, "%c %s:%s %s\n", type_to_char(wh->type),
++				   maj, min, acc);
++		}
  	}
-@@ -281,42 +281,42 @@
+ 	rcu_read_unlock();
+=20
+ 	return 0;
  }
- 
- /**
-- * may_access_whitelist - verifies if a new rule is part of what is allowed
-- *			  by a dev cgroup based on the default policy +
-- *			  exceptions. This is used to make sure a child cgroup
-- *			  won't have more privileges than its parent or to
-- *			  verify if a certain access is allowed.
-+ * may_access - verifies if a new exception is part of what is allowed
-+ *		by a dev cgroup based on the default policy +
-+ *		exceptions. This is used to make sure a child cgroup
-+ *		won't have more privileges than its parent or to
-+ *		verify if a certain access is allowed.
-  * @dev_cgroup: dev cgroup to be tested against
-- * @refwh: new rule
-+ * @refex: new exception
+=20
+-/*
+- * may_access_whitelist:
+- * does the access granted to dev_cgroup c contain the access
+- * requested in whitelist item refwh.
+- * return 1 if yes, 0 if no.
+- * call with devcgroup_mutex held
++/**
++ * may_access_whitelist - verifies if a new rule is part of what is al=
+lowed
++ *			  by a dev cgroup based on the default policy +
++ *			  exceptions. This is used to make sure a child cgroup
++ *			  won't have more privileges than its parent or to
++ *			  verify if a certain access is allowed.
++ * @dev_cgroup: dev cgroup to be tested against
++ * @refwh: new rule
   */
--static int may_access_whitelist(struct dev_cgroup *dev_cgroup,
--			        struct dev_whitelist_item *refwh)
-+static int may_access(struct dev_cgroup *dev_cgroup,
-+		      struct dev_exception_item *refex)
+-static int may_access_whitelist(struct dev_cgroup *c,
+-				       struct dev_whitelist_item *refwh)
++static int may_access_whitelist(struct dev_cgroup *dev_cgroup,
++			        struct dev_whitelist_item *refwh)
  {
--	struct dev_whitelist_item *whitem;
-+	struct dev_exception_item *ex;
- 	bool match = false;
- 
--	list_for_each_entry(whitem, &dev_cgroup->whitelist, list) {
--		if ((refwh->type & DEV_BLOCK) && !(whitem->type & DEV_BLOCK))
-+	list_for_each_entry(ex, &dev_cgroup->exceptions, list) {
-+		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+ 	struct dev_whitelist_item *whitem;
++	bool match =3D false;
+=20
+-	list_for_each_entry(whitem, &c->whitelist, list) {
+-		if (whitem->type & DEV_ALL)
+-			return 1;
++	list_for_each_entry(whitem, &dev_cgroup->whitelist, list) {
+ 		if ((refwh->type & DEV_BLOCK) && !(whitem->type & DEV_BLOCK))
  			continue;
--		if ((refwh->type & DEV_CHAR) && !(whitem->type & DEV_CHAR))
-+		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+ 		if ((refwh->type & DEV_CHAR) && !(whitem->type & DEV_CHAR))
+@@ -305,8 +306,21 @@
  			continue;
--		if (whitem->major != ~0 && whitem->major != refwh->major)
-+		if (ex->major != ~0 && ex->major != refex->major)
+ 		if (refwh->access & (~whitem->access))
  			continue;
--		if (whitem->minor != ~0 && whitem->minor != refwh->minor)
-+		if (ex->minor != ~0 && ex->minor != refex->minor)
- 			continue;
--		if (refwh->access & (~whitem->access))
-+		if (refex->access & (~ex->access))
- 			continue;
- 		match = true;
- 		break;
+-		return 1;
++		match =3D true;
++		break;
  	}
- 
- 	/*
--	 * In two cases we'll consider this new rule valid:
-+	 * In two cases we'll consider this new exception valid:
- 	 * - the dev cgroup has its default policy to allow + exception list:
--	 *   the new rule should *not* match any of the exceptions
-+	 *   the new exception should *not* match any of the exceptions
- 	 *   (!deny_all, !match)
- 	 * - the dev cgroup has its default policy to deny + exception list:
--	 *   the new rule *should* match the exceptions
-+	 *   the new exception *should* match the exceptions
- 	 *   (deny_all, match)
- 	 */
- 	if (dev_cgroup->deny_all == match)
-@@ -326,11 +326,11 @@
- 
- /*
-  * parent_has_perm:
-- * when adding a new allow rule to a device whitelist, the rule
-+ * when adding a new allow rule to a device exception list, the rule
-  * must be allowed in the parent device
-  */
- static int parent_has_perm(struct dev_cgroup *childcg,
--				  struct dev_whitelist_item *wh)
-+				  struct dev_exception_item *ex)
- {
- 	struct cgroup *pcg = childcg->css.cgroup->parent;
- 	struct dev_cgroup *parent;
-@@ -338,17 +338,17 @@
- 	if (!pcg)
- 		return 1;
- 	parent = cgroup_to_devcgroup(pcg);
--	return may_access_whitelist(parent, wh);
-+	return may_access(parent, ex);
++
++	/*
++	 * In two cases we'll consider this new rule valid:
++	 * - the dev cgroup has its default policy to allow + exception list:
++	 *   the new rule should *not* match any of the exceptions
++	 *   (!deny_all, !match)
++	 * - the dev cgroup has its default policy to deny + exception list:
++	 *   the new rule *should* match the exceptions
++	 *   (deny_all, match)
++	 */
++	if (dev_cgroup->deny_all =3D=3D match)
++		return 1;
+ 	return 0;
  }
- 
- /*
-- * Modify the whitelist using allow/deny rules.
-+ * Modify the exception list using allow/deny rules.
-  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
-  * so we can give a container CAP_MKNOD to let it create devices but not
-- * modify the whitelist.
-+ * modify the exception list.
-  * It seems likely we'll want to add a CAP_CONTAINER capability to allow
-  * us to also grant CAP_SYS_ADMIN to containers without giving away the
-- * device whitelist controls, but for now we'll stick with CAP_SYS_ADMIN
-+ * device exception list controls, but for now we'll stick with CAP_SYS_ADMIN
-  *
-  * Taking rules away is always allowed (given CAP_SYS_ADMIN).  Granting
-  * new access is only allowed if you're in the top-level cgroup, or your
-@@ -360,25 +360,25 @@
- 	const char *b;
- 	char *endp;
- 	int count;
--	struct dev_whitelist_item wh;
-+	struct dev_exception_item ex;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
--	memset(&wh, 0, sizeof(wh));
-+	memset(&ex, 0, sizeof(ex));
- 	b = buffer;
- 
+=20
+@@ -356,11 +370,21 @@
+=20
  	switch (*b) {
  	case 'a':
- 		switch (filetype) {
- 		case DEVCG_ALLOW:
--			if (!parent_has_perm(devcgroup, &wh))
-+			if (!parent_has_perm(devcgroup, &ex))
- 				return -EPERM;
--			dev_whitelist_clean(devcgroup);
-+			dev_exception_clean(devcgroup);
- 			devcgroup->deny_all = false;
- 			break;
- 		case DEVCG_DENY:
--			dev_whitelist_clean(devcgroup);
-+			dev_exception_clean(devcgroup);
- 			devcgroup->deny_all = true;
- 			break;
- 		default:
-@@ -386,10 +386,10 @@
- 		}
- 		return 0;
+-		wh.type =3D DEV_ALL;
+-		wh.access =3D ACC_MASK;
+-		wh.major =3D ~0;
+-		wh.minor =3D ~0;
+-		goto handle;
++		switch (filetype) {
++		case DEVCG_ALLOW:
++			if (!parent_has_perm(devcgroup, &wh))
++				return -EPERM;
++			dev_whitelist_clean(devcgroup);
++			devcgroup->deny_all =3D false;
++			break;
++		case DEVCG_DENY:
++			dev_whitelist_clean(devcgroup);
++			devcgroup->deny_all =3D true;
++			break;
++		default:
++			return -EINVAL;
++		}
++		return 0;
  	case 'b':
--		wh.type = DEV_BLOCK;
-+		ex.type = DEV_BLOCK;
+ 		wh.type =3D DEV_BLOCK;
  		break;
- 	case 'c':
--		wh.type = DEV_CHAR;
-+		ex.type = DEV_CHAR;
- 		break;
- 	default:
- 		return -EINVAL;
-@@ -399,10 +399,10 @@
- 		return -EINVAL;
- 	b++;
- 	if (*b == '*') {
--		wh.major = ~0;
-+		ex.major = ~0;
- 		b++;
- 	} else if (isdigit(*b)) {
--		wh.major = simple_strtoul(b, &endp, 10);
-+		ex.major = simple_strtoul(b, &endp, 10);
- 		b = endp;
- 	} else {
- 		return -EINVAL;
-@@ -413,10 +413,10 @@
- 
- 	/* read minor */
- 	if (*b == '*') {
--		wh.minor = ~0;
-+		ex.minor = ~0;
- 		b++;
- 	} else if (isdigit(*b)) {
--		wh.minor = simple_strtoul(b, &endp, 10);
-+		ex.minor = simple_strtoul(b, &endp, 10);
- 		b = endp;
- 	} else {
- 		return -EINVAL;
-@@ -426,13 +426,13 @@
- 	for (b++, count = 0; count < 3; count++, b++) {
- 		switch (*b) {
- 		case 'r':
--			wh.access |= ACC_READ;
-+			ex.access |= ACC_READ;
- 			break;
- 		case 'w':
--			wh.access |= ACC_WRITE;
-+			ex.access |= ACC_WRITE;
- 			break;
- 		case 'm':
--			wh.access |= ACC_MKNOD;
-+			ex.access |= ACC_MKNOD;
- 			break;
- 		case '\n':
- 		case '\0':
-@@ -445,7 +445,7 @@
- 
+@@ -419,17 +443,31 @@
+ 		}
+ 	}
+=20
+-handle:
  	switch (filetype) {
  	case DEVCG_ALLOW:
--		if (!parent_has_perm(devcgroup, &wh))
-+		if (!parent_has_perm(devcgroup, &ex))
+ 		if (!parent_has_perm(devcgroup, &wh))
  			return -EPERM;
- 		/*
- 		 * If the default policy is to allow by default, try to remove
-@@ -453,10 +453,10 @@
- 		 * don't want to break compatibility
- 		 */
- 		if (devcgroup->deny_all == false) {
--			dev_whitelist_rm(devcgroup, &wh);
-+			dev_exception_rm(devcgroup, &ex);
- 			return 0;
- 		}
--		return dev_whitelist_add(devcgroup, &wh);
-+		return dev_exception_add(devcgroup, &ex);
+-		devcgroup->deny_all =3D false;
++		/*
++		 * If the default policy is to allow by default, try to remove
++		 * an matching exception instead. And be silent about it: we
++		 * don't want to break compatibility
++		 */
++		if (devcgroup->deny_all =3D=3D false) {
++			dev_whitelist_rm(devcgroup, &wh);
++			return 0;
++		}
+ 		return dev_whitelist_add(devcgroup, &wh);
  	case DEVCG_DENY:
- 		/*
- 		 * If the default policy is to deny by default, try to remove
-@@ -464,10 +464,10 @@
- 		 * don't want to break compatibility
- 		 */
- 		if (devcgroup->deny_all == true) {
--			dev_whitelist_rm(devcgroup, &wh);
-+			dev_exception_rm(devcgroup, &ex);
- 			return 0;
- 		}
--		return dev_whitelist_add(devcgroup, &wh);
-+		return dev_exception_add(devcgroup, &ex);
+-		dev_whitelist_rm(devcgroup, &wh);
+-		devcgroup->deny_all =3D true;
+-		break;
++		/*
++		 * If the default policy is to deny by default, try to remove
++		 * an matching exception instead. And be silent about it: we
++		 * don't want to break compatibility
++		 */
++		if (devcgroup->deny_all =3D=3D true) {
++			dev_whitelist_rm(devcgroup, &wh);
++			return 0;
++		}
++		return dev_whitelist_add(devcgroup, &wh);
  	default:
  		return -EINVAL;
  	}
-@@ -528,17 +528,17 @@
- 					short type, u32 major, u32 minor,
- 				        short access)
+@@ -476,73 +514,71 @@
+ 	.base_cftypes =3D dev_cgroup_files,
+ };
+=20
+-int __devcgroup_inode_permission(struct inode *inode, int mask)
++/**
++ * __devcgroup_check_permission - checks if an inode operation is perm=
+itted
++ * @dev_cgroup: the dev cgroup to be tested against
++ * @type: device type
++ * @major: device major number
++ * @minor: device minor number
++ * @access: combination of ACC_WRITE, ACC_READ and ACC_MKNOD
++ *
++ * returns 0 on success, -EPERM case the operation is not permitted
++ */
++static int __devcgroup_check_permission(struct dev_cgroup *dev_cgroup,
++					short type, u32 major, u32 minor,
++				        short access)
  {
--	struct dev_whitelist_item wh;
-+	struct dev_exception_item ex;
- 	int rc;
- 
--	memset(&wh, 0, sizeof(wh));
--	wh.type = type;
--	wh.major = major;
--	wh.minor = minor;
--	wh.access = access;
-+	memset(&ex, 0, sizeof(ex));
-+	ex.type = type;
-+	ex.major = major;
-+	ex.minor = minor;
-+	ex.access = access;
- 
+-	struct dev_cgroup *dev_cgroup;
+-	struct dev_whitelist_item *wh;
++	struct dev_whitelist_item wh;
++	int rc;
++
++	memset(&wh, 0, sizeof(wh));
++	wh.type =3D type;
++	wh.major =3D major;
++	wh.minor =3D minor;
++	wh.access =3D access;
+=20
  	rcu_read_lock();
--	rc = may_access_whitelist(dev_cgroup, &wh);
-+	rc = may_access(dev_cgroup, &ex);
- 	rcu_read_unlock();
- 
- 	if (!rc)
++	rc =3D may_access_whitelist(dev_cgroup, &wh);
++	rcu_read_unlock();
+=20
+-	dev_cgroup =3D task_devcgroup(current);
++	if (!rc)
++		return -EPERM;
+=20
+-	list_for_each_entry_rcu(wh, &dev_cgroup->whitelist, list) {
+-		if (wh->type & DEV_ALL)
+-			goto found;
+-		if ((wh->type & DEV_BLOCK) && !S_ISBLK(inode->i_mode))
+-			continue;
+-		if ((wh->type & DEV_CHAR) && !S_ISCHR(inode->i_mode))
+-			continue;
+-		if (wh->major !=3D ~0 && wh->major !=3D imajor(inode))
+-			continue;
+-		if (wh->minor !=3D ~0 && wh->minor !=3D iminor(inode))
+-			continue;
++	return 0;
++}
+=20
+-		if ((mask & MAY_WRITE) && !(wh->access & ACC_WRITE))
+-			continue;
+-		if ((mask & MAY_READ) && !(wh->access & ACC_READ))
+-			continue;
+-found:
+-		rcu_read_unlock();
+-		return 0;
+-	}
++int __devcgroup_inode_permission(struct inode *inode, int mask)
++{
++	struct dev_cgroup *dev_cgroup =3D task_devcgroup(current);
++	short type, access =3D 0;
+=20
+-	rcu_read_unlock();
++	if (S_ISBLK(inode->i_mode))
++		type =3D DEV_BLOCK;
++	if (S_ISCHR(inode->i_mode))
++		type =3D DEV_CHAR;
++	if (mask & MAY_WRITE)
++		access |=3D ACC_WRITE;
++	if (mask & MAY_READ)
++		access |=3D ACC_READ;
+=20
+-	return -EPERM;
++	return __devcgroup_check_permission(dev_cgroup, type, imajor(inode),
++					    iminor(inode), access);
+ }
+=20
+ int devcgroup_inode_mknod(int mode, dev_t dev)
+ {
+-	struct dev_cgroup *dev_cgroup;
+-	struct dev_whitelist_item *wh;
++	struct dev_cgroup *dev_cgroup =3D task_devcgroup(current);
++	short type;
+=20
+ 	if (!S_ISBLK(mode) && !S_ISCHR(mode))
+ 		return 0;
+=20
+-	rcu_read_lock();
+-
+-	dev_cgroup =3D task_devcgroup(current);
+-
+-	list_for_each_entry_rcu(wh, &dev_cgroup->whitelist, list) {
+-		if (wh->type & DEV_ALL)
+-			goto found;
+-		if ((wh->type & DEV_BLOCK) && !S_ISBLK(mode))
+-			continue;
+-		if ((wh->type & DEV_CHAR) && !S_ISCHR(mode))
+-			continue;
+-		if (wh->major !=3D ~0 && wh->major !=3D MAJOR(dev))
+-			continue;
+-		if (wh->minor !=3D ~0 && wh->minor !=3D MINOR(dev))
+-			continue;
+-
+-		if (!(wh->access & ACC_MKNOD))
+-			continue;
+-found:
+-		rcu_read_unlock();
+-		return 0;
+-	}
++	if (S_ISBLK(mode))
++		type =3D DEV_BLOCK;
++	else
++		type =3D DEV_CHAR;
+=20
+-	rcu_read_unlock();
++	return __devcgroup_check_permission(dev_cgroup, type, MAJOR(dev),
++					    MINOR(dev), ACC_MKNOD);
+=20
+-	return -EPERM;
+ }
