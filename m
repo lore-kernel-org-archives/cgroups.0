@@ -1,52 +1,118 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: Limiting CPU resources of a cgroup (how do I) HELP REQUESTED
-Date: Fri, 10 Aug 2012 08:50:23 +0800
-Message-ID: <50245ACF.1000202@huawei.com>
-References: <CACivvv0G3CspFnFud569vgdh=_2sofb4P3f2sfdFRuu2XSvRaQ@mail.gmail.com> <ECF03057-612C-4544-8174-1F6FF0E9FAB7@gmail.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 01/11] memcg: Make it possible to use the stock for
+ more than one page.
+Date: Fri, 10 Aug 2012 17:12:39 +0200
+Message-ID: <20120810151239.GF1425@dhcp22.suse.cz>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+ <1344517279-30646-2-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <ECF03057-612C-4544-8174-1F6FF0E9FAB7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1344517279-30646-2-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Udayan Bapat <uvbapat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Vecu BOSSEUR <vecu.bosseur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Suleiman Souhlal <suleiman@google.com>
 
-On 2012/8/9 21:11, Udayan Bapat wrote:
-> Unless, I am mistaken cgroup does not provide max guarantee. It can be used to provide min guarantee by setting CPU.shares value.
+On Thu 09-08-12 17:01:09, Glauber Costa wrote:
+> From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+> 
+> We currently have a percpu stock cache scheme that charges one page at a
+> time from memcg->res, the user counter. When the kernel memory
+> controller comes into play, we'll need to charge more than that.
+> 
+> This is because kernel memory allocations will also draw from the user
+> counter, and can be bigger than a single page, as it is the case with
+> the stack (usually 2 pages) or some higher order slabs.
+> 
+> [ glommer@parallels.com: added a changelog ]
+> 
+> Signed-off-by: Suleiman Souhlal <suleiman@google.com>
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> Acked-by: David Rientjes <rientjes@google.com>
+> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Yes it does, by setting cpu.cfs_quota_us and cpu.cfs_period_us.
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
+> ---
+>  mm/memcontrol.c | 28 ++++++++++++++++++----------
+>  1 file changed, 18 insertions(+), 10 deletions(-)
 > 
-> Besides, what is the use case where you would want to limit the usage even when other threads/cores are idle? Wouldn't you want to give 100 percent to finish your task earlier than giving say 30 percent only?
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 95162c9..bc7bfa7 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2096,20 +2096,28 @@ struct memcg_stock_pcp {
+>  static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
+>  static DEFINE_MUTEX(percpu_charge_mutex);
+>  
+> -/*
+> - * Try to consume stocked charge on this cpu. If success, one page is consumed
+> - * from local stock and true is returned. If the stock is 0 or charges from a
+> - * cgroup which is not current target, returns false. This stock will be
+> - * refilled.
+> +/**
+> + * consume_stock: Try to consume stocked charge on this cpu.
+> + * @memcg: memcg to consume from.
+> + * @nr_pages: how many pages to charge.
+> + *
+> + * The charges will only happen if @memcg matches the current cpu's memcg
+> + * stock, and at least @nr_pages are available in that stock.  Failure to
+> + * service an allocation will refill the stock.
+> + *
+> + * returns true if succesfull, false otherwise.
+>   */
+> -static bool consume_stock(struct mem_cgroup *memcg)
+> +static bool consume_stock(struct mem_cgroup *memcg, int nr_pages)
+>  {
+>  	struct memcg_stock_pcp *stock;
+>  	bool ret = true;
+>  
+> +	if (nr_pages > CHARGE_BATCH)
+> +		return false;
+> +
+>  	stock = &get_cpu_var(memcg_stock);
+> -	if (memcg == stock->cached && stock->nr_pages)
+> -		stock->nr_pages--;
+> +	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
+> +		stock->nr_pages -= nr_pages;
+>  	else /* need to call res_counter_charge */
+>  		ret = false;
+>  	put_cpu_var(memcg_stock);
+> @@ -2408,7 +2416,7 @@ again:
+>  		VM_BUG_ON(css_is_removed(&memcg->css));
+>  		if (mem_cgroup_is_root(memcg))
+>  			goto done;
+> -		if (nr_pages == 1 && consume_stock(memcg))
+> +		if (consume_stock(memcg, nr_pages))
+>  			goto done;
+>  		css_get(&memcg->css);
+>  	} else {
+> @@ -2433,7 +2441,7 @@ again:
+>  			rcu_read_unlock();
+>  			goto done;
+>  		}
+> -		if (nr_pages == 1 && consume_stock(memcg)) {
+> +		if (consume_stock(memcg, nr_pages)) {
+>  			/*
+>  			 * It seems dagerous to access memcg without css_get().
+>  			 * But considering how consume_stok works, it's not
+> -- 
+> 1.7.11.2
 > 
-> 
-> On Aug 8, 2012, at 8:24 AM, Vecu BOSSEUR <vecu.bosseur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> 
->> Dear Friends or Foes ;-)
->>
->>
->> It is quite some time now that I first tried to find an adequate
->> solution to my problem; none managed to get me right yet :=-(
->>
->> Basically, I would like to limit CPU resource usage (i.e. ~= time
->> share) allocated to a said cgroup to let's say 30% of the machine
->> processing power, or 30 % of time.
->> ( SMP and HyperThreading technologies will change the interpretation
->> of that goal; regardless, please read on. )
->>
->> I am in the very need to throttle some cgroup's CPU usage, regardless
->> the overall machine CPU utilisation. I mean that I need to cap the
->> processing power dedicated and allowed to some cgroup, whether the
->> CPU(s) is(are) otherwise IDLE or BUSY (with respect to other tasks or
->> groups).
->>
->> Any hint on how to accomplish this?
->>
->> All that I happend to do was to create a renice-boosted daemon that
->> alternately froze then unfroze the said cgroup (using a calculated
->> time ratio between running/frozen states) to keep the cgroup's CPU
->> usage under control.
->>
->> You can ea
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
