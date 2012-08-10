@@ -1,72 +1,123 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 02/11] memcg: Reclaim when more than one page needed.
-Date: Fri, 10 Aug 2012 17:42:40 +0200
-Message-ID: <20120810154240.GG1425@dhcp22.suse.cz>
+Subject: Re: [PATCH v2 03/11] memcg: change defines to an enum
+Date: Fri, 10 Aug 2012 17:43:53 +0200
+Message-ID: <20120810154353.GH1425@dhcp22.suse.cz>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
- <1344517279-30646-3-git-send-email-glommer@parallels.com>
+ <1344517279-30646-4-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1344517279-30646-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1344517279-30646-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Thu 09-08-12 17:01:10, Glauber Costa wrote:
-[...]
-> @@ -2317,18 +2318,18 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	} else
->  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
->  	/*
-> -	 * nr_pages can be either a huge page (HPAGE_PMD_NR), a batch
-> -	 * of regular pages (CHARGE_BATCH), or a single regular page (1).
-> -	 *
->  	 * Never reclaim on behalf of optional batching, retry with a
->  	 * single page instead.
->  	 */
-> -	if (nr_pages == CHARGE_BATCH)
-> +	if (nr_pages > min_pages)
->  		return CHARGE_RETRY;
+On Thu 09-08-12 17:01:11, Glauber Costa wrote:
+> This is just a cleanup patch for clarity of expression.  In earlier
+> submissions, people asked it to be in a separate patch, so here it is.
+> 
+> [ v2: use named enum as type throughout the file as well ]
+> 
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-This is dangerous because THP charges will be retried now while they
-previously failed with CHARGE_NOMEM which means that we will keep
-attempting potentially endlessly.
-Why cannot we simply do if (nr_pages < CHARGE_BATCH) and get rid of the
-min_pages altogether?
-Also the comment doesn't seem to be valid anymore.
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
+> ---
+>  mm/memcontrol.c | 26 ++++++++++++++++----------
+>  1 file changed, 16 insertions(+), 10 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2cef99a..b0e29f4 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -393,9 +393,12 @@ enum charge_type {
+>  };
 >  
->  	if (!(gfp_mask & __GFP_WAIT))
->  		return CHARGE_WOULDBLOCK;
->  
-> +	if (gfp_mask & __GFP_NORETRY)
-> +		return CHARGE_NOMEM;
+>  /* for encoding cft->private value on file */
+> -#define _MEM			(0)
+> -#define _MEMSWAP		(1)
+> -#define _OOM_TYPE		(2)
+> +enum res_type {
+> +	_MEM,
+> +	_MEMSWAP,
+> +	_OOM_TYPE,
+> +};
 > +
->  	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
->  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
->  		return CHARGE_RETRY;
-> @@ -2341,7 +2342,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	 * unlikely to succeed so close to the limit, and we fall back
->  	 * to regular pages anyway in case of failure.
->  	 */
-> -	if (nr_pages == 1 && ret)
-> +	if (nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER) && ret)
->  		return CHARGE_RETRY;
+>  #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
+>  #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
+>  #define MEMFILE_ATTR(val)	((val) & 0xffff)
+> @@ -3983,7 +3986,8 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+>  	char str[64];
+>  	u64 val;
+> -	int type, name, len;
+> +	int name, len;
+> +	enum res_type type;
 >  
->  	/*
-> @@ -2476,7 +2477,8 @@ again:
->  			nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
->  		}
+>  	type = MEMFILE_TYPE(cft->private);
+>  	name = MEMFILE_ATTR(cft->private);
+> @@ -4019,7 +4023,8 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+>  			    const char *buffer)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+> -	int type, name;
+> +	enum res_type type;
+> +	int name;
+>  	unsigned long long val;
+>  	int ret;
 >  
-> -		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, oom_check);
-> +		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, nr_pages,
-> +		    oom_check);
->  		switch (ret) {
->  		case CHARGE_OK:
->  			break;
+> @@ -4095,7 +4100,8 @@ out:
+>  static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+> -	int type, name;
+> +	int name;
+> +	enum res_type type;
+>  
+>  	type = MEMFILE_TYPE(event);
+>  	name = MEMFILE_ATTR(event);
+> @@ -4423,7 +4429,7 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+>  	struct mem_cgroup_thresholds *thresholds;
+>  	struct mem_cgroup_threshold_ary *new;
+> -	int type = MEMFILE_TYPE(cft->private);
+> +	enum res_type type = MEMFILE_TYPE(cft->private);
+>  	u64 threshold, usage;
+>  	int i, size, ret;
+>  
+> @@ -4506,7 +4512,7 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+>  	struct mem_cgroup_thresholds *thresholds;
+>  	struct mem_cgroup_threshold_ary *new;
+> -	int type = MEMFILE_TYPE(cft->private);
+> +	enum res_type type = MEMFILE_TYPE(cft->private);
+>  	u64 usage;
+>  	int i, j, size;
+>  
+> @@ -4584,7 +4590,7 @@ static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+>  	struct mem_cgroup_eventfd_list *event;
+> -	int type = MEMFILE_TYPE(cft->private);
+> +	enum res_type type = MEMFILE_TYPE(cft->private);
+>  
+>  	BUG_ON(type != _OOM_TYPE);
+>  	event = kmalloc(sizeof(*event),	GFP_KERNEL);
+> @@ -4609,7 +4615,7 @@ static void mem_cgroup_oom_unregister_event(struct cgroup *cgrp,
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+>  	struct mem_cgroup_eventfd_list *ev, *tmp;
+> -	int type = MEMFILE_TYPE(cft->private);
+> +	enum res_type type = MEMFILE_TYPE(cft->private);
+>  
+>  	BUG_ON(type != _OOM_TYPE);
+>  
 > -- 
 > 1.7.11.2
 > 
