@@ -1,90 +1,66 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v2 11/11] protect architectures where THREAD_SIZE >= PAGE_SIZE
- against fork bombs
-Date: Sat, 11 Aug 2012 02:54:48 +0900
-Message-ID: <50254AE8.6060706@jp.fujitsu.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-12-git-send-email-glommer@parallels.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v2 02/11] memcg: Reclaim when more than one page needed.
+Date: Sat, 11 Aug 2012 02:56:20 +0900
+Message-ID: <50254B44.7090107@jp.fujitsu.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-3-git-send-email-glommer@parallels.com> <20120810154240.GG1425@dhcp22.suse.cz> <50253B95.7010905@jp.fujitsu.com> <20120810172824.GA14591@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1344517279-30646-12-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120810172824.GA14591@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Suleiman Souhlal <suleiman@google.com>
 
-(2012/08/09 22:01), Glauber Costa wrote:
-> Because those architectures will draw their stacks directly from the
-> page allocator, rather than the slab cache, we can directly pass
-> __GFP_KMEMCG flag, and issue the corresponding free_pages.
-> 
-> This code path is taken when the architecture doesn't define
-> CONFIG_ARCH_THREAD_INFO_ALLOCATOR (only ia64 seems to), and has
-> THREAD_SIZE >= PAGE_SIZE. Luckily, most - if not all - of the remaining
-> architectures fall in this category.
-> 
-> This will guarantee that every stack page is accounted to the memcg the
-> process currently lives on, and will have the allocations to fail if
-> they go over limit.
-> 
-> For the time being, I am defining a new variant of THREADINFO_GFP, not
-> to mess with the other path. Once the slab is also tracked by memcg, we
-> can get rid of that flag.
-> 
-> Tested to successfully protect against :(){ :|:& };:
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Acked-by: Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+(2012/08/11 2:28), Michal Hocko wrote:
+> On Sat 11-08-12 01:49:25, KAMEZAWA Hiroyuki wrote:
+>> (2012/08/11 0:42), Michal Hocko wrote:
+>>> On Thu 09-08-12 17:01:10, Glauber Costa wrote:
+>>> [...]
+>>>> @@ -2317,18 +2318,18 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>>>>   	} else
+>>>>   		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+>>>>   	/*
+>>>> -	 * nr_pages can be either a huge page (HPAGE_PMD_NR), a batch
+>>>> -	 * of regular pages (CHARGE_BATCH), or a single regular page (1).
+>>>> -	 *
+>>>>   	 * Never reclaim on behalf of optional batching, retry with a
+>>>>   	 * single page instead.
+>>>>   	 */
+>>>> -	if (nr_pages == CHARGE_BATCH)
+>>>> +	if (nr_pages > min_pages)
+>>>>   		return CHARGE_RETRY;
+>>>
+>>> This is dangerous because THP charges will be retried now while they
+>>> previously failed with CHARGE_NOMEM which means that we will keep
+>>> attempting potentially endlessly.
+>>
+>> with THP, I thought nr_pages == min_pages, and no retry.
+>
+> right you are.
+>
+>>> Why cannot we simply do if (nr_pages < CHARGE_BATCH) and get rid of the
+>>> min_pages altogether?
+>>
+>> Hm, I think a slab can be larger than CHARGE_BATCH.
+>>
+>>> Also the comment doesn't seem to be valid anymore.
+>>>
+>> I agree it's not clean. Because our assumption on nr_pages are changed,
+>> I think this behavior should not depend on nr_pages value..
+>> Shouldn't we have a flag to indicate "trial-for-batched charge" ?
+>
+> dunno, it would require a new parameter anyway (because abusing gfp
+> doesn't seem great idea).
+>
+ok, agreed.
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+-Kame
 
 
-> ---
->   include/linux/thread_info.h | 2 ++
->   kernel/fork.c               | 4 ++--
->   2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/thread_info.h b/include/linux/thread_info.h
-> index ccc1899..e7e0473 100644
-> --- a/include/linux/thread_info.h
-> +++ b/include/linux/thread_info.h
-> @@ -61,6 +61,8 @@ extern long do_no_restart_syscall(struct restart_block *parm);
->   # define THREADINFO_GFP		(GFP_KERNEL | __GFP_NOTRACK)
->   #endif
->   
-> +#define THREADINFO_GFP_ACCOUNTED (THREADINFO_GFP | __GFP_KMEMCG)
-> +
->   /*
->    * flag set/clear/test wrappers
->    * - pass TIF_xxxx constants to these functions
-> diff --git a/kernel/fork.c b/kernel/fork.c
-> index dc3ff16..b0b90c3 100644
-> --- a/kernel/fork.c
-> +++ b/kernel/fork.c
-> @@ -142,7 +142,7 @@ void __weak arch_release_thread_info(struct thread_info *ti) { }
->   static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
->   						  int node)
->   {
-> -	struct page *page = alloc_pages_node(node, THREADINFO_GFP,
-> +	struct page *page = alloc_pages_node(node, THREADINFO_GFP_ACCOUNTED,
->   					     THREAD_SIZE_ORDER);
->   
->   	return page ? page_address(page) : NULL;
-> @@ -151,7 +151,7 @@ static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
->   static inline void free_thread_info(struct thread_info *ti)
->   {
->   	arch_release_thread_info(ti);
-> -	free_pages((unsigned long)ti, THREAD_SIZE_ORDER);
-> +	free_accounted_pages((unsigned long)ti, THREAD_SIZE_ORDER);
->   }
->   # else
->   static struct kmem_cache *thread_info_cache;
-> 
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
