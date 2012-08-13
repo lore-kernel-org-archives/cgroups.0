@@ -1,178 +1,59 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH] execute the whole memcg freeing in rcu callback
-Date: Mon, 13 Aug 2012 16:46:10 +0400
-Message-ID: <1344861970-9999-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 02/11] memcg: Reclaim when more than one page needed.
+Date: Mon, 13 Aug 2012 15:10:14 +0200
+Message-ID: <20120813131014.GB24248@dhcp22.suse.cz>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+ <1344517279-30646-3-git-send-email-glommer@parallels.com>
+ <20120810185417.GB16110@dhcp22.suse.cz>
+ <5028B552.2070708@parallels.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <5028B552.2070708-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-A lot of the initialization we do in mem_cgroup_create() is done with
-softirqs enabled. This include grabbing a css id, which holds
-&ss->id_lock->rlock, and the per-zone trees, which holds
-rtpz->lock->rlock. All of those signal to the lockdep mechanism that
-those locks can be used in SOFTIRQ-ON-W context. This means that the
-freeing of memcg structure must happen in a compatible context,
-otherwise we'll get a deadlock.
+On Mon 13-08-12 12:05:38, Glauber Costa wrote:
+> On 08/10/2012 10:54 PM, Michal Hocko wrote:
+> > On Thu 09-08-12 17:01:10, Glauber Costa wrote:
+> >> From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+> >>
+> >> mem_cgroup_do_charge() was written before kmem accounting, and expects
+> >> three cases: being called for 1 page, being called for a stock of 32
+> >> pages, or being called for a hugepage.  If we call for 2 or 3 pages (and
+> >> both the stack and several slabs used in process creation are such, at
+> >> least with the debug options I had), it assumed it's being called for
+> >> stock and just retried without reclaiming.
+> >>
+> >> Fix that by passing down a minsize argument in addition to the csize.
+> >>
+> >> And what to do about that (csize == PAGE_SIZE && ret) retry?  If it's
+> >> needed at all (and presumably is since it's there, perhaps to handle
+> >> races), then it should be extended to more than PAGE_SIZE, yet how far?
+> >> And should there be a retry count limit, of what?  For now retry up to
+> >> COSTLY_ORDER (as page_alloc.c does) and make sure not to do it if
+> >> __GFP_NORETRY.
+> >>
+> >> [v4: fixed nr pages calculation pointed out by Christoph Lameter ]
+> >>
+> >> Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> >> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> >> Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> > 
+> > I am not happy with the min_pages argument but we can do something more
+> > clever  later.
+> > 
+> > Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > 
+> 
+> I am a bit confused here. Does your ack come before or after your other
+> comments on this patch?
 
-The reference counting mechanism we use allows the memcg structure to be
-freed later and outlive the actual memcg destruction from the
-filesystem. However, we have little, if any, means to guarantee in which
-context the last memcg_put will happen. The best we can do is test it
-and try to make sure no invalid context releases are happening. But as
-we add more code to memcg, the possible interactions grow in number and
-expose more ways to get context conflicts.
-
-Context-related problems already appeared for static branches
-destruction, since their locking forced us to disable them from process
-context, which we could not always guarantee. Now that we're trying to
-add kmem controller, the possibilities of where the freeing can be
-triggered from just increases.
-
-Greg Thelen reported a bug with that patchset applied that would trigger
-if a task would hold a reference to a memcg through its kmem counter.
-This would mean that killing that task would eventually get us to
-__mem_cgroup_free() after dropping the last kernel page reference, in an
-invalid IN-SOFTIRQ-W.
-
-We already moved a part of the freeing to a worker thread to be
-context-safe for the static branches disabling. Although we could move
-the new offending part to such a place as well, I see no reason not
-to do it for the whole freeing action. I consider this to be the safe
-choice.
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-Reported-by: Greg Thelen <gthelen@google.com>
-CC: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-CC: Michal Hocko <mhocko@suse.cz>
-CC: Johannes Weiner <hannes@cmpxchg.org>
-
----
-I am adding this to the kmemcg tree, but I am hoping this can get
-independent review, and maybe be applied independently as well. As you
-can see, this is a problem that was made visible by that patchset, but
-is, ultimately, already there.
-
-Also, please note that this bug would be mostly invisible with the slab
-patches applied ontop, since killing the task would unlikely release the
-last reference on the structure. But still, theorectically present. This
-is exactly the kind of issues I am trying to capture by applying the two
-parts independently.
----
- mm/memcontrol.c | 66 +++++++++++++++++++++++++++++----------------------------
- 1 file changed, 34 insertions(+), 32 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e092f70..64a8d19 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5165,16 +5165,29 @@ out_free:
- }
- 
- /*
-- * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
-- * but in process context.  The work_freeing structure is overlaid
-- * on the rcu_freeing structure, which itself is overlaid on memsw.
-+ * At destroying mem_cgroup, references from swap_cgroup can remain.
-+ * (scanning all at force_empty is too costly...)
-+ *
-+ * Instead of clearing all references at force_empty, we remember
-+ * the number of reference from swap_cgroup and free mem_cgroup when
-+ * it goes down to 0.
-+ *
-+ * Removal of cgroup itself succeeds regardless of refs from swap.
-  */
--static void free_work(struct work_struct *work)
-+
-+static void __mem_cgroup_free(struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *memcg;
-+	int node;
- 	int size = sizeof(struct mem_cgroup);
- 
--	memcg = container_of(work, struct mem_cgroup, work_freeing);
-+	mem_cgroup_remove_from_trees(memcg);
-+	free_css_id(&mem_cgroup_subsys, &memcg->css);
-+
-+	for_each_node(node)
-+		free_mem_cgroup_per_zone_info(memcg, node);
-+
-+	free_percpu(memcg->stat);
-+
- 	/*
- 	 * We need to make sure that (at least for now), the jump label
- 	 * destruction code runs outside of the cgroup lock. This is because
-@@ -5193,38 +5206,27 @@ static void free_work(struct work_struct *work)
- 		vfree(memcg);
- }
- 
--static void free_rcu(struct rcu_head *rcu_head)
--{
--	struct mem_cgroup *memcg;
--
--	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
--	INIT_WORK(&memcg->work_freeing, free_work);
--	schedule_work(&memcg->work_freeing);
--}
- 
- /*
-- * At destroying mem_cgroup, references from swap_cgroup can remain.
-- * (scanning all at force_empty is too costly...)
-- *
-- * Instead of clearing all references at force_empty, we remember
-- * the number of reference from swap_cgroup and free mem_cgroup when
-- * it goes down to 0.
-- *
-- * Removal of cgroup itself succeeds regardless of refs from swap.
-+ * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
-+ * but in process context.  The work_freeing structure is overlaid
-+ * on the rcu_freeing structure, which itself is overlaid on memsw.
-  */
--
--static void __mem_cgroup_free(struct mem_cgroup *memcg)
-+static void free_work(struct work_struct *work)
- {
--	int node;
-+	struct mem_cgroup *memcg;
- 
--	mem_cgroup_remove_from_trees(memcg);
--	free_css_id(&mem_cgroup_subsys, &memcg->css);
-+	memcg = container_of(work, struct mem_cgroup, work_freeing);
-+	__mem_cgroup_free(memcg);
-+}
- 
--	for_each_node(node)
--		free_mem_cgroup_per_zone_info(memcg, node);
-+static void free_rcu(struct rcu_head *rcu_head)
-+{
-+	struct mem_cgroup *memcg;
- 
--	free_percpu(memcg->stat);
--	call_rcu(&memcg->rcu_freeing, free_rcu);
-+	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
-+	INIT_WORK(&memcg->work_freeing, free_work);
-+	schedule_work(&memcg->work_freeing);
- }
- 
- static void mem_cgroup_get(struct mem_cgroup *memcg)
-@@ -5236,7 +5238,7 @@ static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
- {
- 	if (atomic_sub_and_test(count, &memcg->refcnt)) {
- 		struct mem_cgroup *parent = parent_mem_cgroup(memcg);
--		__mem_cgroup_free(memcg);
-+		call_rcu(&memcg->rcu_freeing, free_rcu);
- 		if (parent)
- 			mem_cgroup_put(parent);
- 	}
+Heh, it was hard Friday ;) Yes, it was after the mind fart...
 -- 
-1.7.11.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
