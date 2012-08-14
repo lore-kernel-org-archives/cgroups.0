@@ -1,51 +1,77 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
-Date: Tue, 14 Aug 2012 15:00:53 +0400
-Message-ID: <502A2FE5.4060809@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <50254475.4000201@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <50254475.4000201@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: [PATCH v3 0/6]  cgroup cls & netprio 'cleanups'
+Date: Tue, 14 Aug 2012 15:02:16 +0200
+Message-ID: <1344949343-26090-1-git-send-email-wagi@monom.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Transfer-Encoding: 7bit
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-On 08/10/2012 09:27 PM, Kamezawa Hiroyuki wrote:
->> +bool __memcg_kmem_new_page(gfp_t gfp, void *_handle, int order)
->> > +{
->> > +	struct mem_cgroup *memcg;
->> > +	struct mem_cgroup **handle = (struct mem_cgroup **)_handle;
->> > +	bool ret = true;
->> > +	size_t size;
->> > +	struct task_struct *p;
->> > +
->> > +	*handle = NULL;
->> > +	rcu_read_lock();
->> > +	p = rcu_dereference(current->mm->owner);
->> > +	memcg = mem_cgroup_from_task(p);
->> > +	if (!memcg_kmem_enabled(memcg))
->> > +		goto out;
->> > +
->> > +	mem_cgroup_get(memcg);
->> > +
-> This mem_cgroup_get() will be a potentioal performance problem.
-> Don't you have good idea to avoid accessing atomic counter here ?
-> I think some kind of percpu counter or a feature to disable "move task"
-> will be a help.
-> 
-> 
+From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-I have just sent out a proposal to deal with this. I tried the trick of
-marking only the first charge and last uncharge, and it works quite
-alright at the cost of a bit test on most calls to memcg_kmem_charge.
+Hi,
 
-Please let me know what you think.
+Sorry for the delay on updating this series. The usual
+excuse apply here.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I saw that John is busy improving net_prio so I took the
+liberty to port his changes to net_cls (#1-3). Patch #3 will
+collide with John's unapplied patches. I am happy
+to rebase this series if needed. 
+
+Patch #4 and #5 improve the readability with using
+IS_MODULE/BUILTIN macros. This patches prepare the last
+patch.
+
+Patch #6 removes support for assigning subsystem IDs during
+runtime. As it turns out this is not really needed. By doing
+so we are able to free some unused memory.
+
+The patches are against net-next.
+
+cheers,
+daniel
+
+Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
+Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+
+Daniel Wagner (6):
+  cgroup: Move cls function definition to cls_cgroup.h
+  cgroup: net_cls rework update socket logic
+  cgroup: Update classid for fd pass in SCM_RIGHTS datagramm
+  cgroup: Use IS_MODULE/BUITLIN for net_cls
+  cgroup: Use IS_MODULE/BUITLIN for net_prio
+  cgroup: Assign subsystem IDs during compile time
+
+ include/linux/cgroup.h        | 20 ++++++++++------
+ include/linux/cgroup_subsys.h | 24 +++++++++----------
+ include/net/cls_cgroup.h      | 36 +++++++++++-----------------
+ include/net/netprio_cgroup.h  | 38 +++++++----------------------
+ include/net/sock.h            |  8 -------
+ kernel/cgroup.c               | 31 +++++++-----------------
+ net/core/netprio_cgroup.c     | 19 ++++++---------
+ net/core/scm.c                |  7 +++++-
+ net/core/sock.c               | 29 ++++++++++++----------
+ net/sched/cls_cgroup.c        | 56 +++++++++++++++++++++++++++++++++----------
+ net/socket.c                  |  8 -------
+ 11 files changed, 129 insertions(+), 147 deletions(-)
+
+-- 
+1.7.12.rc1.16.g05a20c8
