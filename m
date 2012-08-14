@@ -1,191 +1,49 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
-Date: Tue, 14 Aug 2012 19:25:40 +0200
-Message-ID: <20120814172540.GD6905@dhcp22.suse.cz>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
- <1344517279-30646-7-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 6/6] cgroup: Assign subsystem IDs during compile time
+Date: Tue, 14 Aug 2012 10:27:49 -0700
+Message-ID: <20120814172749.GL25632@google.com>
+References: <1344949343-26090-1-git-send-email-wagi@monom.org>
+ <1344949343-26090-8-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=CLGHJIY9vwRUh72OK9N+EUsYo4onI4pCO2PbGTcon/A=;
+        b=krSECpmLJlbh5uSRbTQFA8qCjFt5V92KhJx+Am3WQRESwr15XwC3uOpj10wCOYH8HM
+         O/BU5vEvWOkkBA+YiUVlRCt+8xk6BFlVbAychJkaTBTCNO41DBVPTflvLttL1zFVWMYY
+         YpF6sfBmyPZvAbWcSmr1WlwJWO/1/lHyklw8m8csxMjzdAD6YRHXR4ucvYr9blZLyOYh
+         p7YriTPi+T27t5JNbZZrlrqAixk254TA/pdX7JCNYmA7LTspPIcUVkTucM4WeOcV18ju
+         UL6ALUksAK9nSmjCiaf7epKLTKDY4MC7c9n4vfjOK4gD9iXZEuhu7F037kjb1/7cWcc9
+         +6kg==
 Content-Disposition: inline
-In-Reply-To: <1344517279-30646-7-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1344949343-26090-8-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-On Thu 09-08-12 17:01:14, Glauber Costa wrote:
-> This patch introduces infrastructure for tracking kernel memory pages to
-> a given memcg. This will happen whenever the caller includes the flag
-> __GFP_KMEMCG flag, and the task belong to a memcg other than the root.
+On Tue, Aug 14, 2012 at 03:02:23PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 > 
-> In memcontrol.h those functions are wrapped in inline accessors.  The
-> idea is to later on, patch those with static branches, so we don't incur
-> any overhead when no mem cgroups with limited kmem are being used.
+> We are able to safe some space when we assign the subsystem
+> IDs at compile time. Instead of allocating per cgroup
+> cgroup->subsys[CGROUP_SUBSYS_COUNT] where CGROUP_SUBSYS_COUNT is
+> always 64, we allocate 12 + 1 at max (at this point there are 12
+> subsystem). The additinal one is the price we have to pay to
+> distinguish between builtin and module subsystems.
 > 
-> [ v2: improved comments and standardized function names ]
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
->  include/linux/memcontrol.h |  79 +++++++++++++++++++
->  mm/memcontrol.c            | 185 +++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 264 insertions(+)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 8d9489f..75b247e 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-[...]
-> +/**
-> + * memcg_kmem_new_page: verify if a new kmem allocation is allowed.
-> + * @gfp: the gfp allocation flags.
-> + * @handle: a pointer to the memcg this was charged against.
-> + * @order: allocation order.
-> + *
-> + * returns true if the memcg where the current task belongs can hold this
-> + * allocation.
-> + *
-> + * We return true automatically if this allocation is not to be accounted to
-> + * any memcg.
-> + */
-> +static __always_inline bool
-> +memcg_kmem_new_page(gfp_t gfp, void *handle, int order)
-> +{
-> +	if (!memcg_kmem_on)
-> +		return true;
-> +	if (!(gfp & __GFP_KMEMCG) || (gfp & __GFP_NOFAIL))
+> We should only access task_cls_classid() and task_netprioidx()
+> if the subsystem is ready to be used using jump labels for this.
 
-OK, I see the point behind __GFP_NOFAIL but it would deserve a comment
-or a mention in the changelog.
+I think I want to like this patch but it's kinda confusing to review.
+Is there any reasonable way that you can split the core changes from
+net_cls ones?
 
-[...]
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 54e93de..e9824c1 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-[...]
-> +EXPORT_SYMBOL(__memcg_kmem_new_page);
-
-Why is this exported?
-
-> +
-> +void __memcg_kmem_commit_page(struct page *page, void *handle, int order)
-> +{
-> +	struct page_cgroup *pc;
-> +	struct mem_cgroup *memcg = handle;
-> +
-> +	if (!memcg)
-> +		return;
-> +
-> +	WARN_ON(mem_cgroup_is_root(memcg));
-> +	/* The page allocation must have failed. Revert */
-> +	if (!page) {
-> +		size_t size = PAGE_SIZE << order;
-> +
-> +		memcg_uncharge_kmem(memcg, size);
-> +		mem_cgroup_put(memcg);
-> +		return;
-> +	}
-> +
-> +	pc = lookup_page_cgroup(page);
-> +	lock_page_cgroup(pc);
-> +	pc->mem_cgroup = memcg;
-> +	SetPageCgroupUsed(pc);
-
-Don't we need a write barrier before assigning memcg? Same as
-__mem_cgroup_commit_charge. This tests the Used bit always from within
-lock_page_cgroup so it should be safe but I am not 100% sure about the
-rest of the code.
-
-[...]
-> +EXPORT_SYMBOL(__memcg_kmem_free_page);
-
-Why is the symbol exported?
-
->  #endif /* CONFIG_MEMCG_KMEM */
->  
->  #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
-> @@ -5759,3 +5878,69 @@ static int __init enable_swap_account(char *s)
->  __setup("swapaccount=", enable_swap_account);
->  
->  #endif
-> +
-> +#ifdef CONFIG_MEMCG_KMEM
-> +int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, s64 delta)
-> +{
-> +	struct res_counter *fail_res;
-> +	struct mem_cgroup *_memcg;
-> +	int ret;
-> +	bool may_oom;
-> +	bool nofail = false;
-> +
-> +	may_oom = (gfp & __GFP_WAIT) && (gfp & __GFP_FS) &&
-> +	    !(gfp & __GFP_NORETRY);
-
-This deserves a comment.
-
-> +
-> +	ret = 0;
-> +
-> +	if (!memcg)
-> +		return ret;
-> +
-> +	_memcg = memcg;
-> +	ret = __mem_cgroup_try_charge(NULL, gfp, delta / PAGE_SIZE,
-> +	    &_memcg, may_oom);
-
-This is really dangerous because atomic allocation which seem to be
-possible could result in deadlocks because of the reclaim. Also, as I
-have mentioned in the other email in this thread. Why should we reclaim
-just because of kernel allocation when we are not reclaiming any of it
-because shrink_slab is ignored in the memcg reclaim.
-
-> +
-> +	if (ret == -EINTR)  {
-> +		nofail = true;
-> +		/*
-> +		 * __mem_cgroup_try_charge() chosed to bypass to root due to
-> +		 * OOM kill or fatal signal.  Since our only options are to
-> +		 * either fail the allocation or charge it to this cgroup, do
-> +		 * it as a temporary condition. But we can't fail. From a
-> +		 * kmem/slab perspective, the cache has already been selected,
-> +		 * by mem_cgroup_get_kmem_cache(), so it is too late to change
-> +		 * our minds
-> +		 */
-> +		res_counter_charge_nofail(&memcg->res, delta, &fail_res);
-> +		if (do_swap_account)
-> +			res_counter_charge_nofail(&memcg->memsw, delta,
-> +						  &fail_res);
-
-Hmmm, this is kind of ugly but I guess unvoidable with the current
-implementation. Oh well...
-
-> +		ret = 0;
-> +	} else if (ret == -ENOMEM)
-> +		return ret;
-> +
-> +	if (nofail)
-> +		res_counter_charge_nofail(&memcg->kmem, delta, &fail_res);
-> +	else
-> +		ret = res_counter_charge(&memcg->kmem, delta, &fail_res);
-> +
-> +	if (ret) {
-> +		res_counter_uncharge(&memcg->res, delta);
-> +		if (do_swap_account)
-> +			res_counter_uncharge(&memcg->memsw, delta);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-[...]
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
