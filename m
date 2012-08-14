@@ -1,137 +1,191 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
-Date: Tue, 14 Aug 2012 18:21:55 +0200
-Message-ID: <20120814162144.GC6905@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Tue, 14 Aug 2012 19:25:40 +0200
+Message-ID: <20120814172540.GD6905@dhcp22.suse.cz>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
- <1344517279-30646-5-git-send-email-glommer@parallels.com>
+ <1344517279-30646-7-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1344517279-30646-5-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1344517279-30646-7-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-On Thu 09-08-12 17:01:12, Glauber Costa wrote:
-> This patch adds the basic infrastructure for the accounting of the slab
-> caches. To control that, the following files are created:
+On Thu 09-08-12 17:01:14, Glauber Costa wrote:
+> This patch introduces infrastructure for tracking kernel memory pages to
+> a given memcg. This will happen whenever the caller includes the flag
+> __GFP_KMEMCG flag, and the task belong to a memcg other than the root.
 > 
->  * memory.kmem.usage_in_bytes
->  * memory.kmem.limit_in_bytes
->  * memory.kmem.failcnt
->  * memory.kmem.max_usage_in_bytes
+> In memcontrol.h those functions are wrapped in inline accessors.  The
+> idea is to later on, patch those with static branches, so we don't incur
+> any overhead when no mem cgroups with limited kmem are being used.
 > 
-> They have the same meaning of their user memory counterparts. They
-> reflect the state of the "kmem" res_counter.
+> [ v2: improved comments and standardized function names ]
 > 
-> The code is not enabled until a limit is set. This can be tested by the
-> flag "kmem_accounted". This means that after the patch is applied, no
-> behavioral changes exists for whoever is still using memcg to control
-> their memory usage.
-> 
-> We always account to both user and kernel resource_counters. This
-> effectively means that an independent kernel limit is in place when the
-> limit is set to a lower value than the user memory. A equal or higher
-> value means that the user limit will always hit first, meaning that kmem
-> is effectively unlimited.
-
-Well, it contributes to the user limit so it is not unlimited. It just
-falls under a different limit and it tends to contribute less. This can
-be quite confusing.  I am still not sure whether we should mix the two
-things together. If somebody wants to limit the kernel memory he has to
-touch the other limit anyway.  Do you have a strong reason to mix the
-user and kernel counters?
-My impression was that kernel allocation should simply fail while user
-allocations might reclaim as well. Why should we reclaim just because of
-the kernel allocation (which is unreclaimable from hard limit reclaim
-point of view)?
-I also think that the whole thing would get much simpler if those two
-are split. Anyway if this is really a must then this should be
-documented here.
- 
-One nit bellow.
-
-> People who want to track kernel memory but not limit it, can set this
-> limit to a very high number (like RESOURCE_MAX - 1page - that no one
-> will ever hit, or equal to the user memory)
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Michal Hocko <mhocko@suse.cz>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > ---
->  mm/memcontrol.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 68 insertions(+), 1 deletion(-)
+>  include/linux/memcontrol.h |  79 +++++++++++++++++++
+>  mm/memcontrol.c            | 185 +++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 264 insertions(+)
 > 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 8d9489f..75b247e 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+[...]
+> +/**
+> + * memcg_kmem_new_page: verify if a new kmem allocation is allowed.
+> + * @gfp: the gfp allocation flags.
+> + * @handle: a pointer to the memcg this was charged against.
+> + * @order: allocation order.
+> + *
+> + * returns true if the memcg where the current task belongs can hold this
+> + * allocation.
+> + *
+> + * We return true automatically if this allocation is not to be accounted to
+> + * any memcg.
+> + */
+> +static __always_inline bool
+> +memcg_kmem_new_page(gfp_t gfp, void *handle, int order)
+> +{
+> +	if (!memcg_kmem_on)
+> +		return true;
+> +	if (!(gfp & __GFP_KMEMCG) || (gfp & __GFP_NOFAIL))
+
+OK, I see the point behind __GFP_NOFAIL but it would deserve a comment
+or a mention in the changelog.
+
+[...]
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b0e29f4..54e93de 100644
+> index 54e93de..e9824c1 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
 [...]
-> @@ -4046,8 +4059,23 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
->  			break;
->  		if (type == _MEM)
->  			ret = mem_cgroup_resize_limit(memcg, val);
-> -		else
-> +		else if (type == _MEMSWAP)
->  			ret = mem_cgroup_resize_memsw_limit(memcg, val);
-> +		else if (type == _KMEM) {
-> +			ret = res_counter_set_limit(&memcg->kmem, val);
-> +			if (ret)
-> +				break;
-> +			/*
-> +			 * Once enabled, can't be disabled. We could in theory
-> +			 * disable it if we haven't yet created any caches, or
-> +			 * if we can shrink them all to death.
-> +			 *
-> +			 * But it is not worth the trouble
-> +			 */
-> +			if (!memcg->kmem_accounted && val != RESOURCE_MAX)
-> +				memcg->kmem_accounted = true;
-> +		} else
-> +			return -EINVAL;
->  		break;
+> +EXPORT_SYMBOL(__memcg_kmem_new_page);
 
-This doesn't check for the hierachy so kmem_accounted might not be in 
-sync with it's parents. mem_cgroup_create (below) needs to copy
-kmem_accounted down from the parent and the above needs to check if this
-is a similar dance like mem_cgroup_oom_control_write.
+Why is this exported?
+
+> +
+> +void __memcg_kmem_commit_page(struct page *page, void *handle, int order)
+> +{
+> +	struct page_cgroup *pc;
+> +	struct mem_cgroup *memcg = handle;
+> +
+> +	if (!memcg)
+> +		return;
+> +
+> +	WARN_ON(mem_cgroup_is_root(memcg));
+> +	/* The page allocation must have failed. Revert */
+> +	if (!page) {
+> +		size_t size = PAGE_SIZE << order;
+> +
+> +		memcg_uncharge_kmem(memcg, size);
+> +		mem_cgroup_put(memcg);
+> +		return;
+> +	}
+> +
+> +	pc = lookup_page_cgroup(page);
+> +	lock_page_cgroup(pc);
+> +	pc->mem_cgroup = memcg;
+> +	SetPageCgroupUsed(pc);
+
+Don't we need a write barrier before assigning memcg? Same as
+__mem_cgroup_commit_charge. This tests the Used bit always from within
+lock_page_cgroup so it should be safe but I am not 100% sure about the
+rest of the code.
 
 [...]
+> +EXPORT_SYMBOL(__memcg_kmem_free_page);
 
-> @@ -5033,6 +5098,7 @@ mem_cgroup_create(struct cgroup *cont)
->  	if (parent && parent->use_hierarchy) {
->  		res_counter_init(&memcg->res, &parent->res);
->  		res_counter_init(&memcg->memsw, &parent->memsw);
-> +		res_counter_init(&memcg->kmem, &parent->kmem);
->  		/*
->  		 * We increment refcnt of the parent to ensure that we can
->  		 * safely access it on res_counter_charge/uncharge.
-> @@ -5043,6 +5109,7 @@ mem_cgroup_create(struct cgroup *cont)
->  	} else {
->  		res_counter_init(&memcg->res, NULL);
->  		res_counter_init(&memcg->memsw, NULL);
-> +		res_counter_init(&memcg->kmem, NULL);
->  	}
->  	memcg->last_scanned_node = MAX_NUMNODES;
->  	INIT_LIST_HEAD(&memcg->oom_notify);
-> -- 
-> 1.7.11.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Why is the symbol exported?
+
+>  #endif /* CONFIG_MEMCG_KMEM */
+>  
+>  #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
+> @@ -5759,3 +5878,69 @@ static int __init enable_swap_account(char *s)
+>  __setup("swapaccount=", enable_swap_account);
+>  
+>  #endif
+> +
+> +#ifdef CONFIG_MEMCG_KMEM
+> +int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, s64 delta)
+> +{
+> +	struct res_counter *fail_res;
+> +	struct mem_cgroup *_memcg;
+> +	int ret;
+> +	bool may_oom;
+> +	bool nofail = false;
+> +
+> +	may_oom = (gfp & __GFP_WAIT) && (gfp & __GFP_FS) &&
+> +	    !(gfp & __GFP_NORETRY);
+
+This deserves a comment.
+
+> +
+> +	ret = 0;
+> +
+> +	if (!memcg)
+> +		return ret;
+> +
+> +	_memcg = memcg;
+> +	ret = __mem_cgroup_try_charge(NULL, gfp, delta / PAGE_SIZE,
+> +	    &_memcg, may_oom);
+
+This is really dangerous because atomic allocation which seem to be
+possible could result in deadlocks because of the reclaim. Also, as I
+have mentioned in the other email in this thread. Why should we reclaim
+just because of kernel allocation when we are not reclaiming any of it
+because shrink_slab is ignored in the memcg reclaim.
+
+> +
+> +	if (ret == -EINTR)  {
+> +		nofail = true;
+> +		/*
+> +		 * __mem_cgroup_try_charge() chosed to bypass to root due to
+> +		 * OOM kill or fatal signal.  Since our only options are to
+> +		 * either fail the allocation or charge it to this cgroup, do
+> +		 * it as a temporary condition. But we can't fail. From a
+> +		 * kmem/slab perspective, the cache has already been selected,
+> +		 * by mem_cgroup_get_kmem_cache(), so it is too late to change
+> +		 * our minds
+> +		 */
+> +		res_counter_charge_nofail(&memcg->res, delta, &fail_res);
+> +		if (do_swap_account)
+> +			res_counter_charge_nofail(&memcg->memsw, delta,
+> +						  &fail_res);
+
+Hmmm, this is kind of ugly but I guess unvoidable with the current
+implementation. Oh well...
+
+> +		ret = 0;
+> +	} else if (ret == -ENOMEM)
+> +		return ret;
+> +
+> +	if (nofail)
+> +		res_counter_charge_nofail(&memcg->kmem, delta, &fail_res);
+> +	else
+> +		ret = res_counter_charge(&memcg->kmem, delta, &fail_res);
+> +
+> +	if (ret) {
+> +		res_counter_uncharge(&memcg->res, delta);
+> +		if (do_swap_account)
+> +			res_counter_uncharge(&memcg->memsw, delta);
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+[...]
 
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
