@@ -1,49 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 6/6] cgroup: Assign subsystem IDs during compile time
-Date: Tue, 14 Aug 2012 10:27:49 -0700
-Message-ID: <20120814172749.GL25632@google.com>
-References: <1344949343-26090-1-git-send-email-wagi@monom.org>
- <1344949343-26090-8-git-send-email-wagi@monom.org>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Tue, 14 Aug 2012 11:58:10 -0700
+Message-ID: <xr93ipcl9u7x.fsf@gthelen.mtv.corp.google.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+	<1344517279-30646-7-git-send-email-glommer@parallels.com>
+	<50254475.4000201@jp.fujitsu.com> <5028BA9E.7000302@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=CLGHJIY9vwRUh72OK9N+EUsYo4onI4pCO2PbGTcon/A=;
-        b=krSECpmLJlbh5uSRbTQFA8qCjFt5V92KhJx+Am3WQRESwr15XwC3uOpj10wCOYH8HM
-         O/BU5vEvWOkkBA+YiUVlRCt+8xk6BFlVbAychJkaTBTCNO41DBVPTflvLttL1zFVWMYY
-         YpF6sfBmyPZvAbWcSmr1WlwJWO/1/lHyklw8m8csxMjzdAD6YRHXR4ucvYr9blZLyOYh
-         p7YriTPi+T27t5JNbZZrlrqAixk254TA/pdX7JCNYmA7LTspPIcUVkTucM4WeOcV18ju
-         UL6ALUksAK9nSmjCiaf7epKLTKDY4MC7c9n4vfjOK4gD9iXZEuhu7F037kjb1/7cWcc9
-         +6kg==
-Content-Disposition: inline
-In-Reply-To: <1344949343-26090-8-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version:content-type;
+        bh=v4hRGWfYkyhaXgQoMmn3Pt6nMr5nNLY1LbpndlQKYyA=;
+        b=n7hp2GC40Bel1lFZrKmCJomaHA5ST9g8HYRWm+ZojVmD8d9BO8mmcnWSkQxoXK8wyC
+         ve6TGu0cxH2fKt8uk+HJvNshbNR2GFORKrqwZVCpYZWOPpG6EpktXoh6QJeMlK8fa2/0
+         0xVZgNfy1D+ujE22NKgpFt1G98u+qCDh1Ya6uyKIOrPWS0yQo3l5HJNjaIPl91MQ5l9H
+         VSEkHmSpoQq6JwxQle40ZtPsIM3ye0aaODxpHDE0mh160BpHwdhaNgnQIRKkcW0svPmR
+         vuJ/lIimq9bX+2c6bmXQSI4S1AEcEk04T+4IxGRWM2PgL+bnSBIzqK0duXRFoOm269+s
+         j71A==
+In-Reply-To: <5028BA9E.7000302@parallels.com> (Glauber Costa's message of
+	"Mon, 13 Aug 2012 12:28:14 +0400")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On Tue, Aug 14, 2012 at 03:02:23PM +0200, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> 
-> We are able to safe some space when we assign the subsystem
-> IDs at compile time. Instead of allocating per cgroup
-> cgroup->subsys[CGROUP_SUBSYS_COUNT] where CGROUP_SUBSYS_COUNT is
-> always 64, we allocate 12 + 1 at max (at this point there are 12
-> subsystem). The additinal one is the price we have to pay to
-> distinguish between builtin and module subsystems.
-> 
-> We should only access task_cls_classid() and task_netprioidx()
-> if the subsystem is ready to be used using jump labels for this.
+On Mon, Aug 13 2012, Glauber Costa wrote:
 
-I think I want to like this patch but it's kinda confusing to review.
-Is there any reasonable way that you can split the core changes from
-net_cls ones?
+>>> > +	WARN_ON(mem_cgroup_is_root(memcg));
+>>> > +	size = (1 << order) << PAGE_SHIFT;
+>>> > +	memcg_uncharge_kmem(memcg, size);
+>>> > +	mem_cgroup_put(memcg);
+>> Why do we need ref-counting here ? kmem res_counter cannot work as
+>> reference ?
+> This is of course the pair of the mem_cgroup_get() you commented on
+> earlier. If we need one, we need the other. If we don't need one, we
+> don't need the other =)
+>
+> The guarantee we're trying to give here is that the memcg structure will
+> stay around while there are dangling charges to kmem, that we decided
+> not to move (remember: moving it for the stack is simple, for the slab
+> is very complicated and ill-defined, and I believe it is better to treat
+> all kmem equally here)
 
-Thanks.
+By keeping memcg structures hanging around until the last referring kmem
+page is uncharged do such zombie memcg each consume a css_id and thus
+put pressure on the 64k css_id space?  I imagine in pathological cases
+this would prevent creation of new cgroups until these zombies are
+dereferenced.
 
--- 
-tejun
+Is there any way to see how much kmem such zombie memcg are consuming?
+I think we could find these with
+for_each_mem_cgroup_tree(root_mem_cgroup).  Basically, I'm wanting to
+know where kernel memory has been allocated.  For live memcg, an admin
+can cat memory.kmem.usage_in_bytes.  But for zombie memcg, I'm not sure
+how to get this info.  It looks like the root_mem_cgroup
+memory.kmem.usage_in_bytes is not hierarchically charged.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
