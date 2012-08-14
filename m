@@ -1,125 +1,137 @@
-From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Subject: Re: [PATCH v3 0/6]  cgroup cls & netprio 'cleanups'
-Date: Tue, 14 Aug 2012 11:37:01 -0400
-Message-ID: <20120814153701.GE18731@hmsreliant.think-freely.org>
-References: <1344949343-26090-1-git-send-email-wagi@monom.org>
- <20120814131035.GC18731@hmsreliant.think-freely.org>
- <502A51DE.7040809@monom.org>
- <20120814133053.GD18731@hmsreliant.think-freely.org>
- <502A56C9.8070701@monom.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
+Date: Tue, 14 Aug 2012 18:21:55 +0200
+Message-ID: <20120814162144.GC6905@dhcp22.suse.cz>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+ <1344517279-30646-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <502A56C9.8070701-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1344517279-30646-5-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
 
-On Tue, Aug 14, 2012 at 03:46:49PM +0200, Daniel Wagner wrote:
-> Hi Neil,
+On Thu 09-08-12 17:01:12, Glauber Costa wrote:
+> This patch adds the basic infrastructure for the accounting of the slab
+> caches. To control that, the following files are created:
 > 
-> On 14.08.2012 15:30, Neil Horman wrote:
-> > On Tue, Aug 14, 2012 at 03:25:50PM +0200, Daniel Wagner wrote:
-> >> On 14.08.2012 15:10, Neil Horman wrote:
-> >>> On Tue, Aug 14, 2012 at 03:02:16PM +0200, Daniel Wagner wrote:
-> >>>> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> >>>>
-> >>>> Hi,
-> >>>>
-> >>>> Sorry for the delay on updating this series. The usual
-> >>>> excuse apply here.
-> >>>>
-> >>>> I saw that John is busy improving net_prio so I took the
-> >>>> liberty to port his changes to net_cls (#1-3). Patch #3 will
-> >>>> collide with John's unapplied patches. I am happy
-> >>>> to rebase this series if needed.
-> >>>>
-> >>>> Patch #4 and #5 improve the readability with using
-> >>>> IS_MODULE/BUILTIN macros. This patches prepare the last
-> >>>> patch.
-> >>>>
-> >>>> Patch #6 removes support for assigning subsystem IDs during
-> >>>> runtime. As it turns out this is not really needed. By doing
-> >>>> so we are able to free some unused memory.
-> >>>>
-> >>>> The patches are against net-next.
-> >>>>
-> >>>> cheers,
-> >>>> daniel
-> >>>>
-> >>> These aren't so much 'cleanups' as feature enhancements and fixes for the first
-> >>> pass of those enhancements (at least in the case of the net_prio cgroup).
-> >>
-> >> Sorry about that. I wanted to keep the series title, so that someone
-> >> looking up older versions find it.
-> >>
-> > That makes sense, but it would be best until we acked the the version going into
-> > net_prio, otherwise we maybe tracking regressions in two places rather than one.
+>  * memory.kmem.usage_in_bytes
+>  * memory.kmem.limit_in_bytes
+>  * memory.kmem.failcnt
+>  * memory.kmem.max_usage_in_bytes
 > 
-> I agree, let's wait until net_prio gets stable.
->  
-> >>> I've nothing against them, but since we're still going through some churn on the
-> >>> net_prio variant, it may be best to wait until thats settled before moving them
-> >>> over to net_cls.
-> >>
-> >> Sure, I can update this series when the net_prio controller changes
-> >> have settled down.
-> >>
-> > Thank you, I think thats a good idea.
-> > 
-> >> I just wonder if it wouldn't make sense to merge them together.
-> >> Obviously, that will break the user space which is not a good thing
-> >> but having a controller per socket option is not good either.
-> >>
-> > This has been discussed (although perhaps not on list) before.  I don't think
-> > we're going to see lots of cgroups for socket options.  most of them have proc
-> > tunables, priroity and classification dont.
+> They have the same meaning of their user memory counterparts. They
+> reflect the state of the "kmem" res_counter.
 > 
-> Well, I'll would like to able to set SO_MARK via a controller [1][2]. The use
-> case is that I'd like to set the routing table per application. As it turns
-> out the kernel has almost all bits and pieces to get this working. The only
-> missing thing is setting SO_MARK without touching the application. For which
-> the net cgroup controllers seem to be the perfect match.
+> The code is not enabled until a limit is set. This can be tested by the
+> flag "kmem_accounted". This means that after the patch is applied, no
+> behavioral changes exists for whoever is still using memcg to control
+> their memory usage.
 > 
-Ok, I stand corrected, there are other things that might be good for using with
-cgroups in the networking space.
+> We always account to both user and kernel resource_counters. This
+> effectively means that an independent kernel limit is in place when the
+> limit is set to a lower value than the user memory. A equal or higher
+> value means that the user limit will always hit first, meaning that kmem
+> is effectively unlimited.
 
-> > We could merge the two controllers,
-> > but as you said it breaks users space which is a non-starter.  It also doesn't
-> > really buy us anything, as people want to be able to set priority and
-> > classification independently, so we either use two controllers, or one
-> > controller with twice as many cgroup instances (one for each combination of
-> > priroity/class that an admin wants).
-> 
-> Okay, I see your point. What is your standpoint concerning SO_MARK? Following
-> your logic, we would need another controller for this which is what I rather
-> have avoided. But I am more than happy to send patches for this :)
-> 
-Others may well have differing opinions, but my feeling is separate controllers
-for separate functions.  As noted, while you could merge all the controllers, it
-doesn't buy you much, and convolutes the meaning of a particular cgroup instance
-(i.e. with a merged controller, a given cgroup instance owuld enforce
-clasification A, priority B and mark value C, while another could enforce class
-D priority B and mark C.  With separate controllers, admins can independently
-select which class/priority and mark value to apply orthogonally.
+Well, it contributes to the user limit so it is not unlimited. It just
+falls under a different limit and it tends to contribute less. This can
+be quite confusing.  I am still not sure whether we should mix the two
+things together. If somebody wants to limit the kernel memory he has to
+touch the other limit anyway.  Do you have a strong reason to mix the
+user and kernel counters?
+My impression was that kernel allocation should simply fail while user
+allocations might reclaim as well. Why should we reclaim just because of
+the kernel allocation (which is unreclaimable from hard limit reclaim
+point of view)?
+I also think that the whole thing would get much simpler if those two
+are split. Anyway if this is really a must then this should be
+documented here.
+ 
+One nit bellow.
 
-So I'd vote for separate controllers.
+> People who want to track kernel memory but not limit it, can set this
+> limit to a very high number (like RESOURCE_MAX - 1page - that no one
+> will ever hit, or equal to the user memory)
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+>  mm/memcontrol.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 68 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b0e29f4..54e93de 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+[...]
+> @@ -4046,8 +4059,23 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+>  			break;
+>  		if (type == _MEM)
+>  			ret = mem_cgroup_resize_limit(memcg, val);
+> -		else
+> +		else if (type == _MEMSWAP)
+>  			ret = mem_cgroup_resize_memsw_limit(memcg, val);
+> +		else if (type == _KMEM) {
+> +			ret = res_counter_set_limit(&memcg->kmem, val);
+> +			if (ret)
+> +				break;
+> +			/*
+> +			 * Once enabled, can't be disabled. We could in theory
+> +			 * disable it if we haven't yet created any caches, or
+> +			 * if we can shrink them all to death.
+> +			 *
+> +			 * But it is not worth the trouble
+> +			 */
+> +			if (!memcg->kmem_accounted && val != RESOURCE_MAX)
+> +				memcg->kmem_accounted = true;
+> +		} else
+> +			return -EINVAL;
+>  		break;
 
-> > I'll ping you when the net_prio stuff settles out.
-> 
-> Great, thanks.
-> 
-> cheers,
-> daniel
-> 
-> [1] http://lists.connman.net/pipermail/connman/2012-August/010716.html
-> [2] http://lists.connman.net/pipermail/connman/2012-August/010715.html
+This doesn't check for the hierachy so kmem_accounted might not be in 
+sync with it's parents. mem_cgroup_create (below) needs to copy
+kmem_accounted down from the parent and the above needs to check if this
+is a similar dance like mem_cgroup_oom_control_write.
+
+[...]
+
+> @@ -5033,6 +5098,7 @@ mem_cgroup_create(struct cgroup *cont)
+>  	if (parent && parent->use_hierarchy) {
+>  		res_counter_init(&memcg->res, &parent->res);
+>  		res_counter_init(&memcg->memsw, &parent->memsw);
+> +		res_counter_init(&memcg->kmem, &parent->kmem);
+>  		/*
+>  		 * We increment refcnt of the parent to ensure that we can
+>  		 * safely access it on res_counter_charge/uncharge.
+> @@ -5043,6 +5109,7 @@ mem_cgroup_create(struct cgroup *cont)
+>  	} else {
+>  		res_counter_init(&memcg->res, NULL);
+>  		res_counter_init(&memcg->memsw, NULL);
+> +		res_counter_init(&memcg->kmem, NULL);
+>  	}
+>  	memcg->last_scanned_node = MAX_NUMNODES;
+>  	INIT_LIST_HEAD(&memcg->oom_notify);
+> -- 
+> 1.7.11.2
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
