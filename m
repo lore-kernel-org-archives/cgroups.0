@@ -1,35 +1,30 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
-Date: Wed, 15 Aug 2012 18:27:45 +0400
-Message-ID: <502BB1E1.5080403@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <20120814172540.GD6905@dhcp22.suse.cz> <502B6F00.8040207@parallels.com> <20120815130952.GI23985@dhcp22.suse.cz> <502BABCF.7020608@parallels.com> <20120815142338.GL23985@dhcp22.suse.cz>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
+Date: Wed, 15 Aug 2012 14:47:57 +0000
+Message-ID: <000001392ac15404-43a3fd2c-a6d3-4985-b173-74bb586ad47c-000000@email.amazonses.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-5-git-send-email-glommer@parallels.com> <20120814162144.GC6905@dhcp22.suse.cz> <502B6D03.1080804@parallels.com> <20120815123931.GF23985@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120815142338.GL23985@dhcp22.suse.cz>
+In-Reply-To: <20120815123931.GF23985@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
 
+On Wed, 15 Aug 2012, Michal Hocko wrote:
 
->>
->> I see now, you seem to be right.
-> 
-> No I am not because it seems that I am really blind these days...
-> We were doing this in mem_cgroup_do_charge for ages:
-> 	if (!(gfp_mask & __GFP_WAIT))
->                 return CHARGE_WOULDBLOCK;
-> 
-> /me goes to hide and get with further feedback with a clean head.
-> 
-> Sorry about that.
-> 
-I am as well, since I went to look at mem_cgroup_do_charge() and missed
-that.
+> > That is not what the kernel does, in general. We assume that if he wants
+> > that memory and we can serve it, we should. Also, not all kernel memory
+> > is unreclaimable. We can shrink the slabs, for instance. Ying Han
+> > claims she has patches for that already...
+>
+> Are those patches somewhere around?
 
-Do you have any other concerns specific to this patch ?
+You can already shrink the reclaimable slabs (dentries / inodes) via
+calls to the subsystem specific shrinkers. Did Ying Han do anything to
+go beyond that?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
