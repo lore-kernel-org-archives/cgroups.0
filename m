@@ -1,59 +1,80 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
-Date: Wed, 15 Aug 2012 18:01:51 +0400
-Message-ID: <502BABCF.7020608@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <20120814172540.GD6905@dhcp22.suse.cz> <502B6F00.8040207@parallels.com> <20120815130952.GI23985@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
+Date: Wed, 15 Aug 2012 16:10:41 +0200
+Message-ID: <20120815141041.GK23985@dhcp22.suse.cz>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+ <1344517279-30646-5-git-send-email-glommer@parallels.com>
+ <20120814162144.GC6905@dhcp22.suse.cz>
+ <502B6D03.1080804@parallels.com>
+ <20120815123931.GF23985@dhcp22.suse.cz>
+ <502B9BD4.4070003@parallels.com>
+ <20120815130228.GH23985@dhcp22.suse.cz>
+ <502B9E5F.2080907@parallels.com>
+ <20120815132621.GJ23985@dhcp22.suse.cz>
+ <502BA4AC.9040000@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120815130952.GI23985@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <502BA4AC.9040000-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 08/15/2012 05:09 PM, Michal Hocko wrote:
-> On Wed 15-08-12 13:42:24, Glauber Costa wrote:
-> [...]
->>>> +
->>>> +	ret = 0;
->>>> +
->>>> +	if (!memcg)
->>>> +		return ret;
->>>> +
->>>> +	_memcg = memcg;
->>>> +	ret = __mem_cgroup_try_charge(NULL, gfp, delta / PAGE_SIZE,
->>>> +	    &_memcg, may_oom);
->>>
->>> This is really dangerous because atomic allocation which seem to be
->>> possible could result in deadlocks because of the reclaim. 
->>
->> Can you elaborate on how this would happen?
+On Wed 15-08-12 17:31:24, Glauber Costa wrote:
+> On 08/15/2012 05:26 PM, Michal Hocko wrote:
+> > On Wed 15-08-12 17:04:31, Glauber Costa wrote:
+> >> On 08/15/2012 05:02 PM, Michal Hocko wrote:
+> >>> On Wed 15-08-12 16:53:40, Glauber Costa wrote:
+> >>> [...]
+> >>>>>>> This doesn't check for the hierachy so kmem_accounted might not be in 
+> >>>>>>> sync with it's parents. mem_cgroup_create (below) needs to copy
+> >>>>>>> kmem_accounted down from the parent and the above needs to check if this
+> >>>>>>> is a similar dance like mem_cgroup_oom_control_write.
+> >>>>>>>
+> >>>>>>
+> >>>>>> I don't see why we have to.
+> >>>>>>
+> >>>>>> I believe in a A/B/C hierarchy, C should be perfectly able to set a
+> >>>>>> different limit than its parents. Note that this is not a boolean.
+> >>>>>
+> >>>>> Ohh, I wasn't clear enough. I am not against setting the _limit_ I just
+> >>>>> meant that the kmem_accounted should be consistent within the hierarchy.
+> >>>>>
+> >>>>
+> >>>> If a parent of yours is accounted, you get accounted as well. This is
+> >>>> not the state in this patch, but gets added later. Isn't this enough ?
+> >>>
+> >>> But if the parent is not accounted, you can set the children to be
+> >>> accounted, right? Or maybe this is changed later in the series? I didn't
+> >>> get to the end yet.
+> >>>
+> >>
+> >> Yes, you can. Do you see any problem with that?
+> > 
+> > Well, if a child contributes with the kmem charges upwards the hierachy
+> > then a parent can have kmem.usage > 0 with disabled accounting.
+> > I am not saying this is a no-go but it definitely is confusing and I do
+> > not see any good reason for it. I've considered it as an overlook rather
+> > than a deliberate design decision.
+> > 
 > 
-> Say you have an atomic allocation and we hit the limit so we get either
-> to reclaim which can sleep or to oom which can sleep as well (depending
-> on the oom_control).
+> No, it is not an overlook.
+> It is theoretically possible to skip accounting on non-limited parents,
+> but how expensive is that? This is, indeed, confusing.
 > 
+> Of course I can be biased, but the way I see it, once you have
+> hierarchy, you account everything your child accounts.
+>
+> I really don't see what is the concern here.
 
-I see now, you seem to be right.
-
-How about we change the following code in mem_cgroup_do_charge:
-
-        if (gfp_mask & __GFP_NORETRY)
-                return CHARGE_NOMEM;
-
-to:
-
-        if ((gfp_mask & __GFP_NORETRY) || (gfp_mask & __GFP_ATOMIC))
-                return CHARGE_NOMEM;
-
-?
-
-Would this take care of the issue ?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+OK, I missed an important point that kmem_accounted is not exported to
+the userspace (I thought it would be done later in the series) which
+is not the case so actually nobody get's confused by the inconsistency
+because it is about RESOURCE_MAX which they see in both cases.
+Sorry about the confusion!
+-- 
+Michal Hocko
+SUSE Labs
