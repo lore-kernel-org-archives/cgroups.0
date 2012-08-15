@@ -1,60 +1,121 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
-Date: Wed, 15 Aug 2012 17:31:24 +0400
-Message-ID: <502BA4AC.9040000@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-5-git-send-email-glommer@parallels.com> <20120814162144.GC6905@dhcp22.suse.cz> <502B6D03.1080804@parallels.com> <20120815123931.GF23985@dhcp22.suse.cz> <502B9BD4.4070003@parallels.com> <20120815130228.GH23985@dhcp22.suse.cz> <502B9E5F.2080907@parallels.com> <20120815132621.GJ23985@dhcp22.suse.cz>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v2 07/11] mm: Allocate kernel pages to the right memcg
+Date: Wed, 15 Aug 2012 17:39:58 +0400
+Message-ID: <502BA6AE.9000209@parallels.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-8-git-send-email-glommer@parallels.com> <20120814151616.GO4177@suse.de> <502B66F8.30909@parallels.com> <20120815132244.GQ4177@suse.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120815132621.GJ23985-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120815132244.GQ4177@suse.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Mel Gorman <mgorman@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
-On 08/15/2012 05:26 PM, Michal Hocko wrote:
-> On Wed 15-08-12 17:04:31, Glauber Costa wrote:
->> On 08/15/2012 05:02 PM, Michal Hocko wrote:
->>> On Wed 15-08-12 16:53:40, Glauber Costa wrote:
->>> [...]
->>>>>>> This doesn't check for the hierachy so kmem_accounted might not be in 
->>>>>>> sync with it's parents. mem_cgroup_create (below) needs to copy
->>>>>>> kmem_accounted down from the parent and the above needs to check if this
->>>>>>> is a similar dance like mem_cgroup_oom_control_write.
->>>>>>>
->>>>>>
->>>>>> I don't see why we have to.
->>>>>>
->>>>>> I believe in a A/B/C hierarchy, C should be perfectly able to set a
->>>>>> different limit than its parents. Note that this is not a boolean.
->>>>>
->>>>> Ohh, I wasn't clear enough. I am not against setting the _limit_ I just
->>>>> meant that the kmem_accounted should be consistent within the hierarchy.
->>>>>
->>>>
->>>> If a parent of yours is accounted, you get accounted as well. This is
->>>> not the state in this patch, but gets added later. Isn't this enough ?
->>>
->>> But if the parent is not accounted, you can set the children to be
->>> accounted, right? Or maybe this is changed later in the series? I didn't
->>> get to the end yet.
->>>
 >>
->> Yes, you can. Do you see any problem with that?
+>> As for the type, do you think using struct mem_cgroup would be less
+>> confusing?
+>>
 > 
-> Well, if a child contributes with the kmem charges upwards the hierachy
-> then a parent can have kmem.usage > 0 with disabled accounting.
-> I am not saying this is a no-go but it definitely is confusing and I do
-> not see any good reason for it. I've considered it as an overlook rather
-> than a deliberate design decision.
+> Yes and returning the mem_cgroup or NULL instead of bool.
+
+Ok. struct mem_cgroup it is.
+
+> 
+>> The placeholder is there, but it is later patched
+>> to the final thing.
+>> With that explained, if you want me to change it to something else, I
+>> can do it. Should I ?
+>>
+> 
+> Not in this patch anyway. I would have preferred a pattern like this but
+> that's about it.
+> 
+> #ifdef CONFIG_MEMCG_KMEM
+> extern struct static_key memcg_kmem_enabled_key;
+> static inline int memcg_kmem_enabled(void)
+> {
+>        return static_key_false(&memcg_kmem_enabled_key);
+> }
+> #else
+> 
+> static inline bool memcg_kmem_enabled(void)
+> {
+>        return false;
+> }
+> #endif
 > 
 
-No, it is not an overlook.
-It is theoretically possible to skip accounting on non-limited parents,
-but how expensive is that? This is, indeed, confusing.
+humm, I'll have to think about this name.
+"memcg_kmem_enabled" means it is enabled in this cgroup. It is actually
+used inside memcontrol.c to denote precisely that.
 
-Of course I can be biased, but the way I see it, once you have
-hierarchy, you account everything your child accounts.
+Now the static branch, of course, means it is globally enabled. Or as I
+called here, "on".
 
-I really don't see what is the concern here.
+
+> Two reasons. One, it does not use the terms "on" and "enabled"
+> interchangeably.  The other reason is down to taste as I'm copying the
+> pattern I used myself for sk_memalloc_socks(). Of course I am biased.
+> 
+> Also, why is the key exported?
+> 
+
+Same reason. The slab will now have inline functions that will test
+against that. The alloc functions themselves, are inside the page
+allocator, and the exports can go away.
+
+But the static branch will still be tested inside inlined functions in
+the slab.
+
+That said, for the sake of simplicity, I can make it go away here, and
+add that to the right place later.
+
+>>> I also find it *very* strange to have a function named as if it is an
+>>> allocation-style function when it in fact it's looking up a mem_cgroup
+>>> and charging it (and uncharging it in the error path if necessary). If
+>>> it was called memcg_kmem_newpage_charge I might have found it a little
+>>> better.
+>>
+>> I don't feel strongly about names in general. I can change it.
+>> Will update to memcg_kmem_newpage_charge() and memcg_kmem_page_uncharge().
+>>
+> 
+> I would prefer that anyway. Names have meaning and people make assumptions on
+> the implementation depending on the name. We should try to be as consistent
+> as possible or maintenance becomes harder. I know there are areas where
+> we are not consistent at all but we should not compound the problem.
+
+memcg_kmem_page_charge() is even better I believe, and that is what I
+changed this to in my tree.
+
+>>> As this thing is called from within the allocator, it's not clear why
+>>> __memcg_kmem_new_page is exported. I can't imagine why a module would call
+>>> it directly although maybe you cover that somewhere else in the series.
+>>
+>> Okay, more people commented on this, so let me clarify: They shouldn't
+>> be. They were initially exported when this was about the slab only,
+>> because they could be called from inlined functions from the allocators.
+>> Now that the charge/uncharge was moved to the page allocator - which
+>> already allowed me the big benefit of separating this in two pieces,
+>> none of this needs to be exported.
+>>
+>> Sorry for not noticing this myself, but thanks for the eyes =)
+>>
+> 
+> You're welcome. I expect to see all the exports disappear so. If there
+> are any exports left I think it would be important to document why they
+> have to be exported. This is particularly true because they are
+> EXPORT_SYMBOL not EXPORT_SYMBOL_GPL. I think it would be good to know in
+> advance why a module (particularly an out-of-tree one) would be
+> interested.
+> 
+
+I will remove them all for now.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
