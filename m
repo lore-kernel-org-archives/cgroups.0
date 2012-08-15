@@ -1,110 +1,168 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
-Date: Wed, 15 Aug 2012 23:31:34 +0400
-Message-ID: <502BF916.10902@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <50254475.4000201@jp.fujitsu.com> <5028BA9E.7000302@parallels.com> <xr93ipcl9u7x.fsf@gthelen.mtv.corp.google.com> <502B6956.5030508@parallels.com> <xr93wr109kke.fsf@gthelen.mtv.corp.google.com> <502BD5AF.301@parallels.com> <xr93lihg9j0q.fsf@gthelen.mtv.corp.google.com>
+From: Ying Han <yinghan@google.com>
+Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
+Date: Wed, 15 Aug 2012 12:50:55 -0700
+Message-ID: <CALWz4iwgnqwq5k_zhpsiiwrj8Y=OkCUg7H96khJWPZScSQE=nw@mail.gmail.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+	<1344517279-30646-5-git-send-email-glommer@parallels.com>
+	<20120814162144.GC6905@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <xr93lihg9j0q.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:x-system-of-record;
+        bh=hHkoWLapMxs00YQqeYcPe7/zAXe08SfRmtyBsj+sh/s=;
+        b=gi+G9UPjAqsohl5ILFM923cbiHATCltQ1nF4c48OwA0GSZGz6AZtUKjrrHW0CmObkS
+         5rQgIz7958Ue4JoYy5Ldneg2aeOVKsGEBl2q9qVCq8TI6kb7cNmunAy2QL4iO+FVRCEB
+         ESZ36MNVLFJ1wgbnXWUQGPHHocpzJgLTX1Q6rrsUQlawreXH7LAdt227s1ufGNZxl91/
+         rk1MDWLebcsrxZpwZVzC3EmGjPkQrAoKicNrUzDIKrCxNWTbMQq/aSFMi8FrcpXI17Cx
+         KNE/sfDgVb0dyxpdJOonwRF9j3h0dFpyquO7gMcDCA+KueC3IKAEBvbwsIj/l55OCw8f
+         NJHg==
+In-Reply-To: <20120814162144.GC6905@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
 
-On 08/15/2012 09:12 PM, Greg Thelen wrote:
-> On Wed, Aug 15 2012, Glauber Costa wrote:
-> 
->> On 08/15/2012 08:38 PM, Greg Thelen wrote:
->>> On Wed, Aug 15 2012, Glauber Costa wrote:
->>>
->>>> On 08/14/2012 10:58 PM, Greg Thelen wrote:
->>>>> On Mon, Aug 13 2012, Glauber Costa wrote:
->>>>>
->>>>>>>>> +	WARN_ON(mem_cgroup_is_root(memcg));
->>>>>>>>> +	size = (1 << order) << PAGE_SHIFT;
->>>>>>>>> +	memcg_uncharge_kmem(memcg, size);
->>>>>>>>> +	mem_cgroup_put(memcg);
->>>>>>> Why do we need ref-counting here ? kmem res_counter cannot work as
->>>>>>> reference ?
->>>>>> This is of course the pair of the mem_cgroup_get() you commented on
->>>>>> earlier. If we need one, we need the other. If we don't need one, we
->>>>>> don't need the other =)
->>>>>>
->>>>>> The guarantee we're trying to give here is that the memcg structure will
->>>>>> stay around while there are dangling charges to kmem, that we decided
->>>>>> not to move (remember: moving it for the stack is simple, for the slab
->>>>>> is very complicated and ill-defined, and I believe it is better to treat
->>>>>> all kmem equally here)
->>>>>
->>>>> By keeping memcg structures hanging around until the last referring kmem
->>>>> page is uncharged do such zombie memcg each consume a css_id and thus
->>>>> put pressure on the 64k css_id space?  I imagine in pathological cases
->>>>> this would prevent creation of new cgroups until these zombies are
->>>>> dereferenced.
->>>>
->>>> Yes, but although this patch makes it more likely, it doesn't introduce
->>>> that. If the tasks, for instance, grab a reference to the cgroup dentry
->>>> in the filesystem (like their CWD, etc), they will also keep the cgroup
->>>> around.
->>>
->>> Fair point.  But this doesn't seems like a feature.  It's probably not
->>> needed initially, but what do you think about creating a
->>> memcg_kernel_context structure which is allocated when memcg is
->>> allocated?  Kernel pages charged to a memcg would have
->>> page_cgroup->mem_cgroup=memcg_kernel_context rather than memcg.  This
->>> would allow the mem_cgroup and its css_id to be deleted when the cgroup
->>> is unlinked from cgroupfs while allowing for the active kernel pages to
->>> continue pointing to a valid memcg_kernel_context.  This would be a
->>> reference counted structure much like you are doing with memcg.  When a
->>> memcg is deleted the memcg_kernel_context would be linked into its
->>> surviving parent memcg.  This would avoid needing to visit each kernel
->>> page.
+On Tue, Aug 14, 2012 at 9:21 AM, Michal Hocko <mhocko@suse.cz> wrote:
+> On Thu 09-08-12 17:01:12, Glauber Costa wrote:
+>> This patch adds the basic infrastructure for the accounting of the slab
+>> caches. To control that, the following files are created:
 >>
->> You need more, you need at the res_counters to stay around as well. And
->> probably other fields.
-> 
-> I am not sure the res_counters would need to stay around.  Once a
-> memcg_kernel_context has been reparented, then any future kernel page
-> uncharge calls will uncharge the parent res_counter.
-
-Well, if you hold the memcg due to a reference, like in the dentry case,
-then fine. But if this is a dangling charge, as will be the case with
-the slab, then you have to uncharge it.
-
-An arbitrary number of parents might have been deleted as well, so you
-need to transverse them all until you reach a live parent to uncharge from.
-
-To do that, your counters have to be still alive.
-
-> 
->> So my fear here is that as you add fields to that structure, you can
->> defeat a bit the goal of reducing memory consumption. Still leaves the
->> css space, yes. But by doing this we can introduce some subtle bugs by
->> having a field in the wrong structure.
+>>  * memory.kmem.usage_in_bytes
+>>  * memory.kmem.limit_in_bytes
+>>  * memory.kmem.failcnt
+>>  * memory.kmem.max_usage_in_bytes
 >>
->> Did you observe that to be a big problem in your systems?
-> 
-> No I have not seen this yet.  But our past solutions have reparented
-> kmem_cache's to root memcg so we have been avoiding zombie memcg.  My
-> concerns with your approach are just a suspicion because we have been
-> experimenting with accounting of even more kernel memory (e.g. vmalloc,
-> kernel stacks, page tables).  As the scope of such accounting grows the
-> chance of long lived charged pages grows and thus the chance of zombies
-> which exhaust the css_id space grows.
+>> They have the same meaning of their user memory counterparts. They
+>> reflect the state of the "kmem" res_counter.
+>>
+>> The code is not enabled until a limit is set. This can be tested by the
+>> flag "kmem_accounted". This means that after the patch is applied, no
+>> behavioral changes exists for whoever is still using memcg to control
+>> their memory usage.
+>>
+>> We always account to both user and kernel resource_counters. This
+>> effectively means that an independent kernel limit is in place when the
+>> limit is set to a lower value than the user memory. A equal or higher
+>> value means that the user limit will always hit first, meaning that kmem
+>> is effectively unlimited.
+>
+> Well, it contributes to the user limit so it is not unlimited. It just
+> falls under a different limit and it tends to contribute less. This can
+> be quite confusing.  I am still not sure whether we should mix the two
+> things together. If somebody wants to limit the kernel memory he has to
+> touch the other limit anyway.  Do you have a strong reason to mix the
+> user and kernel counters?
 
-Well, since we agree this can all be done under the hood, I'd say let's
-wait until a problem actually exists, since the solution is likely to be
-a bit convoluted...
+The reason to mix the two together is a compromise of the two use
+cases we've heard by far. In google, we only need one limit which
+limits u & k, and the reclaim kicks in when the total usage hits the
+limit.
 
-I personally believe that if won't have a lot of task movement, most of
-the data will go away as the cgroup dies. The remainder shouldn't be too
-much to hold it in memory for a lot of time. This is of course assuming
-a real use case, not an adversarial scenario, which is quite easy to
-come up with: just create a task, hold a bunch of kmem, move the task
-away, delete the cgroup, etc.
+> My impression was that kernel allocation should simply fail while user
+> allocations might reclaim as well. Why should we reclaim just because of
+> the kernel allocation (which is unreclaimable from hard limit reclaim
+> point of view)?
 
-That said, nothing stops us to actively try to create a scenario that
-would demonstrate such a problem.
+Some of kernel objects are reclaimable if we have per-memcg shrinker.
 
+> I also think that the whole thing would get much simpler if those two
+> are split. Anyway if this is really a must then this should be
+> documented here.
+
+What would be the use case you have in your end?
+
+--Ying
+
+> One nit bellow.
+>
+>> People who want to track kernel memory but not limit it, can set this
+>> limit to a very high number (like RESOURCE_MAX - 1page - that no one
+>> will ever hit, or equal to the user memory)
+>>
+>> Signed-off-by: Glauber Costa <glommer@parallels.com>
+>> CC: Michal Hocko <mhocko@suse.cz>
+>> CC: Johannes Weiner <hannes@cmpxchg.org>
+>> Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>> ---
+>>  mm/memcontrol.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>>  1 file changed, 68 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index b0e29f4..54e93de 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+> [...]
+>> @@ -4046,8 +4059,23 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+>>                       break;
+>>               if (type == _MEM)
+>>                       ret = mem_cgroup_resize_limit(memcg, val);
+>> -             else
+>> +             else if (type == _MEMSWAP)
+>>                       ret = mem_cgroup_resize_memsw_limit(memcg, val);
+>> +             else if (type == _KMEM) {
+>> +                     ret = res_counter_set_limit(&memcg->kmem, val);
+>> +                     if (ret)
+>> +                             break;
+>> +                     /*
+>> +                      * Once enabled, can't be disabled. We could in theory
+>> +                      * disable it if we haven't yet created any caches, or
+>> +                      * if we can shrink them all to death.
+>> +                      *
+>> +                      * But it is not worth the trouble
+>> +                      */
+>> +                     if (!memcg->kmem_accounted && val != RESOURCE_MAX)
+>> +                             memcg->kmem_accounted = true;
+>> +             } else
+>> +                     return -EINVAL;
+>>               break;
+>
+> This doesn't check for the hierachy so kmem_accounted might not be in
+> sync with it's parents. mem_cgroup_create (below) needs to copy
+> kmem_accounted down from the parent and the above needs to check if this
+> is a similar dance like mem_cgroup_oom_control_write.
+>
+> [...]
+>
+>> @@ -5033,6 +5098,7 @@ mem_cgroup_create(struct cgroup *cont)
+>>       if (parent && parent->use_hierarchy) {
+>>               res_counter_init(&memcg->res, &parent->res);
+>>               res_counter_init(&memcg->memsw, &parent->memsw);
+>> +             res_counter_init(&memcg->kmem, &parent->kmem);
+>>               /*
+>>                * We increment refcnt of the parent to ensure that we can
+>>                * safely access it on res_counter_charge/uncharge.
+>> @@ -5043,6 +5109,7 @@ mem_cgroup_create(struct cgroup *cont)
+>>       } else {
+>>               res_counter_init(&memcg->res, NULL);
+>>               res_counter_init(&memcg->memsw, NULL);
+>> +             res_counter_init(&memcg->kmem, NULL);
+>>       }
+>>       memcg->last_scanned_node = MAX_NUMNODES;
+>>       INIT_LIST_HEAD(&memcg->oom_notify);
+>> --
+>> 1.7.11.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> Michal Hocko
+> SUSE Labs
+>
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
