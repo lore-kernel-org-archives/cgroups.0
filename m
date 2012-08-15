@@ -1,63 +1,86 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 07/11] mm: Allocate kernel pages to the right memcg
-Date: Wed, 15 Aug 2012 11:24:05 +0200
-Message-ID: <20120815092404.GA23985@dhcp22.suse.cz>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
- <1344517279-30646-8-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
+Date: Wed, 15 Aug 2012 13:33:55 +0400
+Message-ID: <502B6D03.1080804@parallels.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-5-git-send-email-glommer@parallels.com> <20120814162144.GC6905@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1344517279-30646-8-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20120814162144.GC6905@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
 
-On Thu 09-08-12 17:01:15, Glauber Costa wrote:
-[...]
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index b956cec..da341dc 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -2532,6 +2532,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
->  	struct page *page = NULL;
->  	int migratetype = allocflags_to_migratetype(gfp_mask);
->  	unsigned int cpuset_mems_cookie;
-> +	void *handle = NULL;
->  
->  	gfp_mask &= gfp_allowed_mask;
->  
-> @@ -2543,6 +2544,13 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
->  		return NULL;
->  
->  	/*
-> +	 * Will only have any effect when __GFP_KMEMCG is set.
-> +	 * This is verified in the (always inline) callee
-> +	 */
-> +	if (!memcg_kmem_new_page(gfp_mask, &handle, order))
-> +		return NULL;
 
-When the previous patch introduced this function I thought the handle
-obfuscantion is to prevent from spreading struct mem_cgroup inside the
-page allocator but memcg_kmem_commit_page uses the type directly. So why
-that obfuscation? Even handle as a name sounds unnecessarily confusing.
-I would go with struct mem_cgroup **memcgp or even return the pointer on
-success or NULL otherwise.
+>> We always account to both user and kernel resource_counters. This
+>> effectively means that an independent kernel limit is in place when the
+>> limit is set to a lower value than the user memory. A equal or higher
+>> value means that the user limit will always hit first, meaning that kmem
+>> is effectively unlimited.
+> 
+> Well, it contributes to the user limit so it is not unlimited. It just
+> falls under a different limit and it tends to contribute less.
 
-[...]
-> +EXPORT_SYMBOL(__free_accounted_pages);
+You are right, but this is just wording. I will update it, but what I
+really mean here is that an independent limit is no imposed on kmem.
 
-Why exported?
+> This can
+> be quite confusing.  I am still not sure whether we should mix the two
+> things together. If somebody wants to limit the kernel memory he has to
+> touch the other limit anyway.  Do you have a strong reason to mix the
+> user and kernel counters?
 
-Btw. this is called from call_rcu context but it itself calls call_rcu
-down the chain in mem_cgroup_put. Is it safe?
+This is funny, because the first opposition I found to this work was
+"Why would anyone want to limit it separately?" =p
 
-[...]
-> +EXPORT_SYMBOL(free_accounted_pages);
+It seems that a quite common use case is to have a container with a
+unified view of "memory" that it can use the way he likes, be it with
+kernel memory, or user memory. I believe those people would be happy to
+just silently account kernel memory to user memory, or at the most have
+a switch to enable it.
 
-here again
--- 
-Michal Hocko
-SUSE Labs
+What gets clear from this back and forth, is that there are people
+interested in both use cases.
+
+> My impression was that kernel allocation should simply fail while user
+> allocations might reclaim as well. Why should we reclaim just because of
+> the kernel allocation (which is unreclaimable from hard limit reclaim
+> point of view)?
+
+That is not what the kernel does, in general. We assume that if he wants
+that memory and we can serve it, we should. Also, not all kernel memory
+is unreclaimable. We can shrink the slabs, for instance. Ying Han
+claims she has patches for that already...
+
+> I also think that the whole thing would get much simpler if those two
+> are split. Anyway if this is really a must then this should be
+> documented here.
+
+Well, documentation can't hurt.
+
+> 
+> This doesn't check for the hierachy so kmem_accounted might not be in 
+> sync with it's parents. mem_cgroup_create (below) needs to copy
+> kmem_accounted down from the parent and the above needs to check if this
+> is a similar dance like mem_cgroup_oom_control_write.
+> 
+
+I don't see why we have to.
+
+I believe in a A/B/C hierarchy, C should be perfectly able to set a
+different limit than its parents. Note that this is not a boolean.
+
+Also, right now, C can become completely unlimited (by not setting a
+limited) and this is, indeed, not the desired behavior.
+
+A later patch will change kmem_accounted to a bitfield, and we'll use
+one of the bits to signal that we should account kmem because our parent
+is limited.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
