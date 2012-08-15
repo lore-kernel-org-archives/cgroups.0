@@ -1,48 +1,109 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
-Date: Wed, 15 Aug 2012 19:35:13 +0400
-Message-ID: <502BC1B1.3010807@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-5-git-send-email-glommer@parallels.com> <20120814162144.GC6905@dhcp22.suse.cz> <502B6D03.1080804@parallels.com> <20120815123931.GF23985@dhcp22.suse.cz> <000001392ac15404-43a3fd2c-a6d3-4985-b173-74bb586ad47c-000000@email.amazonses.com> <502BBC35.809@parallels.com> <000001392aec1926-72b3a631-1fb1-460c-803d-38c4405151e1-000000@email.amazonses.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Wed, 15 Aug 2012 09:38:57 -0700
+Message-ID: <xr93wr109kke.fsf@gthelen.mtv.corp.google.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+	<1344517279-30646-7-git-send-email-glommer@parallels.com>
+	<50254475.4000201@jp.fujitsu.com> <5028BA9E.7000302@parallels.com>
+	<xr93ipcl9u7x.fsf@gthelen.mtv.corp.google.com>
+	<502B6956.5030508@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <000001392aec1926-72b3a631-1fb1-460c-803d-38c4405151e1-000000-p/GC64/jrecnJqMo6gzdpkEOCMrvLtNR@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version:content-type;
+        bh=OxNHKpesYLvtocHmwpXsqKpW/5zb3PhpKBXp912t01s=;
+        b=KCcSq6POqei632VIPLGeCaJM0YCD64PP1GKVTlgE7WgCecU7R3PSwV+wf0UtepI+6G
+         9wcda1ON7qUOfGQAhWV3k2iLheVDQkp7UQf1tyjg056JTepUKh5EavFKwA76Y0c+7l9k
+         fwoJeYZJ/unZ0QnaCsi1BR7KnJRSEEr1SRLbP7X/0Xf3MO7FCa2ZOa6pncds5F4xKYB1
+         0l2pgvoMlSzWW3nrtEXeA8W6LAiU++PzdefjESc3vJrUDubAJDjIxOM9hQG8/fjQEMvy
+         E/gTgRAuipcPZa5H/g0tyij36FmUSv2X3BM6+dPoWXvOHFHvkrdBicbqB5PArIiVfzT6
+         qSIw==
+In-Reply-To: <502B6956.5030508@parallels.com> (Glauber Costa's message of
+	"Wed, 15 Aug 2012 13:18:14 +0400")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 08/15/2012 07:34 PM, Christoph Lameter wrote:
-> On Wed, 15 Aug 2012, Glauber Costa wrote:
-> 
->> On 08/15/2012 06:47 PM, Christoph Lameter wrote:
->>> On Wed, 15 Aug 2012, Michal Hocko wrote:
->>>
->>>>> That is not what the kernel does, in general. We assume that if he wants
->>>>> that memory and we can serve it, we should. Also, not all kernel memory
->>>>> is unreclaimable. We can shrink the slabs, for instance. Ying Han
->>>>> claims she has patches for that already...
->>>>
->>>> Are those patches somewhere around?
->>>
->>> You can already shrink the reclaimable slabs (dentries / inodes) via
->>> calls to the subsystem specific shrinkers. Did Ying Han do anything to
->>> go beyond that?
->>>
->> That is not enough for us.
->> We would like to make sure that the objects being discarded belong to
->> the memcg which is under pressure. We don't need to be perfect here, and
->> an occasional slip is totally fine. But if in general, shrinking from
->> memcg A will mostly wipe out objects from memcg B, we harmed the system
->> in return for nothing good.
-> 
-> How can you figure out which objects belong to which memcg? The ownerships
-> of dentries and inodes is a dubious concept already.
-> 
+On Wed, Aug 15 2012, Glauber Costa wrote:
 
-Remember we copy over the metadata and create copies of the caches
-per-memcg. Therefore, a dentry belongs to a memcg if it was allocated
-from the slab pertaining to that memcg.
+> On 08/14/2012 10:58 PM, Greg Thelen wrote:
+>> On Mon, Aug 13 2012, Glauber Costa wrote:
+>> 
+>>>>>> +	WARN_ON(mem_cgroup_is_root(memcg));
+>>>>>> +	size = (1 << order) << PAGE_SHIFT;
+>>>>>> +	memcg_uncharge_kmem(memcg, size);
+>>>>>> +	mem_cgroup_put(memcg);
+>>>> Why do we need ref-counting here ? kmem res_counter cannot work as
+>>>> reference ?
+>>> This is of course the pair of the mem_cgroup_get() you commented on
+>>> earlier. If we need one, we need the other. If we don't need one, we
+>>> don't need the other =)
+>>>
+>>> The guarantee we're trying to give here is that the memcg structure will
+>>> stay around while there are dangling charges to kmem, that we decided
+>>> not to move (remember: moving it for the stack is simple, for the slab
+>>> is very complicated and ill-defined, and I believe it is better to treat
+>>> all kmem equally here)
+>> 
+>> By keeping memcg structures hanging around until the last referring kmem
+>> page is uncharged do such zombie memcg each consume a css_id and thus
+>> put pressure on the 64k css_id space?  I imagine in pathological cases
+>> this would prevent creation of new cgroups until these zombies are
+>> dereferenced.
+>
+> Yes, but although this patch makes it more likely, it doesn't introduce
+> that. If the tasks, for instance, grab a reference to the cgroup dentry
+> in the filesystem (like their CWD, etc), they will also keep the cgroup
+> around.
 
-It is not 100 % accurate, but it is good enough.
+Fair point.  But this doesn't seems like a feature.  It's probably not
+needed initially, but what do you think about creating a
+memcg_kernel_context structure which is allocated when memcg is
+allocated?  Kernel pages charged to a memcg would have
+page_cgroup->mem_cgroup=memcg_kernel_context rather than memcg.  This
+would allow the mem_cgroup and its css_id to be deleted when the cgroup
+is unlinked from cgroupfs while allowing for the active kernel pages to
+continue pointing to a valid memcg_kernel_context.  This would be a
+reference counted structure much like you are doing with memcg.  When a
+memcg is deleted the memcg_kernel_context would be linked into its
+surviving parent memcg.  This would avoid needing to visit each kernel
+page.
+
+>> Is there any way to see how much kmem such zombie memcg are consuming?
+>> I think we could find these with
+>> for_each_mem_cgroup_tree(root_mem_cgroup).
+>
+> Yes, just need an interface for that. But I think it is something that
+> can be addressed orthogonaly to this work, in a separate patch, not as
+> some fundamental limitation.
+
+Agreed.
+
+>> Basically, I'm wanting to know where kernel memory has been
+>> allocated.  For live memcg, an admin can cat
+>> memory.kmem.usage_in_bytes.  But for zombie memcg, I'm not sure how
+>> to get this info.  It looks like the root_mem_cgroup
+>> memory.kmem.usage_in_bytes is not hierarchically charged.
+>> 
+>
+> Not sure what you mean by not being hierarchically charged. It should
+> be, when use_hierarchy = 1. As a matter of fact, I just tested it, and I
+> do see kmem being charged all the way to the root cgroup when hierarchy
+> is used. (we just can't limit it there)
+
+You're correct, my mistake.
+
+I think the procedure to determine out the amount of zombie kmem is:
+  root_mem_cgroup.kmem_usage_in_bytes - 
+    sum(all top level memcg memory.kmem_usage_in_bytes)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
