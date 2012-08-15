@@ -1,54 +1,44 @@
-From: Greg Thelen <gthelen@google.com>
+From: Christoph Lameter <cl@linux.com>
 Subject: Re: [PATCH v2 04/11] kmem accounting basic infrastructure
-Date: Wed, 15 Aug 2012 08:19:58 -0700
-Message-ID: <xr93obmcb2sh.fsf@gthelen.mtv.corp.google.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
-	<1344517279-30646-5-git-send-email-glommer@parallels.com>
-	<20120814162144.GC6905@dhcp22.suse.cz>
-	<502B6D03.1080804@parallels.com>
-	<20120815123931.GF23985@dhcp22.suse.cz>
-	<000001392ac15404-43a3fd2c-a6d3-4985-b173-74bb586ad47c-000000@email.amazonses.com>
+Date: Wed, 15 Aug 2012 15:34:39 +0000
+Message-ID: <000001392aec1926-72b3a631-1fb1-460c-803d-38c4405151e1-000000@email.amazonses.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-5-git-send-email-glommer@parallels.com> <20120814162144.GC6905@dhcp22.suse.cz> <502B6D03.1080804@parallels.com> <20120815123931.GF23985@dhcp22.suse.cz>
+ <000001392ac15404-43a3fd2c-a6d3-4985-b173-74bb586ad47c-000000@email.amazonses.com> <502BBC35.809@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:references:date:in-reply-to:message-id
-         :user-agent:mime-version:content-type;
-        bh=/RtgW+cc7D9IGQtrKWtHwjAkVoHU5WOKWzcbXqaqLgw=;
-        b=ZUMtQcZ2GgHYaGuhMmg95XBrqkjp/5WFSgGUko8URN1V6LG2tFoxe6Zma5WP10DdFE
-         TU/8FuAKDiDRaJ3ysSiGOXlswtWghjYHUp9xNZS7Ntlu0Hvuvtn7zmHf3WRL1QlXEmyC
-         KBYatA4dtKiF5jrXkQs87Qdiv7uxO5B/EDQ/diLFBEvjj9kBDUSf4soFuoe3t5zS5pf4
-         GKHTt+bHZmFaAfAGe0+UXRJf/EeajcK22N607bUf2ZZQFK7MBIdSzAQdkEoLThtZ6vF7
-         gJW1jaj5PV2zvSiqzhXdhPRv7CNgJDtlmDgv9Cw5innq9vRNHd+BDlCwEgVtA4mVXlfg
-         L6dg==
-In-Reply-To: <000001392ac15404-43a3fd2c-a6d3-4985-b173-74bb586ad47c-000000@email.amazonses.com>
-	(Christoph Lameter's message of "Wed, 15 Aug 2012 14:47:57 +0000")
+In-Reply-To: <502BBC35.809@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl@linux.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, yinghan@google.com
+To: Glauber Costa <glommer@parallels.com>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
 
-On Wed, Aug 15 2012, Christoph Lameter wrote:
+On Wed, 15 Aug 2012, Glauber Costa wrote:
 
-> On Wed, 15 Aug 2012, Michal Hocko wrote:
->
->> > That is not what the kernel does, in general. We assume that if he wants
->> > that memory and we can serve it, we should. Also, not all kernel memory
->> > is unreclaimable. We can shrink the slabs, for instance. Ying Han
->> > claims she has patches for that already...
->>
->> Are those patches somewhere around?
->
-> You can already shrink the reclaimable slabs (dentries / inodes) via
-> calls to the subsystem specific shrinkers. Did Ying Han do anything to
-> go beyond that?
+> On 08/15/2012 06:47 PM, Christoph Lameter wrote:
+> > On Wed, 15 Aug 2012, Michal Hocko wrote:
+> >
+> >>> That is not what the kernel does, in general. We assume that if he wants
+> >>> that memory and we can serve it, we should. Also, not all kernel memory
+> >>> is unreclaimable. We can shrink the slabs, for instance. Ying Han
+> >>> claims she has patches for that already...
+> >>
+> >> Are those patches somewhere around?
+> >
+> > You can already shrink the reclaimable slabs (dentries / inodes) via
+> > calls to the subsystem specific shrinkers. Did Ying Han do anything to
+> > go beyond that?
+> >
+> That is not enough for us.
+> We would like to make sure that the objects being discarded belong to
+> the memcg which is under pressure. We don't need to be perfect here, and
+> an occasional slip is totally fine. But if in general, shrinking from
+> memcg A will mostly wipe out objects from memcg B, we harmed the system
+> in return for nothing good.
 
-cc: Ying
-
-The Google shrinker patches enhance prune_dcache_sb() to limit dentry
-pressure to a specific memcg.
+How can you figure out which objects belong to which memcg? The ownerships
+of dentries and inodes is a dubious concept already.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
