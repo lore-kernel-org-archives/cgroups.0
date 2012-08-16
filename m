@@ -1,597 +1,79 @@
-From: aris@redhat.com
-Subject: [PATCH v6 1/4] xattr: extract simple_xattr code from tmpfs
-Date: Thu, 16 Aug 2012 13:44:54 -0400
-Message-ID: <20120816174453.507922179@napanee.usersys.redhat.com>
-References: <20120816174453.154143248@napanee.usersys.redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=cgroup1.patch
-Sender: linux-kernel-owner@vger.kernel.org
+From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [PATCH v0 0/5] cgroup: Assign subsystem IDs during compile time
+Date: Thu, 16 Aug 2012 15:05:42 -0400
+Message-ID: <20120816190542.GA8203@hmsreliant.think-freely.org>
+References: <1345126336-20755-1-git-send-email-wagi@monom.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1345126336-20755-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Hillf Danton <dhillf@gmail.com>, Lennart Poettering <lpoetter@redhat.com>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-From: Li Zefan <lizefan@huawei.com>
+On Thu, Aug 16, 2012 at 04:12:11PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> 
+> Hi,
+> 
+> The patch #1 and #2 are there to be able to introduce (#3, #4) the 
+> jump labels in task_cls_classid() and task_netprioidx(). The jump
+> labels are needed to know when it is safe to access the controller. 
+> For example not safe means the module is not yet loaded.
+> 
+> All those patches are just preparation for the center piece (#5) 
+> of these series. This one will remove the dynamic subsystem ID
+> generation and falls back to compile time generated IDs. 
+> 
+> This is the first result from the discussion around on the
+> "cgroup cls & netprio 'cleanups'" patches.
+> 
+> This patches are against net-next
+> 
+> cheers,
+> daniel
+> 
+> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
+> Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> 
+> Daniel Wagner (5):
+>   cgroup: Use empty task_cls_classid() when !CONFIG_NET_CLS(_MODULE)
+>   cgroup: Move sock_update_classid() decleration to cls_cgroup.h
+>   cgroup: Protect access to task_cls_classid() when built as module
+>   cgroup: Protect access to task_netprioidx() when built as module
+>   cgroup: Assign subsystem IDs during compile time
+> 
+>  include/linux/cgroup.h        | 20 +++++++++++++-------
+>  include/linux/cgroup_subsys.h | 24 ++++++++++++------------
+>  include/net/cls_cgroup.h      | 42 +++++++++++++++++++++++++++++-------------
+>  include/net/netprio_cgroup.h  | 23 +++++++++++------------
+>  include/net/sock.h            |  8 --------
+>  kernel/cgroup.c               | 31 +++++++++----------------------
+>  net/core/netprio_cgroup.c     | 17 ++++++-----------
+>  net/core/sock.c               | 12 ++++++------
+>  net/sched/cls_cgroup.c        | 18 +++++-------------
+>  9 files changed, 91 insertions(+), 104 deletions(-)
+> 
+> -- 
+> 1.7.12.rc1.16.g05a20c8
+> 
+> 
 
-Extract in-memory xattr APIs from tmpfs. Will be used by cgroup.
 
-$ size vmlinux.o
-   text    data     bss     dec     hex filename
-4658782  880729 5195032 10734543         a3cbcf vmlinux.o
-$ size vmlinux.o
-   text    data     bss     dec     hex filename
-4658957  880729 5195032 10734718         a3cc7e vmlinux.o
-
-v6:
-- no changes
-v5:
-- no changes
-v4:
-- move simple_xattrs_free() to fs/xattr.c
-v3:
-- in kmem_xattrs_free(), reinitialize the list
-- use simple_xattr_* prefix
-- introduce simple_xattr_add() to prevent direct list usage
-
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Hillf Danton <dhillf@gmail.com>
-Cc: Lennart Poettering <lpoetter@redhat.com>
-Signed-off-by: Li Zefan <lizefan@huawei.com>
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
-
----
- fs/xattr.c               |  200 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/shmem_fs.h |    3 
- include/linux/xattr.h    |   25 +++++
- mm/shmem.c               |  171 +++-------------------------------------
- 4 files changed, 240 insertions(+), 159 deletions(-)
-
-Index: github/fs/xattr.c
-===================================================================
---- github.orig/fs/xattr.c	2012-08-16 11:28:12.719273435 -0400
-+++ github/fs/xattr.c	2012-08-16 11:28:13.975307743 -0400
-@@ -791,3 +791,203 @@
- EXPORT_SYMBOL(generic_listxattr);
- EXPORT_SYMBOL(generic_setxattr);
- EXPORT_SYMBOL(generic_removexattr);
-+
-+/*
-+ * initialize the simple_xattrs structure
-+ */
-+void simple_xattrs_init(struct simple_xattrs *xattrs)
-+{
-+	INIT_LIST_HEAD(&xattrs->head);
-+	spin_lock_init(&xattrs->lock);
-+}
-+
-+/*
-+ * Allocate new xattr and copy in the value; but leave the name to callers.
-+ */
-+struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
-+{
-+	struct simple_xattr *new_xattr;
-+	size_t len;
-+
-+	/* wrap around? */
-+	len = sizeof(*new_xattr) + size;
-+	if (len <= sizeof(*new_xattr))
-+		return NULL;
-+
-+	new_xattr = kmalloc(len, GFP_KERNEL);
-+	if (!new_xattr)
-+		return NULL;
-+
-+	new_xattr->size = size;
-+	memcpy(new_xattr->value, value, size);
-+	return new_xattr;
-+}
-+
-+/*
-+ * free all the xattrs
-+ */
-+void simple_xattrs_free(struct simple_xattrs *xattrs)
-+{
-+	struct simple_xattr *xattr, *node;
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry_safe(xattr, node, &xattrs->head, list) {
-+		kfree(xattr->name);
-+		kfree(xattr);
-+	}
-+	INIT_LIST_HEAD(&xattrs->head);
-+	spin_unlock(&xattrs->lock);
-+}
-+
-+/*
-+ * xattr GET operation for in-memory/pseudo filesystems
-+ */
-+int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
-+		     void *buffer, size_t size)
-+{
-+	struct simple_xattr *xattr;
-+	int ret = -ENODATA;
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry(xattr, &xattrs->head, list) {
-+		if (strcmp(name, xattr->name))
-+			continue;
-+
-+		ret = xattr->size;
-+		if (buffer) {
-+			if (size < xattr->size)
-+				ret = -ERANGE;
-+			else
-+				memcpy(buffer, xattr->value, xattr->size);
-+		}
-+		break;
-+	}
-+	spin_unlock(&xattrs->lock);
-+	return ret;
-+}
-+
-+static int __simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
-+			      const void *value, size_t size, int flags)
-+{
-+	struct simple_xattr *xattr;
-+	struct simple_xattr *new_xattr = NULL;
-+	size_t len;
-+	int err = 0;
-+
-+	/* value == NULL means remove */
-+	if (value) {
-+		/* wrap around? */
-+		len = sizeof(*new_xattr) + size;
-+		if (len <= sizeof(*new_xattr))
-+			return -ENOMEM;
-+
-+		new_xattr = kmalloc(len, GFP_KERNEL);
-+		if (!new_xattr)
-+			return -ENOMEM;
-+
-+		new_xattr->name = kstrdup(name, GFP_KERNEL);
-+		if (!new_xattr->name) {
-+			kfree(new_xattr);
-+			return -ENOMEM;
-+		}
-+
-+		new_xattr->size = size;
-+		memcpy(new_xattr->value, value, size);
-+	}
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry(xattr, &xattrs->head, list) {
-+		if (!strcmp(name, xattr->name)) {
-+			if (flags & XATTR_CREATE) {
-+				xattr = new_xattr;
-+				err = -EEXIST;
-+			} else if (new_xattr) {
-+				list_replace(&xattr->list, &new_xattr->list);
-+			} else {
-+				list_del(&xattr->list);
-+			}
-+			goto out;
-+		}
-+	}
-+	if (flags & XATTR_REPLACE) {
-+		xattr = new_xattr;
-+		err = -ENODATA;
-+	} else {
-+		list_add(&new_xattr->list, &xattrs->head);
-+		xattr = NULL;
-+	}
-+out:
-+	spin_unlock(&xattrs->lock);
-+	if (xattr) {
-+		kfree(xattr->name);
-+		kfree(xattr);
-+	}
-+	return err;
-+
-+}
-+
-+/*
-+ * xattr SET operation for in-memory/pseudo filesystems
-+ */
-+int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
-+		     const void *value, size_t size, int flags)
-+{
-+	if (size == 0)
-+		value = ""; /* empty EA, do not remove */
-+	return __simple_xattr_set(xattrs, name, value, size, flags);
-+}
-+
-+/*
-+ * xattr REMOVE operation for in-memory/pseudo filesystems
-+ */
-+int simple_xattr_remove(struct simple_xattrs *xattrs, const char *name)
-+{
-+        return __simple_xattr_set(xattrs, name, NULL, 0, XATTR_REPLACE);
-+}
-+
-+static bool xattr_is_trusted(const char *name)
-+{
-+	return !strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN);
-+}
-+
-+/*
-+ * xattr LIST operation for in-memory/pseudo filesystems
-+ */
-+ssize_t simple_xattr_list(struct simple_xattrs *xattrs, char *buffer, size_t size)
-+{
-+	bool trusted = capable(CAP_SYS_ADMIN);
-+	struct simple_xattr *xattr;
-+	size_t used = 0;
-+
-+	spin_lock(&xattrs->lock);
-+	list_for_each_entry(xattr, &xattrs->head, list) {
-+		size_t len;
-+
-+		/* skip "trusted." attributes for unprivileged callers */
-+		if (!trusted && xattr_is_trusted(xattr->name))
-+			continue;
-+
-+		len = strlen(xattr->name) + 1;
-+		used += len;
-+		if (buffer) {
-+			if (size < used) {
-+				used = -ERANGE;
-+				break;
-+			}
-+			memcpy(buffer, xattr->name, len);
-+			buffer += len;
-+		}
-+	}
-+	spin_unlock(&xattrs->lock);
-+
-+	return used;
-+}
-+
-+void simple_xattr_list_add(struct simple_xattrs *xattrs,
-+			   struct simple_xattr *new_xattr)
-+{
-+	spin_lock(&xattrs->lock);
-+	list_add(&new_xattr->list, &xattrs->head);
-+	spin_unlock(&xattrs->lock);
-+}
-+
-Index: github/include/linux/shmem_fs.h
-===================================================================
---- github.orig/include/linux/shmem_fs.h	2012-08-16 11:28:12.719273435 -0400
-+++ github/include/linux/shmem_fs.h	2012-08-16 11:28:13.975307743 -0400
-@@ -5,6 +5,7 @@
- #include <linux/mempolicy.h>
- #include <linux/pagemap.h>
- #include <linux/percpu_counter.h>
-+#include <linux/xattr.h>
- 
- /* inode in-kernel data */
- 
-@@ -18,7 +19,7 @@
- 	};
- 	struct shared_policy	policy;		/* NUMA memory alloc policy */
- 	struct list_head	swaplist;	/* chain of maybes on swap */
--	struct list_head	xattr_list;	/* list of shmem_xattr */
-+	struct simple_xattrs	xattrs;		/* list of xattrs */
- 	struct inode		vfs_inode;
- };
- 
-Index: github/include/linux/xattr.h
-===================================================================
---- github.orig/include/linux/xattr.h	2012-08-16 11:28:12.719273435 -0400
-+++ github/include/linux/xattr.h	2012-08-16 11:28:13.975307743 -0400
-@@ -60,6 +60,7 @@
- #ifdef  __KERNEL__
- 
- #include <linux/types.h>
-+#include <linux/spinlock.h>
- 
- struct inode;
- struct dentry;
-@@ -96,6 +97,30 @@
- 			   char **xattr_value, size_t size, gfp_t flags);
- int vfs_xattr_cmp(struct dentry *dentry, const char *xattr_name,
- 		  const char *value, size_t size, gfp_t flags);
-+
-+struct simple_xattrs {
-+	struct list_head head;
-+	spinlock_t lock;
-+};
-+
-+struct simple_xattr {
-+	struct list_head list;
-+	char *name;
-+	size_t size;
-+	char value[0];
-+};
-+
-+void simple_xattrs_init(struct simple_xattrs *xattrs);
-+struct simple_xattr *simple_xattr_alloc(const void *value, size_t size);
-+void simple_xattrs_free(struct simple_xattrs *xattrs);
-+int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
-+		     void *buffer, size_t size);
-+int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
-+		     const void *value, size_t size, int flags);
-+int simple_xattr_remove(struct simple_xattrs *xattrs, const char *name);
-+ssize_t simple_xattr_list(struct simple_xattrs *xattrs, char *buffer, size_t size);
-+void simple_xattr_list_add(struct simple_xattrs *xattrs, struct simple_xattr *new_xattr);
-+
- #endif  /*  __KERNEL__  */
- 
- #endif	/* _LINUX_XATTR_H */
-Index: github/mm/shmem.c
-===================================================================
---- github.orig/mm/shmem.c	2012-08-16 11:28:12.719273435 -0400
-+++ github/mm/shmem.c	2012-08-16 11:28:13.975307743 -0400
-@@ -77,13 +77,6 @@
- /* Symlink up to this size is kmalloc'ed instead of using a swappable page */
- #define SHORT_SYMLINK_LEN 128
- 
--struct shmem_xattr {
--	struct list_head list;	/* anchored by shmem_inode_info->xattr_list */
--	char *name;		/* xattr name */
--	size_t size;
--	char value[0];
--};
--
- /*
-  * shmem_fallocate and shmem_writepage communicate via inode->i_private
-  * (with i_mutex making sure that it has only one user at a time):
-@@ -636,7 +629,6 @@
- static void shmem_evict_inode(struct inode *inode)
- {
- 	struct shmem_inode_info *info = SHMEM_I(inode);
--	struct shmem_xattr *xattr, *nxattr;
- 
- 	if (inode->i_mapping->a_ops == &shmem_aops) {
- 		shmem_unacct_size(info->flags, inode->i_size);
-@@ -650,10 +642,7 @@
- 	} else
- 		kfree(info->symlink);
- 
--	list_for_each_entry_safe(xattr, nxattr, &info->xattr_list, list) {
--		kfree(xattr->name);
--		kfree(xattr);
--	}
-+	simple_xattrs_free(&info->xattrs);
- 	BUG_ON(inode->i_blocks);
- 	shmem_free_inode(inode->i_sb);
- 	clear_inode(inode);
-@@ -1377,7 +1366,7 @@
- 		spin_lock_init(&info->lock);
- 		info->flags = flags & VM_NORESERVE;
- 		INIT_LIST_HEAD(&info->swaplist);
--		INIT_LIST_HEAD(&info->xattr_list);
-+		simple_xattrs_init(&info->xattrs);
- 		cache_no_acl(inode);
- 
- 		switch (mode & S_IFMT) {
-@@ -2060,28 +2049,6 @@
-  */
- 
- /*
-- * Allocate new xattr and copy in the value; but leave the name to callers.
-- */
--static struct shmem_xattr *shmem_xattr_alloc(const void *value, size_t size)
--{
--	struct shmem_xattr *new_xattr;
--	size_t len;
--
--	/* wrap around? */
--	len = sizeof(*new_xattr) + size;
--	if (len <= sizeof(*new_xattr))
--		return NULL;
--
--	new_xattr = kmalloc(len, GFP_KERNEL);
--	if (!new_xattr)
--		return NULL;
--
--	new_xattr->size = size;
--	memcpy(new_xattr->value, value, size);
--	return new_xattr;
--}
--
--/*
-  * Callback for security_inode_init_security() for acquiring xattrs.
-  */
- static int shmem_initxattrs(struct inode *inode,
-@@ -2090,11 +2057,11 @@
- {
- 	struct shmem_inode_info *info = SHMEM_I(inode);
- 	const struct xattr *xattr;
--	struct shmem_xattr *new_xattr;
-+	struct simple_xattr *new_xattr;
- 	size_t len;
- 
- 	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
--		new_xattr = shmem_xattr_alloc(xattr->value, xattr->value_len);
-+		new_xattr = simple_xattr_alloc(xattr->value, xattr->value_len);
- 		if (!new_xattr)
- 			return -ENOMEM;
- 
-@@ -2111,91 +2078,12 @@
- 		memcpy(new_xattr->name + XATTR_SECURITY_PREFIX_LEN,
- 		       xattr->name, len);
- 
--		spin_lock(&info->lock);
--		list_add(&new_xattr->list, &info->xattr_list);
--		spin_unlock(&info->lock);
-+		simple_xattr_list_add(&info->xattrs, new_xattr);
- 	}
- 
- 	return 0;
- }
- 
--static int shmem_xattr_get(struct dentry *dentry, const char *name,
--			   void *buffer, size_t size)
--{
--	struct shmem_inode_info *info;
--	struct shmem_xattr *xattr;
--	int ret = -ENODATA;
--
--	info = SHMEM_I(dentry->d_inode);
--
--	spin_lock(&info->lock);
--	list_for_each_entry(xattr, &info->xattr_list, list) {
--		if (strcmp(name, xattr->name))
--			continue;
--
--		ret = xattr->size;
--		if (buffer) {
--			if (size < xattr->size)
--				ret = -ERANGE;
--			else
--				memcpy(buffer, xattr->value, xattr->size);
--		}
--		break;
--	}
--	spin_unlock(&info->lock);
--	return ret;
--}
--
--static int shmem_xattr_set(struct inode *inode, const char *name,
--			   const void *value, size_t size, int flags)
--{
--	struct shmem_inode_info *info = SHMEM_I(inode);
--	struct shmem_xattr *xattr;
--	struct shmem_xattr *new_xattr = NULL;
--	int err = 0;
--
--	/* value == NULL means remove */
--	if (value) {
--		new_xattr = shmem_xattr_alloc(value, size);
--		if (!new_xattr)
--			return -ENOMEM;
--
--		new_xattr->name = kstrdup(name, GFP_KERNEL);
--		if (!new_xattr->name) {
--			kfree(new_xattr);
--			return -ENOMEM;
--		}
--	}
--
--	spin_lock(&info->lock);
--	list_for_each_entry(xattr, &info->xattr_list, list) {
--		if (!strcmp(name, xattr->name)) {
--			if (flags & XATTR_CREATE) {
--				xattr = new_xattr;
--				err = -EEXIST;
--			} else if (new_xattr) {
--				list_replace(&xattr->list, &new_xattr->list);
--			} else {
--				list_del(&xattr->list);
--			}
--			goto out;
--		}
--	}
--	if (flags & XATTR_REPLACE) {
--		xattr = new_xattr;
--		err = -ENODATA;
--	} else {
--		list_add(&new_xattr->list, &info->xattr_list);
--		xattr = NULL;
--	}
--out:
--	spin_unlock(&info->lock);
--	if (xattr)
--		kfree(xattr->name);
--	kfree(xattr);
--	return err;
--}
--
- static const struct xattr_handler *shmem_xattr_handlers[] = {
- #ifdef CONFIG_TMPFS_POSIX_ACL
- 	&generic_acl_access_handler,
-@@ -2226,6 +2114,7 @@
- static ssize_t shmem_getxattr(struct dentry *dentry, const char *name,
- 			      void *buffer, size_t size)
- {
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
- 	int err;
- 
- 	/*
-@@ -2240,12 +2129,13 @@
- 	if (err)
- 		return err;
- 
--	return shmem_xattr_get(dentry, name, buffer, size);
-+	return simple_xattr_get(&info->xattrs, name, buffer, size);
- }
- 
- static int shmem_setxattr(struct dentry *dentry, const char *name,
- 			  const void *value, size_t size, int flags)
- {
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
- 	int err;
- 
- 	/*
-@@ -2260,15 +2150,12 @@
- 	if (err)
- 		return err;
- 
--	if (size == 0)
--		value = "";  /* empty EA, do not remove */
--
--	return shmem_xattr_set(dentry->d_inode, name, value, size, flags);
--
-+	return simple_xattr_set(&info->xattrs, name, value, size, flags);
- }
- 
- static int shmem_removexattr(struct dentry *dentry, const char *name)
- {
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
- 	int err;
- 
- 	/*
-@@ -2283,45 +2170,13 @@
- 	if (err)
- 		return err;
- 
--	return shmem_xattr_set(dentry->d_inode, name, NULL, 0, XATTR_REPLACE);
--}
--
--static bool xattr_is_trusted(const char *name)
--{
--	return !strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN);
-+	return simple_xattr_remove(&info->xattrs, name);
- }
- 
- static ssize_t shmem_listxattr(struct dentry *dentry, char *buffer, size_t size)
- {
--	bool trusted = capable(CAP_SYS_ADMIN);
--	struct shmem_xattr *xattr;
--	struct shmem_inode_info *info;
--	size_t used = 0;
--
--	info = SHMEM_I(dentry->d_inode);
--
--	spin_lock(&info->lock);
--	list_for_each_entry(xattr, &info->xattr_list, list) {
--		size_t len;
--
--		/* skip "trusted." attributes for unprivileged callers */
--		if (!trusted && xattr_is_trusted(xattr->name))
--			continue;
--
--		len = strlen(xattr->name) + 1;
--		used += len;
--		if (buffer) {
--			if (size < used) {
--				used = -ERANGE;
--				break;
--			}
--			memcpy(buffer, xattr->name, len);
--			buffer += len;
--		}
--	}
--	spin_unlock(&info->lock);
--
--	return used;
-+	struct shmem_inode_info *info = SHMEM_I(dentry->d_inode);
-+	return simple_xattr_list(&info->xattrs, buffer, size);
- }
- #endif /* CONFIG_TMPFS_XATTR */
- 
+The series seems reasonable.  I presume you've testing building and running both
+net_prio and net_cls as modules and monolithically?
+Neil
