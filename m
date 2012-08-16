@@ -1,112 +1,93 @@
-From: Daniel Wagner <wagi@monom.org>
-Subject: [PATCH v0 3/5] cgroup: Protect access to task_cls_classid() when built as module
-Date: Thu, 16 Aug 2012 16:12:14 +0200
-Message-ID: <1345126336-20755-4-git-send-email-wagi@monom.org>
-References: <1345126336-20755-1-git-send-email-wagi@monom.org>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1345126336-20755-1-git-send-email-wagi@monom.org>
-Sender: netdev-owner@vger.kernel.org
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Thu, 16 Aug 2012 17:05:18 +0200
+Message-ID: <20120816150518.GE2817@dhcp22.suse.cz>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+ <1344517279-30646-7-git-send-email-glommer@parallels.com>
+ <20120814172540.GD6905@dhcp22.suse.cz>
+ <502B6F00.8040207@parallels.com>
+ <20120815130952.GI23985@dhcp22.suse.cz>
+ <502BABCF.7020608@parallels.com>
+ <20120815142338.GL23985@dhcp22.suse.cz>
+ <502BB1E1.5080403@parallels.com>
+ <20120816095309.GB2817@dhcp22.suse.cz>
+ <502CC3F3.5060706@parallels.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <502CC3F3.5060706@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: netdev@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, Gao feng <gaofeng@cn.fujitsu.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Li Zefan <lizefan@huawei.com>, Neil Horman <nhorman@tuxdriver.com>, Tejun Heo <tj@kernel.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+On Thu 16-08-12 13:57:07, Glauber Costa wrote:
+> On 08/16/2012 01:53 PM, Michal Hocko wrote:
+> > On Wed 15-08-12 18:27:45, Glauber Costa wrote:
+> >>
+> >>>>
+> >>>> I see now, you seem to be right.
+> >>>
+> >>> No I am not because it seems that I am really blind these days...
+> >>> We were doing this in mem_cgroup_do_charge for ages:
+> >>> 	if (!(gfp_mask & __GFP_WAIT))
+> >>>                 return CHARGE_WOULDBLOCK;
+> >>>
+> >>> /me goes to hide and get with further feedback with a clean head.
+> >>>
+> >>> Sorry about that.
+> >>>
+> >> I am as well, since I went to look at mem_cgroup_do_charge() and missed
+> >> that.
+> > 
+> > I thought we are not doing atomic allocations in user pages accounting
+> > but I was obviously wrong because at least shmem uses atomic
+> > allocations for ages.
+> > 
+> >> Do you have any other concerns specific to this patch ?
+> > 
+> > I understood you changed also handle thingy. So the patch should be
+> > correct.
+> > Do you plan to send an updated version?
+> > 
+> That depends more on you than on me! =)
+> 
+> Do you still have any concerns regarding the u+k charging as it stands
+> now? That would be the last big concern I heard during this iteration.
 
-The module version of task_cls_classid() checks if net_cls_sbusys_id
-is valid to indentify when it is okay to access the controller.
+Well, I am still not 100% sure because I still see technical
+difficulties that are not addressed by the patchset (memcg-oom, memcg
+slab shrinking, possibly others). More importantly this is changing the
+current semantic of the limit so we should better be careful about it
+and check that we are not making the code tight to specific workloads
+without a way out.
 
-Instead relying on the subusys_id to be set, make it explicit
-with a jump label.
+On the other hand I do not want to block the progress here without
+having _really_ good arguments against that couldn't be handled later
+(and it seems that some of my concerns are work in progress already).
 
-Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Gao feng <gaofeng@cn.fujitsu.com>
-Cc: Jamal Hadi Salim <jhs@mojatatu.com>
-Cc: John Fastabend <john.r.fastabend@intel.com>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Neil Horman <nhorman@tuxdriver.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: netdev@vger.kernel.org
-Cc: cgroups@vger.kernel.org
----
- include/net/cls_cgroup.h | 8 +++++++-
- net/core/sock.c          | 5 +++++
- net/sched/cls_cgroup.c   | 5 +++++
- 3 files changed, 17 insertions(+), 1 deletion(-)
+I have to admit I like several things about the patchset. Especially the
+way how it enables easy-to-setup (aka don't care about kmem details just
+make sure you can cap the thing) as well as "I know exactly what I want
+to do" usecases.
+It is also good nice that only users of the feature are affected by
+potential issues.
 
-diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
-index 401672c..5b91220 100644
---- a/include/net/cls_cgroup.h
-+++ b/include/net/cls_cgroup.h
-@@ -16,6 +16,7 @@
- #include <linux/cgroup.h>
- #include <linux/hardirq.h>
- #include <linux/rcupdate.h>
-+#include <linux/jump_label.h>
- 
- #ifdef CONFIG_CGROUPS
- struct cgroup_cls_state
-@@ -24,6 +25,11 @@ struct cgroup_cls_state
- 	u32 classid;
- };
- 
-+#if IS_ENABLED(CONFIG_NET_CLS_CGROUP)
-+extern struct static_key cgroup_cls_enabled;
-+#define clscg_enabled static_key_false(&cgroup_cls_enabled)
-+#endif
-+
- extern void sock_update_classid(struct sock *sk);
- 
- #if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
-@@ -52,7 +58,7 @@ static inline u32 task_cls_classid(struct task_struct *p)
- 	int id;
- 	u32 classid = 0;
- 
--	if (in_interrupt())
-+	if (!clscg_enabled || in_interrupt())
- 		return 0;
- 
- 	rcu_read_lock();
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 8f67ced..8d3a400 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -327,6 +327,11 @@ int __sk_backlog_rcv(struct sock *sk, struct sk_buff *skb)
- EXPORT_SYMBOL(__sk_backlog_rcv);
- 
- #if defined(CONFIG_CGROUPS)
-+#if IS_ENABLED(CONFIG_NET_CLS_CGROUP)
-+struct static_key cgroup_cls_enabled = STATIC_KEY_INIT_FALSE;
-+EXPORT_SYMBOL_GPL(cgroup_cls_enabled);
-+#endif
-+
- #if !defined(CONFIG_NET_CLS_CGROUP)
- int net_cls_subsys_id = -1;
- EXPORT_SYMBOL_GPL(net_cls_subsys_id);
-diff --git a/net/sched/cls_cgroup.c b/net/sched/cls_cgroup.c
-index 7743ea8..f40086b 100644
---- a/net/sched/cls_cgroup.c
-+++ b/net/sched/cls_cgroup.c
-@@ -44,12 +44,17 @@ static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
- 
- 	if (cgrp->parent)
- 		cs->classid = cgrp_cls_state(cgrp->parent)->classid;
-+	else if (!clscg_enabled)
-+                static_key_slow_inc(&cgroup_cls_enabled);
- 
- 	return &cs->css;
- }
- 
- static void cgrp_destroy(struct cgroup *cgrp)
- {
-+	if (!cgrp->parent && clscg_enabled)
-+                static_key_slow_dec(&cgroup_cls_enabled);
-+
- 	kfree(cgrp_cls_state(cgrp));
- }
- 
+So I think it is worth a broader attention which could produce other use
+cases which could show potential drawbacks from the u+k semantic but I
+would be still very careful about merging it to the Linus tree and only
+merge it after at least the memcg reclaim path is slab aware. Living in
+the -mm tree should help us with the testing converage.
+
+Does it sounds reasonable?
 -- 
-1.7.12.rc1.16.g05a20c8
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
