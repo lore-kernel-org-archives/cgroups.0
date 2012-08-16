@@ -1,137 +1,77 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v2] memcg: execute partial memcg freeing in mem_cgroup_destroy
-Date: Thu, 16 Aug 2012 15:01:43 +0400
-Message-ID: <1345114903-20627-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: [PATCH v0 1/5] cgroup: Use empty task_cls_classid() when !CONFIG_NET_CLS(_MODULE)
+Date: Thu, 16 Aug 2012 16:12:12 +0200
+Message-ID: <1345126336-20755-2-git-send-email-wagi@monom.org>
+References: <1345126336-20755-1-git-send-email-wagi@monom.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1345126336-20755-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-A lot of the initialization we do in mem_cgroup_create() is done with
-softirqs enabled. This include grabbing a css id, which holds
-&ss->id_lock->rlock, and the per-zone trees, which holds
-rtpz->lock->rlock. All of those signal to the lockdep mechanism that
-those locks can be used in SOFTIRQ-ON-W context. This means that the
-freeing of memcg structure must happen in a compatible context,
-otherwise we'll get a deadlock.
+From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-The reference counting mechanism we use allows the memcg structure to be
-freed later and outlive the actual memcg destruction from the
-filesystem. However, we have little, if any, means to guarantee in which
-context the last memcg_put will happen. The best we can do is test it
-and try to make sure no invalid context releases are happening. But as
-we add more code to memcg, the possible interactions grow in number and
-expose more ways to get context conflicts.
-
-Greg Thelen reported a bug with that patchset applied that would trigger
-if a task would hold a reference to a memcg through its kmem counter.
-This would mean that killing that task would eventually get us to
-__mem_cgroup_free() after dropping the last kernel page reference, in an
-invalid IN-SOFTIRQ-W.
-
-Besides that, he raised the quite valid concern that keeping the full
-memcg around for an unbounded period of time can eventually exhaust the
-css_id space, and pin a lot of not needed memory. For instance, a
-O(nr_cpus) percpu data for the stats is kept around, and we don't expect
-to use it after the memcg is gone.
-
-Both those problems can be avoided by freeing as much as we can in
-mem_cgroup_destroy(), and leaving only the memcg structure and the
-static branches to be removed later. That freeing run on a predictable
-context, getting rid of the softirq problem, and also reduces pressure
-both on the css_id space and total dangling memory.
-
-I consider this safe because all the page_cgroup references to user
-pages are reparented to the imediate parent, so late uncharges won't
-trigger the common uncharge paths with a destroyed memcg.
-
-Although we don't migrate kernel pages to parent, we also don't call the
-common uncharge paths for those pages, rather uncharging the
-res_counters directly. So we are safe on this side of the wall as well.
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-Reported-by: Greg Thelen <gthelen@google.com>
-CC: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-CC: Michal Hocko <mhocko@suse.cz>
-CC: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
+Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/memcontrol.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ include/net/cls_cgroup.h | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9a82965..78cb394 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5169,18 +5169,9 @@ static void free_work(struct work_struct *work)
- 		vfree(memcg);
- }
+diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
+index a4dc5b0..e2fe2b9 100644
+--- a/include/net/cls_cgroup.h
++++ b/include/net/cls_cgroup.h
+@@ -24,7 +24,8 @@ struct cgroup_cls_state
+ 	u32 classid;
+ };
  
--static void free_rcu(struct rcu_head *rcu_head)
--{
--	struct mem_cgroup *memcg;
--
--	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
--	INIT_WORK(&memcg->work_freeing, free_work);
--	schedule_work(&memcg->work_freeing);
--}
--
- /*
-- * At destroying mem_cgroup, references from swap_cgroup can remain.
-- * (scanning all at force_empty is too costly...)
-+ * At destroying mem_cgroup, references from swap_cgroup and other places can
-+ * remain.  (scanning all at force_empty is too costly...)
-  *
-  * Instead of clearing all references at force_empty, we remember
-  * the number of reference from swap_cgroup and free mem_cgroup when
-@@ -5188,6 +5179,14 @@ static void free_rcu(struct rcu_head *rcu_head)
-  *
-  * Removal of cgroup itself succeeds regardless of refs from swap.
-  */
-+static void free_rcu(struct rcu_head *rcu_head)
-+{
-+	struct mem_cgroup *memcg;
+-#ifdef CONFIG_NET_CLS_CGROUP
++#if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
 +
-+	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
-+	INIT_WORK(&memcg->work_freeing, free_work);
-+	schedule_work(&memcg->work_freeing);
-+}
- 
- static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ static inline u32 task_cls_classid(struct task_struct *p)
  {
-@@ -5200,7 +5199,6 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 		free_mem_cgroup_per_zone_info(memcg, node);
+ 	int classid;
+@@ -39,7 +40,9 @@ static inline u32 task_cls_classid(struct task_struct *p)
  
- 	free_percpu(memcg->stat);
--	call_rcu(&memcg->rcu_freeing, free_rcu);
+ 	return classid;
  }
+-#else
++
++#elif IS_MODULE(CONFIG_NET_CLS_CGROUP)
++
+ extern int net_cls_subsys_id;
  
- static void mem_cgroup_get(struct mem_cgroup *memcg)
-@@ -5212,7 +5210,7 @@ static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
+ static inline u32 task_cls_classid(struct task_struct *p)
+@@ -60,11 +63,16 @@ static inline u32 task_cls_classid(struct task_struct *p)
+ 
+ 	return classid;
+ }
+-#endif
++
+ #else
++
+ static inline u32 task_cls_classid(struct task_struct *p)
  {
- 	if (atomic_sub_and_test(count, &memcg->refcnt)) {
- 		struct mem_cgroup *parent = parent_mem_cgroup(memcg);
--		__mem_cgroup_free(memcg);
-+		call_rcu(&memcg->rcu_freeing, free_rcu);
- 		if (parent)
- 			mem_cgroup_put(parent);
- 	}
-@@ -5377,6 +5375,7 @@ static void mem_cgroup_destroy(struct cgroup *cont)
- 
- 	kmem_cgroup_destroy(memcg);
- 
-+	__mem_cgroup_free(memcg);
- 	mem_cgroup_put(memcg);
+ 	return 0;
  }
- 
+-#endif
++
++#endif /* CONFIG_NET_CLS_CGROUP */
++
++#endif /* CONFIG_CGROURPS */
++
+ #endif  /* _NET_CLS_CGROUP_H */
 -- 
-1.7.11.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.7.12.rc1.16.g05a20c8
