@@ -1,35 +1,42 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH RESEND 0/4] device_cgroup: replace internally whitelist
- with exception list
-Date: Thu, 16 Aug 2012 13:08:44 -0700
-Message-ID: <20120816130844.6f26530d.akpm@linux-foundation.org>
-References: <20120809190414.773462171@muttley.lan.cathedral>
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [PATCH v0 0/5] cgroup: Assign subsystem IDs during compile time
+Date: Thu, 16 Aug 2012 22:25:27 +0200
+Message-ID: <502D5737.1010604@monom.org>
+References: <1345126336-20755-1-git-send-email-wagi@monom.org> <20120816190542.GA8203@hmsreliant.think-freely.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120809190414.773462171-+5JutNtNrJPwzbzh4h2Q61C45dnP8DBc@public.gmane.org>
+In-Reply-To: <20120816190542.GA8203-B26myB8xz7F8NnZeBjwnZQMhkBWG/bsMQH7oEaQurus@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Thu, 09 Aug 2012 15:04:14 -0400
-aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org wrote:
+Hi Neil,
 
-> The original model of device_cgroup is having a whitelist where all the
-> allowed devices are listed. The problem with this approach is that is
-> impossible to have the case of allowing everything but few devices.
+On 08/16/2012 09:05 PM, Neil Horman wrote:
+>> Daniel Wagner (5):
+>>    cgroup: Use empty task_cls_classid() when !CONFIG_NET_CLS(_MODULE)
+>>    cgroup: Move sock_update_classid() decleration to cls_cgroup.h
+>>    cgroup: Protect access to task_cls_classid() when built as module
+>>    cgroup: Protect access to task_netprioidx() when built as module
+>>    cgroup: Assign subsystem IDs during compile time
 > 
-> The reason for that lies in the way the whitelist is handled internally:
-> since there's only a whitelist, the "all devices" entry would have to be
-> removed and replaced by the entire list of possible devices but the ones
-> that are being denied.  Since dev_t is 32 bits long, representing the allowed
-> devices as a bitfield is not memory efficient.
-> 
-> This patch replaces the "whitelist" by a "exceptions" list and the default
-> policy is kept as "deny_all" variable in dev_cgroup structure.
+> The series seems reasonable.  I presume you've testing building and running both
+> net_prio and net_cls as modules and monolithically?
+> Neil
 
-The patches look reasonable to me.  I suggest you resend them after
-kernel summit and cc a few additional people: Serge Hallyn, Pavel
-Emelyanov and James Morris.
+Yep, I spend a good bit of time rebuilding and testing all patches in
+the different configuration. I hope I really got the small semantic
+differences between net_cls and net_prio regarding the loading and
+unloading correct. So please have a close look at the jump label
+patches (#3 and #4). 
+
+BTW, I have a few mores on top of these patches, e.g. merging the
+builtin and module version of task_cls_classid()/task_netprioidx()
+implementation together and getting rid of the many ifdefs in the
+header. But let's first get this part reviewed.
+
+thanks,
+daniel
