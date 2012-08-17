@@ -1,137 +1,145 @@
-From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Subject: Re: [PATCH v1 3/5] cgroup: Protect access to task_cls_classid() when
- built as module
-Date: Fri, 17 Aug 2012 14:28:55 -0400
-Message-ID: <20120817182855.GA11607@hmsreliant.think-freely.org>
-References: <1345215494-9181-1-git-send-email-wagi@monom.org>
- <1345215494-9181-4-git-send-email-wagi@monom.org>
+From: Ying Han <yinghan@google.com>
+Subject: Re: [PATCH v2 00/11] Request for Inclusion: kmem controller for memcg.
+Date: Fri, 17 Aug 2012 14:37:21 -0700
+Message-ID: <CALWz4iycCxuUaEeBz_b8+U13fcCLep3rvuSNUTPD8N-eZkDBrg@mail.gmail.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1345215494-9181-4-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:x-system-of-record;
+        bh=nuyuLH1RLvw5klRgbiP2wrwp6XOIsuigYrLREVWnrjY=;
+        b=XFy8XC5KYyKTSDyJk/BStVO4M1Nq1TJc3bP1rMpLk4CORQN3hnEY5jRIyCEKTSM1Ao
+         CGpmAZwWjZ4BtYyjETS6v6DEDUAEis/0FSdUvHcTJMJpcppvIWATIEIRu9dFprwFugpV
+         E4R99fJtGuJtMd07zsmwxYoL3J3ZuDscel8WjPlNhCB5qx+3QzPGZviFqTxcVrYDgK1X
+         Zlf2Bl7D3EHpJozW/vYe8ihUo6ckTuq+cv3O5TCHlMKqlzJ4GiU9zB5VUyd7X/HaFkiN
+         hBND24USkU2Trfu8oShb24aj5nl/iwOFe9+f6Z7f1rFRbls0H8nFnyuhq+a17K6X2qO7
+         ZfpA==
+In-Reply-To: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>
 
-On Fri, Aug 17, 2012 at 04:58:12PM +0200, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> 
-> The module version of task_cls_classid() checks if net_cls_sbusys_id
-> is valid to indentify when it is okay to access the controller.
-> 
-> Instead relying on the subusys_id to be set, make it explicit
-> with a jump label.
-> 
-> Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-> Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
-> Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  include/net/cls_cgroup.h | 5 ++++-
->  net/core/sock.c          | 5 +++++
->  net/sched/cls_cgroup.c   | 9 +++++++++
->  3 files changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
-> index 401672c..bbbd957 100644
-> --- a/include/net/cls_cgroup.h
-> +++ b/include/net/cls_cgroup.h
-> @@ -16,6 +16,7 @@
->  #include <linux/cgroup.h>
->  #include <linux/hardirq.h>
->  #include <linux/rcupdate.h>
-> +#include <linux/jump_label.h>
->  
->  #ifdef CONFIG_CGROUPS
->  struct cgroup_cls_state
-> @@ -44,6 +45,8 @@ static inline u32 task_cls_classid(struct task_struct *p)
->  }
->  
->  #elif IS_MODULE(CONFIG_NET_CLS_CGROUP)
-> +extern struct static_key cgroup_cls_enabled;
-> +#define clscg_enabled static_key_false(&cgroup_cls_enabled)
->  
->  extern int net_cls_subsys_id;
->  
-> @@ -52,7 +55,7 @@ static inline u32 task_cls_classid(struct task_struct *p)
->  	int id;
->  	u32 classid = 0;
->  
-> -	if (in_interrupt())
-> +	if (!clscg_enabled || in_interrupt())
->  		return 0;
->  
->  	rcu_read_lock();
-> diff --git a/net/core/sock.c b/net/core/sock.c
-> index 8f67ced..8106e77 100644
-> --- a/net/core/sock.c
-> +++ b/net/core/sock.c
-> @@ -327,6 +327,11 @@ int __sk_backlog_rcv(struct sock *sk, struct sk_buff *skb)
->  EXPORT_SYMBOL(__sk_backlog_rcv);
->  
->  #if defined(CONFIG_CGROUPS)
-> +#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
-> +struct static_key cgroup_cls_enabled = STATIC_KEY_INIT_FALSE;
-> +EXPORT_SYMBOL_GPL(cgroup_cls_enabled);
-> +#endif
-> +
->  #if !defined(CONFIG_NET_CLS_CGROUP)
->  int net_cls_subsys_id = -1;
->  EXPORT_SYMBOL_GPL(net_cls_subsys_id);
-> diff --git a/net/sched/cls_cgroup.c b/net/sched/cls_cgroup.c
-> index 7743ea8..0635894 100644
-> --- a/net/sched/cls_cgroup.c
-> +++ b/net/sched/cls_cgroup.c
-> @@ -44,12 +44,21 @@ static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
->  
->  	if (cgrp->parent)
->  		cs->classid = cgrp_cls_state(cgrp->parent)->classid;
-> +#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
-> +	else if (!clscg_enabled)
-> +                static_key_slow_inc(&cgroup_cls_enabled);
-This is racy I think.  The read of the static key is atomic with other reads,
-but the entire conditional is not atomic.  If two cpus were creating cgroups in
-parallel, it would be possible for both to read the static key as being zero
-(the second cpu would read the key before the first cpu could increment it).
-> +#endif
->  
->  	return &cs->css;
->  }
->  
->  static void cgrp_destroy(struct cgroup *cgrp)
->  {
-> +#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
-> +	if (!cgrp->parent && clscg_enabled)
-> +                static_key_slow_dec(&cgroup_cls_enabled);
-Ditto here with the race above.  I think what you want is one of:
+On Thu, Aug 9, 2012 at 6:01 AM, Glauber Costa <glommer@parallels.com> wrote:
+> Hi,
+>
+> This is the first part of the kernel memory controller for memcg. It has been
+> discussed many times, and I consider this stable enough to be on tree. A follow
+> up to this series are the patches to also track slab memory. They are not
+> included here because I believe we could benefit from merging them separately
+> for better testing coverage. If there are any issues preventing this to be
+> merged, let me know. I'll be happy to address them.
+>
+> The slab patches are also mature in my self evaluation and could be merged not
+> too long after this. For the reference, the last discussion about them happened
+> at http://lwn.net/Articles/508087/
+>
+> A (throwaway) git tree with them is placed at:
+>
+>         git://github.com/glommer/linux.git kmemcg-slab
 
-1) Use static_key_slow_[inc|dec] unconditionally 
+I would like to make a kernel on the tree and run some perf tests on
+it. However the kernel
+doesn't boot due to "divide error: 0000 [#1] SMP".
+https://lkml.org/lkml/2012/5/21/502
 
-2) Keep a separate internal counter to track the number of cgroup instances
-so that you only inc the static key on the first create and dec it on the last
-delete.
+I believe the issue has been fixed ( didn't look through) and can you
+do a rebase on your tree?
 
-I would think (1) would be sufficent.  It looks like static_key_slow_inc uses
-atomic_inc_not_zero to just do an inc anyway in the event that multiple inc
-events are made.
+--Ying
 
-Neil
+>
+> A general explanation of what this is all about follows:
+>
+> The kernel memory limitation mechanism for memcg concerns itself with
+> disallowing potentially non-reclaimable allocations to happen in exaggerate
+> quantities by a particular set of processes (cgroup). Those allocations could
+> create pressure that affects the behavior of a different and unrelated set of
+> processes.
+>
+> Its basic working mechanism is to annotate some allocations with the
+> _GFP_KMEMCG flag. When this flag is set, the current process allocating will
+> have its memcg identified and charged against. When reaching a specific limit,
+> further allocations will be denied.
+>
+> One example of such problematic pressure that can be prevented by this work is
+> a fork bomb conducted in a shell. We prevent it by noting that processes use a
+> limited amount of stack pages. Seen this way, a fork bomb is just a special
+> case of resource abuse. If the offender is unable to grab more pages for the
+> stack, no new processes can be created.
+>
+> There are also other things the general mechanism protects against. For
+> example, using too much of pinned dentry and inode cache, by touching files an
+> leaving them in memory forever.
+>
+> In fact, a simple:
+>
+> while true; do mkdir x; cd x; done
+>
+> can halt your system easily because the file system limits are hard to reach
+> (big disks), but the kernel memory is not. Those are examples, but the list
+> certainly don't stop here.
+>
+> An important use case for all that, is concerned with people offering hosting
+> services through containers. In a physical box we can put a limit to some
+> resources, like total number of processes or threads. But in an environment
+> where each independent user gets its own piece of the machine, we don't want a
+> potentially malicious user to destroy good users' services.
+>
+> This might be true for systemd as well, that now groups services inside
+> cgroups. They generally want to put forward a set of guarantees that limits the
+> running service in a variety of ways, so that if they become badly behaved,
+> they won't interfere with the rest of the system.
+>
+> There is, of course, a cost for that. To attempt to mitigate that, static
+> branches are used to make sure that even if the feature is compiled in with
+> potentially a lot of memory cgroups deployed this code will only be enabled
+> after the first user of this service configures any limit. Limits lower than
+> the user limit effectively means there is a separate kernel memory limit that
+> may be reached independently than the user limit. Values equal or greater than
+> the user limit implies only that kernel memory is tracked. This provides a
+> unified vision of "maximum memory", be it kernel or user memory. Because this
+> is all default-off, existing deployments will see no change in behavior.
+>
+> Glauber Costa (9):
+>   memcg: change defines to an enum
+>   kmem accounting basic infrastructure
+>   Add a __GFP_KMEMCG flag
+>   memcg: kmem controller infrastructure
+>   mm: Allocate kernel pages to the right memcg
+>   memcg: disable kmem code when not in use.
+>   memcg: propagate kmem limiting information to children
+>   memcg: allow a memcg with kmem charges to be destructed.
+>   protect architectures where THREAD_SIZE >= PAGE_SIZE against fork
+>     bombs
+>
+> Suleiman Souhlal (2):
+>   memcg: Make it possible to use the stock for more than one page.
+>   memcg: Reclaim when more than one page needed.
+>
+>  include/linux/gfp.h         |  10 +-
+>  include/linux/memcontrol.h  |  82 ++++++++
+>  include/linux/thread_info.h |   2 +
+>  kernel/fork.c               |   4 +-
+>  mm/memcontrol.c             | 443 +++++++++++++++++++++++++++++++++++++++++---
+>  mm/page_alloc.c             |  38 ++++
+>  6 files changed, 546 insertions(+), 33 deletions(-)
+>
+> --
+> 1.7.11.2
+>
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
-> +#endif
-> +
->  	kfree(cgrp_cls_state(cgrp));
->  }
->  
-> -- 
-> 1.7.12.rc1.16.g05a20c8
-> 
-> 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
