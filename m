@@ -1,30 +1,53 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: [PATCH v0 3/5] cgroup: Protect access to task_cls_classid() when
- built as module
-Date: Fri, 17 Aug 2012 09:55:27 +0200
-Message-ID: <502DF8EF.1070202@monom.org>
-References: <1345126336-20755-1-git-send-email-wagi@monom.org> <1345126336-20755-4-git-send-email-wagi@monom.org> <502DF43F.9010209@huawei.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 08/11] memcg: disable kmem code when not in use.
+Date: Fri, 17 Aug 2012 10:04:04 +0200
+Message-ID: <20120817080404.GB18600@dhcp22.suse.cz>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+ <1344517279-30646-9-git-send-email-glommer@parallels.com>
+ <20120817070241.GA18600@dhcp22.suse.cz>
+ <502DEC32.6070807@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <502DF43F.9010209-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <502DEC32.6070807@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
-On 17.08.2012 09:35, Li Zefan wrote:
->> +#if IS_ENABLED(CONFIG_NET_CLS_CGROUP)
->> +extern struct static_key cgroup_cls_enabled;
->> +#define clscg_enabled static_key_false(&cgroup_cls_enabled)
->> +#endif
->> +
+On Fri 17-08-12 11:01:06, Glauber Costa wrote:
+> On 08/17/2012 11:02 AM, Michal Hocko wrote:
+> > On Thu 09-08-12 17:01:16, Glauber Costa wrote:
+> >> We can use jump labels to patch the code in or out when not used.
+> >>
+> >> Because the assignment: memcg->kmem_accounted = true is done after the
+> >> jump labels increment, we guarantee that the root memcg will always be
+> >> selected until all call sites are patched (see memcg_kmem_enabled).
+> > 
+> > Not that it would be really important because kmem_accounted goes away
+
+And just found out it doesn't go away completely, it just transforms
+from bool to unsigned log (with flags). The rest still holds...
+
+> > in a subsequent patch but I think the wording is a bit misleading here.
+> > First of all there is no guanratee that kmem_accounted=true is seen
+> > before atomic_inc(&key->enabled) because there is no memory barrier and
+> > the lock serves just a leave barrier. But I do not think this is
+> > important at all because key->enabled is what matters here. Even if
+> > memcg_kmem_enabled is true we do not consider it if the key is disabled,
+> > right?
+> > 
 > 
-> If it's built-in, clscg_enabled is always true (after we call cgroup_subsys_init at
-> boot), so we don't need jump label at all.
+> Right.
 
-Okay. I'll update the patches so that only the module built contain the
-jump labels.
+-- 
+Michal Hocko
+SUSE Labs
 
-daniel
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
