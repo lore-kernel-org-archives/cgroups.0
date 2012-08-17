@@ -1,53 +1,53 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v2 08/11] memcg: disable kmem code when not in use.
-Date: Fri, 17 Aug 2012 10:04:04 +0200
-Message-ID: <20120817080404.GB18600@dhcp22.suse.cz>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
- <1344517279-30646-9-git-send-email-glommer@parallels.com>
- <20120817070241.GA18600@dhcp22.suse.cz>
- <502DEC32.6070807@parallels.com>
+From: Daniel Wagner <wagi@monom.org>
+Subject: Re: [PATCH v0 5/5] cgroup: Assign subsystem IDs during compile time
+Date: Fri, 17 Aug 2012 10:48:18 +0200
+Message-ID: <502E0552.3080602@monom.org>
+References: <1345126336-20755-1-git-send-email-wagi@monom.org> <1345126336-20755-6-git-send-email-wagi@monom.org> <20120816232010.GJ24861@google.com> <502DF1DF.8040109@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <502DEC32.6070807@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <502DF1DF.8040109@huawei.com>
+Sender: netdev-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Li Zefan <lizefan@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Eric Dumazet <edumazet@google.com>, Gao feng <gaofeng@cn.fujitsu.com>, Glauber Costa <glommer@parallels.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Neil Horman <nhorman@tuxdriver.com>
 
-On Fri 17-08-12 11:01:06, Glauber Costa wrote:
-> On 08/17/2012 11:02 AM, Michal Hocko wrote:
-> > On Thu 09-08-12 17:01:16, Glauber Costa wrote:
-> >> We can use jump labels to patch the code in or out when not used.
-> >>
-> >> Because the assignment: memcg->kmem_accounted = true is done after the
-> >> jump labels increment, we guarantee that the root memcg will always be
-> >> selected until all call sites are patched (see memcg_kmem_enabled).
-> > 
-> > Not that it would be really important because kmem_accounted goes away
+On 17.08.2012 09:25, Li Zefan wrote:
+> On 2012/8/17 7:20, Tejun Heo wrote:
+>> On Thu, Aug 16, 2012 at 04:12:16PM +0200, Daniel Wagner wrote:
+>>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+>>>
+>>> We are able to safe some space when we assign the subsystem
+>>> IDs at compile time. Instead of allocating per cgroup
+>>> cgroup->subsys[CGROUP_SUBSYS_COUNT] where CGROUP_SUBSYS_COUNT is
+>>> always 64, we allocate 12 + 1 at max (at this point there are 12
+>>> subsystem).
+>>
+>> So, IIUC, this is effectively removing the capability to implement
+>> modularized controller which isn't known at kernel compile time.  Am I
+>> right?
+>>
+>
+> I think so.
 
-And just found out it doesn't go away completely, it just transforms
-from bool to unsigned log (with flags). The rest still holds...
+I am preparing an updated version which does not need the extra 1 
+pointer. Some more preprocessor magic involved :)
 
-> > in a subsequent patch but I think the wording is a bit misleading here.
-> > First of all there is no guanratee that kmem_accounted=true is seen
-> > before atomic_inc(&key->enabled) because there is no memory barrier and
-> > the lock serves just a leave barrier. But I do not think this is
-> > important at all because key->enabled is what matters here. Even if
-> > memcg_kmem_enabled is true we do not consider it if the key is disabled,
-> > right?
-> > 
-> 
-> Right.
+>> I don't think that's a bad idea but if we're doing that, can't we make
+>> things even simpler?  Do we need to distinguish in-kernel and module
+>> at all?
+>>
+>> Li, what do you think about this?
+>>
+>
+> I'm definitely all for simplicity, but I'm not sure if we can do better in
+> simplifying the code for modularized cgroup subsystem. (I guess you didn't
+> mean to remove this feature?)
 
--- 
-Michal Hocko
-SUSE Labs
+The new version should also be simpler to review because I don't have to 
+touch the loops everywhere.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+daniel
+
+
