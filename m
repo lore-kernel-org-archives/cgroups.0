@@ -1,40 +1,26 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 08/11] memcg: disable kmem code when not in use.
-Date: Fri, 17 Aug 2012 11:01:06 +0400
-Message-ID: <502DEC32.6070807@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-9-git-send-email-glommer@parallels.com> <20120817070241.GA18600@dhcp22.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Fri, 17 Aug 2012 11:04:02 +0400
+Message-ID: <502DECE2.9090402@parallels.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <50254475.4000201@jp.fujitsu.com> <5028BA9E.7000302@parallels.com> <502DAE2A.1000404@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120817070241.GA18600@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <502DAE2A.1000404-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-On 08/17/2012 11:02 AM, Michal Hocko wrote:
-> On Thu 09-08-12 17:01:16, Glauber Costa wrote:
->> We can use jump labels to patch the code in or out when not used.
->>
->> Because the assignment: memcg->kmem_accounted = true is done after the
->> jump labels increment, we guarantee that the root memcg will always be
->> selected until all call sites are patched (see memcg_kmem_enabled).
-> 
-> Not that it would be really important because kmem_accounted goes away
-> in a subsequent patch but I think the wording is a bit misleading here.
-> First of all there is no guanratee that kmem_accounted=true is seen
-> before atomic_inc(&key->enabled) because there is no memory barrier and
-> the lock serves just a leave barrier. But I do not think this is
-> important at all because key->enabled is what matters here. Even if
-> memcg_kmem_enabled is true we do not consider it if the key is disabled,
-> right?
-> 
+On 08/17/2012 06:36 AM, Kamezawa Hiroyuki wrote:
+> I just want to see the same logic used in mem_cgroup_uncharge_common().
+> Hmm, at setting pc->mem_cgroup, the things happens in
+>    set pc->mem_cgroup
+>    set Used bit
+> order. If you clear pc->mem_cgroup
+>    unset Used bit
+>    clear pc->mem_cgroup
+> seems reasonable.
 
-Right.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Makes sense. I'll make sure we're consistent here.
