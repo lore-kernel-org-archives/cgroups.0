@@ -1,52 +1,74 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 09/11] memcg: propagate kmem limiting information to
- children
-Date: Fri, 17 Aug 2012 14:39:23 +0400
-Message-ID: <502E1F5B.9090601@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-10-git-send-email-glommer@parallels.com> <20120817090005.GC18600@dhcp22.suse.cz> <502E0BC3.8090204@parallels.com> <20120817093504.GE18600@dhcp22.suse.cz> <502E17C4.7060204@parallels.com> <20120817103550.GF18600@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: [PATCH v1 0/5] cgroup: Assign subsystem IDs during compile time
+Date: Fri, 17 Aug 2012 16:58:09 +0200
+Message-ID: <1345215494-9181-1-git-send-email-wagi@monom.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120817103550.GF18600-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-On 08/17/2012 02:35 PM, Michal Hocko wrote:
-> On Fri 17-08-12 14:07:00, Glauber Costa wrote:
->> On 08/17/2012 01:35 PM, Michal Hocko wrote:
->>>>> Above you said "Once enabled, can't be disabled." and now you can
->>>>>>> disable it? Say you are a leaf group with non accounted parents. This
->>>>>>> will clear the flag and so no further accounting is done. Shouldn't
->>>>>>> unlimited mean that we will never reach the limit? Or am I missing
->>>>>>> something?
->>>>>>>
->>>>>
->>>>> You are missing something, and maybe I should be more clear about that.
->>>>> The static branches can't be disabled (it is only safe to disable them
->>>>> from disarm_static_branches(), when all references are gone). Note that
->>>>> when unlimited, we flip bits, do a transversal, but there is no mention
->>>>> to the static branch.
->>> My little brain still doesn't get this. I wasn't concerned about static
->>> branches. I was worried about memcg_can_account_kmem which will return
->>> false now, doesn't it.
->>>
->>
->> Yes, it will. If I got you right, you are concerned because I said that
->> can't happen. But it will.
->>
->> But I never said that can't happen. I said (ok, I meant) the static
->> branches can't be disabled.
-> 
-> Ok, then I misunderstood that because the comment was there even before
-> static branches were introduced and it made sense to me. This is
-> inconsistent with what we do for user accounting because even if we set
-> limit to unlimitted we still account. Why should we differ here?
-> 
-There is another thing as well. Mel was right in his comment: I am
-actually abusing this bit (because it is flippable), and it seems the
-static branch can be updated more than once...
+From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-I'll merge your comments, and fix this.
+Hi,
+
+I was able to 'fix' CGROUP_BUILTIN_SUBSYS_COUNT defition. With this
+version there is no unused subsys_id. 
+
+The number of builtin subsystem are counted with gcc's predefined
+__COUNTER__ macro. This is a bit fragile, because __COUNTER__
+is only reset to 0 per compile unit. There is a workaround for this.
+When starting to enumate we need to store the current value of
+__COUNTER__ and then subtract that from all enums we define. 
+
+Not sure if that is okay or not.
+
+cheers,
+daniel
+
+
+Original cover letter:
+
+The patch #1 and #2 are there to be able to introduce (#3, #4) the 
+jump labels in task_cls_classid() and task_netprioidx(). The jump
+labels are needed to know when it is safe to access the controller. 
+For example not safe means the module is not yet loaded.
+
+All those patches are just preparation for the center piece (#5) 
+of these series. This one will remove the dynamic subsystem ID
+generation and falls back to compile time generated IDs. 
+
+This is the first result from the discussion around on the
+"cgroup cls & netprio 'cleanups'" patches.
+
+This patches are against net-next
+
+
+v1: - only use jump labels when built as module (#3, #4)
+    - get rid of the additional 'pointer' (#5)
+v0: - initial version
+
+
+Daniel Wagner (5):
+  cgroup: Use empty task_cls_classid() when !CONFIG_NET_CLS(_MODULE)
+  cgroup: Move sock_update_classid() decleration to cls_cgroup.h
+  cgroup: Protect access to task_cls_classid() when built as module
+  cgroup: Protect access to task_netprioidx() when built as module
+  cgroup: Assign subsystem IDs during compile time
+
+ include/linux/cgroup.h        | 27 ++++++++++++++++++---------
+ include/linux/cgroup_subsys.h | 24 ++++++++++++------------
+ include/net/cls_cgroup.h      | 39 ++++++++++++++++++++++++++-------------
+ include/net/netprio_cgroup.h  | 25 +++++++++++--------------
+ include/net/sock.h            |  8 --------
+ kernel/cgroup.c               | 25 ++++++-------------------
+ net/core/netprio_cgroup.c     | 21 ++++++++++-----------
+ net/core/sock.c               | 12 ++++++------
+ net/sched/cls_cgroup.c        | 22 +++++++++-------------
+ 9 files changed, 98 insertions(+), 105 deletions(-)
+
+-- 
+1.7.12.rc1.16.g05a20c8
