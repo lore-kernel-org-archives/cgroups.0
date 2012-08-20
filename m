@@ -1,90 +1,172 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
-Date: Mon, 20 Aug 2012 19:29:33 +0400
-Message-ID: <503257DD.50709@parallels.com>
-References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <50254475.4000201@jp.fujitsu.com> <5028BA9E.7000302@parallels.com> <xr93ipcl9u7x.fsf@gthelen.mtv.corp.google.com> <502B6956.5030508@parallels.com> <xr93wr109kke.fsf@gthelen.mtv.corp.google.com> <502BD5AF.301@parallels.com> <50323D50.8070307@jp.fujitsu.com>
+From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [PATCH v1 3/5] cgroup: Protect access to task_cls_classid() when
+ built as module
+Date: Mon, 20 Aug 2012 13:03:42 -0400
+Message-ID: <20120820170342.GC1734@hmsreliant.think-freely.org>
+References: <1345215494-9181-1-git-send-email-wagi@monom.org>
+ <1345215494-9181-4-git-send-email-wagi@monom.org>
+ <20120817182855.GA11607@hmsreliant.think-freely.org>
+ <20120820112938.GA22415@candlejack.bmw-carit.intra>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50323D50.8070307@jp.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120820112938.GA22415-rjQKm2AMs/APuY3F5OKgMy7zKzJi9e1+kcYEyfhdaNw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Transfer-Encoding: 7bit
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 08/20/2012 05:36 PM, Kamezawa Hiroyuki wrote:
-> (2012/08/16 2:00), Glauber Costa wrote:
->> On 08/15/2012 08:38 PM, Greg Thelen wrote:
->>> On Wed, Aug 15 2012, Glauber Costa wrote:
->>>
->>>> On 08/14/2012 10:58 PM, Greg Thelen wrote:
->>>>> On Mon, Aug 13 2012, Glauber Costa wrote:
->>>>>
->>>>>>>>> +    WARN_ON(mem_cgroup_is_root(memcg));
->>>>>>>>> +    size = (1 << order) << PAGE_SHIFT;
->>>>>>>>> +    memcg_uncharge_kmem(memcg, size);
->>>>>>>>> +    mem_cgroup_put(memcg);
->>>>>>> Why do we need ref-counting here ? kmem res_counter cannot work as
->>>>>>> reference ?
->>>>>> This is of course the pair of the mem_cgroup_get() you commented on
->>>>>> earlier. If we need one, we need the other. If we don't need one, we
->>>>>> don't need the other =)
->>>>>>
->>>>>> The guarantee we're trying to give here is that the memcg
->>>>>> structure will
->>>>>> stay around while there are dangling charges to kmem, that we decided
->>>>>> not to move (remember: moving it for the stack is simple, for the
->>>>>> slab
->>>>>> is very complicated and ill-defined, and I believe it is better to
->>>>>> treat
->>>>>> all kmem equally here)
->>>>>
->>>>> By keeping memcg structures hanging around until the last referring
->>>>> kmem
->>>>> page is uncharged do such zombie memcg each consume a css_id and thus
->>>>> put pressure on the 64k css_id space?  I imagine in pathological cases
->>>>> this would prevent creation of new cgroups until these zombies are
->>>>> dereferenced.
->>>>
->>>> Yes, but although this patch makes it more likely, it doesn't introduce
->>>> that. If the tasks, for instance, grab a reference to the cgroup dentry
->>>> in the filesystem (like their CWD, etc), they will also keep the cgroup
->>>> around.
->>>
->>> Fair point.  But this doesn't seems like a feature.  It's probably not
->>> needed initially, but what do you think about creating a
->>> memcg_kernel_context structure which is allocated when memcg is
->>> allocated?  Kernel pages charged to a memcg would have
->>> page_cgroup->mem_cgroup=memcg_kernel_context rather than memcg.  This
->>> would allow the mem_cgroup and its css_id to be deleted when the cgroup
->>> is unlinked from cgroupfs while allowing for the active kernel pages to
->>> continue pointing to a valid memcg_kernel_context.  This would be a
->>> reference counted structure much like you are doing with memcg.  When a
->>> memcg is deleted the memcg_kernel_context would be linked into its
->>> surviving parent memcg.  This would avoid needing to visit each kernel
->>> page.
->>
->> You need more, you need at the res_counters to stay around as well. And
->> probably other fields.
->>
->> So my fear here is that as you add fields to that structure, you can
->> defeat a bit the goal of reducing memory consumption. Still leaves the
->> css space, yes. But by doing this we can introduce some subtle bugs by
->> having a field in the wrong structure.
->>
+On Mon, Aug 20, 2012 at 01:29:38PM +0200, Daniel Wagner wrote:
+> On Fri, Aug 17, 2012 at 02:28:55PM -0400, Neil Horman wrote:
+> > On Fri, Aug 17, 2012 at 04:58:12PM +0200, Daniel Wagner wrote:
+> > > From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> > > 
+> > > The module version of task_cls_classid() checks if net_cls_sbusys_id
+> > > is valid to indentify when it is okay to access the controller.
+> > > 
+> > > Instead relying on the subusys_id to be set, make it explicit
+> > > with a jump label.
+> > > 
+> > > Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> > > Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> > > Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> > > Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
+> > > Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > > Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> > > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > > Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > > ---
+> > >  include/net/cls_cgroup.h | 5 ++++-
+> > >  net/core/sock.c          | 5 +++++
+> > >  net/sched/cls_cgroup.c   | 9 +++++++++
+> > >  3 files changed, 18 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
+> > > index 401672c..bbbd957 100644
+> > > --- a/include/net/cls_cgroup.h
+> > > +++ b/include/net/cls_cgroup.h
+> > > @@ -16,6 +16,7 @@
+> > >  #include <linux/cgroup.h>
+> > >  #include <linux/hardirq.h>
+> > >  #include <linux/rcupdate.h>
+> > > +#include <linux/jump_label.h>
+> > >  
+> > >  #ifdef CONFIG_CGROUPS
+> > >  struct cgroup_cls_state
+> > > @@ -44,6 +45,8 @@ static inline u32 task_cls_classid(struct task_struct *p)
+> > >  }
+> > >  
+> > >  #elif IS_MODULE(CONFIG_NET_CLS_CGROUP)
+> > > +extern struct static_key cgroup_cls_enabled;
+> > > +#define clscg_enabled static_key_false(&cgroup_cls_enabled)
+> > >  
+> > >  extern int net_cls_subsys_id;
+> > >  
+> > > @@ -52,7 +55,7 @@ static inline u32 task_cls_classid(struct task_struct *p)
+> > >  	int id;
+> > >  	u32 classid = 0;
+> > >  
+> > > -	if (in_interrupt())
+> > > +	if (!clscg_enabled || in_interrupt())
+> > >  		return 0;
+> > >  
+> > >  	rcu_read_lock();
+> > > diff --git a/net/core/sock.c b/net/core/sock.c
+> > > index 8f67ced..8106e77 100644
+> > > --- a/net/core/sock.c
+> > > +++ b/net/core/sock.c
+> > > @@ -327,6 +327,11 @@ int __sk_backlog_rcv(struct sock *sk, struct sk_buff *skb)
+> > >  EXPORT_SYMBOL(__sk_backlog_rcv);
+> > >  
+> > >  #if defined(CONFIG_CGROUPS)
+> > > +#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
+> > > +struct static_key cgroup_cls_enabled = STATIC_KEY_INIT_FALSE;
+> > > +EXPORT_SYMBOL_GPL(cgroup_cls_enabled);
+> > > +#endif
+> > > +
+> > >  #if !defined(CONFIG_NET_CLS_CGROUP)
+> > >  int net_cls_subsys_id = -1;
+> > >  EXPORT_SYMBOL_GPL(net_cls_subsys_id);
+> > > diff --git a/net/sched/cls_cgroup.c b/net/sched/cls_cgroup.c
+> > > index 7743ea8..0635894 100644
+> > > --- a/net/sched/cls_cgroup.c
+> > > +++ b/net/sched/cls_cgroup.c
+> > > @@ -44,12 +44,21 @@ static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
+> > >  
+> > >  	if (cgrp->parent)
+> > >  		cs->classid = cgrp_cls_state(cgrp->parent)->classid;
+> > > +#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
+> > > +	else if (!clscg_enabled)
+> > > +                static_key_slow_inc(&cgroup_cls_enabled);
+> > This is racy I think.  The read of the static key is atomic with other reads,
+> > but the entire conditional is not atomic.  If two cpus were creating cgroups in
+> > parallel, it would be possible for both to read the static key as being zero
+> > (the second cpu would read the key before the first cpu could increment it).
 > 
-> Hm, can't we free css_id and delete css structure from the css_id idr tree
-> when a memcg goes zombie ?
+> D'oh, That is racy.
 > 
-> Thanks,
-> -Kame
+> > > +#endif
+> > >  
+> > >  	return &cs->css;
+> > >  }
+> > >  
+> > >  static void cgrp_destroy(struct cgroup *cgrp)
+> > >  {
+> > > +#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
+> > > +	if (!cgrp->parent && clscg_enabled)
+> > > +                static_key_slow_dec(&cgroup_cls_enabled);
+> > Ditto here with the race above.  I think what you want is one of:
+> > 
+> > 1) Use static_key_slow_[inc|dec] unconditionally 
+> 
+> While the static_key_slow_inc() case will work, I am not so sure about
+> the static_key_slow_dec(), e.g. we could still access inside
+> task_cls_classid() a destroyed container.
+> 
+Possibly, yes, I think.
 
-Kame,
+> > 2) Keep a separate internal counter to track the number of cgroup instances
+> > so that you only inc the static key on the first create and dec it on the last
+> > delete.
+> 
+> If I got you right, than this would not be different then direclty using
+> static_key_slow_[inc|dec].
+> 
+As long as a cgroup subsystems ->destroy method is only called when the
+subsystem is being removed, then I think thats correct.  I'm not 100% sure thats
+the case though.
 
-I wrote a patch that does exactly that. Can you take a look? (I posted
-it already)
-I actually need to go back to it, because greg seems to be right saying
-that that will break things for memsw. But a simplified version may work.
+> > I would think (1) would be sufficent.  It looks like static_key_slow_inc uses
+> > atomic_inc_not_zero to just do an inc anyway in the event that multiple inc
+> > events are made.
+> 
+> Would something like this work?
+> 
+I think so yes, assuming that you also make the slow_inc|dec changes
 
-
+> static inline u32 task_cls_classid(struct task_struct *p)
+> {
+> 	u32 classid;
+> 	struct cgroup_cls_state *css;
+> 
+> 	if (!clscg_enabled || in_interrupt())
+> 		return 0;
+> 
+> 	rcu_read_lock();
+> 	css = container_of(task_subsys_state(p, net_cls_subsys_id),
+> 			   struct cgroup_cls_state, css);
+> 	if (!css)
+> 		classid = css->classid;
+> 	else
+> 		classid = 0;
+> 	rcu_read_unlock();
+> 
+> 	return classid;
+> }
+> 
+> Daniel
+> 
