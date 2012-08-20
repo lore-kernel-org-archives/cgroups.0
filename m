@@ -1,51 +1,86 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v1 3/5] cgroup: Protect access to task_cls_classid() when
- built as module
-Date: Mon, 20 Aug 2012 15:33:59 +0400
-Message-ID: <503220A7.2010807@parallels.com>
-References: <1345215494-9181-1-git-send-email-wagi@monom.org> <1345215494-9181-4-git-send-email-wagi@monom.org> <20120817182855.GA11607@hmsreliant.think-freely.org> <20120820112938.GA22415@candlejack.bmw-carit.intra>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Mon, 20 Aug 2012 22:36:16 +0900
+Message-ID: <50323D50.8070307@jp.fujitsu.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com> <1344517279-30646-7-git-send-email-glommer@parallels.com> <50254475.4000201@jp.fujitsu.com> <5028BA9E.7000302@parallels.com> <xr93ipcl9u7x.fsf@gthelen.mtv.corp.google.com> <502B6956.5030508@parallels.com> <xr93wr109kke.fsf@gthelen.mtv.corp.google.com> <502BD5AF.301@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120820112938.GA22415-rjQKm2AMs/APuY3F5OKgMy7zKzJi9e1+kcYEyfhdaNw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <502BD5AF.301@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Glauber Costa <glommer@parallels.com>
+Cc: Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 08/20/2012 03:29 PM, Daniel Wagner wrote:
->> This is racy I think.  The read of the static key is atomic with other reads,
->> > but the entire conditional is not atomic.  If two cpus were creating cgroups in
->> > parallel, it would be possible for both to read the static key as being zero
->> > (the second cpu would read the key before the first cpu could increment it).
-> D'oh, That is racy.
-> 
+(2012/08/16 2:00), Glauber Costa wrote:
+> On 08/15/2012 08:38 PM, Greg Thelen wrote:
+>> On Wed, Aug 15 2012, Glauber Costa wrote:
+>>
+>>> On 08/14/2012 10:58 PM, Greg Thelen wrote:
+>>>> On Mon, Aug 13 2012, Glauber Costa wrote:
+>>>>
+>>>>>>>> +	WARN_ON(mem_cgroup_is_root(memcg));
+>>>>>>>> +	size = (1 << order) << PAGE_SHIFT;
+>>>>>>>> +	memcg_uncharge_kmem(memcg, size);
+>>>>>>>> +	mem_cgroup_put(memcg);
+>>>>>> Why do we need ref-counting here ? kmem res_counter cannot work as
+>>>>>> reference ?
+>>>>> This is of course the pair of the mem_cgroup_get() you commented on
+>>>>> earlier. If we need one, we need the other. If we don't need one, we
+>>>>> don't need the other =)
+>>>>>
+>>>>> The guarantee we're trying to give here is that the memcg structure will
+>>>>> stay around while there are dangling charges to kmem, that we decided
+>>>>> not to move (remember: moving it for the stack is simple, for the slab
+>>>>> is very complicated and ill-defined, and I believe it is better to treat
+>>>>> all kmem equally here)
+>>>>
+>>>> By keeping memcg structures hanging around until the last referring kmem
+>>>> page is uncharged do such zombie memcg each consume a css_id and thus
+>>>> put pressure on the 64k css_id space?  I imagine in pathological cases
+>>>> this would prevent creation of new cgroups until these zombies are
+>>>> dereferenced.
+>>>
+>>> Yes, but although this patch makes it more likely, it doesn't introduce
+>>> that. If the tasks, for instance, grab a reference to the cgroup dentry
+>>> in the filesystem (like their CWD, etc), they will also keep the cgroup
+>>> around.
+>>
+>> Fair point.  But this doesn't seems like a feature.  It's probably not
+>> needed initially, but what do you think about creating a
+>> memcg_kernel_context structure which is allocated when memcg is
+>> allocated?  Kernel pages charged to a memcg would have
+>> page_cgroup->mem_cgroup=memcg_kernel_context rather than memcg.  This
+>> would allow the mem_cgroup and its css_id to be deleted when the cgroup
+>> is unlinked from cgroupfs while allowing for the active kernel pages to
+>> continue pointing to a valid memcg_kernel_context.  This would be a
+>> reference counted structure much like you are doing with memcg.  When a
+>> memcg is deleted the memcg_kernel_context would be linked into its
+>> surviving parent memcg.  This would avoid needing to visit each kernel
+>> page.
+>
+> You need more, you need at the res_counters to stay around as well. And
+> probably other fields.
+>
+> So my fear here is that as you add fields to that structure, you can
+> defeat a bit the goal of reducing memory consumption. Still leaves the
+> css space, yes. But by doing this we can introduce some subtle bugs by
+> having a field in the wrong structure.
+>
 
-Take a look at how we solve this particular problem in memcg. By using a
-pair of bits meaning "ever active" and "currently active", we can avoid
-problems with the static key increments.
+Hm, can't we free css_id and delete css structure from the css_id idr tree
+when a memcg goes zombie ?
 
-Nothing bad can't happen by increasing the static key more than once;
-the problem is that you need to somehow take note of that to make sure
-you decrement the as many times you incremented when you release it.
+Thanks,
+-Kame
 
-Two other important things to keep in mind while dealing with static
-branches:
 
-* You can't increase/decrease while holding the cgroup_lock. lockdep may
-trigger, because the cgroup_lock holds the cpu_hotplug lock, that the
-static branches update path will also take. (due to cpusets). Doing a
-logical hotplug will stress this path, and make the problem visible.
 
-Take a look at disarm_sock_keys() (mm/memcontrol.c) to see how we solve
-this particular problem.
 
-* If you have code in more than one call site, the update among them is
-not atomic. Not sure if this one applies to your case, but it can lead
-you to some very unpleasant to debug problems. We use one of those two
-bits I mentioned ("currently active") to make sure objects are not
-marked before all sites are already patched.
 
-Hope our previous experience with this can help you.
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
