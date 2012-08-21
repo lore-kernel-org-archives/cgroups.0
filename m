@@ -1,50 +1,53 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2] memcg: execute partial memcg freeing in mem_cgroup_destroy
-Date: Tue, 21 Aug 2012 17:34:44 +0400
-Message-ID: <50338E74.9020507@parallels.com>
-References: <1345114903-20627-1-git-send-email-glommer@parallels.com> <xr93vcgiazok.fsf@gthelen.mtv.corp.google.com> <502DCDD0.3060502@parallels.com> <xr93a9xu9g7z.fsf@gthelen.mtv.corp.google.com>
+From: Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 3/4] cgroup: add xattr support
+Date: Tue, 21 Aug 2012 23:43:44 +0200
+Message-ID: <50340110.50607@redhat.com>
+References: <20120816174453.154143248@napanee.usersys.redhat.com> <20120816174454.087507415@napanee.usersys.redhat.com> <20120816200006.GG24861@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <xr93a9xu9g7z.fsf@gthelen.mtv.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120816200006.GG24861-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Greg Thelen <gthelen@google.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 08/17/2012 10:37 AM, Greg Thelen wrote:
->> >
->> > Can we demonstrate that? I agree there might be a potential problem, and
->> > that is why I sent this separately. But the impression I got after
->> > testing and reading the code, was that the memcg information in
->> > pc->mem_cgroup would be updated to the parent.
->> >
->> > This means that any later call to uncharge or uncharge_swap would just
->> > uncharge from the parent memcg and we'd have no problem.
-> I am by no means a swap expert, so I may be heading in the weeds.  But I
-> think that a swapped out page is not necessarily in any memcg lru.  So
-> the mem_cgroup_pre_destroy() call to mem_cgroup_force_empty() will not
-> necessarily see swapped out pages.
-> 
-> I think this demonstrates the problem.
+Heya,
 
-Ok, thanks Greg.
-This seem to happen solely because we use the css_id in swap_cgroup
-structure, and that needs to stay around. If we stored the memcg address
-instead, we'd have no such problem. (I believe so atm, still need to go
-dig deeper)
+(sorry for the late reply)
 
-But this would lead to a 4 times bigger memory usage for that. Quite a
-waste considering this tend to be sparsely used most of the time.
+On 16.08.2012 22:00, Tejun Heo wrote:
+> On Thu, Aug 16, 2012 at 01:44:56PM -0400, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
 
+>>> Attaching meta information to services, in an easily discoverable
+>>> way. For example, in systemd we create one cgroup for each service, and
+>>> could then store data like the main pid of the specific service as an
+>>> xattr on the cgroup itself. That way we'd have almost all service state
+>>> in the cgroupfs, which would make it possible to terminate systemd and
+>>> later restart it without losing any state information. But there's more:
+>>> for example, some very peculiar services cannot be terminated on
+>>> shutdown (i.e. fakeraid DM stuff) and it would be really nice if the
+>>> services in question could just mark that on their cgroup, by setting an
+>>> xattr. On the more desktopy side of things there are other
+>>> possibilities: for example there are plans defining what an application
+>>> is along the lines of a cgroup (i.e. an app being a collection of
+>>> processes). With xattrs one could then attach an icon or human readable
+>>> program name on the cgroup.
+>>>
+>>> The key idea is that this would allow attaching runtime meta information
+>>> to cgroups and everything they model (services, apps, vms), that doesn't
+>>> need any complex userspace infrastructure, has good access control
+>>> (i.e. because the file system enforces that anyway, and there's the
+>>> "trusted." xattr namespace), notifications (inotify), and can easily be
+>>> shared among applications.
 
+>
+> I'm not against this but unsure whether using kmem is enough for the
+> suggested use case.  Lennart, would this suit systemd?  How much
+> metadata are we talking about?
 
+Just small things, like values, PIDs, i.e. a few 100 bytes or so per 
+cgroup should be more than sufficient for our needs.
 
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Lennart
