@@ -1,60 +1,105 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v6 1/4] xattr: extract simple_xattr code from tmpfs
-Date: Wed, 22 Aug 2012 16:55:57 -0400
-Message-ID: <20120822205556.GE16951@redhat.com>
-References: <20120816174453.154143248@napanee.usersys.redhat.com>
- <20120816174453.507922179@napanee.usersys.redhat.com>
- <20120816195831.GF24861@google.com>
- <alpine.LSU.2.00.1208192356580.24824@eggly.anvils>
- <20120820190039.GR25353@redhat.com>
- <alpine.LSU.2.00.1208202122470.1286@eggly.anvils>
- <20120822200746.GD16951@redhat.com>
- <alpine.LSU.2.00.1208221312540.1909@eggly.anvils>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH v2 09/11] memcg: propagate kmem limiting information to children
+Date: Wed, 22 Aug 2012 16:23:12 -0700
+Message-ID: <xr93a9xmwly7.fsf@gthelen.mtv.corp.google.com>
+References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
+	<1344517279-30646-10-git-send-email-glommer@parallels.com>
+	<20120817090005.GC18600@dhcp22.suse.cz>
+	<502E0BC3.8090204@parallels.com>
+	<20120817093504.GE18600@dhcp22.suse.cz>
+	<502E17C4.7060204@parallels.com>
+	<20120817103550.GF18600@dhcp22.suse.cz>
+	<502E1E90.1080805@parallels.com>
+	<20120821075430.GA19797@dhcp22.suse.cz>
+	<50335341.6010400@parallels.com>
+	<20120821100007.GE19797@dhcp22.suse.cz>
+	<xr93fw7fbumo.fsf@gthelen.mtv.corp.google.com>
+	<503496D9.3020806@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.1208221312540.1909-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version:content-type;
+        bh=K1v9FJMkvEeRKQSRgQkfb4G9AeOnPPTi97dFO8TVY7w=;
+        b=gznvPOZgJkm3SPFXzlU6JoR3z7I9VGr0pS5HzoYMuCemnQc8Mu4XtnC9eGfpxBXF/E
+         HLlHyatGswI4puq+lHxT4r1jT+bMcDU7IQWwfERsHWnLjr6zN3CYJ5mT5dCvkyudFfb+
+         Mq/IIiafADvX0MRzQ/rZSBpACqQvtwPO2AcNUx2C7SvyDBKs87lgCryr1pyDqOz+4C6a
+         IymE6QTDsiVFzoIS6fuYjg8YJopXyTq7u8xDSpb1dTCETuQqb1R61fLZ+e6PVpcDg6fn
+         LXiUWjZNxhHFL6gqWVe9WjjXValjwjTaavN0AHwj6olep2Y8qkHg+KXDByWf5twK92+f
+         sVyQ==
+In-Reply-To: <503496D9.3020806@parallels.com> (Glauber Costa's message of
+	"Wed, 22 Aug 2012 12:22:49 +0400")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
-On Wed, Aug 22, 2012 at 01:25:06PM -0700, Hugh Dickins wrote:
-> > > Probably more important would be to remove spin_lock() and spin_unlock()
-> > > (and INIT_LIST_HEAD) from simple_xattrs_free() - those are unnecessary
-> > > in shmem_evict_inode(), and wouldn't they be unnecessary whenever
-> > > simple_xattrs_free() gets called?
-> > 
-> > Removing INIT_LIST_HEAD() it's possible by actually unlinking each xattr
-> > inside the loop before freeing them. still, it'll have to check if the list is
-> > empty or not, which might end up being the same?
-> > 
-> > About the locking, I'm not sure, I'm investigating it.
-> 
-> I think we have a misunderstanding.
-> 
-> INIT_LIST_HEAD() is not expensive, I just meant to remove it because
-> I thought it unnecessary by that point.
+On Wed, Aug 22 2012, Glauber Costa wrote:
 
-ah, I see.
+>>>>
+>>>> I am fine with either, I just need a clear sign from you guys so I don't
+>>>> keep deimplementing and reimplementing this forever.
+>>>
+>>> I would be for make it simple now and go with additional features later
+>>> when there is a demand for them. Maybe we will have runtimg switch for
+>>> user memory accounting as well one day.
+>>>
+>>> But let's see what others think?
+>> 
+>> In my use case memcg will either be disable or (enabled and kmem
+>> limiting enabled).
+>> 
+>> I'm not sure I follow the discussion about history.  Are we saying that
+>> once a kmem limit is set then kmem will be accounted/charged to memcg.
+>> Is this discussion about the static branches/etc that are autotuned the
+>> first time is enabled?  
+>
+> No, the question is about when you unlimit a former kmem-limited memcg.
+>
+>> The first time its set there parts of the system
+>> will be adjusted in such a way that may impose a performance overhead
+>> (static branches, etc).  Thereafter the performance cannot be regained
+>> without a reboot.  This makes sense to me.  Are we saying that
+>> kmem.limit_in_bytes will have three states?
+>
+> It is not about performance, about interface.
+>
+> Michal says that once a particular memcg was kmem-limited, it will keep
+> accounting pages, even if you make it unlimited. The limits won't be
+> enforced, for sure - there is no limit, but pages will still be accounted.
+>
+> This simplifies the code galore, but I worry about the interface: A
+> person looking at the current status of the files only, without
+> knowledge of past history, can't tell if allocations will be tracked or not.
 
-> Do you envisage anywhere that would call simple_xattrs_free() except
-> a filesystem's evict_inode()?
+In the current patch set we've conflating enabling kmem accounting with
+the kmem limit value (RESOURCE_MAX=disabled, all_other_values=enabled).
 
-cgroup does it differently and it's called in d_iput() path (see cgroup_diput),
-because it needs to selectively remove files upon remount.
+I see no problem with simpling the kernel code with the requirement that
+once a particular memcg enables kmem accounting that it cannot be
+disabled for that memcg.
 
-> By that point, the inode is on its way out of the system: nothing
-> much (yes, I am being a bit vague there ;) can get to it any more,
-> there's no need to reinitialize the list head and there's no need for
-> locking, because nothing else can be playing with those xattrs now.
+The only question is the user space interface.  Two options spring to
+mind:
+a) Close to current code.  Once kmem.limit_in_bytes is set to
+   non-RESOURCE_MAX, then kmem accounting is enabled and cannot be
+   disabled.  Therefore the limit cannot be set to RESOURCE_MAX
+   thereafter.  The largest value would be something like
+   RESOURCE_MAX-PAGE_SIZE.  An admin wondering if kmem is enabled only
+   has to cat kmem.limit_in_bytes - if it's less than RESOURCE_MAX, then
+   kmem is enabled.
 
-I agree with you. That's why I'm looking into it because I'm pretty sure
-I removed it at some point in the past and decided to put it back after
-investigating the easily reproducible oops. Sadly I managed to forget
-the analisys I did at the time.
+b) Or, if we could introduce a separate sticky kmem.enabled file.  Once
+   set it could not be unset.  Kmem accounting would only be enabled if
+   kmem.enabled=1.
 
--- 
-Aristeu
+I think (b) is clearer.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
