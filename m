@@ -1,194 +1,347 @@
-From: aris@redhat.com
-Subject: [PATCH v7 2/4] cgroup: revise how we re-populate root directory
-Date: Thu, 23 Aug 2012 16:53:29 -0400
-Message-ID: <20120823205327.919315135@napanee.usersys.redhat.com>
+From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH v7 3/4] cgroup: add xattr support
+Date: Thu, 23 Aug 2012 16:53:30 -0400
+Message-ID: <20120823205328.203219708@napanee.usersys.redhat.com>
 References: <20120823205327.237533518@napanee.usersys.redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=cgroup2.patch
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline; filename=cgroup3.patch
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Hillf Danton <dhillf@gmail.com>, Lennart Poettering <lpoetter@redhat.com>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Li Zefan <lizefan@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-When remounting cgroupfs with some subsystems added to it and some
-removed, cgroup will remove all the files in root directory and then
-re-popluate it.
+This is one of the items in the plumber's wish list.
 
-What I'm doing here is, only remove files which belong to subsystems that
-are to be unbinded, and only create files for newly-added subsystems.
-The purpose is to have all other files untouched.
+For use cases:
 
-This is a preparation for cgroup xattr support.
+>> What would the use case be for this?
+>
+> Attaching meta information to services, in an easily discoverable
+> way. For example, in systemd we create one cgroup for each service, and
+> could then store data like the main pid of the specific service as an
+> xattr on the cgroup itself. That way we'd have almost all service state
+> in the cgroupfs, which would make it possible to terminate systemd and
+> later restart it without losing any state information. But there's more:
+> for example, some very peculiar services cannot be terminated on
+> shutdown (i.e. fakeraid DM stuff) and it would be really nice if the
+> services in question could just mark that on their cgroup, by setting an
+> xattr. On the more desktopy side of things there are other
+> possibilities: for example there are plans defining what an application
+> is along the lines of a cgroup (i.e. an app being a collection of
+> processes). With xattrs one could then attach an icon or human readable
+> program name on the cgroup.
+>
+> The key idea is that this would allow attaching runtime meta information
+> to cgroups and everything they model (services, apps, vms), that doesn't
+> need any complex userspace infrastructure, has good access control
+> (i.e. because the file system enforces that anyway, and there's the
+> "trusted." xattr namespace), notifications (inotify), and can easily be
+> shared among applications.
+>
+> Lennart
 
 v7:
-- checkpatch warnings fixed
+- no changes
 v6:
-- no changes
+- remove user xattr namespace, only allow trusted and security
 v5:
-- no changes
+- check for capabilities before setting/removing xattrs
 v4:
-- refactored cgroup_clear_directory() to not use cgroup_rm_file()
-- instead of going thru the list of files, get the file list using the
-  subsystems
-- use 'subsys_mask' instead of {added,removed}_bits and made
-  cgroup_populate_dir() to match the parameters with cgroup_clear_directory()
+- no changes
 v3:
-- refresh patches after recent refactoring
+- instead of config option, use mount option to enable xattr support
 
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Hillf Danton <dhillf@gmail.com>
-Cc: Lennart Poettering <lpoetter@redhat.com>
-Signed-off-by: Li Zefan <lizefan@huawei.com>
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 ---
- kernel/cgroup.c |   61 ++++++++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 48 insertions(+), 13 deletions(-)
+ include/linux/cgroup.h |   13 ++++--
+ kernel/cgroup.c        |  100 +++++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 103 insertions(+), 10 deletions(-)
 
-Index: github/kernel/cgroup.c
+Index: github/include/linux/cgroup.h
 ===================================================================
---- github.orig/kernel/cgroup.c	2012-08-23 15:46:12.557171590 -0400
-+++ github/kernel/cgroup.c	2012-08-23 15:48:33.577016061 -0400
-@@ -824,7 +824,8 @@
- static int cgroup_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode);
- static struct dentry *cgroup_lookup(struct inode *, struct dentry *, unsigned int);
- static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry);
--static int cgroup_populate_dir(struct cgroup *cgrp);
-+static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
-+			       unsigned long subsys_mask);
- static const struct inode_operations cgroup_dir_inode_operations;
- static const struct file_operations proc_cgroupstats_operations;
+--- github.orig/include/linux/cgroup.h	2012-08-23 15:46:12.465169082 -0400
++++ github/include/linux/cgroup.h	2012-08-23 15:48:42.485258910 -0400
+@@ -17,6 +17,7 @@
+ #include <linux/rwsem.h>
+ #include <linux/idr.h>
+ #include <linux/workqueue.h>
++#include <linux/xattr.h>
  
-@@ -963,12 +964,29 @@
- 	return -ENOENT;
- }
+ #ifdef CONFIG_CGROUPS
  
--static void cgroup_clear_directory(struct dentry *dir)
-+/**
-+ * cgroup_clear_directory - selective removal of base and subsystem files
-+ * @dir: directory containing the files
-+ * @base_files: true if the base files should be removed
-+ * @subsys_mask: mask of the subsystem ids whose files should be removed
-+ */
-+static void cgroup_clear_directory(struct dentry *dir, bool base_files,
-+				   unsigned long subsys_mask)
- {
- 	struct cgroup *cgrp = __d_cgrp(dir);
-+	struct cgroup_subsys *ss;
- 
--	while (!list_empty(&cgrp->files))
--		cgroup_rm_file(cgrp, NULL);
-+	for_each_subsys(cgrp->root, ss) {
-+		struct cftype_set *set;
-+		if (!test_bit(ss->subsys_id, &subsys_mask))
-+			continue;
-+		list_for_each_entry(set, &ss->cftsets, node)
-+			cgroup_rm_file(cgrp, set->cfts);
-+	}
-+	if (base_files) {
-+		while (!list_empty(&cgrp->files))
-+			cgroup_rm_file(cgrp, NULL);
-+	}
- }
- 
- /*
-@@ -977,8 +995,9 @@
- static void cgroup_d_remove_dir(struct dentry *dentry)
- {
- 	struct dentry *parent;
-+	struct cgroupfs_root *root = dentry->d_sb->s_fs_info;
- 
--	cgroup_clear_directory(dentry);
-+	cgroup_clear_directory(dentry, true, root->subsys_bits);
- 
- 	parent = dentry->d_parent;
- 	spin_lock(&parent->d_lock);
-@@ -1339,6 +1358,7 @@
- 	struct cgroupfs_root *root = sb->s_fs_info;
- 	struct cgroup *cgrp = &root->top_cgroup;
- 	struct cgroup_sb_opts opts;
-+	unsigned long added_bits, removed_bits;
- 
- 	mutex_lock(&cgrp->dentry->d_inode->i_mutex);
- 	mutex_lock(&cgroup_mutex);
-@@ -1354,6 +1374,9 @@
- 		pr_warning("cgroup: option changes via remount are deprecated (pid=%d comm=%s)\n",
- 			   task_tgid_nr(current), current->comm);
- 
-+	added_bits = opts.subsys_bits & ~root->subsys_bits;
-+	removed_bits = root->subsys_bits & ~opts.subsys_bits;
+@@ -216,6 +217,9 @@
+ 	/* List of events which userspace want to receive */
+ 	struct list_head event_list;
+ 	spinlock_t event_list_lock;
 +
- 	/* Don't allow flags or name to change at remount */
- 	if (opts.flags != root->flags ||
- 	    (opts.name && strcmp(opts.name, root->name))) {
-@@ -1369,8 +1392,9 @@
- 	}
- 
- 	/* clear out any existing files and repopulate subsystem files */
--	cgroup_clear_directory(cgrp->dentry);
--	cgroup_populate_dir(cgrp);
-+	cgroup_clear_directory(cgrp->dentry, false, removed_bits);
-+	/* re-populate subsystem files */
-+	cgroup_populate_dir(cgrp, false, added_bits);
- 
- 	if (opts.release_agent)
- 		strcpy(root->release_agent_path, opts.release_agent);
-@@ -1669,7 +1693,7 @@
- 		BUG_ON(root->number_of_cgroups != 1);
- 
- 		cred = override_creds(&init_cred);
--		cgroup_populate_dir(root_cgrp);
-+		cgroup_populate_dir(root_cgrp, true, root->subsys_bits);
- 		revert_creds(cred);
- 		mutex_unlock(&cgroup_root_mutex);
- 		mutex_unlock(&cgroup_mutex);
-@@ -3843,18 +3867,29 @@
- 	{ }	/* terminate */
++	/* directory xattrs */
++	struct simple_xattrs xattrs;
  };
  
--static int cgroup_populate_dir(struct cgroup *cgrp)
-+/**
-+ * cgroup_populate_dir - selectively creation of files in a directory
-+ * @cgrp: target cgroup
-+ * @base_files: true if the base files should be added
-+ * @subsys_mask: mask of the subsystem ids whose files should be added
-+ */
-+static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
-+			       unsigned long subsys_mask)
- {
- 	int err;
- 	struct cgroup_subsys *ss;
+ /*
+@@ -309,6 +313,9 @@
+ 	/* CFTYPE_* flags */
+ 	unsigned int flags;
  
--	err = cgroup_addrm_files(cgrp, NULL, files, true);
--	if (err < 0)
--		return err;
-+	if (base_files) {
-+		err = cgroup_addrm_files(cgrp, NULL, files, true);
-+		if (err < 0)
-+			return err;
-+	}
++	/* file xattrs */
++	struct simple_xattrs xattrs;
++
+ 	int (*open)(struct inode *inode, struct file *file);
+ 	ssize_t (*read)(struct cgroup *cgrp, struct cftype *cft,
+ 			struct file *file,
+@@ -394,7 +401,7 @@
+  */
+ struct cftype_set {
+ 	struct list_head		node;	/* chained at subsys->cftsets */
+-	const struct cftype		*cfts;
++	struct cftype			*cfts;
+ };
  
- 	/* process cftsets of each subsystem */
- 	for_each_subsys(cgrp->root, ss) {
- 		struct cftype_set *set;
-+		if (!test_bit(ss->subsys_id, &subsys_mask))
+ struct cgroup_scanner {
+@@ -406,8 +413,8 @@
+ 	void *data;
+ };
+ 
+-int cgroup_add_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts);
+-int cgroup_rm_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts);
++int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
++int cgroup_rm_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ 
+ int cgroup_is_removed(const struct cgroup *cgrp);
+ 
+Index: github/kernel/cgroup.c
+===================================================================
+--- github.orig/kernel/cgroup.c	2012-08-23 15:48:33.577016061 -0400
++++ github/kernel/cgroup.c	2012-08-23 15:48:42.485258910 -0400
+@@ -276,7 +276,8 @@
+ 
+ /* bits in struct cgroupfs_root flags field */
+ enum {
+-	ROOT_NOPREFIX, /* mounted subsystems have no named prefix */
++	ROOT_NOPREFIX,	/* mounted subsystems have no named prefix */
++	ROOT_XATTR,	/* supports extended attributes */
+ };
+ 
+ static int cgroup_is_releasable(const struct cgroup *cgrp)
+@@ -913,15 +914,19 @@
+ 		 */
+ 		BUG_ON(!list_empty(&cgrp->pidlists));
+ 
++		simple_xattrs_free(&cgrp->xattrs);
++
+ 		kfree_rcu(cgrp, rcu_head);
+ 	} else {
+ 		struct cfent *cfe = __d_cfe(dentry);
+ 		struct cgroup *cgrp = dentry->d_parent->d_fsdata;
++		struct cftype *cft = cfe->type;
+ 
+ 		WARN_ONCE(!list_empty(&cfe->node) &&
+ 			  cgrp != &cgrp->root->top_cgroup,
+ 			  "cfe still linked for %s\n", cfe->type->name);
+ 		kfree(cfe);
++		simple_xattrs_free(&cft->xattrs);
+ 	}
+ 	iput(inode);
+ }
+@@ -1140,6 +1145,8 @@
+ 		seq_printf(seq, ",%s", ss->name);
+ 	if (test_bit(ROOT_NOPREFIX, &root->flags))
+ 		seq_puts(seq, ",noprefix");
++	if (test_bit(ROOT_XATTR, &root->flags))
++		seq_puts(seq, ",xattr");
+ 	if (strlen(root->release_agent_path))
+ 		seq_printf(seq, ",release_agent=%s", root->release_agent_path);
+ 	if (clone_children(&root->top_cgroup))
+@@ -1208,6 +1215,10 @@
+ 			opts->clone_children = true;
+ 			continue;
+ 		}
++		if (!strcmp(token, "xattr")) {
++			set_bit(ROOT_XATTR, &opts->flags);
 +			continue;
++		}
+ 		if (!strncmp(token, "release_agent=", 14)) {
+ 			/* Specifying two release agents is forbidden */
+ 			if (opts->release_agent)
+@@ -1425,6 +1436,7 @@
+ 	mutex_init(&cgrp->pidlist_mutex);
+ 	INIT_LIST_HEAD(&cgrp->event_list);
+ 	spin_lock_init(&cgrp->event_list_lock);
++	simple_xattrs_init(&cgrp->xattrs);
+ }
  
- 		list_for_each_entry(set, &ss->cftsets, node)
- 			cgroup_addrm_files(cgrp, ss, set->cfts, true);
-@@ -3988,7 +4023,7 @@
- 
- 	list_add_tail(&cgrp->allcg_node, &root->allcg_list);
- 
--	err = cgroup_populate_dir(cgrp);
-+	err = cgroup_populate_dir(cgrp, true, root->subsys_bits);
- 	/* If err < 0, we have a half-filled directory - oh well ;) */
- 
+ static void init_cgroup_root(struct cgroupfs_root *root)
+@@ -1769,6 +1781,8 @@
+ 	mutex_unlock(&cgroup_root_mutex);
  	mutex_unlock(&cgroup_mutex);
+ 
++	simple_xattrs_free(&cgrp->xattrs);
++
+ 	kill_litter_super(sb);
+ 	cgroup_drop_root(root);
+ }
+@@ -2575,6 +2589,64 @@
+ 	return simple_rename(old_dir, old_dentry, new_dir, new_dentry);
+ }
+ 
++static struct simple_xattrs *__d_xattrs(struct dentry *dentry)
++{
++	if (S_ISDIR(dentry->d_inode->i_mode))
++		return &__d_cgrp(dentry)->xattrs;
++	else
++		return &__d_cft(dentry)->xattrs;
++}
++
++static inline int xattr_enabled(struct dentry *dentry)
++{
++	struct cgroupfs_root *root = dentry->d_sb->s_fs_info;
++	return test_bit(ROOT_XATTR, &root->flags);
++}
++
++static bool is_valid_xattr(const char *name)
++{
++	if (!strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN) ||
++	    !strncmp(name, XATTR_SECURITY_PREFIX, XATTR_SECURITY_PREFIX_LEN))
++		return true;
++	return false;
++}
++
++static int cgroup_setxattr(struct dentry *dentry, const char *name,
++			   const void *val, size_t size, int flags)
++{
++	if (!xattr_enabled(dentry))
++		return -EOPNOTSUPP;
++	if (!is_valid_xattr(name))
++		return -EINVAL;
++	return simple_xattr_set(__d_xattrs(dentry), name, val, size, flags);
++}
++
++static int cgroup_removexattr(struct dentry *dentry, const char *name)
++{
++	if (!xattr_enabled(dentry))
++		return -EOPNOTSUPP;
++	if (!is_valid_xattr(name))
++		return -EINVAL;
++	return simple_xattr_remove(__d_xattrs(dentry), name);
++}
++
++static ssize_t cgroup_getxattr(struct dentry *dentry, const char *name,
++			       void *buf, size_t size)
++{
++	if (!xattr_enabled(dentry))
++		return -EOPNOTSUPP;
++	if (!is_valid_xattr(name))
++		return -EINVAL;
++	return simple_xattr_get(__d_xattrs(dentry), name, buf, size);
++}
++
++static ssize_t cgroup_listxattr(struct dentry *dentry, char *buf, size_t size)
++{
++	if (!xattr_enabled(dentry))
++		return -EOPNOTSUPP;
++	return simple_xattr_list(__d_xattrs(dentry), buf, size);
++}
++
+ static const struct file_operations cgroup_file_operations = {
+ 	.read = cgroup_file_read,
+ 	.write = cgroup_file_write,
+@@ -2583,11 +2655,22 @@
+ 	.release = cgroup_file_release,
+ };
+ 
++static const struct inode_operations cgroup_file_inode_operations = {
++	.setxattr = cgroup_setxattr,
++	.getxattr = cgroup_getxattr,
++	.listxattr = cgroup_listxattr,
++	.removexattr = cgroup_removexattr,
++};
++
+ static const struct inode_operations cgroup_dir_inode_operations = {
+ 	.lookup = cgroup_lookup,
+ 	.mkdir = cgroup_mkdir,
+ 	.rmdir = cgroup_rmdir,
+ 	.rename = cgroup_rename,
++	.setxattr = cgroup_setxattr,
++	.getxattr = cgroup_getxattr,
++	.listxattr = cgroup_listxattr,
++	.removexattr = cgroup_removexattr,
+ };
+ 
+ static struct dentry *cgroup_lookup(struct inode *dir, struct dentry *dentry, unsigned int flags)
+@@ -2635,6 +2718,7 @@
+ 	} else if (S_ISREG(mode)) {
+ 		inode->i_size = 0;
+ 		inode->i_fop = &cgroup_file_operations;
++		inode->i_op = &cgroup_file_inode_operations;
+ 	}
+ 	d_instantiate(dentry, inode);
+ 	dget(dentry);	/* Extra count - pin the dentry in core */
+@@ -2695,7 +2779,7 @@
+ }
+ 
+ static int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *subsys,
+-			   const struct cftype *cft)
++			   struct cftype *cft)
+ {
+ 	struct dentry *dir = cgrp->dentry;
+ 	struct cgroup *parent = __d_cgrp(dir);
+@@ -2705,6 +2789,8 @@
+ 	umode_t mode;
+ 	char name[MAX_CGROUP_TYPE_NAMELEN + MAX_CFTYPE_NAME + 2] = { 0 };
+ 
++	simple_xattrs_init(&cft->xattrs);
++
+ 	/* does @cft->flags tell us to skip creation on @cgrp? */
+ 	if ((cft->flags & CFTYPE_NOT_ON_ROOT) && !cgrp->parent)
+ 		return 0;
+@@ -2745,9 +2831,9 @@
+ }
+ 
+ static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
+-			      const struct cftype cfts[], bool is_add)
++			      struct cftype cfts[], bool is_add)
+ {
+-	const struct cftype *cft;
++	struct cftype *cft;
+ 	int err, ret = 0;
+ 
+ 	for (cft = cfts; cft->name[0] != '\0'; cft++) {
+@@ -2781,7 +2867,7 @@
+ }
+ 
+ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
+-			       const struct cftype *cfts, bool is_add)
++			       struct cftype *cfts, bool is_add)
+ 	__releases(&cgroup_mutex) __releases(&cgroup_cft_mutex)
+ {
+ 	LIST_HEAD(pending);
+@@ -2832,7 +2918,7 @@
+  * function currently returns 0 as long as @cfts registration is successful
+  * even if some file creation attempts on existing cgroups fail.
+  */
+-int cgroup_add_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts)
++int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ {
+ 	struct cftype_set *set;
+ 
+@@ -2862,7 +2948,7 @@
+  * Returns 0 on successful unregistration, -ENOENT if @cfts is not
+  * registered with @ss.
+  */
+-int cgroup_rm_cftypes(struct cgroup_subsys *ss, const struct cftype *cfts)
++int cgroup_rm_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ {
+ 	struct cftype_set *set;
+ 
