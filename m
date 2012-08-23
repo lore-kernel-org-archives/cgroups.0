@@ -1,105 +1,346 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH v2 09/11] memcg: propagate kmem limiting information to children
-Date: Wed, 22 Aug 2012 16:23:12 -0700
-Message-ID: <xr93a9xmwly7.fsf@gthelen.mtv.corp.google.com>
+From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 06/11] memcg: kmem controller infrastructure
+Date: Wed, 22 Aug 2012 17:07:45 -0700
+Message-ID: <xr93boi2v5bi.fsf@gthelen.mtv.corp.google.com>
 References: <1344517279-30646-1-git-send-email-glommer@parallels.com>
-	<1344517279-30646-10-git-send-email-glommer@parallels.com>
-	<20120817090005.GC18600@dhcp22.suse.cz>
-	<502E0BC3.8090204@parallels.com>
-	<20120817093504.GE18600@dhcp22.suse.cz>
-	<502E17C4.7060204@parallels.com>
-	<20120817103550.GF18600@dhcp22.suse.cz>
-	<502E1E90.1080805@parallels.com>
-	<20120821075430.GA19797@dhcp22.suse.cz>
-	<50335341.6010400@parallels.com>
-	<20120821100007.GE19797@dhcp22.suse.cz>
-	<xr93fw7fbumo.fsf@gthelen.mtv.corp.google.com>
-	<503496D9.3020806@parallels.com>
+	<1344517279-30646-7-git-send-email-glommer@parallels.com>
+	<xr93boi3ewxt.fsf@gthelen.mtv.corp.google.com>
+	<503499CC.7070704@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=from:to:cc:subject:references:date:in-reply-to:message-id
          :user-agent:mime-version:content-type;
-        bh=K1v9FJMkvEeRKQSRgQkfb4G9AeOnPPTi97dFO8TVY7w=;
-        b=gznvPOZgJkm3SPFXzlU6JoR3z7I9VGr0pS5HzoYMuCemnQc8Mu4XtnC9eGfpxBXF/E
-         HLlHyatGswI4puq+lHxT4r1jT+bMcDU7IQWwfERsHWnLjr6zN3CYJ5mT5dCvkyudFfb+
-         Mq/IIiafADvX0MRzQ/rZSBpACqQvtwPO2AcNUx2C7SvyDBKs87lgCryr1pyDqOz+4C6a
-         IymE6QTDsiVFzoIS6fuYjg8YJopXyTq7u8xDSpb1dTCETuQqb1R61fLZ+e6PVpcDg6fn
-         LXiUWjZNxhHFL6gqWVe9WjjXValjwjTaavN0AHwj6olep2Y8qkHg+KXDByWf5twK92+f
-         sVyQ==
-In-Reply-To: <503496D9.3020806@parallels.com> (Glauber Costa's message of
-	"Wed, 22 Aug 2012 12:22:49 +0400")
-Sender: owner-linux-mm@kvack.org
+        bh=53rWK2NQT7PLKTGqS1drCyiNAkCghCkl0V62x0caYRo=;
+        b=l7W0OodHkWdb950VnZRVMVOVS6pl0CFOo5NEZL4GxvkdzkqPuQF1l9XhCTjgu0cSty
+         C7BgqHkYqbJ3pNI6BZW/K2R8F+V1DU1SjColcZuPn3xXltBfb9w4KNYl851yNLc3F6Fl
+         WxOl2lBFFqUST+OqFxF7eM/W53fNSpOqUxJ5TePVXcrVac6cIQHALN66CBtBv4xYbNLp
+         3Uu8Ba8NurG8GAkBilPz9A6OdrTEnUb2L8u84CeDz8QShqMMBkQXja1p+Rz1tg6AvDPa
+         jBXeLfT4c1upB6iSZWJWsssferVi6ZkgLHfI7ycIPuY/mhXW/SsD4xP+XNPo+WLjGPt1
+         810g==
+In-Reply-To: <503499CC.7070704-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> (Glauber Costa's message of
+	"Wed, 22 Aug 2012 12:35:24 +0400")
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
 On Wed, Aug 22 2012, Glauber Costa wrote:
 
->>>>
->>>> I am fine with either, I just need a clear sign from you guys so I don't
->>>> keep deimplementing and reimplementing this forever.
->>>
->>> I would be for make it simple now and go with additional features later
->>> when there is a demand for them. Maybe we will have runtimg switch for
->>> user memory accounting as well one day.
->>>
->>> But let's see what others think?
+> On 08/22/2012 01:50 AM, Greg Thelen wrote:
+>> On Thu, Aug 09 2012, Glauber Costa wrote:
 >> 
->> In my use case memcg will either be disable or (enabled and kmem
->> limiting enabled).
+>>> This patch introduces infrastructure for tracking kernel memory pages to
+>>> a given memcg. This will happen whenever the caller includes the flag
+>>> __GFP_KMEMCG flag, and the task belong to a memcg other than the root.
+>>>
+>>> In memcontrol.h those functions are wrapped in inline accessors.  The
+>>> idea is to later on, patch those with static branches, so we don't incur
+>>> any overhead when no mem cgroups with limited kmem are being used.
+>>>
+>>> [ v2: improved comments and standardized function names ]
+>>>
+>>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>>> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+>>> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+>>> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>>> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>>> ---
+>>>  include/linux/memcontrol.h |  79 +++++++++++++++++++
+>>>  mm/memcontrol.c            | 185 +++++++++++++++++++++++++++++++++++++++++++++
+>>>  2 files changed, 264 insertions(+)
+>>>
+>>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>>> index 8d9489f..75b247e 100644
+>>> --- a/include/linux/memcontrol.h
+>>> +++ b/include/linux/memcontrol.h
+>>> @@ -21,6 +21,7 @@
+>>>  #define _LINUX_MEMCONTROL_H
+>>>  #include <linux/cgroup.h>
+>>>  #include <linux/vm_event_item.h>
+>>> +#include <linux/hardirq.h>
+>>>  
+>>>  struct mem_cgroup;
+>>>  struct page_cgroup;
+>>> @@ -399,6 +400,11 @@ struct sock;
+>>>  #ifdef CONFIG_MEMCG_KMEM
+>>>  void sock_update_memcg(struct sock *sk);
+>>>  void sock_release_memcg(struct sock *sk);
+>>> +
+>>> +#define memcg_kmem_on 1
+>>> +bool __memcg_kmem_new_page(gfp_t gfp, void *handle, int order);
+>>> +void __memcg_kmem_commit_page(struct page *page, void *handle, int order);
+>>> +void __memcg_kmem_free_page(struct page *page, int order);
+>>>  #else
+>>>  static inline void sock_update_memcg(struct sock *sk)
+>>>  {
+>>> @@ -406,6 +412,79 @@ static inline void sock_update_memcg(struct sock *sk)
+>>>  static inline void sock_release_memcg(struct sock *sk)
+>>>  {
+>>>  }
+>>> +
+>>> +#define memcg_kmem_on 0
+>>> +static inline bool
+>>> +__memcg_kmem_new_page(gfp_t gfp, void *handle, int order)
+>>> +{
+>>> +	return false;
+>>> +}
+>>> +
+>>> +static inline void  __memcg_kmem_free_page(struct page *page, int order)
+>>> +{
+>>> +}
+>>> +
+>>> +static inline void
+>>> +__memcg_kmem_commit_page(struct page *page, struct mem_cgroup *handle, int order)
+>>> +{
+>>> +}
+>>>  #endif /* CONFIG_MEMCG_KMEM */
+>>> +
+>>> +/**
+>>> + * memcg_kmem_new_page: verify if a new kmem allocation is allowed.
+>>> + * @gfp: the gfp allocation flags.
+>>> + * @handle: a pointer to the memcg this was charged against.
+>>> + * @order: allocation order.
+>>> + *
+>>> + * returns true if the memcg where the current task belongs can hold this
+>>> + * allocation.
+>>> + *
+>>> + * We return true automatically if this allocation is not to be accounted to
+>>> + * any memcg.
+>>> + */
+>>> +static __always_inline bool
+>>> +memcg_kmem_new_page(gfp_t gfp, void *handle, int order)
+>>> +{
+>>> +	if (!memcg_kmem_on)
+>>> +		return true;
+>>> +	if (!(gfp & __GFP_KMEMCG) || (gfp & __GFP_NOFAIL))
+>>> +		return true;
+>>> +	if (in_interrupt() || (!current->mm) || (current->flags & PF_KTHREAD))
+>>> +		return true;
+>>> +	return __memcg_kmem_new_page(gfp, handle, order);
+>>> +}
+>>> +
+>>> +/**
+>>> + * memcg_kmem_free_page: uncharge pages from memcg
+>>> + * @page: pointer to struct page being freed
+>>> + * @order: allocation order.
+>>> + *
+>>> + * there is no need to specify memcg here, since it is embedded in page_cgroup
+>>> + */
+>>> +static __always_inline void
+>>> +memcg_kmem_free_page(struct page *page, int order)
+>>> +{
+>>> +	if (memcg_kmem_on)
+>>> +		__memcg_kmem_free_page(page, order);
+>>> +}
+>>> +
+>>> +/**
+>>> + * memcg_kmem_commit_page: embeds correct memcg in a page
+>>> + * @handle: a pointer to the memcg this was charged against.
+>>> + * @page: pointer to struct page recently allocated
+>>> + * @handle: the memcg structure we charged against
+>>> + * @order: allocation order.
+>>> + *
+>>> + * Needs to be called after memcg_kmem_new_page, regardless of success or
+>>> + * failure of the allocation. if @page is NULL, this function will revert the
+>>> + * charges. Otherwise, it will commit the memcg given by @handle to the
+>>> + * corresponding page_cgroup.
+>>> + */
+>>> +static __always_inline void
+>>> +memcg_kmem_commit_page(struct page *page, struct mem_cgroup *handle, int order)
+>>> +{
+>>> +	if (memcg_kmem_on)
+>>> +		__memcg_kmem_commit_page(page, handle, order);
+>>> +}
+>>>  #endif /* _LINUX_MEMCONTROL_H */
+>>>  
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 54e93de..e9824c1 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>>> @@ -10,6 +10,10 @@
+>>>   * Copyright (C) 2009 Nokia Corporation
+>>>   * Author: Kirill A. Shutemov
+>>>   *
+>>> + * Kernel Memory Controller
+>>> + * Copyright (C) 2012 Parallels Inc. and Google Inc.
+>>> + * Authors: Glauber Costa and Suleiman Souhlal
+>>> + *
+>>>   * This program is free software; you can redistribute it and/or modify
+>>>   * it under the terms of the GNU General Public License as published by
+>>>   * the Free Software Foundation; either version 2 of the License, or
+>>> @@ -434,6 +438,9 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+>>>  #include <net/ip.h>
+>>>  
+>>>  static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
+>>> +static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, s64 delta);
+>>> +static void memcg_uncharge_kmem(struct mem_cgroup *memcg, s64 delta);
+>>> +
+>>>  void sock_update_memcg(struct sock *sk)
+>>>  {
+>>>  	if (mem_cgroup_sockets_enabled) {
+>>> @@ -488,6 +495,118 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
+>>>  }
+>>>  EXPORT_SYMBOL(tcp_proto_cgroup);
+>>>  #endif /* CONFIG_INET */
+>>> +
+>>> +static inline bool memcg_kmem_enabled(struct mem_cgroup *memcg)
+>>> +{
+>>> +	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
+>>> +		memcg->kmem_accounted;
+>>> +}
+>>> +
+>>> +/*
+>>> + * We need to verify if the allocation against current->mm->owner's memcg is
+>>> + * possible for the given order. But the page is not allocated yet, so we'll
+>>> + * need a further commit step to do the final arrangements.
+>>> + *
+>>> + * It is possible for the task to switch cgroups in this mean time, so at
+>>> + * commit time, we can't rely on task conversion any longer.  We'll then use
+>>> + * the handle argument to return to the caller which cgroup we should commit
+>>> + * against
+>>> + *
+>>> + * Returning true means the allocation is possible.
+>>> + */
+>>> +bool __memcg_kmem_new_page(gfp_t gfp, void *_handle, int order)
+>>> +{
+>>> +	struct mem_cgroup *memcg;
+>>> +	struct mem_cgroup **handle = (struct mem_cgroup **)_handle;
+>>> +	bool ret = true;
+>>> +	size_t size;
+>>> +	struct task_struct *p;
+>>> +
+>>> +	*handle = NULL;
+>>> +	rcu_read_lock();
+>>> +	p = rcu_dereference(current->mm->owner);
+>>> +	memcg = mem_cgroup_from_task(p);
+>>> +	if (!memcg_kmem_enabled(memcg))
+>>> +		goto out;
+>>> +
+>>> +	mem_cgroup_get(memcg);
+>>> +
+>>> +	size = PAGE_SIZE << order;
+>>> +	ret = memcg_charge_kmem(memcg, gfp, size) == 0;
+>>> +	if (!ret) {
+>>> +		mem_cgroup_put(memcg);
+>>> +		goto out;
+>>> +	}
+>>> +
+>>> +	*handle = memcg;
+>>> +out:
+>>> +	rcu_read_unlock();
+>>> +	return ret;
+>>> +}
+>>> +EXPORT_SYMBOL(__memcg_kmem_new_page);
+>>> +
+>>> +void __memcg_kmem_commit_page(struct page *page, void *handle, int order)
+>>> +{
+>>> +	struct page_cgroup *pc;
+>>> +	struct mem_cgroup *memcg = handle;
+>>> +
+>>> +	if (!memcg)
+>>> +		return;
+>>> +
+>>> +	WARN_ON(mem_cgroup_is_root(memcg));
+>>> +	/* The page allocation must have failed. Revert */
+>>> +	if (!page) {
+>>> +		size_t size = PAGE_SIZE << order;
+>>> +
+>>> +		memcg_uncharge_kmem(memcg, size);
+>>> +		mem_cgroup_put(memcg);
+>>> +		return;
 >> 
->> I'm not sure I follow the discussion about history.  Are we saying that
->> once a kmem limit is set then kmem will be accounted/charged to memcg.
->> Is this discussion about the static branches/etc that are autotuned the
->> first time is enabled?  
+>>> +
+>>> +	pc = lookup_page_cgroup(page);
+>>> +	lock_page_cgroup(pc);
+>>> +	pc->mem_cgroup = memcg;
+>>> +	SetPageCgroupUsed(pc);
+>>> +	unlock_page_cgroup(pc);
+>> 
+>> I have no problem with the code here.  But, out of curiosity, why do we
+>> need to lock the pc here and below in __memcg_kmem_free_page()?
+>> 
+>> For the allocating side, I don't think that migration or reclaim will be
+>> manipulating this page.  But is there something else that we need the
+>> locking for?
+>> 
+>> For the freeing side, it seems that anyone calling
+>> __memcg_kmem_free_page() is going to be freeing a previously accounted
+>> page.
+>> 
+>> I imagine that if we did not need the locking we would still need some
+>> memory barriers to make sure that modifications to the PG_lru are
+>> serialized wrt. to kmem modifying PageCgroupUsed here.
+>> 
+> Unlocking should do that, no?
+
+Yes, I agree that your existing locking should provide the necessary
+barriers.
+
+>> Perhaps we're just trying to take a conservative initial implementation
+>> which is consistent with user visible pages.
+>>
 >
-> No, the question is about when you unlimit a former kmem-limited memcg.
+> The way I see it, is not about being conservative, but rather about my
+> physical safety. It is quite easy and natural to assume that "all
+> modifications to page cgroup are done under lock". So someone modifying
+> this later will likely find out about this exception in a rather
+> unpleasant way. They know where I live, and guns for hire are everywhere.
 >
->> The first time its set there parts of the system
->> will be adjusted in such a way that may impose a performance overhead
->> (static branches, etc).  Thereafter the performance cannot be regained
->> without a reboot.  This makes sense to me.  Are we saying that
->> kmem.limit_in_bytes will have three states?
+> Note that it is not unreasonable to believe that we can modify this
+> later. This can be a way out, for example, for the memcg lifecycle problem.
 >
-> It is not about performance, about interface.
+> I agree with your analysis and we can ultimately remove it, but if we
+> cannot pinpoint any performance problems to here, maybe consistency
+> wins. Also, the locking operation itself is a bit expensive, but the
+> biggest price is the actual contention. If we'll have nobody contending
+> for the same page_cgroup, the problem - if exists - shouldn't be that
+> bad. And if we ever have, the lock is needed.
+
+Sounds reasonable. Another reason we might have to eventually revisit
+this lock is the fact that lock_page_cgroup() is not generally irq_safe.
+I assume that slab pages may be freed in softirq and would thus (in an
+upcoming patch series) call __memcg_kmem_free_page.  There are a few
+factors that might make it safe to grab this lock here (and below in
+__memcg_kmem_free_page) from hard/softirq context:
+* the pc lock is a per page bit spinlock.  So we only need to worry
+  about interrupting a task which holds the same page's lock to avoid
+  deadlock.
+* for accounted kernel pages, I am not aware of other code beyond
+  __memcg_kmem_charge_page and __memcg_kmem_free_page which grab pc
+  lock.  So we shouldn't find __memcg_kmem_free_page() called from a
+  context which interrupted a holder of the page's pc lock.
+
+>>> +}
+>>> +
+>>> +void __memcg_kmem_free_page(struct page *page, int order)
+>>> +{
+>>> +	struct mem_cgroup *memcg;
+>>> +	size_t size;
+>>> +	struct page_cgroup *pc;
+>>> +
+>>> +	if (mem_cgroup_disabled())
+>>> +		return;
+>>> +
+>>> +	pc = lookup_page_cgroup(page);
+>>> +	lock_page_cgroup(pc);
+>>> +	memcg = pc->mem_cgroup;
+>>> +	pc->mem_cgroup = NULL;
+>>> +	if (!PageCgroupUsed(pc)) {
+>> 
+>> When do we expect to find PageCgroupUsed() unset in this routine?  Is
+>> this just to handle the race of someone enabling kmem accounting after
+>> allocating a page and then later freeing that page?
+>> 
 >
-> Michal says that once a particular memcg was kmem-limited, it will keep
-> accounting pages, even if you make it unlimited. The limits won't be
-> enforced, for sure - there is no limit, but pages will still be accounted.
->
-> This simplifies the code galore, but I worry about the interface: A
-> person looking at the current status of the files only, without
-> knowledge of past history, can't tell if allocations will be tracked or not.
+> All the time we have a valid memcg. It is marked Used at charge time, so
+> this is how we differentiate between a tracked page and a non-tracked
+> page. Note that even though we explicit mark the freeing call sites with
+> free_allocated_page, etc, not all pc->memcg will be valid. There are
+> unlimited memcgs, bypassed charges, GFP_NOFAIL allocations, etc.
 
-In the current patch set we've conflating enabling kmem accounting with
-the kmem limit value (RESOURCE_MAX=disabled, all_other_values=enabled).
-
-I see no problem with simpling the kernel code with the requirement that
-once a particular memcg enables kmem accounting that it cannot be
-disabled for that memcg.
-
-The only question is the user space interface.  Two options spring to
-mind:
-a) Close to current code.  Once kmem.limit_in_bytes is set to
-   non-RESOURCE_MAX, then kmem accounting is enabled and cannot be
-   disabled.  Therefore the limit cannot be set to RESOURCE_MAX
-   thereafter.  The largest value would be something like
-   RESOURCE_MAX-PAGE_SIZE.  An admin wondering if kmem is enabled only
-   has to cat kmem.limit_in_bytes - if it's less than RESOURCE_MAX, then
-   kmem is enabled.
-
-b) Or, if we could introduce a separate sticky kmem.enabled file.  Once
-   set it could not be unset.  Kmem accounting would only be enabled if
-   kmem.enabled=1.
-
-I think (b) is clearer.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Understood.  Thanks.
