@@ -1,60 +1,47 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: [PATCH v2 00/10] cgroup: Assign subsystem IDs during compile
- time
-Date: Fri, 24 Aug 2012 17:01:33 +0200
-Message-ID: <5037974D.20105@monom.org>
-References: <1345816904-21745-1-git-send-email-wagi@monom.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 0/4] cgroup: add xattr support
+Date: Fri, 24 Aug 2012 15:58:39 -0700
+Message-ID: <20120824225839.GM21325@google.com>
+References: <20120823205327.237533518@napanee.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1345816904-21745-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=lG1QGxhenbfwSofB3eMWYIqgkEla10yRvKxaCJ7mnTE=;
+        b=RwD54702sts3Sx6Zyon6ntW29v2HH4MUJZLoMWbTt/dHs7kgpZo4hz9ZXc1C7D6brp
+         lgzOWylCU2Nz0E2ePpqY4oCVZAaSa0JF3t5Yu1YlnIqWiPeKovbs63Eb1oW5yzsc+6bt
+         SQ28sSB9H9x9Rz2N/nlcKq0fAGyREe5bnxhXeGSdWZBUhDYN4DNwt2MO/+2u8pJtuWAB
+         8JEVrFxY8gIyLoeagb1k6HKxMQms2tztnGY+fkaKNOx/wZoIPThxkoJ7W9GjsxLy/mKx
+         hhmpNjweWOiVul+3fEXlAFIw+LUJfF8QgP+bYDzjLQM0B0JEyW5PutZos4ZJFohG9IkK
+         lOZg==
+Content-Disposition: inline
+In-Reply-To: <20120823205327.237533518-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 24.08.2012 16:01, Daniel Wagner wrote:
-> CGROUP_BUILTIN_SUBSYS_COUNT is also gone in this version.  This time I
-> trade space for speed. Some extra cycles are spend to identify the
-> modules in the for loops, e.g.
->
-> for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
-> 	struct cgroup_subsys_state *ss = cgrp->subsys[i];
->
-> 	/* at bootup time, we don't worry about modular subsystems */
-> 	if (!ss || (ss && ss->module))
-> 		continue;
->
-> 	[...]
-> }
->
-> CGROUP_SUBSYS_COUNT is currently 12 if all controllers are built.  I
-> haven't found any other way to get rid of CGROUP_BUILTIN_SUBSYS_COUNT
-> without real dirty preprocessor tricks.
+Hello,
 
-As usual, the good ideas come right after sending patches:
+On Thu, Aug 23, 2012 at 04:53:27PM -0400, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
+> This series are a refreshed version of a patchset submitted by Li Zefan back
+> in march:
+> 	https://lkml.org/lkml/2012/3/1/13
 
-enum cgroup_subsys_id {
-#define SUBSYS(_x) _x ## _subsys_id,
+Applied to cgroup/for-3.7 w/ "Original-Patch-by: Li Zefan" added for
+the first three patches.
 
-#define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
-#include <linux/cgroup_subsys.h>
-#undef IS_SUBSYS_ENABLED
+* Can you please update MTA setting so that the From: header contains
+  your full name?  Importing the series to git ended up with
+  "aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>".
 
-	CGROUP_BUILTIN_SUBSYS_COUNT,
-	CGROUP_BUILTIN_SUBSYS_LAST = CGROUP_BUILTIN_SUBSYS_COUNT - 1,
+* Can you please add some comments and documentation regarding this?
 
-#define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
-#include <linux/cgroup_subsys.h>
-#undef IS_SUBSYS_ENABLED
+Thanks.
 
-#undef SUBSYS
-
-	CGROUP_SUBSYS_COUNT,
-};
-
-Would that be an acceptable solution?
-
-cheers,
-daniel
+-- 
+tejun
