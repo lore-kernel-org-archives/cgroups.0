@@ -1,121 +1,36 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 06/10] cgroup: Assign subsystem IDs during compile
- time
-Date: Fri, 24 Aug 2012 16:38:10 -0700
-Message-ID: <20120824233810.GT21325@google.com>
+Subject: Re: [PATCH v2 07/10] cgroup: net_cls: Simplify ifdef logic
+Date: Fri, 24 Aug 2012 16:39:34 -0700
+Message-ID: <20120824233934.GU21325@google.com>
 References: <1345816904-21745-1-git-send-email-wagi@monom.org>
- <1345816904-21745-7-git-send-email-wagi@monom.org>
+ <1345816904-21745-8-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=tQoCaGw3GBuo+QDomv4yZXRGvH94SKgfsQLiji2QdIk=;
-        b=Do/GkKprYx9Y4IT8JCbhVGXYV18FnyhYXo/I3w6f9ZIVNGgZlJ9gAENdgOCAwDvVEJ
-         7NzSO5g+XgMKtUQ4CsQJekkOzcqnEpCDMrBa4jzUOEEwM0TvlvGcXshKNqN0DhDQZjI/
-         Nbc7P2A+6B/9Bd4ATgk/FY9Ub6cLwMUdCsTMVa488wT9KJaNgnBsZRl/27e13yhJ/JwR
-         0rCUZ5/2JEwoGrWyQS0KAYLaEHfbIDWwfV7XGOyMSkr5RGQOzh3cNslJe3LwlbXyiRul
-         meh83hqskzAax/INLHKq+axbKLeCwR1XyBEgewM2vWNAsTSsB59OZ4gnxmDPaMt4jlAj
-         WkSg==
+        bh=Wz4jS/tWCogsDxOAzUybijg1Hyigxak1UwNEvudEdzM=;
+        b=O8w8/zyRM9nh3bJzpzFHNXevR/h+ROdjbs/WNvuM/78ZRZz6Z4aoF1choF90Y1a92e
+         bYdy9hiYuKMbj7OI21DxLs4LJA1aQuJQWlSl0R4hcOMMqAd8bApttmS1Uw1iwWM5KLcb
+         ncxz7avYShI9KOdPOILgWzf9h6WRmZ3ln/R4Ce8Xbb0rs3SN172GwOHLPyWvHfN1f3+r
+         +xAPvb41U8DibVL/yYUn6qkW22yVK7mMA+LZAqZZzkmP299z5OKXBBCtGMcROIeLGNS9
+         WNimJUZclc7xITc+Am3NZ9+iNi4/xGX0iiTpkn4YgJLm0l+HQPaRt9rLn9/PDta242gd
+         Fu9A==
 Content-Disposition: inline
-In-Reply-To: <1345816904-21745-7-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+In-Reply-To: <1345816904-21745-8-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-Hello,
+On Fri, Aug 24, 2012 at 04:01:41PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-On Fri, Aug 24, 2012 at 04:01:40PM +0200, Daniel Wagner wrote:
-> We are able to safe some space when we assign the subsystem
-                 ^               ^
-		 save    if we assign both builtin and
-		         module susbsystem IDs at compile time?
-
-> IDs at compile time. Instead of allocating per cgroup
-> cgroup->subsys[CGROUP_SUBSYS_COUNT] where CGROUP_SUBSYS_COUNT is
-> always 64, we allocate at max 12 (at this point there are 12
-> subsystem).
-
-Please note (in big fat ugly way) that this disallows support for
-modular controller which isn't known at kernel compile time.
-
-> task_cls_classid() and task_netprioidx() (when built as
-> module) are protected by a jump label and therefore we can
-> simply replace the subsystem index lookup with the enum.
-
-Can we put these in a separate patch?  ie. The first patch makes all
-subsys IDs constant and then patches to simplify users.
-
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 3787872..ada517f 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -43,18 +43,27 @@ extern void cgroup_unload_subsys(struct cgroup_subsys *ss);
->  
->  extern const struct file_operations proc_cgroup_operations;
->  
-> -/* Define the enumeration of all builtin cgroup subsystems */
-> -#define SUBSYS(_x) _x ## _subsys_id,
-> +/*
-> + * Define the enumeration of all builtin cgroup subsystems.
-> + * For the builtin subsystems the subsys_id needs to be indentical
-> + * with the index in css->subsys. Therefore, all the builtin
-> + * subsys are listed first and then the modules ids.
-> + */
->  enum cgroup_subsys_id {
-> +#define SUBSYS(_x) _x ## _subsys_id,
-> +
-> +#define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
->  #include <linux/cgroup_subsys.h>
-> -};
-> +#undef IS_SUBSYS_ENABLED
-> +
-> +#define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
-> +#include <linux/cgroup_subsys.h>
-> +#undef IS_SUBSYS_ENABLED
-> +
-
-Why do we need to segregate in-kernel and modular ones at all?  What's
-wrong with just defining them in one go?
-
-> diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
-> index 24443d2..43fae13 100644
-> --- a/include/net/cls_cgroup.h
-> +++ b/include/net/cls_cgroup.h
-> @@ -49,22 +49,16 @@ static inline u32 task_cls_classid(struct task_struct *p)
->  extern struct static_key cgroup_cls_enabled;
->  #define clscg_enabled static_key_false(&cgroup_cls_enabled)
->  
-> -extern int net_cls_subsys_id;
-> -
->  static inline u32 task_cls_classid(struct task_struct *p)
->  {
-> -	int id;
-> -	u32 classid = 0;
-> +	u32 classid;
->  
->  	if (!clscg_enabled || in_interrupt())
->  		return 0;
->  
->  	rcu_read_lock();
-> -	id = rcu_dereference_index_check(net_cls_subsys_id,
-> -					 rcu_read_lock_held());
-> -	if (id >= 0)
-> -		classid = container_of(task_subsys_state(p, id),
-> -				       struct cgroup_cls_state, css)->classid;
-> +	classid = container_of(task_subsys_state(p, net_cls_subsys_id),
-> +			       struct cgroup_cls_state, css)->classid;
->  	rcu_read_unlock();
->  
->  	return classid;
-
-Hmm... patch sequence looks odd to me.  If you first make all IDs
-constant, you can first remove module specific ones and then later add
-jump labels as separate patches.  Wouldn't that be simpler?
+I suppose this is equivalent conversion?  Maybe it would be nice to
+note that in patch description?
 
 Thanks.
 
