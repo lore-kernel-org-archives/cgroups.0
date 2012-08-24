@@ -1,45 +1,41 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 0/4] cgroup: add xattr support
-Date: Fri, 24 Aug 2012 15:58:39 -0700
-Message-ID: <20120824225839.GM21325@google.com>
-References: <20120823205327.237533518@napanee.usersys.redhat.com>
+Subject: Re: [PATCH v2 00/10] cgroup: Assign subsystem IDs during compile
+ time
+Date: Fri, 24 Aug 2012 16:15:28 -0700
+Message-ID: <20120824231528.GO21325@google.com>
+References: <1345816904-21745-1-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=lG1QGxhenbfwSofB3eMWYIqgkEla10yRvKxaCJ7mnTE=;
-        b=RwD54702sts3Sx6Zyon6ntW29v2HH4MUJZLoMWbTt/dHs7kgpZo4hz9ZXc1C7D6brp
-         lgzOWylCU2Nz0E2ePpqY4oCVZAaSa0JF3t5Yu1YlnIqWiPeKovbs63Eb1oW5yzsc+6bt
-         SQ28sSB9H9x9Rz2N/nlcKq0fAGyREe5bnxhXeGSdWZBUhDYN4DNwt2MO/+2u8pJtuWAB
-         8JEVrFxY8gIyLoeagb1k6HKxMQms2tztnGY+fkaKNOx/wZoIPThxkoJ7W9GjsxLy/mKx
-         hhmpNjweWOiVul+3fEXlAFIw+LUJfF8QgP+bYDzjLQM0B0JEyW5PutZos4ZJFohG9IkK
-         lOZg==
+        bh=1S9zmHlqWxjNIE4FQZjMYhWPl3+5TDhQA+A7SaATdYE=;
+        b=JdhzkRh41j1uabhotDWobwewyVum8ay9FRvnR6NTPtnoj5OXp9g3XqYMySBwqmOTb/
+         nhJBOJiR2N0ZygCSrX/clkD2f+OQMTsJCqwueEGSW2TUEyO++TG5zRRoaObrfIP+gCTw
+         uyb5T1KrZ4SREKCrpKK4p8zxTDApxAH2gvVbQxtEIDgsB7jfTSLGuP0NLqylcKvANZUO
+         l6A9WqC8w97q9+a6+lRoDgb5acEXV0bJl+6uLEm4cWXW6Bsz0+7xQGBUkqiuAzF6VerS
+         0YR/OSjhqgAzU/6LcxmvMHgtKO0e3Pdvxfjy4y7e8Lj/M+BgVvNzIbyNVayiLQ7mOfiX
+         WVvQ==
 Content-Disposition: inline
-In-Reply-To: <20120823205327.237533518-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <1345816904-21745-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-Hello,
+Hello, Daniel.
 
-On Thu, Aug 23, 2012 at 04:53:27PM -0400, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
-> This series are a refreshed version of a patchset submitted by Li Zefan back
-> in march:
-> 	https://lkml.org/lkml/2012/3/1/13
+On Fri, Aug 24, 2012 at 04:01:34PM +0200, Daniel Wagner wrote:
+> CGROUP_BUILTIN_SUBSYS_COUNT is also gone in this version.  This time I
+> trade space for speed. Some extra cycles are spend to identify the
+> modules in the for loops, e.g.
 
-Applied to cgroup/for-3.7 w/ "Original-Patch-by: Li Zefan" added for
-the first three patches.
-
-* Can you please update MTA setting so that the From: header contains
-  your full name?  Importing the series to git ended up with
-  "aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>".
-
-* Can you please add some comments and documentation regarding this?
+There's no point in optimizing either space or speed here.  It's not a
+hot path by any stretch of imagination.  Please focus on making it
+simple.
 
 Thanks.
 
