@@ -1,117 +1,91 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: [PATCH v2 06/10] cgroup: Assign subsystem IDs during compile
- time
-Date: Sat, 25 Aug 2012 19:11:31 +0200
-Message-ID: <50390743.2090203@monom.org>
-References: <1345816904-21745-1-git-send-email-wagi@monom.org> <1345816904-21745-7-git-send-email-wagi@monom.org> <20120824233810.GT21325@google.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH v2 01/10] cgroup: net_cls: Use empty task_cls_classid()
+ when !CONFIG_NET_CLS(_MODULE)
+Date: Mon, 27 Aug 2012 10:32:55 +0800
+Message-ID: <503ADC57.70602@huawei.com>
+References: <1345816904-21745-1-git-send-email-wagi@monom.org> <1345816904-21745-2-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120824233810.GT21325-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1345816904-21745-2-git-send-email-wagi@monom.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Daniel Wagner <wagi@monom.org>
+Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, Gao feng <gaofeng@cn.fujitsu.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Neil Horman <nhorman@tuxdriver.com>, Tejun Heo <tj@kernel.org>
 
-On 25.08.2012 01:38, Tejun Heo wrote:
-> Hello,
->
-> On Fri, Aug 24, 2012 at 04:01:40PM +0200, Daniel Wagner wrote:
->> We are able to safe some space when we assign the subsystem
->                   ^               ^
-> 		 save    if we assign both builtin and
-> 		         module susbsystem IDs at compile time?
->
->> IDs at compile time. Instead of allocating per cgroup
->> cgroup->subsys[CGROUP_SUBSYS_COUNT] where CGROUP_SUBSYS_COUNT is
->> always 64, we allocate at max 12 (at this point there are 12
->> subsystem).
->
-> Please note (in big fat ugly way) that this disallows support for
-> modular controller which isn't known at kernel compile time.
+task_cls_classid() is called by sock_update_classid().
 
-yep, will do
+#ifdef CONFIG_CGROUPS
+extern void sock_update_classid(struct sock *sk);
+#else
+static inline void sock_update_classid(struct sock *sk)
+{
+}
+#endif
 
->> task_cls_classid() and task_netprioidx() (when built as
->> module) are protected by a jump label and therefore we can
->> simply replace the subsystem index lookup with the enum.
->
-> Can we put these in a separate patch?  ie. The first patch makes all
-> subsys IDs constant and then patches to simplify users.
+Change to define sock_update_classid() only when CONFIG_NET_CLS is enabled, and
+then we don't need this patch, and the code will be simpler.
 
-Wouldn't this break bisection? I merged this step so that all steps in 
-this series are able to compile and run.
-
->> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
->> index 3787872..ada517f 100644
->> --- a/include/linux/cgroup.h
->> +++ b/include/linux/cgroup.h
->> @@ -43,18 +43,27 @@ extern void cgroup_unload_subsys(struct cgroup_subsys *ss);
->>
->>   extern const struct file_operations proc_cgroup_operations;
->>
->> -/* Define the enumeration of all builtin cgroup subsystems */
->> -#define SUBSYS(_x) _x ## _subsys_id,
->> +/*
->> + * Define the enumeration of all builtin cgroup subsystems.
->> + * For the builtin subsystems the subsys_id needs to be indentical
->> + * with the index in css->subsys. Therefore, all the builtin
->> + * subsys are listed first and then the modules ids.
->> + */
->>   enum cgroup_subsys_id {
->> +#define SUBSYS(_x) _x ## _subsys_id,
->> +
->> +#define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
->>   #include <linux/cgroup_subsys.h>
->> -};
->> +#undef IS_SUBSYS_ENABLED
->> +
->> +#define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
->> +#include <linux/cgroup_subsys.h>
->> +#undef IS_SUBSYS_ENABLED
->> +
->
-> Why do we need to segregate in-kernel and modular ones at all?  What's
-> wrong with just defining them in one go?
-
-I have done that but the result was a panic. There seems some code which 
-expects this ordering. Let me dig into this and fix it.
-
->> diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
->> index 24443d2..43fae13 100644
->> --- a/include/net/cls_cgroup.h
->> +++ b/include/net/cls_cgroup.h
->> @@ -49,22 +49,16 @@ static inline u32 task_cls_classid(struct task_struct *p)
->>   extern struct static_key cgroup_cls_enabled;
->>   #define clscg_enabled static_key_false(&cgroup_cls_enabled)
->>
->> -extern int net_cls_subsys_id;
->> -
->>   static inline u32 task_cls_classid(struct task_struct *p)
->>   {
->> -	int id;
->> -	u32 classid = 0;
->> +	u32 classid;
->>
->>   	if (!clscg_enabled || in_interrupt())
->>   		return 0;
->>
->>   	rcu_read_lock();
->> -	id = rcu_dereference_index_check(net_cls_subsys_id,
->> -					 rcu_read_lock_held());
->> -	if (id >= 0)
->> -		classid = container_of(task_subsys_state(p, id),
->> -				       struct cgroup_cls_state, css)->classid;
->> +	classid = container_of(task_subsys_state(p, net_cls_subsys_id),
->> +			       struct cgroup_cls_state, css)->classid;
->>   	rcu_read_unlock();
->>
->>   	return classid;
->
-> Hmm... patch sequence looks odd to me.  If you first make all IDs
-> constant, you can first remove module specific ones and then later add
-> jump labels as separate patches.  Wouldn't that be simpler?
-
-As said above, I tried to keep all steps usable so bisection would work. 
-I think your steps would lead to non working versions of the kernel.
+On 2012/8/24 22:01, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> 
+> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Gao feng <gaofeng@cn.fujitsu.com>
+> Cc: Jamal Hadi Salim <jhs@mojatatu.com>
+> Cc: John Fastabend <john.r.fastabend@intel.com>
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: Neil Horman <nhorman@tuxdriver.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: netdev@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> ---
+>  include/net/cls_cgroup.h | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
+> index a4dc5b0..e2fe2b9 100644
+> --- a/include/net/cls_cgroup.h
+> +++ b/include/net/cls_cgroup.h
+> @@ -24,7 +24,8 @@ struct cgroup_cls_state
+>  	u32 classid;
+>  };
+>  
+> -#ifdef CONFIG_NET_CLS_CGROUP
+> +#if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
+> +
+>  static inline u32 task_cls_classid(struct task_struct *p)
+>  {
+>  	int classid;
+> @@ -39,7 +40,9 @@ static inline u32 task_cls_classid(struct task_struct *p)
+>  
+>  	return classid;
+>  }
+> -#else
+> +
+> +#elif IS_MODULE(CONFIG_NET_CLS_CGROUP)
+> +
+>  extern int net_cls_subsys_id;
+>  
+>  static inline u32 task_cls_classid(struct task_struct *p)
+> @@ -60,11 +63,16 @@ static inline u32 task_cls_classid(struct task_struct *p)
+>  
+>  	return classid;
+>  }
+> -#endif
+> +
+>  #else
+> +
+>  static inline u32 task_cls_classid(struct task_struct *p)
+>  {
+>  	return 0;
+>  }
+> -#endif
+> +
+> +#endif /* CONFIG_NET_CLS_CGROUP */
+> +
+> +#endif /* CONFIG_CGROURPS */
+> +
+>  #endif  /* _NET_CLS_CGROUP_H */
+> 
