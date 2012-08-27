@@ -1,91 +1,40 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCH v2 01/10] cgroup: net_cls: Use empty task_cls_classid()
- when !CONFIG_NET_CLS(_MODULE)
-Date: Mon, 27 Aug 2012 10:32:55 +0800
-Message-ID: <503ADC57.70602@huawei.com>
-References: <1345816904-21745-1-git-send-email-wagi@monom.org> <1345816904-21745-2-git-send-email-wagi@monom.org>
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v7 0/4] cgroup: add xattr support
+Date: Mon, 27 Aug 2012 09:05:25 -0400
+Message-ID: <20120827130525.GI18688@redhat.com>
+References: <20120823205327.237533518@napanee.usersys.redhat.com>
+ <20120824225839.GM21325@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1345816904-21745-2-git-send-email-wagi@monom.org>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120824225839.GM21325-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Wagner <wagi@monom.org>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, Gao feng <gaofeng@cn.fujitsu.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Neil Horman <nhorman@tuxdriver.com>, Tejun Heo <tj@kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-task_cls_classid() is called by sock_update_classid().
-
-#ifdef CONFIG_CGROUPS
-extern void sock_update_classid(struct sock *sk);
-#else
-static inline void sock_update_classid(struct sock *sk)
-{
-}
-#endif
-
-Change to define sock_update_classid() only when CONFIG_NET_CLS is enabled, and
-then we don't need this patch, and the code will be simpler.
-
-On 2012/8/24 22:01, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Hi Tejun,
+On Fri, Aug 24, 2012 at 03:58:39PM -0700, Tejun Heo wrote:
+> On Thu, Aug 23, 2012 at 04:53:27PM -0400, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
+> > This series are a refreshed version of a patchset submitted by Li Zefan back
+> > in march:
+> > 	https://lkml.org/lkml/2012/3/1/13
 > 
-> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Gao feng <gaofeng@cn.fujitsu.com>
-> Cc: Jamal Hadi Salim <jhs@mojatatu.com>
-> Cc: John Fastabend <john.r.fastabend@intel.com>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Neil Horman <nhorman@tuxdriver.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: netdev@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> ---
->  include/net/cls_cgroup.h | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
+> Applied to cgroup/for-3.7 w/ "Original-Patch-by: Li Zefan" added for
+> the first three patches.
 > 
-> diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
-> index a4dc5b0..e2fe2b9 100644
-> --- a/include/net/cls_cgroup.h
-> +++ b/include/net/cls_cgroup.h
-> @@ -24,7 +24,8 @@ struct cgroup_cls_state
->  	u32 classid;
->  };
->  
-> -#ifdef CONFIG_NET_CLS_CGROUP
-> +#if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
-> +
->  static inline u32 task_cls_classid(struct task_struct *p)
->  {
->  	int classid;
-> @@ -39,7 +40,9 @@ static inline u32 task_cls_classid(struct task_struct *p)
->  
->  	return classid;
->  }
-> -#else
-> +
-> +#elif IS_MODULE(CONFIG_NET_CLS_CGROUP)
-> +
->  extern int net_cls_subsys_id;
->  
->  static inline u32 task_cls_classid(struct task_struct *p)
-> @@ -60,11 +63,16 @@ static inline u32 task_cls_classid(struct task_struct *p)
->  
->  	return classid;
->  }
-> -#endif
-> +
->  #else
-> +
->  static inline u32 task_cls_classid(struct task_struct *p)
->  {
->  	return 0;
->  }
-> -#endif
-> +
-> +#endif /* CONFIG_NET_CLS_CGROUP */
-> +
-> +#endif /* CONFIG_CGROURPS */
-> +
->  #endif  /* _NET_CLS_CGROUP_H */
-> 
+> * Can you please update MTA setting so that the From: header contains
+>   your full name?  Importing the series to git ended up with
+>   "aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>".
+
+sure, will repost with that fixed and including "Original-Patch-by: Li
+Zefan" on the first three patches
+
+> * Can you please add some comments and documentation regarding this?
+
+about what exactly?
+
+-- 
+Aristeu
