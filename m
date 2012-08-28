@@ -1,60 +1,64 @@
-From: "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH v2 03/10] cgroup: net_cls: Protect access to
- task_cls_classid() when built as module
-Date: Tue, 28 Aug 2012 07:47:25 -0700
-Message-ID: <20120828144725.GR2961@linux.vnet.ibm.com>
-References: <1345816904-21745-1-git-send-email-wagi@monom.org>
- <1345816904-21745-4-git-send-email-wagi@monom.org>
- <20120824232621.GQ21325@google.com>
- <503903BD.6020208@monom.org>
-Reply-To: paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 0/4] cgroup: add xattr support
+Date: Tue, 28 Aug 2012 09:15:22 -0700
+Message-ID: <20120828161522.GD14812@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <20120823205327.237533518@napanee.usersys.redhat.com>
+ <20120824225839.GM21325@google.com>
+ <20120827130525.GI18688@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=B8aaKid3ct9gMDlNn9UkIg+4znsm4djdbaRGlv/rov0=;
+        b=hEcyKbT4hTCwRskY4Zm0DCDfvouVbpWFUrzOrlZFTVhHvIHlK7lY0akhv1o0pMpqFi
+         2aF73Bx1aIf2IX6G0F0zgZmMKexggcCW9AnO7K6PDyAZd/049CY+QLw2xj57k2lh5+r9
+         3XviBpdNvWPZuRfLKz7ws6lkRg4vgPv6AFqHAqWcQlHE6mek2pu8xU8b2e4OLfZqZnmZ
+         PyPmj1QK/zoN6yv4h9dzaJc3/J9S5pDQjdBC0QUdKMBhAq948bPiNy/Jwhf50mcC9THl
+         Dtnm06isUazjOMDhyGnSKg/Ux16ZmNKd0sEAh+qrXUD/SQe8Y43av6joncxZCsGWNIFb
+         P+rg==
 Content-Disposition: inline
-In-Reply-To: <503903BD.6020208-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+In-Reply-To: <20120827130525.GI18688-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Sat, Aug 25, 2012 at 06:56:29PM +0200, Daniel Wagner wrote:
-> On 25.08.2012 01:26, Tejun Heo wrote:
-> >On Fri, Aug 24, 2012 at 04:01:37PM +0200, Daniel Wagner wrote:
-> >>@@ -306,6 +312,11 @@ static void __exit exit_cgroup_cls(void)
-> >>  	synchronize_rcu();
-> >>  #endif
-> >>
-> >>+#if IS_MODULE(CONFIG_NET_CLS_CGROUP)
-> >>+	static_key_slow_dec(&cgroup_cls_enabled);
-> >>+	rcu_barrier();
-> >
-> >Why is this rcu_barrier() necessary?
-> 
-> I have read the rcubarrier.txt document and I got from that that an
-> rcu_barrier() is needed when unloading a module. But maybe I got it
-> wrong.
-> 
-> So the idea after disabling the jump lables all pending readers in
-> task_cls_classid() have left. THe same thing is done in the old code
-> with the dynamic id part. With the difference that synchronize_rcu()
-> is used.
+Hello,
 
-FWIW, the rcu_barrier() is needed only if the module uses call_rcu().
-In that case it is required to ensure that all the resulting callbacks
-execute before the module's .text is freed up.
+On Mon, Aug 27, 2012 at 09:05:25AM -0400, Aristeu Rozanski wrote:
+> Hi Tejun,
+> On Fri, Aug 24, 2012 at 03:58:39PM -0700, Tejun Heo wrote:
+> > On Thu, Aug 23, 2012 at 04:53:27PM -0400, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
+> > > This series are a refreshed version of a patchset submitted by Li Zefan back
+> > > in march:
+> > > 	https://lkml.org/lkml/2012/3/1/13
+> > 
+> > Applied to cgroup/for-3.7 w/ "Original-Patch-by: Li Zefan" added for
+> > the first three patches.
+> > 
+> > * Can you please update MTA setting so that the From: header contains
+> >   your full name?  Importing the series to git ended up with
+> >   "aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>".
+> 
+> sure, will repost with that fixed and including "Original-Patch-by: Li
+> Zefan" on the first three patches
 
-							Thanx, Paul
+Ooh, I already fixed it up myself.  I was mentioning for future
+patches.
 
-> >In general, please explain what
-> >synchronization is going on when using sync constructs which aren't
-> >obvious - e.g. memory barriers, rcu barriers.
+> > * Can you please add some comments and documentation regarding this?
 > 
-> Sure, I will keep this in mind.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> about what exactly?
+
+What xattr support in cgroup does and for what supposed purposes with
+what kind of restrictions and some comments explaining the
+implementation, I suppose.
+
+Thanks.
+
+-- 
+tejun
