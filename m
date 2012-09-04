@@ -1,10 +1,8 @@
 From: Aristeu Rozanski <aris@redhat.com>
-Subject: [PATCH v2 2/6] device_cgroup: introduce dev_whitelist_clean()
-Date: Tue, 04 Sep 2012 10:34:21 -0400
-Message-ID: <20120904143420.546524755@napanee.usersys.redhat.com>
-References: <20120904143419.892872876@napanee.usersys.redhat.com>
+Subject: [PATCH v2 0/6] device_cgroup: replace internally whitelist with exception list
+Date: Tue, 04 Sep 2012 10:34:19 -0400
+Message-ID: <20120904143419.892872876@napanee.usersys.redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=introduce_whitelist_clean.patch
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -13,62 +11,71 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andrew Morton <akpm@linux-foundation.org>
 
-This function cleans all the items in a whitelist and will be used by the next
-patches.
+The original model of device_cgroup is having a whitelist where all the
+allowed devices are listed. The problem with this approach is that is
+impossible to have the case of allowing everything but few devices.
+
+The reason for that lies in the way the whitelist is handled internally:
+since there's only a whitelist, the "all devices" entry would have to be
+removed and replaced by the entire list of possible devices but the ones
+that are being denied.  Since dev_t is 32 bits long, representing the allowed
+devices as a bitfield is not memory efficient.
+
+This patch replaces the "whitelist" by a "exceptions" list and the default
+policy is kept as "deny_all" variable in dev_cgroup structure.
+
+The current interface determines that whenever "a" is written to devices.allow
+or devices.deny, the entry masking all devices will be added or removed,
+respectively. This behavior is kept and it's what will determine the default
+policy:
+
+	# cat devices.list 
+	a *:* rwm
+	# echo a >devices.deny
+	# cat devices.list 
+	# echo a >devices.allow
+	# cat devices.list 
+	a *:* rwm
+
+The interface is also preserved. For example, if one wants to block only access
+to /dev/null:
+	# ls -l /dev/null
+	crw-rw-rw- 1 root root 1, 3 Jul 24 16:17 /dev/null
+	# echo a >devices.allow
+	# echo "c 1:3 rwm" >devices.deny
+	# cat /dev/null
+	cat: /dev/null: Operation not permitted
+	# echo >/dev/null
+	bash: /dev/null: Operation not permitted
+	# mknod /tmp/null c 1 3
+	mknod: /tmp/null: Operation not permitted
+	# echo "c 1:3 r" >devices.allow
+	# cat /dev/null
+	# echo >/dev/null
+	bash: /dev/null: Operation not permitted
+	# mknod /tmp/null c 1 3
+	mknod: /tmp/null: Operation not permitted
+	# echo "c 1:3 rw" >devices.allow
+	# echo >/dev/null
+	# cat /dev/null
+	# mknod /tmp/null c 1 3
+	mknod: /tmp/null: Operation not permitted
+	# echo "c 1:3 rwm" >devices.allow
+	# echo >/dev/null
+	# cat /dev/null
+	# mknod /tmp/null c 1 3
+	#
 
 v2:
-- no changes
+- stop using simple_strtoul()
+- fix checkpatch warnings
+- rename deny_all to behavior
+- updated documentation
+- added new files to cgroupfs to better reflect the internal state
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: James Morris <jmorris@namei.org>
-Cc: Pavel Emelyanov <xemul@openvz.org>
-Cc: Serge Hallyn <serge.hallyn@canonical.com>
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+ Documentation/cgroups/devices.txt |   73 ++++--
+ security/device_cgroup.c          |  443 +++++++++++++++++++++++---------------
+ 2 files changed, 333 insertions(+), 183 deletions(-)
 
----
- security/device_cgroup.c |   22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
-
-Index: github/security/device_cgroup.c
-===================================================================
---- github.orig/security/device_cgroup.c	2012-08-21 10:50:34.650810797 -0400
-+++ github/security/device_cgroup.c	2012-08-21 10:50:37.526892088 -0400
-@@ -157,6 +157,22 @@
- 	}
- }
- 
-+/**
-+ * dev_whitelist_clean - frees all entries of the whitelist
-+ * @dev_cgroup: dev_cgroup with the whitelist to be cleaned
-+ *
-+ * called under devcgroup_mutex
-+ */
-+static void dev_whitelist_clean(struct dev_cgroup *dev_cgroup)
-+{
-+	struct dev_whitelist_item *wh, *tmp;
-+
-+	list_for_each_entry_safe(wh, tmp, &dev_cgroup->whitelist, list) {
-+		list_del(&wh->list);
-+		kfree(wh);
-+	}
-+}
-+
- /*
-  * called from kernel/cgroup.c with cgroup_lock() held.
-  */
-@@ -203,13 +219,9 @@
- static void devcgroup_destroy(struct cgroup *cgroup)
- {
- 	struct dev_cgroup *dev_cgroup;
--	struct dev_whitelist_item *wh, *tmp;
- 
- 	dev_cgroup = cgroup_to_devcgroup(cgroup);
--	list_for_each_entry_safe(wh, tmp, &dev_cgroup->whitelist, list) {
--		list_del(&wh->list);
--		kfree(wh);
--	}
-+	dev_whitelist_clean(dev_cgroup);
- 	kfree(dev_cgroup);
- }
- 
+-- 
+Aristeu
