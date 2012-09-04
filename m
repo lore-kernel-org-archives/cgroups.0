@@ -1,118 +1,498 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v2] memcg: first step towards hierarchical controller
-Date: Tue, 4 Sep 2012 16:35:52 +0200
-Message-ID: <20120904143552.GB15683@dhcp22.suse.cz>
-References: <1346687211-31848-1-git-send-email-glommer@parallels.com>
- <20120903170806.GA21682@dhcp22.suse.cz>
- <5045BD25.10301@parallels.com>
- <20120904130905.GA15683@dhcp22.suse.cz>
- <504601B8.2050907@parallels.com>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <504601B8.2050907@parallels.com>
-Sender: owner-linux-mm@kvack.org
+From: Aristeu Rozanski <aris@redhat.com>
+Subject: [PATCH v2 5/6] device_cgroup: rename whitelist to exception list
+Date: Tue, 04 Sep 2012 10:34:24 -0400
+Message-ID: <20120904143421.423387352@napanee.usersys.redhat.com>
+References: <20120904143419.892872876@napanee.usersys.redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=rename.patch
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Dave Jones <davej@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay.sievers@vrfy.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue 04-09-12 17:27:20, Glauber Costa wrote:
-> On 09/04/2012 05:09 PM, Michal Hocko wrote:
-> > Not really. Do it slowly means that somebody actually _notices_ that
-> > something is about to change and they have a lot of time for that. This
-> > will be really hard with the config option saying N by default.  People
-> > will ignore that until it's too late.
-> > We are interested in those users who would keep the config default N and
-> > they are (ab)using use_hierarchy=0 in a way which is hard/impossible to
-> > fix. This is where distributions might help and they should IMHO but why
-> > to put an additional code into upstream? Isn't it sufficient that those
-> > who would like to help (and take the risk) would just take the patch?
-> 
-> At least Fedora, seem to frown upon heavily at non-upstream patches.
+This patch replaces the "whitelist" usage in the code and comments and replace
+them by exception list related information.
 
-OK, so what about the following approach instead? We won't change the
-default but rather shout at people when they actually create subtrees
-with use_hierarchy==0. This shouldn't make pointless noise. I do not
-remember whether we have considered this previously so sorry if this was
-shot down as well.
+v2:
+- fix checkpatch warnings
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: James Morris <jmorris@namei.org>
+Cc: Pavel Emelyanov <xemul@openvz.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+
 ---
-From 5e6e9dbe09dc6144d84a76d936327d17bbad9ecb Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
-Date: Tue, 4 Sep 2012 15:55:03 +0200
-Subject: [PATCH] memcg: warn on deeper hierarchies with use_hierarchy==0
+ security/device_cgroup.c |  198 +++++++++++++++++++++++------------------------
+ 1 file changed, 99 insertions(+), 99 deletions(-)
 
-The memory controller supports both hierarchical and non-hierarchical
-behavior which is controlled by use_hierarchy knob (0 by default).
-The primary motivation for this distinction was an ineffectiveness
-of hierarchical accounting. This has improved a lot since it was
-introduced.
-
-This schizophrenia makes the code and integration with other controllers
-more complicated (e.g. mounting it with fully hierarchical one could
-have an unexpected side effects) for no good reason so it would be good
-to make the memory controller behave only hierarchically.
-
-It seems that there is no good reasons for deep cgroup hierarchies which
-are not truly hierarchical so we could set the default to 1. This might,
-however, lead to unexpected regressions when somebody relies on the
-current default behavior. For example, consider the following setup:
-		 Root[cpuset,memory]
-		  |
-		  A (use_hierarchy=0)
-		 / \
-		B  C
-
-All three A, B, C have some tasks and their memory limits. The hierarchy
-is created only because of the cpuset and its configuration.
-Say the default is changed. Then a memory pressure in C could influence
-both A and B which wouldn't happen before. The problem might be really
-hard to notice (unexpected slowdown).
-This configuration could be fixed up easily by reorganization, though:
-		 Root
-		  |
-		  A' (use_hierarchy=1, limit=unlimited, no tasks)
-		 /|\
-		A B C
-
-The problem is that we don't know whether somebody has an use case which
-cannot be transformed like that. Therefore this patch starts the slow
-transition to hierarchical only memory controller by warning users who
-are using flat hierarchies. The warning triggers only if a subgroup of
-non-root group is created with use_hierarchy==0.
-
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/memcontrol.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 795e525..87cb83f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4958,6 +4958,11 @@ mem_cgroup_create(struct cgroup *cont)
- 		parent = mem_cgroup_from_cont(cont->parent);
- 		memcg->use_hierarchy = parent->use_hierarchy;
- 		memcg->oom_kill_disable = parent->oom_kill_disable;
-+		WARN_ONCE(!memcg->use_hierarchy && parent != root_mem_cgroup,
-+				"Creating hierarchies with use_hierarchy==0 "
-+				"(flat hierarchy) is considered deprecated. "
-+				"If you believe that your setup is correct, "
-+				"we kindly ask you to contact linux-mm@kvack.org and let us");
+Index: github/security/device_cgroup.c
+===================================================================
+--- github.orig/security/device_cgroup.c	2012-08-21 10:51:15.000000000 -0400
++++ github/security/device_cgroup.c	2012-08-21 10:54:16.509079085 -0400
+@@ -26,12 +26,12 @@
+ static DEFINE_MUTEX(devcgroup_mutex);
+ 
+ /*
+- * whitelist locking rules:
++ * exception list locking rules:
+  * hold devcgroup_mutex for update/read.
+  * hold rcu_read_lock() for read.
+  */
+ 
+-struct dev_whitelist_item {
++struct dev_exception_item {
+ 	u32 major, minor;
+ 	short type;
+ 	short access;
+@@ -41,7 +41,7 @@
+ 
+ struct dev_cgroup {
+ 	struct cgroup_subsys_state css;
+-	struct list_head whitelist;
++	struct list_head exceptions;
+ 	enum {
+ 		DEVCG_DEFAULT_ALLOW,
+ 		DEVCG_DEFAULT_DENY,
+@@ -78,12 +78,12 @@
+ /*
+  * called under devcgroup_mutex
+  */
+-static int dev_whitelist_copy(struct list_head *dest, struct list_head *orig)
++static int dev_exceptions_copy(struct list_head *dest, struct list_head *orig)
+ {
+-	struct dev_whitelist_item *wh, *tmp, *new;
++	struct dev_exception_item *ex, *tmp, *new;
+ 
+-	list_for_each_entry(wh, orig, list) {
+-		new = kmemdup(wh, sizeof(*wh), GFP_KERNEL);
++	list_for_each_entry(ex, orig, list) {
++		new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
+ 		if (!new)
+ 			goto free_and_exit;
+ 		list_add_tail(&new->list, dest);
+@@ -92,9 +92,9 @@
+ 	return 0;
+ 
+ free_and_exit:
+-	list_for_each_entry_safe(wh, tmp, dest, list) {
+-		list_del(&wh->list);
+-		kfree(wh);
++	list_for_each_entry_safe(ex, tmp, dest, list) {
++		list_del(&ex->list);
++		kfree(ex);
+ 	}
+ 	return -ENOMEM;
+ }
+@@ -102,50 +102,50 @@
+ /*
+  * called under devcgroup_mutex
+  */
+-static int dev_whitelist_add(struct dev_cgroup *dev_cgroup,
+-			struct dev_whitelist_item *wh)
++static int dev_exception_add(struct dev_cgroup *dev_cgroup,
++			     struct dev_exception_item *ex)
+ {
+-	struct dev_whitelist_item *whcopy, *walk;
++	struct dev_exception_item *excopy, *walk;
+ 
+-	whcopy = kmemdup(wh, sizeof(*wh), GFP_KERNEL);
+-	if (!whcopy)
++	excopy = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
++	if (!excopy)
+ 		return -ENOMEM;
+ 
+-	list_for_each_entry(walk, &dev_cgroup->whitelist, list) {
+-		if (walk->type != wh->type)
++	list_for_each_entry(walk, &dev_cgroup->exceptions, list) {
++		if (walk->type != ex->type)
+ 			continue;
+-		if (walk->major != wh->major)
++		if (walk->major != ex->major)
+ 			continue;
+-		if (walk->minor != wh->minor)
++		if (walk->minor != ex->minor)
+ 			continue;
+ 
+-		walk->access |= wh->access;
+-		kfree(whcopy);
+-		whcopy = NULL;
++		walk->access |= ex->access;
++		kfree(excopy);
++		excopy = NULL;
  	}
  
- 	if (parent && parent->use_hierarchy) {
--- 
-1.7.10.4
-
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-	if (whcopy != NULL)
+-		list_add_tail_rcu(&whcopy->list, &dev_cgroup->whitelist);
++	if (excopy != NULL)
++		list_add_tail_rcu(&excopy->list, &dev_cgroup->exceptions);
+ 	return 0;
+ }
+ 
+ /*
+  * called under devcgroup_mutex
+  */
+-static void dev_whitelist_rm(struct dev_cgroup *dev_cgroup,
+-			struct dev_whitelist_item *wh)
++static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
++			     struct dev_exception_item *ex)
+ {
+-	struct dev_whitelist_item *walk, *tmp;
++	struct dev_exception_item *walk, *tmp;
+ 
+-	list_for_each_entry_safe(walk, tmp, &dev_cgroup->whitelist, list) {
+-		if (walk->type != wh->type)
++	list_for_each_entry_safe(walk, tmp, &dev_cgroup->exceptions, list) {
++		if (walk->type != ex->type)
+ 			continue;
+-		if (walk->major != wh->major)
++		if (walk->major != ex->major)
+ 			continue;
+-		if (walk->minor != wh->minor)
++		if (walk->minor != ex->minor)
+ 			continue;
+ 
+-		walk->access &= ~wh->access;
++		walk->access &= ~ex->access;
+ 		if (!walk->access) {
+ 			list_del_rcu(&walk->list);
+ 			kfree_rcu(walk, rcu);
+@@ -154,18 +154,18 @@
+ }
+ 
+ /**
+- * dev_whitelist_clean - frees all entries of the whitelist
+- * @dev_cgroup: dev_cgroup with the whitelist to be cleaned
++ * dev_exception_clean - frees all entries of the exception list
++ * @dev_cgroup: dev_cgroup with the exception list to be cleaned
+  *
+  * called under devcgroup_mutex
+  */
+-static void dev_whitelist_clean(struct dev_cgroup *dev_cgroup)
++static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
+ {
+-	struct dev_whitelist_item *wh, *tmp;
++	struct dev_exception_item *ex, *tmp;
+ 
+-	list_for_each_entry_safe(wh, tmp, &dev_cgroup->whitelist, list) {
+-		list_del(&wh->list);
+-		kfree(wh);
++	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
++		list_del(&ex->list);
++		kfree(ex);
+ 	}
+ }
+ 
+@@ -181,7 +181,7 @@
+ 	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
+ 	if (!dev_cgroup)
+ 		return ERR_PTR(-ENOMEM);
+-	INIT_LIST_HEAD(&dev_cgroup->whitelist);
++	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+ 	parent_cgroup = cgroup->parent;
+ 
+ 	if (parent_cgroup == NULL)
+@@ -189,8 +189,8 @@
+ 	else {
+ 		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+ 		mutex_lock(&devcgroup_mutex);
+-		ret = dev_whitelist_copy(&dev_cgroup->whitelist,
+-				&parent_dev_cgroup->whitelist);
++		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
++					  &parent_dev_cgroup->exceptions);
+ 		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+ 		mutex_unlock(&devcgroup_mutex);
+ 		if (ret) {
+@@ -207,7 +207,7 @@
+ 	struct dev_cgroup *dev_cgroup;
+ 
+ 	dev_cgroup = cgroup_to_devcgroup(cgroup);
+-	dev_whitelist_clean(dev_cgroup);
++	dev_exception_clean(dev_cgroup);
+ 	kfree(dev_cgroup);
+ }
+ 
+@@ -253,7 +253,7 @@
+ 				struct seq_file *m)
+ {
+ 	struct dev_cgroup *devcgroup = cgroup_to_devcgroup(cgroup);
+-	struct dev_whitelist_item *wh;
++	struct dev_exception_item *ex;
+ 	char maj[MAJMINLEN], min[MAJMINLEN], acc[ACCLEN];
+ 
+ 	rcu_read_lock();
+@@ -270,11 +270,11 @@
+ 		seq_printf(m, "%c %s:%s %s\n", type_to_char(DEV_ALL),
+ 			   maj, min, acc);
+ 	} else {
+-		list_for_each_entry_rcu(wh, &devcgroup->whitelist, list) {
+-			set_access(acc, wh->access);
+-			set_majmin(maj, wh->major);
+-			set_majmin(min, wh->minor);
+-			seq_printf(m, "%c %s:%s %s\n", type_to_char(wh->type),
++		list_for_each_entry_rcu(ex, &devcgroup->exceptions, list) {
++			set_access(acc, ex->access);
++			set_majmin(maj, ex->major);
++			set_majmin(min, ex->minor);
++			seq_printf(m, "%c %s:%s %s\n", type_to_char(ex->type),
+ 				   maj, min, acc);
+ 		}
+ 	}
+@@ -284,42 +284,42 @@
+ }
+ 
+ /**
+- * may_access_whitelist - verifies if a new rule is part of what is allowed
+- *			  by a dev cgroup based on the default policy +
+- *			  exceptions. This is used to make sure a child cgroup
+- *			  won't have more privileges than its parent or to
+- *			  verify if a certain access is allowed.
++ * may_access - verifies if a new exception is part of what is allowed
++ *		by a dev cgroup based on the default policy +
++ *		exceptions. This is used to make sure a child cgroup
++ *		won't have more privileges than its parent or to
++ *		verify if a certain access is allowed.
+  * @dev_cgroup: dev cgroup to be tested against
+- * @refwh: new rule
++ * @refex: new exception
+  */
+-static int may_access_whitelist(struct dev_cgroup *dev_cgroup,
+-				struct dev_whitelist_item *refwh)
++static int may_access(struct dev_cgroup *dev_cgroup,
++		      struct dev_exception_item *refex)
+ {
+-	struct dev_whitelist_item *whitem;
++	struct dev_exception_item *ex;
+ 	bool match = false;
+ 
+-	list_for_each_entry(whitem, &dev_cgroup->whitelist, list) {
+-		if ((refwh->type & DEV_BLOCK) && !(whitem->type & DEV_BLOCK))
++	list_for_each_entry(ex, &dev_cgroup->exceptions, list) {
++		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+ 			continue;
+-		if ((refwh->type & DEV_CHAR) && !(whitem->type & DEV_CHAR))
++		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+ 			continue;
+-		if (whitem->major != ~0 && whitem->major != refwh->major)
++		if (ex->major != ~0 && ex->major != refex->major)
+ 			continue;
+-		if (whitem->minor != ~0 && whitem->minor != refwh->minor)
++		if (ex->minor != ~0 && ex->minor != refex->minor)
+ 			continue;
+-		if (refwh->access & (~whitem->access))
++		if (refex->access & (~ex->access))
+ 			continue;
+ 		match = true;
+ 		break;
+ 	}
+ 
+ 	/*
+-	 * In two cases we'll consider this new rule valid:
++	 * In two cases we'll consider this new exception valid:
+ 	 * - the dev cgroup has its default policy to allow + exception list:
+-	 *   the new rule should *not* match any of the exceptions
++	 *   the new exception should *not* match any of the exceptions
+ 	 *   (behavior != DEVCG_DEFAULT_DENY, !match)
+ 	 * - the dev cgroup has its default policy to deny + exception list:
+-	 *   the new rule *should* match the exceptions
++	 *   the new exception *should* match the exceptions
+ 	 *   (behavior == DEVCG_DEFAULT_DENY, match)
+ 	 */
+ 	if ((dev_cgroup->behavior == DEVCG_DEFAULT_DENY) == match)
+@@ -329,11 +329,11 @@
+ 
+ /*
+  * parent_has_perm:
+- * when adding a new allow rule to a device whitelist, the rule
++ * when adding a new allow rule to a device exception list, the rule
+  * must be allowed in the parent device
+  */
+ static int parent_has_perm(struct dev_cgroup *childcg,
+-				  struct dev_whitelist_item *wh)
++				  struct dev_exception_item *ex)
+ {
+ 	struct cgroup *pcg = childcg->css.cgroup->parent;
+ 	struct dev_cgroup *parent;
+@@ -341,17 +341,17 @@
+ 	if (!pcg)
+ 		return 1;
+ 	parent = cgroup_to_devcgroup(pcg);
+-	return may_access_whitelist(parent, wh);
++	return may_access(parent, ex);
+ }
+ 
+ /*
+- * Modify the whitelist using allow/deny rules.
++ * Modify the exception list using allow/deny rules.
+  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
+  * so we can give a container CAP_MKNOD to let it create devices but not
+- * modify the whitelist.
++ * modify the exception list.
+  * It seems likely we'll want to add a CAP_CONTAINER capability to allow
+  * us to also grant CAP_SYS_ADMIN to containers without giving away the
+- * device whitelist controls, but for now we'll stick with CAP_SYS_ADMIN
++ * device exception list controls, but for now we'll stick with CAP_SYS_ADMIN
+  *
+  * Taking rules away is always allowed (given CAP_SYS_ADMIN).  Granting
+  * new access is only allowed if you're in the top-level cgroup, or your
+@@ -363,25 +363,25 @@
+ 	const char *b;
+ 	char temp[12];		/* 11 + 1 characters needed for a u32 */
+ 	int count, rc;
+-	struct dev_whitelist_item wh;
++	struct dev_exception_item ex;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
+-	memset(&wh, 0, sizeof(wh));
++	memset(&ex, 0, sizeof(ex));
+ 	b = buffer;
+ 
+ 	switch (*b) {
+ 	case 'a':
+ 		switch (filetype) {
+ 		case DEVCG_ALLOW:
+-			if (!parent_has_perm(devcgroup, &wh))
++			if (!parent_has_perm(devcgroup, &ex))
+ 				return -EPERM;
+-			dev_whitelist_clean(devcgroup);
++			dev_exception_clean(devcgroup);
+ 			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+ 			break;
+ 		case DEVCG_DENY:
+-			dev_whitelist_clean(devcgroup);
++			dev_exception_clean(devcgroup);
+ 			devcgroup->behavior = DEVCG_DEFAULT_DENY;
+ 			break;
+ 		default:
+@@ -389,10 +389,10 @@
+ 		}
+ 		return 0;
+ 	case 'b':
+-		wh.type = DEV_BLOCK;
++		ex.type = DEV_BLOCK;
+ 		break;
+ 	case 'c':
+-		wh.type = DEV_CHAR;
++		ex.type = DEV_CHAR;
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -402,7 +402,7 @@
+ 		return -EINVAL;
+ 	b++;
+ 	if (*b == '*') {
+-		wh.major = ~0;
++		ex.major = ~0;
+ 		b++;
+ 	} else if (isdigit(*b)) {
+ 		memset(temp, 0, sizeof(temp));
+@@ -412,7 +412,7 @@
+ 			if (!isdigit(*b))
+ 				break;
+ 		}
+-		rc = kstrtou32(temp, 10, &wh.major);
++		rc = kstrtou32(temp, 10, &ex.major);
+ 		if (rc)
+ 			return -EINVAL;
+ 	} else {
+@@ -424,7 +424,7 @@
+ 
+ 	/* read minor */
+ 	if (*b == '*') {
+-		wh.minor = ~0;
++		ex.minor = ~0;
+ 		b++;
+ 	} else if (isdigit(*b)) {
+ 		memset(temp, 0, sizeof(temp));
+@@ -434,7 +434,7 @@
+ 			if (!isdigit(*b))
+ 				break;
+ 		}
+-		rc = kstrtou32(temp, 10, &wh.minor);
++		rc = kstrtou32(temp, 10, &ex.minor);
+ 		if (rc)
+ 			return -EINVAL;
+ 	} else {
+@@ -445,13 +445,13 @@
+ 	for (b++, count = 0; count < 3; count++, b++) {
+ 		switch (*b) {
+ 		case 'r':
+-			wh.access |= ACC_READ;
++			ex.access |= ACC_READ;
+ 			break;
+ 		case 'w':
+-			wh.access |= ACC_WRITE;
++			ex.access |= ACC_WRITE;
+ 			break;
+ 		case 'm':
+-			wh.access |= ACC_MKNOD;
++			ex.access |= ACC_MKNOD;
+ 			break;
+ 		case '\n':
+ 		case '\0':
+@@ -464,7 +464,7 @@
+ 
+ 	switch (filetype) {
+ 	case DEVCG_ALLOW:
+-		if (!parent_has_perm(devcgroup, &wh))
++		if (!parent_has_perm(devcgroup, &ex))
+ 			return -EPERM;
+ 		/*
+ 		 * If the default policy is to allow by default, try to remove
+@@ -472,10 +472,10 @@
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+-			dev_whitelist_rm(devcgroup, &wh);
++			dev_exception_rm(devcgroup, &ex);
+ 			return 0;
+ 		}
+-		return dev_whitelist_add(devcgroup, &wh);
++		return dev_exception_add(devcgroup, &ex);
+ 	case DEVCG_DENY:
+ 		/*
+ 		 * If the default policy is to deny by default, try to remove
+@@ -483,10 +483,10 @@
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+-			dev_whitelist_rm(devcgroup, &wh);
++			dev_exception_rm(devcgroup, &ex);
+ 			return 0;
+ 		}
+-		return dev_whitelist_add(devcgroup, &wh);
++		return dev_exception_add(devcgroup, &ex);
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -547,17 +547,17 @@
+ 					short type, u32 major, u32 minor,
+ 					short access)
+ {
+-	struct dev_whitelist_item wh;
++	struct dev_exception_item ex;
+ 	int rc;
+ 
+-	memset(&wh, 0, sizeof(wh));
+-	wh.type = type;
+-	wh.major = major;
+-	wh.minor = minor;
+-	wh.access = access;
++	memset(&ex, 0, sizeof(ex));
++	ex.type = type;
++	ex.major = major;
++	ex.minor = minor;
++	ex.access = access;
+ 
+ 	rcu_read_lock();
+-	rc = may_access_whitelist(dev_cgroup, &wh);
++	rc = may_access(dev_cgroup, &ex);
+ 	rcu_read_unlock();
+ 
+ 	if (!rc)
