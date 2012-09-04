@@ -1,34 +1,57 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: first step towards hierarchical controller
-Date: Tue, 4 Sep 2012 17:27:20 +0400
-Message-ID: <504601B8.2050907@parallels.com>
-References: <1346687211-31848-1-git-send-email-glommer@parallels.com> <20120903170806.GA21682@dhcp22.suse.cz> <5045BD25.10301@parallels.com> <20120904130905.GA15683@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120904130905.GA15683-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [RFC 0/5] forced comounts for cgroups.
+Date: Tue,  4 Sep 2012 18:18:15 +0400
+Message-ID: <1346768300-10282-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, davej@redhat.com, ben@decadent.org.uk, a.p.zijlstra@chello.nl, pjt@google.com, lennart@poettering.net, kay.sievers@vrfy.org, tj@kernel.org
 
-On 09/04/2012 05:09 PM, Michal Hocko wrote:
-> Not really. Do it slowly means that somebody actually _notices_ that
-> something is about to change and they have a lot of time for that. This
-> will be really hard with the config option saying N by default.  People
-> will ignore that until it's too late.
-> We are interested in those users who would keep the config default N and
-> they are (ab)using use_hierarchy=0 in a way which is hard/impossible to
-> fix. This is where distributions might help and they should IMHO but why
-> to put an additional code into upstream? Isn't it sufficient that those
-> who would like to help (and take the risk) would just take the patch?
+Hi,
 
-At least Fedora, seem to frown upon heavily at non-upstream patches.
-To follow up with what you say, what would you say if we would WARN_ON()
-unconditionally even if this switch is turned off?
+As we have been extensively discussing, the cost and pain points for cgroups
+come from many places. But at least one of those is the arbitrary nature of
+hierarchies. Many people, including at least Tejun and me would like this to go
+away altogether. Problem so far, is breaking compatiblity with existing setups
 
-a warn on dmesg is almost impossible not to be seen by anyone who cares.
-That warning would tell people to flip the Kconfig option for the
-warning will disappear. But ultimately, we are still keeping the
-behavior intact.
+I am proposing here a default-n Kconfig option that will guarantee that the cpu
+cgroups (for now) will be comounted. I started with them because the
+cpu/cpuacct division is clearly the worst offender. Also, the default-n is here
+so distributions will have time to adapt: Forcing this flag to be on without
+userspace changes will just lead to cgroups failing to mount, which we don't
+want.
+
+Although I've tested it and it works, I haven't compile-tested all possible
+config combinations. So this is mostly for your eyes. If this gets traction,
+I'll submit it properly, along with any changes that you might require.
+
+Thanks.
+
+Glauber Costa (5):
+  cgroup: allow some comounts to be forced.
+  sched: adjust exec_clock to use it as cpu usage metric
+  sched: do not call cpuacct_charge when cpu and cpuacct are comounted
+  cpuacct: do not gather cpuacct statistics when not mounted
+  sched: add cpusets to comounts list
+
+ include/linux/cgroup.h |   6 ++
+ init/Kconfig           |  23 ++++++++
+ kernel/cgroup.c        |  29 +++++++++-
+ kernel/cpuset.c        |   4 ++
+ kernel/sched/core.c    | 149 +++++++++++++++++++++++++++++++++++++++++++++----
+ kernel/sched/rt.c      |   1 +
+ kernel/sched/sched.h   |  20 ++++++-
+ 7 files changed, 220 insertions(+), 12 deletions(-)
+
+-- 
+1.7.11.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
