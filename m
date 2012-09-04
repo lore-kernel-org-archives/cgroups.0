@@ -1,91 +1,77 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [RFC 4/5] cpuacct: do not gather cpuacct statistics when not mounted
-Date: Tue,  4 Sep 2012 18:18:19 +0400
-Message-ID: <1346768300-10282-5-git-send-email-glommer@parallels.com>
-References: <1346768300-10282-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1346768300-10282-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+From: Aristeu Rozanski <aris@redhat.com>
+Subject: [PATCH v2 1/6] device_cgroup: add "behavior" in dev_cgroup structure
+Date: Tue, 04 Sep 2012 10:34:20 -0400
+Message-ID: <20120904143420.234142640@napanee.usersys.redhat.com>
+References: <20120904143419.892872876@napanee.usersys.redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=deny_all.patch
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, davej@redhat.com, ben@decadent.org.uk, a.p.zijlstra@chello.nl, pjt@google.com, lennart@poettering.net, kay.sievers@vrfy.org, tj@kernel.org, Glauber Costa <glommer@parallels.com>
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Currently, the only test that prevents us from running the expensive
-cpuacct_charge() is cpuacct_subsys.active == true. This will hold at all
-times after the subsystem is activated, even if it is not mounted.
+behavior will determine if the default policy is to deny all device access
+unless for the ones in the exception list.
 
-IOW, use it or not, you pay it. By hooking with the bind() callback, we
-can detect when cpuacct is mounted or umounted, and stop collecting
-statistics when this cgroup is not in use.
+This variable will be used in the next patches to convert device_cgroup
+internally into a default policy + rules.
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Dave Jones <davej@redhat.com>
-CC: Ben Hutchings <ben@decadent.org.uk>
-CC: Peter Zijlstra <a.p.zijlstra@chello.nl>
-CC: Paul Turner <pjt@google.com>
-CC: Lennart Poettering <lennart@poettering.net>
-CC: Kay Sievers <kay.sievers@vrfy.org>
-CC: Tejun Heo <tj@kernel.org>
+v2:
+- renamed deny_all to behavior
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: James Morris <jmorris@namei.org>
+Cc: Pavel Emelyanov <xemul@openvz.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+
 ---
- kernel/sched/core.c  | 8 ++++++++
- kernel/sched/sched.h | 3 +++
- 2 files changed, 11 insertions(+)
+ security/device_cgroup.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e46871d..d654bd1 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -8595,6 +8595,13 @@ static struct cftype files[] = {
- 	{ }	/* terminate */
+Index: github/security/device_cgroup.c
+===================================================================
+--- github.orig/security/device_cgroup.c	2012-08-21 09:49:38.698415513 -0400
++++ github/security/device_cgroup.c	2012-08-21 10:50:34.650810797 -0400
+@@ -42,6 +42,10 @@
+ struct dev_cgroup {
+ 	struct cgroup_subsys_state css;
+ 	struct list_head whitelist;
++	enum {
++		DEVCG_DEFAULT_ALLOW,
++		DEVCG_DEFAULT_DENY,
++	} behavior;
  };
  
-+bool cpuacct_mounted;
-+
-+void cpuacct_bind(struct cgroup *root)
-+{
-+	cpuacct_mounted = root->root == root_cpuacct.css.cgroup->root;
-+}
-+
- /*
-  * charge this task's execution time to its accounting group.
-  *
-@@ -8628,6 +8635,7 @@ struct cgroup_subsys cpuacct_subsys = {
- 	.destroy = cpuacct_destroy,
- 	.subsys_id = cpuacct_subsys_id,
- 	.base_cftypes = files,
-+	.bind = cpuacct_bind,
- #ifdef CONFIG_CGROUP_FORCE_COMOUNT_CPU
- 	.comounts = 1,
- 	.must_comount = { cpu_cgroup_subsys_id, },
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1da9fa8..d33f777 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -887,6 +887,7 @@ extern void update_idle_cpu_load(struct rq *this_rq);
- #include <linux/cgroup.h>
- 
- extern bool cpuacct_from_cpu;
-+extern bool cpuacct_mounted;
- 
- /* track cpu usage of a group of tasks and its child groups */
- struct cpuacct {
-@@ -921,6 +922,8 @@ extern void __cpuacct_charge(struct task_struct *tsk, u64 cputime);
- 
- static inline void cpuacct_charge(struct task_struct *tsk, u64 cputime)
- {
-+	if (unlikely(!cpuacct_mounted))
-+		return;
- #ifdef CONFIG_CGROUP_FORCE_COMOUNT_CPU
- 	if (likely(!cpuacct_from_cpu))
- 		return;
--- 
-1.7.11.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+@@ -178,12 +182,14 @@
+ 		wh->minor = wh->major = ~0;
+ 		wh->type = DEV_ALL;
+ 		wh->access = ACC_MASK;
++		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+ 		list_add(&wh->list, &dev_cgroup->whitelist);
+ 	} else {
+ 		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+ 		mutex_lock(&devcgroup_mutex);
+ 		ret = dev_whitelist_copy(&dev_cgroup->whitelist,
+ 				&parent_dev_cgroup->whitelist);
++		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+ 		mutex_unlock(&devcgroup_mutex);
+ 		if (ret) {
+ 			kfree(dev_cgroup);
+@@ -409,9 +415,11 @@
+ 	case DEVCG_ALLOW:
+ 		if (!parent_has_perm(devcgroup, &wh))
+ 			return -EPERM;
++		devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+ 		return dev_whitelist_add(devcgroup, &wh);
+ 	case DEVCG_DENY:
+ 		dev_whitelist_rm(devcgroup, &wh);
++		devcgroup->behavior = DEVCG_DEFAULT_DENY;
+ 		break;
+ 	default:
+ 		return -EINVAL;
