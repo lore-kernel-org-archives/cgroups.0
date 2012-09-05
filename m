@@ -1,14 +1,13 @@
 From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 3/6] device_cgroup: convert device_cgroup internally
- to policy + exceptions
-Date: Wed, 5 Sep 2012 03:09:15 +0000
-Message-ID: <20120905030915.GC13310@mail.hallyn.com>
+Subject: Re: [PATCH v2 4/6] device_cgroup: stop using simple_strtoul()
+Date: Wed, 5 Sep 2012 03:22:10 +0000
+Message-ID: <20120905032209.GD13310@mail.hallyn.com>
 References: <20120904143419.892872876@napanee.usersys.redhat.com>
- <20120904143420.841275882@napanee.usersys.redhat.com>
+ <20120904143421.144153057@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120904143420.841275882-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20120904143421.144153057-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,412 +16,75 @@ To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
 Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> The original model of device_cgroup is having a whitelist where all the
-> allowed devices are listed. The problem with this approach is that is
-> impossible to have the case of allowing everything but few devices.
+> This patch converts the code to use kstrtou32() instead of simple_strtoul()
+> which is deprecated. The real size of the variables are u32, so use kstrtou32
+> instead of kstrtoul
 > 
-> The reason for that lies in the way the whitelist is handled internally:
-> since there's only a whitelist, the "all devices" entry would have to be
-> removed and replaced by the entire list of possible devices but the ones
-> that are being denied.  Since dev_t is 32 bits long, representing the allowed
-> devices as a bitfield is not memory efficient.
-> 
-> This patch replaces the "whitelist" by a "exceptions" list and the default
-> policy is kept as "behavior" variable in dev_cgroup structure.
-> 
-> The current interface determines that whenever "a" is written to devices.allow
-> or devices.deny, the entry masking all devices will be added or removed,
-> respectively. This behavior is kept and it's what will determine the default
-> policy:
-> 
-> 	# cat devices.list 
-> 	a *:* rwm
-> 	# echo a >devices.deny
-> 	# cat devices.list 
-> 	# echo a >devices.allow
-> 	# cat devices.list 
-> 	a *:* rwm
-> 
-> The interface is also preserved. For example, if one wants to block only access
-> to /dev/null:
-> 	# ls -l /dev/null
-> 	crw-rw-rw- 1 root root 1, 3 Jul 24 16:17 /dev/null
-> 	# echo a >devices.allow
-> 	# echo "c 1:3 rwm" >devices.deny
-> 	# cat /dev/null
-> 	cat: /dev/null: Operation not permitted
-> 	# echo >/dev/null
-> 	bash: /dev/null: Operation not permitted
-> 	# mknod /tmp/null c 1 3
-> 	mknod: /tmp/null: Operation not permitted
-> 	# echo "c 1:3 r" >devices.allow
-> 	# cat /dev/null
-> 	# echo >/dev/null
-> 	bash: /dev/null: Operation not permitted
-> 	# mknod /tmp/null c 1 3
-> 	mknod: /tmp/null: Operation not permitted
-> 	# echo "c 1:3 rw" >devices.allow
-> 	# echo >/dev/null
-> 	# cat /dev/null
-> 	# mknod /tmp/null c 1 3
-> 	mknod: /tmp/null: Operation not permitted
-> 	# echo "c 1:3 rwm" >devices.allow
-> 	# echo >/dev/null
-> 	# cat /dev/null
-> 	# mknod /tmp/null c 1 3
-> 	#
-> 
-> Note that I didn't rename the functions/variables in this patch, but in the
-> next one to make reviewing easier.
-> 
-> v2:
-> - convert code to use behavior instead of deny_all
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-(Note - I'm going by the changelog which says use of 'behavior' instead
-of deny_all is the only difference from v1)
-
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
-> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+phew, i'm afraid i'm not up on the latest 'best parsing techniques' 
+but the end result looks correct (just not sure it's optimal).
 
 Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
 > ---
->  security/device_cgroup.c |  228 +++++++++++++++++++++++++++--------------------
->  1 file changed, 132 insertions(+), 96 deletions(-)
+>  security/device_cgroup.c |   28 ++++++++++++++++++++++------
+>  1 file changed, 22 insertions(+), 6 deletions(-)
 > 
 > Index: github/security/device_cgroup.c
 > ===================================================================
-> --- github.orig/security/device_cgroup.c	2012-08-21 10:50:37.526892088 -0400
-> +++ github/security/device_cgroup.c	2012-08-21 10:50:48.967215436 -0400
-> @@ -99,7 +99,6 @@
->  	return -ENOMEM;
->  }
->  
-> -/* Stupid prototype - don't bother combining existing entries */
->  /*
->   * called under devcgroup_mutex
->   */
-> @@ -139,16 +138,13 @@
->  	struct dev_whitelist_item *walk, *tmp;
->  
->  	list_for_each_entry_safe(walk, tmp, &dev_cgroup->whitelist, list) {
-> -		if (walk->type == DEV_ALL)
-> -			goto remove;
->  		if (walk->type != wh->type)
->  			continue;
-> -		if (walk->major != ~0 && walk->major != wh->major)
-> +		if (walk->major != wh->major)
->  			continue;
-> -		if (walk->minor != ~0 && walk->minor != wh->minor)
-> +		if (walk->minor != wh->minor)
->  			continue;
->  
-> -remove:
->  		walk->access &= ~wh->access;
->  		if (!walk->access) {
->  			list_del_rcu(&walk->list);
-> @@ -188,19 +184,9 @@
->  	INIT_LIST_HEAD(&dev_cgroup->whitelist);
->  	parent_cgroup = cgroup->parent;
->  
-> -	if (parent_cgroup == NULL) {
-> -		struct dev_whitelist_item *wh;
-> -		wh = kmalloc(sizeof(*wh), GFP_KERNEL);
-> -		if (!wh) {
-> -			kfree(dev_cgroup);
-> -			return ERR_PTR(-ENOMEM);
-> -		}
-> -		wh->minor = wh->major = ~0;
-> -		wh->type = DEV_ALL;
-> -		wh->access = ACC_MASK;
-> +	if (parent_cgroup == NULL)
->  		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
-> -		list_add(&wh->list, &dev_cgroup->whitelist);
-> -	} else {
-> +	else {
->  		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
->  		mutex_lock(&devcgroup_mutex);
->  		ret = dev_whitelist_copy(&dev_cgroup->whitelist,
-> @@ -271,33 +257,48 @@
->  	char maj[MAJMINLEN], min[MAJMINLEN], acc[ACCLEN];
->  
->  	rcu_read_lock();
-> -	list_for_each_entry_rcu(wh, &devcgroup->whitelist, list) {
-> -		set_access(acc, wh->access);
-> -		set_majmin(maj, wh->major);
-> -		set_majmin(min, wh->minor);
-> -		seq_printf(m, "%c %s:%s %s\n", type_to_char(wh->type),
-> +	/*
-> +	 * To preserve the compatibility:
-> +	 * - Only show the "all devices" when the default policy is to allow
-> +	 * - List the exceptions in case the default policy is to deny
-> +	 * This way, the file remains as a "whitelist of devices"
-> +	 */
-> +	if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
-> +		set_access(acc, ACC_MASK);
-> +		set_majmin(maj, ~0);
-> +		set_majmin(min, ~0);
-> +		seq_printf(m, "%c %s:%s %s\n", type_to_char(DEV_ALL),
->  			   maj, min, acc);
-> +	} else {
-> +		list_for_each_entry_rcu(wh, &devcgroup->whitelist, list) {
-> +			set_access(acc, wh->access);
-> +			set_majmin(maj, wh->major);
-> +			set_majmin(min, wh->minor);
-> +			seq_printf(m, "%c %s:%s %s\n", type_to_char(wh->type),
-> +				   maj, min, acc);
-> +		}
->  	}
->  	rcu_read_unlock();
->  
->  	return 0;
->  }
->  
-> -/*
-> - * may_access_whitelist:
-> - * does the access granted to dev_cgroup c contain the access
-> - * requested in whitelist item refwh.
-> - * return 1 if yes, 0 if no.
-> - * call with devcgroup_mutex held
-> +/**
-> + * may_access_whitelist - verifies if a new rule is part of what is allowed
-> + *			  by a dev cgroup based on the default policy +
-> + *			  exceptions. This is used to make sure a child cgroup
-> + *			  won't have more privileges than its parent or to
-> + *			  verify if a certain access is allowed.
-> + * @dev_cgroup: dev cgroup to be tested against
-> + * @refwh: new rule
->   */
-> -static int may_access_whitelist(struct dev_cgroup *c,
-> -				       struct dev_whitelist_item *refwh)
-> +static int may_access_whitelist(struct dev_cgroup *dev_cgroup,
-> +				struct dev_whitelist_item *refwh)
+> --- github.orig/security/device_cgroup.c	2012-08-21 10:51:05.751689805 -0400
+> +++ github/security/device_cgroup.c	2012-08-21 10:51:15.015951623 -0400
+> @@ -361,8 +361,8 @@
+>  				   int filetype, const char *buffer)
 >  {
->  	struct dev_whitelist_item *whitem;
-> +	bool match = false;
+>  	const char *b;
+> -	char *endp;
+> -	int count;
+> +	char temp[12];		/* 11 + 1 characters needed for a u32 */
+> +	int count, rc;
+>  	struct dev_whitelist_item wh;
 >  
-> -	list_for_each_entry(whitem, &c->whitelist, list) {
-> -		if (whitem->type & DEV_ALL)
-> -			return 1;
-> +	list_for_each_entry(whitem, &dev_cgroup->whitelist, list) {
->  		if ((refwh->type & DEV_BLOCK) && !(whitem->type & DEV_BLOCK))
->  			continue;
->  		if ((refwh->type & DEV_CHAR) && !(whitem->type & DEV_CHAR))
-> @@ -308,8 +309,21 @@
->  			continue;
->  		if (refwh->access & (~whitem->access))
->  			continue;
-> -		return 1;
-> +		match = true;
-> +		break;
->  	}
-> +
-> +	/*
-> +	 * In two cases we'll consider this new rule valid:
-> +	 * - the dev cgroup has its default policy to allow + exception list:
-> +	 *   the new rule should *not* match any of the exceptions
-> +	 *   (behavior != DEVCG_DEFAULT_DENY, !match)
-> +	 * - the dev cgroup has its default policy to deny + exception list:
-> +	 *   the new rule *should* match the exceptions
-> +	 *   (behavior == DEVCG_DEFAULT_DENY, match)
-> +	 */
-> +	if ((dev_cgroup->behavior == DEVCG_DEFAULT_DENY) == match)
-> +		return 1;
->  	return 0;
->  }
->  
-> @@ -359,11 +373,21 @@
->  
->  	switch (*b) {
->  	case 'a':
-> -		wh.type = DEV_ALL;
-> -		wh.access = ACC_MASK;
-> -		wh.major = ~0;
-> -		wh.minor = ~0;
-> -		goto handle;
-> +		switch (filetype) {
-> +		case DEVCG_ALLOW:
-> +			if (!parent_has_perm(devcgroup, &wh))
-> +				return -EPERM;
-> +			dev_whitelist_clean(devcgroup);
-> +			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
-> +			break;
-> +		case DEVCG_DENY:
-> +			dev_whitelist_clean(devcgroup);
-> +			devcgroup->behavior = DEVCG_DEFAULT_DENY;
-> +			break;
-> +		default:
+>  	if (!capable(CAP_SYS_ADMIN))
+> @@ -405,8 +405,16 @@
+>  		wh.major = ~0;
+>  		b++;
+>  	} else if (isdigit(*b)) {
+> -		wh.major = simple_strtoul(b, &endp, 10);
+> -		b = endp;
+> +		memset(temp, 0, sizeof(temp));
+> +		for (count = 0; count < sizeof(temp) - 1; count++) {
+> +			temp[count] = *b;
+> +			b++;
+> +			if (!isdigit(*b))
+> +				break;
+> +		}
+> +		rc = kstrtou32(temp, 10, &wh.major);
+> +		if (rc)
 > +			return -EINVAL;
-> +		}
-> +		return 0;
->  	case 'b':
->  		wh.type = DEV_BLOCK;
->  		break;
-> @@ -422,17 +446,31 @@
->  		}
->  	}
->  
-> -handle:
->  	switch (filetype) {
->  	case DEVCG_ALLOW:
->  		if (!parent_has_perm(devcgroup, &wh))
->  			return -EPERM;
-> -		devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
-> +		/*
-> +		 * If the default policy is to allow by default, try to remove
-> +		 * an matching exception instead. And be silent about it: we
-> +		 * don't want to break compatibility
-> +		 */
-> +		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
-> +			dev_whitelist_rm(devcgroup, &wh);
-> +			return 0;
-> +		}
->  		return dev_whitelist_add(devcgroup, &wh);
->  	case DEVCG_DENY:
-> -		dev_whitelist_rm(devcgroup, &wh);
-> -		devcgroup->behavior = DEVCG_DEFAULT_DENY;
-> -		break;
-> +		/*
-> +		 * If the default policy is to deny by default, try to remove
-> +		 * an matching exception instead. And be silent about it: we
-> +		 * don't want to break compatibility
-> +		 */
-> +		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
-> +			dev_whitelist_rm(devcgroup, &wh);
-> +			return 0;
-> +		}
-> +		return dev_whitelist_add(devcgroup, &wh);
->  	default:
+>  	} else {
 >  		return -EINVAL;
 >  	}
-> @@ -479,73 +517,71 @@
->  	.base_cftypes = dev_cgroup_files,
->  };
->  
-> -int __devcgroup_inode_permission(struct inode *inode, int mask)
-> +/**
-> + * __devcgroup_check_permission - checks if an inode operation is permitted
-> + * @dev_cgroup: the dev cgroup to be tested against
-> + * @type: device type
-> + * @major: device major number
-> + * @minor: device minor number
-> + * @access: combination of ACC_WRITE, ACC_READ and ACC_MKNOD
-> + *
-> + * returns 0 on success, -EPERM case the operation is not permitted
-> + */
-> +static int __devcgroup_check_permission(struct dev_cgroup *dev_cgroup,
-> +					short type, u32 major, u32 minor,
-> +					short access)
->  {
-> -	struct dev_cgroup *dev_cgroup;
-> -	struct dev_whitelist_item *wh;
-> +	struct dev_whitelist_item wh;
-> +	int rc;
-> +
-> +	memset(&wh, 0, sizeof(wh));
-> +	wh.type = type;
-> +	wh.major = major;
-> +	wh.minor = minor;
-> +	wh.access = access;
->  
->  	rcu_read_lock();
-> +	rc = may_access_whitelist(dev_cgroup, &wh);
-> +	rcu_read_unlock();
->  
-> -	dev_cgroup = task_devcgroup(current);
-> +	if (!rc)
-> +		return -EPERM;
->  
-> -	list_for_each_entry_rcu(wh, &dev_cgroup->whitelist, list) {
-> -		if (wh->type & DEV_ALL)
-> -			goto found;
-> -		if ((wh->type & DEV_BLOCK) && !S_ISBLK(inode->i_mode))
-> -			continue;
-> -		if ((wh->type & DEV_CHAR) && !S_ISCHR(inode->i_mode))
-> -			continue;
-> -		if (wh->major != ~0 && wh->major != imajor(inode))
-> -			continue;
-> -		if (wh->minor != ~0 && wh->minor != iminor(inode))
-> -			continue;
-> +	return 0;
-> +}
->  
-> -		if ((mask & MAY_WRITE) && !(wh->access & ACC_WRITE))
-> -			continue;
-> -		if ((mask & MAY_READ) && !(wh->access & ACC_READ))
-> -			continue;
-> -found:
-> -		rcu_read_unlock();
-> -		return 0;
-> -	}
-> +int __devcgroup_inode_permission(struct inode *inode, int mask)
-> +{
-> +	struct dev_cgroup *dev_cgroup = task_devcgroup(current);
-> +	short type, access = 0;
->  
-> -	rcu_read_unlock();
-> +	if (S_ISBLK(inode->i_mode))
-> +		type = DEV_BLOCK;
-> +	if (S_ISCHR(inode->i_mode))
-> +		type = DEV_CHAR;
-> +	if (mask & MAY_WRITE)
-> +		access |= ACC_WRITE;
-> +	if (mask & MAY_READ)
-> +		access |= ACC_READ;
->  
-> -	return -EPERM;
-> +	return __devcgroup_check_permission(dev_cgroup, type, imajor(inode),
-> +					    iminor(inode), access);
->  }
->  
->  int devcgroup_inode_mknod(int mode, dev_t dev)
->  {
-> -	struct dev_cgroup *dev_cgroup;
-> -	struct dev_whitelist_item *wh;
-> +	struct dev_cgroup *dev_cgroup = task_devcgroup(current);
-> +	short type;
->  
->  	if (!S_ISBLK(mode) && !S_ISCHR(mode))
->  		return 0;
->  
-> -	rcu_read_lock();
-> -
-> -	dev_cgroup = task_devcgroup(current);
-> -
-> -	list_for_each_entry_rcu(wh, &dev_cgroup->whitelist, list) {
-> -		if (wh->type & DEV_ALL)
-> -			goto found;
-> -		if ((wh->type & DEV_BLOCK) && !S_ISBLK(mode))
-> -			continue;
-> -		if ((wh->type & DEV_CHAR) && !S_ISCHR(mode))
-> -			continue;
-> -		if (wh->major != ~0 && wh->major != MAJOR(dev))
-> -			continue;
-> -		if (wh->minor != ~0 && wh->minor != MINOR(dev))
-> -			continue;
-> -
-> -		if (!(wh->access & ACC_MKNOD))
-> -			continue;
-> -found:
-> -		rcu_read_unlock();
-> -		return 0;
-> -	}
-> +	if (S_ISBLK(mode))
-> +		type = DEV_BLOCK;
-> +	else
-> +		type = DEV_CHAR;
->  
-> -	rcu_read_unlock();
-> +	return __devcgroup_check_permission(dev_cgroup, type, MAJOR(dev),
-> +					    MINOR(dev), ACC_MKNOD);
->  
-> -	return -EPERM;
->  }
+> @@ -419,8 +427,16 @@
+>  		wh.minor = ~0;
+>  		b++;
+>  	} else if (isdigit(*b)) {
+> -		wh.minor = simple_strtoul(b, &endp, 10);
+> -		b = endp;
+> +		memset(temp, 0, sizeof(temp));
+> +		for (count = 0; count < sizeof(temp) - 1; count++) {
+> +			temp[count] = *b;
+> +			b++;
+> +			if (!isdigit(*b))
+> +				break;
+> +		}
+> +		rc = kstrtou32(temp, 10, &wh.minor);
+> +		if (rc)
+> +			return -EINVAL;
+>  	} else {
+>  		return -EINVAL;
+>  	}
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
