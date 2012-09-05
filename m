@@ -1,14 +1,13 @@
 From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 6/6] device_cgroup: introduce a new, more consistent
- interface for device_cgroup
-Date: Wed, 5 Sep 2012 03:27:56 +0000
-Message-ID: <20120905032756.GF13310@mail.hallyn.com>
+Subject: Re: [PATCH v2 0/6] device_cgroup: replace internally whitelist
+ with exception list
+Date: Wed, 5 Sep 2012 03:30:02 +0000
+Message-ID: <20120905033002.GG13310@mail.hallyn.com>
 References: <20120904143419.892872876@napanee.usersys.redhat.com>
- <20120904143421.692197560@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120904143421.692197560-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20120904143419.892872876-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,232 +16,75 @@ To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
 Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> Internally device_cgroup now uses a default rule (behavior) and an exception
-> list and this interface reflects it.
+> The original model of device_cgroup is having a whitelist where all the
+> allowed devices are listed. The problem with this approach is that is
+> impossible to have the case of allowing everything but few devices.
 > 
-> The new files, devices.behavior ('allow' or 'deny') and devices.exceptions map
-> directly to the internal state.
+> The reason for that lies in the way the whitelist is handled internally:
+> since there's only a whitelist, the "all devices" entry would have to be
+> removed and replaced by the entire list of possible devices but the ones
+> that are being denied.  Since dev_t is 32 bits long, representing the allowed
+> devices as a bitfield is not memory efficient.
 > 
-> Also, update documentation about the new interface.
+> This patch replaces the "whitelist" by a "exceptions" list and the default
+> policy is kept as "deny_all" variable in dev_cgroup structure.
 > 
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
-> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> The current interface determines that whenever "a" is written to devices.allow
+> or devices.deny, the entry masking all devices will be added or removed,
+> respectively. This behavior is kept and it's what will determine the default
+> policy:
+> 
+> 	# cat devices.list 
+> 	a *:* rwm
+> 	# echo a >devices.deny
+> 	# cat devices.list 
+> 	# echo a >devices.allow
+> 	# cat devices.list 
+> 	a *:* rwm
+> 
+> The interface is also preserved. For example, if one wants to block only access
+> to /dev/null:
+> 	# ls -l /dev/null
+> 	crw-rw-rw- 1 root root 1, 3 Jul 24 16:17 /dev/null
+> 	# echo a >devices.allow
+> 	# echo "c 1:3 rwm" >devices.deny
+> 	# cat /dev/null
+> 	cat: /dev/null: Operation not permitted
+> 	# echo >/dev/null
+> 	bash: /dev/null: Operation not permitted
+> 	# mknod /tmp/null c 1 3
+> 	mknod: /tmp/null: Operation not permitted
+> 	# echo "c 1:3 r" >devices.allow
+> 	# cat /dev/null
+> 	# echo >/dev/null
+> 	bash: /dev/null: Operation not permitted
+> 	# mknod /tmp/null c 1 3
+> 	mknod: /tmp/null: Operation not permitted
+> 	# echo "c 1:3 rw" >devices.allow
+> 	# echo >/dev/null
+> 	# cat /dev/null
+> 	# mknod /tmp/null c 1 3
+> 	mknod: /tmp/null: Operation not permitted
+> 	# echo "c 1:3 rwm" >devices.allow
+> 	# echo >/dev/null
+> 	# cat /dev/null
+> 	# mknod /tmp/null c 1 3
+> 	#
+> 
+> v2:
+> - stop using simple_strtoul()
+> - fix checkpatch warnings
+> - rename deny_all to behavior
+> - updated documentation
+> - added new files to cgroupfs to better reflect the internal state
+> 
+>  Documentation/cgroups/devices.txt |   73 ++++--
+>  security/device_cgroup.c          |  443 +++++++++++++++++++++++---------------
+>  2 files changed, 333 insertions(+), 183 deletions(-)
+> 
+> -- 
+> Aristeu
 
-Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Thanks, Aristeu, very nice.
 
-> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> 
-> ---
->  Documentation/cgroups/devices.txt |   73 ++++++++++++++++++++++++++++----------
->  security/device_cgroup.c          |   63 +++++++++++++++++++++++++++-----
->  2 files changed, 107 insertions(+), 29 deletions(-)
-> 
-> --- a/security/device_cgroup.c	2012-08-30 11:53:54.214675713 -0400
-> +++ b/security/device_cgroup.c	2012-08-30 11:53:54.227682064 -0400
-> @@ -214,6 +214,8 @@ static void devcgroup_destroy(struct cgr
->  #define DEVCG_ALLOW 1
->  #define DEVCG_DENY 2
->  #define DEVCG_LIST 3
-> +#define DEVCG_BEHAVIOR 4
-> +#define DEVCG_EXCEPTIONS 5
->  
->  #define MAJMINLEN 13
->  #define ACCLEN 4
-> @@ -249,11 +251,25 @@ static void set_majmin(char *str, unsign
->  		sprintf(str, "%u", m);
->  }
->  
-> +static void __devcg_seq_list_exceptions(struct dev_cgroup *devcg,
-> +					struct seq_file *m)
-> +{
-> +	struct dev_exception_item *ex;
-> +	char maj[MAJMINLEN], min[MAJMINLEN], acc[ACCLEN];
-> +
-> +	list_for_each_entry_rcu(ex, &devcg->exceptions, list) {
-> +		set_access(acc, ex->access);
-> +		set_majmin(maj, ex->major);
-> +		set_majmin(min, ex->minor);
-> +		seq_printf(m, "%c %s:%s %s\n", type_to_char(ex->type),
-> +			   maj, min, acc);
-> +	}
-> +}
-> +
->  static int devcgroup_seq_read(struct cgroup *cgroup, struct cftype *cft,
->  				struct seq_file *m)
->  {
->  	struct dev_cgroup *devcgroup = cgroup_to_devcgroup(cgroup);
-> -	struct dev_exception_item *ex;
->  	char maj[MAJMINLEN], min[MAJMINLEN], acc[ACCLEN];
->  
->  	rcu_read_lock();
-> @@ -269,20 +285,37 @@ static int devcgroup_seq_read(struct cgr
->  		set_majmin(min, ~0);
->  		seq_printf(m, "%c %s:%s %s\n", type_to_char(DEV_ALL),
->  			   maj, min, acc);
-> -	} else {
-> -		list_for_each_entry_rcu(ex, &devcgroup->exceptions, list) {
-> -			set_access(acc, ex->access);
-> -			set_majmin(maj, ex->major);
-> -			set_majmin(min, ex->minor);
-> -			seq_printf(m, "%c %s:%s %s\n", type_to_char(ex->type),
-> -				   maj, min, acc);
-> -		}
-> -	}
-> +	} else
-> +		__devcg_seq_list_exceptions(devcgroup, m);
-> +
->  	rcu_read_unlock();
->  
->  	return 0;
->  }
->  
-> +static int devcg_seq_read_behavior(struct cgroup *cgroup,
-> +				   struct cftype *cft, struct seq_file *m)
-> +{
-> +	struct dev_cgroup *devcgroup = cgroup_to_devcgroup(cgroup);
-> +
-> +	if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW)
-> +		seq_printf(m, "allow\n");
-> +	else
-> +		seq_printf(m, "deny\n");
-> +
-> +	return 0;
-> +}
-> +
-> +static int devcg_seq_read_exceptions(struct cgroup *cgroup,
-> +				     struct cftype *cft, struct seq_file *m)
-> +{
-> +	struct dev_cgroup *devcgroup = cgroup_to_devcgroup(cgroup);
-> +
-> +	__devcg_seq_list_exceptions(devcgroup, m);
-> +
-> +	return 0;
-> +}
-> +
->  /**
->   * may_access - verifies if a new exception is part of what is allowed
->   *		by a dev cgroup based on the default policy +
-> @@ -521,6 +554,16 @@ static struct cftype dev_cgroup_files[]
->  		.read_seq_string = devcgroup_seq_read,
->  		.private = DEVCG_LIST,
->  	},
-> +	{
-> +		.name = "behavior",
-> +		.read_seq_string = devcg_seq_read_behavior,
-> +		.private = DEVCG_BEHAVIOR,
-> +	},
-> +	{
-> +		.name = "exceptions",
-> +		.read_seq_string = devcg_seq_read_exceptions,
-> +		.private = DEVCG_EXCEPTIONS,
-> +	},
->  	{ }	/* terminate */
->  };
->  
-> --- a/Documentation/cgroups/devices.txt	2012-06-18 14:33:03.913651049 -0400
-> +++ b/Documentation/cgroups/devices.txt	2012-08-30 12:20:46.258720000 -0400
-> @@ -3,37 +3,65 @@ Device Whitelist Controller
->  1. Description:
->  
->  Implement a cgroup to track and enforce open and mknod restrictions
-> -on device files.  A device cgroup associates a device access
-> -whitelist with each cgroup.  A whitelist entry has 4 fields.
-> -'type' is a (all), c (char), or b (block).  'all' means it applies
-> -to all types and all major and minor numbers.  Major and minor are
-> -either an integer or * for all.  Access is a composition of r
-> -(read), w (write), and m (mknod).
-> -
-> -The root device cgroup starts with rwm to 'all'.  A child device
-> -cgroup gets a copy of the parent.  Administrators can then remove
-> -devices from the whitelist or add new entries.  A child cgroup can
-> +on device files.  A device cgroup associates a device access default
-> +behavior and a exception list with each cgroup.  A exception entry
-> +has 4 fields.  'type' is a (all), c (char), or b (block).  'all'
-> +means it applies to all types and all major and minor numbers.
-> +Major and minor are either an integer or * for all.  Access is a
-> +composition of r (read), w (write), and m (mknod).  The behavior
-> +can be set to 'allow' or 'deny' and determines what's the default
-> +action if a matching exception is not found.
-> +
-> +The root device cgroup starts with default behavior 'allow'.  A
-> +child device cgroup gets a copy of the parent.  Administrators can
-> +then add exceptions or change the behavior.  A child cgroup can
->  never receive a device access which is denied by its parent.  However
->  when a device access is removed from a parent it will not also be
->  removed from the child(ren).
->  
->  2. User Interface
->  
-> -An entry is added using devices.allow, and removed using
-> -devices.deny.  For instance
-> +First determine what's the current behavior by reading
-> +'devices.behavior':
->  
-> -	echo 'c 1:3 mr' > /sys/fs/cgroup/1/devices.allow
-> +	# cat /sys/fs/cgroup/1/devices.behavior
-> +	allow
->  
-> -allows cgroup 1 to read and mknod the device usually known as
-> -/dev/null.  Doing
-> +This means the default action is to allow everything.  You can switch
-> +the behavior by writing 'a' on the opposite file:
->  
-> -	echo a > /sys/fs/cgroup/1/devices.deny
-> +	# echo 'a' > /sys/fs/cgroup/1/devices.deny
-> +	# cat /sys/fs/cgroup/1/behavior
-> +	deny
-> +	# echo 'a' > /sys/fs/cgroup/1/devices.allow
-> +	# cat /sys/fs/cgroup/1/behavior
-> +	allow
->  
-> -will remove the default 'a *:* rwm' entry. Doing
-> +Every time the behavior changes, the exception list is cleared.
-> +To add an exception, write a rule on the opposite file:
->  
-> -	echo a > /sys/fs/cgroup/1/devices.allow
-> +	# echo 'a' > /sys/fs/cgroup/1/devices.allow
-> +	# echo 'c 1:3 mr' > /sys/fs/cgroup/1/devices.deny
->  
-> -will add the 'a *:* rwm' entry to the whitelist.
-> +So the default behavior is to allow everything but mknod and read
-> +on /dev/null file.  The file 'devices.exceptions' contains the
-> +current list of exceptions:
-> +
-> +	# cat /sys/fs/cgroup/1/devices.exceptions
-> +	c 1:3 mr
-> +
-> +To remove an exception, write the same rule in the opposite file:
-> +
-> +	# echo 'c 1:3 mr' > /sys/fs/cgroup/1/devices.allow
-> +
-> +Now the exceptions list will be empty.  It's also possible to change
-> +an exception entry::
-> +
-> +	# cat /sys/fs/cgroup/1/devices.exceptions
-> +	c 1:3 rm
-> +	# echo 'c 1:3 m' > /sys/fs/cgroup/1/devices.allow
-> +	# cat /sys/fs/cgroup/1/devices.exceptions
-> +	c 1:3 r
->  
->  3. Security
->  
-> @@ -50,3 +78,10 @@ task to a new cgroup.  (Again we'll prob
->  
->  A cgroup may not be granted more permissions than the cgroup's
->  parent has.
-> +
-> +4. Compatibility
-> +
-> +Previous versions of device cgroup operated using a whitelist.  The
-> +old interface (devices.allow, devices.deny and devices.list) is still
-> +supported but users are advised to replace devices.list usage by
-> +devices.behavior and devices.exceptions.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+-serge
