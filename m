@@ -1,62 +1,83 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [RFC 0/5] forced comounts for cgroups.
-Date: Wed, 5 Sep 2012 12:17:11 +0400
-Message-ID: <50470A87.1040701@parallels.com>
-References: <1346768300-10282-1-git-send-email-glommer@parallels.com> <20120904214602.GA9092@dhcp-172-17-108-109.mtv.corp.google.com> <5047074D.1030104@parallels.com> <20120905081439.GC3195@dhcp-172-17-108-109.mtv.corp.google.com>
+Date: Wed, 5 Sep 2012 01:29:47 -0700
+Message-ID: <20120905082947.GD3195@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <1346768300-10282-1-git-send-email-glommer@parallels.com>
+ <20120904214602.GA9092@dhcp-172-17-108-109.mtv.corp.google.com>
+ <5047074D.1030104@parallels.com>
+ <20120905081439.GC3195@dhcp-172-17-108-109.mtv.corp.google.com>
+ <50470A87.1040701@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120905081439.GC3195@dhcp-172-17-108-109.mtv.corp.google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=HHI51I3YB2Ium7hPabS2GTUS8WOkCFeam3tbnTTOwls=;
+        b=O/15yqDUJUAbhp9nrqmkH51AN6TuXv4b6lv1PGVoEGkx8b7oNW+ObLArYQ0qqjnhDH
+         VHVcoNoMHXgdCKruLGTy/eFqaw9bRNaspjknYfjKAXB+MWVKhmQaYXLbWTKPSwftCBT1
+         +DFmnagnhq0CMpF42nZLxoWHHNa0okPX71vcrBDKQQk/2bjZsSKzeeUgff8JpT/72Zgg
+         h5AaiEnOVRbCaOojRpq6MPua9G0KR0Pb1UAVz7v7KNUJQyInsiBZGzzJWc2Nr6weSRHn
+         XHGlbdVhBfIO0DMCxG4JbTtRlvJ99TUEAFN/oHvQW74h3GuJCPuDCr5jbCMOwBomT0i8
+         M1lg==
+Content-Disposition: inline
+In-Reply-To: <50470A87.1040701@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, davej@redhat.com, ben@decadent.org.uk, a.p.zijlstra@chello.nl, pjt@google.com, lennart@poettering.net, kay.sievers@vrfy.org
 
-On 09/05/2012 12:14 PM, Tejun Heo wrote:
-> Hello, Glauber.
+Hello, Glauber.
+
+On Wed, Sep 05, 2012 at 12:17:11PM +0400, Glauber Costa wrote:
+> > Distros can just co-mount them during boot.  What's the point of the
+> > config options?
 > 
-> On Wed, Sep 05, 2012 at 12:03:25PM +0400, Glauber Costa wrote:
->> The goal here is to have distributions to do it, because they tend to
->> have a well defined lifecycle management, much more than upstream. Whoever
->> sets this option, can coordinate with upstream.
+> Pretty simple. The kernel can't assume the distro did. And then we still
+> need to pay a stupid big price in the scheduler.
 > 
-> Distros can just co-mount them during boot.  What's the point of the
-> config options?
+> After this patchset, We can assume this. And cpuusage can totally be
+> derived from the cpu cgroup. Because much more than "they can comount",
+> we can assume they did.
+
+As long as cpuacct and cpu are separate, I think it makes sense to
+assume that they at least could be at different granularity.  As for
+optimization for co-mounted case, if that is *really* necessary,
+couldn't it be done dynamically?  It's not like CONFIG_XXX blocks are
+pretty things and they're worse for runtime code path coverage.
+
+> > Differing hierarchies in memcg and blkcg currently is the most
+> > prominent case where the intersection in writeback is problematic and
+> > your proposed solution doesn't help one way or the other.  What's the
+> > point?
 > 
-
-Pretty simple. The kernel can't assume the distro did. And then we still
-need to pay a stupid big price in the scheduler.
-
-After this patchset, We can assume this. And cpuusage can totally be
-derived from the cpu cgroup. Because much more than "they can comount",
-we can assume they did.
-
->>> Also, I really don't see much point in enforcing this almost arbitrary
->>> grouping of controllers.  It doesn't simplify anything and using
->>> cpuacct in more granular way than cpu actually is one of the better
->>> justified use of multiple hierarchies.  Also, what about memcg and
->>> blkcg?  Do they *really* coincide?  Note that both blkcg and memcg
->>> involve non-trivial overhead and blkcg is essentially broken
->>> hierarchy-wise.
->>
->> Where did I mention memcg or blkcg in this patch ?
+> The point is that I am focusing at one problem at a time. But FWIW, I
+> don't see why memcg/blkcg can't use a step just like this one in a
+> separate pass.
 > 
-> Differing hierarchies in memcg and blkcg currently is the most
-> prominent case where the intersection in writeback is problematic and
-> your proposed solution doesn't help one way or the other.  What's the
-> point?
-> 
+> If the goal is comounting them eventually, at some point when the issues
+> are sorted out, just do it. Get a switch like this one, and then you
+> will start being able to assume a lot of things in the code. Miracles
+> can happen.
 
-The point is that I am focusing at one problem at a time. But FWIW, I
-don't see why memcg/blkcg can't use a step just like this one in a
-separate pass.
+The problem is that I really don't see how this leads to where we
+eventually wanna be.  Orthogonal hierarchies are bad because,
 
-If the goal is comounting them eventually, at some point when the issues
-are sorted out, just do it. Get a switch like this one, and then you
-will start being able to assume a lot of things in the code. Miracles
-can happen.
+* It complicates the code.  This doesn't really help there much.
 
+* Intersections between controllers are cumbersome to handle.  Again,
+  this doesn't help much.
+
+And this restricts the only valid use case for multiple hierarchies
+which is applying differing level of granularity depending on
+controllers.  So, I don't know.  Doesn't seem like a good idea to me.
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
