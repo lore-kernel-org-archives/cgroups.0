@@ -1,90 +1,58 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 0/6] device_cgroup: replace internally whitelist
- with exception list
-Date: Wed, 5 Sep 2012 03:30:02 +0000
-Message-ID: <20120905033002.GG13310@mail.hallyn.com>
-References: <20120904143419.892872876@napanee.usersys.redhat.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [RFC 0/5] forced comounts for cgroups.
+Date: Wed, 5 Sep 2012 12:03:25 +0400
+Message-ID: <5047074D.1030104@parallels.com>
+References: <1346768300-10282-1-git-send-email-glommer@parallels.com> <20120904214602.GA9092@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120904143419.892872876-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20120904214602.GA9092-RcKxWJ4Cfj1J2suj2OqeGauc2jM2gXBXkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org
 
-Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> The original model of device_cgroup is having a whitelist where all the
-> allowed devices are listed. The problem with this approach is that is
-> impossible to have the case of allowing everything but few devices.
+On 09/05/2012 01:46 AM, Tejun Heo wrote:
+> Hello, Glauber.
 > 
-> The reason for that lies in the way the whitelist is handled internally:
-> since there's only a whitelist, the "all devices" entry would have to be
-> removed and replaced by the entire list of possible devices but the ones
-> that are being denied.  Since dev_t is 32 bits long, representing the allowed
-> devices as a bitfield is not memory efficient.
+> On Tue, Sep 04, 2012 at 06:18:15PM +0400, Glauber Costa wrote:
+>> As we have been extensively discussing, the cost and pain points for cgroups
+>> come from many places. But at least one of those is the arbitrary nature of
+>> hierarchies. Many people, including at least Tejun and me would like this to go
+>> away altogether. Problem so far, is breaking compatiblity with existing setups
+>>
+>> I am proposing here a default-n Kconfig option that will guarantee that the cpu
+>> cgroups (for now) will be comounted. I started with them because the
+>> cpu/cpuacct division is clearly the worst offender. Also, the default-n is here
+>> so distributions will have time to adapt: Forcing this flag to be on without
+>> userspace changes will just lead to cgroups failing to mount, which we don't
+>> want.
+>>
+>> Although I've tested it and it works, I haven't compile-tested all possible
+>> config combinations. So this is mostly for your eyes. If this gets traction,
+>> I'll submit it properly, along with any changes that you might require.
 > 
-> This patch replaces the "whitelist" by a "exceptions" list and the default
-> policy is kept as "deny_all" variable in dev_cgroup structure.
-> 
-> The current interface determines that whenever "a" is written to devices.allow
-> or devices.deny, the entry masking all devices will be added or removed,
-> respectively. This behavior is kept and it's what will determine the default
-> policy:
-> 
-> 	# cat devices.list 
-> 	a *:* rwm
-> 	# echo a >devices.deny
-> 	# cat devices.list 
-> 	# echo a >devices.allow
-> 	# cat devices.list 
-> 	a *:* rwm
-> 
-> The interface is also preserved. For example, if one wants to block only access
-> to /dev/null:
-> 	# ls -l /dev/null
-> 	crw-rw-rw- 1 root root 1, 3 Jul 24 16:17 /dev/null
-> 	# echo a >devices.allow
-> 	# echo "c 1:3 rwm" >devices.deny
-> 	# cat /dev/null
-> 	cat: /dev/null: Operation not permitted
-> 	# echo >/dev/null
-> 	bash: /dev/null: Operation not permitted
-> 	# mknod /tmp/null c 1 3
-> 	mknod: /tmp/null: Operation not permitted
-> 	# echo "c 1:3 r" >devices.allow
-> 	# cat /dev/null
-> 	# echo >/dev/null
-> 	bash: /dev/null: Operation not permitted
-> 	# mknod /tmp/null c 1 3
-> 	mknod: /tmp/null: Operation not permitted
-> 	# echo "c 1:3 rw" >devices.allow
-> 	# echo >/dev/null
-> 	# cat /dev/null
-> 	# mknod /tmp/null c 1 3
-> 	mknod: /tmp/null: Operation not permitted
-> 	# echo "c 1:3 rwm" >devices.allow
-> 	# echo >/dev/null
-> 	# cat /dev/null
-> 	# mknod /tmp/null c 1 3
-> 	#
-> 
-> v2:
-> - stop using simple_strtoul()
-> - fix checkpatch warnings
-> - rename deny_all to behavior
-> - updated documentation
-> - added new files to cgroupfs to better reflect the internal state
-> 
->  Documentation/cgroups/devices.txt |   73 ++++--
->  security/device_cgroup.c          |  443 +++++++++++++++++++++++---------------
->  2 files changed, 333 insertions(+), 183 deletions(-)
-> 
-> -- 
-> Aristeu
+> As I said during the discussion, I'm skeptical about how useful this
+> is.  This can't nudge existing users in any meaningfully gradual way.
+> Kconfig doesn't make it any better.  It's still an abrupt behavior
+> change when seen from userland.
+>
 
-Thanks, Aristeu, very nice.
+The goal here is to have distributions to do it, because they tend to
+have a well defined lifecycle management, much more than upstream. Whoever
+sets this option, can coordinate with upstream.
 
--serge
+Aside from enforcing it, we can pretty much warn() as well, to direct
+people towards flipping the switch.
+
+> Also, I really don't see much point in enforcing this almost arbitrary
+> grouping of controllers.  It doesn't simplify anything and using
+> cpuacct in more granular way than cpu actually is one of the better
+> justified use of multiple hierarchies.  Also, what about memcg and
+> blkcg?  Do they *really* coincide?  Note that both blkcg and memcg
+> involve non-trivial overhead and blkcg is essentially broken
+> hierarchy-wise.
+> 
+
+Where did I mention memcg or blkcg in this patch ?
