@@ -1,73 +1,90 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 0/5] forced comounts for cgroups.
-Date: Tue, 4 Sep 2012 14:46:02 -0700
-Message-ID: <20120904214602.GA9092@dhcp-172-17-108-109.mtv.corp.google.com>
-References: <1346768300-10282-1-git-send-email-glommer@parallels.com>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/6] device_cgroup: add "behavior" in dev_cgroup
+ structure
+Date: Wed, 5 Sep 2012 03:00:25 +0000
+Message-ID: <20120905030025.GA13310@mail.hallyn.com>
+References: <20120904143419.892872876@napanee.usersys.redhat.com>
+ <20120904143420.234142640@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=QAF0qo1Sp71F8SCMlq1cWeWXNeIk8GctJWdHBdSOcDk=;
-        b=HINKc6Eo0YOzzwQv6jrudEQOWUtQZV6PMXnwwG2Yf9RvEAcXblk1VnboyYZ7ZTfY7Q
-         vGLHha35fwpDgZbRbAkP0aBX7UsFpEdPrBpjlXCU3C4nsZPg/KKBDo9j/tsSynjpgg2P
-         riFWsU+7QjNWt4ERW7ivdqYMGB3OREkDni2P75TnePLVVjgNCOGMFV5jFXV7Iw3hYTBK
-         BWiliz0mzVs12n+8ko9abVcDQO3dg7um4wovTnhCmr47gv7Sj0Nad1/7V5AHKtCVZ8a/
-         4JTVqdSHqfWrRlOY2Z7kSpircCYVMmJNDdagLws4GNjekZZ6MLhaao31liO3hV2cYc0d
-         zHcA==
 Content-Disposition: inline
-In-Reply-To: <1346768300-10282-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20120904143420.234142640-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hello, Glauber.
-
-On Tue, Sep 04, 2012 at 06:18:15PM +0400, Glauber Costa wrote:
-> As we have been extensively discussing, the cost and pain points for cgroups
-> come from many places. But at least one of those is the arbitrary nature of
-> hierarchies. Many people, including at least Tejun and me would like this to go
-> away altogether. Problem so far, is breaking compatiblity with existing setups
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> behavior will determine if the default policy is to deny all device access
+> unless for the ones in the exception list.
 > 
-> I am proposing here a default-n Kconfig option that will guarantee that the cpu
-> cgroups (for now) will be comounted. I started with them because the
-> cpu/cpuacct division is clearly the worst offender. Also, the default-n is here
-> so distributions will have time to adapt: Forcing this flag to be on without
-> userspace changes will just lead to cgroups failing to mount, which we don't
-> want.
+> This variable will be used in the next patches to convert device_cgroup
+> internally into a default policy + rules.
 > 
-> Although I've tested it and it works, I haven't compile-tested all possible
-> config combinations. So this is mostly for your eyes. If this gets traction,
-> I'll submit it properly, along with any changes that you might require.
+> v2:
+> - renamed deny_all to behavior
+> 
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
+> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-As I said during the discussion, I'm skeptical about how useful this
-is.  This can't nudge existing users in any meaningfully gradual way.
-Kconfig doesn't make it any better.  It's still an abrupt behavior
-change when seen from userland.
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-Also, I really don't see much point in enforcing this almost arbitrary
-grouping of controllers.  It doesn't simplify anything and using
-cpuacct in more granular way than cpu actually is one of the better
-justified use of multiple hierarchies.  Also, what about memcg and
-blkcg?  Do they *really* coincide?  Note that both blkcg and memcg
-involve non-trivial overhead and blkcg is essentially broken
-hierarchy-wise.
-
-Currently, from userland visible behavior POV, the crazy parts are
-
-1. The flat hierarchy thing.  This just should go away.
-
-2. Orthogonal multiple hierarchies.
-
-I think we agree that #1 should go away one way or the other.  I
-*really* wanna get rid of #2 but am not sure how.  I'll give it
-another stab once the writeback thing is resolved.
-
-Thanks.
-
--- 
-tejun
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> ---
+>  security/device_cgroup.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> Index: github/security/device_cgroup.c
+> ===================================================================
+> --- github.orig/security/device_cgroup.c	2012-08-21 09:49:38.698415513 -0400
+> +++ github/security/device_cgroup.c	2012-08-21 10:50:34.650810797 -0400
+> @@ -42,6 +42,10 @@
+>  struct dev_cgroup {
+>  	struct cgroup_subsys_state css;
+>  	struct list_head whitelist;
+> +	enum {
+> +		DEVCG_DEFAULT_ALLOW,
+> +		DEVCG_DEFAULT_DENY,
+> +	} behavior;
+>  };
+>  
+>  static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+> @@ -178,12 +182,14 @@
+>  		wh->minor = wh->major = ~0;
+>  		wh->type = DEV_ALL;
+>  		wh->access = ACC_MASK;
+> +		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+>  		list_add(&wh->list, &dev_cgroup->whitelist);
+>  	} else {
+>  		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+>  		mutex_lock(&devcgroup_mutex);
+>  		ret = dev_whitelist_copy(&dev_cgroup->whitelist,
+>  				&parent_dev_cgroup->whitelist);
+> +		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+>  		mutex_unlock(&devcgroup_mutex);
+>  		if (ret) {
+>  			kfree(dev_cgroup);
+> @@ -409,9 +415,11 @@
+>  	case DEVCG_ALLOW:
+>  		if (!parent_has_perm(devcgroup, &wh))
+>  			return -EPERM;
+> +		devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+>  		return dev_whitelist_add(devcgroup, &wh);
+>  	case DEVCG_DENY:
+>  		dev_whitelist_rm(devcgroup, &wh);
+> +		devcgroup->behavior = DEVCG_DEFAULT_DENY;
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
