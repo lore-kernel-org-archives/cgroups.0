@@ -1,10 +1,10 @@
 From: Aristeu Rozanski <aris@redhat.com>
-Subject: [PATCH 2/2] fs: add documentation to simple_xattr functions
-Date: Wed, 05 Sep 2012 14:31:34 -0400
-Message-ID: <20120905183133.461178345@napanee.usersys.redhat.com>
+Subject: [PATCH 1/2] cgroups: add documentation on extended attributes usage
+Date: Wed, 05 Sep 2012 14:31:33 -0400
+Message-ID: <20120905183133.162440150@napanee.usersys.redhat.com>
 References: <20120905183132.806473183@napanee.usersys.redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=simple_xattr_doc.txt
+Content-Disposition: inline; filename=doc.patch
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -12,6 +12,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Hillf Danton <dhillf@gmail.com>, Lennart Poettering <lpoetter@redhat.com>
+
 
 Cc: Li Zefan <lizefan@huawei.com>
 Cc: Tejun Heo <tj@kernel.org>
@@ -21,68 +22,39 @@ Cc: Lennart Poettering <lpoetter@redhat.com>
 Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 
 ---
- Documentation/filesystems/00-INDEX         |    3 ++
- Documentation/filesystems/simple_xattr.txt |   42 +++++++++++++++++++++++++++++
- 2 files changed, 45 insertions(+)
+ Documentation/cgroups/00-INDEX  |    2 ++
+ Documentation/cgroups/xattr.txt |   21 +++++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
-Index: github/Documentation/filesystems/00-INDEX
-===================================================================
---- github.orig/Documentation/filesystems/00-INDEX	2012-09-05 11:51:50.870969722 -0400
-+++ github/Documentation/filesystems/00-INDEX	2012-09-05 12:10:46.250211947 -0400
-@@ -96,6 +96,9 @@
- 	- how to use the seq_file API
- sharedsubtree.txt
- 	- a description of shared subtrees for namespaces.
-+simple_xattr.txt
-+	- description of extended attributes for memory backed filesystems
-+	  like tmpfs and cgroup filesystem.
- spufs.txt
- 	- info and mount options for the SPU filesystem used on Cell.
- sysfs-pci.txt
-Index: github/Documentation/filesystems/simple_xattr.txt
-===================================================================
+--- a/Documentation/cgroups/00-INDEX	2010-07-29 22:53:28.000000000 -0400
++++ b/Documentation/cgroups/00-INDEX	2012-08-30 12:32:18.419879863 -0400
+@@ -16,3 +16,5 @@ memory.txt
+ 	- Memory Resource Controller; design, accounting, interface, testing.
+ resource_counter.txt
+ 	- Resource Counter API.
++xattr.txt
++	- Extended attributes support and usage in cgroup filesystem
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ github/Documentation/filesystems/simple_xattr.txt	2012-09-05 12:10:46.250211947 -0400
-@@ -0,0 +1,42 @@
-+Simple Extended Attributes for Memory Backed Filesystems Interface
-+==================================================================
++++ b/Documentation/cgroups/xattr.txt	2012-08-30 13:02:56.585865106 -0400
+@@ -0,0 +1,21 @@
++Extended Attributes Usage in cgroup Filesystem
 +
-+Implements extended attributes storage using kernel memory.  Users of these
-+functions are strongly advised against allowing user or any other kind of
-+extended attributes that can be manipulated by unprivileged users, since it'd
-+be trivial to exhaust kernel memory.
++1. Usage
 +
-+The filesystem implementation is responsible by storing a simple_xattrs
-+structure for every directory and file and to implement setxattr() and
-+getxattr() calls. Also, setxattr() should filter off by name the unsupported
-+types.
++cgroup filesystem supports certain types of extended attributes in its
++directories and files.  The current supported types are:
++	- Trusted (XATTR_TRUSTED)
++	- Security (XATTR_SECURITY)
 +
-+void simple_xattrs_init(struct simple_xattrs *xattrs)
-+- Initializes a pre allocated structure
++Both require CAP_SYS_ADMIN capability to set.
 +
-+void simple_xattrs_free(struct simple_xattrs *xattrs)
-+- Frees up all the extended attributes and any resources allocated by
-+  simple_xattrs_init
++Like in tmpfs, the extended attributes in cgroup filesystem are stored
++using kernel memory and it's advised to keep the usage at minimum.  This
++is the reason why user defined extended attributes are not supported, since
++any user can do it and there's no limit in the value size.
 +
-+struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
-+- Allocates a extended attribute entry
++2. Users
 +
-+void simple_xattr_list_add(struct simple_xattrs *xattrs,
-+                          struct simple_xattr *new_xattr)
-+int simple_xattr_remove(struct simple_xattrs *xattrs, const char *name)
-+- Adds and removes an extended attribute from the list
-+
-+int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
-+                    void *buffer, size_t size);
-+- Returns the value of an extended attribute searching by name
-+
-+int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
-+                    const void *value, size_t size, int flags);
-+- Sets a new value for a given extended attribute. Specifying value as
-+  NULL will remove the entry.  If XATTR_CREATE is set in flags, no extended
-+  attribute with the same name may exist.  If XATTR_REPLACE is set, the
-+  extended attribute has to exist or the operation will fail
-+
-+ssize_t simple_xattr_list(struct simple_xattrs *xattrs, char *buffer,
-+                         size_t size);
-+- Lists the existing extended attributes names in a given buffer
++The current known users for this feature are SELinux to limit cgroup usage
++in containers and systemd for assorted meta data like main PID in a cgroup
++(systemd creates a cgroup per service).
