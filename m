@@ -1,76 +1,129 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 06/10] cgroup: Assign subsystem IDs during compile
- time
-Date: Thu, 6 Sep 2012 15:32:38 -0700
-Message-ID: <20120906223238.GR29092@google.com>
-References: <1345816904-21745-1-git-send-email-wagi@monom.org>
- <1345816904-21745-7-git-send-email-wagi@monom.org>
- <20120824233810.GT21325@google.com>
- <50390743.2090203@monom.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC 0/5] forced comounts for cgroups.
+Date: Fri, 7 Sep 2012 02:36:36 +0400
+Message-ID: <50492574.6030308@parallels.com>
+References: <20120904214602.GA9092@dhcp-172-17-108-109.mtv.corp.google.com> <5047074D.1030104@parallels.com> <20120905081439.GC3195@dhcp-172-17-108-109.mtv.corp.google.com> <50470A87.1040701@parallels.com> <20120905082947.GD3195@dhcp-172-17-108-109.mtv.corp.google.com> <50470EBF.9070109@parallels.com> <20120905084740.GE3195@dhcp-172-17-108-109.mtv.corp.google.com> <1346835993.2600.9.camel@twins> <20120905093204.GL3195@dhcp-172-17-108-109.mtv.corp.google.com> <1346839487.2600.24.camel@twins> <20120906204642.GN29092@google.com> <CAPM31RKVYpkc0oTJKjsdsvqBfif=Bovi3a6TE8qdOOpEYOC0Lw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Hn6Ox+gF3ase+Jg8+KPZXypZFobt81gZf8NRHpuhuSI=;
-        b=LknGapNm9pbwmWs0usvixMRdgPa7ejCKJsiaVGuYed6GA9dlrpaiDPgr39HRwYdVzW
-         WEPSFHfoBqh5kKFfDXp46QmwZNiPwNCXq6AsluOfGaYQF0JAHeZBDk+S+vcRwjKkv+4y
-         etvoZLsL0KQ8qSx/OMWzzoyRtSndqI14rFaBxSC/MuSCMsMeZCZXtKOWQ4LxzxBBeRRr
-         98KJxgivycjZtyz2DzNikYx9pY+ATfjodBz3/d8AWaoDKLWCaVyTR1JZYfBM1xkFXwFJ
-         JvZLMty5HqsMEIAg3EsHah0SAeZzqk3F8aIYtGh3xblaTH9FHE2y7JNHJj1A2E9h3hLa
-         dtzg==
-Content-Disposition: inline
-In-Reply-To: <50390743.2090203-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <CAPM31RKVYpkc0oTJKjsdsvqBfif=Bovi3a6TE8qdOOpEYOC0Lw@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+To: Paul Turner <pjt@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, davej@redhat.com, ben@decadent.org.uk, lennart@poettering.net, kay.sievers@vrfy.org, Dhaval Giani <dhaval.giani@gmail.com>, Frederic Weisbecker <fweisbec@gmail.com>
 
-Hello, Daniel.
-
-On Sat, Aug 25, 2012 at 07:11:31PM +0200, Daniel Wagner wrote:
-> On 25.08.2012 01:38, Tejun Heo wrote:
-> >>task_cls_classid() and task_netprioidx() (when built as
-> >>module) are protected by a jump label and therefore we can
-> >>simply replace the subsystem index lookup with the enum.
-> >
-> >Can we put these in a separate patch?  ie. The first patch makes all
-> >subsys IDs constant and then patches to simplify users.
+On 09/07/2012 01:11 AM, Paul Turner wrote:
+> On Thu, Sep 6, 2012 at 1:46 PM, Tejun Heo <tj@kernel.org> wrote:
+>> Hello,
+>>
+>> cc'ing Dhaval and Frederic.  They were interested in the subject
+>> before and Dhaval was pretty vocal about cpuacct having a separate
+>> hierarchy (or at least granularity).
 > 
-> Wouldn't this break bisection? I merged this step so that all steps
-> in this series are able to compile and run.
-
-I don't see why it should but maybe I'm missing something.  If so,
-please enlighten me.
-
-> >>+#define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
-> >>+#include <linux/cgroup_subsys.h>
-> >>+#undef IS_SUBSYS_ENABLED
-> >>+
-> >
-> >Why do we need to segregate in-kernel and modular ones at all?  What's
-> >wrong with just defining them in one go?
+> Really?  Time just has _not_ borne out this use-case.  I'll let Dhaval
+> make a case for this but he should expect violent objection.
 > 
-> I have done that but the result was a panic. There seems some code
-> which expects this ordering. Let me dig into this and fix it.
 
-Yes, please.
+I strongly advise against physical violence. In case it is really
+necessary, please break his legs only.
 
-> >Hmm... patch sequence looks odd to me.  If you first make all IDs
-> >constant, you can first remove module specific ones and then later add
-> >jump labels as separate patches.  Wouldn't that be simpler?
+>> On Wed, Sep 05, 2012 at 12:04:47PM +0200, Peter Zijlstra wrote:
+>>>> cpuacct is rather unique tho.  I think it's gonna be silly whether the
+>>>> hierarchy is unified or not.
+>>>>
+>>>> 1. If they always can live on the exact same hierarchy, there's no
+>>>>    point in having the two separate.  Just merge them.
+>>>>
+>>>> 2. If they need differing levels of granularity, they either need to
+>>>>    do it completely separately as they do now or have some form of
+>>>>    dynamic optimization if absolutely necesary.
+>>>>
+>>>> So, I think that choice is rather separate from other issues.  If
+>>>> cpuacct is gonna be kept, I'd just keep it separate and warn that it
+>>>> incurs extra overhead for the current users if for nothing else.
+>>>> Otherwise, kill it or merge it into cpu.
+>>>
+>>> Quite, hence my 'proposal' to remove cpuacct.
+>>>
+>>> There was some whining last time Glauber proposed this, but the one
+>>> whining never convinced and has gone away from Linux, so lets just do
+>>> this.
+>>>
+>>> Lets make cpuacct print a deprecated msg to dmesg for a few releases and
+>>> make cpu do all this.
+>>
+>> I like it.  Currently cpuacct is the only problematic one in this
+>> regard (cpuset to a much lesser extent) and it would be great to make
+>> it go away.
+>>
+>> Dhaval, Frederic, Paul, if you guys object, please voice your
+>> opinions.
+>>
+>>> The co-mounting stuff would have been nice for cpusets as well, knowing
+>>> all your tasks are affine to a subset of cpus allows for a few
+>>> optimizations (smaller cpumask iterations), but I guess we'll have to do
+>>> that dynamically, we'll just have to see how ugly that is.
+>>
+>> Forced co-mounting sounds rather silly to me.  If the two are always
+>> gonna be co-mounted, why not just merge them and switch the
+>> functionality depending on configuration?  I'm fairly sure the code
+>> would be simpler that way.
 > 
-> As said above, I tried to keep all steps usable so bisection would
-> work. I think your steps would lead to non working versions of the
-> kernel.
+> It would be simpler but the problem is we'd break any userspace that
+> was just doing mount cpuacct?
+> 
+> Further, even if it were mounting both, userspace code still has to be
+> changed to read from "cpu.export" instead of "cpuacct.export".
+> 
 
-Hmmm... Yes, it should be bisectable but again I don't see why being
-biesectable interferes with the patch ordering here.
+Only if we remove cpuacct. What we can do, and I thought about doing, is
+just merging cpuacct functionality into cpu. Then we move cpuacct to
+default no. It will be there for userspace if they absolutely want to
+use it.
 
-Thanks.
+> I think a sane path on this front is:
+> 
+> Immediately:
+> Don't allow cpuacct and cpu to be co-mounted on separate hierarchies
+> simultaneously.
+> 
+that is precisely what my patch does, except it is a bit more generic.
 
--- 
-tejun
+> That is:
+> mount none /dev/cgroup/cpuacct -t cgroupfs -o cpuacct : still works
+> mount none /dev/cgroup/cpu -t cgroupfs -o cpu : still works
+> mount none /dev/cgroup/cpux -t cgroupfs -o cpuacct,cpu : still works
+> 
+> But the combination:
+> mount none /dev/cgroup/cpu -t cgroupfs -o cpu : still works
+> mount none /dev/cgroup/cpuacct -t cgroupfs -o cpu : EINVAL [or vice versa].
+> 
+> Also:
+> WARN_ON when mounting cpuacct without cpu, strongly explaining that
+> ANY such configuration is deprecated.
+> 
+> Glauber's patchset goes most of the way towards enabling this.
+>
+yes.
+
+> In a release or two:
+> Make the restriction strict; don't allow individual mounting of
+> cpuacct, force it to be mounted ONLY with cpu.
+> 
+> Glauber's patchset gives us this.
+> 
+> Finally:
+> Mirror the interfaces to cpu, print nasty syslog messages about ANY
+> mounts of cpuacct
+> Follow that up by eventually removing cpuacct completely
+>
+Why don't start with mirroring? It gives more time for people to start
+switching to it.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
