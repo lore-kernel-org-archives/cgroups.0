@@ -1,90 +1,121 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] mm/memcontrol.c: Remove duplicate inclusion of sock.h
- file
-Date: Tue, 11 Sep 2012 11:52:00 +0200
-Message-ID: <20120911095200.GB8058@dhcp22.suse.cz>
-References: <1347350934-17712-1-git-send-email-sachin.kamat@linaro.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
+	broken hierarchy support and whine if cgroups are nested for them
+Date: Tue, 11 Sep 2012 12:04:33 +0200
+Message-ID: <20120911100433.GC8058@dhcp22.suse.cz>
+References: <20120910223125.GC7677@google.com>
+	<20120910223355.GD7677@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1347350934-17712-1-git-send-email-sachin.kamat@linaro.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120910223355.GD7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Tue 11-09-12 13:38:54, Sachin Kamat wrote:
-> net/sock.h is included unconditionally at the beginning of the file.
-> Hence, another conditional include is not required.
+I like the approach in general but see the comments bellow:
 
-I guess we can do little bit better. What do you think about the
-following?  I have compile tested this with:
-- CONFIG_INET=y && CONFIG_MEMCG_KMEM=n
-- CONFIG_MEMCG_KMEM=y
----
-From 83c5a97e893b5379b7e93cfdc933d5e37756e70a Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
-Date: Tue, 11 Sep 2012 10:38:42 +0200
-Subject: [PATCH] memcg: clean up networking headers file inclusion
+On Mon 10-09-12 15:33:55, Tejun Heo wrote:
+[...]
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3855,12 +3855,17 @@ static int mem_cgroup_hierarchy_write(st
+>  	 */
+>  	if ((!parent_memcg || !parent_memcg->use_hierarchy) &&
+>  				(val == 1 || val == 0)) {
+> -		if (list_empty(&cont->children))
+> +		if (list_empty(&cont->children)) {
+>  			memcg->use_hierarchy = val;
+> -		else
+> +			/* we're fully hierarchical iff root uses hierarchy */
+> +			if (mem_cgroup_is_root(memcg))
+> +				mem_cgroup_subsys.broken_hierarchy = !val;
+> +		} else {
+>  			retval = -EBUSY;
+> -	} else
+> +		}
+> +	} else {
+>  		retval = -EINVAL;
+> +	}
+>  
+>  out:
+>  	cgroup_unlock();
+> @@ -4953,6 +4958,7 @@ mem_cgroup_create(struct cgroup *cont)
+>  						&per_cpu(memcg_stock, cpu);
+>  			INIT_WORK(&stock->work, drain_local_stock);
+>  		}
+> +		mem_cgroup_subsys.broken_hierarchy = !memcg->use_hierarchy;
 
-Memory controller doesn't need anything from the networking stack unless
-CONFIG_MEMCG_KMEM is selected.
-Now we are including net/sock.h and net/tcp_memcontrol.h unconditionally
-which is not necessary. Moreover struct mem_cgroup contains tcp_mem even
-if CONFIG_MEMCG_KMEM is not selected which is not necessary.
+Hmmm, this will warn even if we have
+root (default use_hierarchy=0)
+ \
+  A (use_hierarchy=1)
+   \
+    B <- here
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/memcontrol.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+which is unfortunate because it will add a noise to a reasonable
+configuration.
+I think this is fixable if you move the warning after 
+cgroup_subsys_state::create and broken_hierarchy would be set only if
+parent is not root and use_hierarchy==0 in mem_cgroup_create. Something
+like:
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 795e525..85ec9ff 100644
+index 795e525..d5c93ab 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -50,8 +50,12 @@
- #include <linux/cpu.h>
- #include <linux/oom.h>
- #include "internal.h"
-+
-+#ifdef CONFIG_MEMCG_KMEM
- #include <net/sock.h>
-+#include <net/ip.h>
- #include <net/tcp_memcontrol.h>
-+#endif
- 
- #include <asm/uaccess.h>
- 
-@@ -326,7 +330,7 @@ struct mem_cgroup {
- 	struct mem_cgroup_stat_cpu nocpu_base;
- 	spinlock_t pcp_counter_lock;
- 
--#ifdef CONFIG_INET
-+#ifdef CONFIG_MEMCG_KMEM
- 	struct tcp_memcontrol tcp_mem;
- #endif
- };
-@@ -413,8 +417,6 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
- 
- /* Writing them here to avoid exposing memcg's inner layout */
- #ifdef CONFIG_MEMCG_KMEM
--#include <net/sock.h>
--#include <net/ip.h>
- 
- static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
- void sock_update_memcg(struct sock *sk)
--- 
-1.7.10.4
+@@ -4973,6 +4973,13 @@ mem_cgroup_create(struct cgroup *cont)
+ 	} else {
+ 		res_counter_init(&memcg->res, NULL);
+ 		res_counter_init(&memcg->memsw, NULL);
++		/*
++		 * Deeper hierachy with use_hierarchy == false doesn't make
++		 * much sense so let cgroup subsystem know about this unfortunate
++		 * state in our controller.
++		 */
++		if (parent && parent != root_mem_cgroup)
++			mem_cgroup_subsys.broken_hierarchy = true;
+ 	}
+ 	memcg->last_scanned_node = MAX_NUMNODES;
+ 	INIT_LIST_HEAD(&memcg->oom_notify);
+
+What do you think?
+
+>  		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
+>  	} else {
+>  		parent = mem_cgroup_from_cont(cont->parent);
+> --- a/net/core/netprio_cgroup.c
+> +++ b/net/core/netprio_cgroup.c
+> @@ -330,7 +330,17 @@ struct cgroup_subsys net_prio_subsys = {
+>  	.subsys_id	= net_prio_subsys_id,
+>  #endif
+>  	.base_cftypes	= ss_files,
+> -	.module		= THIS_MODULE
+> +	.module		= THIS_MODULE,
+> +
+> +	/*
+> +	 * net_prio has artificial limit on the number of cgroups and
+> +	 * disallows nesting making it impossible to co-mount it with other
+> +	 * hierarchical subsystems.  Remove the artificially low PRIOIDX_SZ
+> +	 * limit and properly nest configuration such that children follow
+> +	 * their parents' configurations by default and are allowed to
+> +	 * override and remove the following.
+> +	 */
+> +	.broken_hierarchy = trye,
+
+typo
 
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
