@@ -1,286 +1,87 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: [PATCH v3 4/8] cgroup: Remove CGROUP_BUILTIN_SUBSYS_COUNT
-Date: Tue, 11 Sep 2012 18:26:10 +0200
-Message-ID: <1347380774-9546-5-git-send-email-wagi@monom.org>
-References: <1347380774-9546-1-git-send-email-wagi@monom.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
+ broken hierarchy support and whine if cgroups are nested for them
+Date: Tue, 11 Sep 2012 10:07:46 -0700
+Message-ID: <20120911170746.GL7677@google.com>
+References: <20120910223125.GC7677@google.com>
+ <20120910223355.GD7677@google.com>
+ <20120911100433.GC8058@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1347380774-9546-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=0KMVSfFV9KTM405TLi/3tdsTibacxDSp7+qhxQ3TKe8=;
+        b=zfGimDZk3sjh2rkAGoo4W3qaRqgxydvaIOSL3KmXynzCbA4fhzk7BlNqh5vJyB5d09
+         DERyaLvnZV/8f26r2W0tqOPIZsocsN3jeAeVJKiILBYcosl71eDdZc0pLUnmEdfs1b+r
+         hIZOcu94suycu06iA9/K+GqbzfqnSurJ9FIEu+RbZwQwK55fA8uuCNcKjfy9DSAvA8gL
+         3e83ZwRF5wHmD79Ls/Ex1JAGAQYhQMStD9HaX1WZ8kaugaCzpK8A9VM/mHfGb5YzANuS
+         wKOGEnGaRTuNDYglsWND9ejAGs05creL0gynUWMemY/jrBnUm6CtpnNTmk01msMn7NnI
+         0olw==
+Content-Disposition: inline
+In-Reply-To: <20120911100433.GC8058-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-=46rom: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Hello, Michal.
 
-CGROUP_BUILTIN_SUBSYS_COUNT is used as start index or stop index when
-looping over the subsys array looking either at the builtin or the
-module subsystems. Since all the builtin subsystems have an id which
-is lower then CGROUP_BUILTIN_SUBSYS_COUNT we know that any module will
-have an id larger than CGROUP_BUILTIN_SUBSYS_COUNT. In short the ids
-are sorted.
+On Tue, Sep 11, 2012 at 12:04:33PM +0200, Michal Hocko wrote:
+> >  	cgroup_unlock();
+> > @@ -4953,6 +4958,7 @@ mem_cgroup_create(struct cgroup *cont)
+> >  						&per_cpu(memcg_stock, cpu);
+> >  			INIT_WORK(&stock->work, drain_local_stock);
+> >  		}
+> > +		mem_cgroup_subsys.broken_hierarchy = !memcg->use_hierarchy;
+> 
+> Hmmm, this will warn even if we have
+> root (default use_hierarchy=0)
+>  \
+>   A (use_hierarchy=1)
+>    \
+>     B <- here
+> 
+> which is unfortunate because it will add a noise to a reasonable
+> configuration.
 
-We are about to change id assignment to happen only at compile time
-later in this series. That means we can't rely on the above trick
-since all ids will always be defined at compile time. Furthermore,
-ordering the builtin subsystems and the module subsystems is not
-really necessary.
+I suppose you're talking about having root group not performing any
+accounting and/or control?  I suppose such could be a valid use case
+(is it really necessary tho?)  but I don't think .use_hierarchy is the
+right interface for that.  If it's absolutely necessary, I think it
+should be a root-only flag (even if that ends up using the same code
+path).  Eventually, we really want to kill .use_hierarchy, or at least
+make it to RO 1.  As it's currently defined, it's just way too
+confusing.
 
-So we need a different way to know which subsystem is a builtin or a
-module one. We can use the subsys[]->module pointer for this. Any
-place where we need to know if a subsys is module we just check for
-the pointer. If it is NULL then the subsystem is a builtin one.
+> >  		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
+> >  	} else {
+> >  		parent = mem_cgroup_from_cont(cont->parent);
+> > --- a/net/core/netprio_cgroup.c
+> > +++ b/net/core/netprio_cgroup.c
+> > @@ -330,7 +330,17 @@ struct cgroup_subsys net_prio_subsys = {
+> >  	.subsys_id	= net_prio_subsys_id,
+> >  #endif
+> >  	.base_cftypes	= ss_files,
+> > -	.module		= THIS_MODULE
+> > +	.module		= THIS_MODULE,
+> > +
+> > +	/*
+> > +	 * net_prio has artificial limit on the number of cgroups and
+> > +	 * disallows nesting making it impossible to co-mount it with other
+> > +	 * hierarchical subsystems.  Remove the artificially low PRIOIDX_SZ
+> > +	 * limit and properly nest configuration such that children follow
+> > +	 * their parents' configurations by default and are allowed to
+> > +	 * override and remove the following.
+> > +	 */
+> > +	.broken_hierarchy = trye,
+> 
+> typo
 
-With this we are able to drop the CGROUP_BUILTIN_SUBSYS_COUNT
-enum. Though we need to introduce a temporary placeholder so that we
-don't get a compilation error when only CONFIG_CGROUP is selected and
-no single controller. An empty enum definition is not valid. Later in
-this series we are able to remove the placeholder again.
+Heh, I thought I enabled all controllers.  Thanks. :)
 
-And with this change we get a fix for this:
-
-kernel/cgroup.c: In function =E2=80=98cgroup_load_subsys=E2=80=99:
-kernel/cgroup.c:4326:38: warning: array subscript is below array bounds=
- [-Warray-bounds]
-
-when CONFIG_CGROUP=3Dy and no built in controller was enabled.
-
-Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
-Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- include/linux/cgroup.h |  2 +-
- kernel/cgroup.c        | 75 +++++++++++++++++++++++++++++++-----------=
---------
- 2 files changed, 48 insertions(+), 29 deletions(-)
-
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c90eaa8..2140f91 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -47,7 +47,7 @@ extern const struct file_operations proc_cgroup_opera=
-tions;
- #define SUBSYS(_x) _x ## _subsys_id,
- enum cgroup_subsys_id {
- #include <linux/cgroup_subsys.h>
--	CGROUP_BUILTIN_SUBSYS_COUNT
-+	__CGROUP_TEMPORARY_PLACEHOLDER
- };
- #undef SUBSYS
- /*
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7981850..40f881b 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -88,7 +88,7 @@ static DEFINE_MUTEX(cgroup_root_mutex);
-=20
- /*
-  * Generate an array of cgroup subsystem pointers. At boot time, this =
-is
-- * populated up to CGROUP_BUILTIN_SUBSYS_COUNT, and modular subsystems=
- are
-+ * populated with the built in subsystems, and modular subsystems are
-  * registered after that. The mutable section of this array is protect=
-ed by
-  * cgroup_mutex.
-  */
-@@ -1291,11 +1291,13 @@ static int parse_cgroupfs_options(char *data, s=
-truct cgroup_sb_opts *opts)
- 	 * take duplicate reference counts on a subsystem that's already used=
-,
- 	 * but rebind_subsystems handles this case.
- 	 */
--	for (i =3D CGROUP_BUILTIN_SUBSYS_COUNT; i < CGROUP_SUBSYS_COUNT; i++)=
- {
-+	for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 		unsigned long bit =3D 1UL << i;
-=20
- 		if (!(bit & opts->subsys_bits))
- 			continue;
-+		if (!subsys[i]->module)
-+			continue;
- 		if (!try_module_get(subsys[i]->module)) {
- 			module_pin_failed =3D true;
- 			break;
-@@ -1307,12 +1309,14 @@ static int parse_cgroupfs_options(char *data, s=
-truct cgroup_sb_opts *opts)
- 		 * raced with a module_delete call, and to the user this is
- 		 * essentially a "subsystem doesn't exist" case.
- 		 */
--		for (i--; i >=3D CGROUP_BUILTIN_SUBSYS_COUNT; i--) {
-+		for (i--; i >=3D 0; i--) {
- 			/* drop refcounts only on the ones we took */
- 			unsigned long bit =3D 1UL << i;
-=20
- 			if (!(bit & opts->subsys_bits))
- 				continue;
-+			if (!subsys[i]->module)
-+				continue;
- 			module_put(subsys[i]->module);
- 		}
- 		return -ENOENT;
-@@ -1324,11 +1328,13 @@ static int parse_cgroupfs_options(char *data, s=
-truct cgroup_sb_opts *opts)
- static void drop_parsed_module_refcounts(unsigned long subsys_bits)
- {
- 	int i;
--	for (i =3D CGROUP_BUILTIN_SUBSYS_COUNT; i < CGROUP_SUBSYS_COUNT; i++)=
- {
-+	for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 		unsigned long bit =3D 1UL << i;
-=20
- 		if (!(bit & subsys_bits))
- 			continue;
-+		if (!subsys[i]->module)
-+			continue;
- 		module_put(subsys[i]->module);
- 	}
- }
-@@ -1401,6 +1407,7 @@ static void init_cgroup_housekeeping(struct cgrou=
-p *cgrp)
- 	mutex_init(&cgrp->pidlist_mutex);
- 	INIT_LIST_HEAD(&cgrp->event_list);
- 	spin_lock_init(&cgrp->event_list_lock);
-+	memset(cgrp->subsys, 0, sizeof(cgrp->subsys));
- }
-=20
- static void init_cgroup_root(struct cgroupfs_root *root)
-@@ -4321,8 +4328,7 @@ int __init_or_module cgroup_load_subsys(struct cg=
-roup_subsys *ss)
- 	 * since cgroup_init_subsys will have already taken care of it.
- 	 */
- 	if (ss->module =3D=3D NULL) {
--		/* a few sanity checks */
--		BUG_ON(ss->subsys_id >=3D CGROUP_BUILTIN_SUBSYS_COUNT);
-+		/* a sanity check */
- 		BUG_ON(subsys[ss->subsys_id] !=3D ss);
- 		return 0;
- 	}
-@@ -4336,7 +4342,7 @@ int __init_or_module cgroup_load_subsys(struct cg=
-roup_subsys *ss)
- 	 */
- 	mutex_lock(&cgroup_mutex);
- 	/* find the first empty slot in the array */
--	for (i =3D CGROUP_BUILTIN_SUBSYS_COUNT; i < CGROUP_SUBSYS_COUNT; i++)=
- {
-+	for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 		if (subsys[i] =3D=3D NULL)
- 			break;
- 	}
-@@ -4439,7 +4445,6 @@ void cgroup_unload_subsys(struct cgroup_subsys *s=
-s)
-=20
- 	mutex_lock(&cgroup_mutex);
- 	/* deassign the subsys_id */
--	BUG_ON(ss->subsys_id < CGROUP_BUILTIN_SUBSYS_COUNT);
- 	subsys[ss->subsys_id] =3D NULL;
-=20
- 	/* remove subsystem from rootnode's list of subsystems */
-@@ -4502,10 +4507,13 @@ int __init cgroup_init_early(void)
- 	for (i =3D 0; i < CSS_SET_TABLE_SIZE; i++)
- 		INIT_HLIST_HEAD(&css_set_table[i]);
-=20
--	/* at bootup time, we don't worry about modular subsystems */
--	for (i =3D 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
-+	for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 		struct cgroup_subsys *ss =3D subsys[i];
-=20
-+		/* at bootup time, we don't worry about modular subsystems */
-+		if (!ss || (ss && ss->module))
-+			continue;
-+
- 		BUG_ON(!ss->name);
- 		BUG_ON(strlen(ss->name) > MAX_CGROUP_TYPE_NAMELEN);
- 		BUG_ON(!ss->create);
-@@ -4538,9 +4546,12 @@ int __init cgroup_init(void)
- 	if (err)
- 		return err;
-=20
--	/* at bootup time, we don't worry about modular subsystems */
--	for (i =3D 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
-+	for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 		struct cgroup_subsys *ss =3D subsys[i];
-+
-+		/* at bootup time, we don't worry about modular subsystems */
-+		if (!ss || (ss && ss->module))
-+			continue;
- 		if (!ss->early_init)
- 			cgroup_init_subsys(ss);
- 		if (ss->use_id)
-@@ -4735,13 +4746,16 @@ void cgroup_fork_callbacks(struct task_struct *=
-child)
- {
- 	if (need_forkexit_callback) {
- 		int i;
--		/*
--		 * forkexit callbacks are only supported for builtin
--		 * subsystems, and the builtin section of the subsys array is
--		 * immutable, so we don't need to lock the subsys array here.
--		 */
--		for (i =3D 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
-+		for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 			struct cgroup_subsys *ss =3D subsys[i];
-+
-+			/*
-+			 * forkexit callbacks are only supported for
-+			 * builtin subsystems.
-+			 */
-+			if (!ss || (ss && ss->module))
-+				continue;
-+
- 			if (ss->fork)
- 				ss->fork(child);
- 		}
-@@ -4846,12 +4860,13 @@ void cgroup_exit(struct task_struct *tsk, int r=
-un_callbacks)
- 	tsk->cgroups =3D &init_css_set;
-=20
- 	if (run_callbacks && need_forkexit_callback) {
--		/*
--		 * modular subsystems can't use callbacks, so no need to lock
--		 * the subsys array
--		 */
--		for (i =3D 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
-+		for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 			struct cgroup_subsys *ss =3D subsys[i];
-+
-+			/* modular subsystems can't use callbacks */
-+			if (!ss || (ss && ss->module))
-+				continue;
-+
- 			if (ss->exit) {
- 				struct cgroup *old_cgrp =3D
- 					rcu_dereference_raw(cg->subsys[i])->cgroup;
-@@ -5037,13 +5052,17 @@ static int __init cgroup_disable(char *str)
- 	while ((token =3D strsep(&str, ",")) !=3D NULL) {
- 		if (!*token)
- 			continue;
--		/*
--		 * cgroup_disable, being at boot time, can't know about module
--		 * subsystems, so we don't worry about them.
--		 */
--		for (i =3D 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
-+		for (i =3D 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 			struct cgroup_subsys *ss =3D subsys[i];
-=20
-+			/*
-+			 * cgroup_disable, being at boot time, can't
-+			 * know about module subsystems, so we don't
-+			 * worry about them.
-+			 */
-+			if (!ss || (ss && ss->module))
-+				continue;
-+
- 			if (!strcmp(token, ss->name)) {
- 				ss->disabled =3D 1;
- 				printk(KERN_INFO "Disabling %s control group"
---=20
-1.7.12.315.g682ce8b
+-- 
+tejun
