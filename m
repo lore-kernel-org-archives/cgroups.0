@@ -1,55 +1,102 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
- broken hierarchy support and whine if cgroups are nested for them
-Date: Tue, 11 Sep 2012 20:38:51 +0800
-Message-ID: <504F30DB.60808@huawei.com>
-References: <20120910223125.GC7677@google.com> <20120910223355.GD7677@google.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120910223355.GD7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Daniel Wagner <wagi@monom.org>
+Subject: [PATCH v3 3/8] cgroup: net_prio: Do not define task_netpioidx() when not selected
+Date: Tue, 11 Sep 2012 18:26:09 +0200
+Message-ID: <1347380774-9546-4-git-send-email-wagi@monom.org>
+References: <1347380774-9546-1-git-send-email-wagi@monom.org>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1347380774-9546-1-git-send-email-wagi@monom.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: netdev@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>, Gao feng <gaofeng@cn.fujitsu.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Li Zefan <lizefan@huawei.com>, Neil Horman <nhorman@tuxdriver.com>, Tejun Heo <tj@kernel.org>
 
-On 2012/9/11 6:33, Tejun Heo wrote:
-> (forgot cc'ing containers / cgroups mailing lists and used the old
->  address for Li.  Reposting.  Sorry for the noise.)
-> 
-> Currently, cgroup hierarchy support is a mess.  cpu related subsystems
-> behave correctly - configuration, accounting and control on a parent
-> properly cover its children.  blkio and freezer completely ignore
-> hierarchy and treat all cgroups as if they're directly under the root
-> cgroup.  Others show yet different behaviors.
-> 
-> These differing interpretations of cgroup hierarchy make using cgroup
-> confusing and it impossible to co-mount controllers into the same
-> hierarchy and obtain sane behavior.
-> 
-> Eventually, we want full hierarchy support from all subsystems and
-> probably a unified hierarchy.  Users using separate hierarchies
-> expecting completely different behaviors depending on the mounted
-> subsystem is deterimental to making any progress on this front.
-> 
-> This patch adds cgroup_subsys.broken_hierarchy and sets it to %true
-> for controllers which are lacking in hierarchy support.  The goal of
-> this patch is two-fold.
-> 
-> * Move users away from using hierarchy on currently non-hierarchical
->   subsystems, so that implementing proper hierarchy support on those
->   doesn't surprise them.
-> 
-> * Keep track of which controllers are broken how and nudge the
->   subsystems to implement proper hierarchy support.
-> 
-> For now, start with a single warning message.  We can whine louder
-> later on.
-> 
-> (I tried to document what's broken and how it should be fixed.  If I
->  got something wrong, please let me know.)
-> 
+From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
-So isn't cpuset broken too? child cpuset's cpu mask isn't necessary a subset
-of the parent's if the cpu_exclusive flag is not set.
+task_netprioidx() should not be defined in case the configuration is
+CONFIG_NETPRIO_CGROUP=n. The reason is that in a following patch the
+net_prio_subsys_id will only be defined if CONFIG_NETPRIO_CGROUP!=n.
+When net_prio is not built at all any callee should only get an empty
+task_netprioidx() without any references to net_prio_subsys_id.
+
+Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Cc: Gao feng <gaofeng@cn.fujitsu.com>
+Cc: Jamal Hadi Salim <jhs@mojatatu.com>
+Cc: John Fastabend <john.r.fastabend@intel.com>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: netdev@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+---
+ include/net/netprio_cgroup.h | 12 +++++-------
+ net/core/sock.c              |  2 ++
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/netprio_cgroup.h b/include/net/netprio_cgroup.h
+index 2719dec..b202de8 100644
+--- a/include/net/netprio_cgroup.h
++++ b/include/net/netprio_cgroup.h
+@@ -18,14 +18,13 @@
+ #include <linux/rcupdate.h>
+ 
+ 
++#if IS_ENABLED(CONFIG_NETPRIO_CGROUP)
+ struct netprio_map {
+ 	struct rcu_head rcu;
+ 	u32 priomap_len;
+ 	u32 priomap[];
+ };
+ 
+-#ifdef CONFIG_CGROUPS
+-
+ struct cgroup_netprio_state {
+ 	struct cgroup_subsys_state css;
+ 	u32 prioidx;
+@@ -71,18 +70,17 @@ static inline u32 task_netprioidx(struct task_struct *p)
+ 	rcu_read_unlock();
+ 	return idx;
+ }
++#endif
+ 
+-#else
++#else /* !CONFIG_NETPRIO_CGROUP */
+ 
+ static inline u32 task_netprioidx(struct task_struct *p)
+ {
+ 	return 0;
+ }
+ 
+-#endif /* CONFIG_NETPRIO_CGROUP */
+-
+-#else
+ #define sock_update_netprioidx(sk, task)
+-#endif
++
++#endif /* CONFIG_NETPRIO_CGROUP */
+ 
+ #endif  /* _NET_CLS_CGROUP_H */
+diff --git a/net/core/sock.c b/net/core/sock.c
+index a2af5ef..a1f1c02 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -1237,6 +1237,7 @@ void sock_update_classid(struct sock *sk)
+ EXPORT_SYMBOL(sock_update_classid);
+ #endif
+ 
++#if IS_ENABLED(CONFIG_NETPRIO_CGROUP)
+ void sock_update_netprioidx(struct sock *sk, struct task_struct *task)
+ {
+ 	if (in_interrupt())
+@@ -1246,6 +1247,7 @@ void sock_update_netprioidx(struct sock *sk, struct task_struct *task)
+ }
+ EXPORT_SYMBOL_GPL(sock_update_netprioidx);
+ #endif
++#endif
+ 
+ /**
+  *	sk_alloc - All socket objects are allocated here
+-- 
+1.7.12.315.g682ce8b
