@@ -1,76 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v3 7/8] cgroup: Assign subsystem IDs during compile time
-Date: Tue, 11 Sep 2012 14:01:09 -0700
-Message-ID: <20120911210109.GZ7677@google.com>
+Date: Tue, 11 Sep 2012 14:04:35 -0700
+Message-ID: <20120911210435.GA7677@google.com>
 References: <1347380774-9546-1-git-send-email-wagi@monom.org>
  <1347380774-9546-8-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=KI2rvPawVGvJReDJWAFJQ8hwLRRB/LsU2HT8kfBX14Q=;
-        b=q/8YhkXap+RcjBsNVD5ELxA4yIR0MbucaS+AE+jKMtnCnazdWQsOwoMGcxkjifNQQA
-         GrrPdrW4PrUAgEMRhb/YLv8NVLINj2AJ0RcVd+MFKjFTJ9a1+oZcHFWbsQTdmzG5p/nO
-         8EPNfWhIp89z9WfRAOPc0CxdeeoeHH1Og/T63eucdv5CK4fzdQ76xmudNPl4yK4cBJim
-         wBNGCKlmDXDnhTxQpCPxwJWTl6q8E52EN34thciVyIN1Z5Onu0rwbzaebFeNiwnCJCti
-         lVRuFpyvdkf7DcS3mFtsXRDgBbAA490vEL24dzDAQHiXBJj/97zKrjFhYXMYGtlIRGdb
-         MVtA==
+        bh=M9ZYcsslvzb5s2/WlHwaXQ5IEy7PtMS0hwX5pHWe9ag=;
+        b=NqUWXRFAlN3fiWeCa1iJbJFMVWYn6lKca11WTCkzIlTqsNeNOJQbkDAncQf2wn4wGb
+         OUpQu1J/Z1zh5maoiL7z7PXcuu/jmxqbKPwGyhm5eWvF0c04fHfyB7OH+Y57ep10Oz4N
+         4w4a86Wkv4hXleBim2/J8M1f5U4D6DPOj5UG1eYcQbw1cagXARlpPCmc7hgL26eutdfQ
+         EZiKc9aM/fHqpqbQXRzPDVeIaL0vjjtWoHtIzHsr3VK2OxzeYWED3ymeK2VUbSKKp1cA
+         Hl7/Aj1oXATfn6+V8M8n3rS6pgc4OvImJpj8qecN0UIyWfZdpONQIGHi9QTCG622LWnl
+         FiHQ==
 Content-Disposition: inline
-In-Reply-To: <1347380774-9546-8-git-send-email-wagi@monom.org>
-Sender: netdev-owner@vger.kernel.org
+In-Reply-To: <1347380774-9546-8-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <wagi@monom.org>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Eric Dumazet <edumazet@google.com>, Gao feng <gaofeng@cn.fujitsu.com>, Glauber Costa <glommer@parallels.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Li Zefan <lizefan@huawei.com>, Neil Horman <nhorman@tuxdriver.com>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
 Hello, Daniel.
 
-I generally like this but I still think it's too big a patch.
+One more thing.
 
-> diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-> index c75e3f9..6bc460c 100644
-> --- a/net/core/netprio_cgroup.c
-> +++ b/net/core/netprio_cgroup.c
-> @@ -326,9 +326,7 @@ struct cgroup_subsys net_prio_subsys = {
->  	.create		= cgrp_create,
->  	.destroy	= cgrp_destroy,
->  	.attach		= net_prio_attach,
-> -#ifdef CONFIG_NETPRIO_CGROUP
->  	.subsys_id	= net_prio_subsys_id,
-> -#endif
->  	.base_cftypes	= ss_files,
->  	.module		= THIS_MODULE
->  };
-> @@ -366,10 +364,6 @@ static int __init init_cgroup_netprio(void)
->  	ret = cgroup_load_subsys(&net_prio_subsys);
->  	if (ret)
->  		goto out;
-> -#ifndef CONFIG_NETPRIO_CGROUP
-> -	smp_wmb();
-> -	net_prio_subsys_id = net_prio_subsys.subsys_id;
-> -#endif
->  
->  	register_netdevice_notifier(&netprio_device_notifier);
->  
-> @@ -386,11 +380,6 @@ static void __exit exit_cgroup_netprio(void)
->  
->  	cgroup_unload_subsys(&net_prio_subsys);
->  
-> -#ifndef CONFIG_NETPRIO_CGROUP
-> -	net_prio_subsys_id = -1;
-> -	synchronize_rcu();
+On Tue, Sep 11, 2012 at 06:26:13PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> 
+> WARNING: With this change it is not possible to load external built
+> controllers anymore.
+> 
+> In case where CONFIG_NETPRIO_CGROUP=m and CONFIG_NET_CLS_CGROUP=m is
+> set, the type of the corresponding subsys_id should also be of type
+> enum. Up to now, net_prio_subsys_id and net_cls_subsys_id would be an
+> int in this configuration.
+> 
+> With switching the macro definition IS_SUBSYS_ENABLED from IS_BUILTIN
+> to IS_ENABLED, the subsys_id will always be enum for all
+> subsystems. That means we need to remove all the code which assumes
+> that net_prio_subsys_id and net_cls_subsys_id is of type int.
 
-For example, it's not evident the above is correct and it's burried
-with all other changes.  Can't we just assign the fixed subsys ID to
-net_prio_subsys_id in this patch?  This patch would be correct without
-any netprio changes, no?  Please separate these changes and explain
-them.
-
-BTW, people who use barriers of any kind without explicitly explaining
-what's going on need to be kicked hard in the ass.  :(
+I don't think int or enum is the matter here.  enum is an int.  It's
+whether the ID is allocated statically or dynamically.  Can you please
+update the description using those terms instead?
 
 Thanks.
 
