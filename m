@@ -1,43 +1,76 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH UPDATED RFC cgroup/for-3.7] cgroup: mark subsystems with
- broken hierarchy support and whine if cgroups are nested for them
-Date: Tue, 11 Sep 2012 13:51:30 -0700
-Message-ID: <CAOS58YPmrCrgdunsck78GTeGUCf9CBrS75BRt3wpQUfwMUGpsg@mail.gmail.com>
-References: <20120910223125.GC7677@google.com>
-	<20120910223355.GD7677@google.com>
-	<20120911182356.GR7677@google.com>
-	<20120911205027.GA25837@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 7/8] cgroup: Assign subsystem IDs during compile time
+Date: Tue, 11 Sep 2012 14:01:09 -0700
+Message-ID: <20120911210109.GZ7677@google.com>
+References: <1347380774-9546-1-git-send-email-wagi@monom.org>
+ <1347380774-9546-8-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-        bh=C+u15A0/npRxZG+eYPPLgYV0uE400Vero3WZlCN3Ros=;
-        b=kOGu1xgZKV+qBe85n7XY0oFsgBe0oEzY+GsCgn317gv9hZLzt+TsvfhQpKeSOcjeuW
-         AI0FhZKvR1AS3flLMMPPWbpaksaznFv3LMxSHlqVPj0/IBK8c+cSyOZFbxNAcMsjpWex
-         cr75mdNAJfQgjcm6ccbHQE+Ush1oAHAJfHSiYMktUtmbAUphjUMg5DfL5mDxvnT+9CQE
-         4K/j+Kf7ow2E+Uaqv7uy1+a1FYnNBvOKNKmKsE2KgeOQwMSelsTGRMwsP7wuA4ZKhj+L
-         aJOkbgcoPUcoSWXWkQ1kIzZ8Ndxn5OQMXOCAYUQCmwk4RPfT5YpMGwi7wLHTU7X3JZe1
-         zITA==
-In-Reply-To: <20120911205027.GA25837-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=KI2rvPawVGvJReDJWAFJQ8hwLRRB/LsU2HT8kfBX14Q=;
+        b=q/8YhkXap+RcjBsNVD5ELxA4yIR0MbucaS+AE+jKMtnCnazdWQsOwoMGcxkjifNQQA
+         GrrPdrW4PrUAgEMRhb/YLv8NVLINj2AJ0RcVd+MFKjFTJ9a1+oZcHFWbsQTdmzG5p/nO
+         8EPNfWhIp89z9WfRAOPc0CxdeeoeHH1Og/T63eucdv5CK4fzdQ76xmudNPl4yK4cBJim
+         wBNGCKlmDXDnhTxQpCPxwJWTl6q8E52EN34thciVyIN1Z5Onu0rwbzaebFeNiwnCJCti
+         lVRuFpyvdkf7DcS3mFtsXRDgBbAA490vEL24dzDAQHiXBJj/97zKrjFhYXMYGtlIRGdb
+         MVtA==
+Content-Disposition: inline
+In-Reply-To: <1347380774-9546-8-git-send-email-wagi@monom.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+To: Daniel Wagner <wagi@monom.org>
+Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Eric Dumazet <edumazet@google.com>, Gao feng <gaofeng@cn.fujitsu.com>, Glauber Costa <glommer@parallels.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Li Zefan <lizefan@huawei.com>, Neil Horman <nhorman@tuxdriver.com>
 
-Hello,
+Hello, Daniel.
 
-On Tue, Sep 11, 2012 at 1:50 PM, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> Hi Tejun,
-> On Tue, Sep 11, 2012 at 11:23:56AM -0700, Tejun Heo wrote:
->> +                     /* we're fully hierarchical iff root uses hierarchy */
->
-> minor nit: s/iff/if/
+I generally like this but I still think it's too big a patch.
 
-That was intentional iff == if and only if. :)
+> diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
+> index c75e3f9..6bc460c 100644
+> --- a/net/core/netprio_cgroup.c
+> +++ b/net/core/netprio_cgroup.c
+> @@ -326,9 +326,7 @@ struct cgroup_subsys net_prio_subsys = {
+>  	.create		= cgrp_create,
+>  	.destroy	= cgrp_destroy,
+>  	.attach		= net_prio_attach,
+> -#ifdef CONFIG_NETPRIO_CGROUP
+>  	.subsys_id	= net_prio_subsys_id,
+> -#endif
+>  	.base_cftypes	= ss_files,
+>  	.module		= THIS_MODULE
+>  };
+> @@ -366,10 +364,6 @@ static int __init init_cgroup_netprio(void)
+>  	ret = cgroup_load_subsys(&net_prio_subsys);
+>  	if (ret)
+>  		goto out;
+> -#ifndef CONFIG_NETPRIO_CGROUP
+> -	smp_wmb();
+> -	net_prio_subsys_id = net_prio_subsys.subsys_id;
+> -#endif
+>  
+>  	register_netdevice_notifier(&netprio_device_notifier);
+>  
+> @@ -386,11 +380,6 @@ static void __exit exit_cgroup_netprio(void)
+>  
+>  	cgroup_unload_subsys(&net_prio_subsys);
+>  
+> -#ifndef CONFIG_NETPRIO_CGROUP
+> -	net_prio_subsys_id = -1;
+> -	synchronize_rcu();
+
+For example, it's not evident the above is correct and it's burried
+with all other changes.  Can't we just assign the fixed subsys ID to
+net_prio_subsys_id in this patch?  This patch would be correct without
+any netprio changes, no?  Please separate these changes and explain
+them.
+
+BTW, people who use barriers of any kind without explicitly explaining
+what's going on need to be kicked hard in the ass.  :(
 
 Thanks.
 
