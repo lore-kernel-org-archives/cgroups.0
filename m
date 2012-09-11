@@ -1,261 +1,313 @@
-From: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [patch] cgroups: trivial fixes for Documentation/cgroups/cgroups.txt
-Date: Tue, 11 Sep 2012 13:20:20 +0200
-Message-ID: <504F1E74.10709@gmail.com>
+From: Michael Kerrisk <mtk.manpages@gmail.com>
+Subject: [patch] memcg: trivial fixes for Documentation/cgroups/memory.txt
+Date: Tue, 11 Sep 2012 13:20:33 +0200
+Message-ID: <504F1E81.40002@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=message-id:date:from:user-agent:mime-version:to:cc:subject
          :content-type:content-transfer-encoding;
-        bh=mlnrhxQI9NC+F8hXCm6orprzj75mlg1pQr2LjOYE3UI=;
-        b=S59m86hAoNlf2gK4miHQx2dHucD0FGHqM0PuprJCeYMPng24gYCNs7bqQ88JblTLr4
-         u7rkz8/PjB6gQAABoa0wQrg0u8THLxzwhyJ8Ur/Xikh1VJI7778H8lLnRH2o73c1CF6e
-         4/mVBoqN2DW7C1H5g9mg2knq2vyYb/o/8zjcNYZU7w6FxX7Rn9IZ5emOgFUi0eCwCs//
-         CrbaFgdJj2QDZEbvto/YGGIlr//xtMViJqdLPwty+yQGKeunnob3WbPa2vniaOzZdo2l
-         DCbEEvQCk+V58wqPD6aFG3+DHIbTiC3HR1lOM8xhISylpVTg+dCWbf+qukJYkeI39cTI
-         SxaQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=C0LYSWuTHpRVf48+oKrWDORsMsFjrlfAAo2hnwmzaGA=;
+        b=SNVtn9x9sP/URqYiMaBqS6s/0smy4xYVAR0uYvy7LJ5/cBp62roJ9pyPe2i8eKS2QY
+         D0HZZei5AqbEhuB6t/EszWseTp7xg2A32KC27ylc4hlFjGK1XejOWGvFSDUCp1EIgZB2
+         5zcouQAl0zzqkC67e5WKJj8I9hAPjtQAr3aXxHo8NA6Rk19Zyp/OduguCUXiMKq3zgLP
+         Xzc9CA6D7H5KbziK2u9PbkBptGu1daVxGe+Ok67GtkT52U60BIjz9fSnbVllFUHXjJ6X
+         Bx9k1l/6ko4O/0hLZ+gDDYCjBu3F5bldI6GbLZD5kKzle7T1tgo4KznjiHzJc0yhVWR/
+         z9VA==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: Michael Kerrisk <mtk.manpages@gmail.com>, Mel Gorman <mel@csn.ul.ie>, Glauber Costa <glommer@parallels.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>
 
-While reading through Documentation/cgroups/cgroups.txt, I found a
-number of minor wordos and typos. The patch below is a conservative
+While reading through Documentation/cgroups/memory.txt, I found a number
+of minor wordos and typos. The patch below is a conservative
 handling of some of these: it provides just a number of "obviously
 correct" fixes to the English that improve the readability
 of the document somewhat. Obviously some more significant
-fixes could be made to the document, but some of those 
-may not be in the "obviously correct" category.
+fixes need to be made to the document, but some of those 
+may not be in the "obvious correct" category.
 
 Please apply.
 
-Signed-off-by: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Michael Kerrisk <mtk.manpages@gmail.com>
 
 
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index 4a0b64c..798cf21 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -62,9 +62,9 @@ an instance of the cgroup virtual filesystem associated with it.
- At any one time there may be multiple active hierarchies of task
- cgroups. Each hierarchy is a partition of all tasks in the system.
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index 4372e6b..c07f7b4 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -18,16 +18,16 @@ from the rest of the system. The article on LWN [12] mentions some probable
+ uses of the memory controller. The memory controller can be used to
  
--User level code may create and destroy cgroups by name in an
-+User-level code may create and destroy cgroups by name in an
- instance of the cgroup virtual file system, specify and query to
--which cgroup a task is assigned, and list the task pids assigned to
-+which cgroup a task is assigned, and list the task PIDs assigned to
- a cgroup. Those creations and assignments only affect the hierarchy
- associated with that instance of the cgroup file system.
+ a. Isolate an application or a group of applications
+-   Memory hungry applications can be isolated and limited to a smaller
++   Memory-hungry applications can be isolated and limited to a smaller
+    amount of memory.
+-b. Create a cgroup with limited amount of memory, this can be used
++b. Create a cgroup with a limited amount of memory; this can be used
+    as a good alternative to booting with mem=XXXX.
+ c. Virtualization solutions can control the amount of memory they want
+    to assign to a virtual machine instance.
+ d. A CD/DVD burner could control the amount of memory used by the
+    rest of the system to ensure that burning does not fail due to lack
+    of available memory.
+-e. There are several other use cases, find one or use the controller just
++e. There are several other use cases; find one or use the controller just
+    for fun (to learn and hack on the VM subsystem).
  
-@@ -72,7 +72,7 @@ On their own, the only use for cgroups is for simple job
- tracking. The intention is that other subsystems hook into the generic
- cgroup support to provide new attributes for cgroups, such as
- accounting/limiting the resources which processes in a cgroup can
--access. For example, cpusets (see Documentation/cgroups/cpusets.txt) allows
-+access. For example, cpusets (see Documentation/cgroups/cpusets.txt) allow
- you to associate a set of CPUs and a set of memory nodes with the
- tasks in each cgroup.
+ Current Status: linux-2.6.34-mmotm(development version of 2010/April)
+@@ -38,12 +38,12 @@ Features:
+  - optionally, memory+swap usage can be accounted and limited.
+  - hierarchical accounting
+  - soft limit
+- - moving(recharging) account at moving a task is selectable.
++ - moving (recharging) account at moving a task is selectable.
+  - usage threshold notifier
+  - oom-killer disable knob and oom-notifier
+  - Root cgroup has no limit controls.
  
-@@ -80,11 +80,11 @@ tasks in each cgroup.
- ----------------------------
+- Kernel memory support is work in progress, and the current version provides
++ Kernel memory support is a work in progress, and the current version provides
+  basically functionality. (See Section 2.7)
  
- There are multiple efforts to provide process aggregations in the
--Linux kernel, mainly for resource tracking purposes. Such efforts
-+Linux kernel, mainly for resource-tracking purposes. Such efforts
- include cpusets, CKRM/ResGroups, UserBeanCounters, and virtual server
- namespaces. These all require the basic notion of a
- grouping/partitioning of processes, with newly forked processes ending
--in the same group (cgroup) as their parent process.
-+up in the same group (cgroup) as their parent process.
+ Brief summary of control files.
+@@ -144,9 +144,9 @@ Figure 1 shows the important aspects of the controller
+ 3. Each page has a pointer to the page_cgroup, which in turn knows the
+    cgroup it belongs to
  
- The kernel cgroup patch provides the minimum essential kernel
- mechanisms required to efficiently implement such groups. It has
-@@ -127,14 +127,14 @@ following lines:
-                                / \
-                Professors (15%)  students (5%)
+-The accounting is done as follows: mem_cgroup_charge() is invoked to setup
++The accounting is done as follows: mem_cgroup_charge() is invoked to set up
+ the necessary data structures and check if the cgroup that is being charged
+-is over its limit. If it is then reclaim is invoked on the cgroup.
++is over its limit. If it is, then reclaim is invoked on the cgroup.
+ More details can be found in the reclaim section of this document.
+ If everything goes well, a page meta-data-structure called page_cgroup is
+ updated. page_cgroup has its own LRU on cgroup.
+@@ -163,13 +163,13 @@ for earlier. A file page will be accounted for as Page Cache when it's
+ inserted into inode (radix-tree). While it's mapped into the page tables of
+ processes, duplicate accounting is carefully avoided.
  
--Browsers like Firefox/Lynx go into the WWW network class, while (k)nfsd go
--into NFS network class.
-+Browsers like Firefox/Lynx go into the WWW network class, while (k)nfsd goes
-+into the NFS network class.
+-A RSS page is unaccounted when it's fully unmapped. A PageCache page is
++An RSS page is unaccounted when it's fully unmapped. A PageCache page is
+ unaccounted when it's removed from radix-tree. Even if RSS pages are fully
+ unmapped (by kswapd), they may exist as SwapCache in the system until they
+-are really freed. Such SwapCaches also also accounted.
++are really freed. Such SwapCaches are also accounted.
+ A swapped-in page is not accounted until it's mapped.
  
- At the same time Firefox/Lynx will share an appropriate CPU/Memory class
- depending on who launched it (prof/student).
+-Note: The kernel does swapin-readahead and read multiple swaps at once.
++Note: The kernel does swapin-readahead and reads multiple swaps at once.
+ This means swapped-in pages may contain pages for other tasks than a task
+ causing page fault. So, we avoid accounting at swap-in I/O.
  
- With the ability to classify tasks differently for different resources
--(by putting those resource subsystems in different hierarchies) then
-+(by putting those resource subsystems in different hierarchies),
- the admin can easily set up a script which receives exec notifications
- and depending on who is launching the browser he can
+@@ -209,7 +209,7 @@ memsw.limit_in_bytes.
+ Example: Assume a system with 4G of swap. A task which allocates 6G of memory
+ (by mistake) under 2G memory limitation will use all swap.
+ In this case, setting memsw.limit_in_bytes=3G will prevent bad use of swap.
+-By using memsw limit, you can avoid system OOM which can be caused by swap
++By using the memsw limit, you can avoid system OOM which can be caused by swap
+ shortage.
  
-@@ -145,19 +145,19 @@ a separate cgroup for every browser launched and associate it with
- appropriate network and other resource class.  This may lead to
- proliferation of such cgroups.
+ * why 'memory+swap' rather than swap.
+@@ -217,7 +217,7 @@ The global LRU(kswapd) can swap out arbitrary pages. Swap-out means
+ to move account from memory to swap...there is no change in usage of
+ memory+swap. In other words, when we want to limit the usage of swap without
+ affecting global LRU, memory+swap limit is better than just limiting swap from
+-OS point of view.
++an OS point of view.
  
--Also lets say that the administrator would like to give enhanced network
-+Also let's say that the administrator would like to give enhanced network
- access temporarily to a student's browser (since it is night and the user
--wants to do online gaming :))  OR give one of the students simulation
--apps enhanced CPU power,
-+wants to do online gaming :))  OR give one of the student's simulation
-+apps enhanced CPU power.
+ * What happens when a cgroup hits memory.memsw.limit_in_bytes
+ When a cgroup hits memory.memsw.limit_in_bytes, it's useless to do swap-out
+@@ -236,7 +236,7 @@ an OOM routine is invoked to select and kill the bulkiest task in the
+ cgroup. (See 10. OOM Control below.)
  
--With ability to write pids directly to resource classes, it's just a
--matter of :
-+With ability to write PIDs directly to resource classes, it's just a
-+matter of:
+ The reclaim algorithm has not been modified for cgroups, except that
+-pages that are selected for reclaiming come from the per cgroup LRU
++pages that are selected for reclaiming come from the per-cgroup LRU
+ list.
  
-        # echo pid > /sys/fs/cgroup/network/<new_class>/tasks
-        (after some time)
-        # echo pid > /sys/fs/cgroup/network/<orig_class>/tasks
+ NOTE: Reclaim does not work for the root cgroup, since we cannot set any
+@@ -316,7 +316,7 @@ We can check the usage:
+ # cat /sys/fs/cgroup/memory/0/memory.usage_in_bytes
+ 1216512
  
--Without this ability, he would have to split the cgroup into
-+Without this ability, the administrator would have to split the cgroup into
- multiple separate ones and then associate the new cgroups with the
- new resource classes.
+-A successful write to this file does not guarantee a successful set of
++A successful write to this file does not guarantee a successful setting of
+ this limit to the value written into the file. This can be due to a
+ number of factors, such as rounding up to page boundaries or the total
+ availability of memory on the system. The user is required to re-read
+@@ -350,7 +350,7 @@ Trying usual test under memory controller is always helpful.
+ 4.1 Troubleshooting
  
-@@ -184,20 +184,20 @@ Control Groups extends the kernel as follows:
-    field of each task_struct using the css_set, anchored at
-    css_set->tasks.
+ Sometimes a user might find that the application under a cgroup is
+-terminated by OOM killer. There are several causes for this:
++terminated by the OOM killer. There are several causes for this:
  
-- - A cgroup hierarchy filesystem can be mounted  for browsing and
-+ - A cgroup hierarchy filesystem can be mounted for browsing and
-    manipulation from user space.
+ 1. The cgroup limit is too low (just too low to do anything useful)
+ 2. The user is using anonymous memory and swap is turned off or too low
+@@ -358,7 +358,7 @@ terminated by OOM killer. There are several causes for this:
+ A sync followed by echo 1 > /proc/sys/vm/drop_caches will help get rid of
+ some of the pages cached in the cgroup (page cache pages).
  
-- - You can list all the tasks (by pid) attached to any cgroup.
-+ - You can list all the tasks (by PID) attached to any cgroup.
+-To know what happens, disable OOM_Kill by 10. OOM Control(see below) and
++To know what happens, disabling OOM_Kill as per "10. OOM Control" (below) and
+ seeing what happens will be helpful.
  
- The implementation of cgroups requires a few, simple hooks
--into the rest of the kernel, none in performance critical paths:
-+into the rest of the kernel, none in performance-critical paths:
+ 4.2 Task migration
+@@ -399,10 +399,10 @@ About use_hierarchy, see Section 6.
  
-  - in init/main.c, to initialize the root cgroups and initial
-    css_set at system boot.
+   Almost all pages tracked by this memory cgroup will be unmapped and freed.
+   Some pages cannot be freed because they are locked or in-use. Such pages are
+-  moved to parent(if use_hierarchy==1) or root (if use_hierarchy==0) and this
++  moved to parent (if use_hierarchy==1) or root (if use_hierarchy==0) and this
+   cgroup will be empty.
  
-  - in fork and exit, to attach and detach a task from its css_set.
+-  Typical use case of this interface is that calling this before rmdir().
++  The typical use case for this interface is before calling rmdir().
+   Because rmdir() moves all pages to parent, some out-of-use page caches can be
+   moved to the parent. If you want to avoid that, force_empty will be useful.
  
--In addition a new file system, of type "cgroup" may be mounted, to
-+In addition, a new file system of type "cgroup" may be mounted, to
- enable browsing and modifying the cgroups presently known to the
- kernel.  When mounting a cgroup hierarchy, you may specify a
- comma-separated list of subsystems to mount as the filesystem mount
-@@ -230,13 +230,13 @@ as the path relative to the root of the cgroup file system.
- Each cgroup is represented by a directory in the cgroup file system
- containing the following files describing that cgroup:
+@@ -486,7 +486,7 @@ You can reset failcnt by writing 0 to failcnt file.
  
-- - tasks: list of tasks (by pid) attached to that cgroup.  This list
--   is not guaranteed to be sorted.  Writing a thread id into this file
-+ - tasks: list of tasks (by PID) attached to that cgroup.  This list
-+   is not guaranteed to be sorted.  Writing a thread ID into this file
-    moves the thread into this cgroup.
-- - cgroup.procs: list of tgids in the cgroup.  This list is not
--   guaranteed to be sorted or free of duplicate tgids, and userspace
-+ - cgroup.procs: list of thread group IDs in the cgroup.  This list is
-+   not guaranteed to be sorted or free of duplicate TGIDs, and userspace
-    should sort/uniquify the list if this property is required.
--   Writing a thread group id into this file moves all threads in that
-+   Writing a thread group ID into this file moves all threads in that
-    group into this cgroup.
-  - notify_on_release flag: run the release agent on exit?
-  - release_agent: the path to use for release notifications (this file
-@@ -261,7 +261,7 @@ cgroup file system directories.
+ For efficiency, as other kernel components, memory cgroup uses some optimization
+ to avoid unnecessary cacheline false sharing. usage_in_bytes is affected by the
+-method and doesn't show 'exact' value of memory(and swap) usage, it's an fuzz
++method and doesn't show 'exact' value of memory (and swap) usage, it's a fuzz
+ value for efficient access. (Of course, when necessary, it's synchronized.)
+ If you want to know more exact memory usage, you should use RSS+CACHE(+SWAP)
+ value in memory.stat(see 5.2).
+@@ -496,8 +496,8 @@ value in memory.stat(see 5.2).
+ This is similar to numa_maps but operates on a per-memcg basis.  This is
+ useful for providing visibility into the numa locality information within
+ an memcg since the pages are allowed to be allocated from any physical
+-node.  One of the usecases is evaluating application performance by
+-combining this information with the application's cpu allocation.
++node.  One of the use cases is evaluating application performance by
++combining this information with the application's CPU allocation.
  
- When a task is moved from one cgroup to another, it gets a new
- css_set pointer - if there's an already existing css_set with the
--desired collection of cgroups then that group is reused, else a new
-+desired collection of cgroups then that group is reused, otherwise a new
- css_set is allocated. The appropriate existing css_set is located by
- looking into a hash table.
+ We export "total", "file", "anon" and "unevictable" pages per-node for
+ each memcg.  The ouput format of memory.numa_stat is:
+@@ -561,10 +561,10 @@ are pushed back to their soft limits. If the soft limit of each control
+ group is very high, they are pushed back as much as possible to make
+ sure that one control group does not starve the others of memory.
  
-@@ -292,7 +292,7 @@ file system) of the abandoned cgroup.  This enables automatic
- removal of abandoned cgroups.  The default value of
- notify_on_release in the root cgroup at system boot is disabled
- (0).  The default value of other cgroups at creation is the current
--value of their parents notify_on_release setting. The default value of
-+value of their parents' notify_on_release settings. The default value of
- a cgroup hierarchy's release_agent path is empty.
+-Please note that soft limits is a best effort feature, it comes with
++Please note that soft limits is a best-effort feature; it comes with
+ no guarantees, but it does its best to make sure that when memory is
+ heavily contended for, memory is allocated based on the soft limit
+-hints/setup. Currently soft limit based reclaim is setup such that
++hints/setup. Currently soft limit based reclaim is set up such that
+ it gets invoked from balance_pgdat (kswapd).
  
- 1.5 What does clone_children do ?
-@@ -316,7 +316,7 @@ the "cpuset" cgroup subsystem, the steps are something like:
-  4) Create the new cgroup by doing mkdir's and write's (or echo's) in
-     the /sys/fs/cgroup virtual file system.
-  5) Start a task that will be the "founding father" of the new job.
-- 6) Attach that task to the new cgroup by writing its pid to the
-+ 6) Attach that task to the new cgroup by writing its PID to the
-     /sys/fs/cgroup/cpuset/tasks file for that cgroup.
-  7) fork, exec or clone the job tasks from this founding father task.
+ 7.1 Interface
+@@ -592,7 +592,7 @@ page tables.
  
-@@ -344,7 +344,7 @@ and then start a subshell 'sh' in that cgroup:
- 2.1 Basic Usage
- ---------------
+ 8.1 Interface
  
--Creating, modifying, using the cgroups can be done through the cgroup
-+Creating, modifying, using cgroups can be done through the cgroup
- virtual filesystem.
+-This feature is disabled by default. It can be enabled(and disabled again) by
++This feature is disabled by default. It can be enabledi (and disabled again) by
+ writing to memory.move_charge_at_immigrate of the destination cgroup.
  
- To mount a cgroup hierarchy with all available subsystems, type:
-@@ -441,7 +441,7 @@ You can attach the current shell task by echoing 0:
- # echo 0 > tasks
+ If you want to enable it:
+@@ -601,8 +601,8 @@ If you want to enable it:
  
- You can use the cgroup.procs file instead of the tasks file to move all
--threads in a threadgroup at once. Echoing the pid of any task in a
-+threads in a threadgroup at once. Echoing the PID of any task in a
- threadgroup to cgroup.procs causes all tasks in that threadgroup to be
- be attached to the cgroup. Writing 0 to cgroup.procs moves all tasks
- in the writing task's threadgroup.
-@@ -479,7 +479,7 @@ in /proc/mounts and /proc/<pid>/cgroups.
- There is mechanism which allows to get notifications about changing
- status of a cgroup.
+ Note: Each bits of move_charge_at_immigrate has its own meaning about what type
+       of charges should be moved. See 8.2 for details.
+-Note: Charges are moved only when you move mm->owner, IOW, a leader of a thread
+-      group.
++Note: Charges are moved only when you move mm->owner, in other words,
++      a leader of a thread group.
+ Note: If we cannot find enough space for the task in the destination cgroup, we
+       try to make space by reclaiming memory. Task migration may fail if we
+       cannot make enough space.
+@@ -612,25 +612,25 @@ And if you want disable it again:
  
--To register new notification handler you need:
-+To register a new notification handler you need to:
-  - create a file descriptor for event notification using eventfd(2);
-  - open a control file to be monitored (e.g. memory.usage_in_bytes);
-  - write "<event_fd> <control_fd> <args>" to cgroup.event_control.
-@@ -488,7 +488,7 @@ To register new notification handler you need:
- eventfd will be woken up by control file implementation or when the
- cgroup is removed.
+ # echo 0 > memory.move_charge_at_immigrate
  
--To unregister notification handler just close eventfd.
-+To unregister a notification handler just close eventfd.
+-8.2 Type of charges which can be move
++8.2 Type of charges which can be moved
  
- NOTE: Support of notifications should be implemented for the control
- file. See documentation for the subsystem.
-@@ -502,7 +502,7 @@ file. See documentation for the subsystem.
- Each kernel subsystem that wants to hook into the generic cgroup
- system needs to create a cgroup_subsys object. This contains
- various methods, which are callbacks from the cgroup system, along
--with a subsystem id which will be assigned by the cgroup system.
-+with a subsystem ID which will be assigned by the cgroup system.
+-Each bits of move_charge_at_immigrate has its own meaning about what type of
+-charges should be moved. But in any cases, it must be noted that an account of
+-a page or a swap can be moved only when it is charged to the task's current(old)
+-memory cgroup.
++Each bit in move_charge_at_immigrate has its own meaning about what type of
++charges should be moved. But in any case, it must be noted that an account of
++a page or a swap can be moved only when it is charged to the task's current
++(old) memory cgroup.
  
- Other fields in the cgroup_subsys object include:
+   bit | what type of charges would be moved ?
+  -----+------------------------------------------------------------------------
+-   0  | A charge of an anonymous page(or swap of it) used by the target task.
+-      | You must enable Swap Extension(see 2.4) to enable move of swap charges.
++   0  | A charge of an anonymous page (or swap of it) used by the target task.
++      | You must enable Swap Extension (see 2.4) to enable move of swap charges.
+  -----+------------------------------------------------------------------------
+-   1  | A charge of file pages(normal file, tmpfs file(e.g. ipc shared memory)
++   1  | A charge of file pages (normal file, tmpfs file (e.g. ipc shared memory)
+       | and swaps of tmpfs file) mmapped by the target task. Unlike the case of
+-      | anonymous pages, file pages(and swaps) in the range mmapped by the task
++      | anonymous pages, file pages (and swaps) in the range mmapped by the task
+       | will be moved even if the task hasn't done page fault, i.e. they might
+       | not be the task's "RSS", but other task's "RSS" that maps the same file.
+-      | And mapcount of the page is ignored(the page can be moved even if
+-      | page_mapcount(page) > 1). You must enable Swap Extension(see 2.4) to
++      | And mapcount of the page is ignored (the page can be moved even if
++      | page_mapcount(page) > 1). You must enable Swap Extension (see 2.4) to
+       | enable move of swap charges.
  
-@@ -516,7 +516,7 @@ Other fields in the cgroup_subsys object include:
-   at system boot.
+ 8.3 TODO
+@@ -640,11 +640,11 @@ memory cgroup.
  
- Each cgroup object created by the system has an array of pointers,
--indexed by subsystem id; this pointer is entirely managed by the
-+indexed by subsystem ID; this pointer is entirely managed by the
- subsystem; the generic cgroup code will never touch this pointer.
+ 9. Memory thresholds
  
- 3.2 Synchronization
-@@ -639,7 +639,7 @@ void post_clone(struct cgroup *cgrp)
+-Memory cgroup implements memory thresholds using cgroups notification
++Memory cgroup implements memory thresholds using the cgroups notification
+ API (see cgroups.txt). It allows to register multiple memory and memsw
+ thresholds and gets notifications when it crosses.
  
- Called during cgroup_create() to do any parameter
- initialization which might be required before a task could attach.  For
--example in cpusets, no task may attach before 'cpus' and 'mems' are set
-+example, in cpusets, no task may attach before 'cpus' and 'mems' are set
- up.
+-To register a threshold application need:
++To register a threshold, an application must:
+ - create an eventfd using eventfd(2);
+ - open memory.usage_in_bytes or memory.memsw.usage_in_bytes;
+ - write string like "<event_fd> <fd of memory.usage_in_bytes> <threshold>" to
+@@ -659,24 +659,24 @@ It's applicable for root and non-root cgroup.
  
- void bind(struct cgroup *root)
-@@ -660,5 +660,5 @@ A: bash's builtin 'echo' command does not check calls to write() against
+ memory.oom_control file is for OOM notification and other controls.
  
- Q: When I attach processes, only the first of the line gets really attached !
- A: We can only return one error code per call to write(). So you should also
--   put only ONE pid.
-+   put only ONE PID.
+-Memory cgroup implements OOM notifier using cgroup notification
++Memory cgroup implements OOM notifier using the cgroup notification
+ API (See cgroups.txt). It allows to register multiple OOM notification
+ delivery and gets notification when OOM happens.
  
+-To register a notifier, application need:
++To register a notifier, an application must:
+  - create an eventfd using eventfd(2)
+  - open memory.oom_control file
+  - write string like "<event_fd> <fd of memory.oom_control>" to
+    cgroup.event_control
+ 
+-Application will be notified through eventfd when OOM happens.
+-OOM notification doesn't work for root cgroup.
++The application will be notified through eventfd when OOM happens.
++OOM notification doesn't work for the root cgroup.
+ 
+-You can disable OOM-killer by writing "1" to memory.oom_control file, as:
++You can disable the OOM-killer by writing "1" to memory.oom_control file, as:
+ 
+ 	#echo 1 > memory.oom_control
+ 
+-This operation is only allowed to the top cgroup of sub-hierarchy.
++This operation is only allowed to the top cgroup of a sub-hierarchy.
+ If OOM-killer is disabled, tasks under cgroup will hang/sleep
+ in memory cgroup's OOM-waitqueue when they request accountable memory.
+ 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
