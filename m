@@ -1,276 +1,65 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH UPDATED RFC cgroup/for-3.7] cgroup: mark subsystems with
- broken hierarchy support and whine if cgroups are nested for them
-Date: Tue, 11 Sep 2012 11:23:56 -0700
-Message-ID: <20120911182356.GR7677@google.com>
-References: <20120910223125.GC7677@google.com>
- <20120910223355.GD7677@google.com>
-Mime-Version: 1.0
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 2/2] fs: add missing documentation to simple_xattr functions
+Date: Tue, 11 Sep 2012 16:28:11 -0400
+Message-ID: <20120911202810.725043407@napanee.usersys.redhat.com>
+References: <20120911202809.988739953@napanee.usersys.redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=R5xHTNHsoCzFEq6xlHAFN/RSWq52F1rNolrO+UOjQ+A=;
-        b=NbP2YkVZeDpAqggS51SpeFrD0jROT2CgRguZoxE6Ih+di/RgXW83nyIc1J9p227RQ3
-         /DP9QmhHcfK/0+z3SF8OtB7sKfSt2uhs9erYuvEySdh/3DoZCZ2y5xyq3/EtDULaepP0
-         5maRvtx4cgD3zXdeaySRZfsFlv2zRAM/YiVe5ykIls7K35j+o13G+BSjY7w4hcFhNnJ/
-         vYSAEBLMrZPPJZfzPwxN4Wo118FkUiFQ8xYSeW4pAWx5uhtmgtjrF5LUbsSIQugAH7ME
-         UKJCq9R5qV4+avhBkDiBEgiQ/V1IBopwY6Jv253Pjsr/vEfXGNs89j2N+WpWIzZfmD9O
-         JqYQ==
-Content-Disposition: inline
-In-Reply-To: <20120910223355.GD7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline; filename=simple_xattr_doc.txt
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Currently, cgroup hierarchy support is a mess.  cpu related subsystems
-behave correctly - configuration, accounting and control on a parent
-properly cover its children.  blkio and freezer completely ignore
-hierarchy and treat all cgroups as if they're directly under the root
-cgroup.  Others show yet different behaviors.
+v2: add function documentation instead of adding a separate file under
+    Documentation/
 
-These differing interpretations of cgroup hierarchy make using cgroup
-confusing and it impossible to co-mount controllers into the same
-hierarchy and obtain sane behavior.
-
-Eventually, we want full hierarchy support from all subsystems and
-probably a unified hierarchy.  Users using separate hierarchies
-expecting completely different behaviors depending on the mounted
-subsystem is deterimental to making any progress on this front.
-
-This patch adds cgroup_subsys.broken_hierarchy and sets it to %true
-for controllers which are lacking in hierarchy support.  The goal of
-this patch is two-fold.
-
-* Move users away from using hierarchy on currently non-hierarchical
-  subsystems, so that implementing proper hierarchy support on those
-  doesn't surprise them.
-
-* Keep track of which controllers are broken how and nudge the
-  subsystems to implement proper hierarchy support.
-
-For now, start with a single warning message.  We can whine louder
-later on.
-
-(I tried to document what's broken and how it should be fixed.  If I
- got something wrong, please let me know.)
-
-v2: Fixed a typo spotted by Michal.  Warning message updated.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
-Cc: Serge E. Hallyn <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Cc: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
 ---
-Here's a slightly updated version w/ updated warning message and typo
-fixed.
+ fs/xattr.c |   18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
-Thanks.
-
- block/blk-cgroup.c        |    8 ++++++++
- include/linux/cgroup.h    |   15 +++++++++++++++
- kernel/cgroup.c           |   12 +++++++++++-
- kernel/cgroup_freezer.c   |    8 ++++++++
- kernel/events/core.c      |    7 +++++++
- mm/memcontrol.c           |   12 +++++++++---
- net/core/netprio_cgroup.c |   12 +++++++++++-
- net/sched/cls_cgroup.c    |    9 +++++++++
- security/device_cgroup.c  |    9 +++++++++
- 9 files changed, 87 insertions(+), 5 deletions(-)
-
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -737,6 +737,14 @@ struct cgroup_subsys blkio_subsys = {
- 	.subsys_id = blkio_subsys_id,
- 	.base_cftypes = blkcg_files,
- 	.module = THIS_MODULE,
-+
-+	/*
-+	 * blkio subsystem is utterly broken in terms of hierarchy support.
-+	 * It treats all cgroups equally regardless of where they're
-+	 * located in the hierarchy - all cgroups are treated as if they're
-+	 * right below the root.  Fix it and remove the following.
-+	 */
-+	.broken_hierarchy = true,
- };
- EXPORT_SYMBOL_GPL(blkio_subsys);
+Index: github/fs/xattr.c
+===================================================================
+--- github.orig/fs/xattr.c	2012-09-11 14:48:12.648072176 -0400
++++ github/fs/xattr.c	2012-09-11 15:33:14.502770685 -0400
+@@ -892,8 +892,19 @@
  
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -503,6 +503,21 @@ struct cgroup_subsys {
- 	 */
- 	bool __DEPRECATED_clear_css_refs;
+ }
  
-+	/*
-+	 * If %false, this subsystem is properly hierarchical -
-+	 * configuration, resource accounting and restriction on a parent
-+	 * cgroup cover those of its children.  If %true, hierarchy support
-+	 * is broken in some ways - some subsystems ignore hierarchy
-+	 * completely while others are only implemented half-way.
-+	 *
-+	 * It's now diallowed to create nested cgroups if the subsystem is
-+	 * broken and cgroup core will emit a warning message on such
-+	 * cases.  Eventually, all subsystems will be made properly
-+	 * hierarchical and this will go away.
-+	 */
-+	bool broken_hierarchy;
-+	bool warned_broken_hierarchy;
-+
- #define MAX_CGROUP_TYPE_NAMELEN 32
- 	const char *name;
+-/*
+- * xattr SET operation for in-memory/pseudo filesystems
++/**
++ * simple_xattr_set: xattr SET operation for in-memory/pseudo filesystems
++ * @xattrs: simple_xattr list
++ * @name: name of the new extended attribute
++ * @value: value of the new extended attribute. If NULL, will remove the
++ *	   attribute
++ * @flags: if XATTR_CREATE is set, no already existing extended attribute may
++ *	   exist. If XATTR_REPLACE is set, the extended attribute should exist.
++ *
++ * returns -ENOMEM for allocation failures, -EEXIST in case XATTR_CREATE is
++ *	   set in flags and an extended attribute with the same name exists,
++ *	   -ENODATA if XATTR_REPLACE is set in flags but no entry with the
++ *	   specified name exists.
+  */
+ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 		     const void *value, size_t size, int flags)
+@@ -950,6 +961,9 @@
+ 	return used;
+ }
  
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4075,8 +4075,18 @@ static long cgroup_create(struct cgroup 
- 		set_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
- 
- 	for_each_subsys(root, ss) {
--		struct cgroup_subsys_state *css = ss->create(cgrp);
-+		struct cgroup_subsys_state *css;
-+
-+		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
-+		    parent->parent) {
-+			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
-+				   current->comm, current->pid, ss->name);
-+			if (!strcmp(ss->name, "memory"))
-+				pr_warning("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
-+			ss->warned_broken_hierarchy = true;
-+		}
- 
-+		css = ss->create(cgrp);
- 		if (IS_ERR(css)) {
- 			err = PTR_ERR(css);
- 			goto err_destroy;
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -373,4 +373,12 @@ struct cgroup_subsys freezer_subsys = {
- 	.can_attach	= freezer_can_attach,
- 	.fork		= freezer_fork,
- 	.base_cftypes	= files,
-+
-+	/*
-+	 * freezer subsys doesn't handle hierarchy at all.  Frozen state
-+	 * should be inherited through the hierarchy - if a parent is
-+	 * frozen, all its children should be frozen.  Fix it and remove
-+	 * the following.
-+	 */
-+	.broken_hierarchy = true,
- };
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -7285,5 +7285,12 @@ struct cgroup_subsys perf_subsys = {
- 	.destroy	= perf_cgroup_destroy,
- 	.exit		= perf_cgroup_exit,
- 	.attach		= perf_cgroup_attach,
-+
-+	/*
-+	 * perf_event cgroup doesn't handle nesting correctly.
-+	 * ctx->nr_cgroups adjustments should be propagated through the
-+	 * cgroup hierarchy.  Fix it and remove the following.
-+	 */
-+	.broken_hierarchy = true,
- };
- #endif /* CONFIG_CGROUP_PERF */
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3855,12 +3855,17 @@ static int mem_cgroup_hierarchy_write(st
- 	 */
- 	if ((!parent_memcg || !parent_memcg->use_hierarchy) &&
- 				(val == 1 || val == 0)) {
--		if (list_empty(&cont->children))
-+		if (list_empty(&cont->children)) {
- 			memcg->use_hierarchy = val;
--		else
-+			/* we're fully hierarchical iff root uses hierarchy */
-+			if (mem_cgroup_is_root(memcg))
-+				mem_cgroup_subsys.broken_hierarchy = !val;
-+		} else {
- 			retval = -EBUSY;
--	} else
-+		}
-+	} else {
- 		retval = -EINVAL;
-+	}
- 
- out:
- 	cgroup_unlock();
-@@ -4953,6 +4958,7 @@ mem_cgroup_create(struct cgroup *cont)
- 						&per_cpu(memcg_stock, cpu);
- 			INIT_WORK(&stock->work, drain_local_stock);
- 		}
-+		mem_cgroup_subsys.broken_hierarchy = !memcg->use_hierarchy;
- 		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
- 	} else {
- 		parent = mem_cgroup_from_cont(cont->parent);
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -330,7 +330,17 @@ struct cgroup_subsys net_prio_subsys = {
- 	.subsys_id	= net_prio_subsys_id,
- #endif
- 	.base_cftypes	= ss_files,
--	.module		= THIS_MODULE
-+	.module		= THIS_MODULE,
-+
-+	/*
-+	 * net_prio has artificial limit on the number of cgroups and
-+	 * disallows nesting making it impossible to co-mount it with other
-+	 * hierarchical subsystems.  Remove the artificially low PRIOIDX_SZ
-+	 * limit and properly nest configuration such that children follow
-+	 * their parents' configurations by default and are allowed to
-+	 * override and remove the following.
-+	 */
-+	.broken_hierarchy = true,
- };
- 
- static int netprio_device_event(struct notifier_block *unused,
---- a/net/sched/cls_cgroup.c
-+++ b/net/sched/cls_cgroup.c
-@@ -82,6 +82,15 @@ struct cgroup_subsys net_cls_subsys = {
- #endif
- 	.base_cftypes	= ss_files,
- 	.module		= THIS_MODULE,
-+
-+	/*
-+	 * While net_cls cgroup has the rudimentary hierarchy support of
-+	 * inheriting the parent's classid on cgroup creation, it doesn't
-+	 * properly propagates config changes in ancestors to their
-+	 * descendents.  A child should follow the parent's configuration
-+	 * but be allowed to override it.  Fix it and remove the following.
-+	 */
-+	.broken_hierarchy = true,
- };
- 
- struct cls_cgroup_head {
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -457,6 +457,15 @@ struct cgroup_subsys devices_subsys = {
- 	.destroy = devcgroup_destroy,
- 	.subsys_id = devices_subsys_id,
- 	.base_cftypes = dev_cgroup_files,
-+
-+	/*
-+	 * While devices cgroup has the rudimentary hierarchy support which
-+	 * checks the parent's restriction, it doesn't properly propagates
-+	 * config changes in ancestors to their descendents.  A child
-+	 * should only be allowed to add more restrictions to the parent's
-+	 * configuration.  Fix it and remove the following.
-+	 */
-+	.broken_hierarchy = true,
- };
- 
- int __devcgroup_inode_permission(struct inode *inode, int mask)
++/*
++ * Adds an extended attribute to the list
++ */
+ void simple_xattr_list_add(struct simple_xattrs *xattrs,
+ 			   struct simple_xattr *new_xattr)
+ {
