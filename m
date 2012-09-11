@@ -1,70 +1,56 @@
-From: Aristeu Rozanski <aris@redhat.com>
-Subject: [PATCH v2 1/2] cgroups: add documentation on extended attributes usage
-Date: Tue, 11 Sep 2012 16:28:10 -0400
-Message-ID: <20120911202810.406133423@napanee.usersys.redhat.com>
-References: <20120911202809.988739953@napanee.usersys.redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=doc.patch
-Sender: linux-kernel-owner@vger.kernel.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 3/8] cgroup: net_prio: Do not define
+ task_netpioidx() when not selected
+Date: Tue, 11 Sep 2012 13:37:28 -0700
+Message-ID: <20120911203728.GX7677@google.com>
+References: <1347380774-9546-1-git-send-email-wagi@monom.org>
+ <1347380774-9546-4-git-send-email-wagi@monom.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=/EMLiexb4clZPCckmYdEOJBjaGMGvDOA+gGyizxdk8Q=;
+        b=CjNynDVamvjgfNY2baeLF+hZGn21khI5aKDMsKuBmIf1N64/+w7GHRkky6dDQcIrKt
+         vj0Fpn94gF6oCel2ZKz3UQFvZkyjy17LV6NZHXBcV+QqhrfWTTdITvG3zotEAmdTcpYk
+         FSTqEdPU5kXjwLuG8A/dsZFLSOweOLqAa/s34VOWBlh+0jtp6B7CVBAvmo7brNbRYLvx
+         vjgWcKgICk58kZGwbY0uq7LkM7BXEQ2KfI/azCMXQC6DPE1nX2VCWp3uvEo2FUV7iUrs
+         sxA5hA7BX7D5L7MbXsxOdz+x2lPUGl7hxKGwU7BdY/9Xq/K+DyYMprQ8YkMrdqAYMTve
+         AZXA==
+Content-Disposition: inline
+In-Reply-To: <1347380774-9546-4-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Hillf Danton <dhillf@gmail.com>, Lennart Poettering <lpoetter@redhat.com>, Hugh Dickins <hughd@google.com>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-v2: update cgroups.txt instead of creating a new file
+On Tue, Sep 11, 2012 at 06:26:09PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> 
+> task_netprioidx() should not be defined in case the configuration is
+> CONFIG_NETPRIO_CGROUP=n. The reason is that in a following patch the
+> net_prio_subsys_id will only be defined if CONFIG_NETPRIO_CGROUP!=n.
+> When net_prio is not built at all any callee should only get an empty
+> task_netprioidx() without any references to net_prio_subsys_id.
+> 
+> Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
+> Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Hillf Danton <dhillf@gmail.com>
-Cc: Lennart Poettering <lpoetter@redhat.com>
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+For 1-3.
 
----
- Documentation/cgroups/cgroups.txt |   24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+  Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Index: github/Documentation/cgroups/cgroups.txt
-===================================================================
---- github.orig/Documentation/cgroups/cgroups.txt	2012-08-16 10:24:48.437596817 -0400
-+++ github/Documentation/cgroups/cgroups.txt	2012-09-07 10:23:19.974357952 -0400
-@@ -29,7 +29,8 @@
-   3.1 Overview
-   3.2 Synchronization
-   3.3 Subsystem API
--4. Questions
-+4. Extended attributes usage
-+5. Questions
- 
- 1. Control Groups
- =================
-@@ -650,7 +651,26 @@
- the default hierarchy (which never has sub-cgroups) and a hierarchy
- that is being created/destroyed (and hence has no sub-cgroups).
- 
--4. Questions
-+4. Extended attribute usage
-+===========================
-+
-+cgroup filesystem supports certain types of extended attributes in its
-+directories and files.  The current supported types are:
-+	- Trusted (XATTR_TRUSTED)
-+	- Security (XATTR_SECURITY)
-+
-+Both require CAP_SYS_ADMIN capability to set.
-+
-+Like in tmpfs, the extended attributes in cgroup filesystem are stored
-+using kernel memory and it's advised to keep the usage at minimum.  This
-+is the reason why user defined extended attributes are not supported, since
-+any user can do it and there's no limit in the value size.
-+
-+The current known users for this feature are SELinux to limit cgroup usage
-+in containers and systemd for assorted meta data like main PID in a cgroup
-+(systemd creates a cgroup per service).
-+
-+5. Questions
- ============
- 
- Q: what's up with this '/bin/echo' ?
+Thanks.
+
+-- 
+tejun
