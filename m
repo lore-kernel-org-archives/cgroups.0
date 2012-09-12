@@ -1,59 +1,47 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
-	broken hierarchy support and whine if cgroups are nested for them
-Date: Wed, 12 Sep 2012 10:11:20 -0700
-Message-ID: <20120912171120.GP7677@google.com>
-References: <20120910223125.GC7677@google.com>
-	<20120910223355.GD7677@google.com>
-	<20120911100433.GC8058@dhcp22.suse.cz>
-	<5050568B.9090601@parallels.com>
-	<20120912154907.GW21579@dhcp22.suse.cz>
+Subject: Re: [PATCH] xattr: mark variable as uninitialized to make both gcc
+ and smatch happy
+Date: Wed, 12 Sep 2012 11:42:00 -0700
+Message-ID: <20120912184200.GQ7677@google.com>
+References: <20120912022813.GA17922@localhost>
+ <20120912075517.GZ19396@mwanda>
+ <20120912143112.GE19694@redhat.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=DnOWTGv6au3nRwFqw9AHeLoFbyZ5g1O+BB3vtS2rMhI=;
+        b=NzHbCHtMjZTDx5x/Xr4x9zdBffEEOBSFMOgEVPNgd5chOJh9QKAv6zfV9dbis3Tp4x
+         C0Ej7RFnfpWZ2jCtuk98Az/FKYlkuxe8W8Il/n150kWExj/J0hhzip2E4DL9TIlVoJJ1
+         IyOqlZm5YTEimxOqv6RyNJwTeCNjGGshO3gJg4AZbNyMMSsak2SHozqOmDOhSsR7Kuh2
+         bYNyTBtmA6vbGbwsrM9uUlE4SuDrK1sKj7hJOlIa57/bVV2ByqpDac5L/7aB7ZQQyzO0
+         epcvEbnLe0QnQo0GGTEFhBlgxFgLF3Ig2CVR8Wjz7c2087+1usiUNIvqwqiLVWleMqlh
+         hEbg==
+Content-Disposition: inline
+In-Reply-To: <20120912143112.GE19694-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=dqcfEPtDMXzvg/Vis/c8Sm/MYKydQPVM3C3HcFNKZP0=;
-	b=uLWXoYp1boeZQi5Fqe+I9o6RPRNVXUr7duaM/i23Fwcj7DodCoq3W6/9m59kwBO3eS
-	o8K/3h0w4VfUoeteKmC9cLXXwqNlNe/cmNvXAPr/vYng3+6YmETGtissz6hHTeF3Tkut
-	Y0rFeCtZA4tu1/2xcOqNNqFcwBQ89xmrSCieOgy6AgewBMcusm9GcCqYuuZPxq/0dXv0
-	zKqbsjjslR8E3qAzuHOK1FUzVSJ/P3oBLpGvV/HbxszFrPwLuY3XTNk8hP2W5ENdsZCK
-	zq0rrQ7J4O0KXp6UkYdR3/PzLxsywrWOjDU4rcwi1WGIkuDmPasY3jUkUN2ZXxW6bwe/
-	uJqg==
-Content-Disposition: inline
-In-Reply-To: <20120912154907.GW21579-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-Hello,
-
-On Wed, Sep 12, 2012 at 05:49:07PM +0200, Michal Hocko wrote:
-> > While I respect your goal of not warning about any configuration
-> > with max_level = 1, I believe the only sane configuration as soon
-> > as we get any 2nd-level child is use_hierarchy = 1 for everybody.
-> > 
-> > Everything aside from it should be warned.
+On Wed, Sep 12, 2012 at 10:31:13AM -0400, Aristeu Rozanski wrote:
+> new_xattr in __simple_xattr_set() is only initialized with a valid
+> pointer if value is not NULL, which only happens if this function is
+> called directly with the intention to remove an existing extended
+> attribute. Even being safe to be this way, smatch warns about possible
+> NULL dereference. Dan Carpenter suggested using uninitialized_var()
+> which will make both gcc and smatch happy.
 > 
-> Defintely. And that what the above guarantess, doesn't it?
+> Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-I'm getting a bit worried that I might not be fully understanding what
-your concern is.  Can you please elaborate what your worries are and
-the transition plan that you have in your mind regarding
-.use_hierarchy?
-
-Thanks.
+applied to cgroup/for-3.7. Thanks.
 
 -- 
 tejun
