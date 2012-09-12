@@ -1,45 +1,70 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] xattr: mark variable as uninitialized to make both gcc and
- smatch happy
-Date: Wed, 12 Sep 2012 10:31:13 -0400
-Message-ID: <20120912143112.GE19694@redhat.com>
-References: <20120912022813.GA17922@localhost>
- <20120912075517.GZ19396@mwanda>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
+ broken hierarchy support and whine if cgroups are nested for them
+Date: Wed, 12 Sep 2012 17:47:45 +0200
+Message-ID: <20120912154745.GV21579@dhcp22.suse.cz>
+References: <20120910223125.GC7677@google.com>
+ <20120910223355.GD7677@google.com>
+ <20120911100433.GC8058@dhcp22.suse.cz>
+ <20120911170746.GL7677@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120912075517.GZ19396@mwanda>
+In-Reply-To: <20120911170746.GL7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-new_xattr in __simple_xattr_set() is only initialized with a valid
-pointer if value is not NULL, which only happens if this function is
-called directly with the intention to remove an existing extended
-attribute. Even being safe to be this way, smatch warns about possible
-NULL dereference. Dan Carpenter suggested using uninitialized_var()
-which will make both gcc and smatch happy.
+On Tue 11-09-12 10:07:46, Tejun Heo wrote:
+> Hello, Michal.
+> 
+> On Tue, Sep 11, 2012 at 12:04:33PM +0200, Michal Hocko wrote:
+> > >  	cgroup_unlock();
+> > > @@ -4953,6 +4958,7 @@ mem_cgroup_create(struct cgroup *cont)
+> > >  						&per_cpu(memcg_stock, cpu);
+> > >  			INIT_WORK(&stock->work, drain_local_stock);
+> > >  		}
+> > > +		mem_cgroup_subsys.broken_hierarchy = !memcg->use_hierarchy;
+> > 
+> > Hmmm, this will warn even if we have
+> > root (default use_hierarchy=0)
+> >  \
+> >   A (use_hierarchy=1)
+> >    \
+> >     B <- here
+> > 
+> > which is unfortunate because it will add a noise to a reasonable
+> > configuration.
+> 
+> I suppose you're talking about having root group not performing any
+> accounting and/or control?
 
-Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+It doesn't do any controlling because you cannot set any limit for it.
+Root cgroup has always been special.
 
----
- fs/xattr.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> I suppose such could be a valid use case
+> (is it really necessary tho?)  but I don't think .use_hierarchy is the
+> right interface for that.  
 
---- a/fs/xattr.c	2012-09-12 09:57:35.000000000 -0400
-+++ b/fs/xattr.c	2012-09-12 09:58:25.619387047 -0400
-@@ -845,7 +845,7 @@ static int __simple_xattr_set(struct sim
- 			      const void *value, size_t size, int flags)
- {
- 	struct simple_xattr *xattr;
--	struct simple_xattr *new_xattr = NULL;
-+	struct simple_xattr *uninitialized_var(new_xattr);
- 	int err = 0;
- 
- 	/* value == NULL means remove */
+I am not sure I understand what you mean by that. My only concern with
+is that we shouldn't complain if somebody doesn't do anything wrong.
+And creating a group under root without any other children, no matter
+what use_hierarchy says, is a valid use case and we shouldn't make too
+much noise about that.
+The only difference in such a use case is that hierarchical stats will
+include numbers from the group only if root had use_hierarchy==1. There
+are no other side effects.
+
+> If it's absolutely necessary, I think it should be a root-only flag
+> (even if that ends up using the same code path).  Eventually, we
+> really want to kill .use_hierarchy, or at least make it to RO 1.  As
+> it's currently defined, it's just way too confusing.
+
+Agreed on that, definitely.
+
+-- 
+Michal Hocko
+SUSE Labs
