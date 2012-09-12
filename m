@@ -1,52 +1,95 @@
-From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next 5/6] fs/xattr.c:882 __simple_xattr_set() error:
- potential NULL dereference 'new_xattr'.
-Date: Wed, 12 Sep 2012 10:28:13 +0800
-Message-ID: <20120912022813.GA17922@localhost>
+From: Sachin Kamat <sachin.kamat-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol.c: Remove duplicate inclusion of sock.h file
+Date: Wed, 12 Sep 2012 09:09:49 +0530
+Message-ID: <CAK9yfHzy3LyNa93aieSSWn_B8ycvr0VsBZ=yjuHwj2qEJ8_fCw@mail.gmail.com>
+References: <1347350934-17712-1-git-send-email-sachin.kamat@linaro.org>
+	<20120911095200.GB8058@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
+In-Reply-To: <20120911095200.GB8058-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi Aristeu,
+On 11 September 2012 15:22, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> On Tue 11-09-12 13:38:54, Sachin Kamat wrote:
+>> net/sock.h is included unconditionally at the beginning of the file.
+>> Hence, another conditional include is not required.
+>
+> I guess we can do little bit better. What do you think about the
+> following?  I have compile tested this with:
+> - CONFIG_INET=y && CONFIG_MEMCG_KMEM=n
+> - CONFIG_MEMCG_KMEM=y
 
-FYI, there are new smatch warnings show up in
+Since you have compile tested this with different config options, your
+method looks better.
+Thanks.
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-head:   9814e970d7947dcc5ab7b37a53514c0098bfacc9
-commit: 38f38657444d15e1a8574eae80ed3de9f501737a xattr: extract simple_xattr code from tmpfs
+> ---
+> From 83c5a97e893b5379b7e93cfdc933d5e37756e70a Mon Sep 17 00:00:00 2001
+> From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Date: Tue, 11 Sep 2012 10:38:42 +0200
+> Subject: [PATCH] memcg: clean up networking headers file inclusion
+>
+> Memory controller doesn't need anything from the networking stack unless
+> CONFIG_MEMCG_KMEM is selected.
+> Now we are including net/sock.h and net/tcp_memcontrol.h unconditionally
+> which is not necessary. Moreover struct mem_cgroup contains tcp_mem even
+> if CONFIG_MEMCG_KMEM is not selected which is not necessary.
+>
+> Signed-off-by: Sachin Kamat <sachin.kamat-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> ---
+>  mm/memcontrol.c |    8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 795e525..85ec9ff 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -50,8 +50,12 @@
+>  #include <linux/cpu.h>
+>  #include <linux/oom.h>
+>  #include "internal.h"
+> +
+> +#ifdef CONFIG_MEMCG_KMEM
+>  #include <net/sock.h>
+> +#include <net/ip.h>
+>  #include <net/tcp_memcontrol.h>
+> +#endif
+>
+>  #include <asm/uaccess.h>
+>
+> @@ -326,7 +330,7 @@ struct mem_cgroup {
+>         struct mem_cgroup_stat_cpu nocpu_base;
+>         spinlock_t pcp_counter_lock;
+>
+> -#ifdef CONFIG_INET
+> +#ifdef CONFIG_MEMCG_KMEM
+>         struct tcp_memcontrol tcp_mem;
+>  #endif
+>  };
+> @@ -413,8 +417,6 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+>
+>  /* Writing them here to avoid exposing memcg's inner layout */
+>  #ifdef CONFIG_MEMCG_KMEM
+> -#include <net/sock.h>
+> -#include <net/ip.h>
+>
+>  static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
+>  void sock_update_memcg(struct sock *sk)
+> --
+> 1.7.10.4
+>
+> --
+> Michal Hocko
+> SUSE Labs
 
 
-fs/xattr.c:882 __simple_xattr_set() error: potential NULL dereference 'new_xattr'.
 
-vim +882 fs/xattr.c
-   872				} else {
-   873					list_del(&xattr->list);
-   874				}
-   875				goto out;
-   876			}
-   877		}
-   878		if (flags & XATTR_REPLACE) {
-   879			xattr = new_xattr;
-   880			err = -ENODATA;
-   881		} else {
- > 882			list_add(&new_xattr->list, &xattrs->head);
-   883			xattr = NULL;
-   884		}
-   885	out:
-   886		spin_unlock(&xattrs->lock);
-   887		if (xattr) {
-   888			kfree(xattr->name);
-   889			kfree(xattr);
-   890		}
-   891		return err;
-   892	
-
----
-0-DAY kernel build testing backend         Open Source Technology Centre
-Fengguang Wu <wfg-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>                     Intel Corporation
+-- 
+With warm regards,
+Sachin
