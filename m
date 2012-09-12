@@ -1,41 +1,116 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
-	broken hierarchy support and whine if cgroups are nested for them
-Date: Wed, 12 Sep 2012 13:37:28 +0400
-Message-ID: <505057D8.4010908@parallels.com>
-References: <20120910223125.GC7677@google.com>
-	<20120910223355.GD7677@google.com> <504F30DB.60808@huawei.com>
-	<20120911170837.GM7677@google.com>
-	<20120911174319.GO7677@google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol.c: Remove duplicate inclusion of sock.h
+ file
+Date: Wed, 12 Sep 2012 14:56:47 +0200
+Message-ID: <20120912125647.GH21579@dhcp22.suse.cz>
+References: <1347350934-17712-1-git-send-email-sachin.kamat@linaro.org>
+ <20120911095200.GB8058@dhcp22.suse.cz>
+ <20120912072520.GB17516@dhcp22.suse.cz>
+ <50504CE1.8030509@parallels.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <50504CE1.8030509-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20120911174319.GO7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Sachin Kamat <sachin.kamat-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On 09/11/2012 09:43 PM, Tejun Heo wrote:
-> Hmm... Looked at it and I don't think hierarchy support is broken w/
-> or w/o exclusive.  Can you please elaborate?
+On Wed 12-09-12 12:50:41, Glauber Costa wrote:
+[...]
+> >> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> >> index 795e525..85ec9ff 100644
+> >> --- a/mm/memcontrol.c
+> >> +++ b/mm/memcontrol.c
+> >> @@ -50,8 +50,12 @@
+> >>  #include <linux/cpu.h>
+> >>  #include <linux/oom.h>
+> >>  #include "internal.h"
+> >> +
+> >> +#ifdef CONFIG_MEMCG_KMEM
+> >>  #include <net/sock.h>
+> >> +#include <net/ip.h>
+> >>  #include <net/tcp_memcontrol.h>
+> >> +#endif
+> >>  
+> >>  #include <asm/uaccess.h>
+> >>  
+> >> @@ -326,7 +330,7 @@ struct mem_cgroup {
+> >>  	struct mem_cgroup_stat_cpu nocpu_base;
+> >>  	spinlock_t pcp_counter_lock;
+> >>  
+> >> -#ifdef CONFIG_INET
+> >> +#ifdef CONFIG_MEMCG_KMEM
+> >>  	struct tcp_memcontrol tcp_mem;
+> >>  #endif
+> >>  };
 > 
-> Thanks.
+> If you are changing this, why not test for both? This field will be
+> useless with inet disabled. I usually don't like conditional in
+> structures (note that the "kmem" res counter in my patchsets is not
+> conditional to KMEM!!), but since the decision was made to make this one
+> conditional, I think INET is a much better test. I am fine with both though.
+ 
+ You are right of course. Updated patch bellow:
+---
+From 9c465974c27859b6230065436b16e5c86a717291 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Tue, 11 Sep 2012 10:38:42 +0200
+Subject: [PATCH] memcg: clean up networking headers file inclusion
 
-From the docs:
+Memory controller doesn't need anything from the networking stack unless
+CONFIG_MEMCG_KMEM is selected.
+Now we are including net/sock.h and net/tcp_memcontrol.h unconditionally
+which is not necessary. Moreover struct mem_cgroup contains tcp_mem even
+if CONFIG_MEMCG_KMEM is not selected which is not necessary.
 
-"If a cpuset is cpu or mem exclusive, no other cpuset, other than
-a direct ancestor or descendant, may share any of the same CPUs or
-Memory Nodes."
+Signed-off-by: Sachin Kamat <sachin.kamat-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ mm/memcontrol.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-So I think it tricked me as well. I was under the impression that
-"exclusive" would also disallow the kids.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 795e525..369b552 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -50,8 +50,12 @@
+ #include <linux/cpu.h>
+ #include <linux/oom.h>
+ #include "internal.h"
++
++#ifdef CONFIG_MEMCG_KMEM && CONFIG_INET
+ #include <net/sock.h>
++#include <net/ip.h>
+ #include <net/tcp_memcontrol.h>
++#endif
+ 
+ #include <asm/uaccess.h>
+ 
+@@ -326,7 +330,7 @@ struct mem_cgroup {
+ 	struct mem_cgroup_stat_cpu nocpu_base;
+ 	spinlock_t pcp_counter_lock;
+ 
+-#ifdef CONFIG_INET
++#ifdef CONFIG_MEMCG_KMEM && CONFIG_INET
+ 	struct tcp_memcontrol tcp_mem;
+ #endif
+ };
+@@ -413,8 +417,6 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+ 
+ /* Writing them here to avoid exposing memcg's inner layout */
+ #ifdef CONFIG_MEMCG_KMEM
+-#include <net/sock.h>
+-#include <net/ip.h>
+ 
+ static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
+ void sock_update_memcg(struct sock *sk)
+-- 
+1.7.10.4
+
+
+-- 
+Michal Hocko
+SUSE Labs
