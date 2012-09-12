@@ -1,102 +1,45 @@
-From: Daniel Wagner <wagi@monom.org>
-Subject: [PATCH v4 3/8] cgroup: net_prio: Do not define task_netpioidx() when not selected
-Date: Wed, 12 Sep 2012 16:12:03 +0200
-Message-ID: <1347459128-32236-4-git-send-email-wagi@monom.org>
-References: <1347459128-32236-1-git-send-email-wagi@monom.org>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1347459128-32236-1-git-send-email-wagi@monom.org>
-Sender: netdev-owner@vger.kernel.org
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] xattr: mark variable as uninitialized to make both gcc and
+ smatch happy
+Date: Wed, 12 Sep 2012 10:31:13 -0400
+Message-ID: <20120912143112.GE19694@redhat.com>
+References: <20120912022813.GA17922@localhost>
+ <20120912075517.GZ19396@mwanda>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120912075517.GZ19396@mwanda>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: netdev@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>, Gao feng <gaofeng@cn.fujitsu.com>, Jamal Hadi Salim <jhs@mojatatu.com>, John Fastabend <john.r.fastabend@intel.com>, Li Zefan <lizefan@huawei.com>, Neil Horman <nhorman@tuxdriver.com>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+new_xattr in __simple_xattr_set() is only initialized with a valid
+pointer if value is not NULL, which only happens if this function is
+called directly with the intention to remove an existing extended
+attribute. Even being safe to be this way, smatch warns about possible
+NULL dereference. Dan Carpenter suggested using uninitialized_var()
+which will make both gcc and smatch happy.
 
-task_netprioidx() should not be defined in case the configuration is
-CONFIG_NETPRIO_CGROUP=n. The reason is that in a following patch the
-net_prio_subsys_id will only be defined if CONFIG_NETPRIO_CGROUP!=n.
-When net_prio is not built at all any callee should only get an empty
-task_netprioidx() without any references to net_prio_subsys_id.
+Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Acked-by: Tejun Heo <tj@kernel.org>
-Cc: Gao feng <gaofeng@cn.fujitsu.com>
-Cc: Jamal Hadi Salim <jhs@mojatatu.com>
-Cc: John Fastabend <john.r.fastabend@intel.com>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Neil Horman <nhorman@tuxdriver.com>
-Cc: netdev@vger.kernel.org
-Cc: cgroups@vger.kernel.org
 ---
- include/net/netprio_cgroup.h | 12 +++++-------
- net/core/sock.c              |  2 ++
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ fs/xattr.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/netprio_cgroup.h b/include/net/netprio_cgroup.h
-index 2719dec..b202de8 100644
---- a/include/net/netprio_cgroup.h
-+++ b/include/net/netprio_cgroup.h
-@@ -18,14 +18,13 @@
- #include <linux/rcupdate.h>
- 
- 
-+#if IS_ENABLED(CONFIG_NETPRIO_CGROUP)
- struct netprio_map {
- 	struct rcu_head rcu;
- 	u32 priomap_len;
- 	u32 priomap[];
- };
- 
--#ifdef CONFIG_CGROUPS
--
- struct cgroup_netprio_state {
- 	struct cgroup_subsys_state css;
- 	u32 prioidx;
-@@ -71,18 +70,17 @@ static inline u32 task_netprioidx(struct task_struct *p)
- 	rcu_read_unlock();
- 	return idx;
- }
-+#endif
- 
--#else
-+#else /* !CONFIG_NETPRIO_CGROUP */
- 
- static inline u32 task_netprioidx(struct task_struct *p)
+--- a/fs/xattr.c	2012-09-12 09:57:35.000000000 -0400
++++ b/fs/xattr.c	2012-09-12 09:58:25.619387047 -0400
+@@ -845,7 +845,7 @@ static int __simple_xattr_set(struct sim
+ 			      const void *value, size_t size, int flags)
  {
- 	return 0;
- }
+ 	struct simple_xattr *xattr;
+-	struct simple_xattr *new_xattr = NULL;
++	struct simple_xattr *uninitialized_var(new_xattr);
+ 	int err = 0;
  
--#endif /* CONFIG_NETPRIO_CGROUP */
--
--#else
- #define sock_update_netprioidx(sk, task)
--#endif
-+
-+#endif /* CONFIG_NETPRIO_CGROUP */
- 
- #endif  /* _NET_CLS_CGROUP_H */
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 82cadc6..ca3eaee 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -1237,6 +1237,7 @@ void sock_update_classid(struct sock *sk)
- EXPORT_SYMBOL(sock_update_classid);
- #endif
- 
-+#if IS_ENABLED(CONFIG_NETPRIO_CGROUP)
- void sock_update_netprioidx(struct sock *sk, struct task_struct *task)
- {
- 	if (in_interrupt())
-@@ -1246,6 +1247,7 @@ void sock_update_netprioidx(struct sock *sk, struct task_struct *task)
- }
- EXPORT_SYMBOL_GPL(sock_update_netprioidx);
- #endif
-+#endif
- 
- /**
-  *	sk_alloc - All socket objects are allocated here
--- 
-1.7.12.315.g682ce8b
+ 	/* value == NULL means remove */
