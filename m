@@ -1,55 +1,79 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [cgroup:for-next 5/6] fs/xattr.c:882 __simple_xattr_set() error:
- potential NULL dereference 'new_xattr'.
-Date: Wed, 12 Sep 2012 09:40:32 -0400
-Message-ID: <20120912134031.GC19694@redhat.com>
-References: <20120912022813.GA17922@localhost>
- <20120912075517.GZ19396@mwanda>
-Mime-Version: 1.0
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: [PATCH v4 1/8] cgroup: net_cls: Move sock_update_classid() declaration to cls_cgroup.h
+Date: Wed, 12 Sep 2012 16:12:01 +0200
+Message-ID: <1347459128-32236-2-git-send-email-wagi@monom.org>
+References: <1347459128-32236-1-git-send-email-wagi@monom.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120912075517.GZ19396@mwanda>
+In-Reply-To: <1347459128-32236-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-On Wed, Sep 12, 2012 at 10:55:17AM +0300, Dan Carpenter wrote:
-> On Wed, Sep 12, 2012 at 10:28:13AM +0800, Fengguang Wu wrote:
-> > Hi Aristeu,
-> > 
-> > FYI, there are new smatch warnings show up in
-> > 
-> > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-> > head:   9814e970d7947dcc5ab7b37a53514c0098bfacc9
-> > commit: 38f38657444d15e1a8574eae80ed3de9f501737a xattr: extract simple_xattr code from tmpfs
-> > 
-> > 
-> > fs/xattr.c:882 __simple_xattr_set() error: potential NULL dereference 'new_xattr'.
-> > 
-> 
-> I don't know if this specific code is buggy or not.  It would depend
-> on how the function is called.
+From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-this should be safe. the only way to have value == NULL (thus keeping
-new_xattr from being initialized) is if you call __simple_xattr_set()
-directly with the intention of removing an existing entry.
+The only user of sock_update_classid() is net/socket.c which happens
+to include cls_cgroup.h directly.
 
-> But potentially I should disable this Smatch rule.  It tends to have
-> a lot of false positives.  The thing is that GCC complains if you
-> don't initialize "new_xattr", but if you initialize it to NULL then
-> Smatch complains.
-> 
-> One solution might be to use the unitialized_var() macro.
-> 
-> -       struct simple_xattr *new_xattr = NULL;
-> +       struct simple_xattr *uninitialized_var(new_xattr);
-> 
-> That would make both GCC and Smatch happy.
+Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
+Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ include/net/cls_cgroup.h | 6 ++++++
+ include/net/sock.h       | 8 --------
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-Sounds good to me. Will get a patch ready. Thanks Dan.
-
+diff --git a/include/net/cls_cgroup.h b/include/net/cls_cgroup.h
+index a4dc5b0..e88527a 100644
+--- a/include/net/cls_cgroup.h
++++ b/include/net/cls_cgroup.h
+@@ -24,6 +24,8 @@ struct cgroup_cls_state
+ 	u32 classid;
+ };
+ 
++extern void sock_update_classid(struct sock *sk);
++
+ #ifdef CONFIG_NET_CLS_CGROUP
+ static inline u32 task_cls_classid(struct task_struct *p)
+ {
+@@ -62,6 +64,10 @@ static inline u32 task_cls_classid(struct task_struct *p)
+ }
+ #endif
+ #else
++static inline void sock_update_classid(struct sock *sk)
++{
++}
++
+ static inline u32 task_cls_classid(struct task_struct *p)
+ {
+ 	return 0;
+diff --git a/include/net/sock.h b/include/net/sock.h
+index 72132ae..160a680 100644
+--- a/include/net/sock.h
++++ b/include/net/sock.h
+@@ -1486,14 +1486,6 @@ extern void *sock_kmalloc(struct sock *sk, int size,
+ extern void sock_kfree_s(struct sock *sk, void *mem, int size);
+ extern void sk_send_sigurg(struct sock *sk);
+ 
+-#ifdef CONFIG_CGROUPS
+-extern void sock_update_classid(struct sock *sk);
+-#else
+-static inline void sock_update_classid(struct sock *sk)
+-{
+-}
+-#endif
+-
+ /*
+  * Functions to fill in entries in struct proto_ops when a protocol
+  * does not implement a particular function.
 -- 
-Aristeu
+1.7.12.315.g682ce8b
