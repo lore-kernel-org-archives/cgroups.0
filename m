@@ -1,47 +1,55 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] xattr: mark variable as uninitialized to make both gcc
- and smatch happy
-Date: Wed, 12 Sep 2012 11:42:00 -0700
-Message-ID: <20120912184200.GQ7677@google.com>
-References: <20120912022813.GA17922@localhost>
- <20120912075517.GZ19396@mwanda>
- <20120912143112.GE19694@redhat.com>
+Subject: Re: [PATCH v4 0/8] cgroup: Assign subsystem IDs during compile time
+Date: Wed, 12 Sep 2012 11:56:36 -0700
+Message-ID: <20120912185636.GR7677@google.com>
+References: <1347459128-32236-1-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=DnOWTGv6au3nRwFqw9AHeLoFbyZ5g1O+BB3vtS2rMhI=;
-        b=NzHbCHtMjZTDx5x/Xr4x9zdBffEEOBSFMOgEVPNgd5chOJh9QKAv6zfV9dbis3Tp4x
-         C0Ej7RFnfpWZ2jCtuk98Az/FKYlkuxe8W8Il/n150kWExj/J0hhzip2E4DL9TIlVoJJ1
-         IyOqlZm5YTEimxOqv6RyNJwTeCNjGGshO3gJg4AZbNyMMSsak2SHozqOmDOhSsR7Kuh2
-         bYNyTBtmA6vbGbwsrM9uUlE4SuDrK1sKj7hJOlIa57/bVV2ByqpDac5L/7aB7ZQQyzO0
-         epcvEbnLe0QnQo0GGTEFhBlgxFgLF3Ig2CVR8Wjz7c2087+1usiUNIvqwqiLVWleMqlh
-         hEbg==
+        bh=abOkS6dL9L4sku7/GZl8xG6xIG3Z6BuW4e7i0zoT+Po=;
+        b=h4LO0+EcAEaeA2CJ6QHi6hBmfjvy/7EWGNO08MlOsu3amNVd0n5CAmQKQA5Ng7sfkd
+         YBPZtRL2kmwKl3ncHJhUzdi9YYxhyk5AIpwkRmHeYcnMhISuKKgKP8DOaXmgQktCKQsc
+         P/aALgZEKAdhNz3QAp3IwKGz8/WFKlHyq4hHzOaNOSW1VQoQsysR5Y9kBASXet31DUN9
+         aKZqbEXh4T8rzBz+UY8kf0IDjl4TyV6SaHrSL5OlslB2zmB3F+1TMhNIbFf7NS1OcaA1
+         bvjhq9fKXoJnXoq0x81pXgVbZP5Ix5iMVaaUgr/5lZcZiYxvY6SWQnsM/0UFar7XRx4R
+         zX3A==
 Content-Disposition: inline
-In-Reply-To: <20120912143112.GE19694-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1347459128-32236-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-On Wed, Sep 12, 2012 at 10:31:13AM -0400, Aristeu Rozanski wrote:
-> new_xattr in __simple_xattr_set() is only initialized with a valid
-> pointer if value is not NULL, which only happens if this function is
-> called directly with the intention to remove an existing extended
-> attribute. Even being safe to be this way, smatch warns about possible
-> NULL dereference. Dan Carpenter suggested using uninitialized_var()
-> which will make both gcc and smatch happy.
+On Wed, Sep 12, 2012 at 04:12:00PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 > 
-> Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Hi,
+> 
+> I've removed the useless test in patch #4 and updated the commit message
+> on patch #7. 
+> 
+> While rewriting the commit message #7 I realized the pointer check was
+> completely wrong. Instead testing the return value of
+> task_subsys_state() I tested the pointer return by container_of. For
+> more details on this see the commit message. 
+> 
+> Because of this I added Herbert and Paul to the Cc list. Please have
+> close look at my rambling on the RCU part in patch #7. Thanks a lot!
+> 
+> This series is against 
+> 
+>      git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.7
 
-applied to cgroup/for-3.7. Thanks.
+All look good to me.  Li, can you please review this?  Herbert, can
+you please confirm the synchronize_rcu() removal in patch 7?
+
+Once Li review it, I'll route the series through cgroup/for-3.7.
+Thanks.
 
 -- 
 tejun
