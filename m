@@ -1,49 +1,66 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH REPOST RFC cgroup/for-3.7] cgroup: mark subsystems with
-	broken hierarchy support and whine if cgroups are nested for them
-Date: Thu, 13 Sep 2012 14:48:02 +0800
-Message-ID: <505181A2.1040004@huawei.com>
-References: <20120910223125.GC7677@google.com>
-	<20120910223355.GD7677@google.com> <504F30DB.60808@huawei.com>
-	<20120911170837.GM7677@google.com>
-	<20120911174319.GO7677@google.com> <505057D8.4010908@parallels.com>
-	<20120912163433.GL7677@google.com>
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [PATCH v4 4/8] cgroup: Remove CGROUP_BUILTIN_SUBSYS_COUNT
+Date: Thu, 13 Sep 2012 08:57:39 +0200
+Message-ID: <505183E3.3030409@monom.org>
+References: <1347459128-32236-1-git-send-email-wagi@monom.org> <1347459128-32236-5-git-send-email-wagi@monom.org> <50517FFF.4030106@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20120912163433.GL7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50517FFF.4030106-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-On 2012/9/13 0:34, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Sep 12, 2012 at 01:37:28PM +0400, Glauber Costa wrote:
->> "If a cpuset is cpu or mem exclusive, no other cpuset, other than
->> a direct ancestor or descendant, may share any of the same CPUs or
->> Memory Nodes."
+Hi Li,
+
+On 13.09.2012 08:41, Li Zefan wrote:
+>> @@ -1321,11 +1321,13 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+>>   	 * take duplicate reference counts on a subsystem that's already used,
+>>   	 * but rebind_subsystems handles this case.
+>>   	 */
+>> -	for (i = CGROUP_BUILTIN_SUBSYS_COUNT; i < CGROUP_SUBSYS_COUNT; i++) {
+>> +	for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
+>>   		unsigned long bit = 1UL << i;
 >>
->> So I think it tricked me as well. I was under the impression that
->> "exclusive" would also disallow the kids.
-> 
-> You two are confusing me even more.  AFAICS, the hierarchical
-> properties don't seem to change whether exclusive is set or not.  It
-> still ensures children can't have something parent doesn't allow and
-> exclusive applies to whether to share something with siblings, so I
-> don't think anything is broken hierarchy-wise.  Am I missing
-> something?  If so, please be explicit and elaborate where and how it's
-> broken.
-> 
+>>   		if (!(bit & opts->subsys_mask))
+>>   			continue;
+>> +		if (!subsys[i]->module)
+>> +			continue;
+>
+> This check is not necessary. If it's builtin, try_module_get() will just return 1, and
+> we're fine.
 
-Ignore it. I misunderstood the exclusive flag. Sorry for the noise.
+Yes, I didn't see the try_module_get. Although I think with leaving the 
+test away it would change the behavior, e.g.
+
+		if (!subsys[i]->module)
+			continue;
+		if (!try_module_get(subsys[i]->module)) {
+			module_pin_failed = true;
+			break;
+		}
+
+module_pin_failed would be set then and we would jump into the error 
+code later.
+
+This tests looks a bit ugly though I think leaving it away and relying 
+on try_module_get() is not correct.
+
+>> @@ -1437,6 +1443,7 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
+>>   	INIT_LIST_HEAD(&cgrp->event_list);
+>>   	spin_lock_init(&cgrp->event_list_lock);
+>>   	simple_xattrs_init(&cgrp->xattrs);
+>> +	memset(cgrp->subsys, 0, sizeof(cgrp->subsys));
+>
+> This seems an unrelated change, and is redundant. Am I missing something?
+
+The reason why it is necessary to NULL all the entries in the array, is 
+that task_cls_classid() and task_netprioidx() check the return pointer 
+from task_subsys_state(). If it is NULL those function know that the 
+subsystem is not ready to be used. Should I move this change to the next 
+patch then?
+
+cheers,
+daniel
