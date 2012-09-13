@@ -1,48 +1,50 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 5/8] cgroup: Wrap subsystem selection macro
-Date: Thu, 13 Sep 2012 14:41:34 +0800
-Message-ID: <5051801E.2010703@huawei.com>
-References: <1347459128-32236-1-git-send-email-wagi@monom.org> <1347459128-32236-6-git-send-email-wagi@monom.org>
+Subject: Re: [PATCH v4 7/8] cgroup: Assign subsystem IDs during compile time
+Date: Thu, 13 Sep 2012 14:45:02 +0800
+Message-ID: <505180EE.4050105@huawei.com>
+References: <1347459128-32236-1-git-send-email-wagi@monom.org> <1347459128-32236-8-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1347459128-32236-6-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+In-Reply-To: <1347459128-32236-8-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Herbert Xu <herbert-F6s6mLieUQo7FNHlEwC/lvQIK84fMopw@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 On 2012/9/12 22:12, Daniel Wagner wrote:
 > From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 > 
-> Before we are able to define all subsystem ids at compile time we need
-> a more fine grained control what gets defined when we include
-> cgroup_subsys.h. For example we define the enums for the subsystems or
-> to declare for struct cgroup_subsys (builtin subsystem) by including
-> cgroup_subsys.h and defining SUBSYS accordingly.
-> 
-> Currently, the decision if a subsys is used is defined inside the
-> header by testing if CONFIG_*=y is true. By moving this test outside
-> of cgroup_subsys.h we are able to control it on the include level.
-> 
-> This is done by introducing IS_SUBSYS_ENABLED which then is defined
-> according the task, e.g. is CONFIG_*=y or CONFIG_*=m.
-> 
+...
+
+What a lengthy changelog. ;)
+
 > Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> Cc: "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > Cc: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
 > Cc: Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>
 > Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+>  include/linux/cgroup.h       |  2 +-
+>  include/net/cls_cgroup.h     | 12 ++++--------
+>  include/net/netprio_cgroup.h | 18 +++++-------------
+>  kernel/cgroup.c              | 22 +++-------------------
+>  net/core/netprio_cgroup.c    | 11 -----------
+>  net/core/sock.c              | 11 -----------
+>  net/sched/cls_cgroup.c       | 13 -------------
+>  7 files changed, 13 insertions(+), 76 deletions(-)
+> 
 
 Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-
-> ---
->  include/linux/cgroup.h        |  4 ++++
->  include/linux/cgroup_subsys.h | 24 ++++++++++++------------
->  kernel/cgroup.c               |  1 +
->  3 files changed, 17 insertions(+), 12 deletions(-)
