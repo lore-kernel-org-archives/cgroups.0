@@ -1,9 +1,9 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC] cgroup TODOs
-Date: Fri, 14 Sep 2012 11:53:24 -0700
-Message-ID: <20120914185324.GI17747@google.com>
+Date: Fri, 14 Sep 2012 11:54:03 -0700
+Message-ID: <20120914185403.GJ17747@google.com>
 References: <20120913205827.GO7677@google.com>
-	<20120914180754.GF6221@redhat.com>
+	<20120914183641.GA2191@cathedrallabs.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -11,15 +11,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=2rQ0/R3UHNpvHST/O5qT5Bjyf3SL7b0JvBc1TGnNsIo=;
-	b=b14CpNb9mHFyFncViaasgP5AXYCroFgjGOmyCYGlS97ViZ2JvL9GybQc+FQ3mG473k
-	T9jziQxPy9yV7xOGD7vrk+Wu5q5FQP09Ppxk3XuD6gLRtu3lh8gI64k6L7muGu8Q0ixJ
-	V3OLJXZbt4IJZbpW7bTs8YREpVlRXM730MnCUGLCjRSKLrXsAJfjf0c9AT1xspGpnq8L
-	ctSnsac7cWQgt4VWNSlncOc5KoThUoXtpmAnkLAxsUuEwzgNJNp3IuwbS5Tg4Ffio3nZ
-	dK21yVLn7FNZmWAXQpYx8CCkM3qgBaDiRcGK+Yi7iORRJ9OiEl2LURE/cc+iwh8jvScj
-	BsUQ==
+	bh=wN0j/ROCJ09KWzrk/CEFi2YYNVKTHfjkaDEC5Hu2P90=;
+	b=kK8Ytvh6DJPn0E1NfELhGoc+EYTaXijCBd/qMoNRF8aqxzFD7rLintr5mbPOkANLVS
+	yRqbyKrtI1HoFBRh8So7QF57l8nvWglkWr0xPIYUXpqBZzLjyK5nZrxsdy0PM6iuN3nF
+	3S++B+qrZ3m7vPvFrP1Dp7UnL1TljtpI47sOcFcFIyqaDROkgmiTy4ccv9sZUeIrvKVJ
+	PFHU0HLmzpgrmlcAWiRKd961nIosBlwgkTn69CAytHscsgd/Jk706E/jOrxvaYXP6iq2
+	UFU6RYQznqHLioDSlk7MzQuG+pjHZDX848CMlFTgna8+53ZPEN3Ab7QkJArBUeTaf5/7
+	nvyQ==
 Content-Disposition: inline
-In-Reply-To: <20120914180754.GF6221-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20120914183641.GA2191-YqEmrenMroyQb786VAuzj9i2O/JbrIOy@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -30,32 +30,15 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Aristeu Rozanski <aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello, Vivek.
+Hello,
 
-On Fri, Sep 14, 2012 at 02:07:54PM -0400, Vivek Goyal wrote:
-> I am curious that why are you planning to provide capability of controller
-> specific view of hierarchy. To me it sounds pretty close to having
-> separate hierarchies per controller. Just that it is a little more
-> restricted configuration. 
+On Fri, Sep 14, 2012 at 02:36:41PM -0400, Aristeu Rozanski wrote:
+> if Serge is not planning to do it already, I can take a look in device_cgroup.
 
-I think it's a lot less crazy and gives us a way to bind a resource to
-a set of controller cgroups regardless which task is looking at it,
-which is something we're sorely missing now.
-
-> IOW, who is is the user of this functionality and who is asking for it.
-> Can we go all out where all controllers have only one hierarchy view.
-
-I think the issue is that controllers inherently have overhead and
-behavior alterations depending on the tree organization.  At least
-from the usage I see from google which uses nested cgroups
-extensively, at least that level of flexibility seems necessary.
-
-In addition, for some resources, granularity beyond certain point
-simply doesn't work.  Per-service granularity might make sense for cpu
-but applying it by default would be silly for blkio.
+Yes please. :)
 
 Thanks.
 
