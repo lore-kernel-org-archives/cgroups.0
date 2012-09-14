@@ -1,93 +1,51 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] memory cgroup: update root memory cgroup when node is
- onlined
-Date: Fri, 14 Sep 2012 11:46:25 -0400
-Message-ID: <20120914154625.GN1560@cmpxchg.org>
-References: <505187D4.7070404@cn.fujitsu.com>
- <20120913205935.GK1560@cmpxchg.org>
- <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC] cgroup TODOs
+Date: Fri, 14 Sep 2012 10:17:08 -0700
+Message-ID: <20120914171708.GC17747@google.com>
+References: <20120913205827.GO7677@google.com>
+	<1347613484.4340.132.camel@marge.simpson.net>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd@google.com>
-Cc: Wen Congyang <wency@cn.fujitsu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Jiang Liu <liuj97@gmail.com>, mhocko@suse.cz, bsingharora@gmail.com, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@openvz.org>, paul.gortmaker@windriver.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=sY8AWvO+nKIZRyeQWblcCwDqe9yDPO/OU6TjSO5kbS4=;
+	b=JJ4HS/R2vjk8NyGv1VmYS6goSV5siZLe14qwWD4eQ/qyA/N9utC1Iit5cdwBgJ/5lJ
+	7H/m0yiaqQO4DFUz8r3J1lGK10I+SiFSwNRgtPGGXLDu+WTLq4uIgE9nWphxyqubSZB9
+	q5tng2zu3aspdo2TLVoDEg6cpdy+hVPRVDRMCMvhDhIjfM8T0gXdev9xJd6d2DLSHjk+
+	U77z6UBOvSEVHL8eoIjcwfbUd2KC/rdbY5qbrHBR9ysVP8u1JGlEESzOg7SnZ9aAwkWX
+	IUhRpAWuggyDb2D35zrSWcAhavymELH0B7WW86kh42ICLwUOm0/7hF23vstkEjSXi1A1
+	FSXA==
+Content-Disposition: inline
+In-Reply-To: <1347613484.4340.132.camel-YqMYhexLQo31wTEvPJ5Q0F6hYfS7NtTn@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Sep 13, 2012 at 06:36:34PM -0700, Hugh Dickins wrote:
-> On Thu, 13 Sep 2012, Johannes Weiner wrote:
-> > On Thu, Sep 13, 2012 at 03:14:28PM +0800, Wen Congyang wrote:
-> > > root_mem_cgroup->info.nodeinfo is initialized when the system boots.
-> > > But NODE_DATA(nid) is null if the node is not onlined, so
-> > > root_mem_cgroup->info.nodeinfo[nid]->zoneinfo[zone].lruvec.zone contains
-> > > an invalid pointer. If we use numactl to bind a program to the node
-> > > after onlining the node and its memory, it will cause the kernel
-> > > panicked:
+On Fri, Sep 14, 2012 at 11:04:44AM +0200, Mike Galbraith wrote:
+> On Thu, 2012-09-13 at 13:58 -0700, Tejun Heo wrote:
+> 
+> > 7. Misc issues
 > > 
-> > Is there any chance we could get rid of the zone backpointer in lruvec
-> > again instead?
-> 
-> It could be done, but it would make me sad :(
+>    * Extract synchronize_rcu() from user interface?  Exporting grace
+> periods to userspace isn't wonderful for dynamic launchers.
 
-We would not want that!
+Aye aye.
 
-> > But can't
-> > we just go back to passing the zone along with the lruvec down
-> > vmscan.c paths?  I agree it's ugly to pass both, given their
-> > relationship.  But I don't think the backpointer is any cleaner but in
-> > addition less robust.
-> 
-> It's like how we use vma->mm: we could change everywhere to pass mm with
-> vma, but it looks cleaner and cuts down on long arglists to have mm in vma.
-> >From past experience, one of the things I worried about was adding extra
-> args to the reclaim stack.
+Also,
 
-Ok, you certainly have a point.
+* Update doc.
 
-> > That being said, the crashing code in particular makes me wonder:
-> > 
-> > static __always_inline void add_page_to_lru_list(struct page *page,
-> > 				struct lruvec *lruvec, enum lru_list lru)
-> > {
-> > 	int nr_pages = hpage_nr_pages(page);
-> > 	mem_cgroup_update_lru_size(lruvec, lru, nr_pages);
-> > 	list_add(&page->lru, &lruvec->lists[lru]);
-> > 	__mod_zone_page_state(lruvec_zone(lruvec), NR_LRU_BASE + lru, nr_pages);
-> > }
-> > 
-> > Why did we ever pass zone in here and then felt the need to replace it
-> > with lruvec->zone in fa9add6 "mm/memcg: apply add/del_page to lruvec"?
-> > A page does not roam between zones, its zone is a static property that
-> > can be retrieved with page_zone().
-> 
-> Just as in vmscan.c, we have the lruvec to hand, and that's what we
-> mainly want to operate upon, but there is also some need for zone.
-> 
-> (Both Konstantin and I were looking towards the day when we move the
-> lru_lock into the lruvec, removing more dependence on "zone".  Pretty
-> much the only reason that hasn't happened yet, is that we have not found
-> time to make a performance case convincingly - but that's another topic.)
-> 
-> Yes, page_zone(page) is a static property of the page, but it's not
-> necessarily cheap to evaluate: depends on how complex the memory model
-> and the spare page flags space, doesn't it?  We both preferred to
-> derive zone from lruvec where convenient.
-> 
-> How do you feel about this patch, and does it work for you guys?
-> 
-> You'd be right if you guessed that I started out without the
-> mem_cgroup_zone_lruvec part of it, but oops in get_scan_count
-> told me that's needed too.
-> 
-> Description to be filled in later: would it be needed for -stable,
-> or is onlining already broken in other ways that you're now fixing up?
-> 
-> Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
-> Signed-off-by: Hugh Dickins <hughd@google.com>
-
-This looks good to me, thanks.
-
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+-- 
+tejun
