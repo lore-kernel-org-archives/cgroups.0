@@ -1,229 +1,266 @@
-From: Wen Congyang <wency@cn.fujitsu.com>
-Subject: Re: [PATCH] memory cgroup: update root memory cgroup when node is
- onlined
-Date: Fri, 14 Sep 2012 09:53:31 +0800
-Message-ID: <50528E1B.5040804@cn.fujitsu.com>
-References: <505187D4.7070404@cn.fujitsu.com> <20120913205935.GK1560@cmpxchg.org> <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 cgroup/for-3.7] cgroup: mark subsystems with broken
+ hierarchy support and whine if cgroups are nested for them
+Date: Thu, 13 Sep 2012 23:55:48 -0500
+Message-ID: <20120914045548.GA28226@amd1>
+References: <20120913183402.GG7677@google.com>
+ <20120913192058.GH7677@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20120913192058.GH7677-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Hugh Dickins <hughd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Jiang Liu <liuj97@gmail.com>, mhocko@suse.cz, bsingharora@gmail.com, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@openvz.org>, paul.gortmaker@windriver.com
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-At 09/14/2012 09:36 AM, Hugh Dickins Wrote:
-> On Thu, 13 Sep 2012, Johannes Weiner wrote:
->> On Thu, Sep 13, 2012 at 03:14:28PM +0800, Wen Congyang wrote:
->>> root_mem_cgroup->info.nodeinfo is initialized when the system boots.
->>> But NODE_DATA(nid) is null if the node is not onlined, so
->>> root_mem_cgroup->info.nodeinfo[nid]->zoneinfo[zone].lruvec.zone contains
->>> an invalid pointer. If we use numactl to bind a program to the node
->>> after onlining the node and its memory, it will cause the kernel
->>> panicked:
->>
->> Is there any chance we could get rid of the zone backpointer in lruvec
->> again instead?
+Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> Currently, cgroup hierarchy support is a mess.  cpu related subsystems
+> behave correctly - configuration, accounting and control on a parent
+> properly cover its children.  blkio and freezer completely ignore
+> hierarchy and treat all cgroups as if they're directly under the root
+> cgroup.  Others show yet different behaviors.
 > 
-> It could be done, but it would make me sad :(
+> These differing interpretations of cgroup hierarchy make using cgroup
+> confusing and it impossible to co-mount controllers into the same
+> hierarchy and obtain sane behavior.
 > 
->> Adding new nodes is a rare event and so updating every
->> single memcg in the system might be just borderline crazy.
+> Eventually, we want full hierarchy support from all subsystems and
+> probably a unified hierarchy.  Users using separate hierarchies
+> expecting completely different behaviors depending on the mounted
+> subsystem is deterimental to making any progress on this front.
 > 
-> Not horribly crazy, but rather ugly, yes.
+> This patch adds cgroup_subsys.broken_hierarchy and sets it to %true
+> for controllers which are lacking in hierarchy support.  The goal of
+> this patch is two-fold.
 > 
->> But can't
->> we just go back to passing the zone along with the lruvec down
->> vmscan.c paths?  I agree it's ugly to pass both, given their
->> relationship.  But I don't think the backpointer is any cleaner but in
->> addition less robust.
+> * Move users away from using hierarchy on currently non-hierarchical
+>   subsystems, so that implementing proper hierarchy support on those
+>   doesn't surprise them.
 > 
-> It's like how we use vma->mm: we could change everywhere to pass mm with
-> vma, but it looks cleaner and cuts down on long arglists to have mm in vma.
->>From past experience, one of the things I worried about was adding extra
-> args to the reclaim stack.
+> * Keep track of which controllers are broken how and nudge the
+>   subsystems to implement proper hierarchy support.
 > 
->>
->> That being said, the crashing code in particular makes me wonder:
->>
->> static __always_inline void add_page_to_lru_list(struct page *page,
->> 				struct lruvec *lruvec, enum lru_list lru)
->> {
->> 	int nr_pages = hpage_nr_pages(page);
->> 	mem_cgroup_update_lru_size(lruvec, lru, nr_pages);
->> 	list_add(&page->lru, &lruvec->lists[lru]);
->> 	__mod_zone_page_state(lruvec_zone(lruvec), NR_LRU_BASE + lru, nr_pages);
->> }
->>
->> Why did we ever pass zone in here and then felt the need to replace it
->> with lruvec->zone in fa9add6 "mm/memcg: apply add/del_page to lruvec"?
->> A page does not roam between zones, its zone is a static property that
->> can be retrieved with page_zone().
+> For now, start with a single warning message.  We can whine louder
+> later on.
 > 
-> Just as in vmscan.c, we have the lruvec to hand, and that's what we
-> mainly want to operate upon, but there is also some need for zone.
+> v2: Fixed a typo spotted by Michal. Warning message updated.
 > 
-> (Both Konstantin and I were looking towards the day when we move the
-> lru_lock into the lruvec, removing more dependence on "zone".  Pretty
-> much the only reason that hasn't happened yet, is that we have not found
-> time to make a performance case convincingly - but that's another topic.)
+> v3: Updated memcg part so that it doesn't generate warning in the
+>     cases where .use_hierarchy=false doesn't make the behavior
+>     different from root.use_hierarchy=true.  Fixed a typo spotted by
+>     Glauber.
 > 
-> Yes, page_zone(page) is a static property of the page, but it's not
-> necessarily cheap to evaluate: depends on how complex the memory model
-> and the spare page flags space, doesn't it?  We both preferred to
-> derive zone from lruvec where convenient.
+> v4: Check ->broken_hierarchy after cgroup creation is complete so that
+>     ->create() can affect the result per Michal.  Dropped unnecessary
+>     memcg root handling per Michal.
 > 
-> How do you feel about this patch, and does it work for you guys?
-> 
-> You'd be right if you guessed that I started out without the
-> mem_cgroup_zone_lruvec part of it, but oops in get_scan_count
-> told me that's needed too.
-> 
-> Description to be filled in later: would it be needed for -stable,
-> or is onlining already broken in other ways that you're now fixing up?
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
+> Cc: Serge E. Hallyn <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
 
-We will test your patch, please wait some time.
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-> 
-> Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
-> Signed-off-by: Hugh Dickins <hughd@google.com>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>
+> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> Cc: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 > ---
+>  block/blk-cgroup.c        |    8 ++++++++
+>  include/linux/cgroup.h    |   15 +++++++++++++++
+>  kernel/cgroup.c           |   12 +++++++++++-
+>  kernel/cgroup_freezer.c   |    8 ++++++++
+>  kernel/events/core.c      |    7 +++++++
+>  mm/memcontrol.c           |    7 +++++++
+>  net/core/netprio_cgroup.c |   12 +++++++++++-
+>  net/sched/cls_cgroup.c    |    9 +++++++++
+>  security/device_cgroup.c  |    9 +++++++++
+>  9 files changed, 85 insertions(+), 2 deletions(-)
 > 
->  include/linux/mmzone.h |    2 -
->  mm/memcontrol.c        |   40 ++++++++++++++++++++++++++++++++-------
->  mm/mmzone.c            |    6 -----
->  mm/page_alloc.c        |    2 -
->  4 files changed, 36 insertions(+), 14 deletions(-)
-> 
-> --- 3.6-rc5/include/linux/mmzone.h	2012-08-03 08:31:26.892842267 -0700
-> +++ linux/include/linux/mmzone.h	2012-09-13 17:07:51.893772372 -0700
-> @@ -744,7 +744,7 @@ extern int init_currently_empty_zone(str
->  				     unsigned long size,
->  				     enum memmap_context context);
->  
-> -extern void lruvec_init(struct lruvec *lruvec, struct zone *zone);
-> +extern void lruvec_init(struct lruvec *lruvec);
->  
->  static inline struct zone *lruvec_zone(struct lruvec *lruvec)
->  {
-> --- 3.6-rc5/mm/memcontrol.c	2012-08-03 08:31:27.060842270 -0700
-> +++ linux/mm/memcontrol.c	2012-09-13 17:46:36.870804625 -0700
-> @@ -1061,12 +1061,25 @@ struct lruvec *mem_cgroup_zone_lruvec(st
->  				      struct mem_cgroup *memcg)
->  {
->  	struct mem_cgroup_per_zone *mz;
-> +	struct lruvec *lruvec;
->  
-> -	if (mem_cgroup_disabled())
-> -		return &zone->lruvec;
-> +	if (mem_cgroup_disabled()) {
-> +		lruvec = &zone->lruvec;
-> +		goto out;
-> +	}
->  
->  	mz = mem_cgroup_zoneinfo(memcg, zone_to_nid(zone), zone_idx(zone));
-> -	return &mz->lruvec;
-> +	lruvec = &mz->lruvec;
-> +out:
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -737,6 +737,14 @@ struct cgroup_subsys blkio_subsys = {
+>  	.subsys_id = blkio_subsys_id,
+>  	.base_cftypes = blkcg_files,
+>  	.module = THIS_MODULE,
+> +
 > +	/*
-> +	 * Since a node can be onlined after the mem_cgroup was created,
-> +	 * we have to be prepared to initialize lruvec->zone here.
+> +	 * blkio subsystem is utterly broken in terms of hierarchy support.
+> +	 * It treats all cgroups equally regardless of where they're
+> +	 * located in the hierarchy - all cgroups are treated as if they're
+> +	 * right below the root.  Fix it and remove the following.
 > +	 */
-> +	if (unlikely(lruvec->zone != zone)) {
-> +		VM_BUG_ON(lruvec->zone);
-> +		lruvec->zone = zone;
-> +	}
-> +	return lruvec;
->  }
+> +	.broken_hierarchy = true,
+>  };
+>  EXPORT_SYMBOL_GPL(blkio_subsys);
 >  
->  /*
-> @@ -1093,9 +1106,12 @@ struct lruvec *mem_cgroup_page_lruvec(st
->  	struct mem_cgroup_per_zone *mz;
->  	struct mem_cgroup *memcg;
->  	struct page_cgroup *pc;
-> +	struct lruvec *lruvec;
+> --- a/include/linux/cgroup.h
+> +++ b/include/linux/cgroup.h
+> @@ -503,6 +503,21 @@ struct cgroup_subsys {
+>  	 */
+>  	bool __DEPRECATED_clear_css_refs;
 >  
-> -	if (mem_cgroup_disabled())
-> -		return &zone->lruvec;
-> +	if (mem_cgroup_disabled()) {
-> +		lruvec = &zone->lruvec;
-> +		goto out;
-> +	}
->  
->  	pc = lookup_page_cgroup(page);
->  	memcg = pc->mem_cgroup;
-> @@ -1113,7 +1129,17 @@ struct lruvec *mem_cgroup_page_lruvec(st
->  		pc->mem_cgroup = memcg = root_mem_cgroup;
->  
->  	mz = page_cgroup_zoneinfo(memcg, page);
-> -	return &mz->lruvec;
-> +	lruvec = &mz->lruvec;
-> +out:
 > +	/*
-> +	 * Since a node can be onlined after the mem_cgroup was created,
-> +	 * we have to be prepared to initialize lruvec->zone here.
+> +	 * If %false, this subsystem is properly hierarchical -
+> +	 * configuration, resource accounting and restriction on a parent
+> +	 * cgroup cover those of its children.  If %true, hierarchy support
+> +	 * is broken in some ways - some subsystems ignore hierarchy
+> +	 * completely while others are only implemented half-way.
+> +	 *
+> +	 * It's now disallowed to create nested cgroups if the subsystem is
+> +	 * broken and cgroup core will emit a warning message on such
+> +	 * cases.  Eventually, all subsystems will be made properly
+> +	 * hierarchical and this will go away.
 > +	 */
-> +	if (unlikely(lruvec->zone != zone)) {
-> +		VM_BUG_ON(lruvec->zone);
-
-According your comment, lruver->zone != zone if a node is onlined. So
-it is not a bug, and VM_BUG_ON() should not be used here.
-
-Thanks
-Wen Congyang
-
-> +		lruvec->zone = zone;
-> +	}
-> +	return lruvec;
->  }
+> +	bool broken_hierarchy;
+> +	bool warned_broken_hierarchy;
+> +
+>  #define MAX_CGROUP_TYPE_NAMELEN 32
+>  	const char *name;
 >  
->  /**
-> @@ -4742,7 +4768,7 @@ static int alloc_mem_cgroup_per_zone_inf
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -4075,8 +4075,9 @@ static long cgroup_create(struct cgroup 
+>  		set_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
 >  
->  	for (zone = 0; zone < MAX_NR_ZONES; zone++) {
->  		mz = &pn->zoneinfo[zone];
-> -		lruvec_init(&mz->lruvec, &NODE_DATA(node)->node_zones[zone]);
-> +		lruvec_init(&mz->lruvec);
->  		mz->usage_in_excess = 0;
->  		mz->on_tree = false;
->  		mz->memcg = memcg;
-> --- 3.6-rc5/mm/mmzone.c	2012-08-03 08:31:27.064842271 -0700
-> +++ linux/mm/mmzone.c	2012-09-13 17:06:28.921766001 -0700
-> @@ -87,7 +87,7 @@ int memmap_valid_within(unsigned long pf
->  }
->  #endif /* CONFIG_ARCH_HAS_HOLES_MEMORYMODEL */
+>  	for_each_subsys(root, ss) {
+> -		struct cgroup_subsys_state *css = ss->create(cgrp);
+> +		struct cgroup_subsys_state *css;
 >  
-> -void lruvec_init(struct lruvec *lruvec, struct zone *zone)
-> +void lruvec_init(struct lruvec *lruvec)
->  {
->  	enum lru_list lru;
+> +		css = ss->create(cgrp);
+>  		if (IS_ERR(css)) {
+>  			err = PTR_ERR(css);
+>  			goto err_destroy;
+> @@ -4090,6 +4091,15 @@ static long cgroup_create(struct cgroup 
+>  		/* At error, ->destroy() callback has to free assigned ID. */
+>  		if (clone_children(parent) && ss->post_clone)
+>  			ss->post_clone(cgrp);
+> +
+> +		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+> +		    parent->parent) {
+> +			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+> +				   current->comm, current->pid, ss->name);
+> +			if (!strcmp(ss->name, "memory"))
+> +				pr_warning("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
+> +			ss->warned_broken_hierarchy = true;
+> +		}
+>  	}
 >  
-> @@ -95,8 +95,4 @@ void lruvec_init(struct lruvec *lruvec,
+>  	list_add(&cgrp->sibling, &cgrp->parent->children);
+> --- a/kernel/cgroup_freezer.c
+> +++ b/kernel/cgroup_freezer.c
+> @@ -373,4 +373,12 @@ struct cgroup_subsys freezer_subsys = {
+>  	.can_attach	= freezer_can_attach,
+>  	.fork		= freezer_fork,
+>  	.base_cftypes	= files,
+> +
+> +	/*
+> +	 * freezer subsys doesn't handle hierarchy at all.  Frozen state
+> +	 * should be inherited through the hierarchy - if a parent is
+> +	 * frozen, all its children should be frozen.  Fix it and remove
+> +	 * the following.
+> +	 */
+> +	.broken_hierarchy = true,
+>  };
+> --- a/kernel/events/core.c
+> +++ b/kernel/events/core.c
+> @@ -7285,5 +7285,12 @@ struct cgroup_subsys perf_subsys = {
+>  	.destroy	= perf_cgroup_destroy,
+>  	.exit		= perf_cgroup_exit,
+>  	.attach		= perf_cgroup_attach,
+> +
+> +	/*
+> +	 * perf_event cgroup doesn't handle nesting correctly.
+> +	 * ctx->nr_cgroups adjustments should be propagated through the
+> +	 * cgroup hierarchy.  Fix it and remove the following.
+> +	 */
+> +	.broken_hierarchy = true,
+>  };
+>  #endif /* CONFIG_CGROUP_PERF */
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4973,6 +4973,13 @@ mem_cgroup_create(struct cgroup *cont)
+>  	} else {
+>  		res_counter_init(&memcg->res, NULL);
+>  		res_counter_init(&memcg->memsw, NULL);
+> +		/*
+> +		 * Deeper hierachy with use_hierarchy == false doesn't make
+> +		 * much sense so let cgroup subsystem know about this
+> +		 * unfortunate state in our controller.
+> +		 */
+> +		if (parent && parent != root_mem_cgroup)
+> +			mem_cgroup_subsys.broken_hierarchy = true;
+>  	}
+>  	memcg->last_scanned_node = MAX_NUMNODES;
+>  	INIT_LIST_HEAD(&memcg->oom_notify);
+> --- a/net/core/netprio_cgroup.c
+> +++ b/net/core/netprio_cgroup.c
+> @@ -330,7 +330,17 @@ struct cgroup_subsys net_prio_subsys = {
+>  	.subsys_id	= net_prio_subsys_id,
+>  #endif
+>  	.base_cftypes	= ss_files,
+> -	.module		= THIS_MODULE
+> +	.module		= THIS_MODULE,
+> +
+> +	/*
+> +	 * net_prio has artificial limit on the number of cgroups and
+> +	 * disallows nesting making it impossible to co-mount it with other
+> +	 * hierarchical subsystems.  Remove the artificially low PRIOIDX_SZ
+> +	 * limit and properly nest configuration such that children follow
+> +	 * their parents' configurations by default and are allowed to
+> +	 * override and remove the following.
+> +	 */
+> +	.broken_hierarchy = true,
+>  };
 >  
->  	for_each_lru(lru)
->  		INIT_LIST_HEAD(&lruvec->lists[lru]);
-> -
-> -#ifdef CONFIG_MEMCG
-> -	lruvec->zone = zone;
-> -#endif
->  }
-> --- 3.6-rc5/mm/page_alloc.c	2012-08-22 14:25:39.508279046 -0700
-> +++ linux/mm/page_alloc.c	2012-09-13 17:06:08.265763526 -0700
-> @@ -4456,7 +4456,7 @@ static void __paginginit free_area_init_
->  		zone->zone_pgdat = pgdat;
+>  static int netprio_device_event(struct notifier_block *unused,
+> --- a/net/sched/cls_cgroup.c
+> +++ b/net/sched/cls_cgroup.c
+> @@ -82,6 +82,15 @@ struct cgroup_subsys net_cls_subsys = {
+>  #endif
+>  	.base_cftypes	= ss_files,
+>  	.module		= THIS_MODULE,
+> +
+> +	/*
+> +	 * While net_cls cgroup has the rudimentary hierarchy support of
+> +	 * inheriting the parent's classid on cgroup creation, it doesn't
+> +	 * properly propagates config changes in ancestors to their
+> +	 * descendents.  A child should follow the parent's configuration
+> +	 * but be allowed to override it.  Fix it and remove the following.
+> +	 */
+> +	.broken_hierarchy = true,
+>  };
 >  
->  		zone_pcp_init(zone);
-> -		lruvec_init(&zone->lruvec, zone);
-> +		lruvec_init(&zone->lruvec);
->  		if (!size)
->  			continue;
+>  struct cls_cgroup_head {
+> --- a/security/device_cgroup.c
+> +++ b/security/device_cgroup.c
+> @@ -457,6 +457,15 @@ struct cgroup_subsys devices_subsys = {
+>  	.destroy = devcgroup_destroy,
+>  	.subsys_id = devices_subsys_id,
+>  	.base_cftypes = dev_cgroup_files,
+> +
+> +	/*
+> +	 * While devices cgroup has the rudimentary hierarchy support which
+> +	 * checks the parent's restriction, it doesn't properly propagates
+> +	 * config changes in ancestors to their descendents.  A child
+> +	 * should only be allowed to add more restrictions to the parent's
+> +	 * configuration.  Fix it and remove the following.
+> +	 */
+> +	.broken_hierarchy = true,
+>  };
 >  
-> 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>  int __devcgroup_inode_permission(struct inode *inode, int mask)
+> _______________________________________________
+> Containers mailing list
+> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+> https://lists.linuxfoundation.org/mailman/listinfo/containers
