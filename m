@@ -1,87 +1,93 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC] cgroup TODOs
-Date: Fri, 14 Sep 2012 11:14:47 -0400
-Message-ID: <20120914151447.GD6221@redhat.com>
-References: <20120913205827.GO7677@google.com>
-	<20120914142539.GC6221@redhat.com> <1347634409.7172.58.camel@twins>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] memory cgroup: update root memory cgroup when node is
+ onlined
+Date: Fri, 14 Sep 2012 11:46:25 -0400
+Message-ID: <20120914154625.GN1560@cmpxchg.org>
+References: <505187D4.7070404@cn.fujitsu.com>
+ <20120913205935.GK1560@cmpxchg.org>
+ <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1347634409.7172.58.camel@twins>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Hugh Dickins <hughd@google.com>
+Cc: Wen Congyang <wency@cn.fujitsu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Jiang Liu <liuj97@gmail.com>, mhocko@suse.cz, bsingharora@gmail.com, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@openvz.org>, paul.gortmaker@windriver.com
 
-On Fri, Sep 14, 2012 at 04:53:29PM +0200, Peter Zijlstra wrote:
-> On Fri, 2012-09-14 at 10:25 -0400, Vivek Goyal wrote:
-> > So while % model is more intutive to users, it is hard to implement.
-> 
-> I don't agree with that. The fixed quota thing is counter-intuitive and
-> hard to use. It begets you questions like: why, if everything is idle
-> except my task, am I not getting the full throughput.
-
-Actually by fixed quota I meant minimum fixed %. So if other groups are
-idle, this group still gets to use 100% bandwidth. When resources are
-highly contended, this group gets its minimum fixed %.
-
-> 
-> It also makes adding entities harder because you're constrained to 100%.
-> This means you have to start each new cgroup with 0% because any !0
-> value will eventually get you over 100%, it also means you have to do
-> some form of admission control to make sure you never get over that
-> 100%.
-> 
-> Starting with 0% is not convenient for people.. they think this is the
-> wrong default, even though as argued above, it is the only possible
-> value.
-
-We don't have to start with 0%. We can keep a pool with dynamic % and
-launch all the virtual machines from that single pool. So nobody starts
-with 0%. If we require certain % for a machine, only then we look at
-peers and see if we have bandwidth free and create cgroup and move virtual
-machine there, otherwise we deny resources. 
-
-So I think it is doable just that it is painful and tricky and I think
-lot of it will be in user space.
-
-> 
-> >  So
-> > an easier way is to stick to the model of relative weights/share and
-> > let user specify relative importance of a virtual machine and actual
-> > quota or % will vary dynamically depending on other tasks/components
-> > in the system.
+On Thu, Sep 13, 2012 at 06:36:34PM -0700, Hugh Dickins wrote:
+> On Thu, 13 Sep 2012, Johannes Weiner wrote:
+> > On Thu, Sep 13, 2012 at 03:14:28PM +0800, Wen Congyang wrote:
+> > > root_mem_cgroup->info.nodeinfo is initialized when the system boots.
+> > > But NODE_DATA(nid) is null if the node is not onlined, so
+> > > root_mem_cgroup->info.nodeinfo[nid]->zoneinfo[zone].lruvec.zone contains
+> > > an invalid pointer. If we use numactl to bind a program to the node
+> > > after onlining the node and its memory, it will cause the kernel
+> > > panicked:
 > > 
-> > Thoughts? 
+> > Is there any chance we could get rid of the zone backpointer in lruvec
+> > again instead?
 > 
-> cpu does the relative weight, so 'users' will have to deal with it
-> anyway regardless of blk, its effectively free of learning curve for all
-> subsequent controllers.
+> It could be done, but it would make me sad :(
 
-I am inclined to keep it simple in kernel and just follow cpu model of
-relative weights and treating tasks and gropu at same level in the
-hierarchy. It makes behavior consistent across the controllers and I
-think it might just work for majority of cases.
+We would not want that!
 
-Those who really need to implement % model, they will have to do heavy
-lifting in user space. I am skeptical that will take off but kernel
-does not prohibit from somebody creating a group, moving all tasks
-there and making sure tasks and groups are not at same level hence
-% becomes more predictable. Just that, that's not the default from
-kernel.
+> > But can't
+> > we just go back to passing the zone along with the lruvec down
+> > vmscan.c paths?  I agree it's ugly to pass both, given their
+> > relationship.  But I don't think the backpointer is any cleaner but in
+> > addition less robust.
+> 
+> It's like how we use vma->mm: we could change everywhere to pass mm with
+> vma, but it looks cleaner and cuts down on long arglists to have mm in vma.
+> >From past experience, one of the things I worried about was adding extra
+> args to the reclaim stack.
 
-So yes, doing it cpu controller way in block controller should be
-reasonable.
+Ok, you certainly have a point.
 
-Thanks
-Vivek
+> > That being said, the crashing code in particular makes me wonder:
+> > 
+> > static __always_inline void add_page_to_lru_list(struct page *page,
+> > 				struct lruvec *lruvec, enum lru_list lru)
+> > {
+> > 	int nr_pages = hpage_nr_pages(page);
+> > 	mem_cgroup_update_lru_size(lruvec, lru, nr_pages);
+> > 	list_add(&page->lru, &lruvec->lists[lru]);
+> > 	__mod_zone_page_state(lruvec_zone(lruvec), NR_LRU_BASE + lru, nr_pages);
+> > }
+> > 
+> > Why did we ever pass zone in here and then felt the need to replace it
+> > with lruvec->zone in fa9add6 "mm/memcg: apply add/del_page to lruvec"?
+> > A page does not roam between zones, its zone is a static property that
+> > can be retrieved with page_zone().
+> 
+> Just as in vmscan.c, we have the lruvec to hand, and that's what we
+> mainly want to operate upon, but there is also some need for zone.
+> 
+> (Both Konstantin and I were looking towards the day when we move the
+> lru_lock into the lruvec, removing more dependence on "zone".  Pretty
+> much the only reason that hasn't happened yet, is that we have not found
+> time to make a performance case convincingly - but that's another topic.)
+> 
+> Yes, page_zone(page) is a static property of the page, but it's not
+> necessarily cheap to evaluate: depends on how complex the memory model
+> and the spare page flags space, doesn't it?  We both preferred to
+> derive zone from lruvec where convenient.
+> 
+> How do you feel about this patch, and does it work for you guys?
+> 
+> You'd be right if you guessed that I started out without the
+> mem_cgroup_zone_lruvec part of it, but oops in get_scan_count
+> told me that's needed too.
+> 
+> Description to be filled in later: would it be needed for -stable,
+> or is onlining already broken in other ways that you're now fixing up?
+> 
+> Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
+> Signed-off-by: Hugh Dickins <hughd@google.com>
+
+This looks good to me, thanks.
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
