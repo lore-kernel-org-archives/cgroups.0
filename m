@@ -1,239 +1,76 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH] memory cgroup: update root memory cgroup when node is
- onlined
-Date: Sun, 16 Sep 2012 23:40:38 -0700 (PDT)
-Message-ID: <alpine.LSU.2.00.1209162212320.4181@eggly.anvils>
-References: <505187D4.7070404@cn.fujitsu.com> <20120913205935.GK1560@cmpxchg.org> <50528C72.3080008@cn.fujitsu.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [RFC] cgroup TODOs
+Date: Mon, 17 Sep 2012 12:40:28 +0400
+Message-ID: <5056E1FC.1090508@parallels.com>
+References: <20120913205827.GO7677@google.com>
+	<20120914180754.GF6221@redhat.com>
+	<20120914185324.GI17747@google.com>
+	<20120914192840.GG6221@redhat.com>
+	<20120914194439.GP17747@google.com>
+	<20120914194950.GQ17747@google.com>
+	<20120914203925.GR17747@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=K/gfhsg39nvLErg+sXh6CE0h0oHKqSNpD2jvvikmDa0=;
-        b=SSzy1uf1yZ7e5+uOXK0S1u6aGOk5HmHcJM+XoXk4Tbesg9RI/fY8odjVJY5hUo8vWf
-         Uikcp3cf5BCvOMvGVAkoXBtAROFM0Pk7oun7nfUZmoiaSN52O5pkFge0r1uzSe36HBQO
-         W8srOdxmI9bH+ruyvQB/OD9wVNP47P8Q8hpMCHt9y5KZf/m293fNp5UM0O9pXg/xDXX4
-         xtSSMVkOnmaROr6t97ItDqviIErGxVOmvnCwtbs1lN5tx4CWcyPJVOG+MlosundR9YJg
-         a+0vCIi0vkDguY0bBIsNBHGNIbFxnhPLT+02NrNM029qxSFwtLqDaf4y/XSqWlOEDSht
-         5xFQ==
-In-Reply-To: <50528C72.3080008@cn.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wen Congyang <wency@cn.fujitsu.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Konstantin Khlebnikov <khlebnikov@openvz.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Jiang Liu <liuj97@gmail.com>, mhocko@suse.cz, bsingharora@gmail.com, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, paul.gortmaker@windriver.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20120914203925.GR17747-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh
+	Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Fri, 14 Sep 2012, Wen Congyang wrote:
+On 09/15/2012 12:39 AM, Tejun Heo wrote:
+> Hello, again.
 > 
-> Hmm, if we don't update lruvec_zone(lruvec) when a node is onlined,
-> lruver_zone(lruvec) contains a invalid pointer, so we should check
-> all place that accesses lruvec_zone(lruvec). We store zone in lruvec
-> but we can't access it. And we can't avoid to access it in the
-> furture. So I think it is better to update it when the node is
-> onlined.
+> On Fri, Sep 14, 2012 at 12:49:50PM -0700, Tejun Heo wrote:
+>> That said, if someone can think of a better solution, I'm all ears.
+>> One thing that *has* to be maintained is that it should be able to tag
+>> a resource in such way that its associated controllers are
+>> identifiable regardless of which task is looking at it.
+> 
+> So, I thought about it more.  How about we do "consider / ignore this
+> node" instead of "(don't) nest beyond this level".  For example, let's
+> assume a tree like the following.
+> 
+>         R
+>      /  |  \
+>     A   B   C
+>    / \
+>   AA AB
+> 
+> If we want to differentiate between AA and AB, we'll have to consider
+> the whole tree with the previous sheme - A needs to nest, so R needs
+> to nest and we end up with the whole tree.  Instead, if we have honor
+> / ignore this node.  We can set the honor bit on A, AA and AB and see
+> the tree as
+> 
+>         R
+>      /
+>     A
+>    / \
+>   AA AB
+> 
+> We still see the intermediate A node but can ignore the other
+> branches.  Implementation and concept-wise, it's fairly simple too.
+> For any given node and controller, you travel upwards until you meet a
+> node which has the controller enabled and that's the cgroup the
+> controller considers.
+> 
+> Thanks.
+> 
 
-Thanks for your feedback (-), and Johannes (+), and Konstantin (-):
-though your remarks above appear to be in reply to Johannes, I took
-them as applying to my patch.
+That is exactly what I proposed in our previous discussions around
+memcg, with files like "available_controllers" , "current_controllers".
+Name chosen to match what other subsystems already do.
 
-I think it's okay to update lruvec->zone in mem_cgroup_zone_lruvec()
-and mem_cgroup_page_lruvec(), rather than in each place we call
-lruvec_zone(lruvec), because the lruvec addressed is not pulled out
-of nowhere: it has been supplied by either mem_cgroup_zone_lruvec()
-or mem_cgroup_page_lruvec().
-
-But your comment did prompt me to go back and check on that, and
-I did find one other place which makes its own determination of the
-lruvec: mem_cgroup_force_empty_list().  Now, that happens to be safe
-at present because of its list_empty() check, but it's easy to imagine
-a future patch which would accidentally make it go wrong: so in the
-updated version of my lruvec->zone patch below, I've changed the
-assignments at the head of mem_cgroup_force_empty_list() to use
-the standard mem_cgroup_zone_lruvec() to determine lruvec.
-
-But I've made another change (in both places) too - though if you've
-already been testing the earlier patch, this will not be any worse:
-I've removed the VM_BUG_ONs, after realizing that hotremove of
-memory node followed by hotadd of memory node would need to
-update lruvec->zone even though it's currently non-zero -
-unless hotremove goes through updating all memcgs in the
-same way as you propose that hotadd does.
-
-I'm not sure how I feel about my patch: really, I think I'd
-like to see the "update all memcgs when memory node is onlined and
-offlined" patch that you and Konstantin prefer (but I'd prefer one
-of you to write), before we make up our minds which way to go.
-
-If it's not too complicated, yes, I may well prefer it myself too;
-but I worry that it may turn out to be hard to get the serialization
-against mem cgroup creation and destruction right.
-
-Konstantin remarks that it would be nice to have notifier chains
-in memory hotplug: I believe that's already there, and, for example,
-KSM is one user of hotplug_memory_notifier().
-
-I've seen you comment elsewhere that memory hotremove is not working
-with memcg, and I wonder if you've found it far away from working,
-or nearly there.  That might determine which patch to choose: if
-it's nearly working, then you may need to update all memcgs anyway
-to get it fully working, in which case it would probably be right
-to handle lruvec->zone that way too.  But if it's hard to get working,
-but hotadd nearly right, then my patch may be the right choice for now.
-
-I've still not written the patch comment: it was when I started to
-write that, that I realized the hotadd after hotremove issue.
-
-Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Hugh Dickins <hughd@google.com>
----
-
- include/linux/mmzone.h |    2 -
- mm/memcontrol.c        |   46 +++++++++++++++++++++++++++++----------
- mm/mmzone.c            |    6 -----
- mm/page_alloc.c        |    2 -
- 4 files changed, 38 insertions(+), 18 deletions(-)
-
---- 3.6-rc6/include/linux/mmzone.h	2012-08-03 08:31:26.892842267 -0700
-+++ linux/include/linux/mmzone.h	2012-09-13 17:07:51.893772372 -0700
-@@ -744,7 +744,7 @@ extern int init_currently_empty_zone(str
- 				     unsigned long size,
- 				     enum memmap_context context);
- 
--extern void lruvec_init(struct lruvec *lruvec, struct zone *zone);
-+extern void lruvec_init(struct lruvec *lruvec);
- 
- static inline struct zone *lruvec_zone(struct lruvec *lruvec)
- {
---- 3.6-rc6/mm/memcontrol.c	2012-08-03 08:31:27.060842270 -0700
-+++ linux/mm/memcontrol.c	2012-09-16 21:49:28.583284601 -0700
-@@ -1061,12 +1061,24 @@ struct lruvec *mem_cgroup_zone_lruvec(st
- 				      struct mem_cgroup *memcg)
- {
- 	struct mem_cgroup_per_zone *mz;
-+	struct lruvec *lruvec;
- 
--	if (mem_cgroup_disabled())
--		return &zone->lruvec;
-+	if (mem_cgroup_disabled()) {
-+		lruvec = &zone->lruvec;
-+		goto out;
-+	}
- 
- 	mz = mem_cgroup_zoneinfo(memcg, zone_to_nid(zone), zone_idx(zone));
--	return &mz->lruvec;
-+	lruvec = &mz->lruvec;
-+out:
-+	/*
-+	 * Since a node can be onlined after the mem_cgroup was created,
-+	 * we have to be prepared to initialize lruvec->zone here;
-+	 * and if offlined then reonlined, we need to reinitialize it.
-+	 */
-+	if (unlikely(lruvec->zone != zone))
-+		lruvec->zone = zone;
-+	return lruvec;
- }
- 
- /*
-@@ -1093,9 +1105,12 @@ struct lruvec *mem_cgroup_page_lruvec(st
- 	struct mem_cgroup_per_zone *mz;
- 	struct mem_cgroup *memcg;
- 	struct page_cgroup *pc;
-+	struct lruvec *lruvec;
- 
--	if (mem_cgroup_disabled())
--		return &zone->lruvec;
-+	if (mem_cgroup_disabled()) {
-+		lruvec = &zone->lruvec;
-+		goto out;
-+	}
- 
- 	pc = lookup_page_cgroup(page);
- 	memcg = pc->mem_cgroup;
-@@ -1113,7 +1128,16 @@ struct lruvec *mem_cgroup_page_lruvec(st
- 		pc->mem_cgroup = memcg = root_mem_cgroup;
- 
- 	mz = page_cgroup_zoneinfo(memcg, page);
--	return &mz->lruvec;
-+	lruvec = &mz->lruvec;
-+out:
-+	/*
-+	 * Since a node can be onlined after the mem_cgroup was created,
-+	 * we have to be prepared to initialize lruvec->zone here;
-+	 * and if offlined then reonlined, we need to reinitialize it.
-+	 */
-+	if (unlikely(lruvec->zone != zone))
-+		lruvec->zone = zone;
-+	return lruvec;
- }
- 
- /**
-@@ -3694,17 +3718,17 @@ unsigned long mem_cgroup_soft_limit_recl
- static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
- 				int node, int zid, enum lru_list lru)
- {
--	struct mem_cgroup_per_zone *mz;
-+	struct lruvec *lruvec;
- 	unsigned long flags, loop;
- 	struct list_head *list;
- 	struct page *busy;
- 	struct zone *zone;
- 
- 	zone = &NODE_DATA(node)->node_zones[zid];
--	mz = mem_cgroup_zoneinfo(memcg, node, zid);
--	list = &mz->lruvec.lists[lru];
-+	lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-+	list = &lruvec->lists[lru];
- 
--	loop = mz->lru_size[lru];
-+	loop = mem_cgroup_get_lru_size(lruvec, lru);
- 	/* give some margin against EBUSY etc...*/
- 	loop += 256;
- 	busy = NULL;
-@@ -4742,7 +4766,7 @@ static int alloc_mem_cgroup_per_zone_inf
- 
- 	for (zone = 0; zone < MAX_NR_ZONES; zone++) {
- 		mz = &pn->zoneinfo[zone];
--		lruvec_init(&mz->lruvec, &NODE_DATA(node)->node_zones[zone]);
-+		lruvec_init(&mz->lruvec);
- 		mz->usage_in_excess = 0;
- 		mz->on_tree = false;
- 		mz->memcg = memcg;
---- 3.6-rc6/mm/mmzone.c	2012-08-03 08:31:27.064842271 -0700
-+++ linux/mm/mmzone.c	2012-09-13 17:06:28.921766001 -0700
-@@ -87,7 +87,7 @@ int memmap_valid_within(unsigned long pf
- }
- #endif /* CONFIG_ARCH_HAS_HOLES_MEMORYMODEL */
- 
--void lruvec_init(struct lruvec *lruvec, struct zone *zone)
-+void lruvec_init(struct lruvec *lruvec)
- {
- 	enum lru_list lru;
- 
-@@ -95,8 +95,4 @@ void lruvec_init(struct lruvec *lruvec,
- 
- 	for_each_lru(lru)
- 		INIT_LIST_HEAD(&lruvec->lists[lru]);
--
--#ifdef CONFIG_MEMCG
--	lruvec->zone = zone;
--#endif
- }
---- 3.6-rc6/mm/page_alloc.c	2012-08-22 14:25:39.508279046 -0700
-+++ linux/mm/page_alloc.c	2012-09-13 17:06:08.265763526 -0700
-@@ -4456,7 +4456,7 @@ static void __paginginit free_area_init_
- 		zone->zone_pgdat = pgdat;
- 
- 		zone_pcp_init(zone);
--		lruvec_init(&zone->lruvec, zone);
-+		lruvec_init(&zone->lruvec);
- 		if (!size)
- 			continue;
- 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+if memcg is not in "available_controllers" for a node, it cannot be seen
+by anyone bellow that level.
