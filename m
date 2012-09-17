@@ -1,73 +1,225 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: Controlling devices and device namespaces
-Date: Sun, 16 Sep 2012 10:49:07 -0700
-Message-ID: <87zk4pluy4.fsf@xmission.com>
-References: <20120913205827.GO7677@google.com>
-	<20120914183641.GA2191@cathedrallabs.org>
-	<20120915022037.GA6438@mail.hallyn.com>
-	<87wqzv7i08.fsf_-_@xmission.com>
-	<20120915220520.GA11364@mail.hallyn.com> <87y5kazuez.fsf@xmission.com>
-	<20120916122112.3f16178d@pyramind.ukuu.org.uk>
-	<87sjaiuqp5.fsf@xmission.com> <87d31mupp3.fsf@xmission.com>
-	<5055D4D1.3070407@hallyn.com> <87k3vuqc5l.fsf@xmission.com>
-	<20120916171316.517ad0fd@pyramind.ukuu.org.uk>
+From: Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] memory cgroup: update root memory cgroup when node is
+ onlined
+Date: Mon, 17 Sep 2012 13:50:58 +0800
+Message-ID: <5056BA42.1030604@cn.fujitsu.com>
+References: <505187D4.7070404@cn.fujitsu.com> <20120913205935.GK1560@cmpxchg.org> <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20120916171316.517ad0fd-38n7/U1jhRXW96NNrWNlrekiAK3p4hvP@public.gmane.org> (Alan Cox's
-	message of "Sun, 16 Sep 2012 17:13:16 +0100")
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>
-Cc: Aristeu Rozanski <aris-moeOTchvdi7YtjvyW6yDsg@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <alpine.LSU.2.00.1209131816070.1908-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jiang Liu <liuj97-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org
 
-Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org> writes:
+At 09/14/2012 09:36 AM, Hugh Dickins Wrote:
+> On Thu, 13 Sep 2012, Johannes Weiner wrote:
+>> On Thu, Sep 13, 2012 at 03:14:28PM +0800, Wen Congyang wrote:
+>>> root_mem_cgroup->info.nodeinfo is initialized when the system boots.
+>>> But NODE_DATA(nid) is null if the node is not onlined, so
+>>> root_mem_cgroup->info.nodeinfo[nid]->zoneinfo[zone].lruvec.zone contains
+>>> an invalid pointer. If we use numactl to bind a program to the node
+>>> after onlining the node and its memory, it will cause the kernel
+>>> panicked:
+>>
+>> Is there any chance we could get rid of the zone backpointer in lruvec
+>> again instead?
+> 
+> It could be done, but it would make me sad :(
+> 
+>> Adding new nodes is a rare event and so updating every
+>> single memcg in the system might be just borderline crazy.
+> 
+> Not horribly crazy, but rather ugly, yes.
+> 
+>> But can't
+>> we just go back to passing the zone along with the lruvec down
+>> vmscan.c paths?  I agree it's ugly to pass both, given their
+>> relationship.  But I don't think the backpointer is any cleaner but in
+>> addition less robust.
+> 
+> It's like how we use vma->mm: we could change everywhere to pass mm with
+> vma, but it looks cleaner and cuts down on long arglists to have mm in vma.
+>>From past experience, one of the things I worried about was adding extra
+> args to the reclaim stack.
+> 
+>>
+>> That being said, the crashing code in particular makes me wonder:
+>>
+>> static __always_inline void add_page_to_lru_list(struct page *page,
+>> 				struct lruvec *lruvec, enum lru_list lru)
+>> {
+>> 	int nr_pages = hpage_nr_pages(page);
+>> 	mem_cgroup_update_lru_size(lruvec, lru, nr_pages);
+>> 	list_add(&page->lru, &lruvec->lists[lru]);
+>> 	__mod_zone_page_state(lruvec_zone(lruvec), NR_LRU_BASE + lru, nr_pages);
+>> }
+>>
+>> Why did we ever pass zone in here and then felt the need to replace it
+>> with lruvec->zone in fa9add6 "mm/memcg: apply add/del_page to lruvec"?
+>> A page does not roam between zones, its zone is a static property that
+>> can be retrieved with page_zone().
+> 
+> Just as in vmscan.c, we have the lruvec to hand, and that's what we
+> mainly want to operate upon, but there is also some need for zone.
+> 
+> (Both Konstantin and I were looking towards the day when we move the
+> lru_lock into the lruvec, removing more dependence on "zone".  Pretty
+> much the only reason that hasn't happened yet, is that we have not found
+> time to make a performance case convincingly - but that's another topic.)
+> 
+> Yes, page_zone(page) is a static property of the page, but it's not
+> necessarily cheap to evaluate: depends on how complex the memory model
+> and the spare page flags space, doesn't it?  We both preferred to
+> derive zone from lruvec where convenient.
+> 
+> How do you feel about this patch, and does it work for you guys?
+> 
+> You'd be right if you guessed that I started out without the
+> mem_cgroup_zone_lruvec part of it, but oops in get_scan_count
+> told me that's needed too.
+> 
+> Description to be filled in later: would it be needed for -stable,
+> or is onlining already broken in other ways that you're now fixing up?
+> 
+> Reported-by: Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+> 
+>  include/linux/mmzone.h |    2 -
+>  mm/memcontrol.c        |   40 ++++++++++++++++++++++++++++++++-------
+>  mm/mmzone.c            |    6 -----
+>  mm/page_alloc.c        |    2 -
+>  4 files changed, 36 insertions(+), 14 deletions(-)
+> 
+> --- 3.6-rc5/include/linux/mmzone.h	2012-08-03 08:31:26.892842267 -0700
+> +++ linux/include/linux/mmzone.h	2012-09-13 17:07:51.893772372 -0700
+> @@ -744,7 +744,7 @@ extern int init_currently_empty_zone(str
+>  				     unsigned long size,
+>  				     enum memmap_context context);
+>  
+> -extern void lruvec_init(struct lruvec *lruvec, struct zone *zone);
+> +extern void lruvec_init(struct lruvec *lruvec);
+>  
+>  static inline struct zone *lruvec_zone(struct lruvec *lruvec)
+>  {
+> --- 3.6-rc5/mm/memcontrol.c	2012-08-03 08:31:27.060842270 -0700
+> +++ linux/mm/memcontrol.c	2012-09-13 17:46:36.870804625 -0700
+> @@ -1061,12 +1061,25 @@ struct lruvec *mem_cgroup_zone_lruvec(st
+>  				      struct mem_cgroup *memcg)
+>  {
+>  	struct mem_cgroup_per_zone *mz;
+> +	struct lruvec *lruvec;
+>  
+> -	if (mem_cgroup_disabled())
+> -		return &zone->lruvec;
+> +	if (mem_cgroup_disabled()) {
+> +		lruvec = &zone->lruvec;
+> +		goto out;
+> +	}
+>  
+>  	mz = mem_cgroup_zoneinfo(memcg, zone_to_nid(zone), zone_idx(zone));
+> -	return &mz->lruvec;
+> +	lruvec = &mz->lruvec;
+> +out:
+> +	/*
+> +	 * Since a node can be onlined after the mem_cgroup was created,
+> +	 * we have to be prepared to initialize lruvec->zone here.
+> +	 */
+> +	if (unlikely(lruvec->zone != zone)) {
+> +		VM_BUG_ON(lruvec->zone);
 
->> At least with a recent modern distro I can't imagine this to be an
->> issue.  I expect we could have a kernel build option that removed the
->> mknod system call and a modern distro wouldn't notice.
->
-> A few things beyond named pipes will break. PCMCIA I believe still
-> depends on ugly mknod hackery of its own. You also need it for some
-> classes of non detectable device.
->
-> Basically though you could.
+If node is offlined and onlined again, lruvec->zone is not NULL, and not
+equal to zone, this line will cause kernel panicked. 
 
-Ah yes fifos.  I had forgotten mknod created them.  I am half surprised
-there isn't a mkfifo system call.
+> +		lruvec->zone = zone;
+> +	}
+> +	return lruvec;
+>  }
+>  
+>  /*
+> @@ -1093,9 +1106,12 @@ struct lruvec *mem_cgroup_page_lruvec(st
+>  	struct mem_cgroup_per_zone *mz;
+>  	struct mem_cgroup *memcg;
+>  	struct page_cgroup *pc;
+> +	struct lruvec *lruvec;
+>  
+> -	if (mem_cgroup_disabled())
+> -		return &zone->lruvec;
+> +	if (mem_cgroup_disabled()) {
+> +		lruvec = &zone->lruvec;
+> +		goto out;
+> +	}
+>  
+>  	pc = lookup_page_cgroup(page);
+>  	memcg = pc->mem_cgroup;
+> @@ -1113,7 +1129,17 @@ struct lruvec *mem_cgroup_page_lruvec(st
+>  		pc->mem_cgroup = memcg = root_mem_cgroup;
+>  
+>  	mz = page_cgroup_zoneinfo(memcg, page);
+> -	return &mz->lruvec;
+> +	lruvec = &mz->lruvec;
+> +out:
+> +	/*
+> +	 * Since a node can be onlined after the mem_cgroup was created,
+> +	 * we have to be prepared to initialize lruvec->zone here.
+> +	 */
+> +	if (unlikely(lruvec->zone != zone)) {
+> +		VM_BUG_ON(lruvec->zone);
 
->> For migration with direct access to real hardware devices we must treat
->> it as hardware hotunplug.  There is nothing else we can do.
->
-> That is demonstrably false for a shared bus or a network linked device.
-> Consider a firewire camera wired to two systems at once. Consider SAN
-> storage.
+I apply your patch, and remove VM_BUG_ON(). I don't find any error in my test
+now.
 
-Sort of.
 
-If you are talking to the device directly there is usually enough state
-with the path changing that modelling it as a hotunplug/hotplug is about
-all that is practical.  There is all of that intermediate state for in
-progress DMAs in the end system controllers etc.
+Thanks
+Wen Congyang
 
-Now if you have a logical abstraction like a block device in between the
-program and the SAN storage, then figuring out how to preserve device
-names and numbers becomes interesting.  At least far enough to keep
-device and inode numbers for stat intact.
-
-A fully general solution for preserving device names, and numbers
-requires rewriting sysfs.  I expect a lot of the infrastructure someone
-needs is there already from my network namespace work but after having
-done the network namespace I am sick and tired of manhandling that
-unreasonably conjoined glob of device stuff.
-
-Eric
+> +		lruvec->zone = zone;
+> +	}
+> +	return lruvec;
+>  }
+>  
+>  /**
+> @@ -4742,7 +4768,7 @@ static int alloc_mem_cgroup_per_zone_inf
+>  
+>  	for (zone = 0; zone < MAX_NR_ZONES; zone++) {
+>  		mz = &pn->zoneinfo[zone];
+> -		lruvec_init(&mz->lruvec, &NODE_DATA(node)->node_zones[zone]);
+> +		lruvec_init(&mz->lruvec);
+>  		mz->usage_in_excess = 0;
+>  		mz->on_tree = false;
+>  		mz->memcg = memcg;
+> --- 3.6-rc5/mm/mmzone.c	2012-08-03 08:31:27.064842271 -0700
+> +++ linux/mm/mmzone.c	2012-09-13 17:06:28.921766001 -0700
+> @@ -87,7 +87,7 @@ int memmap_valid_within(unsigned long pf
+>  }
+>  #endif /* CONFIG_ARCH_HAS_HOLES_MEMORYMODEL */
+>  
+> -void lruvec_init(struct lruvec *lruvec, struct zone *zone)
+> +void lruvec_init(struct lruvec *lruvec)
+>  {
+>  	enum lru_list lru;
+>  
+> @@ -95,8 +95,4 @@ void lruvec_init(struct lruvec *lruvec,
+>  
+>  	for_each_lru(lru)
+>  		INIT_LIST_HEAD(&lruvec->lists[lru]);
+> -
+> -#ifdef CONFIG_MEMCG
+> -	lruvec->zone = zone;
+> -#endif
+>  }
+> --- 3.6-rc5/mm/page_alloc.c	2012-08-22 14:25:39.508279046 -0700
+> +++ linux/mm/page_alloc.c	2012-09-13 17:06:08.265763526 -0700
+> @@ -4456,7 +4456,7 @@ static void __paginginit free_area_init_
+>  		zone->zone_pgdat = pgdat;
+>  
+>  		zone_pcp_init(zone);
+> -		lruvec_init(&zone->lruvec, zone);
+> +		lruvec_init(&zone->lruvec);
+>  		if (!size)
+>  			continue;
+>  
+> 
