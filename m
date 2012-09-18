@@ -1,61 +1,29 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v4 cgroup/for-3.7] cgroup: mark subsystems with broken
-	hierarchy support and whine if cgroups are nested for them
-Date: Tue, 18 Sep 2012 18:33:07 +0200
-Message-ID: <20120918163257.GD19840@dhcp22.suse.cz>
-References: <20120913183402.GG7677@google.com>
-	<20120913192058.GH7677@google.com>
-	<20120914190608.GM17747@google.com>
-	<20120918150404.GC19840@dhcp22.suse.cz>
-	<CAOS58YPjEE-+Kak_XidAd5qT84pZKt_z=4_MXadHYvzP+yZ5+Q@mail.gmail.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [PATCH v3 13/16] slab: slab-specific propagation changes.
+Date: Tue, 18 Sep 2012 17:00:20 +0000
+Message-ID: <00000139da52bc21-06113921-5cf5-42b6-94e3-fe9763e909bc-000000@email.amazonses.com>
+References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-14-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1347977530-29755-14-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOS58YPjEE-+Kak_XidAd5qT84pZKt_z=4_MXadHYvzP+yZ5+Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Tue 18-09-12 09:27:04, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Tue, Sep 18, 2012 at 8:04 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> >> The branch is based on top of the current mainline (fbcbe2b3c 3.6-rc5)
-> >> and only contains hierarchy related changes.
-> >
-> > This is not very much mm git tree friendly because I would have to pull
-> > a lot just to merge a single commit... It would have been much nicer if
-> > you based it on the last major release (it applies cleanly on top of
-> > 3.5). mm git tree tries to get as few (unrelated) changes as possible on
-> > top of the last major release.
-> 
-> Hmmm... I thought you explicitly requested it to be based on -rc5.
-> Maybe I misread... and yes I did. I read 3.5 as 3.6-rc5.
+On Tue, 18 Sep 2012, Glauber Costa wrote:
 
-No problem.
- 
-> >> The branch will be kept stable unless I do something completely
-> >> stupid, so please feel free to pull into other trees as necessary.
-> >
-> > Anyway, keep it this way for now (as we are getting close to the end of
-> > 3.6). I have cherry-picked 8c7f6edb for now and use the branch after 3.6
-> > is out.
-> 
-> It's single commit.  Rebasing is not a problem.
+> When a parent cache does tune_cpucache, we need to propagate that to the
+> children as well. For that, we unfortunately need to tap into the slab core.
 
-Let's keep it this way. Who knows who has already pulled.
+One of the todo list items for the common stuff is to have actually a
+common kmem_cache structure. If we add a common callback then we could put
+that also into the core.
 
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
