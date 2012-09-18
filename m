@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 08/13] res_counter: return amount of charges after res_counter_uncharge
-Date: Tue, 18 Sep 2012 18:04:05 +0400
-Message-ID: <1347977050-29476-9-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 10/13] memcg: use static branches when code not in use
+Date: Tue, 18 Sep 2012 18:04:07 +0400
+Message-ID: <1347977050-29476-11-git-send-email-glommer@parallels.com>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1347977050-29476-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,129 +11,119 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-It is useful to know how many charges are still left after a call to
-res_counter_uncharge. While it is possible to issue a res_counter_read
-after uncharge, this is racy. It would be better if uncharge itself
-would tell us what the current status is.
+We can use static branches to patch the code in or out when not used.
 
-Since the current return value is void, we don't need to worry about
-anything breaking due to this change: nobody relied on that, and only
-users appearing from now on will be checking this value.
+Because the _ACTIVATED bit on kmem_accounted is only set once, we
+guarantee that the root memcg will always be selected until all call
+sites are patched (see memcg_kmem_enabled).  This guarantees that no
+mischarges are applied.
+
+static branch decrement happens when the last reference count from the
+kmem accounting in memcg dies. This will only happen when the charges
+drop down to 0.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- Documentation/cgroups/resource_counter.txt |  7 ++++---
- include/linux/res_counter.h                | 12 +++++++-----
- kernel/res_counter.c                       | 20 +++++++++++++-------
- 3 files changed, 24 insertions(+), 15 deletions(-)
+ include/linux/memcontrol.h |  4 +++-
+ mm/memcontrol.c            | 26 ++++++++++++++++++++++++--
+ 2 files changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/cgroups/resource_counter.txt b/Documentation/cgroups/resource_counter.txt
-index 0c4a344..c4d99ed 100644
---- a/Documentation/cgroups/resource_counter.txt
-+++ b/Documentation/cgroups/resource_counter.txt
-@@ -83,16 +83,17 @@ to work with it.
- 	res_counter->lock internally (it must be called with res_counter->lock
- 	held). The force parameter indicates whether we can bypass the limit.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 82ede9a..4ec9fd5 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -22,6 +22,7 @@
+ #include <linux/cgroup.h>
+ #include <linux/vm_event_item.h>
+ #include <linux/hardirq.h>
++#include <linux/jump_label.h>
  
-- e. void res_counter_uncharge[_locked]
-+ e. u64 res_counter_uncharge[_locked]
- 			(struct res_counter *rc, unsigned long val)
+ struct mem_cgroup;
+ struct page_cgroup;
+@@ -401,9 +402,10 @@ struct sock;
+ void sock_update_memcg(struct sock *sk);
+ void sock_release_memcg(struct sock *sk);
  
- 	When a resource is released (freed) it should be de-accounted
- 	from the resource counter it was accounted to.  This is called
--	"uncharging".
-+	"uncharging". The return value of this function indicate the amount
-+	of charges still present in the counter.
- 
- 	The _locked routines imply that the res_counter->lock is taken.
- 
-- f. void res_counter_uncharge_until
-+ f. u64 res_counter_uncharge_until
- 		(struct res_counter *rc, struct res_counter *top,
- 		 unsinged long val)
- 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index 7d7fbe2..4b173b6 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -130,14 +130,16 @@ int res_counter_charge_nofail(struct res_counter *counter,
-  *
-  * these calls check for usage underflow and show a warning on the console
-  * _locked call expects the counter->lock to be taken
-+ *
-+ * returns the total charges still present in @counter.
-  */
- 
--void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
--void res_counter_uncharge(struct res_counter *counter, unsigned long val);
-+u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
-+u64 res_counter_uncharge(struct res_counter *counter, unsigned long val);
- 
--void res_counter_uncharge_until(struct res_counter *counter,
--				struct res_counter *top,
--				unsigned long val);
-+u64 res_counter_uncharge_until(struct res_counter *counter,
-+			       struct res_counter *top,
-+			       unsigned long val);
- /**
-  * res_counter_margin - calculate chargeable space of a counter
-  * @cnt: the counter
-diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-index ad581aa..7b3d6dc 100644
---- a/kernel/res_counter.c
-+++ b/kernel/res_counter.c
-@@ -86,33 +86,39 @@ int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
- 	return __res_counter_charge(counter, val, limit_fail_at, true);
- }
- 
--void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
-+u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
++extern struct static_key memcg_kmem_enabled_key;
+ static inline bool memcg_kmem_enabled(void)
  {
- 	if (WARN_ON(counter->usage < val))
- 		val = counter->usage;
- 
- 	counter->usage -= val;
-+	return counter->usage;
+-	return true;
++	return static_key_false(&memcg_kmem_enabled_key);
  }
  
--void res_counter_uncharge_until(struct res_counter *counter,
--				struct res_counter *top,
--				unsigned long val)
-+u64 res_counter_uncharge_until(struct res_counter *counter,
-+			       struct res_counter *top,
-+			       unsigned long val)
- {
- 	unsigned long flags;
- 	struct res_counter *c;
-+	u64 ret = 0;
+ extern bool __memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 720e4bb..aada601 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -467,6 +467,8 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+ #include <net/sock.h>
+ #include <net/ip.h>
  
- 	local_irq_save(flags);
- 	for (c = counter; c != top; c = c->parent) {
-+		u64 r;
- 		spin_lock(&c->lock);
--		res_counter_uncharge_locked(c, val);
-+		r = res_counter_uncharge_locked(c, val);
-+		if (c == counter)
-+			ret = r;
- 		spin_unlock(&c->lock);
- 	}
- 	local_irq_restore(flags);
-+	return ret;
++struct static_key memcg_kmem_enabled_key;
++
+ static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
+ static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size);
+ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size);
+@@ -624,6 +626,16 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
+ 	WARN_ON(mem_cgroup_is_root(memcg));
+ 	memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
  }
++
++static void disarm_kmem_keys(struct mem_cgroup *memcg)
++{
++	if (memcg_kmem_is_accounted(memcg))
++		static_key_slow_dec(&memcg_kmem_enabled_key);
++}
++#else
++static void disarm_kmem_keys(struct mem_cgroup *memcg)
++{
++}
+ #endif /* CONFIG_MEMCG_KMEM */
  
--void res_counter_uncharge(struct res_counter *counter, unsigned long val)
-+u64 res_counter_uncharge(struct res_counter *counter, unsigned long val)
- {
--	res_counter_uncharge_until(counter, NULL, val);
-+	return res_counter_uncharge_until(counter, NULL, val);
+ #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
+@@ -639,6 +651,12 @@ static void disarm_sock_keys(struct mem_cgroup *memcg)
  }
+ #endif
  
- static inline unsigned long long *
++static void disarm_static_keys(struct mem_cgroup *memcg)
++{
++	disarm_sock_keys(memcg);
++	disarm_kmem_keys(memcg);
++}
++
+ static void drain_all_stock_async(struct mem_cgroup *memcg);
+ 
+ static struct mem_cgroup_per_zone *
+@@ -4131,7 +4149,11 @@ static void memcg_update_kmem_limit(struct mem_cgroup *memcg, u64 val)
+ 	 */
+ 	mutex_lock(&set_limit_mutex);
+ 	if ((val != RESOURCE_MAX) && memcg_kmem_set_active(memcg)) {
+-
++		/*
++		 * Once the static branch is enabled it will only be
++		 * disabled when the last reference to memcg is gone.
++		 */
++		static_key_slow_inc(&memcg_kmem_enabled_key);
+ 		mem_cgroup_get(memcg);
+ 
+ 		for_each_mem_cgroup_tree(iter, memcg) {
+@@ -5066,7 +5088,7 @@ static void free_work(struct work_struct *work)
+ 	 * to move this code around, and make sure it is outside
+ 	 * the cgroup_lock.
+ 	 */
+-	disarm_sock_keys(memcg);
++	disarm_static_keys(memcg);
+ 	if (size < PAGE_SIZE)
+ 		kfree(memcg);
+ 	else
 -- 
 1.7.11.4
