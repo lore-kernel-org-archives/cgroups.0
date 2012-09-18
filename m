@@ -1,122 +1,116 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 00/13] kmem controller for memcg.
-Date: Tue, 18 Sep 2012 18:03:57 +0400
-Message-ID: <1347977050-29476-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 03/13] memcg: change defines to an enum
+Date: Tue, 18 Sep 2012 18:04:00 +0400
+Message-ID: <1347977050-29476-4-git-send-email-glommer@parallels.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1347977050-29476-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hi,
+This is just a cleanup patch for clarity of expression.  In earlier
+submissions, people asked it to be in a separate patch, so here it is.
 
-This is the first part of the kernel memory controller for memcg. It has been
-discussed many times, and I consider this stable enough to be on tree. A follow
-up to this series are the patches to also track slab memory. They are not
-included here because I believe we could benefit from merging them separately
-for better testing coverage. If there are any issues preventing this to be
-merged, let me know. I'll be happy to address them.
+[ v2: use named enum as type throughout the file as well ]
 
-*v3:
-	- Changed function names to match memcg's
-	- avoid doing get/put in charge/uncharge path
-	- revert back to keeping the account enabled after it is first activated
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ mm/memcontrol.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-The slab patches are also mature in my self evaluation and could be merged not
-too long after this. For the reference, the last discussion about them happened
-at http://lwn.net/Articles/508087/. Patches for that will be sent shortly, and
-will include the documentation for this.
-
-Numbers can be found at https://lkml.org/lkml/2012/9/13/239
-
-A (throwaway) git tree with them is placed at:
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git kmemcg-stack
-
-A general explanation of what this is all about follows:
-
-The kernel memory limitation mechanism for memcg concerns itself with
-disallowing potentially non-reclaimable allocations to happen in exaggerate
-quantities by a particular set of processes (cgroup). Those allocations could
-create pressure that affects the behavior of a different and unrelated set of
-processes.
-
-Its basic working mechanism is to annotate some allocations with the
-_GFP_KMEMCG flag. When this flag is set, the current process allocating will
-have its memcg identified and charged against. When reaching a specific limit,
-further allocations will be denied.
-
-One example of such problematic pressure that can be prevented by this work is
-a fork bomb conducted in a shell. We prevent it by noting that processes use a
-limited amount of stack pages. Seen this way, a fork bomb is just a special
-case of resource abuse. If the offender is unable to grab more pages for the
-stack, no new processes can be created.
-
-There are also other things the general mechanism protects against. For
-example, using too much of pinned dentry and inode cache, by touching files an
-leaving them in memory forever.
-
-In fact, a simple:
-
-while true; do mkdir x; cd x; done
-
-can halt your system easily because the file system limits are hard to reach
-(big disks), but the kernel memory is not. Those are examples, but the list
-certainly don't stop here.
-
-An important use case for all that, is concerned with people offering hosting
-services through containers. In a physical box we can put a limit to some
-resources, like total number of processes or threads. But in an environment
-where each independent user gets its own piece of the machine, we don't want a
-potentially malicious user to destroy good users' services.
-
-This might be true for systemd as well, that now groups services inside
-cgroups. They generally want to put forward a set of guarantees that limits the
-running service in a variety of ways, so that if they become badly behaved,
-they won't interfere with the rest of the system.
-
-There is, of course, a cost for that. To attempt to mitigate that, static
-branches are used to make sure that even if the feature is compiled in with
-potentially a lot of memory cgroups deployed this code will only be enabled
-after the first user of this service configures any limit. Limits lower than
-the user limit effectively means there is a separate kernel memory limit that
-may be reached independently than the user limit. Values equal or greater than
-the user limit implies only that kernel memory is tracked. This provides a
-unified vision of "maximum memory", be it kernel or user memory. Because this
-is all default-off, existing deployments will see no change in behavior.
-
-
-Glauber Costa (11):
-  memcg: change defines to an enum
-  kmem accounting basic infrastructure
-  Add a __GFP_KMEMCG flag
-  memcg: kmem controller infrastructure
-  mm: Allocate kernel pages to the right memcg
-  res_counter: return amount of charges after res_counter_uncharge
-  memcg: kmem accounting lifecycle management
-  memcg: use static branches when code not in use
-  memcg: allow a memcg with kmem charges to be destructed.
-  execute the whole memcg freeing in rcu callback
-  protect architectures where THREAD_SIZE >= PAGE_SIZE against fork
-    bombs
-
-Suleiman Souhlal (2):
-  memcg: Make it possible to use the stock for more than one page.
-  memcg: Reclaim when more than one page needed.
-
- Documentation/cgroups/resource_counter.txt |   7 +-
- include/linux/gfp.h                        |  10 +-
- include/linux/memcontrol.h                 |  99 ++++++
- include/linux/res_counter.h                |  12 +-
- include/linux/thread_info.h                |   2 +
- kernel/fork.c                              |   4 +-
- kernel/res_counter.c                       |  20 +-
- mm/memcontrol.c                            | 519 +++++++++++++++++++++++++----
- mm/page_alloc.c                            |  35 ++
- 9 files changed, 628 insertions(+), 80 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b12121b..d6ad138 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -385,9 +385,12 @@ enum charge_type {
+ };
+ 
+ /* for encoding cft->private value on file */
+-#define _MEM			(0)
+-#define _MEMSWAP		(1)
+-#define _OOM_TYPE		(2)
++enum res_type {
++	_MEM,
++	_MEMSWAP,
++	_OOM_TYPE,
++};
++
+ #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
+ #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
+ #define MEMFILE_ATTR(val)	((val) & 0xffff)
+@@ -3921,7 +3924,8 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 	char str[64];
+ 	u64 val;
+-	int type, name, len;
++	int name, len;
++	enum res_type type;
+ 
+ 	type = MEMFILE_TYPE(cft->private);
+ 	name = MEMFILE_ATTR(cft->private);
+@@ -3957,7 +3961,8 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 			    const char *buffer)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int type, name;
++	enum res_type type;
++	int name;
+ 	unsigned long long val;
+ 	int ret;
+ 
+@@ -4033,7 +4038,8 @@ out:
+ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int type, name;
++	int name;
++	enum res_type type;
+ 
+ 	type = MEMFILE_TYPE(event);
+ 	name = MEMFILE_ATTR(event);
+@@ -4369,7 +4375,7 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 	u64 threshold, usage;
+ 	int i, size, ret;
+ 
+@@ -4452,7 +4458,7 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 	u64 usage;
+ 	int i, j, size;
+ 
+@@ -4530,7 +4536,7 @@ static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_eventfd_list *event;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 
+ 	BUG_ON(type != _OOM_TYPE);
+ 	event = kmalloc(sizeof(*event),	GFP_KERNEL);
+@@ -4555,7 +4561,7 @@ static void mem_cgroup_oom_unregister_event(struct cgroup *cgrp,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_eventfd_list *ev, *tmp;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 
+ 	BUG_ON(type != _OOM_TYPE);
+ 
 -- 
 1.7.11.4
