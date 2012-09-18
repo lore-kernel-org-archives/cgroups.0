@@ -1,90 +1,42 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 13/16] slab: slab-specific propagation changes.
-Date: Tue, 18 Sep 2012 18:12:07 +0400
-Message-ID: <1347977530-29755-14-git-send-email-glommer@parallels.com>
-References: <1347977530-29755-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1347977530-29755-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Rik van Riel <riel@redhat.com>
+Subject: Re: [PATCH v3 05/13] Add a __GFP_KMEMCG flag
+Date: Tue, 18 Sep 2012 10:15:18 -0400
+Message-ID: <505881F6.3030204@redhat.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-6-git-send-email-glommer@parallels.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1347977050-29476-6-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mel@csn.ul.ie>
 
-When a parent cache does tune_cpucache, we need to propagate that to the
-children as well. For that, we unfortunately need to tap into the slab core.
+On 09/18/2012 10:04 AM, Glauber Costa wrote:
+> This flag is used to indicate to the callees that this allocation is a
+> kernel allocation in process context, and should be accounted to
+> current's memcg. It takes numerical place of the of the recently removed
+> __GFP_NO_KSWAPD.
+>
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Christoph Lameter <cl@linux.com>
+> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> CC: Suleiman Souhlal <suleiman@google.com>
+> CC: Rik van Riel <riel@redhat.com>
+> CC: Mel Gorman <mel@csn.ul.ie>
+> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/slab.c        | 28 +++++++++++++++++++++++++++-
- mm/slab_common.c |  1 +
- 2 files changed, 28 insertions(+), 1 deletion(-)
+Acked-by: Rik van Riel <riel@redhat.com>
 
-diff --git a/mm/slab.c b/mm/slab.c
-index d5c196b..bd9928f 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -4104,7 +4104,7 @@ static void do_ccupdate_local(void *info)
- }
- 
- /* Always called with the slab_mutex held */
--static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
-+static int __do_tune_cpucache(struct kmem_cache *cachep, int limit,
- 				int batchcount, int shared, gfp_t gfp)
- {
- 	struct ccupdate_struct *new;
-@@ -4147,6 +4147,32 @@ static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
- 	return alloc_kmemlist(cachep, gfp);
- }
- 
-+static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
-+				int batchcount, int shared, gfp_t gfp)
-+{
-+	int ret;
-+#ifdef CONFIG_MEMCG_KMEM
-+	struct kmem_cache *c;
-+	struct mem_cgroup_cache_params *p;
-+#endif
-+
-+	ret = __do_tune_cpucache(cachep, limit, batchcount, shared, gfp);
-+#ifdef CONFIG_MEMCG_KMEM
-+	if (slab_state < FULL)
-+		return ret;
-+
-+	if ((ret < 0) || (cachep->memcg_params.id == -1))
-+		return ret;
-+
-+	list_for_each_entry(p, &cachep->memcg_params.sibling_list, sibling_list) {
-+		c = container_of(p, struct kmem_cache, memcg_params);
-+		/* return value determined by the parent cache only */
-+		__do_tune_cpucache(c, limit, batchcount, shared, gfp);
-+	}
-+#endif
-+	return ret;
-+}
-+
- /* Called with slab_mutex held always */
- static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp)
- {
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index c6fb4a7..341c3e1 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -124,6 +124,7 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
- #ifdef CONFIG_MEMCG_KMEM
- 		s->memcg_params.memcg = memcg;
- 		s->memcg_params.parent = parent_cache;
-+		s->memcg_params.id = -1; /* not registered yet */
- #endif
- 		s->name = kstrdup(name, GFP_KERNEL);
- 		if (!s->name) {
+
 -- 
-1.7.11.4
+All rights reversed
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
