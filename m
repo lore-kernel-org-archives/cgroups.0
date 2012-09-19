@@ -1,144 +1,81 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: 3.6-rc5 cgroups blkio throttle + md regression
-Date: Wed, 19 Sep 2012 15:42:31 -0400
-Message-ID: <20120919194231.GF31860@redhat.com>
-References: <CAOzFzEhf2LfT0BCNPAgPgxZ3=pj2KvJ4Z6kP7XF8nnxag1dfvg@mail.gmail.com>
- <CAOzFzEiC4313K4H9393ffzNyBo398BPYSxTk7ZEmuH4GfW5qtw@mail.gmail.com>
- <CAOzFzEhWk_7oQFOyW6Ri_9Cvsshj2s3pa=Oo-p8uL6r340MoTw@mail.gmail.com>
-Mime-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET RFC] cpu,cpuacct: make cpu serve cpuacct files and deprecate cpuacct
+Date: Wed, 19 Sep 2012 15:43:42 -0700
+Message-ID: <1348094625-4471-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOzFzEhWk_7oQFOyW6Ri_9Cvsshj2s3pa=Oo-p8uL6r340MoTw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=R7BdWQRFLns4dQu7mLIqrbGua9frUyDLdnJs9TJA+VA=;
+        b=TjfqoZ8XcQjdiwuU/kF/PmAICilxWO/YhBJ5fG0OKDnCgLT6nI/7K3m4x/FDLrfCq9
+         Cr+7athrppL9mqd8RHoXseh0U2TaMfUIbK4ZM+h/a32XlE3Sq9zlO9ldCA7C4Lc8Z7yb
+         zxWKEikYZxmDtl8T8wq/XZFpDMXtxdS95RR/r/a8c4fQRgwxkFEOxfrWh8fjdX0ABCC+
+         Vu0fJrhq6phVk0bm4woz8oUnq3HK/UN+pzS6n6osLl5F+C1Iqy4XBBw7fTN19XSgsG/F
+         e4vwPDmgmD2dtcF8sybtroeQgbLT2FxWqBor7NsXRVKfrGdIOh/ScRi5lsKd/S9ovDsO
+         +b8Q==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
-Cc: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org, davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Thu, Sep 20, 2012 at 04:20:42AM +1000, Joseph Glanville wrote:
-> Hi,
-> 
-> I booted the machine under bare metal to continue bisecting.
-> Thankfully this allowed me to locate the commit that causes the
-> problem.
-> 
+Hello,
 
-I tested it and I am also noticing the hang. I can see this hang on
-dm devices also.
+This is an attempt at allowing quick deprecation and removal of
+cpuacct.  The patchset makes cpu serve the same cpuacct.* files and
+updates cgroup core such that it ignores cpuacct if requested to be
+co-mounted with cpu whether CONFIG_CGROUP_CPUACCT is enabled or not.
 
-I suspect this issue is related to bio based drivers. We exit the
-bypass mode in blk_init_allocated_queue() and that will be called
-only for request based drivers. So for bio based drivers may be 
-we never exit the bypass mode and this issue is somehow side
-affect of that.
+This de-couples cpuacct deprecation on kernel side from userland
+transition as long as userland is co-mounting cpu and cpuacct.  In
+this series, cpuacct implementation is simply copied into cpu, the
+goal being to provide base for proper optimization (most likely
+periodic collection of stats across the hierarchy).
 
-Thanks
-Vivek
+I didn't try to maintain everything the same.  /proc/cgroups and
+/proc/PID/cgroup may mis-represent or miss cpuacct entry.  Faking it
+completely is doable too but I'd like to keep it as simple as
+possible.
 
-> git bisect reports this as the offending commit:
-> commit b82d4b197c782ced82a8b7b76664125d2d3c156c
-> Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date:   Fri Apr 13 13:11:31 2012 -0700
-> 
->     blkcg: make request_queue bypassing on allocation
-> 
->     With the previous change to guarantee bypass visiblity for RCU read
->     lock regions, entering bypass mode involves non-trivial overhead and
->     future changes are scheduled to make use of bypass mode during init
->     path.  Combined it may end up adding noticeable delay during boot.
-> 
->     This patch makes request_queue start its life in bypass mode, which is
->     ended on queue init completion at the end of
->     blk_init_allocated_queue(), and updates blk_queue_bypass_start() such
->     that draining and RCU synchronization are performed only when the
->     queue actually enters bypass mode.
-> 
->     This avoids unnecessarily switching in and out of bypass mode during
->     init avoiding the overhead and any nasty surprises which may step from
->     leaving bypass mode on half-initialized queues.
-> 
->     The boot time overhead was pointed out by Vivek.
-> 
->     Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->     Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->     Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index f2db628..3b02ba3 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -421,14 +421,18 @@ void blk_drain_queue(struct request_queue *q,
-> bool drain_all)
->   */
->  void blk_queue_bypass_start(struct request_queue *q)
->  {
-> +	bool drain;
-> +
->  	spin_lock_irq(q->queue_lock);
-> -	q->bypass_depth++;
-> +	drain = !q->bypass_depth++;
->  	queue_flag_set(QUEUE_FLAG_BYPASS, q);
->  	spin_unlock_irq(q->queue_lock);
-> 
-> -	blk_drain_queue(q, false);
-> -	/* ensure blk_queue_bypass() is %true inside RCU read lock */
-> -	synchronize_rcu();
-> +	if (drain) {
-> +		blk_drain_queue(q, false);
-> +		/* ensure blk_queue_bypass() is %true inside RCU read lock */
-> +		synchronize_rcu();
-> +	}
->  }
->  EXPORT_SYMBOL_GPL(blk_queue_bypass_start);
-> 
-> @@ -577,6 +581,15 @@ struct request_queue *blk_alloc_queue_node(gfp_t
-> gfp_mask, int node_id)
->  	 */
->  	q->queue_lock = &q->__queue_lock;
-> 
-> +	/*
-> +	 * A queue starts its life with bypass turned on to avoid
-> +	 * unnecessary bypass on/off overhead and nasty surprises during
-> +	 * init.  The initial bypass will be finished at the end of
-> +	 * blk_init_allocated_queue().
-> +	 */
-> +	q->bypass_depth = 1;
-> +	__set_bit(QUEUE_FLAG_BYPASS, &q->queue_flags);
-> +
->  	if (blkcg_init_queue(q))
->  		goto fail_id;
-> 
-> @@ -672,15 +685,15 @@ blk_init_allocated_queue(struct request_queue
-> *q, request_fn_proc *rfn,
-> 
->  	q->sg_reserved_size = INT_MAX;
-> 
-> -	/*
-> -	 * all done
-> -	 */
-> -	if (!elevator_init(q, NULL)) {
-> -		blk_queue_congestion_threshold(q);
-> -		return q;
-> -	}
-> +	/* init elevator */
-> +	if (elevator_init(q, NULL))
-> +		return NULL;
-> 
-> -	return NULL;
-> +	blk_queue_congestion_threshold(q);
-> +
-> +	/* all done, end the initial bypass */
-> +	blk_queue_bypass_end(q);
-> +	return q;
->  }
->  EXPORT_SYMBOL(blk_init_allocated_queue);
-> 
-> 
-> Reverting this commit fixes the regression. :)
-> 
-> Joseph.
-> 
-> -- 
-> CTO | Orion Virtualisation Solutions | www.orionvm.com.au
-> Phone: 1300 56 99 52 | Mobile: 0428 754 846
+* If cpuacct is not used, nothing changes of course.
+
+* If cpuacct is requested to be co-mounted with cpu, cpuacct is not
+  used.  It doesn't matter whether CONFIG_CGROUP_CPUACCT is enabled or
+  not.  cpu will provide cpusage.* statistics.
+
+* If cpuacct is requested to be mounted separately and cpuacct is
+  enabled, cgroup whines before mounting it.  If cpuacct is disabled,
+  it fails.
+
+I think the resulting behavior isn't too crazy and it should allow us
+to remove anything cpuacct related fairly soon.
+
+Longer term, I'd prefer to be able to drop the compatibility hack from
+cgroup core too although I don't think that's too urgent.  I think
+userland can either create symlinks for compatibility -
+e.g. /sys/fs/cgroup/cpuacct and /sys/fs/cgroup/cpu,cpucct both
+pointing to /sys/fs/cgroup/cpu - whether cpuacct exists or not, or
+just ignore anything cpuacct related.
+
+This series is based on for-3.7-hierarchy 8c7f6edbda0 ("cgroup: mark
+subsystems with broken hierarchy...") and also available in the
+following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-deprecate-cpuacct
+
+ include/linux/cgroup.h   |    1 
+ init/Kconfig             |   11 ++
+ kernel/cgroup.c          |   57 ++++++++++++-
+ kernel/sched/core.c      |  196 ++++++++++++++++++++++++++++++++++++++++++++++-
+ kernel/sched/fair.c      |    1 
+ kernel/sched/rt.c        |    1 
+ kernel/sched/sched.h     |    7 +
+ kernel/sched/stop_task.c |    1 
+ 8 files changed, 269 insertions(+), 6 deletions(-)
+
+Thanks.
+
+--
+tejun
