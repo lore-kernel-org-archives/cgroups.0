@@ -1,70 +1,28 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v3 09/16] sl[au]b: always get the cache from its page
- in kfree
-Date: Wed, 19 Sep 2012 11:42:54 +0400
-Message-ID: <5059777E.8060906@parallels.com>
-References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-10-git-send-email-glommer@parallels.com> <00000139d9fe8595-8905906d-18ed-4d41-afdb-f4c632c2d50a-000000@email.amazonses.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 08/16] slab: allow enable_cpu_cache to use preset values
+ for its tunables
+Date: Wed, 19 Sep 2012 11:44:24 +0400
+Message-ID: <505977D8.7050005@parallels.com>
+References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-9-git-send-email-glommer@parallels.com> <00000139d9fc4ccc-d0904b9b-5bbf-4cf6-9325-013f16f11745-000000@email.amazonses.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <00000139d9fe8595-8905906d-18ed-4d41-afdb-f4c632c2d50a-000000@email.amazonses.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <00000139d9fc4ccc-d0904b9b-5bbf-4cf6-9325-013f16f11745-000000-p/GC64/jrecnJqMo6gzdpkEOCMrvLtNR@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl@linux.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 09/18/2012 07:28 PM, Christoph Lameter wrote:
+On 09/18/2012 07:25 PM, Christoph Lameter wrote:
 > On Tue, 18 Sep 2012, Glauber Costa wrote:
 > 
->> index f2d760c..18de3f6 100644
->> --- a/mm/slab.c
->> +++ b/mm/slab.c
->> @@ -3938,9 +3938,12 @@ EXPORT_SYMBOL(__kmalloc);
->>   * Free an object which was previously allocated from this
->>   * cache.
->>   */
->> -void kmem_cache_free(struct kmem_cache *cachep, void *objp)
->> +void kmem_cache_free(struct kmem_cache *s, void *objp)
->>  {
->>  	unsigned long flags;
->> +	struct kmem_cache *cachep = virt_to_cache(objp);
->> +
->> +	VM_BUG_ON(!slab_equal_or_parent(cachep, s));
->>
+>> SLAB allows us to tune a particular cache behavior with tunables.
+>> When creating a new memcg cache copy, we'd like to preserve any tunables
+>> the parent cache already had.
 > 
-> This is an extremely hot path of the kernel and you are adding significant
-> processing. Check how the benchmarks are influenced by this change.
-> virt_to_cache can be a bit expensive.
-> 
+> Again the same is true for SLUB. Some generic way of preserving tuning
+> parameters would be appreciated.
 
-Would it be enough for you to have a separate code path for
-!CONFIG_MEMCG_KMEM?
-
-I don't really see another way to do it, aside from deriving the cache
-from the object in our case. I am open to suggestions if you do.
-
->> diff --git a/mm/slub.c b/mm/slub.c
->> index 4778548..a045dfc 100644
->> --- a/mm/slub.c
->> +++ b/mm/slub.c
->> @@ -2604,7 +2604,9 @@ void kmem_cache_free(struct kmem_cache *s, void *x)
->>
->>  	page = virt_to_head_page(x);
->>
->> -	slab_free(s, page, x, _RET_IP_);
->> +	VM_BUG_ON(!slab_equal_or_parent(page->slab, s));
->> +
->> +	slab_free(page->slab, page, x, _RET_IP_);
->>
-> 
-> Less of a problem here but you are eroding one advantage that slab has had
-> in the past over slub in terms of freeing objects.
-> 
-likewise.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+So you would like me to extend "slub: slub-specific propagation changes"
+to also allow for pre-set values, right?
