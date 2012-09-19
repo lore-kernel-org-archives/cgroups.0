@@ -1,91 +1,52 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: [PATCH 3.2+] memcg: warn on deeper hierarchies with use_hierarchy==0
-Date: Wed, 19 Sep 2012 16:05:09 +0200
-Message-ID: <20120919140509.GD5398@dhcp22.suse.cz>
-References: <20120913205827.GO7677@google.com>
- <20120914150306.GQ28039@dhcp22.suse.cz>
- <20120919140203.GA5398@dhcp22.suse.cz>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 05/13] Add a __GFP_KMEMCG flag
+Date: Wed, 19 Sep 2012 14:07:33 +0000
+Message-ID: <00000139dedaeb71-1199f5a3-c122-460e-a1d8-74174a9d96db-000000@email.amazonses.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-6-git-send-email-glommer@parallels.com> <00000139d9ea69c6-109249c2-5176-4a1e-b000-4c076d05844d-000000@email.amazonses.com> <505976B5.6090801@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20120919140203.GA5398-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <505976B5.6090801-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>
 
-Should apply to 3.4 and later as well
----
-From cbfc6f1cdb4d8095003036c84d250a391054f971 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Date: Tue, 4 Sep 2012 15:55:03 +0200
-Subject: [PATCH] memcg: warn on deeper hierarchies with use_hierarchy==0
+On Wed, 19 Sep 2012, Glauber Costa wrote:
 
-The memory controller supports both hierarchical and non-hierarchical
-behavior which is controlled by use_hierarchy knob (0 by default).
-The primary motivation for this distinction was an ineffectiveness
-of hierarchical accounting. This has improved a lot since it was
-introduced.
+> On 09/18/2012 07:06 PM, Christoph Lameter wrote:
+> > On Tue, 18 Sep 2012, Glauber Costa wrote:
+> >
+> >> +++ b/include/linux/gfp.h
+> >> @@ -35,6 +35,11 @@ struct vm_area_struct;
+> >>  #else
+> >>  #define ___GFP_NOTRACK		0
+> >>  #endif
+> >> +#ifdef CONFIG_MEMCG_KMEM
+> >> +#define ___GFP_KMEMCG		0x400000u
+> >> +#else
+> >> +#define ___GFP_KMEMCG		0
+> >> +#endif
+> >
+> > Could you leave __GFP_MEMCG a simple definition and then define GFP_MEMCG
+> > to be zer0 if !MEMCG_KMEM? I think that would be cleaner and the
+> > __GFP_KMEMCHECK another case that would be good to fix up.
+> >
+> >
+> >
+> I can, but what does this buy us?
 
-This schizophrenia makes the code and integration with other controllers
-more complicated (e.g. mounting it with fully hierarchical one could
-have an unexpected side effects) for no good reason so it would be good
-to make the memory controller behave only hierarchically.
+All the numeric values should be defined with __ unconditionally so that
+they can be used in future context. Note the comment above the __GFP_XX
+which says "Do not use this directly".
 
-It seems that there is no good reasons for deep cgroup hierarchies which
-are not truly hierarchical so we could set the default to 1. This might,
-however, lead to unexpected regressions when somebody relies on the
-current default behavior. For example, consider the following setup:
-		 Root[cpuset,memory]
-		  |
-		  A (use_hierarchy=0)
-		 / \
-		B  C
+> Also, in any case, this can be done incrementally, and for the other
+> flag as well, as you describe.
 
-All three A, B, C have some tasks and their memory limits. The hierarchy
-is created only because of the cpuset and its configuration.
-Say the default is changed. Then a memory pressure in C could influence
-both A and B which wouldn't happen before. The problem might be really
-hard to notice (unexpected slowdown).
-This configuration could be fixed up easily by reorganization, though:
-		 Root
-		  |
-		  A' (use_hierarchy=1, limit=unlimited, no tasks)
-		 /|\
-		A B C
+There is only one other flag that does not follow the scheme. I'd
+appreciate it if you could submit a patch to fix up the __GFP_NOTRACK
+conditional there.
 
-The problem is that we don't know whether somebody has an use case which
-cannot be transformed like that. Therefore this patch starts the slow
-transition to hierarchical only memory controller by warning users who
-are using flat hierarchies. The warning triggers only if a subgroup of
-non-root group is created with use_hierarchy==0.
-
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
----
- mm/memcontrol.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b63f5f7..6fbb0d7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4920,6 +4920,11 @@ mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
- 		parent = mem_cgroup_from_cont(cont->parent);
- 		memcg->use_hierarchy = parent->use_hierarchy;
- 		memcg->oom_kill_disable = parent->oom_kill_disable;
-+		WARN_ONCE(!memcg->use_hierarchy && parent != root_mem_cgroup,
-+				"Creating hierarchies with use_hierarchy==0 "
-+				"(flat hierarchy) is considered deprecated. "
-+				"If you believe that your setup is correct, "
-+				"we kindly ask you to contact linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org and let us know");
- 	}
- 
- 	if (parent && parent->use_hierarchy) {
--- 
-1.7.10.4
-
--- 
-Michal Hocko
-SUSE Labs
+There is no need to do this incrementally. Do it the right way
+immediately.
