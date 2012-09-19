@@ -1,30 +1,24 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: [PATCH 3.0] memcg: warn on deeper hierarchies with use_hierarchy==0
-Date: Wed, 19 Sep 2012 16:03:57 +0200
-Message-ID: <20120919140357.GC5398@dhcp22.suse.cz>
+Subject: [PATCH 3.2+] memcg: warn on deeper hierarchies with use_hierarchy==0
+Date: Wed, 19 Sep 2012 16:05:09 +0200
+Message-ID: <20120919140509.GD5398@dhcp22.suse.cz>
 References: <20120913205827.GO7677@google.com>
-	<20120914150306.GQ28039@dhcp22.suse.cz>
-	<20120919140203.GA5398@dhcp22.suse.cz>
+ <20120914150306.GQ28039@dhcp22.suse.cz>
+ <20120919140203.GA5398@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
 In-Reply-To: <20120919140203.GA5398-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
 
-From 9364396ddc0c8843fce3a7fda0255b39ba7e4f31 Mon Sep 17 00:00:00 2001
+Should apply to 3.4 and later as well
+---
+From cbfc6f1cdb4d8095003036c84d250a391054f971 Mon Sep 17 00:00:00 2001
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Date: Tue, 4 Sep 2012 15:55:03 +0200
 Subject: [PATCH] memcg: warn on deeper hierarchies with use_hierarchy==0
@@ -74,14 +68,14 @@ Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
  1 file changed, 5 insertions(+)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e013b8e..d8ec0cd 100644
+index b63f5f7..6fbb0d7 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4976,6 +4976,11 @@ mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
+@@ -4920,6 +4920,11 @@ mem_cgroup_create(struct cgroup_subsys *ss, struct cgroup *cont)
  		parent = mem_cgroup_from_cont(cont->parent);
- 		mem->use_hierarchy = parent->use_hierarchy;
- 		mem->oom_kill_disable = parent->oom_kill_disable;
-+		WARN_ONCE(!mem->use_hierarchy && parent != root_mem_cgroup,
+ 		memcg->use_hierarchy = parent->use_hierarchy;
+ 		memcg->oom_kill_disable = parent->oom_kill_disable;
++		WARN_ONCE(!memcg->use_hierarchy && parent != root_mem_cgroup,
 +				"Creating hierarchies with use_hierarchy==0 "
 +				"(flat hierarchy) is considered deprecated. "
 +				"If you believe that your setup is correct, "
