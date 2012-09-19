@@ -1,32 +1,70 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v3 13/16] slab: slab-specific propagation changes.
-Date: Wed, 19 Sep 2012 11:41:30 +0400
-Message-ID: <5059772A.8020402@parallels.com>
-References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-14-git-send-email-glommer@parallels.com> <00000139da52bc21-06113921-5cf5-42b6-94e3-fe9763e909bc-000000@email.amazonses.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 09/16] sl[au]b: always get the cache from its page
+ in kfree
+Date: Wed, 19 Sep 2012 11:42:54 +0400
+Message-ID: <5059777E.8060906@parallels.com>
+References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-10-git-send-email-glommer@parallels.com> <00000139d9fe8595-8905906d-18ed-4d41-afdb-f4c632c2d50a-000000@email.amazonses.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <00000139da52bc21-06113921-5cf5-42b6-94e3-fe9763e909bc-000000-p/GC64/jrecnJqMo6gzdpkEOCMrvLtNR@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <00000139d9fe8595-8905906d-18ed-4d41-afdb-f4c632c2d50a-000000@email.amazonses.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Christoph Lameter <cl@linux.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 09/18/2012 09:00 PM, Christoph Lameter wrote:
+On 09/18/2012 07:28 PM, Christoph Lameter wrote:
 > On Tue, 18 Sep 2012, Glauber Costa wrote:
 > 
->> When a parent cache does tune_cpucache, we need to propagate that to the
->> children as well. For that, we unfortunately need to tap into the slab core.
+>> index f2d760c..18de3f6 100644
+>> --- a/mm/slab.c
+>> +++ b/mm/slab.c
+>> @@ -3938,9 +3938,12 @@ EXPORT_SYMBOL(__kmalloc);
+>>   * Free an object which was previously allocated from this
+>>   * cache.
+>>   */
+>> -void kmem_cache_free(struct kmem_cache *cachep, void *objp)
+>> +void kmem_cache_free(struct kmem_cache *s, void *objp)
+>>  {
+>>  	unsigned long flags;
+>> +	struct kmem_cache *cachep = virt_to_cache(objp);
+>> +
+>> +	VM_BUG_ON(!slab_equal_or_parent(cachep, s));
+>>
 > 
-> One of the todo list items for the common stuff is to have actually a
-> common kmem_cache structure. If we add a common callback then we could put
-> that also into the core.
+> This is an extremely hot path of the kernel and you are adding significant
+> processing. Check how the benchmarks are influenced by this change.
+> virt_to_cache can be a bit expensive.
 > 
 
-At this point, I'd like to keep it this way if possible. I agree that it
-would be a lot better living in a common location, and I commit to
-helping you to move in that direction.
+Would it be enough for you to have a separate code path for
+!CONFIG_MEMCG_KMEM?
 
-But I see no reason to have this commonization to happen first, as a
-pre-requisite for this.
+I don't really see another way to do it, aside from deriving the cache
+from the object in our case. I am open to suggestions if you do.
+
+>> diff --git a/mm/slub.c b/mm/slub.c
+>> index 4778548..a045dfc 100644
+>> --- a/mm/slub.c
+>> +++ b/mm/slub.c
+>> @@ -2604,7 +2604,9 @@ void kmem_cache_free(struct kmem_cache *s, void *x)
+>>
+>>  	page = virt_to_head_page(x);
+>>
+>> -	slab_free(s, page, x, _RET_IP_);
+>> +	VM_BUG_ON(!slab_equal_or_parent(page->slab, s));
+>> +
+>> +	slab_free(page->slab, page, x, _RET_IP_);
+>>
+> 
+> Less of a problem here but you are eroding one advantage that slab has had
+> in the past over slub in terms of freeing objects.
+> 
+likewise.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
