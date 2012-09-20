@@ -1,48 +1,70 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/3] cgroup, sched: let cpu serve the same files as
- cpuacct
-Date: Thu, 20 Sep 2012 11:00:49 -0700
-Message-ID: <20120920180049.GG28934@google.com>
-References: <1348094625-4471-1-git-send-email-tj@kernel.org>
- <1348094625-4471-3-git-send-email-tj@kernel.org>
- <505ACE36.80603@parallels.com>
+Subject: Re: [RFC] cgroup TODOs
+Date: Thu, 20 Sep 2012 11:26:51 -0700
+Message-ID: <20120920182651.GH28934@google.com>
+References: <20120913205827.GO7677@google.com>
+ <505A725B.2080901@amacapital.net>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=zkLrtGNNbRyVBvcPjSuJVHGKEr7dKleh0Ve+DYKY7IU=;
-        b=EcStSXJEq9+9xqD/Vk+OkWanzQxnXi/2JQ75fZHaQRq+ubsFYD/9i2/fWJj3DmVUK2
-         PZVyimdInbMj+UCcZWfwcQLyuOevn1g5r00Wa7M7x7rDnB9Jcih1AtP4crxhx77T2QWe
-         FVszmpl/YbI+aGWE1qenl/lx5/U6xiMXHvbTP+L8ACAVwFxYgO6XxpXLI4vIGhkoPLhI
-         CJuvW+/CqT8G5f/TrEPu/1VoV2v6oSLFPBhBdRj1LQLDN1V8pCXFtRJqaD/nCvsvyAcM
-         t13kThRUgCNa2ODF4CtP17Ac/ITM/YVeaHET6BMF/Kv73S5gGxZjUjYrtm8JLgQzCTBN
-         QHwQ==
+        bh=5fZe8zjM4hmvxBJATpAUvSRBtZtlDidywBPCvyUjObo=;
+        b=MBB8LgVZxhnx8OftIGoM/wRBgEYlNTua9p7ZpYQtwl6aIBhaO/EYt7evLgtFcTskx7
+         abQ1h6YmkNBFB8vURNeLewntwqsJJMNMBJoOsLqlFOgigeCD1YbBdicDi648UCVHoCe+
+         jb3GSelOQotQ2jBxDYLv6nsf6Q2KWUUqDo7OgiJEqX6GnHQ3zxdDAoV8PzS88C3Rk7ES
+         vjzn/DoH38pZCefOAOWkjoaZLF9tRICviA9GlWTUNTIFBXt4eiXUybcaF9LoZdxMg8Kf
+         c4s35ugPUtns9wEKid5pJoqYmRPLl3CZGvJovG+etQxHL3wKGa93NKoN0XxgHxsD+7tX
+         RV2Q==
 Content-Disposition: inline
-In-Reply-To: <505ACE36.80603-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <505A725B.2080901-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org, davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4RrovVCs/uTlw@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org
 
-Hell, Glauber.
+Hello,
 
-On Thu, Sep 20, 2012 at 12:05:10PM +0400, Glauber Costa wrote:
-> The whole point of this merge is that this is not needed.
+On Wed, Sep 19, 2012 at 06:33:15PM -0700, Andy Lutomirski wrote:
+> [grr.  why does gmane scramble addresses?]
 
-Yeah, the whole point of this series is enabling that and other
-optimizations.
+You can append /raw to the message url and see the raw mssage.
 
-> This information is already available from exec_clock for fair tasks.
-> for rt tasks, we have no exec clock, but do have a hierarchy walk a bit
-> below the current cpuacct charge, that can be used for that purpose.
+  http://article.gmane.org/gmane.linux.kernel.containers/23802/raw
 
-Yeah yeah, sure, now you can build that on top of this patchset
-without worrying about cpuacct, which can also, hopefully, be removed
-fairly soon.
+> >   I think this level of flexibility should be enough for most use
+> >   cases.  If someone disagrees, please voice your objections now.
+> 
+> OK, I'll bite.
+> 
+> I have a server that has a whole bunch of cores.  A small fraction of
+> those cores are general purpose and run whatever they like.  The rest
+> are tightly controlled.
+> 
+> For simplicity, we have two cpusets that we use.  The root allows all
+> cpus.  The other one only allows the general purpose cpus.  We shove
+> everything into the general-purpose-only cpuset, and then we move
+> special stuff back to root.  (We also shove some kernel threads into a
+> non-root cpuset using the 'cset' tool.)
+
+Using root for special stuff probably isn't a good idea and moving
+bound kthreads into !root cgroups is already disallowed.
+
+> Enter systemd, which wants a hierarchy corresponding to services.  If we
+> were to use it, we might end up violating its hierarchy.
+> 
+> Alternatively, if we started using memcg, then we might have some tasks
+> to have more restrictive memory usage but less restrictive cpu usage.
+> 
+> As long as we can still pull this off, I'm happy.
+
+IIUC, you basically want just two groups w/ cpuset and use it for
+loose cpu ioslation for high priority jobs.  Structure-wise, I don't
+think it's gonna be a problem although using root for special stuff
+would need to change.
 
 Thanks.
 
