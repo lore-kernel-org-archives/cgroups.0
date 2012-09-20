@@ -1,7 +1,7 @@
 From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: 3.6-rc5 cgroups blkio throttle + md regression
-Date: Thu, 20 Sep 2012 15:32:27 -0400
-Message-ID: <20120920193227.GJ4681@redhat.com>
+Date: Thu, 20 Sep 2012 15:57:59 -0400
+Message-ID: <20120920195759.GK4681@redhat.com>
 References: <CAOzFzEhf2LfT0BCNPAgPgxZ3=pj2KvJ4Z6kP7XF8nnxag1dfvg@mail.gmail.com>
  <CAOzFzEiC4313K4H9393ffzNyBo398BPYSxTk7ZEmuH4GfW5qtw@mail.gmail.com>
  <CAOzFzEhWk_7oQFOyW6Ri_9Cvsshj2s3pa=Oo-p8uL6r340MoTw@mail.gmail.com>
@@ -42,24 +42,11 @@ On Thu, Sep 20, 2012 at 12:20:38PM -0700, Tejun Heo wrote:
 > bypass_end call to blk_register_queue().  Like the following.  Not
 > completely sure yet tho.
 
-Hmm.., I am just trying to remember the details hence thinking loud.
-
-So issue was that we did not want to call synchronize_rcu() in queue exit
-path (ex. cfq_exit_queue()) because some driver could call create/destroy
-queues very frequently during device/disk discovery.
-
-So we started queue in bypass mode so that if it is destroyed early, it
-will be destroyed in bypass mode and we shall never have to call
-synchronize_rcu().
-
-So assumption here is that blk_register_queue() will be called by
-add_disk() and hopefully add_disk() will be called by driver only if
-it is not planning to tear down the queue soon. If this assumption is
-right, then this patch should work, I think.
+I can confirm that with this patch, hang issue is gone. I tried it on
+a dm device.
 
 Thanks
 Vivek
-
 > 
 > diff --git a/block/blk-core.c b/block/blk-core.c
 > index 4b4dbdf..cbb019a 100644
