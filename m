@@ -1,96 +1,50 @@
-From: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 06/13] memcg: kmem controller infrastructure
-Date: Fri, 21 Sep 2012 01:05:47 +0900
-Message-ID: <CAAmzW4ONnc7n3kZbYnE6n2Cg0ZyPXW0QU2NMr0uRkyTxnGpNqQ@mail.gmail.com>
-References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
-	<1347977050-29476-7-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/3] cgroup, sched: let cpu serve the same files as
+ cpuacct
+Date: Thu, 20 Sep 2012 11:00:49 -0700
+Message-ID: <20120920180049.GG28934@google.com>
+References: <1348094625-4471-1-git-send-email-tj@kernel.org>
+ <1348094625-4471-3-git-send-email-tj@kernel.org>
+ <505ACE36.80603@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=C3cPZwqXAscM3qmauCiQSIDJrHkePeinPKBiekRu+zE=;
-        b=qVcMfMmqWjsUzw9TNRC6PSukFtAY5X2fyYaZMW6CHxvVSGKjUneJivviEZQNgoLXU6
-         nO+c2ZEfdfOcWJ/1t9zswTu2YAHxd3svORH23Ssjov/qZaOOib4QV4VeABLR8j4Fx+b+
-         PIUDWA/Fy9s6S1kAOFdSx0xtYLcflnh/QdqAmLvMjS1y+9l9kWSYc0g0iVBIk9zss24u
-         5aEVyUz/iOzLH71NZsfxpegzOXq9+9Y8hWJf2Ru6K0+n20QTmdcb6beOa6KgZUJZCuen
-         ivVNXvcv4H66UBIl7Q+CTFVmsuIUGatEVOFPdNH4BBDM5rM3z2mj5Hh4NpS4Wcn5Z84X
-         2MyA==
-In-Reply-To: <1347977050-29476-7-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=zkLrtGNNbRyVBvcPjSuJVHGKEr7dKleh0Ve+DYKY7IU=;
+        b=EcStSXJEq9+9xqD/Vk+OkWanzQxnXi/2JQ75fZHaQRq+ubsFYD/9i2/fWJj3DmVUK2
+         PZVyimdInbMj+UCcZWfwcQLyuOevn1g5r00Wa7M7x7rDnB9Jcih1AtP4crxhx77T2QWe
+         FVszmpl/YbI+aGWE1qenl/lx5/U6xiMXHvbTP+L8ACAVwFxYgO6XxpXLI4vIGhkoPLhI
+         CJuvW+/CqT8G5f/TrEPu/1VoV2v6oSLFPBhBdRj1LQLDN1V8pCXFtRJqaD/nCvsvyAcM
+         t13kThRUgCNa2ODF4CtP17Ac/ITM/YVeaHET6BMF/Kv73S5gGxZjUjYrtm8JLgQzCTBN
+         QHwQ==
+Content-Disposition: inline
+In-Reply-To: <505ACE36.80603-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org, davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-Hi, Glauber.
+Hell, Glauber.
 
-2012/9/18 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
-> +/*
-> + * We need to verify if the allocation against current->mm->owner's memcg is
-> + * possible for the given order. But the page is not allocated yet, so we'll
-> + * need a further commit step to do the final arrangements.
-> + *
-> + * It is possible for the task to switch cgroups in this mean time, so at
-> + * commit time, we can't rely on task conversion any longer.  We'll then use
-> + * the handle argument to return to the caller which cgroup we should commit
-> + * against. We could also return the memcg directly and avoid the pointer
-> + * passing, but a boolean return value gives better semantics considering
-> + * the compiled-out case as well.
-> + *
-> + * Returning true means the allocation is possible.
-> + */
-> +bool
-> +__memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **_memcg, int order)
-> +{
-> +       struct mem_cgroup *memcg;
-> +       bool ret;
-> +       struct task_struct *p;
-> +
-> +       *_memcg = NULL;
-> +       rcu_read_lock();
-> +       p = rcu_dereference(current->mm->owner);
-> +       memcg = mem_cgroup_from_task(p);
-> +       rcu_read_unlock();
-> +
-> +       if (!memcg_can_account_kmem(memcg))
-> +               return true;
-> +
-> +       mem_cgroup_get(memcg);
-> +
-> +       ret = memcg_charge_kmem(memcg, gfp, PAGE_SIZE << order) == 0;
-> +       if (ret)
-> +               *_memcg = memcg;
-> +       else
-> +               mem_cgroup_put(memcg);
-> +
-> +       return ret;
-> +}
+On Thu, Sep 20, 2012 at 12:05:10PM +0400, Glauber Costa wrote:
+> The whole point of this merge is that this is not needed.
 
-"*_memcg = memcg" should be executed when "memcg_charge_kmem" is success.
-"memcg_charge_kmem" return 0 if success in charging.
-Therefore, I think this code is wrong.
-If I am right, it is a serious bug that affect behavior of all the patchset.
+Yeah, the whole point of this series is enabling that and other
+optimizations.
 
-> +void __memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg,
-> +                             int order)
-> +{
-> +       struct page_cgroup *pc;
-> +
-> +       WARN_ON(mem_cgroup_is_root(memcg));
-> +
-> +       /* The page allocation failed. Revert */
-> +       if (!page) {
-> +               memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
-> +               return;
-> +       }
+> This information is already available from exec_clock for fair tasks.
+> for rt tasks, we have no exec clock, but do have a hierarchy walk a bit
+> below the current cpuacct charge, that can be used for that purpose.
 
-In case of "!page ", mem_cgroup_put(memcg) is needed,
-because we already call "mem_cgroup_get(memcg)" in
-__memcg_kmem_newpage_charge().
-I know that mem_cgroup_put()/get() will be removed in later patch, but
-it is important that every patch works fine.
+Yeah yeah, sure, now you can build that on top of this patchset
+without worrying about cpuacct, which can also, hopefully, be removed
+fairly soon.
 
 Thanks.
+
+-- 
+tejun
