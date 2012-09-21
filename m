@@ -1,87 +1,54 @@
-From: JoonSoo Kim <js1304@gmail.com>
-Subject: Re: [PATCH v3 15/16] memcg/sl[au]b: shrink dead caches
-Date: Fri, 21 Sep 2012 18:28:02 +0900
-Message-ID: <CAAmzW4PRPBgySUpNsj=RP6VR3KLcVWv3G7rRtX=r+wiWUTDchw@mail.gmail.com>
+From: Pekka Enberg <penberg@kernel.org>
+Subject: Re: [PATCH v3 08/16] slab: allow enable_cpu_cache to use preset
+ values for its tunables
+Date: Fri, 21 Sep 2012 12:29:20 +0300
+Message-ID: <CAOJsxLFeh5G1JBMmZPkwMBTEXSJB7Bmp1yvvbDz0suWE5sReYA@mail.gmail.com>
 References: <1347977530-29755-1-git-send-email-glommer@parallels.com>
-	<1347977530-29755-16-git-send-email-glommer@parallels.com>
-	<CAAmzW4NyK6gqqXHttUE35=-=h0Eve-smiYJCj3i+mHFFysQE4A@mail.gmail.com>
-	<505C27E4.90509@parallels.com>
+	<1347977530-29755-9-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=dC7N3MIal+c9ux09QdA/c8SUBqQ/8rkcYyi5tgncOoo=;
-        b=WHdzk2i29tOC/46avn58sFzrTuQ4QL9cDZ/eCE//6WpwBBZ2R69fZSrJzgGtuVlqS4
-         kSc0FFZBsUTGOKF5haphsBcFNMJl1Sq0+eu/z3xZ+sl4aOge+21Bx1Wh8ZUJvoK5WHDS
-         xGVYL+EzrY8VngaV5U90aCJnIkH/+wK/GO5eSTfVglXDP/Hu5phZWkYmSXmtX5RHzIwM
-         hOu5q4TDSjPcXQkOzN+qLTGS/t3KC9HVRCJEsAn9G3Em4HHEY242pY2me4w2aySAXi59
-         56AS54PBz+267ouHCugFzv6AIw+5zDx08oxgfrXgbeoPYwOCl6VkNTVWvOzLTqLLdvdQ
-         M/DA==
-In-Reply-To: <505C27E4.90509@parallels.com>
+        h=mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=TUvNFQldKkkr2PlxZ3H+MSoEeai30YWSb8sLFLTgtLo=;
+        b=bKLrcwUqdR7/eI8hlruxXw3zveenuBJM8m8nRFjMjTlvsFY7lQFrvYDYRfmm6CoGix
+         6M6uUuO3J1m+ef9j6gxOYLzNTGjfWdGlNb1aAuY0scHTLZQHC/wwP7YuQmNO9wFCcgnf
+         7vMdr7shIk1P7ICp9sGq42bvq66KKvrruRMU5viKB/Tw5Kcipz2dZn5LfiJ6dzCm6WB7
+         rdb4HXFxdfG7OP4YG5uQMYxK4VNFNWG/V7SNKPamXqBIZPbQEe/rTw8VYWTNw/5xaCIm
+         wDjmtQr3oHklnQDCxOqyaCFtDjJpsZoglOMYJELWLUUd1A7V2MSnYwdbeJ0YtV6sOX8s
+         kdhg==
+In-Reply-To: <1347977530-29755-9-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-Hi, Glauber.
+On Tue, Sep 18, 2012 at 5:12 PM, Glauber Costa <glommer@parallels.com> wrote:
+> diff --git a/mm/slab.c b/mm/slab.c
+> index e2cf984..f2d760c 100644
+> --- a/mm/slab.c
+> +++ b/mm/slab.c
+> @@ -4141,8 +4141,19 @@ static int do_tune_cpucache(struct kmem_cache *cachep, int limit,
+>  static int enable_cpucache(struct kmem_cache *cachep, gfp_t gfp)
+>  {
+>         int err;
+> -       int limit, shared;
+> -
+> +       int limit = 0;
+> +       int shared = 0;
+> +       int batchcount = 0;
+> +
+> +#ifdef CONFIG_MEMCG_KMEM
+> +       if (cachep->memcg_params.parent) {
+> +               limit = cachep->memcg_params.parent->limit;
+> +               shared = cachep->memcg_params.parent->shared;
+> +               batchcount = cachep->memcg_params.parent->batchcount;
 
->> 2012/9/18 Glauber Costa <glommer@parallels.com>:
->>> diff --git a/mm/slub.c b/mm/slub.c
->>> index 0b68d15..9d79216 100644
->>> --- a/mm/slub.c
->>> +++ b/mm/slub.c
->>> @@ -2602,6 +2602,7 @@ redo:
->>>         } else
->>>                 __slab_free(s, page, x, addr);
->>>
->>> +       kmem_cache_verify_dead(s);
->>>  }
->>
->> As far as u know, I am not a expert and don't know anything about memcg.
->> IMHO, this implementation may hurt system performance in some case.
->>
->> In case of memcg is destoried, remained kmem_cache is marked "dead".
->> After it is marked,
->> every free operation to this "dead" kmem_cache call
->> kmem_cache_verify_dead() and finally call kmem_cache_shrink().
->
-> As long as it is restricted to that cache, this is a non issue.
-> dead caches are exactly what they name imply: dead.
->
-> Means that we actively want them to go away, and just don't kill them
-> right away because they have some inflight objects - which we expect not
-> to be too much.
-
-Hmm.. I don't think so.
-We can destroy memcg whenever we want, is it right?
-If it is right, there is many inflight objects when we destory memcg.
-If there is so many inflight objects, performance of these processes
-can be hurt too much.
-
->> And, I found one case that destroying memcg's kmem_cache don't works properly.
->> If we destroy memcg after all object is freed, current implementation
->> doesn't destroy kmem_cache.
->> kmem_cache_destroy_work_func() check "cachep->memcg_params.nr_pages == 0",
->> but in this case, it return false, because kmem_cache may have
->> cpu_slab, and cpu_partials_slabs.
->> As we already free all objects, kmem_cache_verify_dead() is not invoked forever.
->> I think that we need another kmem_cache_shrink() in
->> kmem_cache_destroy_work_func().
->
-> I'll take a look here. What you describe makes sense, and can
-> potentially happen. I tried to handle this case with care in
-> destroy_all_caches, but I may have always made a mistake...
->
-> Did you see this actively happening, or are you just assuming this can
-> happen from your read of the code?
-
-Just read of the code.
-
-Thanks.
+Style nit: please introduce a variable for
+"cachep->memcg_params.parent" to make this human-readable.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
