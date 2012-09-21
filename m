@@ -1,67 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 12/16] memcg/sl[au]b Track all the memcg children of
- a kmem_cache.
-Date: Fri, 21 Sep 2012 13:31:01 -0700
-Message-ID: <20120921203101.GP7264@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 15/16] memcg/sl[au]b: shrink dead caches
+Date: Fri, 21 Sep 2012 13:40:35 -0700
+Message-ID: <20120921204035.GQ7264@google.com>
 References: <1347977530-29755-1-git-send-email-glommer@parallels.com>
- <1347977530-29755-13-git-send-email-glommer@parallels.com>
+ <1347977530-29755-16-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jYvvIO8TY1fWMvUKgr4HFduz9zJthrc754nwdedKqJc=;
-        b=FM3LJup5k0k+MBcqi/YvQMwExCuhHN0YWvcY2NSzqAj7edW9nq4+CNeBLtI6sFdFKt
-         Bj4yuIefNeAUTsUuZNaorrg138X27LCvLeXeDR9ex7MgXSPOUTy82JpYDnoJyRCcnBJF
-         dcIL02VtiUAP/CKGlPgMAzNCDu3+PQ7L831Mcl+k0B9FddimkFU37IhTyjMXxxo7tl70
-         GG6TjqD1GXBpcQLpJ6u2f8KGXQaZEwMgjrsTTl5DaawtF7q2RLxuHxHOrlS6kgmoq6V8
-         t8WDhbTc4MiiT6yAOFMT+fkbAFrtgb/eayrh4XxRQhmmbFG5k3DzwKB2LGk55gFBlGo5
-         YaMw==
+        bh=Z7TjXtppKeHBTYdkrqAm1ctaw4UZUWCe56o3zSOBHhU=;
+        b=rBdn9ar2/8rQrJ32Zb8+Zc11wEouvqGel02xYxSkcWSCtOv0LyxFkph6vnrGfTAhOS
+         AI8BsE5bloJTjlVl26Wm75AICA9/LQLUlJ/WE7EaOWbVL1M8XT6Y+FK2KzD2vtZIKTV0
+         Af9QFlFAbgXO5JaXXkhcTH2KDV6P2RVEG8lSFPGWNCTcdhDJaLzyTCfw4n15w+c6q55y
+         gXAZMA79/p7iewJ0DaoVRVBx8swYRLn4VCESIr04nfcpKLUyO9/OxYl8I20KB337qwBx
+         cVmnG6RVV9YPsAwkJtoNDzb9W7uNR3JvoL0PqlldFhU8Re/XgoOhQnq2mhjds10hry9V
+         taDg==
 Content-Disposition: inline
-In-Reply-To: <1347977530-29755-13-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1347977530-29755-16-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
 Hello, Glauber.
 
-On Tue, Sep 18, 2012 at 06:12:06PM +0400, Glauber Costa wrote:
-> This enables us to remove all the children of a kmem_cache being
-> destroyed, if for example the kernel module it's being used in
-> gets unloaded. Otherwise, the children will still point to the
-> destroyed parent.
+On Tue, Sep 18, 2012 at 06:12:09PM +0400, Glauber Costa wrote:
+> @@ -764,10 +777,21 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+>  		goto out;
+>  	}
+>  
+> +	/*
+> +	 * Because the cache is expected to duplicate the string,
+> +	 * we must make sure it has opportunity to copy its full
+> +	 * name. Only now we can remove the dead part from it
+> +	 */
+> +	name = (char *)new_cachep->name;
+> +	if (name)
+> +		name[strlen(name) - 4] = '\0';
 
-I find the terms parent / child / sibling a bit confusing.  It usually
-implies proper tree structure.  Maybe we can use better terms which
-reflect the single layer structure better?
+This is kinda nasty.  Do we really need to do this?  How long would a
+dead cache stick around?
 
-And, again, in general, please add some comments.  If someone tries to
-understand this for the first time and takes a look at
-mem_cgroup_cache_params, there's almost nothing to guide that person.
-What's the struct for?  What does each field do?  What are the
-synchronization rules?
-
-> @@ -626,6 +630,9 @@ void memcg_release_cache(struct kmem_cache *cachep)
->  {
->  	if (cachep->memcg_params.id != -1)
->  		ida_simple_remove(&cache_types, cachep->memcg_params.id);
-> +	else
-> +		list_del(&cachep->memcg_params.sibling_list);
+> diff --git a/mm/slab.c b/mm/slab.c
+> index bd9928f..6cb4abf 100644
+> --- a/mm/slab.c
+> +++ b/mm/slab.c
+> @@ -3785,6 +3785,8 @@ static inline void __cache_free(struct kmem_cache *cachep, void *objp,
+>  	}
+>  
+>  	ac_put_obj(cachep, ac, objp);
 > +
+> +	kmem_cache_verify_dead(cachep);
 
-list_del_init() please.
+Reaping dead caches doesn't exactly sound like a high priority thing
+and adding a branch to hot path for that might not be the best way to
+do it.  Why not schedule an extremely lazy deferrable delayed_work
+which polls for emptiness, say, every miniute or whatever?
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
