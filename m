@@ -1,83 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Fri, 21 Sep 2012 09:34:04 -0700
-Message-ID: <20120921163404.GC7264@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 12/13] execute the whole memcg freeing in rcu
+ callback
+Date: Fri, 21 Sep 2012 10:23:55 -0700
+Message-ID: <20120921172355.GD7264@google.com>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
- <1347977050-29476-5-git-send-email-glommer@parallels.com>
+ <1347977050-29476-13-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=4MvPeTW01sXCOZVlSiUGMaghsM/2X3u+elRhDZaedww=;
-        b=iXVk8iFbIAPaMA3gaezg4ZnCRWCs5ibWlHULasOSxCe0Q1jKSD2EmdZJS9FSdWRsYO
-         HLdhArv5vQT5ux0W+gEr/eGhEJ3FD3MRJeTvCE7ra9eCJ9n7dqxsDNh911eU1PwN9YtI
-         w+baowIMVEAx8jcek7DCBuH8rqhDbSliBW9C8xzFzP0p3cb8MMwY5SL5bF6C9oYmKi9u
-         BVjd8T2wUACktpC49c1uh61Yq71wDD4Lygg4uFD9I0kS9tnY2HRoRqssiNith7ReNazn
-         xn/CAMYaoioZ8GEk0zkr0F5P1NEErQbrnkpxJqebGYLn5c5XMxxWeusrr74fd307Ha3X
-         RGCw==
+        bh=YWxoAgqdSpyEjNNioRJtWyFzm0Q3J8XNh+oJmCEk73c=;
+        b=NSQRct9OX244JRu5hpD5oiBfV0QMsU3VbPCdM+op5Q9qXQ5EmAV4iwnSvmit+dYogs
+         h246un9nbDrWUNtsrL/+hVt4WRMxWxMBG+FD207aU+T5/PYNpGGBZOxgCtv8yXhMhTN5
+         hQwOKy4uhfL5T/SYyzuhywC5+1FZJwNUiSi2LAoIFJYjdN626ijUwhdYJOh5Hb2UMad4
+         +ROVuUM1krpaypiAtW9TH6fChmHUhYSZXTA9AkwJFFc2TXZeIqkuWMC7nplZSh4HENX4
+         uYewlRxUH+eglWc7XWbybCVaTuveiGjoK5eDHgQAhkLMaKiwCW6jTa1FGZeX6U1MXNhm
+         sUOw==
 Content-Disposition: inline
-In-Reply-To: <1347977050-29476-5-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1347977050-29476-13-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue, Sep 18, 2012 at 06:04:01PM +0400, Glauber Costa wrote:
->  #ifdef CONFIG_MEMCG_KMEM
-> +static struct cftype kmem_cgroup_files[] = {
-> +	{
-> +		.name = "kmem.limit_in_bytes",
-> +		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
-> +		.write_string = mem_cgroup_write,
-> +		.read = mem_cgroup_read,
-> +	},
-> +	{
-> +		.name = "kmem.usage_in_bytes",
-> +		.private = MEMFILE_PRIVATE(_KMEM, RES_USAGE),
-> +		.read = mem_cgroup_read,
-> +	},
-> +	{
-> +		.name = "kmem.failcnt",
-> +		.private = MEMFILE_PRIVATE(_KMEM, RES_FAILCNT),
-> +		.trigger = mem_cgroup_reset,
-> +		.read = mem_cgroup_read,
-> +	},
-> +	{
-> +		.name = "kmem.max_usage_in_bytes",
-> +		.private = MEMFILE_PRIVATE(_KMEM, RES_MAX_USAGE),
-> +		.trigger = mem_cgroup_reset,
-> +		.read = mem_cgroup_read,
-> +	},
-> +	{},
-> +};
-> +
->  static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
->  {
->  	return mem_cgroup_sockets_init(memcg, ss);
-> @@ -4961,6 +5015,12 @@ mem_cgroup_create(struct cgroup *cont)
->  		int cpu;
->  		enable_swap_cgroup();
->  		parent = NULL;
-> +
-> +#ifdef CONFIG_MEMCG_KMEM
-> +		WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys,
-> +					   kmem_cgroup_files));
-> +#endif
-> +
+Hello, Glauber.
 
-Why not just make it part of mem_cgroup_files[]?
+On Tue, Sep 18, 2012 at 06:04:09PM +0400, Glauber Costa wrote:
+> A lot of the initialization we do in mem_cgroup_create() is done with softirqs
+> enabled. This include grabbing a css id, which holds &ss->id_lock->rlock, and
+> the per-zone trees, which holds rtpz->lock->rlock. All of those signal to the
+> lockdep mechanism that those locks can be used in SOFTIRQ-ON-W context. This
+> means that the freeing of memcg structure must happen in a compatible context,
+> otherwise we'll get a deadlock.
+
+Lockdep requires lock to be softirq or irq safe iff the lock is
+actually acquired from the said context.  Merely using a lock with bh
+/ irq disabled doesn't signal that to lockdep; otherwise, we'll end up
+with enormous number of spurious warnings.
+
+> The reference counting mechanism we use allows the memcg structure to be freed
+> later and outlive the actual memcg destruction from the filesystem. However, we
+> have little, if any, means to guarantee in which context the last memcg_put
+> will happen. The best we can do is test it and try to make sure no invalid
+> context releases are happening. But as we add more code to memcg, the possible
+> interactions grow in number and expose more ways to get context conflicts.
+> 
+> We already moved a part of the freeing to a worker thread to be context-safe
+> for the static branches disabling. I see no reason not to do it for the whole
+> freeing action. I consider this to be the safe choice.
+
+And the above description too makes me scratch my head quite a bit.  I
+can see what the patch is doing but can't understand the why.
+
+* Why was it punting the freeing to workqueue anyway?  ISTR something
+  about static_keys but my memory fails.  What changed?  Why don't we
+  need it anymore?
+
+* As for locking context, the above description seems a bit misleading
+  to me.  Synchronization constructs involved there currently doesn't
+  require softirq or irq safe context.  If that needs to change,
+  that's fine but that's a completely different reason than given
+  above.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
