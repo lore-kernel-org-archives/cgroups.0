@@ -1,56 +1,83 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH 1/2] block: lift the initial queue bypass mode on blk_register_queue()
- instead of blk_init_allocated_queue()
-Date: Fri, 21 Sep 2012 15:25:40 +0200
-Message-ID: <505C6AD4.6030206@kernel.dk>
-References: <CAOzFzEhf2LfT0BCNPAgPgxZ3=pj2KvJ4Z6kP7XF8nnxag1dfvg@mail.gmail.com> <CAOzFzEiC4313K4H9393ffzNyBo398BPYSxTk7ZEmuH4GfW5qtw@mail.gmail.com> <CAOzFzEhWk_7oQFOyW6Ri_9Cvsshj2s3pa=Oo-p8uL6r340MoTw@mail.gmail.com> <20120919194231.GF31860@redhat.com> <20120920183153.GI28934@google.com> <20120920184219.GH4681@redhat.com> <20120920191716.GI4681@redhat.com> <20120920192038.GJ28934@google.com> <20120920195759.GK4681@redhat.com> <20120920201815.GB7264@google.com> <20120920210852.GC7264@google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
+Date: Fri, 21 Sep 2012 09:34:04 -0700
+Message-ID: <20120921163404.GC7264@google.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
+ <1347977050-29476-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120920210852.GC7264-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=4MvPeTW01sXCOZVlSiUGMaghsM/2X3u+elRhDZaedww=;
+        b=iXVk8iFbIAPaMA3gaezg4ZnCRWCs5ibWlHULasOSxCe0Q1jKSD2EmdZJS9FSdWRsYO
+         HLdhArv5vQT5ux0W+gEr/eGhEJ3FD3MRJeTvCE7ra9eCJ9n7dqxsDNh911eU1PwN9YtI
+         w+baowIMVEAx8jcek7DCBuH8rqhDbSliBW9C8xzFzP0p3cb8MMwY5SL5bF6C9oYmKi9u
+         BVjd8T2wUACktpC49c1uh61Yq71wDD4Lygg4uFD9I0kS9tnY2HRoRqssiNith7ReNazn
+         xn/CAMYaoioZ8GEk0zkr0F5P1NEErQbrnkpxJqebGYLn5c5XMxxWeusrr74fd307Ha3X
+         RGCw==
+Content-Disposition: inline
+In-Reply-To: <1347977050-29476-5-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 09/20/2012 11:08 PM, Tejun Heo wrote:
-> b82d4b197c ("blkcg: make request_queue bypassing on allocation") made
-> request_queues bypassed on allocation to avoid switching on and off
-> bypass mode on a queue being initialized.  Some drivers allocate and
-> then destroy a lot of queues without fully initializing them and
-> incurring bypass latency overhead on each of them could add upto
-> significant overhead.
-> 
-> Unfortunately, blk_init_allocated_queue() is never used by queues of
-> bio-based drivers, which means that all bio-based driver queues are in
-> bypass mode even after initialization and registration complete
-> successfully.
-> 
-> Due to the limited way request_queues are used by bio drivers, this
-> problem is hidden pretty well but it shows up when blk-throttle is
-> used in combination with a bio-based driver.  Trying to configure
-> (echoing to cgroupfs file) blk-throttle for a bio-based driver hangs
-> indefinitely in blkg_conf_prep() waiting for bypass mode to end.
-> 
-> This patch moves the initial blk_queue_bypass_end() call from
-> blk_init_allocated_queue() to blk_register_queue() which is called for
-> any userland-visible queues regardless of its type.
-> 
-> I believe this is correct because I don't think there is any block
-> driver which needs or wants working elevator and blk-cgroup on a queue
-> which isn't visible to userland.  If there are such users, we need a
-> different solution.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
-> Jens, while these are fixes, I think it isn't extremely urgent and
-> routing these through 3.7-rc1 should be enough.
+On Tue, Sep 18, 2012 at 06:04:01PM +0400, Glauber Costa wrote:
+>  #ifdef CONFIG_MEMCG_KMEM
+> +static struct cftype kmem_cgroup_files[] = {
+> +	{
+> +		.name = "kmem.limit_in_bytes",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
+> +		.write_string = mem_cgroup_write,
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{
+> +		.name = "kmem.usage_in_bytes",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_USAGE),
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{
+> +		.name = "kmem.failcnt",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_FAILCNT),
+> +		.trigger = mem_cgroup_reset,
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{
+> +		.name = "kmem.max_usage_in_bytes",
+> +		.private = MEMFILE_PRIVATE(_KMEM, RES_MAX_USAGE),
+> +		.trigger = mem_cgroup_reset,
+> +		.read = mem_cgroup_read,
+> +	},
+> +	{},
+> +};
+> +
+>  static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+>  {
+>  	return mem_cgroup_sockets_init(memcg, ss);
+> @@ -4961,6 +5015,12 @@ mem_cgroup_create(struct cgroup *cont)
+>  		int cpu;
+>  		enable_swap_cgroup();
+>  		parent = NULL;
+> +
+> +#ifdef CONFIG_MEMCG_KMEM
+> +		WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys,
+> +					   kmem_cgroup_files));
+> +#endif
+> +
 
-Agree, I'll shove them into for-3.7/core
+Why not just make it part of mem_cgroup_files[]?
+
+Thanks.
 
 -- 
-Jens Axboe
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
