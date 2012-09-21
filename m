@@ -1,59 +1,69 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2.6.32] memcg: warn on deeper hierarchies with
-	use_hierarchy==0
-Date: Thu, 20 Sep 2012 15:33:23 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1209201531250.17455@chino.kir.corp.google.com>
-References: <20120913205827.GO7677@google.com>
-	<20120914150306.GQ28039@dhcp22.suse.cz>
-	<20120919140203.GA5398@dhcp22.suse.cz>
-	<20120919140308.GB5398@dhcp22.suse.cz>
-	<alpine.DEB.2.00.1209191237020.749@chino.kir.corp.google.com>
-	<20120920132400.GC23872@dhcp22.suse.cz>
+From: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 15/16] memcg/sl[au]b: shrink dead caches
+Date: Fri, 21 Sep 2012 13:48:30 +0900
+Message-ID: <CAAmzW4NyK6gqqXHttUE35=-=h0Eve-smiYJCj3i+mHFFysQE4A@mail.gmail.com>
+References: <1347977530-29755-1-git-send-email-glommer@parallels.com>
+	<1347977530-29755-16-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=U/3w4DubrKJqGIDVdkXpqLlrHY4Mp+m5ekxdAKk3dZc=;
+        b=K9zf68BU54LJ/JWTnCA0FwqfzMj90GFcATTQlVWsm6ht/wjaNcgkLb4KZRnQhAqsyU
+         St7o6o3NUbbQNWUzMi5F4C6Jxv0dQrGAkpXoQNhy2I/AgehuCaqNJmA35VcqqIN0ZHM5
+         MREgV7qYXyq1ou6QA80V2DI9IMdavqdlP5edD1rOq2elCVhb/mH0bnAj69m/lNe2Clk0
+         jYwP7j39x7MT3Pk6mjXZNO2mB8vQrWICaP/7iFZuXDdLOlYeQ8OiximqTLPlUIw+LEvI
+         zfkb2oL+DYumLt2umxVkDXNbzItoChHYyNCnJCzjDGKNAy7mrwclwfNeo6RQ1bqn/bcn
+         nGNg==
+In-Reply-To: <1347977530-29755-16-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
-	h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-	:references:user-agent:mime-version:content-type;
-	bh=QMpE85IsxGmnzxVc67FbYNtX1fGiNYj9VC/JoO6qhew=;
-	b=YgUhscnNbNPbVhXbGGw5/wXMLUNct2qXzMsNMQ3WBKY7qhwpkruiWeMnxq4kAFvtNI
-	71Fl2FMW0XHvEJXqQQgU+PiCZnAEGVE0DJ34jtTHI9JqNWj+4lFscB3YQ/qX5vY+xs8A
-	OMYWQSS9RlQ3239UMBex0Crbf9fR2a74semjsRqsvYN9EMX26RYkzMsw/fPkTz1kDm7H
-	dTHShsm7d4rVesJDxSJwVQhB3U0FhjrV9+eWvH5hpT7wr0OX/SKoEH/nKcarQ4wGETJh
-	S4ZNY/PpcfcNt2LpZnCIgYdAkgcgQLFYju1328ZduPWSBBcBMBm8vHg7lrS4Ni7/Br0+
-	Czlg==
-In-Reply-To: <20120920132400.GC23872-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Thu, 20 Sep 2012, Michal Hocko wrote:
+Hi Glauber.
 
-> Yes printk_once is an alternative but I really wanted to have this as
-> much visible as possible. People tend to react to stack traceces more
-> and this one will trigger only if somebody is either doing something
-> wrong or the configuration is the one we are looking for.
-> 
+2012/9/18 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 0b68d15..9d79216 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -2602,6 +2602,7 @@ redo:
+>         } else
+>                 __slab_free(s, page, x, addr);
+>
+> +       kmem_cache_verify_dead(s);
+>  }
 
-That's the complete opposite of what Linus has said he wants, he said very 
-specifically that he doesn't want WARN_ONCE() or WARN_ON_ONCE() for 
-deprecation of tunables.  If you want to have this merged, then please get 
-him to ack it.
+As far as u know, I am not a expert and don't know anything about memcg.
+IMHO, this implementation may hurt system performance in some case.
 
-> Comparing to oom_adj, that one was used much more often so the WARN_ONCE
-> was too verbose especially when you usually had to wait for an userspace
-> update which is not the case here.
+In case of memcg is destoried, remained kmem_cache is marked "dead".
+After it is marked,
+every free operation to this "dead" kmem_cache call
+kmem_cache_verify_dead() and finally call kmem_cache_shrink().
+kmem_cache_shrink() do invoking kmalloc and flush_all() and taking a
+lock for online node and invoking kfree.
+Especially, flush_all() may hurt performance largely, because it call
+has_cpu_slab() against all the cpus.
 
-How is WARN_ONCE() too verbose for oom_adj?  It's printed once!  And how 
-can you claim that userspace doesn't need to change if it's creating a 
-hierarchy while use_hierarchy == 0?
+And I know some other case it can hurt system performance.
+But, I don't mention it, because above case is sufficient to worry.
+
+And, I found one case that destroying memcg's kmem_cache don't works properly.
+If we destroy memcg after all object is freed, current implementation
+doesn't destroy kmem_cache.
+kmem_cache_destroy_work_func() check "cachep->memcg_params.nr_pages == 0",
+but in this case, it return false, because kmem_cache may have
+cpu_slab, and cpu_partials_slabs.
+As we already free all objects, kmem_cache_verify_dead() is not invoked forever.
+I think that we need another kmem_cache_shrink() in
+kmem_cache_destroy_work_func().
+
+I don't convince that I am right, so think carefully my humble opinion.
+
+Thanks.
