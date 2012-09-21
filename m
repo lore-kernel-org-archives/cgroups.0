@@ -1,64 +1,72 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2.6.32] memcg: warn on deeper hierarchies with
- use_hierarchy==0
-Date: Fri, 21 Sep 2012 09:16:32 +0200
-Message-ID: <20120921071632.GA13473@dhcp22.suse.cz>
-References: <20120913205827.GO7677@google.com>
- <20120914150306.GQ28039@dhcp22.suse.cz>
- <20120919140203.GA5398@dhcp22.suse.cz>
- <20120919140308.GB5398@dhcp22.suse.cz>
- <alpine.DEB.2.00.1209191237020.749@chino.kir.corp.google.com>
- <20120920132400.GC23872@dhcp22.suse.cz>
- <alpine.DEB.2.00.1209201531250.17455@chino.kir.corp.google.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 15/16] memcg/sl[au]b: shrink dead caches
+Date: Fri, 21 Sep 2012 12:40:04 +0400
+Message-ID: <505C27E4.90509@parallels.com>
+References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-16-git-send-email-glommer@parallels.com> <CAAmzW4NyK6gqqXHttUE35=-=h0Eve-smiYJCj3i+mHFFysQE4A@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1209201531250.17455-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <CAAmzW4NyK6gqqXHttUE35=-=h0Eve-smiYJCj3i+mHFFysQE4A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
+To: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Thu 20-09-12 15:33:23, David Rientjes wrote:
-> On Thu, 20 Sep 2012, Michal Hocko wrote:
+On 09/21/2012 08:48 AM, JoonSoo Kim wrote:
+> Hi Glauber.
 > 
-> > Yes printk_once is an alternative but I really wanted to have this as
-> > much visible as possible. People tend to react to stack traceces more
-> > and this one will trigger only if somebody is either doing something
-> > wrong or the configuration is the one we are looking for.
-> > 
+Hi
+
+> 2012/9/18 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
+>> diff --git a/mm/slub.c b/mm/slub.c
+>> index 0b68d15..9d79216 100644
+>> --- a/mm/slub.c
+>> +++ b/mm/slub.c
+>> @@ -2602,6 +2602,7 @@ redo:
+>>         } else
+>>                 __slab_free(s, page, x, addr);
+>>
+>> +       kmem_cache_verify_dead(s);
+>>  }
 > 
-> That's the complete opposite of what Linus has said he wants, he said very 
-> specifically that he doesn't want WARN_ONCE() or WARN_ON_ONCE() for 
-> deprecation of tunables.  If you want to have this merged, then please get 
-> him to ack it.
-
-This is not meant to be merged upstream. I do not think this is a stable
-material and Linus tree will get the more generic cgroup based patch
-instead. This is just for distributions so that they can help to find
-usecases which would prevent use_hierachy removal
- 
-> > Comparing to oom_adj, that one was used much more often so the WARN_ONCE
-> > was too verbose especially when you usually had to wait for an userspace
-> > update which is not the case here.
+> As far as u know, I am not a expert and don't know anything about memcg.
+> IMHO, this implementation may hurt system performance in some case.
 > 
-> How is WARN_ONCE() too verbose for oom_adj?  It's printed once!  
+> In case of memcg is destoried, remained kmem_cache is marked "dead".
+> After it is marked,
+> every free operation to this "dead" kmem_cache call
+> kmem_cache_verify_dead() and finally call kmem_cache_shrink().
 
-It prints much more than one line, right? When I said oom_adj was used
-much more I meant more applications cared about the value (so the
-prbability of the warning was quite high) not that the message would be
-printed multiple times. And to be honest I didn't mind WARN_ONCE being
-used for that.
+As long as it is restricted to that cache, this is a non issue.
+dead caches are exactly what they name imply: dead.
 
-> And how can you claim that userspace doesn't need to change if it's
-> creating a hierarchy while use_hierarchy == 0?
+Means that we actively want them to go away, and just don't kill them
+right away because they have some inflight objects - which we expect not
+to be too much.
 
-It is code vs. configuration change. You have to wait for an update or
-change and recompile in the first case while the second one can be done
-directly.
+> kmem_cache_shrink() do invoking kmalloc and flush_all() and taking a
+> lock for online node and invoking kfree.
+> Especially, flush_all() may hurt performance largely, because it call
+> has_cpu_slab() against all the cpus.
 
--- 
-Michal Hocko
-SUSE Labs
+Again, this is all right, but being a dead cache, it shouldn't be on any
+hot path.
+
+> 
+> And, I found one case that destroying memcg's kmem_cache don't works properly.
+> If we destroy memcg after all object is freed, current implementation
+> doesn't destroy kmem_cache.
+> kmem_cache_destroy_work_func() check "cachep->memcg_params.nr_pages == 0",
+> but in this case, it return false, because kmem_cache may have
+> cpu_slab, and cpu_partials_slabs.
+> As we already free all objects, kmem_cache_verify_dead() is not invoked forever.
+> I think that we need another kmem_cache_shrink() in
+> kmem_cache_destroy_work_func().
+
+I'll take a look here. What you describe makes sense, and can
+potentially happen. I tried to handle this case with care in
+destroy_all_caches, but I may have always made a mistake...
+
+Did you see this actively happening, or are you just assuming this can
+happen from your read of the code?
