@@ -1,47 +1,80 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 07/16] memcg: skip memcg kmem allocations in
- specified code regions
-Date: Mon, 24 Sep 2012 10:47:42 -0700
-Message-ID: <20120924174742.GC7694@google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 06/16] memcg: infrastructure to match an allocation
+ to the right cache
+Date: Mon, 24 Sep 2012 10:56:19 -0700
+Message-ID: <20120924175619.GD7694@google.com>
 References: <1347977530-29755-1-git-send-email-glommer@parallels.com>
- <1347977530-29755-8-git-send-email-glommer@parallels.com>
- <20120921195929.GL7264@google.com>
- <50602343.6040806@parallels.com>
+ <1347977530-29755-7-git-send-email-glommer@parallels.com>
+ <20120921183217.GH7264@google.com>
+ <50601DEB.10705@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=maA7J+Px1Iblh+LUL9eMfVnrWam2J6jAEEI5dTq3t6g=;
-        b=SOpqGkhlkiHihQMF0zfhxx9FKKGQHGhpgUws3zW/qEQct+GdDOJkI7/VwXlzXbPPo+
-         unlSIZyu0QnuMniIIaOxYKCNYrJM64Fdh84EmTjcPoF4jfstGqmHYkbMmsUZKUSc9KIC
-         oEcLBaDN7hA75sKu9gbdpVyGCJ10bTC7cQVhrht1XBtnZflmryAKHUpfxBqM0Mlrn4H0
-         5dsP+cSPyY9ZzjkzBW+JtJQ579apDxJz+Qt1GqiN2hmuNN5SdJGNXNAa9kfCg0Zn5kIn
-         QYABRjcGKjSYhx+1kMaC5pFkzPoPRfQJD7ENUQE6kGIFTwe/kxnu2aJbhhQ8bAHhHWAP
-         Oq4g==
+        bh=iwDHE+KS2w1vD5wPagwOnF+L1Krzoz0e37KjlOHM1w8=;
+        b=NrQNPyY8oncjArumPj8bI5Ukz/AE/lOPogJ+HHGKRpBHxD6IJfm7cDlxKRMhKnrdrK
+         ETFkxacUTT7r/HPX3nzxLj4wC0lRNZXJOwYwH7LFwA+08bK8c6Oc2lYIR/Hf7+bgpILI
+         FnpdDI0Fbx7iJEGXUsCxuS2igdL4mI5sI+aGp+kHDDqgwoQlNdYOXikPOl0TVq4BqnSC
+         SJrYyKs/ZO4nHzApyH+pYjD9qmTb+xUeq2Q0MHyfBNx4TY8honbhmuXYqTB5okgiSh2r
+         bNImY6NtMFLF+YTfjf9h4ypM+mi6IA7ZwrjwFlmIVslbm/DReIf1T0i72m3Ia0dfMcPf
+         KdUA==
 Content-Disposition: inline
-In-Reply-To: <50602343.6040806-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <50601DEB.10705@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-Hello,
+Hello, Glauber.
 
-On Mon, Sep 24, 2012 at 01:09:23PM +0400, Glauber Costa wrote:
-> > I can't say I'm a big fan of this approach.  If there are enough
-> > users, maybe but can't we just annotate the affected allocations
-> > explicitly?  Is this gonna have many more users?
+On Mon, Sep 24, 2012 at 12:46:35PM +0400, Glauber Costa wrote:
+> >> +#ifdef CONFIG_MEMCG_KMEM
+> >> +	/* Slab accounting */
+> >> +	struct kmem_cache *slabs[MAX_KMEM_CACHE_TYPES];
+> >> +#endif
+> > 
+> > Bah, 400 entry array in struct mem_cgroup.  Can't we do something a
+> > bit more flexible?
+> > 
 > 
-> What exactly do you mean by annotating the affected allocations?
+> I guess. I still would like it to be an array, so we can easily access
+> its fields. There are two ways around this:
+> 
+> 1) Do like the events mechanism and allocate this in a separate
+> structure. Add a pointer chase in the access, and I don't think it helps
+> much because it gets allocated anyway. But we could at least
+> defer it to the time when we limit the cache.
 
-IOW, can't you just pass down an extra argument / flag / whatever
-instead?
+Start at some reasonable size and then double it as usage grows?  How
+many kmem_caches do we typically end up using?
+
+> >> +	if (memcg->slabs[idx] == NULL) {
+> >> +		memcg_create_cache_enqueue(memcg, cachep);
+> > 
+> > Do we want to wait for the work item if @gfp allows?
+> > 
+> 
+> I tried this once, and it got complicated enough that I deemed as "not
+> worth it". I honestly don't remember much of the details now, it was one
+> of the first things I tried, and a bunch of time has passed. If you
+> think it is absolutely worth it, I can try it again. But at the very
+> best, I view this as an optimization.
+
+I don't know.  It seems like a logical thing to try and depends on how
+complex it gets.  I don't think it's a must.  The whole thing is
+somewhat opportunistic after all.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
