@@ -1,79 +1,50 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [RFC 0/4] bypass charges if memcg is not used
-Date: Tue, 25 Sep 2012 12:52:49 +0400
-Message-ID: <1348563173-8952-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [RFC 4/4] memcg: do not walk all the way to the root for memcg
+Date: Tue, 25 Sep 2012 12:52:53 +0400
+Message-ID: <1348563173-8952-5-git-send-email-glommer@parallels.com>
+References: <1348563173-8952-1-git-send-email-glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1348563173-8952-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, Peter Zijlstra <a.p.zijlstra@chello.nl>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-For the special case that memcg is compiled in (a quite common case) but not in
-use (also a common case), we are still seeing a huge performance impact. Mel
-Gorman demonstrated in the Kernel Summit, mm mini summit, that depending on the
-hardware, this can vary between 6 and 15 %.
+Since the root is special anyway, and we always get its figures from
+global counters anyway, there is no make all cgroups its descendants,
+wrt res_counters. The sad effect of doing that is that we need to lock
+the root for all allocations, since it is a common ancestor of
+everybody.
 
-I am proposing in this initial patch, that we take the strategy of bypassing
-the memcg code with static branches. We can flip it on when the first memcg
-gets created. Up to that moment, we'll mostly have a bunch of nops.
+Not having the root as a common ancestor should lead to better
+scalability for not-uncommon case of tasks in the cgroup being
+node-bound to different nodes in NUMA systems.
 
-This patch also defers the call to page_cgroup_init() to that moment. This means
-that the memory used by page_cgroup structure won't be wasted until we really
-need it. We can do the same with the memory used for swap, if needed.
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-There are many edges to be trimmed, but I wanted to send this early to collect
-feedback. I coded this enough to get numbers out of it. I tested it in a 24-way
-2-socket Intel box, 24 Gb mem. I used Mel Gorman's pft test, that he used to
-demonstrate this problem back in the Kernel Summit. There are three kernels:
-
-nomemcg  : memcg compile disabled.
-base     : memcg enabled, patch not applied.
-bypassed : memcg enabled, with patch applied.
-
-                base    bypassed
-User          109.12      105.64
-System       1646.84     1597.98
-Elapsed       229.56      215.76
-
-             nomemcg    bypassed
-User          104.35      105.64
-System       1578.19     1597.98
-Elapsed       212.33      215.76
-
-So as one can see, the difference between base and nomemcg in terms
-of both system time and elapsed time is quite drastic, and consistent
-with the figures shown by Mel Gorman in the Kernel summit. This is a
-~ 7 % drop in performance, just by having memcg enabled. memcg functions
-appear heavily in the profiles, even if all tasks lives in the root
-memcg.
-
-With bypassed kernel, we drop this down to 1.5 %, which starts to fall
-in the acceptable range. More investigation is needed to see if we can
-claim that last percent back, but I believe at last part of it should
-be.
-
-
-Glauber Costa (4):
-  memcg: provide root figures from system totals
-  memcg: make it suck faster
-  memcg: do not call page_cgroup_init at system_boot
-  memcg: do not walk all the way to the root for memcg
-
- include/linux/memcontrol.h  | 56 ++++++++++++++++++++++++++------
- include/linux/page_cgroup.h | 20 +++++++++---
- init/main.c                 |  1 -
- mm/memcontrol.c             | 78 ++++++++++++++++++++++++++++++++++++++++-----
- mm/page_cgroup.c            | 44 +++++++++++++++++++------
- 5 files changed, 165 insertions(+), 34 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f8115f0..829ea9e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5720,7 +5720,7 @@ mem_cgroup_create(struct cgroup *cont)
+ 		static_key_slow_inc(&memcg_in_use_key);
+ 	}
+ 
+-	if (parent && parent->use_hierarchy) {
++	if (parent && !mem_cgroup_is_root(parent) && parent->use_hierarchy) {
+ 		struct mem_cgroup __maybe_unused *p;
+ 
+ 		res_counter_init(&memcg->res, &parent->res);
 -- 
 1.7.11.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
