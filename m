@@ -1,43 +1,42 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Christoph Lameter <cl@linux.com>
 Subject: Re: [PATCH v3 06/16] memcg: infrastructure to match an allocation
  to the right cache
-Date: Tue, 25 Sep 2012 17:57:38 +0400
-Message-ID: <5061B852.7070902@parallels.com>
+Date: Tue, 25 Sep 2012 16:28:11 +0000
+Message-ID: <00000139fe41d6c9-f647ef17-8c06-4332-91b8-13c18a0b19ea-000000@email.amazonses.com>
 References: <1347977530-29755-1-git-send-email-glommer@parallels.com> <1347977530-29755-7-git-send-email-glommer@parallels.com> <20120921183217.GH7264@google.com> <50601DEB.10705@parallels.com> <20120924175619.GD7694@google.com>
+ <5061B852.7070902@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120924175619.GD7694-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <5061B852.7070902@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 09/24/2012 09:56 PM, Tejun Heo wrote:
-> Hello, Glauber.
-> 
-> On Mon, Sep 24, 2012 at 12:46:35PM +0400, Glauber Costa wrote:
->>>> +#ifdef CONFIG_MEMCG_KMEM
->>>> +	/* Slab accounting */
->>>> +	struct kmem_cache *slabs[MAX_KMEM_CACHE_TYPES];
->>>> +#endif
->>>
->>> Bah, 400 entry array in struct mem_cgroup.  Can't we do something a
->>> bit more flexible?
->>>
->>
->> I guess. I still would like it to be an array, so we can easily access
->> its fields. There are two ways around this:
->>
->> 1) Do like the events mechanism and allocate this in a separate
->> structure. Add a pointer chase in the access, and I don't think it helps
->> much because it gets allocated anyway. But we could at least
->> defer it to the time when we limit the cache.
-> 
-> Start at some reasonable size and then double it as usage grows?  How
-> many kmem_caches do we typically end up using?
-> 
+On Tue, 25 Sep 2012, Glauber Costa wrote:
 
-So my Fedora box here, recently booted on a Fedora kernel, will have 111
-caches. How would 150 sound to you?
+> >> 1) Do like the events mechanism and allocate this in a separate
+> >> structure. Add a pointer chase in the access, and I don't think it helps
+> >> much because it gets allocated anyway. But we could at least
+> >> defer it to the time when we limit the cache.
+> >
+> > Start at some reasonable size and then double it as usage grows?  How
+> > many kmem_caches do we typically end up using?
+> >
+>
+> So my Fedora box here, recently booted on a Fedora kernel, will have 111
+> caches. How would 150 sound to you?
+
+Some drivers/subsystems can dynamically create slabs as needed for new
+devices or instances of metadata. You cannot use a fixed size
+array and cannot establish an upper boundary for the number of slabs on
+the system.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
