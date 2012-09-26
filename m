@@ -1,76 +1,75 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Thu, 27 Sep 2012 02:29:06 +0400
-Message-ID: <506381B2.2060806@parallels.com>
-References: <CAOS58YNj-L4ocwn-c27ho4WPW41MKOeJbnLZ8N8r4eUkoxC7GA@mail.gmail.com> <50634105.8060302@parallels.com> <20120926180124.GA12544@google.com> <50634FC9.4090609@parallels.com> <20120926193417.GJ12544@google.com> <50635B9D.8020205@parallels.com> <20120926195648.GA20342@google.com> <50635F46.7000700@parallels.com> <20120926201629.GB20342@google.com> <50637298.2090904@parallels.com> <20120926221046.GA10453@mtj.dyndns.org>
+Date: Wed, 26 Sep 2012 15:42:35 -0700
+Message-ID: <20120926224235.GB10453@mtj.dyndns.org>
+References: <20120926180124.GA12544@google.com>
+ <50634FC9.4090609@parallels.com>
+ <20120926193417.GJ12544@google.com>
+ <50635B9D.8020205@parallels.com>
+ <20120926195648.GA20342@google.com>
+ <50635F46.7000700@parallels.com>
+ <20120926201629.GB20342@google.com>
+ <50637298.2090904@parallels.com>
+ <20120926221046.GA10453@mtj.dyndns.org>
+ <506381B2.2060806@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120926221046.GA10453@mtj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=vhLRE2JU+pc6MZ+aHV+RVMAR+ATaVETA4M3+JUIsB2w=;
+        b=t0wFnKR3T4tPSqJbl1mWjvYOywgkCY5A/Cr2JOD19UIAyclByjpXvygKLWsMOvRXI9
+         4z24vv3mHoS66nlacE9ZMHAs+JRFENyFWv9I5FX93AopXAjwB/Duh0DPBDs0AEr21tV2
+         oDr3TzU3aS3rsz5XdtdnHpEFWsUUV3oDHLOokxVGtmtzvhG3MGkpK7qjRpJs7tkzFvbY
+         j1E0Eoc6KerxYscNfHd51EVV8tceUYixSLU4zvjSfg4sZdbr8c9ZFqZtXe9mW/MY/va0
+         lIb7pdQ7z+7NYJ6x09/vcS4Vjur7yh+FRM3bkGlmx6zQoA+m08CfYmviudDl6kI7P9yo
+         kZ7g==
+Content-Disposition: inline
+In-Reply-To: <506381B2.2060806-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 09/27/2012 02:10 AM, Tejun Heo wrote:
-> Hello, Glauber.
+Hello, Glauber.
+
+On Thu, Sep 27, 2012 at 02:29:06AM +0400, Glauber Costa wrote:
+> And then what? If you want a different behavior you need to go kill all
+> your services that are using memcg so you can get the behavior you want?
+> And if they happen to be making a specific flag choice by design, you
+> just say "you really can't run A + B together" ?
 > 
-> On Thu, Sep 27, 2012 at 01:24:40AM +0400, Glauber Costa wrote:
->> "kmem_accounted" is not a switch. It is an internal representation only.
->> The semantics, that we discussed exhaustively in San Diego, is that a
->> group that is not limited is not accounted. This is simple and consistent.
->>
->> Since the limits are still per-cgroup, you are actually proposing more
->> user-visible complexity than me, since you are adding yet another file,
->> with its own semantics.
+> I myself think global switches are an unnecessary complication. And let
+> us not talk about use_hierarchy, please. If it becomes global, it is
+> going to be as part of a phase out plan anyway. The problem with that is
+> not that it is global, is that it shouldn't even exist.
+
+I would consider it more of a compatibility thing which is set during
+boot and configurable by sysadmin.  Let the newer systems enable it by
+default on boot and old configs / special ones disable it as
+necessary.
+
+> > Backward compatibility is covered with single switch and I really
+> > don't think "you can enable limits for kernel memory anytime but we
+> > don't keep track of whatever happened before it was flipped the first
+> > time because the first time is always special" is a sane thing to
+> > expose to userland.  Or am I misunderstanding the proposed behavior
+> > again?
 > 
-> I was confused.  I thought it was exposed as a switch to userland (it
-> being right below .use_hierarchy tripped red alert). 
+> You do keep track. Before you switch it for the first time, it all
+> belongs to the root memcg.
 
-Remember I was the one more vocally and radically so far trying to get
-rid of use_hierarchy. I should have been more clear - and I was, as soon
-as I better understood the nature of your opposition - but this is
-precisely what I meant by "inherently different".
+Well, that's really playing with words.  Limit is per cgroup and
+before the limit is set for the first time, everything is accounted to
+something else.  How is that keeping track?
 
-> 
-> So, the proposed behavior is to allow enabling kmemcg anytime but
-> ignore what happened inbetween?  Where the knob is changes but the
-> weirdity seems all the same.  What prevents us from having a single
-> switch at root which can only be flipped when there's no children?
+The proposed behavior seems really crazy to me.  Do people really
+think this is a good idea?
 
-So I view this very differently from you. We have no root-only switches
-in memcg. This would be a first, and this is the kind of thing that adds
-complexity, in my view.
+Thanks.
 
-You have someone like libvirt or a systemd service using memcg. It
-probably starts at boot. Once it is started, it will pretty much prevent
-switching of any global switch like this.
-
-And then what? If you want a different behavior you need to go kill all
-your services that are using memcg so you can get the behavior you want?
-And if they happen to be making a specific flag choice by design, you
-just say "you really can't run A + B together" ?
-
-I myself think global switches are an unnecessary complication. And let
-us not talk about use_hierarchy, please. If it becomes global, it is
-going to be as part of a phase out plan anyway. The problem with that is
-not that it is global, is that it shouldn't even exist.
-
-> 
-> Backward compatibility is covered with single switch and I really
-> don't think "you can enable limits for kernel memory anytime but we
-> don't keep track of whatever happened before it was flipped the first
-> time because the first time is always special" is a sane thing to
-> expose to userland.  Or am I misunderstanding the proposed behavior
-> again?
-> 
-
-You do keep track. Before you switch it for the first time, it all
-belongs to the root memcg.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
