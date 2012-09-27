@@ -1,58 +1,116 @@
-From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Thu, 27 Sep 2012 15:43:07 +0100
-Message-ID: <20120927144307.GH3429@suse.de>
-References: <20120926180124.GA12544@google.com>
- <50634FC9.4090609@parallels.com>
- <20120926193417.GJ12544@google.com>
- <50635B9D.8020205@parallels.com>
- <20120926195648.GA20342@google.com>
+Date: Thu, 27 Sep 2012 07:49:42 -0700
+Message-ID: <20120927144942.GB4251@mtj.dyndns.org>
+References: <20120926195648.GA20342@google.com>
  <50635F46.7000700@parallels.com>
  <20120926201629.GB20342@google.com>
  <50637298.2090904@parallels.com>
- <20120927120806.GA29104@dhcp22.suse.cz>
- <20120927143300.GA4251@mtj.dyndns.org>
+ <20120926221046.GA10453@mtj.dyndns.org>
+ <506381B2.2060806@parallels.com>
+ <20120926224235.GB10453@mtj.dyndns.org>
+ <50638793.7060806@parallels.com>
+ <20120926230807.GC10453@mtj.dyndns.org>
+ <20120927142822.GG3429@suse.de>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=T/37Zy51AWyo7/eHLVb0YLC6RRwFkOH/cemRr01Ubj8=;
+        b=zC0Kyj8GvO64Zv+W/utaG1SO6xyvXGSUnrt3hnIkIxP0b+RM31KToC+hYA3KEJiKRf
+         liKf9TP77skv/BirFArfrg3g2eww5NfTh0/DXwsbhwztine7aUo/qd4ghi75/GSJn63P
+         +K2ko3QuMbtO07xF4VBJXldhZpBqwSCfkLr/XxNO5vJuzu4okjs9ZdWG+CvA/yPQ366Y
+         +JKoAcmLK+0HlcLgAMa4paJR3HvG2kuyCmF81apPO2mjucqBNG8Km2z0cfhObGp1jqwm
+         RsA0SttV9aaSxC8RGlYgKkBww1d7VA+AX8rfXde2rFy0yuNPnYETYO/p7bqXXyX0eR4d
+         fgbw==
 Content-Disposition: inline
-In-Reply-To: <20120927143300.GA4251-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20120927142822.GG3429@suse.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Mel Gorman <mgorman@suse.de>
+Cc: Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Thu, Sep 27, 2012 at 07:33:00AM -0700, Tejun Heo wrote:
-> Hello, Michal.
+Hello, Mel.
+
+On Thu, Sep 27, 2012 at 03:28:22PM +0100, Mel Gorman wrote:
+> > In addition, how is userland supposed to know which
+> > workload is shared kmem heavy or not? 
 > 
-> On Thu, Sep 27, 2012 at 02:08:06PM +0200, Michal Hocko wrote:
-> > Yes, because we have many users (basically almost all) who care only
-> > about the user memory because that's what occupies the vast majority of
-> > the memory. They usually want to isolate workload which would disrupt
-> > the global memory otherwise (e.g. backup process vs. database). You
-> > really do not want to pay an additional overhead for kmem accounting
-> > here.
+> By using a bit of common sense.
 > 
-> I'm not too convinced.  First of all, the overhead added by kmemcg
-> isn't big. 
+> An application may not be able to figure this out but the administrator
+> is going to be able to make a very educated guess. If processes running
+> within two containers are not sharing a filesystem hierarchy for example
+> then it'll be clear they are not sharing dentries.
+> 
+> If there was a suspicion they were then it could be analysed with
+> something like SystemTap probing when files are opened and see if files
+> are being opened that are shared between containers.
+> 
+> It's not super-easy but it's not impossible either and I fail to see why
+> it's such a big deal for you.
 
-Really?
+Because we're not even trying to actually solve the problem but just
+dumping it to userland.  If dentry/inode usage is the only case we're
+being worried about, there can be better ways to solve it or at least
+we should strive for that.
 
-If kmemcg was globally accounted then every __GFP_KMEMCG allocation in
-the page allocator potentially ends up down in
-__memcg_kmem_newpage_charge which
+Also, the problem is not that it is impossible if you know and
+carefully plan for things beforehand (that would be one extremely
+competent admin) but that the problem is undiscoverable.  With kmemcg
+accounting disabled, there's no way to tell a looking cgroup the admin
+thinks running something which doesn'ft tax kmem much could be
+generating a ton without the admin ever noticing.
 
-1. takes RCU read lock
-2. looks up cgroup from task
-3. takes a reference count
-4. memcg_charge_kmem -> __mem_cgroup_try_charge
-5. release reference count
+> > The fact that the numbers don't really mean what they apparently
+> > should mean.
+> 
+> I think it is a reasonable limitation that only some kernel allocations are
+> accounted for although I'll freely admit I'm not a cgroup or memcg user
+> either.
+> 
+> My understanding is that this comes down to cost -- accounting for the
+> kernel memory usage is expensive so it is limited only to the allocations
+> that are easy to abuse by an unprivileged process. Hence this is
+> initially concerned with stack pages with dentries and TCP usage to
+> follow in later patches.
 
-That's a *LOT* of work to incur for cgroups that do not care about kernel
-accounting. This is why I thought it was reasonable that the kmem accounting
-not be global.
+I think the cost isn't too prohibitive considering it's already using
+memcg.  Charging / uncharging happens only as pages enter and leave
+slab caches and the hot path overhead is essentially single
+indirection.  Glauber's benchmark seemed pretty reasonable to me and I
+don't yet think that warrants exposing this subtle tree of
+configuration.
+
+> > Sure, conferences are useful for building consensus but that's the
+> > extent of it.  Sorry that I didn't realize the implications then but
+> > conferences don't really add any finality to decisions.
+> > 
+> > So, this seems properly crazy to me at the similar level of
+> > use_hierarchy fiasco.  I'm gonna NACK on this.
+> 
+> I think you're over-reacting to say the very least :|
+
+The part I nacked is enabling kmemcg on a populated cgroup and then
+starting accounting from then without any apparent indication that any
+past allocation hasn't been considered.  You end up with numbers which
+nobody can't tell what they really mean and there's no mechanism to
+guarantee any kind of ordering between populating the cgroup and
+configuring it and there's *no* way to find out what happened
+afterwards neither.  This is properly crazy and definitely deserves a
+nack.
+
+Thanks.
 
 -- 
-Mel Gorman
-SUSE Labs
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
