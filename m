@@ -1,9 +1,8 @@
-From: Tejun Heo <tj@kernel.org>
+From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Thu, 27 Sep 2012 07:33:00 -0700
-Message-ID: <20120927143300.GA4251@mtj.dyndns.org>
-References: <50634105.8060302@parallels.com>
- <20120926180124.GA12544@google.com>
+Date: Thu, 27 Sep 2012 15:43:07 +0100
+Message-ID: <20120927144307.GH3429@suse.de>
+References: <20120926180124.GA12544@google.com>
  <50634FC9.4090609@parallels.com>
  <20120926193417.GJ12544@google.com>
  <50635B9D.8020205@parallels.com>
@@ -12,102 +11,48 @@ References: <50634105.8060302@parallels.com>
  <20120926201629.GB20342@google.com>
  <50637298.2090904@parallels.com>
  <20120927120806.GA29104@dhcp22.suse.cz>
+ <20120927143300.GA4251@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=l/JhyRb8OWVSVnMclaIH3n92ljfSepSag81S0dznDhI=;
-        b=gBPieP053pMVyni4eHlGMH+9R5eixjJIr+xUnbpwJtwWY1NJqyJB01aTykUXXE223i
-         AXIOiBdotbPgznppzUwyN3VRJ13HiYdW1fNZA1PUoWZlIOBoy9TTQxXrxyUBH1xuRVxx
-         S1xGXrs617wXUQ9sXDuI5gIkwzZCzIHR94B7qec5kvtRtSXzMvn2g5BL0Wjko5dfL5B2
-         W0Q5LMuojSU4r+C1zNvOIe9DEgYvrRZ06nxUqrxlnM81MH+7ZjpHk4D/ABnWFNzQnYy7
-         vUKHUSKjbpNKktjhbA6aeWrbyea0KpJQh1h6le386AEsNPvy05Sw94D5KXlZpxW/n9Na
-         53rA==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20120927120806.GA29104@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20120927143300.GA4251-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hello, Michal.
-
-On Thu, Sep 27, 2012 at 02:08:06PM +0200, Michal Hocko wrote:
-> Yes, because we have many users (basically almost all) who care only
-> about the user memory because that's what occupies the vast majority of
-> the memory. They usually want to isolate workload which would disrupt
-> the global memory otherwise (e.g. backup process vs. database). You
-> really do not want to pay an additional overhead for kmem accounting
-> here.
-
-I'm not too convinced.  First of all, the overhead added by kmemcg
-isn't big.  The hot path overhead is quite minimal - it doesn't do
-much more than indirecting one more time.  In terms of memory usage,
-it sure could lead to a bit more fragmentation but even if it gets to
-several megs per cgroup, I don't think that's something excessive.
-So, there is overhead but I don't believe it to be prohibitive.
-
-> > So your question for global vs local switch (that again, doesn't
-> > exist; only a local *limit* exists) should really be posed in the
-> > following way:  "Can two different use cases with different needs be
-> > hosted in the same box?"
+On Thu, Sep 27, 2012 at 07:33:00AM -0700, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> I think this is a good and a relevant question. I think this boils down
-> to whether you want to have trusted and untrusted workloads at the same
-> machine.
-> Trusted loads usually only need user memory accounting because kmem
-> consumption should be really negligible (unless kernel is doing
-> something really stupid and no kmem limit will help here). 
-> On the other hand, untrusted workloads can do nasty things that
-> administrator has hard time to mitigate and setting a kmem limit can
-> help significantly.
+> On Thu, Sep 27, 2012 at 02:08:06PM +0200, Michal Hocko wrote:
+> > Yes, because we have many users (basically almost all) who care only
+> > about the user memory because that's what occupies the vast majority of
+> > the memory. They usually want to isolate workload which would disrupt
+> > the global memory otherwise (e.g. backup process vs. database). You
+> > really do not want to pay an additional overhead for kmem accounting
+> > here.
 > 
-> IMHO such a different loads exist on a single machine quite often (Web
-> server and a back up process as the most simplistic one). The per
-> hierarchy accounting, therefore, sounds like a good idea without too
-> much added complexity (actually the only added complexity is in the
-> proper kmem.limit_in_bytes handling which is a single place).
+> I'm not too convinced.  First of all, the overhead added by kmemcg
+> isn't big. 
 
-The distinction between "trusted" and "untrusted" is something
-artificially created due to the assumed deficiency of kmemcg
-implementation.  Making things like this visible to userland is a bad
-idea because it locks us into a place where we can't or don't need to
-improve the said deficiencies and end up pushing the difficult
-problems to somewhere else where it will likely be implemented in a
-shabbier way.  There sure are cases when such approach simply cannot
-be avoided, but I really don't think that's the case here - the
-overhead already seems to be at an acceptable level and we're not
-taking away the escape switch.
+Really?
 
-This is userland visible API.  We better err on the side of being
-conservative than going overboard with flexibility.  Even if we
-eventually need to make this switching fullly hierarchical, we really
-should be doing,
+If kmemcg was globally accounted then every __GFP_KMEMCG allocation in
+the page allocator potentially ends up down in
+__memcg_kmem_newpage_charge which
 
-1. Implement simple global switching and look for problem cases.
+1. takes RCU read lock
+2. looks up cgroup from task
+3. takes a reference count
+4. memcg_charge_kmem -> __mem_cgroup_try_charge
+5. release reference count
 
-2. Analyze them and see whether the problem case can't be solved in a
-   better, more intelligent way.
-
-3. If the problem is something structurally inherent or reasonably too
-   difficult to solve any other way, consider dumping the problem as
-   config parameters to userland.
-
-We can always expand the flexibility.  Let's do the simple thing
-first.  As an added bonus, it would enable using static_keys for
-accounting branches too.
-
-Thanks.
+That's a *LOT* of work to incur for cgroups that do not care about kernel
+accounting. This is why I thought it was reasonable that the kmem accounting
+not be global.
 
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Mel Gorman
+SUSE Labs
