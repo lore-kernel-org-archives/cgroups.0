@@ -1,21 +1,21 @@
-From: Mel Gorman <mgorman@suse.de>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH v3 07/13] mm: Allocate kernel pages to the right memcg
-Date: Thu, 27 Sep 2012 14:50:53 +0100
-Message-ID: <20120927135053.GF3429@suse.de>
+Date: Thu, 27 Sep 2012 15:52:39 +0200
+Message-ID: <20120927135239.GF29104@dhcp22.suse.cz>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
  <1347977050-29476-8-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1347977050-29476-8-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1347977050-29476-8-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue, Sep 18, 2012 at 06:04:04PM +0400, Glauber Costa wrote:
+On Tue 18-09-12 18:04:04, Glauber Costa wrote:
 > When a process tries to allocate a page with the __GFP_KMEMCG flag, the
 > page allocator will call the corresponding memcg functions to validate
 > the allocation. Tasks in the root memcg can always proceed.
@@ -30,14 +30,19 @@ On Tue, Sep 18, 2012 at 06:04:04PM +0400, Glauber Costa wrote:
 > [ v2: inverted test order to avoid a memcg_get leak,
 >   free_accounted_pages simplification ]
 > 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Christoph Lameter <cl@linux.com>
-> CC: Pekka Enberg <penberg@cs.helsinki.fi>
-> CC: Michal Hocko <mhocko@suse.cz>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Suleiman Souhlal <suleiman@google.com>
-> CC: Mel Gorman <mgorman@suse.de>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+Thanks!
+
 > ---
 >  include/linux/gfp.h |  3 +++
 >  mm/page_alloc.c     | 35 +++++++++++++++++++++++++++++++++++
@@ -80,30 +85,6 @@ On Tue, Sep 18, 2012 at 06:04:04PM +0400, Glauber Costa wrote:
 > +	if (!memcg_kmem_newpage_charge(gfp_mask, &memcg, order))
 > +		return NULL;
 > +
-
-1. returns quickly if memcg disabled
-2. returns quickly if !__GFP_KMEMCG
-3. returns quickly for kernel threads and interrupts
-
-I'm expecting that these paths are completely dead when kmem accounting
-is off so
-
-Acked-by: Mel Gorman <mgorman@suse.de>
-
-
-That said, it's not directly related to this patch but I would suggest that
-you also check for TIF_MEMDIE in memcg_kmem_newpage_charge. It would be very
-silly if a process failed to exit because it couldn't allocate a page it
-needed. I expect that such a case is impossible today but it might change in
-the future. If you're doing another revision, an extra check would not hurt.
-
-It's difficult to predict if it should be making all the checks that
-gfp_to_alloc_flags() does but you might need to in the future so keep it
-in mind.
-
-
-
-
 >  retry_cpuset:
 >  	cpuset_mems_cookie = get_mems_allowed();
 >  
@@ -114,9 +95,6 @@ in mind.
 > +	memcg_kmem_commit_charge(page, memcg, order);
 > +
 >  	return page;
-
-Ok.
-
 >  }
 >  EXPORT_SYMBOL(__alloc_pages_nodemask);
 > @@ -2676,6 +2686,31 @@ void free_pages(unsigned long addr, unsigned int order)
@@ -144,10 +122,6 @@ Ok.
 > +{
 > +	if (addr != 0) {
 > +		VM_BUG_ON(!virt_addr_valid((void *)addr));
-
-This is probably overkill. If it's invalid, the next line is likely to
-blow up anyway. It's no biggie.
-
 > +		__free_accounted_pages(virt_to_page((void *)addr), order);
 > +	}
 > +}
@@ -158,13 +132,11 @@ blow up anyway. It's no biggie.
 > -- 
 > 1.7.11.4
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-Mel Gorman
+Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
