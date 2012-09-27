@@ -1,103 +1,261 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Wed, 26 Sep 2012 16:33:34 -0700
-Message-ID: <20120926233334.GD10453@mtj.dyndns.org>
-References: <20120926195648.GA20342@google.com>
- <50635F46.7000700@parallels.com>
- <20120926201629.GB20342@google.com>
- <50637298.2090904@parallels.com>
- <20120926221046.GA10453@mtj.dyndns.org>
- <506381B2.2060806@parallels.com>
- <20120926224235.GB10453@mtj.dyndns.org>
- <50638793.7060806@parallels.com>
- <20120926230807.GC10453@mtj.dyndns.org>
- <50638DBB.4000002@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 06/13] memcg: kmem controller infrastructure
+Date: Thu, 27 Sep 2012 15:31:57 +0400
+Message-ID: <5064392D.5040707@parallels.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-7-git-send-email-glommer@parallels.com> <20120926155108.GE15801@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=IBjO0sCBpTXfIRy3rYD9xGxMw0hc+J3V86BLS2zKY5A=;
-        b=T9xhkpHmNqEyUqmbIL7xH9jRF1fKjIRHdX4dNtBzyjeKmk4EzwLnLIoUwihIcopEZ6
-         B5rltRiadcV+URU5uQ4UBadcsy5Gy/2qzL0H2I7cJZ/mk/67TW9twGKr23mNnEvR2NrK
-         /jxB7BWPtKkwFu23rpQPkOn1a+SUziDDhlmqBv1LMebSEpF+54g2c34rtQxsJj+y2/w6
-         6I0AU+FLIZukrAan4Y9SQZ2l1GJxRzvoTz/rlrKFyJy3NXDL6duu2MTiBt8nK7OA8vVp
-         jI58vqSPUZHCiC+cqdi0QXjO+pLeEhgCyjVok40TREoPb566TqnjJ3J21hnITSEfy7bT
-         I0Ag==
-Content-Disposition: inline
-In-Reply-To: <50638DBB.4000002@parallels.com>
+In-Reply-To: <20120926155108.GE15801@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Johannes Weiner <hannes@cmpxchg.org>
 
-Hello,
-
-On Thu, Sep 27, 2012 at 03:20:27AM +0400, Glauber Costa wrote:
-> > One of the things wrong with that is that it exposes the limitation of
-> > the current implementation as interface to userland, which is never a
-> > good idea.  In addition, how is userland supposed to know which
-> > workload is shared kmem heavy or not?  Details like that are not even
-> > inherent to workloads.  It's highly dependent on kernel implementation
-> > which may change any day.  If we hit workloads like that the right
-> > thing to do is improving kmemcg so that such problems don't occur, not
-> > exposing another switch.
+On 09/26/2012 07:51 PM, Michal Hocko wrote:
+> On Tue 18-09-12 18:04:03, Glauber Costa wrote:
+>> This patch introduces infrastructure for tracking kernel memory pages to
+>> a given memcg. This will happen whenever the caller includes the flag
+>> __GFP_KMEMCG flag, and the task belong to a memcg other than the root.
+>>
+>> In memcontrol.h those functions are wrapped in inline acessors.  The
+>> idea is to later on, patch those with static branches, so we don't incur
+>> any overhead when no mem cgroups with limited kmem are being used.
 > 
-> Sorry, there is nothing implementation dependent in here. One of the
-> biggest consumers of all this, are dentries. Dentries are related to
-> the paths you touch. If you touch files in a self-contained directory,
-> where you don't expect anyone else to touch, this can safely be
-> considered local. If you touch files all around, this can safely be
-> considered not local. Where is the implementation dependent part?
+> Could you describe the API a bit here, please? I guess the
+> kernel user is supposed to call memcg_kmem_newpage_charge and
+> memcg_kmem_commit_charge resp. memcg_kmem_uncharge_page.
+> All other kmem functions here are just helpers, right?
+Yes, sir.
 
-For things like dentries and inodes and if that really matters, we
-should be able to account for the usage better, no?  And frankly I'm
-not even sold on that usecase.  Unless there's a way to detect and
-inform about these, userland isn't gonna know that they're doing
-something which consumes a lot of shared memory even that activity is
-filesystem walking.  You're still asking userland to tune something
-depending on parameters not easily visible from userland.  It's a lose
-lose situation.
-
-> >> Even after the limit is set, it is set only by workloads that want kmem
-> >> to be tracked. If you want to track it during the whole lifetime of the
-> >> cgroup, you switch it before you put tasks to it. What is so crazy about it?
-> > 
-> > The fact that the numbers don't really mean what they apparently
-> > should mean.
-> > 
+>>
+>> [ v2: improved comments and standardized function names ]
+>> [ v3: handle no longer opaque, functions not exported,
+>>   even more comments ]
+>> [ v4: reworked Used bit handling and surroundings for more clarity ]
+>>
+>> Signed-off-by: Glauber Costa <glommer@parallels.com>
+>> CC: Christoph Lameter <cl@linux.com>
+>> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+>> CC: Michal Hocko <mhocko@suse.cz>
+>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>> CC: Johannes Weiner <hannes@cmpxchg.org>
+>> ---
+>>  include/linux/memcontrol.h |  97 +++++++++++++++++++++++++
+>>  mm/memcontrol.c            | 177 +++++++++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 274 insertions(+)
+>>
+>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>> index 8d9489f..82ede9a 100644
+>> --- a/include/linux/memcontrol.h
+>> +++ b/include/linux/memcontrol.h
+>> @@ -21,6 +21,7 @@
+>>  #define _LINUX_MEMCONTROL_H
+>>  #include <linux/cgroup.h>
+>>  #include <linux/vm_event_item.h>
+>> +#include <linux/hardirq.h>
+>>
+>>  struct mem_cgroup;
+>>  struct page_cgroup;
+>> @@ -399,6 +400,17 @@ struct sock;
+>>  #ifdef CONFIG_MEMCG_KMEM
+>>  void sock_update_memcg(struct sock *sk);
+>>  void sock_release_memcg(struct sock *sk);
+>> +
+>> +static inline bool memcg_kmem_enabled(void)
+>> +{
+>> +	return true;
+>> +}
+>> +
+>> +extern bool __memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg,
+>> +					int order);
+>> +extern void __memcg_kmem_commit_charge(struct page *page,
+>> +				       struct mem_cgroup *memcg, int order);
+>> +extern void __memcg_kmem_uncharge_page(struct page *page, int order);
+>>  #else
+>>  static inline void sock_update_memcg(struct sock *sk)
+>>  {
+>> @@ -406,6 +418,91 @@ static inline void sock_update_memcg(struct sock *sk)
+>>  static inline void sock_release_memcg(struct sock *sk)
+>>  {
+>>  }
+>> +
+>> +static inline bool memcg_kmem_enabled(void)
+>> +{
+>> +	return false;
+>> +}
+>> +
+>> +static inline bool
+>> +__memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
+>> +{
+>> +	return false;
+>> +}
+>> +
+>> +static inline void  __memcg_kmem_uncharge_page(struct page *page, int order)
+>> +{
+>> +}
+>> +
+>> +static inline void
+>> +__memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg, int order)
+>> +{
+>> +}
 > 
-> This is vague. The usage file in the cgroup means how much kernel memory
-> was used by that cgroup. If it really bothers you that this may not be
-> set through the whole group's lifetime, it is also easily solvable.
-
-Yes, easily by having a global switch which can be manipulated when
-there's no children.  It really seems like a no brainer to me.
-
-> > So, this seems properly crazy to me at the similar level of
-> > use_hierarchy fiasco.  I'm gonna NACK on this.
+> I think we shouldn't care about these for !MEMCG_KMEM. It should be
+> sufficient to define the main three functions bellow as return true
+> resp. NOOP. This would reduce the code churn a bit and also make it
+> better maintainable.
 > 
-> As I said: all use cases I particularly care about are covered by a
-> global switch.
+
+Ok.
+
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index f3fd354..0f36a01 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -10,6 +10,10 @@
+>>   * Copyright (C) 2009 Nokia Corporation
+>>   * Author: Kirill A. Shutemov
+>>   *
+>> + * Kernel Memory Controller
+>> + * Copyright (C) 2012 Parallels Inc. and Google Inc.
+>> + * Authors: Glauber Costa and Suleiman Souhlal
+>> + *
+>>   * This program is free software; you can redistribute it and/or modify
+>>   * it under the terms of the GNU General Public License as published by
+>>   * the Free Software Foundation; either version 2 of the License, or
+>> @@ -426,6 +430,9 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+>>  #include <net/ip.h>
+>>  
+>>  static bool mem_cgroup_is_root(struct mem_cgroup *memcg);
+>> +static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size);
+>> +static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size);
+>> +
 > 
-> I am laying down my views because I really believe they make more sense.
-> But at some point, of course, I'll shut up if I believe I am a lone voice.
+> Why the forward declarations here? We can simply move definitions up
+> before they are used for the first time, can't we? Besides that they are
+> never used/defined from outside of KMEM_MEMCG.
+>
+I see your point, given the recent patch about gcc complaining about
+those things. Will change.
+
+>> +
+>> +	*_memcg = NULL;
+>> +	rcu_read_lock();
+>> +	p = rcu_dereference(current->mm->owner);
+>> +	memcg = mem_cgroup_from_task(p);
 > 
-> I believe it should still be good to hear from mhocko and kame, but from
-> your point of view, would all the rest, plus the introduction of a
-> global switch make it acceptable to you?
+> mem_cgroup_from_task says it can return NULL. Do we care here? If not
+> then please put VM_BUG_ON(!memcg) here.
+> 
+>> +	rcu_read_unlock();
+>> +
+>> +	if (!memcg_can_account_kmem(memcg))
+>> +		return true;
+>> +
+>> +	mem_cgroup_get(memcg);
+> 
+> I am confused. Why do we take a reference to memcg rather than css_get
+> here? Ahh it is because we keep the reference while the page is
+> allocated, right? Comment please.
+ok.
 
-The only thing I'm whining about is per-node switch + silently
-ignoring past accounting, so if those two are solved, I think I'm
-pretty happy with the rest.
+> 
+> I am still not sure whether we need css_get here as well. How do you
+> know that the current is not moved in parallel and it is a last task in
+> a group which then can go away?
 
-Thanks.
+the reference count aquired by mem_cgroup_get will still prevent the
+memcg from going away, no?
 
--- 
-tejun
+>> +
+>> +	/* The page allocation failed. Revert */
+>> +	if (!page) {
+>> +		memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
+>> +		return;
+>> +	}
+>> +
+>> +	pc = lookup_page_cgroup(page);
+>> +	lock_page_cgroup(pc);
+>> +	pc->mem_cgroup = memcg;
+>> +	SetPageCgroupUsed(pc);
+>> +	unlock_page_cgroup(pc);
+>> +}
+>> +
+>> +void __memcg_kmem_uncharge_page(struct page *page, int order)
+>> +{
+>> +	struct mem_cgroup *memcg = NULL;
+>> +	struct page_cgroup *pc;
+>> +
+>> +
+>> +	pc = lookup_page_cgroup(page);
+>> +	/*
+>> +	 * Fast unlocked return. Theoretically might have changed, have to
+>> +	 * check again after locking.
+>> +	 */
+>> +	if (!PageCgroupUsed(pc))
+>> +		return;
+>> +
+>> +	lock_page_cgroup(pc);
+>> +	if (PageCgroupUsed(pc)) {
+>> +		memcg = pc->mem_cgroup;
+>> +		ClearPageCgroupUsed(pc);
+>> +	}
+>> +	unlock_page_cgroup(pc);
+>> +
+>> +	/*
+>> +	 * Checking if kmem accounted is enabled won't work for uncharge, since
+>> +	 * it is possible that the user enabled kmem tracking, allocated, and
+>> +	 * then disabled it again.
+> 
+> disabling cannot happen, right?
+> 
+not anymore, right. I can update the comment, but I still believe it is
+a lot saner to trust information in page_cgroup.
+
+>> +#ifdef CONFIG_MEMCG_KMEM
+>> +int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
+>> +{
+>> +	struct res_counter *fail_res;
+>> +	struct mem_cgroup *_memcg;
+>> +	int ret;
+>> +	bool may_oom;
+>> +	bool nofail = false;
+>> +
+>> +	may_oom = (gfp & __GFP_WAIT) && (gfp & __GFP_FS) &&
+>> +	    !(gfp & __GFP_NORETRY);
+> 
+> A comment please? Why __GFP_IO is not considered for example?
+> 
+> 
+
+Actually, I believe testing for GFP_WAIT and !GFP_NORETRY would be enough.
+
+The rationale here is, of course, under which circumstance would it be
+valid to call the oom killer? Which is, if the allocation can wait, and
+can retry.
+
+> 
+> You could save few lines and get rid of the strange nofail by:
+> [...]
+> +		res_counter_charge_nofail(&memcg->res, size, &fail_res);
+> +		if (do_swap_account)
+> +			res_counter_charge_nofail(&memcg->memsw, size,
+> +						  &fail_res);
+> +		res_counter_charge_nofail(&memcg->kmem, size, &fail_res);
+> +		return 0;
+> +	} else if (ret == -ENOMEM)
+> +		return ret;
+> +	else
+> +		ret = res_counter_charge(&memcg->kmem, size, &fail_res);
+> +
+> +	if (ret) {
+> +		res_counter_uncharge(&memcg->res, size);
+> +		if (do_swap_account)
+> +			res_counter_uncharge(&memcg->memsw, size);
+> +	}
+> 
+indeed.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
