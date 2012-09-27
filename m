@@ -1,111 +1,131 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Thu, 27 Sep 2012 18:57:59 +0400
-Message-ID: <50646977.40300@parallels.com>
-References: <20120926195648.GA20342@google.com> <50635F46.7000700@parallels.com> <20120926201629.GB20342@google.com> <50637298.2090904@parallels.com> <20120926221046.GA10453@mtj.dyndns.org> <506381B2.2060806@parallels.com> <20120926224235.GB10453@mtj.dyndns.org> <50638793.7060806@parallels.com> <20120926230807.GC10453@mtj.dyndns.org> <20120927142822.GG3429@suse.de> <20120927144942.GB4251@mtj.dyndns.org>
+Date: Thu, 27 Sep 2012 17:09:50 +0200
+Message-ID: <20120927150950.GG29104@dhcp22.suse.cz>
+References: <20120926180124.GA12544@google.com>
+ <50634FC9.4090609@parallels.com>
+ <20120926193417.GJ12544@google.com>
+ <50635B9D.8020205@parallels.com>
+ <20120926195648.GA20342@google.com>
+ <50635F46.7000700@parallels.com>
+ <20120926201629.GB20342@google.com>
+ <50637298.2090904@parallels.com>
+ <20120927120806.GA29104@dhcp22.suse.cz>
+ <20120927143300.GA4251@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120927144942.GB4251@mtj.dyndns.org>
+Content-Disposition: inline
+In-Reply-To: <20120927143300.GA4251@mtj.dyndns.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 09/27/2012 06:49 PM, Tejun Heo wrote:
-> Hello, Mel.
+On Thu 27-09-12 07:33:00, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> On Thu, Sep 27, 2012 at 03:28:22PM +0100, Mel Gorman wrote:
->>> In addition, how is userland supposed to know which
->>> workload is shared kmem heavy or not? 
->>
->> By using a bit of common sense.
->>
->> An application may not be able to figure this out but the administrator
->> is going to be able to make a very educated guess. If processes running
->> within two containers are not sharing a filesystem hierarchy for example
->> then it'll be clear they are not sharing dentries.
->>
->> If there was a suspicion they were then it could be analysed with
->> something like SystemTap probing when files are opened and see if files
->> are being opened that are shared between containers.
->>
->> It's not super-easy but it's not impossible either and I fail to see why
->> it's such a big deal for you.
+> On Thu, Sep 27, 2012 at 02:08:06PM +0200, Michal Hocko wrote:
+> > Yes, because we have many users (basically almost all) who care only
+> > about the user memory because that's what occupies the vast majority of
+> > the memory. They usually want to isolate workload which would disrupt
+> > the global memory otherwise (e.g. backup process vs. database). You
+> > really do not want to pay an additional overhead for kmem accounting
+> > here.
 > 
-> Because we're not even trying to actually solve the problem but just
-> dumping it to userland.  If dentry/inode usage is the only case we're
-> being worried about, there can be better ways to solve it or at least
-> we should strive for that.
-> 
+> I'm not too convinced.  First of all, the overhead added by kmemcg
+> isn't big. 
 
-Not only it is not the only case we care about, this is not even touched
-in this series. (It is only touched in the next one). This one, for
-instance, cares about the stack. The reason everything is being dumped
-into "kmem", is precisely to make things simpler. I argue that at some
-point it makes sense to draw a line, and "kmem" is a much better line
-than any fine grained control - precisely because it is conceptually
-easier to grasp.
+You are probably talking about memory overhead which is indeed not that
+big (except for possible side effects as fragmentation which you mention
+bellow). But the runtime overhead is present, as far as I understand from
+what Glauber said. But, on the other hand, it is fair to say that those
+who _want_ use the feature should pay for it.
 
+> The hot path overhead is quite minimal - it doesn't do much more than
+> indirecting one more time.  In terms of memory usage, it sure could
+> lead to a bit more fragmentation but even if it gets to several megs
+> per cgroup, I don't think that's something excessive.  So, there is
+> overhead but I don't believe it to be prohibitive.
 
-> Also, the problem is not that it is impossible if you know and
-> carefully plan for things beforehand (that would be one extremely
-> competent admin) but that the problem is undiscoverable.  With kmemcg
-> accounting disabled, there's no way to tell a looking cgroup the admin
-> thinks running something which doesn'ft tax kmem much could be
-> generating a ton without the admin ever noticing.
+Remember that users do not want to pay even "something minimal" when the
+feature is not needed.
+
+> > > So your question for global vs local switch (that again, doesn't
+> > > exist; only a local *limit* exists) should really be posed in the
+> > > following way:  "Can two different use cases with different needs be
+> > > hosted in the same box?"
+> > 
+> > I think this is a good and a relevant question. I think this boils down
+> > to whether you want to have trusted and untrusted workloads at the same
+> > machine.
+> > Trusted loads usually only need user memory accounting because kmem
+> > consumption should be really negligible (unless kernel is doing
+> > something really stupid and no kmem limit will help here). 
+> > On the other hand, untrusted workloads can do nasty things that
+> > administrator has hard time to mitigate and setting a kmem limit can
+> > help significantly.
+> > 
+> > IMHO such a different loads exist on a single machine quite often (Web
+> > server and a back up process as the most simplistic one). The per
+> > hierarchy accounting, therefore, sounds like a good idea without too
+> > much added complexity (actually the only added complexity is in the
+> > proper kmem.limit_in_bytes handling which is a single place).
 > 
->>> The fact that the numbers don't really mean what they apparently
->>> should mean.
->>
->> I think it is a reasonable limitation that only some kernel allocations are
->> accounted for although I'll freely admit I'm not a cgroup or memcg user
->> either.
->>
->> My understanding is that this comes down to cost -- accounting for the
->> kernel memory usage is expensive so it is limited only to the allocations
->> that are easy to abuse by an unprivileged process. Hence this is
->> initially concerned with stack pages with dentries and TCP usage to
->> follow in later patches.
-> 
-> I think the cost isn't too prohibitive considering it's already using
-> memcg.  Charging / uncharging happens only as pages enter and leave
-> slab caches and the hot path overhead is essentially single
-> indirection.  Glauber's benchmark seemed pretty reasonable to me and I
-> don't yet think that warrants exposing this subtle tree of
-> configuration.
-> 
+> The distinction between "trusted" and "untrusted" is something
+> artificially created due to the assumed deficiency of kmemcg
+> implementation.  
 
-Only so we can get some numbers: the cost is really minor if this is all
-disabled. It this is fully enable, it can get to some 2 or 3 %, which
-may or may not be acceptable to an application. But for me this is not
-even about cost, and that's why I haven't brought it up so far
+Not really. It doesn't have to do anything with the overhead (be it
+memory or runtime). It really boils down to "do I need/want it at all".
+Why would I want to think about how much kernel memory is in use in the
+first place? Or do you think that user memory accounting should be
+deprecated?
 
->>> Sure, conferences are useful for building consensus but that's the
->>> extent of it.  Sorry that I didn't realize the implications then but
->>> conferences don't really add any finality to decisions.
->>>
->>> So, this seems properly crazy to me at the similar level of
->>> use_hierarchy fiasco.  I'm gonna NACK on this.
->>
->> I think you're over-reacting to say the very least :|
+> Making things like this visible to userland is a bad
+> idea because it locks us into a place where we can't or don't need to
+> improve the said deficiencies and end up pushing the difficult
+> problems to somewhere else where it will likely be implemented in a
+> shabbier way.  There sure are cases when such approach simply cannot
+> be avoided, but I really don't think that's the case here - the
+> overhead already seems to be at an acceptable level and we're not
+> taking away the escape switch.
 > 
-> The part I nacked is enabling kmemcg on a populated cgroup and then
-> starting accounting from then without any apparent indication that any
-> past allocation hasn't been considered.  You end up with numbers which
-> nobody can't tell what they really mean and there's no mechanism to
-> guarantee any kind of ordering between populating the cgroup and
-> configuring it and there's *no* way to find out what happened
-> afterwards neither.  This is properly crazy and definitely deserves a
-> nack.
+> This is userland visible API.  
+
+I am not sure which API visible part you have in mind but
+kmem.limit_in_bytes will be there whether we go with global knob or "no
+limit no accounting" approach. 
+
+> We better err on the side of being conservative than going overboard
+> with flexibility.  Even if we eventually need to make this switching
+> fullly hierarchical, we really should be doing,
 > 
+> 1. Implement simple global switching and look for problem cases.
+> 
+> 2. Analyze them and see whether the problem case can't be solved in a
+>    better, more intelligent way.
+> 
+> 3. If the problem is something structurally inherent or reasonably too
+>    difficult to solve any other way, consider dumping the problem as
+>    config parameters to userland.
+> 
+> We can always expand the flexibility.  Let's do the simple thing
+> first.  As an added bonus, it would enable using static_keys for
+> accounting branches too.
 
-Mel suggestion of not allowing this to happen once the cgroup has tasks
-takes care of this, and is something I thought of myself.
-
-This would remove this particular piece of objection, and maintain the
-per-subtree control.
+While I do agree with you in general and being careful is at place in
+this area as time shown several times, this seems to be too restrictive
+in this particular case.
+We won't save almost no code with the global knob so I am not sure
+what we are actually saving here. Global knob will just give us all or
+nothing semantic without making the whole thing simpler. You will stick
+with static branches and checkes whether the group accountable anyway,
+right?
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
