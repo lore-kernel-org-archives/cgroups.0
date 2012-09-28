@@ -1,95 +1,37 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Thu, 27 Sep 2012 22:45:01 +0400
-Message-ID: <50649EAD.2050306@parallels.com>
-References: <20120926201629.GB20342@google.com> <50637298.2090904@parallels.com> <20120926221046.GA10453@mtj.dyndns.org> <506381B2.2060806@parallels.com> <20120926224235.GB10453@mtj.dyndns.org> <50638793.7060806@parallels.com> <20120926230807.GC10453@mtj.dyndns.org> <20120927142822.GG3429@suse.de> <20120927144942.GB4251@mtj.dyndns.org> <50646977.40300@parallels.com> <20120927174605.GA2713@localhost>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 07/13] mm: Allocate kernel pages to the right memcg
+Date: Fri, 28 Sep 2012 13:43:47 +0400
+Message-ID: <50657153.8010101@parallels.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-8-git-send-email-glommer@parallels.com> <20120927135053.GF3429@suse.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20120927174605.GA2713@localhost>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20120927135053.GF3429-l3A5Bk7waGM@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 09/27/2012 09:46 PM, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Sep 27, 2012 at 06:57:59PM +0400, Glauber Costa wrote:
->>> Because we're not even trying to actually solve the problem but just
->>> dumping it to userland.  If dentry/inode usage is the only case we're
->>> being worried about, there can be better ways to solve it or at least
->>> we should strive for that.
->>
->> Not only it is not the only case we care about, this is not even touched
->> in this series. (It is only touched in the next one). This one, for
->> instance, cares about the stack. The reason everything is being dumped
->> into "kmem", is precisely to make things simpler. I argue that at some
->> point it makes sense to draw a line, and "kmem" is a much better line
->> than any fine grained control - precisely because it is conceptually
->> easier to grasp.
-> 
-> Can you please give other examples of cases where this type of issue
-> exists (plenty of shared kernel data structure which is inherent to
-> the workload at hand)?  Until now, this has been the only example for
-> this type of issues.
+On 09/27/2012 05:50 PM, Mel Gorman wrote:
+>> +void __free_accounted_pages(struct page *page, unsigned int order)
+>> > +{
+>> > +	memcg_kmem_uncharge_page(page, order);
+>> > +	__free_pages(page, order);
+>> > +}
+>> > +
+>> > +void free_accounted_pages(unsigned long addr, unsigned int order)
+>> > +{
+>> > +	if (addr != 0) {
+>> > +		VM_BUG_ON(!virt_addr_valid((void *)addr));
+> This is probably overkill. If it's invalid, the next line is likely to
+> blow up anyway. It's no biggie.
 > 
 
-Yes. the namespace related caches (*), all kinds of sockets and network
-structures, other file system structures like file struct, vm areas, and
-pretty much everything a full container does.
+So this is here because it is in free_pages() as well. If it blows, at
+least we know precisely why (if debugging), and VM_BUG_ON() is only
+compiled in when CONFIG_DEBUG_VM.
 
-(*) we run full userspace, so we have namespaces + cgroups combination.
+But I'm fine with either.
+Should it stay or should it go ?
 
->>> I think the cost isn't too prohibitive considering it's already using
->>> memcg.  Charging / uncharging happens only as pages enter and leave
->>> slab caches and the hot path overhead is essentially single
->>> indirection.  Glauber's benchmark seemed pretty reasonable to me and I
->>> don't yet think that warrants exposing this subtle tree of
->>> configuration.
->>
->> Only so we can get some numbers: the cost is really minor if this is all
->> disabled. It this is fully enable, it can get to some 2 or 3 %, which
->> may or may not be acceptable to an application. But for me this is not
->> even about cost, and that's why I haven't brought it up so far
-> 
-> It seems like Mel's concern is mostly based on performance overhead
-> concerns tho.
-> 
->>> The part I nacked is enabling kmemcg on a populated cgroup and then
->>> starting accounting from then without any apparent indication that any
->>> past allocation hasn't been considered.  You end up with numbers which
->>> nobody can't tell what they really mean and there's no mechanism to
->>> guarantee any kind of ordering between populating the cgroup and
->>> configuring it and there's *no* way to find out what happened
->>> afterwards neither.  This is properly crazy and definitely deserves a
->>> nack.
->>>
->>
->> Mel suggestion of not allowing this to happen once the cgroup has tasks
->> takes care of this, and is something I thought of myself.
-> 
-> You mean Michal's?  It should also disallow switching if there are
-> children cgroups, right?
-> 
-
-No, I meant Mel, quoting this:
-
-"Further I would expect that an administrator would be aware of these
-limitations and set kmem_accounting at cgroup creation time before any
-processes start. Maybe that should be enforced but it's not a
-fundamental problem."
-
-But I guess it is pretty much the same thing Michal proposes, in essence.
-
-Or IOW, if your concern is with the fact that charges may have happened
-in the past before this is enabled, we can make sure this cannot happen
-by disallowing the limit to be set if currently unset (value changes are
-obviously fine) if you have children or any tasks already in the group.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
