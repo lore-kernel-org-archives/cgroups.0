@@ -1,45 +1,173 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v3 06/13] memcg: kmem controller infrastructure
-Date: Mon, 1 Oct 2012 11:48:46 +0200
-Message-ID: <20121001094846.GC8622@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v3 08/13] res_counter: return amount of charges after
+ res_counter_uncharge
+Date: Mon, 1 Oct 2012 12:00:10 +0200
+Message-ID: <20121001100010.GD8622@dhcp22.suse.cz>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
- <1347977050-29476-7-git-send-email-glommer@parallels.com>
- <20120926155108.GE15801@dhcp22.suse.cz>
- <5064392D.5040707@parallels.com>
- <20120927134432.GE29104@dhcp22.suse.cz>
- <50658B3B.9020303@parallels.com>
+ <1347977050-29476-9-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <50658B3B.9020303-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1347977050-29476-9-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Fri 28-09-12 15:34:19, Glauber Costa wrote:
-> On 09/27/2012 05:44 PM, Michal Hocko wrote:
-> >> > the reference count aquired by mem_cgroup_get will still prevent the
-> >> > memcg from going away, no?
-> > Yes but you are outside of the rcu now and we usually do css_get before
-> > we rcu_unlock. mem_cgroup_get just makes sure the group doesn't get
-> > deallocated but it could be gone before you call it. Or I am just
-> > confused - these 2 levels of ref counting is really not nice.
-> > 
-> > Anyway, I have just noticed that __mem_cgroup_try_charge does
-> > VM_BUG_ON(css_is_removed(&memcg->css)) on a given memcg so you should
-> > keep css ref count up as well.
-> > 
+On Tue 18-09-12 18:04:05, Glauber Costa wrote:
+> It is useful to know how many charges are still left after a call to
+> res_counter_uncharge. 
+
+> While it is possible to issue a res_counter_read
+> after uncharge, this is racy. It would be better if uncharge itself
+> would tell us what the current status is.
+
+Well I am not sure how less racy it would be if you return the old
+value. It could be out of date when you read it, right? (this is even
+more visible with res_counter_uncharge_until)
+res_counter_read_u64 uses locks only for 32b when your change could help
+to reduce lock contention. Other than that it is just res_counter_member
+which is one cmp and a dereference. Sure you safe something but it is
+barely noticable I guess.
+
+I am not saying I do not like this change I just think that the
+above part of the changelog doesn't fit. So it would be much better if
+you tell us why this is needed for your patchset because the usage is
+not part of the patch.
+
+> Since the current return value is void, we don't need to worry about
+> anything breaking due to this change: nobody relied on that, and only
+> users appearing from now on will be checking this value.
 > 
-> IIRC, css_get will prevent the cgroup directory from being removed.
-> Because some allocations are expected to outlive the cgroup, we
-> specifically don't want that.
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> CC: Suleiman Souhlal <suleiman@google.com>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+>  Documentation/cgroups/resource_counter.txt |  7 ++++---
+>  include/linux/res_counter.h                | 12 +++++++-----
+>  kernel/res_counter.c                       | 20 +++++++++++++-------
+>  3 files changed, 24 insertions(+), 15 deletions(-)
+> 
+> diff --git a/Documentation/cgroups/resource_counter.txt b/Documentation/cgroups/resource_counter.txt
+> index 0c4a344..c4d99ed 100644
+> --- a/Documentation/cgroups/resource_counter.txt
+> +++ b/Documentation/cgroups/resource_counter.txt
+> @@ -83,16 +83,17 @@ to work with it.
+>  	res_counter->lock internally (it must be called with res_counter->lock
+>  	held). The force parameter indicates whether we can bypass the limit.
+>  
+> - e. void res_counter_uncharge[_locked]
+> + e. u64 res_counter_uncharge[_locked]
+>  			(struct res_counter *rc, unsigned long val)
+>  
+>  	When a resource is released (freed) it should be de-accounted
+>  	from the resource counter it was accounted to.  This is called
+> -	"uncharging".
+> +	"uncharging". The return value of this function indicate the amount
+> +	of charges still present in the counter.
+>  
+>  	The _locked routines imply that the res_counter->lock is taken.
+>  
+> - f. void res_counter_uncharge_until
+> + f. u64 res_counter_uncharge_until
+>  		(struct res_counter *rc, struct res_counter *top,
+>  		 unsinged long val)
+>  
+> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+> index 7d7fbe2..4b173b6 100644
+> --- a/include/linux/res_counter.h
+> +++ b/include/linux/res_counter.h
+> @@ -130,14 +130,16 @@ int res_counter_charge_nofail(struct res_counter *counter,
+>   *
+>   * these calls check for usage underflow and show a warning on the console
+>   * _locked call expects the counter->lock to be taken
+> + *
+> + * returns the total charges still present in @counter.
+>   */
+>  
+> -void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+> -void res_counter_uncharge(struct res_counter *counter, unsigned long val);
+> +u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+> +u64 res_counter_uncharge(struct res_counter *counter, unsigned long val);
+>  
+> -void res_counter_uncharge_until(struct res_counter *counter,
+> -				struct res_counter *top,
+> -				unsigned long val);
+> +u64 res_counter_uncharge_until(struct res_counter *counter,
+> +			       struct res_counter *top,
+> +			       unsigned long val);
+>  /**
+>   * res_counter_margin - calculate chargeable space of a counter
+>   * @cnt: the counter
+> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+> index ad581aa..7b3d6dc 100644
+> --- a/kernel/res_counter.c
+> +++ b/kernel/res_counter.c
+> @@ -86,33 +86,39 @@ int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
+>  	return __res_counter_charge(counter, val, limit_fail_at, true);
+>  }
+>  
+> -void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
+> +u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
+>  {
+>  	if (WARN_ON(counter->usage < val))
+>  		val = counter->usage;
+>  
+>  	counter->usage -= val;
+> +	return counter->usage;
+>  }
+>  
+> -void res_counter_uncharge_until(struct res_counter *counter,
+> -				struct res_counter *top,
+> -				unsigned long val)
+> +u64 res_counter_uncharge_until(struct res_counter *counter,
+> +			       struct res_counter *top,
+> +			       unsigned long val)
+>  {
+>  	unsigned long flags;
+>  	struct res_counter *c;
+> +	u64 ret = 0;
+>  
+>  	local_irq_save(flags);
+>  	for (c = counter; c != top; c = c->parent) {
+> +		u64 r;
+>  		spin_lock(&c->lock);
+> -		res_counter_uncharge_locked(c, val);
+> +		r = res_counter_uncharge_locked(c, val);
+> +		if (c == counter)
+> +			ret = r;
+>  		spin_unlock(&c->lock);
+>  	}
+>  	local_irq_restore(flags);
+> +	return ret;
+>  }
+>  
+> -void res_counter_uncharge(struct res_counter *counter, unsigned long val)
+> +u64 res_counter_uncharge(struct res_counter *counter, unsigned long val)
+>  {
+> -	res_counter_uncharge_until(counter, NULL, val);
+> +	return res_counter_uncharge_until(counter, NULL, val);
+>  }
+>  
+>  static inline unsigned long long *
+> -- 
+> 1.7.11.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, but how do you guarantee that the above VM_BUG_ON doesn't trigger?
-Task could have been moved to another group between mem_cgroup_from_task
-and mem_cgroup_get, no?
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
