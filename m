@@ -1,32 +1,42 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v3 03/13] memcg: change defines to an enum
-Date: Mon, 1 Oct 2012 15:06:52 -0400
-Message-ID: <20121001190652.GD23734@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 05/13] Add a __GFP_KMEMCG flag
+Date: Mon, 1 Oct 2012 15:09:05 -0400
+Message-ID: <20121001190905.GE23734@cmpxchg.org>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
- <1347977050-29476-4-git-send-email-glommer@parallels.com>
+ <1347977050-29476-6-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1347977050-29476-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1347977050-29476-6-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Michal Hocko <mhocko@suse.cz>, Rik van Riel <riel@redhat.com>, Mel Gorman <mel@csn.ul.ie>
 
-On Tue, Sep 18, 2012 at 06:04:00PM +0400, Glauber Costa wrote:
-> This is just a cleanup patch for clarity of expression.  In earlier
-> submissions, people asked it to be in a separate patch, so here it is.
+On Tue, Sep 18, 2012 at 06:04:02PM +0400, Glauber Costa wrote:
+> This flag is used to indicate to the callees that this allocation is a
+> kernel allocation in process context, and should be accounted to
+> current's memcg. It takes numerical place of the of the recently removed
+> __GFP_NO_KSWAPD.
 > 
-> [ v2: use named enum as type throughout the file as well ]
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Christoph Lameter <cl@linux.com>
+> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> CC: Suleiman Souhlal <suleiman@google.com>
+> CC: Rik van Riel <riel@redhat.com>
+> CC: Mel Gorman <mel@csn.ul.ie>
+> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Should probably be the first in the series to get the cleanups out of
-the way :-)
+With the feedback from Christoph and Mel incorporated:
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
