@@ -1,133 +1,167 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: [PATCH 10/15] cfq-get-rid-of-slice-offset-and-always-put-new-queue-at-the-end-2
-Date: Mon,  1 Oct 2012 15:32:51 -0400
-Message-ID: <1349119976-26837-11-git-send-email-vgoyal@redhat.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 07/15] cfq-iosced: Do the round robin selection of workload type
+Date: Mon,  1 Oct 2012 15:32:48 -0400
+Message-ID: <1349119976-26837-8-git-send-email-vgoyal@redhat.com>
 References: <1349119976-26837-1-git-send-email-vgoyal@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1349119976-26837-1-git-send-email-vgoyal@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1349119976-26837-1-git-send-email-vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org, axboe@kernel.dk
-Cc: tj@kernel.org, cgroups@vger.kernel.org, vgoyal@redhat.com
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Currently cfq does round robin among cfqq and allocates bigger slices
-to higher prio queue. But it also does additional logic of putting
-higher priority queues ahead of lower priority queues in the service
-tree. cfq_slice_offset() determines the postion of a queue in the
-service tree.
+We have three subclass of workloads (SYNC_NODILE, SYNC and ASYNC) for
+prio class RT and BE. And cfq needs to select a workload to dispatch
+from before it selects a cfqq.
 
-I think it was done so that higher prio queues can get even higher
-share of disk. As I am planning to move to vdisktime logic, this
-does not fit anymore in to scheme of things. In the end of patch
-series, I will introduce another approximation which provides vdisktime
-boost based on weight. So that will kind of emulate this logic to
-provide higher prio queues more than fair share of disk.
+Current workload selection seems to be selecting a workload which has
+the lowest key for a cfqq. So effectively all three service tree are
+kind of related using that cfqq->rb_key. And that cfqq->rb_key is
+influenced by time (apart from other factors). So basically service
+tree keys are influenced by time of queuing as well as prio of queue
+and service trees are related.
 
-So this patch puts every new queue at the end of service tree by
-default. Existing queues get their position in the tree depending
-on how much slice did they use recently and what's their prio/weight.
+I want to change the workload selection logic a bit for following
+reason.
 
-This patch only introduces the functionality of adding queues at
-the end of service tree. Later patches will introduce the functionality
-of determining vdisktime (hence position in service tree) based on
-slice used and weight.
+I am moving away from the notion of time for rb_key. The reason
+being that I am bringing queue scheduling logic closer to group
+scheduling logic where every service tree keeps track of virtual
+time (vdisktime) based on disk share used by that group.
 
-If a queue is being requeued, then it will already be on service tree
-and we can't determine the rb_key of last element using cfq_rb_last().
-So we always remove the queue from service tree first.
+That means we can't use real time on queue service tree. And that
+also means that virtual time of every service tree will move
+independently and I can't use current logic of workload selection
+which assumes that cfqq->rb_key of all three service tree are
+co-related.
 
-This is just an intermediate patch to show clearly how I am chaning
-existing functionality. Did not want to lump it together with bigger
-patches.
+I think one simple way to select workload is do the round robin
+among active workloads. That way each workload gets it fair share.
+(Though we override that later by allowing preemption of of async
+queue by sync queue).
 
-Signed-off-by: Vivek Goyal <vgoyal@redhat.com>
+In case a group is freshly queued, we always start with sync-noidle
+workload first as that seems to be most important.
+
+So making this change allows us to bring closer to group scheduling
+logic, simplifies the workload selection logic and makes the workload
+selection more predictable. I am not expecting any serious adverse effects
+of this change.
+
+Signed-off-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- block/cfq-iosched.c |   51 ++++++++++++++++++---------------------------------
- 1 files changed, 18 insertions(+), 33 deletions(-)
+ block/cfq-iosched.c |   51 ++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 32 insertions(+), 19 deletions(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 76f020f..bf2bc32 100644
+index 619c680..7a65e12 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -1139,16 +1139,6 @@ cfq_find_next_rq(struct cfq_data *cfqd, struct cfq_queue *cfqq,
- 	return cfq_choose_req(cfqd, next, prev, blk_rq_pos(last));
+@@ -166,9 +166,10 @@ enum wl_class_t {
+  * Second index in the service_trees.
+  */
+ enum wl_type_t {
+-	ASYNC_WORKLOAD = 0,
+-	SYNC_NOIDLE_WORKLOAD = 1,
+-	SYNC_WORKLOAD = 2
++	SYNC_NOIDLE_WORKLOAD = 0,
++	SYNC_WORKLOAD = 1,
++	ASYNC_WORKLOAD = 2,
++	WL_TYPE_NR,
+ };
+ 
+ struct cfqg_stats {
+@@ -248,10 +249,14 @@ struct cfq_group {
+ 	struct cfq_rb_root sts[2][3];
+ 	struct cfq_rb_root st_idle;
+ 
++	/* Saved state when group is scheduled out */
+ 	unsigned long saved_wl_slice;
+ 	enum wl_type_t saved_wl_type;
+ 	enum wl_class_t saved_wl_class;
+ 
++	/* Last workload type chosen to run in this group */
++	enum wl_type_t last_run_wl_type;
++
+ 	/* number of requests that are on the dispatch list or inside driver */
+ 	int dispatched;
+ 	struct cfq_ttime ttime;
+@@ -703,7 +708,7 @@ static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
+ 	for (i = 0; i <= IDLE_WORKLOAD; i++) \
+ 		for (j = 0, st = i < IDLE_WORKLOAD ? &cfqg->sts[i][j]\
+ 			: &cfqg->st_idle; \
+-			(i < IDLE_WORKLOAD && j <= SYNC_WORKLOAD) || \
++			(i < IDLE_WORKLOAD && j < WL_TYPE_NR) || \
+ 			(i == IDLE_WORKLOAD && j == 0); \
+ 			j++, st = i < IDLE_WORKLOAD ? \
+ 			&cfqg->sts[i][j]: NULL) \
+@@ -1243,6 +1248,7 @@ cfq_group_notify_queue_del(struct cfq_data *cfqd, struct cfq_group *cfqg)
+ 	cfq_log_cfqg(cfqd, cfqg, "del_from_rr group");
+ 	cfq_group_st_del(st, cfqg);
+ 	cfqg->saved_wl_slice = 0;
++	cfqg->last_run_wl_type = WL_TYPE_NR;
+ 	cfqg_stats_update_dequeue(cfqg);
  }
  
--static unsigned long cfq_slice_offset(struct cfq_data *cfqd,
--				      struct cfq_queue *cfqq)
--{
--	/*
--	 * just an approximation, should be ok.
--	 */
--	return (cfqq->cfqg->nr_cfqq - 1) * (cfq_prio_slice(cfqd, 1, 0) -
--		       cfq_prio_slice(cfqd, cfq_cfqq_sync(cfqq), cfqq->ioprio));
--}
--
- static inline s64
- cfqg_key(struct cfq_rb_root *st, struct cfq_group *cfqg)
- {
-@@ -1625,41 +1615,36 @@ static void cfq_st_add(struct cfq_data *cfqd, struct cfq_queue *cfqq,
- 	bool new_cfqq = RB_EMPTY_NODE(&cfqq->rb_node);
+@@ -1336,6 +1342,7 @@ static void cfq_init_cfqg_base(struct cfq_group *cfqg)
+ 	RB_CLEAR_NODE(&cfqg->rb_node);
  
- 	st = st_for(cfqq->cfqg, cfqq_class(cfqq), cfqq_type(cfqq));
--	if (cfq_class_idle(cfqq)) {
+ 	cfqg->ttime.last_end_request = jiffies;
++	cfqg->last_run_wl_type = WL_TYPE_NR;
+ }
+ 
+ #ifdef CONFIG_CFQ_GROUP_IOSCHED
+@@ -2486,27 +2493,33 @@ static void cfq_setup_merge(struct cfq_queue *cfqq, struct cfq_queue *new_cfqq)
+ 	}
+ }
+ 
++static inline enum wl_type_t next_wl_type(enum wl_type_t wl_type)
++{
++	wl_type++;
++	if (wl_type >= WL_TYPE_NR)
++		wl_type = 0;
++	return wl_type;
++}
 +
-+	if (!new_cfqq) {
-+		cfq_rb_erase(&cfqq->rb_node, cfqq->st);
-+		cfqq->st = NULL;
-+	}
+ static enum wl_type_t cfq_choose_wl_type(struct cfq_data *cfqd,
+ 			struct cfq_group *cfqg, enum wl_class_t wl_class)
+ {
+-	struct cfq_queue *queue;
++	enum wl_type_t new_wl_type, old_wl_type;
++	struct cfq_rb_root *st;
+ 	int i;
+-	bool key_valid = false;
+-	unsigned long lowest_key = 0;
+-	enum wl_type_t cur_best = SYNC_NOIDLE_WORKLOAD;
+-
+-	for (i = 0; i <= SYNC_WORKLOAD; ++i) {
+-		/* select the one with lowest rb_key */
+-		queue = cfq_rb_first(st_for(cfqg, wl_class, i));
+-		if (queue &&
+-		    (!key_valid || time_before(queue->rb_key, lowest_key))) {
+-			lowest_key = queue->rb_key;
+-			cur_best = i;
+-			key_valid = true;
+-		}
 +
-+	if (!add_front) {
- 		rb_key = CFQ_IDLE_DELAY;
- 		parent = rb_last(&st->rb);
--		if (parent && parent != &cfqq->rb_node) {
-+		if (parent) {
- 			__cfqq = rb_entry(parent, struct cfq_queue, rb_node);
- 			rb_key += __cfqq->rb_key;
- 		} else
- 			rb_key += jiffies;
--	} else if (!add_front) {
--		/*
--		 * Get our rb key offset. Subtract any residual slice
--		 * value carried from last service. A negative resid
--		 * count indicates slice overrun, and this should position
--		 * the next service time further away in the tree.
--		 */
--		rb_key = cfq_slice_offset(cfqd, cfqq) + jiffies;
--		rb_key -= cfqq->slice_resid;
--		cfqq->slice_resid = 0;
-+		if (!cfq_class_idle(cfqq)) {
-+			/*
-+			 * Subtract any residual slice * value carried from
-+			 * last service. A negative resid count indicates
-+			 * slice overrun, and this should position
-+			 * the next service time further away in the tree.
-+			 */
-+			rb_key -= cfqq->slice_resid;
-+			cfqq->slice_resid = 0;
-+		}
- 	} else {
- 		rb_key = -HZ;
- 		__cfqq = cfq_rb_first(st);
- 		rb_key += __cfqq ? __cfqq->rb_key : jiffies;
++	old_wl_type = cfqg->last_run_wl_type;
++
++	for (i = 0; i < WL_TYPE_NR; i++) {
++		new_wl_type = next_wl_type(old_wl_type);
++		st = st_for(cfqg, wl_class, new_wl_type);
++		if (st->count)
++			break;
++		old_wl_type = new_wl_type;
  	}
  
--	if (!new_cfqq) {
--		/*
--		 * same position, nothing more to do
--		 */
--		if (rb_key == cfqq->rb_key && cfqq->st == st)
--			return;
--
--		cfq_rb_erase(&cfqq->rb_node, cfqq->st);
--		cfqq->st = NULL;
--	}
--
- 	left = 1;
- 	parent = NULL;
- 	cfqq->st = st;
+-	return cur_best;
++	cfqg->last_run_wl_type = new_wl_type;
++	return new_wl_type;
+ }
+ 
+ static void
 -- 
 1.7.7.6
