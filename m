@@ -1,14 +1,13 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 01/13] memcg: Make it possible to use the stock for
- more than one page.
-Date: Mon, 1 Oct 2012 14:48:12 -0400
-Message-ID: <20121001184812.GB23734@cmpxchg.org>
+Subject: Re: [PATCH v3 02/13] memcg: Reclaim when more than one page needed.
+Date: Mon, 1 Oct 2012 15:00:48 -0400
+Message-ID: <20121001190048.GC23734@cmpxchg.org>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
- <1347977050-29476-2-git-send-email-glommer@parallels.com>
+ <1347977050-29476-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1347977050-29476-2-git-send-email-glommer@parallels.com>
+In-Reply-To: <1347977050-29476-3-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,27 +15,79 @@ Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer@parallels.com>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>
 
-On Tue, Sep 18, 2012 at 06:03:58PM +0400, Glauber Costa wrote:
+On Tue, Sep 18, 2012 at 06:03:59PM +0400, Glauber Costa wrote:
 > From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
 > 
-> We currently have a percpu stock cache scheme that charges one page at a
-> time from memcg->res, the user counter. When the kernel memory
-> controller comes into play, we'll need to charge more than that.
+> mem_cgroup_do_charge() was written before kmem accounting, and expects
+> three cases: being called for 1 page, being called for a stock of 32
+> pages, or being called for a hugepage.  If we call for 2 or 3 pages (and
+> both the stack and several slabs used in process creation are such, at
+> least with the debug options I had), it assumed it's being called for
+> stock and just retried without reclaiming.
 > 
-> This is because kernel memory allocations will also draw from the user
-> counter, and can be bigger than a single page, as it is the case with
-> the stack (usually 2 pages) or some higher order slabs.
+> Fix that by passing down a minsize argument in addition to the csize.
 > 
-> [ glommer@parallels.com: added a changelog ]
+> And what to do about that (csize == PAGE_SIZE && ret) retry?  If it's
+
+Wow, that patch set has been around for a while.  It's been nr_pages
+== 1 for a while now :-)
+
+> needed at all (and presumably is since it's there, perhaps to handle
+> races), then it should be extended to more than PAGE_SIZE, yet how far?
+> And should there be a retry count limit, of what?  For now retry up to
+> COSTLY_ORDER (as page_alloc.c does) and make sure not to do it if
+> __GFP_NORETRY.
+>
+> [v4: fixed nr pages calculation pointed out by Christoph Lameter ]
 > 
 > Signed-off-by: Suleiman Souhlal <suleiman@google.com>
 > Signed-off-by: Glauber Costa <glommer@parallels.com>
-> Acked-by: David Rientjes <rientjes@google.com>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 > Acked-by: Michal Hocko <mhocko@suse.cz>
+> ---
+>  mm/memcontrol.c | 16 +++++++++-------
+>  1 file changed, 9 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 9d3bc72..b12121b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2232,7 +2232,8 @@ enum {
+>  };
+>  
+>  static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> -				unsigned int nr_pages, bool oom_check)
+> +				unsigned int nr_pages, unsigned int min_pages,
+> +				bool oom_check)
 
-Independent of how the per-subtree enable-through-setting-limit
-discussion pans out, we're going to need the charge cache, so:
+I'm not a big fan of the parameter names.  Can we make this function
+officially aware of batching and name the parameters like the
+arguments that are passed in?  I.e. @batch and @nr_pages?
+
+>  {
+>  	unsigned long csize = nr_pages * PAGE_SIZE;
+>  	struct mem_cgroup *mem_over_limit;
+> @@ -2255,18 +2256,18 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	} else
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+>  	/*
+> -	 * nr_pages can be either a huge page (HPAGE_PMD_NR), a batch
+> -	 * of regular pages (CHARGE_BATCH), or a single regular page (1).
+> -	 *
+>  	 * Never reclaim on behalf of optional batching, retry with a
+>  	 * single page instead.
+
+"[...] with the amount of actually required pages instead."
+
+>  	 */
+> -	if (nr_pages == CHARGE_BATCH)
+> +	if (nr_pages > min_pages)
+>  		return CHARGE_RETRY;
+
+	if (batch > nr_pages)
+		return CHARGE_RETRY;
+
+But that is all just nitpicking.  Functionally, it looks sane, so:
 
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
