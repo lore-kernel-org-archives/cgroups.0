@@ -1,102 +1,158 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v3 13/13] protect architectures where THREAD_SIZE >=
- PAGE_SIZE against fork bombs
-Date: Mon, 1 Oct 2012 15:17:09 +0200
-Message-ID: <20121001131709.GK8622@dhcp22.suse.cz>
+Subject: Re: [PATCH v3 12/13] execute the whole memcg freeing in rcu callback
+Date: Mon, 1 Oct 2012 15:27:11 +0200
+Message-ID: <20121001132711.GL8622@dhcp22.suse.cz>
 References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
- <1347977050-29476-14-git-send-email-glommer@parallels.com>
+ <1347977050-29476-13-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1347977050-29476-14-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1347977050-29476-13-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue 18-09-12 18:04:10, Glauber Costa wrote:
-> Because those architectures will draw their stacks directly from the
-> page allocator, rather than the slab cache, we can directly pass
-> __GFP_KMEMCG flag, and issue the corresponding free_pages.
-> 
-> This code path is taken when the architecture doesn't define
-> CONFIG_ARCH_THREAD_INFO_ALLOCATOR (only ia64 seems to), and has
-> THREAD_SIZE >= PAGE_SIZE. Luckily, most - if not all - of the remaining
-> architectures fall in this category.
-> 
-> This will guarantee that every stack page is accounted to the memcg the
-> process currently lives on, and will have the allocations to fail if
-> they go over limit.
-> 
-> For the time being, I am defining a new variant of THREADINFO_GFP, not
-> to mess with the other path. Once the slab is also tracked by memcg, we
-> can get rid of that flag.
-> 
-> Tested to successfully protect against :(){ :|:& };:
+On Tue 18-09-12 18:04:09, Glauber Costa wrote:
+> A lot of the initialization we do in mem_cgroup_create() is done with softirqs
+> enabled. This include grabbing a css id, which holds &ss->id_lock->rlock, and
+> the per-zone trees, which holds rtpz->lock->rlock. All of those signal to the
+> lockdep mechanism that those locks can be used in SOFTIRQ-ON-W context. This
+> means that the freeing of memcg structure must happen in a compatible context,
+> otherwise we'll get a deadlock.
 
-OK. Although I was complaining that this is not the full truth the last
-time, I do not insist on gravy details about the slaughter this will
-cause to the rest of the group and that who-ever could fork in the group
-can easily DOS the whole hierarchy. It has some interesting side effects
-as well but let's keep this to a careful reader ;)
+Maybe I am missing something obvious but why cannot we simply disble
+(soft)irqs in mem_cgroup_create rather than make the free path much more
+complicated. It really feels strange to defer everything (e.g. soft
+reclaim tree cleanup which should be a no-op at the time because there
+shouldn't be any user pages in the group).
 
-The patch, as is, is still useful and an improvement because it reduces
-the impact.
+> The reference counting mechanism we use allows the memcg structure to be freed
+> later and outlive the actual memcg destruction from the filesystem. However, we
+> have little, if any, means to guarantee in which context the last memcg_put
+> will happen. The best we can do is test it and try to make sure no invalid
+> context releases are happening. But as we add more code to memcg, the possible
+> interactions grow in number and expose more ways to get context conflicts.
+> 
+> We already moved a part of the freeing to a worker thread to be context-safe
+> for the static branches disabling. I see no reason not to do it for the whole
+> freeing action. I consider this to be the safe choice.
+
 
 > 
 > Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Acked-by: Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+> Tested-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> CC: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 > CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-
-Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
 > ---
->  include/linux/thread_info.h | 2 ++
->  kernel/fork.c               | 4 ++--
->  2 files changed, 4 insertions(+), 2 deletions(-)
+>  mm/memcontrol.c | 66 +++++++++++++++++++++++++++++----------------------------
+>  1 file changed, 34 insertions(+), 32 deletions(-)
 > 
-> diff --git a/include/linux/thread_info.h b/include/linux/thread_info.h
-> index ccc1899..e7e0473 100644
-> --- a/include/linux/thread_info.h
-> +++ b/include/linux/thread_info.h
-> @@ -61,6 +61,8 @@ extern long do_no_restart_syscall(struct restart_block *parm);
->  # define THREADINFO_GFP		(GFP_KERNEL | __GFP_NOTRACK)
->  #endif
->  
-> +#define THREADINFO_GFP_ACCOUNTED (THREADINFO_GFP | __GFP_KMEMCG)
-> +
->  /*
->   * flag set/clear/test wrappers
->   * - pass TIF_xxxx constants to these functions
-> diff --git a/kernel/fork.c b/kernel/fork.c
-> index 0ff2bf7..897e89c 100644
-> --- a/kernel/fork.c
-> +++ b/kernel/fork.c
-> @@ -146,7 +146,7 @@ void __weak arch_release_thread_info(struct thread_info *ti)
->  static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
->  						  int node)
->  {
-> -	struct page *page = alloc_pages_node(node, THREADINFO_GFP,
-> +	struct page *page = alloc_pages_node(node, THREADINFO_GFP_ACCOUNTED,
->  					     THREAD_SIZE_ORDER);
->  
->  	return page ? page_address(page) : NULL;
-> @@ -154,7 +154,7 @@ static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
->  
->  static inline void free_thread_info(struct thread_info *ti)
->  {
-> -	free_pages((unsigned long)ti, THREAD_SIZE_ORDER);
-> +	free_accounted_pages((unsigned long)ti, THREAD_SIZE_ORDER);
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b05ecac..74654f0 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5082,16 +5082,29 @@ out_free:
 >  }
->  # else
->  static struct kmem_cache *thread_info_cache;
+>  
+>  /*
+> - * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
+> - * but in process context.  The work_freeing structure is overlaid
+> - * on the rcu_freeing structure, which itself is overlaid on memsw.
+> + * At destroying mem_cgroup, references from swap_cgroup can remain.
+> + * (scanning all at force_empty is too costly...)
+> + *
+> + * Instead of clearing all references at force_empty, we remember
+> + * the number of reference from swap_cgroup and free mem_cgroup when
+> + * it goes down to 0.
+> + *
+> + * Removal of cgroup itself succeeds regardless of refs from swap.
+>   */
+> -static void free_work(struct work_struct *work)
+> +
+> +static void __mem_cgroup_free(struct mem_cgroup *memcg)
+>  {
+> -	struct mem_cgroup *memcg;
+> +	int node;
+>  	int size = sizeof(struct mem_cgroup);
+>  
+> -	memcg = container_of(work, struct mem_cgroup, work_freeing);
+> +	mem_cgroup_remove_from_trees(memcg);
+> +	free_css_id(&mem_cgroup_subsys, &memcg->css);
+> +
+> +	for_each_node(node)
+> +		free_mem_cgroup_per_zone_info(memcg, node);
+> +
+> +	free_percpu(memcg->stat);
+> +
+>  	/*
+>  	 * We need to make sure that (at least for now), the jump label
+>  	 * destruction code runs outside of the cgroup lock. This is because
+> @@ -5110,38 +5123,27 @@ static void free_work(struct work_struct *work)
+>  		vfree(memcg);
+>  }
+>  
+> -static void free_rcu(struct rcu_head *rcu_head)
+> -{
+> -	struct mem_cgroup *memcg;
+> -
+> -	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
+> -	INIT_WORK(&memcg->work_freeing, free_work);
+> -	schedule_work(&memcg->work_freeing);
+> -}
+>  
+>  /*
+> - * At destroying mem_cgroup, references from swap_cgroup can remain.
+> - * (scanning all at force_empty is too costly...)
+> - *
+> - * Instead of clearing all references at force_empty, we remember
+> - * the number of reference from swap_cgroup and free mem_cgroup when
+> - * it goes down to 0.
+> - *
+> - * Removal of cgroup itself succeeds regardless of refs from swap.
+> + * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
+> + * but in process context.  The work_freeing structure is overlaid
+> + * on the rcu_freeing structure, which itself is overlaid on memsw.
+>   */
+> -
+> -static void __mem_cgroup_free(struct mem_cgroup *memcg)
+> +static void free_work(struct work_struct *work)
+>  {
+> -	int node;
+> +	struct mem_cgroup *memcg;
+>  
+> -	mem_cgroup_remove_from_trees(memcg);
+> -	free_css_id(&mem_cgroup_subsys, &memcg->css);
+> +	memcg = container_of(work, struct mem_cgroup, work_freeing);
+> +	__mem_cgroup_free(memcg);
+> +}
+>  
+> -	for_each_node(node)
+> -		free_mem_cgroup_per_zone_info(memcg, node);
+> +static void free_rcu(struct rcu_head *rcu_head)
+> +{
+> +	struct mem_cgroup *memcg;
+>  
+> -	free_percpu(memcg->stat);
+> -	call_rcu(&memcg->rcu_freeing, free_rcu);
+> +	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
+> +	INIT_WORK(&memcg->work_freeing, free_work);
+> +	schedule_work(&memcg->work_freeing);
+>  }
+>  
+>  static void mem_cgroup_get(struct mem_cgroup *memcg)
+> @@ -5153,7 +5155,7 @@ static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
+>  {
+>  	if (atomic_sub_and_test(count, &memcg->refcnt)) {
+>  		struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+> -		__mem_cgroup_free(memcg);
+> +		call_rcu(&memcg->rcu_freeing, free_rcu);
+>  		if (parent)
+>  			mem_cgroup_put(parent);
+>  	}
 > -- 
 > 1.7.11.4
 > 
