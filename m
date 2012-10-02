@@ -1,49 +1,42 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC 1/4] memcg: provide root figures from system totals
-Date: Tue, 2 Oct 2012 11:34:33 +0200
-Message-ID: <20121002093433.GA1293@dhcp22.suse.cz>
-References: <1348563173-8952-1-git-send-email-glommer@parallels.com>
- <1348563173-8952-2-git-send-email-glommer@parallels.com>
- <20121001170046.GC24860@dhcp22.suse.cz>
- <506AB0BF.9030400@parallels.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [PATCH 02/15] cfq-iosched: More renaming to better represent
+ wl_class and wl_type
+Date: Tue, 2 Oct 2012 09:25:00 -0400
+Message-ID: <20121002132500.GA758@redhat.com>
+References: <1349119976-26837-1-git-send-email-vgoyal@redhat.com>
+ <1349119976-26837-3-git-send-email-vgoyal@redhat.com>
+ <x49r4phj4rm.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <506AB0BF.9030400-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <x49r4phj4rm.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, tj@kernel.org, cgroups@vger.kernel.org
 
-On Tue 02-10-12 13:15:43, Glauber Costa wrote:
-> On 10/01/2012 09:00 PM, Michal Hocko wrote:
-> > On Tue 25-09-12 12:52:50, Glauber Costa wrote:
-> >> > For the root memcg, there is no need to rely on the res_counters.
-> > This is true only if there are no children groups but once there is at
-> > least one we have to move global statistics into root res_counter and
-> > start using it since then. This is a tricky part because it has to be
-> > done atomically so that we do not miss anything.
-> > 
-> Why can't we shortcut it all the time?
+On Mon, Oct 01, 2012 at 04:50:37PM -0400, Jeff Moyer wrote:
+> Vivek Goyal <vgoyal@redhat.com> writes:
+> 
+> > Also at places I have got rid of keyword "serving" as it is obivious.
+> 
+> I don't agree with getting rid of serving.  After your patch, it looks
+> as though a cfqd has a static workload class and type.  It reads better
+> to me the way it is.
 
-Because it has its own tasks and we are still not at use_hierarchy := 1
+It is also about the length of name. To me now a days CFQ code looks
+pretty messy with very long names or lines at many a places.
 
-> It makes a lot of sense to use the root cgroup as the sum of everything,
-> IOW, global counters. Otherwise you are left in a situation where you
-> had global statistics, and all of a sudden, when a group is created, you
-> start having just a subset of that, excluding the tasks in root.
+So yes, "cfqd->serving_wl_class" and "cfqd->serving_wl_type" is more
+readable than "cfqd->wl_class" and "cfqd->wl_type". But it also 
+increases the string length significantly.
 
-Yes because if there are no other tasks then, well, global == root. Once
-you have more groups (with tasks of course) then it depends on our
-favorite use_hierarchy buddy.
+I don't know. Some of the strings seem too long and code spills into
+multiple lines for a single statement.
 
-> If we can always assume root will have the sum of *all* tasks, including
-> the ones in root, we should never need to rely on root res_counters.
+Anyway, for this I guess I will retain "serving" keyword.
 
-but we are not there yet.
-
--- 
-Michal Hocko
-SUSE Labs
+Thanks
+Vivek
