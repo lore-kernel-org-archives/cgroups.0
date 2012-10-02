@@ -1,67 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup hierarchy changes for v3.7-rc1
-Date: Tue, 2 Oct 2012 16:44:07 +0900
-Message-ID: <20121002074407.GD6144@localhost>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 03/13] memcg: change defines to an enum
+Date: Tue, 2 Oct 2012 13:10:23 +0400
+Message-ID: <506AAF7F.9030901@parallels.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-4-git-send-email-glommer@parallels.com> <20121001190652.GD23734@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=NXpGm2Jt7EAsl2DxQi0xGPgaUAOw6vX6e1o+EY96y+E=;
-        b=ayNysdrOZby6Ru4K3UIPDDfPD29C223R9AwwekY0yb/YWDwh9/rMOQs/pbg7gOJNc+
-         virrAjSw4KD40Sdso5NWC+pe5bRCwbaFzjENnwGk7xvYCqI08+gh0fKQ5LJwp5M7yxSN
-         KHo0K6drvokSDL7Poz57Ha54khEDQaWGS13Mt/0a7t6mOrEBvzeScuYBP3Vw4AzcYJ1Q
-         4xt91vPw5WGykXaJo/e1CQyeH5GUxPHDkmaBS1Q5FYZ3knAmkmasxpB2bcy4jHN+VXSl
-         oVh8DCw1NR8auMv4Sb0qd/WTvmc5vZOotZ3m41htFiRNRGdCaD83fyJweLHX76ZSlTg5
-         eEYg==
-Content-Disposition: inline
+In-Reply-To: <20121001190652.GD23734@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Li Zefan <lizefan@huawei.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>
 
-Hello,
-
-This is another v3.7-rc1 pull request for cgroup.  Currently,
-different cgroup subsystems handle nested cgroups completely
-differently.  There's no consistency among subsystems and the
-behaviors often are outright broken.
-
-People at least seem to agree that the broken hierarhcy behaviors need
-to be weeded out if any progress is gonna be made on this front and
-that the fallouts from deprecating the broken behaviors should be
-acceptable especially given that the current behaviors don't make much
-sense when nested.
-
-This patch makes cgroup emit warning messages if cgroups for
-subsystems with broken hierarchy behavior are nested to prepare for
-fixing them in the future.  This was put in a separate branch because
-more related changes were expected (didn't make it this round) and the
-memory cgroup wanted to pull in this and make changes on top.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.7-hierarchy
-
-Thanks.
-
-Tejun Heo (1):
-      cgroup: mark subsystems with broken hierarchy support and whine if cgroups are nested for them
-
- block/blk-cgroup.c        |    8 ++++++++
- include/linux/cgroup.h    |   15 +++++++++++++++
- kernel/cgroup.c           |   12 +++++++++++-
- kernel/cgroup_freezer.c   |    8 ++++++++
- kernel/events/core.c      |    7 +++++++
- mm/memcontrol.c           |    7 +++++++
- net/core/netprio_cgroup.c |   12 +++++++++++-
- net/sched/cls_cgroup.c    |    9 +++++++++
- security/device_cgroup.c  |    9 +++++++++
- 9 files changed, 85 insertions(+), 2 deletions(-)
-
---
-tejun
+On 10/01/2012 11:06 PM, Johannes Weiner wrote:
+> On Tue, Sep 18, 2012 at 06:04:00PM +0400, Glauber Costa wrote:
+>> This is just a cleanup patch for clarity of expression.  In earlier
+>> submissions, people asked it to be in a separate patch, so here it is.
+>>
+>> [ v2: use named enum as type throughout the file as well ]
+>>
+>> Signed-off-by: Glauber Costa <glommer@parallels.com>
+>> CC: Johannes Weiner <hannes@cmpxchg.org>
+>> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>> Acked-by: Michal Hocko <mhocko@suse.cz>
+> 
+> Should probably be the first in the series to get the cleanups out of
+> the way :-)
+> 
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+If you guys want to merge this separately, be my guest =)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
