@@ -1,41 +1,47 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 03/15] cfq-iosched: Rename "service_tree" to "st"
-Date: Tue, 2 Oct 2012 09:26:03 -0400
-Message-ID: <20121002132603.GB758@redhat.com>
-References: <1349119976-26837-1-git-send-email-vgoyal@redhat.com>
- <1349119976-26837-4-git-send-email-vgoyal@redhat.com>
- <x49ipatj4oy.fsf@segfault.boston.devel.redhat.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v3 05/16] consider a memcg parameter in kmem_create_cache
+Date: Tue, 2 Oct 2012 16:46:10 +0200
+Message-ID: <20121002144610.GA4662@dhcp22.suse.cz>
+References: <1347977530-29755-1-git-send-email-glommer@parallels.com>
+ <1347977530-29755-6-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <x49ipatj4oy.fsf-RRHT56Q3PSP4kTEheFKJxxDDeQx5vsVwAInAS/Ez/D0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1347977530-29755-6-git-send-email-glommer@parallels.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Mon, Oct 01, 2012 at 04:52:13PM -0400, Jeff Moyer wrote:
-> Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+On Tue 18-09-12 18:11:59, Glauber Costa wrote:
+> Allow a memcg parameter to be passed during cache creation.
+> When the slub allocator is being used, it will only merge
+> caches that belong to the same memcg.
 > 
-> > At quite a few places we use the keyword "service_tree" and I feel that
-> > names in CFQ are already very long and they need to be shortened a bit
-> > where appropriate.
-> >
-> > So this patch just renames "service_tree" to "st" at most of the places.
-> > No functionality change.
+> Default function is created as a wrapper, passing NULL
+> to the memcg version. We only merge caches that belong
+> to the same memcg.
 > 
-> NACK.
+> From the memcontrol.c side, 3 helper functions are created:
 > 
-> > -	struct cfq_rb_root service_trees[2][3];
-> > -	struct cfq_rb_root service_tree_idle;
-> > +	struct cfq_rb_root sts[2][3];
-> > +	struct cfq_rb_root st_idle;
+> 1) memcg_css_id: because slub needs a unique cache name
+>    for sysfs. Since this is visible, but not the canonical
+>    location for slab data, the cache name is not used, the
+>    css_id should suffice.
 > 
-> Honestly, who looks at sts and thinks "service trees?"
+> 2) mem_cgroup_register_cache: is responsible for assigning
+>     a unique index to each cache, and other general purpose
+>     setup. The index is only assigned for the root caches. All
+>     others are assigned index == -1.
 
-Yes this one is little odd. Ok, I will change it back to "service_tree"
-and only use "st" for local variables and in some function names.
+It would be nice to describe what is memcg_params.id intended for. There
+is no usage in this patch (except for create_unique_id in slub).
+I guess that by root caches you mean all default caches with
+memcg==NULL, right?
 
-Vivek
+[...]
+-- 
+Michal Hocko
+SUSE Labs
