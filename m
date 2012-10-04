@@ -1,24 +1,63 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [patch 0/2] memcg fixups that fell through cracks in 3.5
-Date: Thu,  4 Oct 2012 14:09:15 -0400
-Message-ID: <1349374157-20604-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch 2/2] mm: memcg: clean up mm_match_cgroup() signature
+Date: Thu,  4 Oct 2012 14:09:17 -0400
+Message-ID: <1349374157-20604-3-git-send-email-hannes@cmpxchg.org>
+References: <1349374157-20604-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1349374157-20604-1-git-send-email-hannes@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Konstantin Khlebnikov <khlebnikov@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Andrew,
+It really should return a boolean for match/no match.  And since it
+takes a memcg, not a cgroup, fix that parameter name as well.
 
-an older version of "mm: memcg: count pte references from every member
-of the reclaimed hierarchy" patch made it into the 3.5
-(c3ac9a8ade65ccbfd145fbff895ae8d8d62d09b0) by accident and I didn't
-notice until just now.  #1 is a fixup on top, tagged for 3.5-stable.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+---
+ include/linux/memcontrol.h | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-#2 is a cleanup you requested but probably missed as it was attached
-to a mail buried in the thread.  For 3.6.
-
-Patches against mm.git.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 8686294..7698182 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -84,14 +84,14 @@ extern struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg);
+ extern struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont);
+ 
+ static inline
+-int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
++bool mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *memcg)
+ {
+-	struct mem_cgroup *memcg;
+-	int match;
++	struct mem_cgroup *task_memcg;
++	bool match;
+ 
+ 	rcu_read_lock();
+-	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
+-	match = memcg && __mem_cgroup_same_or_subtree(cgroup, memcg);
++	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
++	match = task_memcg && __mem_cgroup_same_or_subtree(memcg, task_memcg);
+ 	rcu_read_unlock();
+ 	return match;
+ }
+@@ -258,10 +258,10 @@ static inline struct mem_cgroup *try_get_mem_cgroup_from_mm(struct mm_struct *mm
+ 	return NULL;
+ }
+ 
+-static inline int mm_match_cgroup(struct mm_struct *mm,
++static inline bool mm_match_cgroup(struct mm_struct *mm,
+ 		struct mem_cgroup *memcg)
+ {
+-	return 1;
++	return true;
+ }
+ 
+ static inline int task_in_mem_cgroup(struct task_struct *task,
+-- 
+1.7.11.4
