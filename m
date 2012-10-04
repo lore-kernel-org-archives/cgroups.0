@@ -1,112 +1,121 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Thu, 4 Oct 2012 07:43:16 +0900
-Message-ID: <20121003224316.GD19248@localhost>
-References: <50635B9D.8020205@parallels.com>
- <20120926195648.GA20342@google.com>
- <50635F46.7000700@parallels.com>
- <20120926201629.GB20342@google.com>
- <50637298.2090904@parallels.com>
- <20120927120806.GA29104@dhcp22.suse.cz>
- <20120927143300.GA4251@mtj.dyndns.org>
- <20120927150950.GG29104@dhcp22.suse.cz>
- <20120930084750.GI10383@mtj.dyndns.org>
- <20121001092756.GA8622@dhcp22.suse.cz>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 12/13] execute the whole memcg freeing in rcu callback
+Date: Thu, 4 Oct 2012 18:20:07 +0400
+Message-ID: <506D9B17.7070007@parallels.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-13-git-send-email-glommer@parallels.com> <20121001132711.GL8622@dhcp22.suse.cz> <506D6A99.7070800@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5Bw+XeOG41aYBKim6nWK4e4KM8ozPM3c43h+imXMSIg=;
-        b=Lf06IOH4RpKTnmKRPJMpQuDuz95A0mkATbUjWKorTfcLRUMNHP6CDUdCdqD5qtWphk
-         vzr9j55e7q2rIrS2Y2YaV97Mjy988a5L+khHzythjVLty1oXvxH3kISrWpDh9wJ91/M+
-         WrsX3ECpUdr+4QPpLDcz1wDiWsa/7pLAfmLbbzDi+75rZCh4NqUlblUgJ7pZUZ5aWTq/
-         hWkujjJZR3gDEYfjGzry70RQMDa7w7UY6U0htD7z8UsK5ktT8rWWDvdIaIqGj+E/dZCn
-         xJQO6SS3xlgyGrY/jD4lknB/tQoa/wL4MIKtJh9Hrkqkqo+LsOjzIuSEZ2RXHmgp4Hhv
-         ZWGg==
-Content-Disposition: inline
-In-Reply-To: <20121001092756.GA8622-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <506D6A99.7070800@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Hey, Michal.
-
-On Mon, Oct 01, 2012 at 11:27:56AM +0200, Michal Hocko wrote:
-> > Yeah but, if we can get it down to, say, around 1% under most
-> > workloads for memcg users, it is quite questionable to introduce full
-> > hierarchical configuration to allow avoiding that, isn't it?
+On 10/04/2012 02:53 PM, Glauber Costa wrote:
+> On 10/01/2012 05:27 PM, Michal Hocko wrote:
+>> On Tue 18-09-12 18:04:09, Glauber Costa wrote:
+>>> A lot of the initialization we do in mem_cgroup_create() is done with softirqs
+>>> enabled. This include grabbing a css id, which holds &ss->id_lock->rlock, and
+>>> the per-zone trees, which holds rtpz->lock->rlock. All of those signal to the
+>>> lockdep mechanism that those locks can be used in SOFTIRQ-ON-W context. This
+>>> means that the freeing of memcg structure must happen in a compatible context,
+>>> otherwise we'll get a deadlock.
+>>
+>> Maybe I am missing something obvious but why cannot we simply disble
+>> (soft)irqs in mem_cgroup_create rather than make the free path much more
+>> complicated. It really feels strange to defer everything (e.g. soft
+>> reclaim tree cleanup which should be a no-op at the time because there
+>> shouldn't be any user pages in the group).
+>>
 > 
-> Remember that the kmem memory is still accounted to u+k if it is enabled
-> which could be a no-go because some workloads (I have provided an
-> example that those which are trusted are generally safe to ignore kernel
-> memory overhead) simply don't want to consider additional memory which
-> is mostly invisible for them.
-
-Maybe it's because my exposure to cgroup usage is different from yours
-but the argument that not accounting kernel memory is something
-inherently beneficial is lost on me.  For compatibility, overhead
-and/or implementation complexity issues, yeah, sure, we can't always
-(well more like usually) have all we want but I don't get how not
-accounting kernel memory is something inherently necessary or
-beneficial.  This is all about provisioning physical memory to
-different groups of users and memory is memory (that's why u+k makes
-sense, right?).  Without kmemcg enabled, we not only lack a way to
-control kernel memory usage but also a way to even watch per-group
-usages.
-
-> > But you can apply the same "do I need/want it at all" question to the
-> > configuration parameter too.  
+> Ok.
 > 
-> Yes but, as I've said, the global configuration parameter is too
-> coarse. You can have a mix of trusted and untrusted workloads at the
-> same machine (e.g. web server which is inherently untrusted) and trusted
-> (local batch jobs which just needs a special LRU aging).
+> I was just able to come back to this today - I was mostly working on the
+> slab feedback over the past few days. I will answer yours and Tejun's
+> concerns at once:
+> 
+> Here is the situation: the backtrace I get is this one:
+> 
+> [  124.956725] =================================
+> [  124.957217] [ INFO: inconsistent lock state ]
+> [  124.957217] 3.5.0+ #99 Not tainted
+> [  124.957217] ---------------------------------
+> [  124.957217] inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+> [  124.957217] ksoftirqd/0/3 [HC0[0]:SC1[1]:HE1:SE0] takes:
+> [  124.957217]  (&(&ss->id_lock)->rlock){+.?...}, at:
+> [<ffffffff810aa7b2>] spin_lock+0x9/0xb
+> [  124.957217] {SOFTIRQ-ON-W} state was registered at:
+> [  124.957217]   [<ffffffff810996ed>] __lock_acquire+0x31f/0xd68
+> [  124.957217]   [<ffffffff8109a660>] lock_acquire+0x108/0x15c
+> [  124.957217]   [<ffffffff81534ec4>] _raw_spin_lock+0x40/0x4f
+> [  124.957217]   [<ffffffff810aa7b2>] spin_lock+0x9/0xb
+> [  124.957217]   [<ffffffff810ad00e>] get_new_cssid+0x69/0xf3
+> [  124.957217]   [<ffffffff810ad0da>] cgroup_init_idr+0x42/0x60
+> [  124.957217]   [<ffffffff81b20e04>] cgroup_init+0x50/0x100
+> [  124.957217]   [<ffffffff81b05b9b>] start_kernel+0x3b9/0x3ee
+> [  124.957217]   [<ffffffff81b052d6>] x86_64_start_reservations+0xb1/0xb5
+> [  124.957217]   [<ffffffff81b053d8>] x86_64_start_kernel+0xfe/0x10b
+> 
+> 
+> So what we learn from it, is: we are acquiring a specific lock (the css
+> id one) from softirq context. It was previously taken in a
+> softirq-enabled context, that seems to be coming directly from
+> get_new_cssid.
+> 
+> Tejun correctly pointed out that we should never acquire that lock from
+> a softirq context, in which he is right.
+> 
+> But the situation changes slightly with kmem. Now, the following excerpt
+> of a backtrace is possible:
+> 
+> [   48.602775]  [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
+> [   48.602775]  [<ffffffff81047f90>] free_task+0x31/0x5c
+> [   48.602775]  [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
+> [   48.602775]  [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
+> [   48.602775]  [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
+> [   48.602775]  [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
+> [   48.602775]  [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
+> [   48.602775]  [<ffffffff8105266d>] __do_softirq+0x122/0x277
+> 
+> So as you can see, free_accounted_pages (that will trigger a memcg_put()
+> -> mem_cgroup_free()) can now be called from softirq context, which is,
+> an rcu callback (and I just realized I wrote the exact opposite in the
+> subj line: man, I really suck at that!!)
+> As a matter of fact, we could not move to our rcu callback as well:
+> 
+> we need to move it to a worker thread with the rest.
+> 
+> We already have a worker thread: he reason we have it is not
+> static_branches: The reason is vfree(), that will BUG_ON(in_interrupt())
+> and could not be called from rcu callback as well. We moved static
+> branches in there as well for a similar problem, but haven't introduced it.
+> 
+> Could we move just part of it to the worker thread? Absolutely yes.
+> Moving just free_css_id() is enough to make it work. But since it is not
+> the first context related problem we had, I thought: "to hell with that,
+> let's move everything and be safe".
+> 
+> I am fine moving free_css_id() only if you would prefer.
+> 
+> Can we disable softirqs when we initialize css_id? Maybe. My machine
+> seems to boot fine and survive the simple workload that would trigger
+> that bug if I use irqsave spinlocks instead of normal spinlocks. But
+> this has to be done from cgroup core: We have no control over css
+> creation in memcg.
+> 
+> How would you guys like me to handle this ?
 
-This too stems from the same difference stated above.  You think
-there's inherent distinction between trusted and untrusted workloads
-and they need different features from the kernel while I think why
-trust anyone if you can untrust everyone and consider the knob as a
-compatibility thing.
+One more thing: As I mentioned in the Changelog,
+mem_cgroup_remove_exceeded(), called from mem_cgroup_remove_from_trees()
+will lead to the same usage pattern.
 
-> I think that comparing kmem accounting with use_hierarchy is not fair.
-> Glauber tried to explain why already so I will not repeat it here.
-> I will just mention one thing. use_hierarchy has been introduces becuase
-> hierarchies were expensive at the time. kmem accounting is about should
-> we do u or u+k accounting. So there is a crucial difference.
 
-It may be less crazy but I think there are enough commonalities to at
-least make a comparison.  Mel seems to think it's mostly about
-performance overhead.  You think that not accounting kmem is something
-inherently necessary.
 
-> That is right but I think that the current discussion shows that a mixed
-> (kmem disabled and kmem enabled hierarchies) workloads are far from
-> being theoretical and a global knob is just too coarse. I am afraid we
 
-I'm not sure there's much evidence in this thread.  The strongest upto
-this point seems to be performance overhead / difficulty of general
-enough implementation.  As for "trusted" workload, what are the
-inherent benefits of trusting if you don't have to?
-
-> will see "we want that per hierarchy" requests shortly and that would
-> just add a new confusion where global knob would complicate it
-> considerably (do we really want on/off/per_hierarchy global knob?).
-
-Hmmm?  The global knob is just the same per_hierarchy knob at the
-root.  It's hierarchical after all.
-
-Anyways, as long as the "we silently ignore what happened before being
-enabled" is gone, I won't fight this anymore.  It isn't broken after
-all.  But, please think about making things simpler in general, cgroup
-is riddled with mis-designed complexities and memcg seems to be
-leading the charge at times.
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
