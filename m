@@ -1,65 +1,60 @@
-From: Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
-Subject: [REGRESSION] cgroup: notify_on_release may not be triggered in some
- cases
-Date: Thu, 4 Oct 2012 16:37:16 +0900
-Message-ID: <20121004163716.64dae034dab9eafa2b6e6a8f@mxp.nes.nec.co.jp>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/2] mm: memcontrol: handle potential crash when rmap
+ races with task exit
+Date: Thu, 4 Oct 2012 20:49:58 +0200
+Message-ID: <20121004184958.GG27536@dhcp22.suse.cz>
+References: <1349374157-20604-1-git-send-email-hannes@cmpxchg.org>
+ <1349374157-20604-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1349374157-20604-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>
-Cc: Ben Blum <bblum@andrew.cmu.edu>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-notify_on_release must be triggered when the last process in a cgroup is
-move to another. But if the first(and only) process in a cgroup is moved to
-another, notify_on_release is not triggered.
+On Thu 04-10-12 14:09:16, Johannes Weiner wrote:
+> page_referenced() counts only references of mm's that are associated
+> with the memcg hierarchy that is being reclaimed.  However, if it
+> races with the owner of the mm exiting, mm->owner may be NULL.  Don't
+> crash, just ignore the reference.
 
-	# mkdir /cgroup/cpu/SRC
-	# mkdir /cgroup/cpu/DST
-	#
-	# echo 1 >/cgroup/cpu/SRC/notify_on_release
-	# echo 1 >/cgroup/cpu/DST/notify_on_release
-	#
-	# sleep 300 &
-	[1] 8629
-	#
-	# echo 8629 >/cgroup/cpu/SRC/tasks
-	# echo 8629 >/cgroup/cpu/DST/tasks
-	-> notify_on_release for /SRC must be triggered at this point,
-	   but it isn't.
+This seems to be fixed by Hugh's patch 3a981f48 "memcg: fix use_hierarchy
+css_is_ancestor oops regression" which seems to be merged already.
 
-This is because put_css_set() is called before setting CGRP_RELEASABLE
-in cgroup_task_migrate(), and is a regression introduce by the
-commit:74a1166d(cgroups: make procs file writable), which was merged
-into v3.0.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: stable@kernel.org [3.5]
+> ---
+>  include/linux/memcontrol.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 8d9489f..8686294 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -91,7 +91,7 @@ int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
+>  
+>  	rcu_read_lock();
+>  	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
+> -	match = __mem_cgroup_same_or_subtree(cgroup, memcg);
+> +	match = memcg && __mem_cgroup_same_or_subtree(cgroup, memcg);
+>  	rcu_read_unlock();
+>  	return match;
+>  }
+> -- 
+> 1.7.11.4
+> 
 
-Cc: Ben Blum <bblum@andrew.cmu.edu>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: <stable@vger.kernel.org> # v3.0.x and later
-Signed-off-by: Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
----
-This patch is based on v3.6.
-
- kernel/cgroup.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7981850..7d01182 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1923,9 +1923,8 @@ static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
- 	 * trading it for newcg is protected by cgroup_mutex, we're safe to drop
- 	 * it here; it will be freed under RCU.
- 	 */
--	put_css_set(oldcg);
--
- 	set_bit(CGRP_RELEASABLE, &oldcgrp->flags);
-+	put_css_set(oldcg);
- }
- 
- /**
 -- 
-1.7.1
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
