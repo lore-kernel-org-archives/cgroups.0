@@ -1,107 +1,65 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v3 12/13] execute the whole memcg freeing in rcu callback
-Date: Thu, 4 Oct 2012 14:53:13 +0400
-Message-ID: <506D6A99.7070800@parallels.com>
-References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-13-git-send-email-glommer@parallels.com> <20121001132711.GL8622@dhcp22.suse.cz>
+From: Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
+Subject: [REGRESSION] cgroup: notify_on_release may not be triggered in some
+ cases
+Date: Thu, 4 Oct 2012 16:37:16 +0900
+Message-ID: <20121004163716.64dae034dab9eafa2b6e6a8f@mxp.nes.nec.co.jp>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121001132711.GL8622@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>
+Cc: Ben Blum <bblum@andrew.cmu.edu>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
 
-On 10/01/2012 05:27 PM, Michal Hocko wrote:
-> On Tue 18-09-12 18:04:09, Glauber Costa wrote:
->> A lot of the initialization we do in mem_cgroup_create() is done with softirqs
->> enabled. This include grabbing a css id, which holds &ss->id_lock->rlock, and
->> the per-zone trees, which holds rtpz->lock->rlock. All of those signal to the
->> lockdep mechanism that those locks can be used in SOFTIRQ-ON-W context. This
->> means that the freeing of memcg structure must happen in a compatible context,
->> otherwise we'll get a deadlock.
-> 
-> Maybe I am missing something obvious but why cannot we simply disble
-> (soft)irqs in mem_cgroup_create rather than make the free path much more
-> complicated. It really feels strange to defer everything (e.g. soft
-> reclaim tree cleanup which should be a no-op at the time because there
-> shouldn't be any user pages in the group).
-> 
+notify_on_release must be triggered when the last process in a cgroup is
+move to another. But if the first(and only) process in a cgroup is moved to
+another, notify_on_release is not triggered.
 
-Ok.
+	# mkdir /cgroup/cpu/SRC
+	# mkdir /cgroup/cpu/DST
+	#
+	# echo 1 >/cgroup/cpu/SRC/notify_on_release
+	# echo 1 >/cgroup/cpu/DST/notify_on_release
+	#
+	# sleep 300 &
+	[1] 8629
+	#
+	# echo 8629 >/cgroup/cpu/SRC/tasks
+	# echo 8629 >/cgroup/cpu/DST/tasks
+	-> notify_on_release for /SRC must be triggered at this point,
+	   but it isn't.
 
-I was just able to come back to this today - I was mostly working on the
-slab feedback over the past few days. I will answer yours and Tejun's
-concerns at once:
+This is because put_css_set() is called before setting CGRP_RELEASABLE
+in cgroup_task_migrate(), and is a regression introduce by the
+commit:74a1166d(cgroups: make procs file writable), which was merged
+into v3.0.
 
-Here is the situation: the backtrace I get is this one:
+Cc: Ben Blum <bblum@andrew.cmu.edu>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: <stable@vger.kernel.org> # v3.0.x and later
+Signed-off-by: Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
+---
+This patch is based on v3.6.
 
-[  124.956725] =================================
-[  124.957217] [ INFO: inconsistent lock state ]
-[  124.957217] 3.5.0+ #99 Not tainted
-[  124.957217] ---------------------------------
-[  124.957217] inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
-[  124.957217] ksoftirqd/0/3 [HC0[0]:SC1[1]:HE1:SE0] takes:
-[  124.957217]  (&(&ss->id_lock)->rlock){+.?...}, at:
-[<ffffffff810aa7b2>] spin_lock+0x9/0xb
-[  124.957217] {SOFTIRQ-ON-W} state was registered at:
-[  124.957217]   [<ffffffff810996ed>] __lock_acquire+0x31f/0xd68
-[  124.957217]   [<ffffffff8109a660>] lock_acquire+0x108/0x15c
-[  124.957217]   [<ffffffff81534ec4>] _raw_spin_lock+0x40/0x4f
-[  124.957217]   [<ffffffff810aa7b2>] spin_lock+0x9/0xb
-[  124.957217]   [<ffffffff810ad00e>] get_new_cssid+0x69/0xf3
-[  124.957217]   [<ffffffff810ad0da>] cgroup_init_idr+0x42/0x60
-[  124.957217]   [<ffffffff81b20e04>] cgroup_init+0x50/0x100
-[  124.957217]   [<ffffffff81b05b9b>] start_kernel+0x3b9/0x3ee
-[  124.957217]   [<ffffffff81b052d6>] x86_64_start_reservations+0xb1/0xb5
-[  124.957217]   [<ffffffff81b053d8>] x86_64_start_kernel+0xfe/0x10b
+ kernel/cgroup.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-
-So what we learn from it, is: we are acquiring a specific lock (the css
-id one) from softirq context. It was previously taken in a
-softirq-enabled context, that seems to be coming directly from
-get_new_cssid.
-
-Tejun correctly pointed out that we should never acquire that lock from
-a softirq context, in which he is right.
-
-But the situation changes slightly with kmem. Now, the following excerpt
-of a backtrace is possible:
-
-[   48.602775]  [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
-[   48.602775]  [<ffffffff81047f90>] free_task+0x31/0x5c
-[   48.602775]  [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
-[   48.602775]  [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
-[   48.602775]  [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
-[   48.602775]  [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
-[   48.602775]  [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
-[   48.602775]  [<ffffffff8105266d>] __do_softirq+0x122/0x277
-
-So as you can see, free_accounted_pages (that will trigger a memcg_put()
--> mem_cgroup_free()) can now be called from softirq context, which is,
-an rcu callback (and I just realized I wrote the exact opposite in the
-subj line: man, I really suck at that!!)
-As a matter of fact, we could not move to our rcu callback as well:
-
-we need to move it to a worker thread with the rest.
-
-We already have a worker thread: he reason we have it is not
-static_branches: The reason is vfree(), that will BUG_ON(in_interrupt())
-and could not be called from rcu callback as well. We moved static
-branches in there as well for a similar problem, but haven't introduced it.
-
-Could we move just part of it to the worker thread? Absolutely yes.
-Moving just free_css_id() is enough to make it work. But since it is not
-the first context related problem we had, I thought: "to hell with that,
-let's move everything and be safe".
-
-I am fine moving free_css_id() only if you would prefer.
-
-Can we disable softirqs when we initialize css_id? Maybe. My machine
-seems to boot fine and survive the simple workload that would trigger
-that bug if I use irqsave spinlocks instead of normal spinlocks. But
-this has to be done from cgroup core: We have no control over css
-creation in memcg.
-
-How would you guys like me to handle this ?
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 7981850..7d01182 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1923,9 +1923,8 @@ static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
+ 	 * trading it for newcg is protected by cgroup_mutex, we're safe to drop
+ 	 * it here; it will be freed under RCU.
+ 	 */
+-	put_css_set(oldcg);
+-
+ 	set_bit(CGRP_RELEASABLE, &oldcgrp->flags);
++	put_css_set(oldcg);
+ }
+ 
+ /**
+-- 
+1.7.1
