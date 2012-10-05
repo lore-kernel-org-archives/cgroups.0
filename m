@@ -1,158 +1,133 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v3 12/13] execute the whole memcg freeing in rcu callback
-Date: Fri, 5 Oct 2012 11:31:00 -0400
-Message-ID: <20121005153100.GB2625@cmpxchg.org>
-References: <1347977050-29476-1-git-send-email-glommer@parallels.com>
- <1347977050-29476-13-git-send-email-glommer@parallels.com>
- <20121001132711.GL8622@dhcp22.suse.cz>
- <506D6A99.7070800@parallels.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcg: clean up mm_match_cgroup() signature
+Date: Fri, 5 Oct 2012 13:53:36 -0700
+Message-ID: <20121005135336.1ee7082f.akpm@linux-foundation.org>
+References: <1349374157-20604-1-git-send-email-hannes@cmpxchg.org>
+	<1349374157-20604-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <506D6A99.7070800-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1349374157-20604-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Oct 04, 2012 at 02:53:13PM +0400, Glauber Costa wrote:
-> On 10/01/2012 05:27 PM, Michal Hocko wrote:
-> > On Tue 18-09-12 18:04:09, Glauber Costa wrote:
-> >> A lot of the initialization we do in mem_cgroup_create() is done with softirqs
-> >> enabled. This include grabbing a css id, which holds &ss->id_lock->rlock, and
-> >> the per-zone trees, which holds rtpz->lock->rlock. All of those signal to the
-> >> lockdep mechanism that those locks can be used in SOFTIRQ-ON-W context. This
-> >> means that the freeing of memcg structure must happen in a compatible context,
-> >> otherwise we'll get a deadlock.
-> > 
-> > Maybe I am missing something obvious but why cannot we simply disble
-> > (soft)irqs in mem_cgroup_create rather than make the free path much more
-> > complicated. It really feels strange to defer everything (e.g. soft
-> > reclaim tree cleanup which should be a no-op at the time because there
-> > shouldn't be any user pages in the group).
-> > 
-> 
-> Ok.
-> 
-> I was just able to come back to this today - I was mostly working on the
-> slab feedback over the past few days. I will answer yours and Tejun's
-> concerns at once:
-> 
-> Here is the situation: the backtrace I get is this one:
-> 
-> [  124.956725] =================================
-> [  124.957217] [ INFO: inconsistent lock state ]
-> [  124.957217] 3.5.0+ #99 Not tainted
-> [  124.957217] ---------------------------------
-> [  124.957217] inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
-> [  124.957217] ksoftirqd/0/3 [HC0[0]:SC1[1]:HE1:SE0] takes:
-> [  124.957217]  (&(&ss->id_lock)->rlock){+.?...}, at:
-> [<ffffffff810aa7b2>] spin_lock+0x9/0xb
-> [  124.957217] {SOFTIRQ-ON-W} state was registered at:
-> [  124.957217]   [<ffffffff810996ed>] __lock_acquire+0x31f/0xd68
-> [  124.957217]   [<ffffffff8109a660>] lock_acquire+0x108/0x15c
-> [  124.957217]   [<ffffffff81534ec4>] _raw_spin_lock+0x40/0x4f
-> [  124.957217]   [<ffffffff810aa7b2>] spin_lock+0x9/0xb
-> [  124.957217]   [<ffffffff810ad00e>] get_new_cssid+0x69/0xf3
-> [  124.957217]   [<ffffffff810ad0da>] cgroup_init_idr+0x42/0x60
-> [  124.957217]   [<ffffffff81b20e04>] cgroup_init+0x50/0x100
-> [  124.957217]   [<ffffffff81b05b9b>] start_kernel+0x3b9/0x3ee
-> [  124.957217]   [<ffffffff81b052d6>] x86_64_start_reservations+0xb1/0xb5
-> [  124.957217]   [<ffffffff81b053d8>] x86_64_start_kernel+0xfe/0x10b
-> 
-> 
-> So what we learn from it, is: we are acquiring a specific lock (the css
-> id one) from softirq context. It was previously taken in a
-> softirq-enabled context, that seems to be coming directly from
-> get_new_cssid.
-> 
-> Tejun correctly pointed out that we should never acquire that lock from
-> a softirq context, in which he is right.
-> 
-> But the situation changes slightly with kmem. Now, the following excerpt
-> of a backtrace is possible:
-> 
-> [   48.602775]  [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
-> [   48.602775]  [<ffffffff81047f90>] free_task+0x31/0x5c
-> [   48.602775]  [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
-> [   48.602775]  [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
-> [   48.602775]  [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
-> [   48.602775]  [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
-> [   48.602775]  [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
-> [   48.602775]  [<ffffffff8105266d>] __do_softirq+0x122/0x277
-> 
-> So as you can see, free_accounted_pages (that will trigger a memcg_put()
-> -> mem_cgroup_free()) can now be called from softirq context, which is,
-> an rcu callback (and I just realized I wrote the exact opposite in the
-> subj line: man, I really suck at that!!)
-> As a matter of fact, we could not move to our rcu callback as well:
-> 
-> we need to move it to a worker thread with the rest.
-> 
-> We already have a worker thread: he reason we have it is not
-> static_branches: The reason is vfree(), that will BUG_ON(in_interrupt())
-> and could not be called from rcu callback as well. We moved static
-> branches in there as well for a similar problem, but haven't introduced it.
-> 
-> Could we move just part of it to the worker thread? Absolutely yes.
-> Moving just free_css_id() is enough to make it work. But since it is not
-> the first context related problem we had, I thought: "to hell with that,
-> let's move everything and be safe".
-> 
-> I am fine moving free_css_id() only if you would prefer.
-> 
-> Can we disable softirqs when we initialize css_id? Maybe. My machine
-> seems to boot fine and survive the simple workload that would trigger
-> that bug if I use irqsave spinlocks instead of normal spinlocks. But
-> this has to be done from cgroup core: We have no control over css
-> creation in memcg.
-> 
-> How would you guys like me to handle this ?
+On Thu,  4 Oct 2012 14:09:17 -0400
+Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-Without the vfree callback, I would have preferred just making the
-id_lock softirq safe.  But since we have to defer (parts of) freeing
-anyway, I like your approach of just deferring the rest as well
-better.
+> It really should return a boolean for match/no match.  And since it
+> takes a memcg, not a cgroup, fix that parameter name as well.
+> 
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -84,14 +84,14 @@ extern struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg);
+>  extern struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont);
+>  
+>  static inline
+> -int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
+> +bool mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *memcg)
+>  {
+> -	struct mem_cgroup *memcg;
+> -	int match;
+> +	struct mem_cgroup *task_memcg;
+> +	bool match;
+>  
+>  	rcu_read_lock();
+> -	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
+> -	match = memcg && __mem_cgroup_same_or_subtree(cgroup, memcg);
+> +	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
+> +	match = task_memcg && __mem_cgroup_same_or_subtree(memcg, task_memcg);
+>  	rcu_read_unlock();
+>  	return match;
+>  }
 
-But please add comments why the stuff in there is actually deferred.
-Just simple notes like:
+This needed massaging after droppage of your [1/2]:
 
-"this can be called from atomic contexts, <examples>",
 
-"vfree must run from process context" and "css_id locking is not soft
-irq safe",
 
-"to hell with that, let's just do everything from the workqueue and be
-safe and simple".
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: mm: memcg: clean up mm_match_cgroup() signature
 
-(And this may be personal preference, but why have free_work call
-__mem_cgroup_free()?  Does anyone else need to call that code?  There
-are too many layers already, why not just keep it all in free_work()
-and have one less stack frame on your mind? :))
+It really should return a boolean for match/no match.  And since it
+takes a memcg, not a cgroup, fix that parameter name as well.
 
-As for the changelog, here is my attempt:
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
+index 8686294..7698182 100644
+Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 ---
 
-mm: memcg: defer whole memcg tear-down to workqueue
+ include/linux/memcontrol.h |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-The final memcg put can already happen in atomic context and so the
-freeing is deferred to a workqueue because it needs to use vfree().
+diff -puN include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature
++++ a/include/linux/memcontrol.h
+@@ -84,13 +84,13 @@ extern struct mem_cgroup *parent_mem_cgr
+ extern struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont);
+ 
+ static inline
+-int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
++bool mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *memcg)
+ {
+-	struct mem_cgroup *memcg;
+-	int match;
++	struct mem_cgroup *task_memcg;
++	bool match;
+ 
+ 	rcu_read_lock();
+-	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
++	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
+ 	match = __mem_cgroup_same_or_subtree(cgroup, task_memcg);
+ 	rcu_read_unlock();
+ 	return match;
+@@ -258,10 +258,10 @@ static inline struct mem_cgroup *try_get
+ 	return NULL;
+ }
+ 
+-static inline int mm_match_cgroup(struct mm_struct *mm,
++static inline bool mm_match_cgroup(struct mm_struct *mm,
+ 		struct mem_cgroup *memcg)
+ {
+-	return 1;
++	return true;
+ }
+ 
+ static inline int task_in_mem_cgroup(struct task_struct *task,
+_
 
-Kmem tracking will add freeing from softirq context, but the id_lock
-acquired when destroying the cgroup object is not softirq safe, e.g.:
 
-> [   48.602775]  [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
-> [   48.602775]  [<ffffffff81047f90>] free_task+0x31/0x5c
-> [   48.602775]  [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
-> [   48.602775]  [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
-> [   48.602775]  [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
-> [   48.602775]  [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
-> [   48.602775]  [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
-> [   48.602775]  [<ffffffff8105266d>] __do_softirq+0x122/0x277
+Also,
 
-To avoid making tear-down too complicated - making locks soft irq
-safe, having half the cleanup in one function on the other half
-somewhere else - just defer everything to the workqueue.
+
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: mm-memcg-clean-up-mm_match_cgroup-signature-fix
+
+mm_match_cgroup is not a macro
+
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+
+ include/linux/memcontrol.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature-fix include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature-fix
++++ a/include/linux/memcontrol.h
+@@ -90,7 +90,7 @@ bool mm_match_cgroup(const struct mm_str
+ 	bool match;
+ 
+ 	rcu_read_lock();
+-	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
++	task_memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
+ 	match = __mem_cgroup_same_or_subtree(cgroup, task_memcg);
+ 	rcu_read_unlock();
+ 	return match;
+_
