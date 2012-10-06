@@ -1,133 +1,61 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [patch 2/2] mm: memcg: clean up mm_match_cgroup() signature
-Date: Fri, 5 Oct 2012 13:53:36 -0700
-Message-ID: <20121005135336.1ee7082f.akpm@linux-foundation.org>
-References: <1349374157-20604-1-git-send-email-hannes@cmpxchg.org>
-	<1349374157-20604-3-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
+Date: Sat, 6 Oct 2012 11:19:24 +0900
+Message-ID: <20121006021924.GB2601@localhost>
+References: <50637298.2090904@parallels.com>
+ <20120927120806.GA29104@dhcp22.suse.cz>
+ <20120927143300.GA4251@mtj.dyndns.org>
+ <20120927144307.GH3429@suse.de>
+ <20120927145802.GC4251@mtj.dyndns.org>
+ <50649B4C.8000208@parallels.com>
+ <20120930082358.GG10383@mtj.dyndns.org>
+ <50695817.2030201@parallels.com>
+ <20121003225458.GE19248@localhost>
+ <506D7922.1050108@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1349374157-20604-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=vUP2y3FZgLEDeUlJCa/AgY0KCRG0ecs/CZuCHL2G6DU=;
+        b=WaoD5Az+y9oe95mV/AsZwvfA228Nm7E7V4IKCJf6xEej4BDBsoMW5jp/j9J0fDRltG
+         W+OxyNq0RrGzQRdeoUJscd/d7OkzFWKMPigogw1fvOavPYmrw7ItAjCXiwsjKLA/dLKX
+         KTZrpLdz1eI8WsIZYW6FWxV0jLBrb/F5oHiAm+0HfLEvSV9E1zLjP29qrUBHXrmhN4sH
+         ks31yJmwklhA3xbACeHdBCTm0gCrMJ5pLyVg7L6VAb+F7sG6Nsx8EpL1luLxWwetK6Dh
+         oJ9FbAwopZuV21A2qGyQPkWz6+eOKw3xmMXlLUlKRVGDm3Q56ypkQHe76xmMcb9XYR88
+         ij6A==
+Content-Disposition: inline
+In-Reply-To: <506D7922.1050108-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Thu,  4 Oct 2012 14:09:17 -0400
-Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+Hello, Glauber.
 
-> It really should return a boolean for match/no match.  And since it
-> takes a memcg, not a cgroup, fix that parameter name as well.
+On Thu, Oct 04, 2012 at 03:55:14PM +0400, Glauber Costa wrote:
+> I don't want to bloat unrelated kmem_cache structures, so I can't embed
+> a memcg array in there: I would have to have a pointer to a memcg array
+> that gets assigned at first use. But if we don't want to have a static
+> number, as you and christoph already frowned upon heavily, we may have
+> to do that memcg side as well.
 > 
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -84,14 +84,14 @@ extern struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg);
->  extern struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont);
->  
->  static inline
-> -int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
-> +bool mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *memcg)
->  {
-> -	struct mem_cgroup *memcg;
-> -	int match;
-> +	struct mem_cgroup *task_memcg;
-> +	bool match;
->  
->  	rcu_read_lock();
-> -	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
-> -	match = memcg && __mem_cgroup_same_or_subtree(cgroup, memcg);
-> +	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
-> +	match = task_memcg && __mem_cgroup_same_or_subtree(memcg, task_memcg);
->  	rcu_read_unlock();
->  	return match;
->  }
+> The array gets bigger, though, because it pretty much has to be enough
+> to accomodate all css_ids. Even now, they are more than the 400 I used
+> in this patchset. Not allocating all of them at once will lead to more
+> complication and pointer chasing in here.
 
-This needed massaging after droppage of your [1/2]:
+I don't think it would require more pointer chasing.  At the simplest,
+we can just compare the array size each time.  If you wanna be more
+efficient, all arrays can be kept at the same size and resized when
+the number of memcgs cross the current number.  The only runtime
+overhead would be one pointer deref which I don't think can be avoided
+regardless of the indexing direction.
 
+Thanks.
 
-
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: mm: memcg: clean up mm_match_cgroup() signature
-
-It really should return a boolean for match/no match.  And since it
-takes a memcg, not a cgroup, fix that parameter name as well.
-
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
----
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-index 8686294..7698182 100644
-Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
----
-
- include/linux/memcontrol.h |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff -puN include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature include/linux/memcontrol.h
---- a/include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature
-+++ a/include/linux/memcontrol.h
-@@ -84,13 +84,13 @@ extern struct mem_cgroup *parent_mem_cgr
- extern struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont);
- 
- static inline
--int mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *cgroup)
-+bool mm_match_cgroup(const struct mm_struct *mm, const struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *memcg;
--	int match;
-+	struct mem_cgroup *task_memcg;
-+	bool match;
- 
- 	rcu_read_lock();
--	memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
-+	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
- 	match = __mem_cgroup_same_or_subtree(cgroup, task_memcg);
- 	rcu_read_unlock();
- 	return match;
-@@ -258,10 +258,10 @@ static inline struct mem_cgroup *try_get
- 	return NULL;
- }
- 
--static inline int mm_match_cgroup(struct mm_struct *mm,
-+static inline bool mm_match_cgroup(struct mm_struct *mm,
- 		struct mem_cgroup *memcg)
- {
--	return 1;
-+	return true;
- }
- 
- static inline int task_in_mem_cgroup(struct task_struct *task,
-_
-
-
-Also,
-
-
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: mm-memcg-clean-up-mm_match_cgroup-signature-fix
-
-mm_match_cgroup is not a macro
-
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
----
-
- include/linux/memcontrol.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature-fix include/linux/memcontrol.h
---- a/include/linux/memcontrol.h~mm-memcg-clean-up-mm_match_cgroup-signature-fix
-+++ a/include/linux/memcontrol.h
-@@ -90,7 +90,7 @@ bool mm_match_cgroup(const struct mm_str
- 	bool match;
- 
- 	rcu_read_lock();
--	task_memcg = mem_cgroup_from_task(rcu_dereference((mm)->owner));
-+	task_memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
- 	match = __mem_cgroup_same_or_subtree(cgroup, task_memcg);
- 	rcu_read_unlock();
- 	return match;
-_
+-- 
+tejun
