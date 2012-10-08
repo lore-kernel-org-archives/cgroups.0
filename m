@@ -1,52 +1,138 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Is not locking task_lock in cgroup_fork() safe?
-Date: Mon, 8 Oct 2012 15:57:52 +0900
-Message-ID: <20121008065752.GA5931@localhost>
-References: <20121008020000.GB2575@localhost>
- <20121008020138.GA4188@localhost>
- <507268AA.8050509@huawei.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 12/13] execute the whole memcg freeing in rcu callback
+Date: Mon, 8 Oct 2012 13:45:35 +0400
+Message-ID: <5072A0BF.2060306@parallels.com>
+References: <1347977050-29476-1-git-send-email-glommer@parallels.com> <1347977050-29476-13-git-send-email-glommer@parallels.com> <20121001132711.GL8622@dhcp22.suse.cz> <506D6A99.7070800@parallels.com> <20121005153100.GB2625@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=0txKvZclusWiZEmww33On82N6DQqsDxEVIEtiopcg7k=;
-        b=yUaqog5GEntZKjF7BGSL251I9TCSuzjTXHO6xcWQiZ16qNCfi4aphRXkw9R05I9lQv
-         pVEmHXEuolM0pZ/lzNkyZ3xELrf+3/ffedH5xVBNC5riC52v/p53AM26N8TFVROVjibo
-         e+XRdvW9W3QdTKyG3Lfb8YV8Im4Mq0HbQYSADcEUtYQRSwE/atOtUAdFltkmS/Fa33VM
-         e4NCac71BN9BEo3wGcN2UwYaOXU7uckry4nVH9512hjLJHiTR0x1UCle0719UtYh1u/B
-         OmQVLKCwK6sGcBEyLZtE4dRf/KWQzCmztNa8Ce4OlpxD0SeuV6p7KnwArItVg+GtgBuR
-         4nyw==
-Content-Disposition: inline
-In-Reply-To: <507268AA.8050509-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20121005153100.GB2625@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, devel@openvz.org, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Suleiman Souhlal <suleiman@google.com>, Frederic Weisbecker <fweisbec@gmail.com>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>
 
-Hello, Li, Frederic.
-
-On Mon, Oct 08, 2012 at 01:46:18PM +0800, Li Zefan wrote:
-> You're right. threadgroup lock is held unconditionally in attach_task_py_pid(),
-> but it's held only for CLONE_THREAD in fork path, which I guess I overlooked
-> when reviewing the patch.
+On 10/05/2012 07:31 PM, Johannes Weiner wrote:
+> On Thu, Oct 04, 2012 at 02:53:13PM +0400, Glauber Costa wrote:
+>> On 10/01/2012 05:27 PM, Michal Hocko wrote:
+>>> On Tue 18-09-12 18:04:09, Glauber Costa wrote:
+>>>> A lot of the initialization we do in mem_cgroup_create() is done with softirqs
+>>>> enabled. This include grabbing a css id, which holds &ss->id_lock->rlock, and
+>>>> the per-zone trees, which holds rtpz->lock->rlock. All of those signal to the
+>>>> lockdep mechanism that those locks can be used in SOFTIRQ-ON-W context. This
+>>>> means that the freeing of memcg structure must happen in a compatible context,
+>>>> otherwise we'll get a deadlock.
+>>>
+>>> Maybe I am missing something obvious but why cannot we simply disble
+>>> (soft)irqs in mem_cgroup_create rather than make the free path much more
+>>> complicated. It really feels strange to defer everything (e.g. soft
+>>> reclaim tree cleanup which should be a no-op at the time because there
+>>> shouldn't be any user pages in the group).
+>>>
+>>
+>> Ok.
+>>
+>> I was just able to come back to this today - I was mostly working on the
+>> slab feedback over the past few days. I will answer yours and Tejun's
+>> concerns at once:
+>>
+>> Here is the situation: the backtrace I get is this one:
+>>
+>> [  124.956725] =================================
+>> [  124.957217] [ INFO: inconsistent lock state ]
+>> [  124.957217] 3.5.0+ #99 Not tainted
+>> [  124.957217] ---------------------------------
+>> [  124.957217] inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+>> [  124.957217] ksoftirqd/0/3 [HC0[0]:SC1[1]:HE1:SE0] takes:
+>> [  124.957217]  (&(&ss->id_lock)->rlock){+.?...}, at:
+>> [<ffffffff810aa7b2>] spin_lock+0x9/0xb
+>> [  124.957217] {SOFTIRQ-ON-W} state was registered at:
+>> [  124.957217]   [<ffffffff810996ed>] __lock_acquire+0x31f/0xd68
+>> [  124.957217]   [<ffffffff8109a660>] lock_acquire+0x108/0x15c
+>> [  124.957217]   [<ffffffff81534ec4>] _raw_spin_lock+0x40/0x4f
+>> [  124.957217]   [<ffffffff810aa7b2>] spin_lock+0x9/0xb
+>> [  124.957217]   [<ffffffff810ad00e>] get_new_cssid+0x69/0xf3
+>> [  124.957217]   [<ffffffff810ad0da>] cgroup_init_idr+0x42/0x60
+>> [  124.957217]   [<ffffffff81b20e04>] cgroup_init+0x50/0x100
+>> [  124.957217]   [<ffffffff81b05b9b>] start_kernel+0x3b9/0x3ee
+>> [  124.957217]   [<ffffffff81b052d6>] x86_64_start_reservations+0xb1/0xb5
+>> [  124.957217]   [<ffffffff81b053d8>] x86_64_start_kernel+0xfe/0x10b
+>>
+>>
+>> So what we learn from it, is: we are acquiring a specific lock (the css
+>> id one) from softirq context. It was previously taken in a
+>> softirq-enabled context, that seems to be coming directly from
+>> get_new_cssid.
+>>
+>> Tejun correctly pointed out that we should never acquire that lock from
+>> a softirq context, in which he is right.
+>>
+>> But the situation changes slightly with kmem. Now, the following excerpt
+>> of a backtrace is possible:
+>>
+>> [   48.602775]  [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
+>> [   48.602775]  [<ffffffff81047f90>] free_task+0x31/0x5c
+>> [   48.602775]  [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
+>> [   48.602775]  [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
+>> [   48.602775]  [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
+>> [   48.602775]  [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
+>> [   48.602775]  [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
+>> [   48.602775]  [<ffffffff8105266d>] __do_softirq+0x122/0x277
+>>
+>> So as you can see, free_accounted_pages (that will trigger a memcg_put()
+>> -> mem_cgroup_free()) can now be called from softirq context, which is,
+>> an rcu callback (and I just realized I wrote the exact opposite in the
+>> subj line: man, I really suck at that!!)
+>> As a matter of fact, we could not move to our rcu callback as well:
+>>
+>> we need to move it to a worker thread with the rest.
+>>
+>> We already have a worker thread: he reason we have it is not
+>> static_branches: The reason is vfree(), that will BUG_ON(in_interrupt())
+>> and could not be called from rcu callback as well. We moved static
+>> branches in there as well for a similar problem, but haven't introduced it.
+>>
+>> Could we move just part of it to the worker thread? Absolutely yes.
+>> Moving just free_css_id() is enough to make it work. But since it is not
+>> the first context related problem we had, I thought: "to hell with that,
+>> let's move everything and be safe".
+>>
+>> I am fine moving free_css_id() only if you would prefer.
+>>
+>> Can we disable softirqs when we initialize css_id? Maybe. My machine
+>> seems to boot fine and survive the simple workload that would trigger
+>> that bug if I use irqsave spinlocks instead of normal spinlocks. But
+>> this has to be done from cgroup core: We have no control over css
+>> creation in memcg.
+>>
+>> How would you guys like me to handle this ?
 > 
-> > Also, please note that task_lock is likely to be hot on local CPU at
-> > that point and avoiding it there might not really buy much.
+> Without the vfree callback, I would have preferred just making the
+> id_lock softirq safe.  But since we have to defer (parts of) freeing
+> anyway, I like your approach of just deferring the rest as well
+> better.
 > 
-> Reverting that commit should be fine.
+> But please add comments why the stuff in there is actually deferred.
+> Just simple notes like:
+> 
+> "this can be called from atomic contexts, <examples>",
+> 
+> "vfree must run from process context" and "css_id locking is not soft
+> irq safe",
+> 
+> "to hell with that, let's just do everything from the workqueue and be
+> safe and simple".
+> 
+> (And this may be personal preference, but why have free_work call
+> __mem_cgroup_free()?  Does anyone else need to call that code?  There
+> are too many layers already, why not just keep it all in free_work()
+> and have one less stack frame on your mind? :))
+> 
+It is used when create fails.
 
-There are other commits which perform similar optimization
-
- 7e3aa30ac8 ("cgroup: Remove task_lock() from cgroup_post_fork()")
- c84cdf75cc ("cgroup: Remove unnecessary task_lock before fetching css_set on migration")
-
-Are they wrong too?
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
