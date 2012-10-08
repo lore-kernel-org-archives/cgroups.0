@@ -1,59 +1,36 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 04/13] kmem accounting basic infrastructure
-Date: Sat, 6 Oct 2012 11:19:24 +0900
-Message-ID: <20121006021924.GB2601@localhost>
-References: <50637298.2090904@parallels.com>
- <20120927120806.GA29104@dhcp22.suse.cz>
- <20120927143300.GA4251@mtj.dyndns.org>
- <20120927144307.GH3429@suse.de>
- <20120927145802.GC4251@mtj.dyndns.org>
- <50649B4C.8000208@parallels.com>
- <20120930082358.GG10383@mtj.dyndns.org>
- <50695817.2030201@parallels.com>
- <20121003225458.GE19248@localhost>
- <506D7922.1050108@parallels.com>
+Subject: Is not locking task_lock in cgroup_fork() safe?
+Date: Mon, 8 Oct 2012 11:00:00 +0900
+Message-ID: <20121008020000.GB2575@localhost>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=vUP2y3FZgLEDeUlJCa/AgY0KCRG0ecs/CZuCHL2G6DU=;
-        b=WaoD5Az+y9oe95mV/AsZwvfA228Nm7E7V4IKCJf6xEej4BDBsoMW5jp/j9J0fDRltG
-         W+OxyNq0RrGzQRdeoUJscd/d7OkzFWKMPigogw1fvOavPYmrw7ItAjCXiwsjKLA/dLKX
-         KTZrpLdz1eI8WsIZYW6FWxV0jLBrb/F5oHiAm+0HfLEvSV9E1zLjP29qrUBHXrmhN4sH
-         ks31yJmwklhA3xbACeHdBCTm0gCrMJ5pLyVg7L6VAb+F7sG6Nsx8EpL1luLxWwetK6Dh
-         oJ9FbAwopZuV21A2qGyQPkWz6+eOKw3xmMXlLUlKRVGDm3Q56ypkQHe76xmMcb9XYR88
-         ij6A==
+        h=sender:date:from:to:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=mxh+R3MQJ6tllBjc0TqT0LWkc77rfYHIPDjqSQ9lgA0=;
+        b=qERgUCro7GRfmeIH0P2lIdHuvCecQIR5WxRG5aVuIUCdmabnMMHJ8K2h7xoEdQnOEv
+         qOiHCfoJ1PGkPwtX4eF+ezSR7BG9IJCeAfcd8HFiRTq+6INc/IzQunm2Osx31ZRT5ICd
+         zhMLi/LFaGguMYMVQfifTg9aQHwsakNilrQ28S3iKX/IOQlPjPyaFAKeIPhy/7TJjHPH
+         kTx+W2iQUgx4Jm4Ey/7L1KgRXccOjP9NYiJ0yf07SV7Wh1t2sUxQOPcZuga9CI2l05ND
+         rGTBNeiy+PunSMSU8rAcTTLi/fN84aTjWKnzD10Z46ReYvzWGLPBNraux9i9IPSLUsGv
+         jOkg==
 Content-Disposition: inline
-In-Reply-To: <506D7922.1050108-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Glauber.
+Hello, Frederic.
 
-On Thu, Oct 04, 2012 at 03:55:14PM +0400, Glauber Costa wrote:
-> I don't want to bloat unrelated kmem_cache structures, so I can't embed
-> a memcg array in there: I would have to have a pointer to a memcg array
-> that gets assigned at first use. But if we don't want to have a static
-> number, as you and christoph already frowned upon heavily, we may have
-> to do that memcg side as well.
-> 
-> The array gets bigger, though, because it pretty much has to be enough
-> to accomodate all css_ids. Even now, they are more than the 400 I used
-> in this patchset. Not allocating all of them at once will lead to more
-> complication and pointer chasing in here.
-
-I don't think it would require more pointer chasing.  At the simplest,
-we can just compare the array size each time.  If you wanna be more
-efficient, all arrays can be kept at the same size and resized when
-the number of memcgs cross the current number.  The only runtime
-overhead would be one pointer deref which I don't think can be avoided
-regardless of the indexing direction.
+7e381b0eb1 ("cgroup: Drop task_lock(parent) on cgroup_fork()") removed
+task_lock from cgroup_fork citing that current->cgroups can't change
+due to threadgroup_change locking; however, threadgroup_change locking
+is used only during CLONE_THREAD forking.  If @current is forking a
+new process, there's nothing preventing someone else to migrate the
+parent while forking is in progress and delete the css_set it
+currently is using.  Am I confused somewhere?
 
 Thanks.
 
