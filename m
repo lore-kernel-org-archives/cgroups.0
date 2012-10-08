@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 14/14] Add documentation about the kmem controller
-Date: Mon,  8 Oct 2012 14:06:20 +0400
-Message-ID: <1349690780-15988-15-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 09/14] memcg: kmem accounting lifecycle management
+Date: Mon,  8 Oct 2012 14:06:15 +0400
+Message-ID: <1349690780-15988-10-git-send-email-glommer@parallels.com>
 References: <1349690780-15988-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1349690780-15988-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,112 +11,170 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+
+Because kmem charges can outlive the cgroup, we need to make sure that
+we won't free the memcg structure while charges are still in flight.
+For reviewing simplicity, the charge functions will issue
+mem_cgroup_get() at every charge, and mem_cgroup_put() at every
+uncharge.
+
+This can get expensive, however, and we can do better. mem_cgroup_get()
+only really needs to be issued once: when the first limit is set. In the
+same spirit, we only need to issue mem_cgroup_put() when the last charge
+is gone.
+
+We'll need an extra bit in kmem_accounted for that: KMEM_ACCOUNTED_DEAD.
+it will be set when the cgroup dies, if there are charges in the group.
+If there aren't, we can proceed right away.
+
+Our uncharge function will have to test that bit every time the charges
+drop to 0. Because that is not the likely output of
+res_counter_uncharge, this should not impose a big hit on us: it is
+certainly much better than a reference count decrease at every
+operation.
+
+[ v3: merged all lifecycle related patches in one ]
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- Documentation/cgroups/memory.txt | 55 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 54 insertions(+), 1 deletion(-)
+ mm/memcontrol.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 49 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index c07f7b4..9b08548 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -71,6 +71,11 @@ Brief summary of control files.
-  memory.oom_control		 # set/show oom controls.
-  memory.numa_stat		 # show the number of memory usage per numa node
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index dda54f0..634c7b5 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -344,6 +344,7 @@ struct mem_cgroup {
+ /* internal only representation about the status of kmem accounting. */
+ enum {
+ 	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
++	KMEM_ACCOUNTED_DEAD, /* dead memcg, pending kmem charges */
+ };
  
-+ memory.kmem.limit_in_bytes      # set/show hard limit for kernel memory
-+ memory.kmem.usage_in_bytes      # show current kernel memory allocation
-+ memory.kmem.failcnt             # show the number of kernel memory usage hits limits
-+ memory.kmem.max_usage_in_bytes  # show max kernel memory usage recorded
+ /* first bit */
+@@ -354,6 +355,22 @@ static void memcg_kmem_set_active(struct mem_cgroup *memcg)
+ {
+ 	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
+ }
 +
-  memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
-  memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
-  memory.kmem.tcp.failcnt            # show the number of tcp buf memory usage hits limits
-@@ -268,20 +273,62 @@ the amount of kernel memory used by the system. Kernel memory is fundamentally
- different than user memory, since it can't be swapped out, which makes it
- possible to DoS the system by consuming too much of this precious resource.
- 
-+Kernel memory won't be accounted at all until it is limited. This allows for
-+existing setups to continue working without disruption. Note that it is
-+possible to account it without an effective limit by setting the limits
-+to a very high number (like RESOURCE_MAX -1page). The limit cannot be set
-+if the cgroup have children, or if there are already tasks in the cgroup.
++static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
++{
++	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
++}
 +
-+After a controller is first limited, it will be kept being accounted until it
-+is removed. The memory limitation itself, can of course be removed by writing
-+-1 to memory.kmem.limit_in_bytes
++static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
++{
++	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted))
++		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_accounted);
++}
 +
- Kernel memory limits are not imposed for the root cgroup. Usage for the root
--cgroup may or may not be accounted.
-+cgroup may or may not be accounted. The memory used is accumulated into
-+memory.kmem.usage_in_bytes, or in a separate counter when it makes sense.
-+The main "kmem" counter is fed into the main counter, so kmem charges will
-+also be visible from the user counter.
++static bool memcg_kmem_dead(struct mem_cgroup *memcg)
++{
++	return test_and_clear_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_accounted);
++}
+ #endif
  
- Currently no soft limit is implemented for kernel memory. It is future work
- to trigger slab reclaim when those limits are reached.
+ /* Stuffs for move charges at task migration. */
+@@ -2690,10 +2707,16 @@ static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
  
- 2.7.1 Current Kernel Memory resources accounted
- 
-+* stack pages: every process consumes some stack pages. By accounting into
-+kernel memory, we prevent new processes from being created when the kernel
-+memory usage is too high.
+ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size)
+ {
+-	res_counter_uncharge(&memcg->kmem, size);
+ 	res_counter_uncharge(&memcg->res, size);
+ 	if (do_swap_account)
+ 		res_counter_uncharge(&memcg->memsw, size);
 +
- * sockets memory pressure: some sockets protocols have memory pressure
- thresholds. The Memory Controller allows them to be controlled individually
- per cgroup, instead of globally.
- 
- * tcp memory pressure: sockets memory pressure for the tcp protocol.
- 
-+2.7.3 Common use cases
++	/* Not down to 0 */
++	if (res_counter_uncharge(&memcg->kmem, size))
++		return;
 +
-+Because the "kmem" counter is fed to the main user counter, kernel memory can
-+never be limited completely independently of user memory. Say "U" is the user
-+limit, and "K" the kernel limit. There are three possible ways limits can be
-+set:
-+
-+    U != 0, K = 0:
-+    This is the standard memcg limitation mechanism already present before kmem
-+    accounting. Kernel memory is completely ignored.
-+
-+    U,K != 0, K < U:
-+    Kernel memory is effectively set as a percentage of the user memory. This
-+    setup is useful in deployments where the total amount of memory per-cgroup
-+    is overcommited. Overcommiting kernel memory limits is definitely not
-+    recommended, since the box can still run out of non-reclaimable memory.
-+    In this case, the admin could set up K so that the sum of all groups is
-+    never greater than the total memory, and freely set U at the cost of his
-+    QoS.
-+
-+    U,K != 0, K >= U:
-+    Since kmem charges will also be fed to the user counter, this setup gives
-+    the admin a unified view of memory. Reclaim will be triggered for the cgroup
-+    for both kinds of memory.
-+
- 3. User Interface
++	if (memcg_kmem_dead(memcg))
++		mem_cgroup_put(memcg);
+ }
  
- 0. Configuration
-@@ -290,6 +337,7 @@ a. Enable CONFIG_CGROUPS
- b. Enable CONFIG_RESOURCE_COUNTERS
- c. Enable CONFIG_MEMCG
- d. Enable CONFIG_MEMCG_SWAP (to use swap extension)
-+d. Enable CONFIG_MEMCG_KMEM (to use kmem extension)
+ /*
+@@ -2732,13 +2755,9 @@ __memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **_memcg, int order)
+ 		return true;
+ 	}
  
- 1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
- # mount -t tmpfs none /sys/fs/cgroup
-@@ -406,6 +454,11 @@ About use_hierarchy, see Section 6.
-   Because rmdir() moves all pages to parent, some out-of-use page caches can be
-   moved to the parent. If you want to avoid that, force_empty will be useful.
+-	mem_cgroup_get(memcg);
+-
+ 	ret = memcg_charge_kmem(memcg, gfp, PAGE_SIZE << order);
+ 	if (!ret)
+ 		*_memcg = memcg;
+-	else
+-		mem_cgroup_put(memcg);
  
-+  Also, note that when memory.kmem.limit_in_bytes is set the charges due to
-+  kernel pages will still be seen. This is not considered a failure and the
-+  write will still return success. In this case, it is expected that
-+  memory.kmem.usage_in_bytes == memory.usage_in_bytes.
+ 	css_put(&memcg->css);
+ 	return (ret == 0);
+@@ -2754,7 +2773,6 @@ void __memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg,
+ 	/* The page allocation failed. Revert */
+ 	if (!page) {
+ 		memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
+-		mem_cgroup_put(memcg);
+ 		return;
+ 	}
+ 
+@@ -2795,7 +2813,6 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
+ 
+ 	VM_BUG_ON(mem_cgroup_is_root(memcg));
+ 	memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
+-	mem_cgroup_put(memcg);
+ }
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+@@ -4180,6 +4197,13 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ 			goto out;
+ 
+ 		memcg_kmem_set_active(memcg);
++		/*
++		 * kmem charges can outlive the cgroup. In the case of slab
++		 * pages, for instance, a page contain objects from various
++		 * processes, so it is unfeasible to migrate them away. We
++		 * need to reference count the memcg because of that.
++		 */
++		mem_cgroup_get(memcg);
+ 	} else
+ 		ret = res_counter_set_limit(&memcg->kmem, val);
+ out:
+@@ -4193,6 +4217,10 @@ static void memcg_propagate_kmem(struct mem_cgroup *memcg,
+ 				 struct mem_cgroup *parent)
+ {
+ 	memcg->kmem_accounted = parent->kmem_accounted;
++#ifdef CONFIG_MEMCG_KMEM
++	if (memcg_kmem_is_active(memcg))
++		mem_cgroup_get(memcg);
++#endif
+ }
+ 
+ /*
+@@ -4876,6 +4904,20 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
+ {
+ 	mem_cgroup_sockets_destroy(memcg);
 +
-   About use_hierarchy, see Section 6.
- 
- 5.2 stat file
++	memcg_kmem_mark_dead(memcg);
++
++	if (res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0)
++		return;
++
++	/*
++	 * Charges already down to 0, undo mem_cgroup_get() done in the charge
++	 * path here, being careful not to race with memcg_uncharge_kmem: it is
++	 * possible that the charges went down to 0 between mark_dead and the
++	 * res_counter read, so in that case, we don't need the put
++	 */
++	if (memcg_kmem_dead(memcg))
++		mem_cgroup_put(memcg);
+ }
+ #else
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
 -- 
 1.7.11.4
