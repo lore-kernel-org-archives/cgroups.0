@@ -1,102 +1,132 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 02/14] memcg: Reclaim when more than one page needed.
-Date: Mon,  8 Oct 2012 14:06:08 +0400
-Message-ID: <1349690780-15988-3-git-send-email-glommer@parallels.com>
-References: <1349690780-15988-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 00/14] kmem controller for memcg.
+Date: Mon,  8 Oct 2012 14:06:06 +0400
+Message-ID: <1349690780-15988-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1349690780-15988-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-From: Suleiman Souhlal <ssouhlal-HZy0K5TPuP5AfugRpC6u6w@public.gmane.org>
+Hi,
 
-mem_cgroup_do_charge() was written before kmem accounting, and expects
-three cases: being called for 1 page, being called for a stock of 32
-pages, or being called for a hugepage.  If we call for 2 or 3 pages (and
-both the stack and several slabs used in process creation are such, at
-least with the debug options I had), it assumed it's being called for
-stock and just retried without reclaiming.
+This is the first part of the kernel memory controller for memcg. It has been
+discussed many times, and I consider this stable enough to be on tree. A follow
+up to this series are the patches to also track slab memory. They are not
+included here because I believe we could benefit from merging them separately
+for better testing coverage. If there are any issues preventing this to be
+merged, let me know. I'll be happy to address them.
 
-Fix that by passing down a minsize argument in addition to the csize.
+*v4:    - kmem_accounted can no longer become unlimited
+        - kmem_accounted can no longer become limited, if group has children.
+        - documentation moved to this patchset
+        - more style changes
+        - css_get in charge path to ensure task won't move during charge
+*v3:
+	- Changed function names to match memcg's
+	- avoid doing get/put in charge/uncharge path
+	- revert back to keeping the account enabled after it is first activated
 
-And what to do about that (csize == PAGE_SIZE && ret) retry?  If it's
-needed at all (and presumably is since it's there, perhaps to handle
-races), then it should be extended to more than PAGE_SIZE, yet how far?
-And should there be a retry count limit, of what?  For now retry up to
-COSTLY_ORDER (as page_alloc.c does) and make sure not to do it if
-__GFP_NORETRY.
+The slab patches are going through a rework of the cache selection mechanism.
+But after some rounds of discussion, the bulk of it is still stable in my self
+evaluation and could be merged not too long after this. For the reference, the
+last discussion about them happened at http://lwn.net/Articles/516705/. I
+expect to send patches for that within the week.
 
-[v4: fixed nr pages calculation pointed out by Christoph Lameter ]
+Numbers can be found at https://lkml.org/lkml/2012/9/13/239
 
-Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Reviewed-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- mm/memcontrol.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+A (throwaway) git tree with them is placed at:
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 47cb019..7a9652a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2226,7 +2226,8 @@ enum {
- };
- 
- static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
--				unsigned int nr_pages, bool oom_check)
-+				unsigned int nr_pages, unsigned int min_pages,
-+				bool oom_check)
- {
- 	unsigned long csize = nr_pages * PAGE_SIZE;
- 	struct mem_cgroup *mem_over_limit;
-@@ -2249,18 +2250,18 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	} else
- 		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
- 	/*
--	 * nr_pages can be either a huge page (HPAGE_PMD_NR), a batch
--	 * of regular pages (CHARGE_BATCH), or a single regular page (1).
--	 *
- 	 * Never reclaim on behalf of optional batching, retry with a
- 	 * single page instead.
- 	 */
--	if (nr_pages == CHARGE_BATCH)
-+	if (nr_pages > min_pages)
- 		return CHARGE_RETRY;
- 
- 	if (!(gfp_mask & __GFP_WAIT))
- 		return CHARGE_WOULDBLOCK;
- 
-+	if (gfp_mask & __GFP_NORETRY)
-+		return CHARGE_NOMEM;
-+
- 	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
- 	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
- 		return CHARGE_RETRY;
-@@ -2273,7 +2274,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	 * unlikely to succeed so close to the limit, and we fall back
- 	 * to regular pages anyway in case of failure.
- 	 */
--	if (nr_pages == 1 && ret)
-+	if (nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER) && ret)
- 		return CHARGE_RETRY;
- 
- 	/*
-@@ -2408,7 +2409,8 @@ again:
- 			nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
- 		}
- 
--		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, oom_check);
-+		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch, nr_pages,
-+		    oom_check);
- 		switch (ret) {
- 		case CHARGE_OK:
- 			break;
+	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git kmemcg-stack
+
+A general explanation of what this is all about follows:
+
+The kernel memory limitation mechanism for memcg concerns itself with
+disallowing potentially non-reclaimable allocations to happen in exaggerate
+quantities by a particular set of processes (cgroup). Those allocations could
+create pressure that affects the behavior of a different and unrelated set of
+processes.
+
+Its basic working mechanism is to annotate some allocations with the
+_GFP_KMEMCG flag. When this flag is set, the current process allocating will
+have its memcg identified and charged against. When reaching a specific limit,
+further allocations will be denied.
+
+One example of such problematic pressure that can be prevented by this work is
+a fork bomb conducted in a shell. We prevent it by noting that processes use a
+limited amount of stack pages. Seen this way, a fork bomb is just a special
+case of resource abuse. If the offender is unable to grab more pages for the
+stack, no new processes can be created.
+
+There are also other things the general mechanism protects against. For
+example, using too much of pinned dentry and inode cache, by touching files an
+leaving them in memory forever.
+
+In fact, a simple:
+
+while true; do mkdir x; cd x; done
+
+can halt your system easily because the file system limits are hard to reach
+(big disks), but the kernel memory is not. Those are examples, but the list
+certainly don't stop here.
+
+An important use case for all that, is concerned with people offering hosting
+services through containers. In a physical box we can put a limit to some
+resources, like total number of processes or threads. But in an environment
+where each independent user gets its own piece of the machine, we don't want a
+potentially malicious user to destroy good users' services.
+
+This might be true for systemd as well, that now groups services inside
+cgroups. They generally want to put forward a set of guarantees that limits the
+running service in a variety of ways, so that if they become badly behaved,
+they won't interfere with the rest of the system.
+
+There is, of course, a cost for that. To attempt to mitigate that, static
+branches are used to make sure that even if the feature is compiled in with
+potentially a lot of memory cgroups deployed this code will only be enabled
+after the first user of this service configures any limit. Limits lower than
+the user limit effectively means there is a separate kernel memory limit that
+may be reached independently than the user limit. Values equal or greater than
+the user limit implies only that kernel memory is tracked. This provides a
+unified vision of "maximum memory", be it kernel or user memory. Because this
+is all default-off, existing deployments will see no change in behavior.
+
+
+
+Glauber Costa (12):
+  memcg: change defines to an enum
+  kmem accounting basic infrastructure
+  Add a __GFP_KMEMCG flag
+  memcg: kmem controller infrastructure
+  mm: Allocate kernel pages to the right memcg
+  res_counter: return amount of charges after res_counter_uncharge
+  memcg: kmem accounting lifecycle management
+  memcg: use static branches when code not in use
+  memcg: allow a memcg with kmem charges to be destructed.
+  execute the whole memcg freeing in free_worker
+  protect architectures where THREAD_SIZE >= PAGE_SIZE against fork
+    bombs
+  Add documentation about the kmem controller
+
+Suleiman Souhlal (2):
+  memcg: Make it possible to use the stock for more than one page.
+  memcg: Reclaim when more than one page needed.
+
+ Documentation/cgroups/memory.txt           |  55 ++-
+ Documentation/cgroups/resource_counter.txt |   7 +-
+ include/linux/gfp.h                        |   6 +-
+ include/linux/memcontrol.h                 |  97 +++++
+ include/linux/res_counter.h                |  12 +-
+ include/linux/thread_info.h                |   2 +
+ include/trace/events/gfpflags.h            |   1 +
+ kernel/fork.c                              |   4 +-
+ kernel/res_counter.c                       |  20 +-
+ mm/memcontrol.c                            | 555 +++++++++++++++++++++++++----
+ mm/page_alloc.c                            |  35 ++
+ 11 files changed, 713 insertions(+), 81 deletions(-)
+
 -- 
 1.7.11.4
