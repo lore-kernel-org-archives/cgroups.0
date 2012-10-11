@@ -1,174 +1,184 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v4 04/14] kmem accounting basic infrastructure
-Date: Thu, 11 Oct 2012 12:11:19 +0200
-Message-ID: <20121011101119.GB29295@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v4 06/14] memcg: kmem controller infrastructure
+Date: Thu, 11 Oct 2012 14:42:12 +0200
+Message-ID: <20121011124212.GC29295@dhcp22.suse.cz>
 References: <1349690780-15988-1-git-send-email-glommer@parallels.com>
- <1349690780-15988-5-git-send-email-glommer@parallels.com>
+ <1349690780-15988-7-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1349690780-15988-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1349690780-15988-7-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, Suleiman Souhlal <suleiman@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, devel@openvz.org, Frederic Weisbecker <fweisbec@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On Mon 08-10-12 14:06:10, Glauber Costa wrote:
-> This patch adds the basic infrastructure for the accounting of the slab
-> caches. To control that, the following files are created:
+On Mon 08-10-12 14:06:12, Glauber Costa wrote:
+> This patch introduces infrastructure for tracking kernel memory pages to
+> a given memcg. This will happen whenever the caller includes the flag
+> __GFP_KMEMCG flag, and the task belong to a memcg other than the root.
 > 
->  * memory.kmem.usage_in_bytes
->  * memory.kmem.limit_in_bytes
->  * memory.kmem.failcnt
->  * memory.kmem.max_usage_in_bytes
+> In memcontrol.h those functions are wrapped in inline acessors.  The
+> idea is to later on, patch those with static branches, so we don't incur
+> any overhead when no mem cgroups with limited kmem are being used.
 > 
-> They have the same meaning of their user memory counterparts. They
-> reflect the state of the "kmem" res_counter.
+> Users of this functionality shall interact with the memcg core code
+> through the following functions:
 > 
-> Per cgroup slab memory accounting is not enabled until a limit is set
-
-s/slab/kmem/ right?
-
-> for the group. Once the limit is set the accounting cannot be disabled
-> for that group.  This means that after the patch is applied, no
-> behavioral changes exists for whoever is still using memcg to control
-> their memory usage, until memory.kmem.limit_in_bytes is set for the
-> first time.
+> memcg_kmem_newpage_charge: will return true if the group can handle the
+>                            allocation. At this point, struct page is not
+>                            yet allocated.
 > 
-> We always account to both user and kernel resource_counters. This
-> effectively means that an independent kernel limit is in place when the
-> limit is set to a lower value than the user memory. A equal or higher
-> value means that the user limit will always hit first, meaning that kmem
-> is effectively unlimited.
+> memcg_kmem_commit_charge: will either revert the charge, if struct page
+>                           allocation failed, or embed memcg information
+>                           into page_cgroup.
 > 
-> People who want to track kernel memory but not limit it, can set this
-> limit to a very high number (like RESOURCE_MAX - 1page - that no one
-> will ever hit, or equal to the user memory)
+> memcg_kmem_uncharge_page: called at free time, will revert the charge.
 > 
-> [ v4: make kmem files part of the main array;
->       do not allow limit to be set for non-empty cgroups ]
+> [ v2: improved comments and standardized function names ]
+> [ v3: handle no longer opaque, functions not exported,
+>   even more comments ]
+> [ v4: reworked Used bit handling and surroundings for more clarity ]
+> [ v5: simplified code for kmemcg compiled out and core functions in
+>   memcontrol.c, moved kmem code to the middle to avoid forward decls ]
 > 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Christoph Lameter <cl@linux.com>
+> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
 > ---
->  mm/memcontrol.c | 123 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 122 insertions(+), 1 deletion(-)
+>  include/linux/memcontrol.h |  95 +++++++++++++++++++++++++
+>  mm/memcontrol.c            | 173 +++++++++++++++++++++++++++++++++++++++++++--
+>  2 files changed, 263 insertions(+), 5 deletions(-)
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 71d259e..ba855cc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-[...]
-> @@ -332,6 +337,26 @@ struct mem_cgroup {
->  #endif
->  };
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 8d9489f..783cd78 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -21,6 +21,7 @@
+>  #define _LINUX_MEMCONTROL_H
+>  #include <linux/cgroup.h>
+>  #include <linux/vm_event_item.h>
+> +#include <linux/hardirq.h>
 >  
-> +/* internal only representation about the status of kmem accounting. */
-> +enum {
-> +	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
-> +};
+>  struct mem_cgroup;
+>  struct page_cgroup;
+> @@ -399,6 +400,85 @@ struct sock;
+>  #ifdef CONFIG_MEMCG_KMEM
+>  void sock_update_memcg(struct sock *sk);
+>  void sock_release_memcg(struct sock *sk);
 > +
-> +/* first bit */
-> +#define KMEM_ACCOUNTED_MASK 0x1
-> +
-> +#ifdef CONFIG_MEMCG_KMEM
-> +static void memcg_kmem_set_active(struct mem_cgroup *memcg)
+> +static inline bool memcg_kmem_enabled(void)
 > +{
-> +	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
+> +	return true;
 > +}
-> +
-> +static bool memcg_kmem_is_accounted(struct mem_cgroup *memcg)
-> +{
-> +	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
-> +}
-> +#endif
+> +V
+> +extern bool __memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg,
+> +					int order);
+> +extern void __memcg_kmem_commit_charge(struct page *page,
+> +				       struct mem_cgroup *memcg, int order);
+> +extern void __memcg_kmem_uncharge_page(struct page *page, int order);
 
-set_active vs. is_accounted. Is there any reason for inconsistency here?
+Just a nit. Hmm we are far from being consisten in using vs. not using
+externs in header files for function declarations but I do not see any
+reason why to use them here. Names are just longer without any
+additional value.
 
-> +
->  /* Stuffs for move charges at task migration. */
->  /*
->   * Types of charges to be moved. "move_charge_at_immitgrate" is treated as a
 [...]
-> @@ -3947,6 +3980,58 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
->  	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
->  	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
->  }
-> +
-> +static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+> +static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
 > +{
-> +	int ret = -EINVAL;
-> +#ifdef CONFIG_MEMCG_KMEM
-> +	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+> +	struct res_counter *fail_res;
+> +	struct mem_cgroup *_memcg;
+> +	int ret = 0;
+> +	bool may_oom;
+> +
 > +	/*
-> +	 * For simplicity, we won't allow this to be disabled.  It also can't
-> +	 * be changed if the cgroup has children already, or if tasks had
-> +	 * already joined.
-> +	 *
-> +	 * If tasks join before we set the limit, a person looking at
-> +	 * kmem.usage_in_bytes will have no way to determine when it took
-> +	 * place, which makes the value quite meaningless.
-> +	 *
-> +	 * After it first became limited, changes in the value of the limit are
-> +	 * of course permitted.
-> +	 *
-> +	 * Taking the cgroup_lock is really offensive, but it is so far the only
-> +	 * way to guarantee that no children will appear. There are plenty of
-> +	 * other offenders, and they should all go away. Fine grained locking
-> +	 * is probably the way to go here. When we are fully hierarchical, we
-> +	 * can also get rid of the use_hierarchy check.
+> +	 * Conditions under which we can wait for the oom_killer.
+> +	 * __GFP_NORETRY should be masked by __mem_cgroup_try_charge,
+> +	 * but there is no harm in being explicit here
 > +	 */
-> +	cgroup_lock();
-> +	mutex_lock(&set_limit_mutex);
-> +	if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
+> +	may_oom = (gfp & __GFP_WAIT) && !(gfp & __GFP_NORETRY);
 
-Just a nit but wouldn't memcg_kmem_is_accounted(memcg) be better than
-directly checking kmem_accounted?
-Besides that I am not sure I fully understand RESOURCE_MAX test. Say I
-want to have kmem accounting for monitoring so I do 
-echo -1 > memory.kmem.limit_in_bytes
+Well we _have to_ check __GFP_NORETRY here because if we don't then we
+can end up in OOM. mem_cgroup_do_charge returns CHARGE_NOMEM for
+__GFP_NORETRY (without doing any reclaim) and of oom==true we decrement
+oom retries counter and eventually hit OOM killer. So the comment is
+misleading.
+> +
+> +	_memcg = memcg;
+> +	ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
+> +				      &_memcg, may_oom);
+> +
+> +	if (!ret) {
+> +		ret = res_counter_charge(&memcg->kmem, size, &fail_res);
 
-so you set the value but do not activate it. Isn't this just a reminder
-from the time when the accounting could be deactivated?
+Now that I'm thinking about the charging ordering we should charge the
+kmem first because we would like to hit kmem limit before we hit u+k
+limit, don't we. 
+Say that you have kmem limit 10M and the total limit 50M. Current `u'
+would be 40M and this charge would cause kmem to hit the `k' limit. I
+think we should fail to charge kmem before we go to u+k and potentially
+reclaim/oom.
+Or has this been alredy discussed and I just do not remember?
 
-> +		if (cgroup_task_count(cont) || (memcg->use_hierarchy &&
-> +						!list_empty(&cont->children))) {
-> +			ret = -EBUSY;
-> +			goto out;
+> +		if (ret) {
+> +			res_counter_uncharge(&memcg->res, size);
+> +			if (do_swap_account)
+> +				res_counter_uncharge(&memcg->memsw, size);
 > +		}
-> +		ret = res_counter_set_limit(&memcg->kmem, val);
-
-VM_BUG_IN(ret) ?
-There shouldn't be any usage when you enable it or something bad is
-going on.
-
-> +		if (ret)
-> +			goto out;
-> +
-> +		memcg_kmem_set_active(memcg);
-> +	} else
-> +		ret = res_counter_set_limit(&memcg->kmem, val);
-> +out:
-> +	mutex_unlock(&set_limit_mutex);
-> +	cgroup_unlock();
-> +#endif
-> +	return ret;
-> +}
-> +
-> +static void memcg_propagate_kmem(struct mem_cgroup *memcg,
-> +				 struct mem_cgroup *parent)
+[...]
+> +bool
+> +__memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **_memcg, int order)
 > +{
-> +	memcg->kmem_accounted = parent->kmem_accounted;
+> +	struct mem_cgroup *memcg;
+> +	int ret;
+> +
+> +	*_memcg = NULL;
+> +	memcg = try_get_mem_cgroup_from_mm(current->mm);
+> +
+> +	/*
+> +	 * very rare case described in mem_cgroup_from_task. Unfortunately there
+> +	 * isn't much we can do without complicating this too much, and it would
+> +	 * be gfp-dependent anyway. Just let it go
+> +	 */
+> +	if (unlikely(!memcg))
+> +		return true;
+> +
+> +	if (!memcg_can_account_kmem(memcg)) {
+> +		css_put(&memcg->css);
+> +		return true;
+> +	}
+> +
+	/*
+	 * Keep reference on memcg while the page is charged to prevent
+	 * group from vanishing because allocation can outlive their
+	 * tasks. The reference is dropped in __memcg_kmem_uncharge_page
+	 */
+
+please
+> +	mem_cgroup_get(memcg);
+> +
+> +	ret = memcg_charge_kmem(memcg, gfp, PAGE_SIZE << order);
+> +	if (!ret)
+> +		*_memcg = memcg;
+> +	else
+> +		mem_cgroup_put(memcg);
+> +
+> +	css_put(&memcg->css);
+> +	return (ret == 0);
 > +}
 > +
->  /*
->   * The user of this function is...
->   * RES_LIMIT.
 [...]
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
