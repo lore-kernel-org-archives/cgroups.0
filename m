@@ -1,81 +1,185 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v4 10/14] memcg: use static branches when code not in use
-Date: Thu, 11 Oct 2012 15:40:28 +0200
-Message-ID: <20121011134028.GH29295@dhcp22.suse.cz>
+Subject: Re: [PATCH v4 12/14] execute the whole memcg freeing in free_worker
+Date: Thu, 11 Oct 2012 16:21:27 +0200
+Message-ID: <20121011142127.GI29295@dhcp22.suse.cz>
 References: <1349690780-15988-1-git-send-email-glommer@parallels.com>
- <1349690780-15988-11-git-send-email-glommer@parallels.com>
+ <1349690780-15988-13-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1349690780-15988-11-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1349690780-15988-13-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon 08-10-12 14:06:16, Glauber Costa wrote:
-> We can use static branches to patch the code in or out when not used.
+On Mon 08-10-12 14:06:18, Glauber Costa wrote:
+> A lot of the initialization we do in mem_cgroup_create() is done with
+> softirqs enabled. This include grabbing a css id, which holds
+> &ss->id_lock->rlock, and the per-zone trees, which holds
+> rtpz->lock->rlock. All of those signal to the lockdep mechanism that
+> those locks can be used in SOFTIRQ-ON-W context. This means that the
+> freeing of memcg structure must happen in a compatible context,
+> otherwise we'll get a deadlock, like the one bellow, caught by lockdep:
 > 
-> Because the _ACTIVE bit on kmem_accounted is only set after the
-> increment is done, we guarantee that the root memcg will always be
-> selected for kmem charges until all call sites are patched (see
-> memcg_kmem_enabled).  This guarantees that no mischarges are applied.
+>   [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
+>   [<ffffffff81047f90>] free_task+0x31/0x5c
+>   [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
+>   [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
+>   [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
+>   [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
+>   [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
+>   [<ffffffff8105266d>] __do_softirq+0x122/0x277
 > 
-> static branch decrement happens when the last reference count from the
-> kmem accounting in memcg dies. This will only happen when the charges
-> drop down to 0.
+> This usage pattern could not be triggered before kmem came into play.
+> With the introduction of kmem stack handling, it is possible that we
+> call the last mem_cgroup_put() from the task destructor, which is run in
+> an rcu callback. Such callbacks are run with softirqs disabled, leading
+> to the offensive usage pattern.
 > 
-> When that happen, we need to disable the static branch only on those
-> memcgs that enabled it. To achieve this, we would be forced to
-> complicate the code by keeping track of which memcgs were the ones
-> that actually enabled limits, and which ones got it from its parents.
+> In general, we have little, if any, means to guarantee in which context
+> the last memcg_put will happen. The best we can do is test it and try to
+> make sure no invalid context releases are happening. But as we add more
+> code to memcg, the possible interactions grow in number and expose more
+> ways to get context conflicts. One thing to keep in mind, is that part
+> of the freeing process is already deferred to a worker, such as vfree(),
+> that can only be called from process context.
 > 
-> It is a lot simpler just to do static_key_slow_inc() on every child
-> that is accounted.
+> For the moment, the only two functions we really need moved away are:
 > 
-> [ v4: adapted this patch to the changes in kmem_accounted ]
+>   * free_css_id(), and
+>   * mem_cgroup_remove_from_trees().
+> 
+> But because the later accesses per-zone info,
+> free_mem_cgroup_per_zone_info() needs to be moved as well. With that, we
+> are left with the per_cpu stats only. Better move it all.
 > 
 > Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+> Tested-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> CC: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 > CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 > CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Looks reasonable to me
+OK, it seems it is much easier this way.
 Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Just a little nit.
-
-[...]
-
+> ---
+>  mm/memcontrol.c | 66 +++++++++++++++++++++++++++++----------------------------
+>  1 file changed, 34 insertions(+), 32 deletions(-)
+> 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 634c7b5..724a08b 100644
+> index 2f92f89..c5215f1 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -344,11 +344,15 @@ struct mem_cgroup {
->  /* internal only representation about the status of kmem accounting. */
->  enum {
->  	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
-> +	KMEM_ACCOUNTED_ACTIVATED, /* static key enabled. */
->  	KMEM_ACCOUNTED_DEAD, /* dead memcg, pending kmem charges */
->  };
+> @@ -5205,16 +5205,29 @@ out_free:
+>  }
 >  
-> -/* first bit */
-> -#define KMEM_ACCOUNTED_MASK 0x1
-> +/*
-> + * first two bits. We account when limit is on, but only after
-> + * call sites are patched
-> + */
-> +#define KMEM_ACCOUNTED_MASK 0x3
+>  /*
+> - * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
+> - * but in process context.  The work_freeing structure is overlaid
+> - * on the rcu_freeing structure, which itself is overlaid on memsw.
+> + * At destroying mem_cgroup, references from swap_cgroup can remain.
+> + * (scanning all at force_empty is too costly...)
+> + *
+> + * Instead of clearing all references at force_empty, we remember
+> + * the number of reference from swap_cgroup and free mem_cgroup when
+> + * it goes down to 0.
+> + *
+> + * Removal of cgroup itself succeeds regardless of refs from swap.
+>   */
+> -static void free_work(struct work_struct *work)
+> +
+> +static void __mem_cgroup_free(struct mem_cgroup *memcg)
+>  {
+> -	struct mem_cgroup *memcg;
+> +	int node;
+>  	int size = sizeof(struct mem_cgroup);
+>  
+> -	memcg = container_of(work, struct mem_cgroup, work_freeing);
+> +	mem_cgroup_remove_from_trees(memcg);
+> +	free_css_id(&mem_cgroup_subsys, &memcg->css);
+> +
+> +	for_each_node(node)
+> +		free_mem_cgroup_per_zone_info(memcg, node);
+> +
+> +	free_percpu(memcg->stat);
+> +
+>  	/*
+>  	 * We need to make sure that (at least for now), the jump label
+>  	 * destruction code runs outside of the cgroup lock. This is because
+> @@ -5233,38 +5246,27 @@ static void free_work(struct work_struct *work)
+>  		vfree(memcg);
+>  }
+>  
+> -static void free_rcu(struct rcu_head *rcu_head)
+> -{
+> -	struct mem_cgroup *memcg;
+> -
+> -	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
+> -	INIT_WORK(&memcg->work_freeing, free_work);
+> -	schedule_work(&memcg->work_freeing);
+> -}
+>  
+>  /*
+> - * At destroying mem_cgroup, references from swap_cgroup can remain.
+> - * (scanning all at force_empty is too costly...)
+> - *
+> - * Instead of clearing all references at force_empty, we remember
+> - * the number of reference from swap_cgroup and free mem_cgroup when
+> - * it goes down to 0.
+> - *
+> - * Removal of cgroup itself succeeds regardless of refs from swap.
+> + * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
+> + * but in process context.  The work_freeing structure is overlaid
+> + * on the rcu_freeing structure, which itself is overlaid on memsw.
+>   */
+> -
+> -static void __mem_cgroup_free(struct mem_cgroup *memcg)
+> +static void free_work(struct work_struct *work)
+>  {
+> -	int node;
+> +	struct mem_cgroup *memcg;
+>  
+> -	mem_cgroup_remove_from_trees(memcg);
+> -	free_css_id(&mem_cgroup_subsys, &memcg->css);
+> +	memcg = container_of(work, struct mem_cgroup, work_freeing);
+> +	__mem_cgroup_free(memcg);
+> +}
+>  
+> -	for_each_node(node)
+> -		free_mem_cgroup_per_zone_info(memcg, node);
+> +static void free_rcu(struct rcu_head *rcu_head)
+> +{
+> +	struct mem_cgroup *memcg;
+>  
+> -	free_percpu(memcg->stat);
+> -	call_rcu(&memcg->rcu_freeing, free_rcu);
+> +	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
+> +	INIT_WORK(&memcg->work_freeing, free_work);
+> +	schedule_work(&memcg->work_freeing);
+>  }
+>  
+>  static void mem_cgroup_get(struct mem_cgroup *memcg)
+> @@ -5276,7 +5278,7 @@ static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
+>  {
+>  	if (atomic_sub_and_test(count, &memcg->refcnt)) {
+>  		struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+> -		__mem_cgroup_free(memcg);
+> +		call_rcu(&memcg->rcu_freeing, free_rcu);
+>  		if (parent)
+>  			mem_cgroup_put(parent);
+>  	}
+> -- 
+> 1.7.11.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The names are long but why not use KMEM_ACCOUNTED_ACTIVE*
-#define KMEM_ACCOUNTED_MASK 1<<KMEM_ACCOUNTED_ACTIVE | 1<<KMEM_ACCOUNTED_ACTIVATED
-
-[...]
 -- 
 Michal Hocko
 SUSE Labs
