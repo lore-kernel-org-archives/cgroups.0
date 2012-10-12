@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 04/19] sl[au]b: process slabinfo_show in common code
-Date: Fri, 12 Oct 2012 17:40:58 +0400
-Message-ID: <1350049273-17213-5-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 05/19] slab: don't preemptively remove element from list in cache destroy
+Date: Fri, 12 Oct 2012 17:40:59 +0400
+Message-ID: <1350049273-17213-6-git-send-email-glommer@parallels.com>
 References: <1350049273-17213-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1350049273-17213-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,185 +11,52 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-With all the infrastructure in place, we can now have slabinfo_show
-done from slab_common.c. A cache-specific function is called to grab
-information about the cache itself, since that is still heavily
-dependent on the implementation. But with the values produced by it, all
-the printing and handling is done from common code.
+After the slab/slub/slob merge, we are deleting the element from the
+slab_cache lists, and then if the destruction fail, we add it back
+again. This behavior was present in some caches, but not in others, if
+my memory doesn't fail me.
 
-[ v2: moved objects_per_slab and cache_order to slabinfo ]
+I, however, see no reason why we need to do so, since we are now locked
+during the whole deletion (which wasn't necessarily true before).  I
+propose a simplification in which we delete it only when there is no
+more going back, so we don't need to add it again.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- mm/slab.c        | 26 +++++++++++++++-----------
- mm/slab.h        | 16 +++++++++++++++-
- mm/slab_common.c | 18 +++++++++++++++++-
- mm/slub.c        | 24 ++++++++++--------------
- 4 files changed, 57 insertions(+), 27 deletions(-)
+ mm/slab_common.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/mm/slab.c b/mm/slab.c
-index 864a9e9..98b3460 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -4262,9 +4262,8 @@ out:
- }
- 
- #ifdef CONFIG_SLABINFO
--int slabinfo_show(struct seq_file *m, void *p)
-+void get_slabinfo(struct kmem_cache *cachep, struct slabinfo *sinfo)
- {
--	struct kmem_cache *cachep = list_entry(p, struct kmem_cache, list);
- 	struct slab *slabp;
- 	unsigned long active_objs;
- 	unsigned long num_objs;
-@@ -4319,13 +4318,20 @@ int slabinfo_show(struct seq_file *m, void *p)
- 	if (error)
- 		printk(KERN_ERR "slab: cache %s error: %s\n", name, error);
- 
--	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
--		   name, active_objs, num_objs, cachep->size,
--		   cachep->num, (1 << cachep->gfporder));
--	seq_printf(m, " : tunables %4u %4u %4u",
--		   cachep->limit, cachep->batchcount, cachep->shared);
--	seq_printf(m, " : slabdata %6lu %6lu %6lu",
--		   active_slabs, num_slabs, shared_avail);
-+	sinfo->active_objs = active_objs;
-+	sinfo->num_objs = num_objs;
-+	sinfo->active_slabs = active_slabs;
-+	sinfo->num_slabs = num_slabs;
-+	sinfo->shared_avail = shared_avail;
-+	sinfo->limit = cachep->limit;
-+	sinfo->batchcount = cachep->batchcount;
-+	sinfo->shared = cachep->shared;
-+	sinfo->objects_per_slab = cachep->num;
-+	sinfo->cache_order = cachep->gfporder;
-+}
-+
-+void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *cachep)
-+{
- #if STATS
- 	{			/* list3 stats */
- 		unsigned long high = cachep->high_mark;
-@@ -4355,8 +4361,6 @@ int slabinfo_show(struct seq_file *m, void *p)
- 			   allochit, allocmiss, freehit, freemiss);
- 	}
- #endif
--	seq_putc(m, '\n');
--	return 0;
- }
- 
- #define MAX_SLABINFO_WRITE 128
-diff --git a/mm/slab.h b/mm/slab.h
-index e9ba23f..66a62d3 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -74,8 +74,22 @@ int __kmem_cache_shutdown(struct kmem_cache *);
- 
- struct seq_file;
- struct file;
--int slabinfo_show(struct seq_file *m, void *p);
- 
-+struct slabinfo {
-+	unsigned long active_objs;
-+	unsigned long num_objs;
-+	unsigned long active_slabs;
-+	unsigned long num_slabs;
-+	unsigned long shared_avail;
-+	unsigned int limit;
-+	unsigned int batchcount;
-+	unsigned int shared;
-+	unsigned int objects_per_slab;
-+	unsigned int cache_order;
-+};
-+
-+void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo);
-+void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *s);
- ssize_t slabinfo_write(struct file *file, const char __user *buffer,
- 		       size_t count, loff_t *ppos);
- #endif
 diff --git a/mm/slab_common.c b/mm/slab_common.c
-index bb4d751..1ee1d6f 100644
+index 1ee1d6f..bf4b4f1 100644
 --- a/mm/slab_common.c
 +++ b/mm/slab_common.c
-@@ -246,7 +246,23 @@ static void s_stop(struct seq_file *m, void *p)
- 
- static int s_show(struct seq_file *m, void *p)
- {
--	return slabinfo_show(m, p);
-+	struct kmem_cache *s = list_entry(p, struct kmem_cache, list);
-+	struct slabinfo sinfo;
-+
-+	memset(&sinfo, 0, sizeof(sinfo));
-+	get_slabinfo(s, &sinfo);
-+
-+	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
-+		   s->name, sinfo.active_objs, sinfo.num_objs, s->size,
-+		   sinfo.objects_per_slab, (1 << sinfo.cache_order));
-+
-+	seq_printf(m, " : tunables %4u %4u %4u",
-+		   sinfo.limit, sinfo.batchcount, sinfo.shared);
-+	seq_printf(m, " : slabdata %6lu %6lu %6lu",
-+		   sinfo.active_slabs, sinfo.num_slabs, sinfo.shared_avail);
-+	slabinfo_show_stats(m, s);
-+	seq_putc(m, '\n');
-+	return 0;
- }
- 
- /*
-diff --git a/mm/slub.c b/mm/slub.c
-index 91e1f3b..a34548e 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -5394,18 +5394,14 @@ __initcall(slab_sysfs_init);
-  * The /proc/slabinfo ABI
-  */
- #ifdef CONFIG_SLABINFO
--int slabinfo_show(struct seq_file *m, void *p)
-+void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo)
- {
- 	unsigned long nr_partials = 0;
- 	unsigned long nr_slabs = 0;
--	unsigned long nr_inuse = 0;
- 	unsigned long nr_objs = 0;
- 	unsigned long nr_free = 0;
--	struct kmem_cache *s;
- 	int node;
- 
--	s = list_entry(p, struct kmem_cache, list);
+@@ -174,16 +174,15 @@ void kmem_cache_destroy(struct kmem_cache *s)
+ 	mutex_lock(&slab_mutex);
+ 	s->refcount--;
+ 	if (!s->refcount) {
+-		list_del(&s->list);
 -
- 	for_each_online_node(node) {
- 		struct kmem_cache_node *n = get_node(s, node);
+ 		if (!__kmem_cache_shutdown(s)) {
+ 			if (s->flags & SLAB_DESTROY_BY_RCU)
+ 				rcu_barrier();
  
-@@ -5418,16 +5414,16 @@ int slabinfo_show(struct seq_file *m, void *p)
- 		nr_free += count_partial(n, count_free);
- 	}
- 
--	nr_inuse = nr_objs - nr_free;
-+	sinfo->active_objs = nr_objs - nr_free;
-+	sinfo->num_objs = nr_objs;
-+	sinfo->active_slabs = nr_slabs;
-+	sinfo->num_slabs = nr_slabs;
-+	sinfo->objects_per_slab = oo_objects(s->oo);
-+	sinfo->cache_order = oo_order(s->oo);
-+}
- 
--	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d", s->name, nr_inuse,
--		   nr_objs, s->size, oo_objects(s->oo),
--		   (1 << oo_order(s->oo)));
--	seq_printf(m, " : tunables %4u %4u %4u", 0, 0, 0);
--	seq_printf(m, " : slabdata %6lu %6lu %6lu", nr_slabs, nr_slabs,
--		   0UL);
--	seq_putc(m, '\n');
--	return 0;
-+void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *s)
-+{
- }
- 
- ssize_t slabinfo_write(struct file *file, const char __user *buffer,
++			list_del(&s->list);
++
+ 			kfree(s->name);
+ 			kmem_cache_free(kmem_cache, s);
+ 		} else {
+-			list_add(&s->list, &slab_caches);
+ 			printk(KERN_ERR "kmem_cache_destroy %s: Slab cache still has objects\n",
+ 				s->name);
+ 			dump_stack();
 -- 
 1.7.11.4
