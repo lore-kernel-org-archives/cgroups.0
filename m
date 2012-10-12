@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 10/19] memcg: skip memcg kmem allocations in specified code regions
-Date: Fri, 12 Oct 2012 17:41:04 +0400
-Message-ID: <1350049273-17213-11-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 04/19] sl[au]b: process slabinfo_show in common code
+Date: Fri, 12 Oct 2012 17:40:58 +0400
+Message-ID: <1350049273-17213-5-git-send-email-glommer@parallels.com>
 References: <1350049273-17213-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1350049273-17213-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -11,145 +11,185 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-This patch creates a mechanism that skip memcg allocations during
-certain pieces of our core code. It basically works in the same way
-as preempt_disable()/preempt_enable(): By marking a region under
-which all allocations will be accounted to the root memcg.
+With all the infrastructure in place, we can now have slabinfo_show
+done from slab_common.c. A cache-specific function is called to grab
+information about the cache itself, since that is still heavily
+dependent on the implementation. But with the values produced by it, all
+the printing and handling is done from common code.
 
-We need this to prevent races in early cache creation, when we
-allocate data using caches that are not necessarily created already.
-
-[ v2: wrap the whole enqueue process, INIT_WORK can alloc memory ]
+[ v2: moved objects_per_slab and cache_order to slabinfo ]
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+CC: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/sched.h |  1 +
- mm/memcontrol.c       | 63 +++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 62 insertions(+), 2 deletions(-)
+ mm/slab.c        | 26 +++++++++++++++-----------
+ mm/slab.h        | 16 +++++++++++++++-
+ mm/slab_common.c | 18 +++++++++++++++++-
+ mm/slub.c        | 24 ++++++++++--------------
+ 4 files changed, 57 insertions(+), 27 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0d907e1..9fad6c1 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1581,6 +1581,7 @@ struct task_struct {
- 		unsigned long nr_pages;	/* uncharged usage */
- 		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
- 	} memcg_batch;
-+	unsigned int memcg_kmem_skip_account;
+diff --git a/mm/slab.c b/mm/slab.c
+index 864a9e9..98b3460 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -4262,9 +4262,8 @@ out:
+ }
+ 
+ #ifdef CONFIG_SLABINFO
+-int slabinfo_show(struct seq_file *m, void *p)
++void get_slabinfo(struct kmem_cache *cachep, struct slabinfo *sinfo)
+ {
+-	struct kmem_cache *cachep = list_entry(p, struct kmem_cache, list);
+ 	struct slab *slabp;
+ 	unsigned long active_objs;
+ 	unsigned long num_objs;
+@@ -4319,13 +4318,20 @@ int slabinfo_show(struct seq_file *m, void *p)
+ 	if (error)
+ 		printk(KERN_ERR "slab: cache %s error: %s\n", name, error);
+ 
+-	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
+-		   name, active_objs, num_objs, cachep->size,
+-		   cachep->num, (1 << cachep->gfporder));
+-	seq_printf(m, " : tunables %4u %4u %4u",
+-		   cachep->limit, cachep->batchcount, cachep->shared);
+-	seq_printf(m, " : slabdata %6lu %6lu %6lu",
+-		   active_slabs, num_slabs, shared_avail);
++	sinfo->active_objs = active_objs;
++	sinfo->num_objs = num_objs;
++	sinfo->active_slabs = active_slabs;
++	sinfo->num_slabs = num_slabs;
++	sinfo->shared_avail = shared_avail;
++	sinfo->limit = cachep->limit;
++	sinfo->batchcount = cachep->batchcount;
++	sinfo->shared = cachep->shared;
++	sinfo->objects_per_slab = cachep->num;
++	sinfo->cache_order = cachep->gfporder;
++}
++
++void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *cachep)
++{
+ #if STATS
+ 	{			/* list3 stats */
+ 		unsigned long high = cachep->high_mark;
+@@ -4355,8 +4361,6 @@ int slabinfo_show(struct seq_file *m, void *p)
+ 			   allochit, allocmiss, freehit, freemiss);
+ 	}
  #endif
- #ifdef CONFIG_HAVE_HW_BREAKPOINT
- 	atomic_t ptrace_bp_refcnt;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 148baad..96916bd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2949,6 +2949,41 @@ out:
- 	kfree(s->memcg_params);
+-	seq_putc(m, '\n');
+-	return 0;
  }
  
-+/*
-+ * During the creation a new cache, we need to disable our accounting mechanism
-+ * altogether. This is true even if we are not creating, but rather just
-+ * enqueing new caches to be created.
-+ *
-+ * This is because that process will trigger allocations; some visible, like
-+ * explicit kmallocs to auxiliary data structures, name strings and internal
-+ * cache structures; some well concealed, like INIT_WORK() that can allocate
-+ * objects during debug.
-+ *
-+ * If any allocation happens during memcg_kmem_get_cache, we will recurse back
-+ * to it. This may not be a bounded recursion: since the first cache creation
-+ * failed to complete (waiting on the allocation), we'll just try to create the
-+ * cache again, failing at the same point.
-+ *
-+ * memcg_kmem_get_cache is prepared to abort after seeing a positive count of
-+ * memcg_kmem_skip_account. So we enclose anything that might allocate memory
-+ * inside the following two functions.
-+ */
-+static void memcg_stop_kmem_account(void)
-+{
-+	if (!current->mm)
-+		return;
+ #define MAX_SLABINFO_WRITE 128
+diff --git a/mm/slab.h b/mm/slab.h
+index e9ba23f..66a62d3 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -74,8 +74,22 @@ int __kmem_cache_shutdown(struct kmem_cache *);
+ 
+ struct seq_file;
+ struct file;
+-int slabinfo_show(struct seq_file *m, void *p);
+ 
++struct slabinfo {
++	unsigned long active_objs;
++	unsigned long num_objs;
++	unsigned long active_slabs;
++	unsigned long num_slabs;
++	unsigned long shared_avail;
++	unsigned int limit;
++	unsigned int batchcount;
++	unsigned int shared;
++	unsigned int objects_per_slab;
++	unsigned int cache_order;
++};
 +
-+	current->memcg_kmem_skip_account++;
-+}
-+
-+static void memcg_resume_kmem_account(void)
-+{
-+	if (!current->mm)
-+		return;
-+
-+	current->memcg_kmem_skip_account--;
-+}
-+
- static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
++void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo);
++void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *s);
+ ssize_t slabinfo_write(struct file *file, const char __user *buffer,
+ 		       size_t count, loff_t *ppos);
+ #endif
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index bb4d751..1ee1d6f 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -246,7 +246,23 @@ static void s_stop(struct seq_file *m, void *p)
+ 
+ static int s_show(struct seq_file *m, void *p)
  {
- 	char *name;
-@@ -3008,7 +3043,10 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	if (new_cachep)
- 		goto out;
- 
-+	/* Don't block progress to enqueue caches for internal infrastructure */
-+	memcg_stop_kmem_account();
- 	new_cachep = kmem_cache_dup(memcg, cachep);
-+	memcg_resume_kmem_account();
- 
- 	if (new_cachep == NULL) {
- 		new_cachep = cachep;
-@@ -3046,8 +3084,8 @@ static void memcg_create_cache_work_func(struct work_struct *w)
-  * Enqueue the creation of a per-memcg kmem_cache.
-  * Called with rcu_read_lock.
-  */
--static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
--				       struct kmem_cache *cachep)
-+static void __memcg_create_cache_enqueue(struct mem_cgroup *memcg,
-+					 struct kmem_cache *cachep)
- {
- 	struct create_work *cw;
- 
-@@ -3066,6 +3104,24 @@ static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
- 	schedule_work(&cw->work);
+-	return slabinfo_show(m, p);
++	struct kmem_cache *s = list_entry(p, struct kmem_cache, list);
++	struct slabinfo sinfo;
++
++	memset(&sinfo, 0, sizeof(sinfo));
++	get_slabinfo(s, &sinfo);
++
++	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
++		   s->name, sinfo.active_objs, sinfo.num_objs, s->size,
++		   sinfo.objects_per_slab, (1 << sinfo.cache_order));
++
++	seq_printf(m, " : tunables %4u %4u %4u",
++		   sinfo.limit, sinfo.batchcount, sinfo.shared);
++	seq_printf(m, " : slabdata %6lu %6lu %6lu",
++		   sinfo.active_slabs, sinfo.num_slabs, sinfo.shared_avail);
++	slabinfo_show_stats(m, s);
++	seq_putc(m, '\n');
++	return 0;
  }
  
-+static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
-+				       struct kmem_cache *cachep)
-+{
-+	/*
-+	 * We need to stop accounting when we kmalloc, because if the
-+	 * corresponding kmalloc cache is not yet created, the first allocation
-+	 * in __memcg_create_cache_enqueue will recurse.
-+	 *
-+	 * However, it is better to enclose the whole function. Depending on
-+	 * the debugging options enabled, INIT_WORK(), for instance, can
-+	 * trigger an allocation. This too, will make us recurse. Because at
-+	 * this point we can't allow ourselves back into memcg_kmem_get_cache,
-+	 * the safest choice is to do it like this, wrapping the whole function.
-+	 */
-+	memcg_stop_kmem_account();
-+	__memcg_create_cache_enqueue(memcg, cachep);
-+	memcg_resume_kmem_account();
-+}
  /*
-  * Return the kmem_cache we're supposed to use for a slab allocation.
-  * We try to use the current memcg's version of the cache.
-@@ -3085,6 +3141,9 @@ struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
- 	struct mem_cgroup *memcg;
- 	int idx;
+diff --git a/mm/slub.c b/mm/slub.c
+index 91e1f3b..a34548e 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -5394,18 +5394,14 @@ __initcall(slab_sysfs_init);
+  * The /proc/slabinfo ABI
+  */
+ #ifdef CONFIG_SLABINFO
+-int slabinfo_show(struct seq_file *m, void *p)
++void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo)
+ {
+ 	unsigned long nr_partials = 0;
+ 	unsigned long nr_slabs = 0;
+-	unsigned long nr_inuse = 0;
+ 	unsigned long nr_objs = 0;
+ 	unsigned long nr_free = 0;
+-	struct kmem_cache *s;
+ 	int node;
  
-+	if (!current->mm || current->memcg_kmem_skip_account)
-+		return cachep;
-+
- 	if (cachep->memcg_params && cachep->memcg_params->memcg)
- 		return cachep;
+-	s = list_entry(p, struct kmem_cache, list);
+-
+ 	for_each_online_node(node) {
+ 		struct kmem_cache_node *n = get_node(s, node);
  
+@@ -5418,16 +5414,16 @@ int slabinfo_show(struct seq_file *m, void *p)
+ 		nr_free += count_partial(n, count_free);
+ 	}
+ 
+-	nr_inuse = nr_objs - nr_free;
++	sinfo->active_objs = nr_objs - nr_free;
++	sinfo->num_objs = nr_objs;
++	sinfo->active_slabs = nr_slabs;
++	sinfo->num_slabs = nr_slabs;
++	sinfo->objects_per_slab = oo_objects(s->oo);
++	sinfo->cache_order = oo_order(s->oo);
++}
+ 
+-	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d", s->name, nr_inuse,
+-		   nr_objs, s->size, oo_objects(s->oo),
+-		   (1 << oo_order(s->oo)));
+-	seq_printf(m, " : tunables %4u %4u %4u", 0, 0, 0);
+-	seq_printf(m, " : slabdata %6lu %6lu %6lu", nr_slabs, nr_slabs,
+-		   0UL);
+-	seq_putc(m, '\n');
+-	return 0;
++void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *s)
++{
+ }
+ 
+ ssize_t slabinfo_write(struct file *file, const char __user *buffer,
 -- 
 1.7.11.4
