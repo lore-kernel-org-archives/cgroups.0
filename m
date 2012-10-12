@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 18/19] slub: slub-specific propagation changes.
-Date: Fri, 12 Oct 2012 17:41:12 +0400
-Message-ID: <1350049273-17213-19-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 11/19] sl[au]b: always get the cache from its page in kfree
+Date: Fri, 12 Oct 2012 17:41:05 +0400
+Message-ID: <1350049273-17213-12-git-send-email-glommer@parallels.com>
 References: <1350049273-17213-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1350049273-17213-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,29 +13,20 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-SLUB allows us to tune a particular cache behavior with sysfs-based
-tunables.  When creating a new memcg cache copy, we'd like to preserve
-any tunables the parent cache already had.
+struct page already have this information. If we start chaining
+caches, this information will always be more trustworthy than
+whatever is passed into the function
 
-This can be done by tapping into the store attribute function provided
-by the allocator. We of course don't need to mess with read-only
-fields. Since the attributes can have multiple types and are stored
-internally by sysfs, the best strategy is to issue a ->show() in the
-root cache, and then ->store() in the memcg cache.
+A parent pointer is added to the slub structure, so we can make sure
+the freeing comes from either the right slab, or from its rightful
+parent.
 
-The drawback of that, is that sysfs can allocate up to a page in
-buffering for show(), that we are likely not to need, but also can't
-guarantee. To avoid always allocating a page for that, we can update the
-caches at store time with the maximum attribute size ever stored to the
-root cache. We will then get a buffer big enough to hold it. The
-corolary to this, is that if no stores happened, nothing will be
-propagated.
-
-It can also happen that a root cache has its tunables updated during
-normal system operation. In this case, we will propagate the change to
-all caches that are already active.
+[ v3: added parent testing with VM_BUG_ON ]
+[ v4: make it faster when kmemcg not in use ]
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
@@ -44,128 +35,112 @@ CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/slub_def.h |  1 +
- mm/slub.c                | 71 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 72 insertions(+)
+ include/linux/memcontrol.h |  4 ++++
+ mm/slab.c                  | 17 ++++++++++++++++-
+ mm/slab.h                  | 13 +++++++++++++
+ mm/slub.c                  | 14 ++++++++++++--
+ 4 files changed, 45 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-index ed330df..f41acb9 100644
---- a/include/linux/slub_def.h
-+++ b/include/linux/slub_def.h
-@@ -105,6 +105,7 @@ struct kmem_cache {
- #endif
- #ifdef CONFIG_MEMCG_KMEM
- 	struct memcg_cache_params *memcg_params;
-+	int max_attr_size; /* for propagation, maximum size of a stored attr */
- #endif
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index c7886aa..4c94182 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -536,6 +536,10 @@ static inline void sock_release_memcg(struct sock *sk)
+ {
+ }
  
- #ifdef CONFIG_NUMA
++static inline bool memcg_kmem_enabled(void)
++{
++	return false;
++}
+ static inline bool
+ memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
+ {
+diff --git a/mm/slab.c b/mm/slab.c
+index 98b3460..6f22067 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -3911,9 +3911,24 @@ EXPORT_SYMBOL(__kmalloc);
+  * Free an object which was previously allocated from this
+  * cache.
+  */
+-void kmem_cache_free(struct kmem_cache *cachep, void *objp)
++void kmem_cache_free(struct kmem_cache *s, void *objp)
+ {
+ 	unsigned long flags;
++	struct kmem_cache *cachep;
++
++	/*
++	 * When kmemcg is not being used, both assignments should return the
++	 * same value. but we don't want to pay the assignment price in that
++	 * case. If it is not compiled in, the compiler should be smart enough
++	 * to not do even the assignment. In that case, slab_equal_or_root
++	 * will also be a constant.
++	 */
++	if (memcg_kmem_enabled()) {
++		cachep = virt_to_cache(objp);
++		VM_BUG_ON(!slab_equal_or_root(cachep, s));
++	} else
++		cachep = s;
++
+ 
+ 	local_irq_save(flags);
+ 	debug_check_no_locks_freed(objp, cachep->object_size);
+diff --git a/mm/slab.h b/mm/slab.h
+index c35ecce..b9b5f1f 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -108,6 +108,13 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
+ 	return (is_root_cache(cachep) && !memcg) ||
+ 		(cachep->memcg_params->memcg == memcg);
+ }
++
++static inline bool slab_equal_or_root(struct kmem_cache *s,
++					struct kmem_cache *p)
++{
++	return (p == s) ||
++		(s->memcg_params && (p == s->memcg_params->root_cache));
++}
+ #else
+ static inline bool is_root_cache(struct kmem_cache *s)
+ {
+@@ -119,5 +126,11 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
+ {
+ 	return true;
+ }
++
++static inline bool slab_equal_or_root(struct kmem_cache *s,
++					struct kmem_cache *p)
++{
++	return true;
++}
+ #endif
+ #endif
 diff --git a/mm/slub.c b/mm/slub.c
-index e98fdf0..617d7ad 100644
+index 05aefe2..6e1a90f 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -3965,6 +3965,8 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
- 	return s;
- }
+@@ -2609,9 +2609,19 @@ redo:
  
-+static void memcg_propagate_slab_attrs(struct kmem_cache *s);
-+
- int __kmem_cache_create(struct kmem_cache *s, unsigned long flags)
+ void kmem_cache_free(struct kmem_cache *s, void *x)
  {
- 	int err;
-@@ -3973,6 +3975,7 @@ int __kmem_cache_create(struct kmem_cache *s, unsigned long flags)
- 	if (err)
- 		return err;
+-	struct page *page;
++	struct page *page = virt_to_head_page(x);
  
-+	memcg_propagate_slab_attrs(s);
- 	mutex_unlock(&slab_mutex);
- 	err = sysfs_slab_add(s);
- 	mutex_lock(&slab_mutex);
-@@ -5198,6 +5201,7 @@ static ssize_t slab_attr_store(struct kobject *kobj,
- 	struct slab_attribute *attribute;
- 	struct kmem_cache *s;
- 	int err;
-+	int i __maybe_unused;
- 
- 	attribute = to_slab_attr(attr);
- 	s = to_slab(kobj);
-@@ -5206,10 +5210,77 @@ static ssize_t slab_attr_store(struct kobject *kobj,
- 		return -EIO;
- 
- 	err = attribute->store(s, buf, len);
-+#ifdef CONFIG_MEMCG_KMEM
-+	if (slab_state < FULL)
-+		return err;
- 
-+	if ((err < 0) || !is_root_cache(s))
-+		return err;
-+
-+	mutex_lock(&slab_mutex);
-+	if (s->max_attr_size < len)
-+		s->max_attr_size = len;
-+
-+	for_each_memcg_cache_index(i) {
-+		struct kmem_cache *c = cache_from_memcg(s, i);
-+		if (c)
-+			/* return value determined by the parent cache only */
-+			attribute->store(c, buf, len);
+-	page = virt_to_head_page(x);
++	/*
++	 * When kmemcg is not being used, both assignments should return the
++	 * same value. but we don't want to pay the assignment price in that
++	 * case. If it is not compiled in, the compiler should be smart enough
++	 * to not do even the assignment. In that case, slab_equal_or_root
++	 * will also be a constant.
++	 */
++	if (memcg_kmem_enabled()) {
++		VM_BUG_ON(!slab_equal_or_root(page->slab, s));
++		s = page->slab;
 +	}
-+	mutex_unlock(&slab_mutex);
-+#endif
- 	return err;
- }
  
-+static void memcg_propagate_slab_attrs(struct kmem_cache *s)
-+{
-+#ifdef CONFIG_MEMCG_KMEM
-+	int i;
-+	char *buffer = NULL;
-+
-+	if (!is_root_cache(s))
-+		return;
-+
-+	if (!s->max_attr_size)
-+		return;
-+
-+	for (i = 0; i < ARRAY_SIZE(slab_attrs); i++) {
-+		char mbuf[64];
-+		char *buf;
-+		struct slab_attribute *attr = to_slab_attr(slab_attrs[i]);
-+
-+		if (!attr || !attr->store || !attr->show)
-+			continue;
-+
-+		/*
-+		 * It is really bad that we have to allocate here, so we will
-+		 * do it only as a fallback. If we actually allocate, though,
-+		 * we can just use the allocated buffer until the end.
-+		 *
-+		 * Most of the slub attributes will tend to be very small in
-+		 * size, but sysfs allows buffers up to a page, so they can
-+		 * theoretically happen.
-+		 */
-+		if (buffer)
-+			buf = buffer;
-+		else if (s->max_attr_size < ARRAY_SIZE(mbuf))
-+			buf = mbuf;
-+		else {
-+			buffer = (char *) get_zeroed_page(GFP_KERNEL);
-+			if (WARN_ON(!buffer))
-+				continue;
-+			buf = buffer;
-+		}
-+
-+		attr->show(s->memcg_params->root_cache, buf);
-+		attr->store(s, buf, strlen(buf));
-+	}
-+
-+	if (buffer)
-+		free_page((unsigned long)buffer);
-+#endif
-+}
-+
- static const struct sysfs_ops slab_sysfs_ops = {
- 	.show = slab_attr_show,
- 	.store = slab_attr_store,
+ 	if (kmem_cache_debug(s) && page->slab != s) {
+ 		pr_err("kmem_cache_free: Wrong slab cache. %s but object"
 -- 
 1.7.11.4
