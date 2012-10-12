@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 07/19] consider a memcg parameter in kmem_create_cache
-Date: Fri, 12 Oct 2012 17:41:01 +0400
-Message-ID: <1350049273-17213-8-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 13/19] memcg: destroy memcg caches
+Date: Fri, 12 Oct 2012 17:41:07 +0400
+Message-ID: <1350049273-17213-14-git-send-email-glommer@parallels.com>
 References: <1350049273-17213-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1350049273-17213-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,20 +13,14 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Allow a memcg parameter to be passed during cache creation.  When the slub
-allocator is being used, it will only merge caches that belong to the same
-memcg.
+This patch implements destruction of memcg caches. Right now,
+only caches where our reference counter is the last remaining are
+deleted. If there are any other reference counters around, we just
+leave the caches lying around until they go away.
 
-Default function is created as a wrapper, passing NULL to the memcg version. We
-only merge caches that belong to the same memcg.
-
-A helper is provided, memcg_css_id: because slub needs a unique cache name for
-sysfs. Since this is visible, but not the canonical location for slab data, the
-cache name is not used, the css_id should suffice.
-
-[ v2: moved to idr/ida instead of redoing the indexes ]
-[ v3: moved call to ida_init away from cgroup creation to fix a bug ]
-[ v4: no longer using the index mechanism ]
+When that happen, a destruction function is called from the cache
+code. Caches are only destroyed in process context, so we queue them
+up for later processing in the general case.
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
@@ -37,398 +31,248 @@ CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/memcontrol.h | 22 +++++++++++++++++++++
- include/linux/slab.h       | 12 +++++++++++-
- mm/memcontrol.c            | 49 ++++++++++++++++++++++++++++++++++++++++++++++
- mm/slab.h                  | 23 ++++++++++++++++++----
- mm/slab_common.c           | 40 +++++++++++++++++++++++++++----------
- mm/slub.c                  | 16 +++++++++++----
- 6 files changed, 143 insertions(+), 19 deletions(-)
+ include/linux/memcontrol.h |  2 ++
+ include/linux/slab.h       |  9 +++++++++
+ mm/memcontrol.c            | 47 ++++++++++++++++++++++++++++++++++++++++++++++
+ mm/slab.c                  |  3 +++
+ mm/slab.h                  | 24 +++++++++++++++++++++++
+ mm/slub.c                  |  7 ++++++-
+ 6 files changed, 91 insertions(+), 1 deletion(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 34e96cf..957da60 100644
+index 4c94182..9ac12cb 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -28,6 +28,7 @@ struct mem_cgroup;
- struct page_cgroup;
- struct page;
- struct mm_struct;
-+struct kmem_cache;
+@@ -426,6 +426,8 @@ void memcg_update_array_size(int num_groups);
+ struct kmem_cache *
+ __memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp);
  
- /* Stats that can be updated by kernel. */
- enum mem_cgroup_page_stat_item {
-@@ -414,6 +415,11 @@ void __memcg_kmem_commit_charge(struct page *page,
- 				       struct mem_cgroup *memcg, int order);
- void __memcg_kmem_uncharge_page(struct page *page, int order);
- 
-+int memcg_css_id(struct mem_cgroup *memcg);
-+int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s);
-+void memcg_release_cache(struct kmem_cache *cachep);
-+void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep);
++void mem_cgroup_destroy_cache(struct kmem_cache *cachep);
 +
  /**
   * memcg_kmem_newpage_charge: verify if a new kmem allocation is allowed.
   * @gfp: the gfp allocation flags.
-@@ -506,6 +512,22 @@ static inline void
- memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg, int order)
- {
- }
-+
-+static inline int memcg_register_cache(struct mem_cgroup *memcg,
-+				       struct kmem_cache *s)
-+{
-+	return 0;
-+}
-+
-+static inline void memcg_release_cache(struct kmem_cache *cachep)
-+{
-+}
-+
-+static inline void memcg_cache_list_add(struct mem_cgroup *memcg,
-+					struct kmem_cache *s)
-+{
-+	BUG();
-+}
- #endif /* CONFIG_MEMCG_KMEM */
- #endif /* _LINUX_MEMCONTROL_H */
- 
 diff --git a/include/linux/slab.h b/include/linux/slab.h
-index e4ea48a..b22a158 100644
+index b22a158..e17d348 100644
 --- a/include/linux/slab.h
 +++ b/include/linux/slab.h
-@@ -116,6 +116,7 @@ struct kmem_cache {
- };
- #endif
- 
-+struct mem_cgroup;
- /*
-  * struct kmem_cache related prototypes
-  */
-@@ -125,6 +126,9 @@ int slab_is_available(void);
- struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
- 			unsigned long,
- 			void (*)(void *));
-+struct kmem_cache *
-+kmem_cache_create_memcg(struct mem_cgroup *, const char *, size_t, size_t,
-+			unsigned long, void (*)(void *));
- void kmem_cache_destroy(struct kmem_cache *);
- int kmem_cache_shrink(struct kmem_cache *);
- void kmem_cache_free(struct kmem_cache *, void *);
-@@ -193,15 +197,21 @@ unsigned int kmem_cache_size(struct kmem_cache *);
-  * Child caches will hold extra metadata needed for its operation. Fields are:
+@@ -198,6 +198,11 @@ unsigned int kmem_cache_size(struct kmem_cache *);
   *
   * @memcg: pointer to the memcg this cache belongs to
-+ * @root_cache: pointer to the global, root cache, this cache was derived from
+  * @root_cache: pointer to the global, root cache, this cache was derived from
++ * @cachep: backpointer to the kmem_cache structure that hold us.
++ * @dead: set to true after the memcg dies; the cache may still be around.
++ * @nr_pages: number of pages that belongs to this cache.
++ * @destroy: worker to be called whenever we are ready, or believe we may be
++ *           ready, to destroy this cache.
   */
  struct memcg_cache_params {
  	bool is_root_cache;
- 	union {
- 		struct kmem_cache *memcg_caches[0];
--		struct mem_cgroup *memcg;
-+		struct {
-+			struct mem_cgroup *memcg;
-+			struct kmem_cache *root_cache;
-+		};
+@@ -206,6 +211,10 @@ struct memcg_cache_params {
+ 		struct {
+ 			struct mem_cgroup *memcg;
+ 			struct kmem_cache *root_cache;
++			struct kmem_cache *cachep;
++			bool dead;
++			atomic_t nr_pages;
++			struct work_struct destroy;
+ 		};
  	};
  };
- 
-+int memcg_update_all_caches(int num_memcgs);
-+
- /*
-  * Common kmalloc functions provided by all allocators
-  */
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b3a22a6..fff089e 100644
+index 4d2a01f..f744305 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -339,6 +339,12 @@ struct mem_cgroup {
- #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_INET)
- 	struct tcp_memcontrol tcp_mem;
- #endif
-+#if defined(CONFIG_MEMCG_KMEM)
-+	/* analogous to slab_common's slab_caches list. per-memcg */
-+	struct list_head memcg_slab_caches;
-+	/* Not a spinlock, we can take a lot of time walking the list */
-+	struct mutex slab_caches_mutex;
-+#endif
- };
- 
- /* internal only representation about the status of kmem accounting. */
-@@ -2754,6 +2760,49 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size)
- 		mem_cgroup_put(memcg);
+@@ -2949,6 +2949,31 @@ out:
+ 	kfree(s->memcg_params);
  }
  
-+void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
++static void kmem_cache_destroy_work_func(struct work_struct *w)
 +{
++	struct kmem_cache *cachep;
++	struct memcg_cache_params *p;
++
++	p = container_of(w, struct memcg_cache_params, destroy);
++	cachep = p->cachep;
++
++	if (!atomic_read(&cachep->memcg_params->nr_pages))
++		kmem_cache_destroy(cachep);
++}
++static DECLARE_WORK(kmem_cache_destroy_work, kmem_cache_destroy_work_func);
++
++void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
++{
++	if (!cachep->memcg_params->dead)
++		return;
++
++	/*
++	 * We have to defer the actual destroying to a workqueue, because
++	 * we might currently be in a context that cannot sleep.
++	 */
++	schedule_work(&cachep->memcg_params->destroy);
++}
++
+ /*
+  * During the creation a new cache, we need to disable our accounting mechanism
+  * altogether. This is true even if we are not creating, but rather just
+@@ -3061,6 +3086,8 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 	wmb(); /* the readers won't lock, make sure everybody sees it */
+ 	new_cachep->memcg_params->memcg = memcg;
+ 	new_cachep->memcg_params->root_cache = cachep;
++	new_cachep->memcg_params->cachep = new_cachep;
++	atomic_set(&new_cachep->memcg_params->nr_pages , 0);
+ out:
+ 	mutex_unlock(&memcg_cache_mutex);
+ 	return new_cachep;
+@@ -3072,6 +3099,21 @@ struct create_work {
+ 	struct work_struct work;
+ };
+ 
++static void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
++{
++	struct kmem_cache *cachep;
++
 +	mutex_lock(&memcg->slab_caches_mutex);
-+	list_add(&cachep->list, &memcg->memcg_slab_caches);
++	list_for_each_entry(cachep, &memcg->memcg_slab_caches, list) {
++
++		cachep->memcg_params->dead = true;
++		INIT_WORK(&cachep->memcg_params->destroy,
++			  kmem_cache_destroy_work_func);
++		schedule_work(&cachep->memcg_params->destroy);
++	}
 +	mutex_unlock(&memcg->slab_caches_mutex);
 +}
 +
-+/*
-+ * helper for acessing a memcg's index. It will be used as an index in the
-+ * child cache array in kmem_cache, and also to derive its name.
-+ *
-+ * According to kernel/cgroup.c, needs to be rcu protected.
-+ */
-+int memcg_css_id(struct mem_cgroup *memcg)
+ static void memcg_create_cache_work_func(struct work_struct *w)
+ {
+ 	struct create_work *cw;
+@@ -3277,6 +3319,10 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
+ 	VM_BUG_ON(mem_cgroup_is_root(memcg));
+ 	memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
+ }
++#else
++static inline void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
 +{
-+	int id;
-+	rcu_read_lock();
-+	id = css_id(&memcg->css);
-+	rcu_read_unlock();
-+	return id;
 +}
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+@@ -5872,6 +5918,7 @@ static int mem_cgroup_pre_destroy(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 
++	mem_cgroup_destroy_all_caches(memcg);
+ 	return mem_cgroup_force_empty(memcg, false);
+ }
+ 
+diff --git a/mm/slab.c b/mm/slab.c
+index 03952c4..39127f6 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -1911,6 +1911,7 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
+ 		if (page->pfmemalloc)
+ 			SetPageSlabPfmemalloc(page + i);
+ 	}
++	memcg_bind_pages(cachep, cachep->gfporder);
+ 
+ 	if (kmemcheck_enabled && !(cachep->flags & SLAB_NOTRACK)) {
+ 		kmemcheck_alloc_shadow(page, cachep->gfporder, flags, nodeid);
+@@ -1947,6 +1948,8 @@ static void kmem_freepages(struct kmem_cache *cachep, void *addr)
+ 		__ClearPageSlab(page);
+ 		page++;
+ 	}
 +
-+int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s)
-+{
-+	size_t size = sizeof(struct memcg_cache_params);
-+
-+	if (!memcg_kmem_enabled())
-+		return 0;
-+
-+	s->memcg_params = kzalloc(size, GFP_KERNEL);
-+	if (!s->memcg_params)
-+		return -ENOMEM;
-+
-+	if (memcg)
-+		s->memcg_params->memcg = memcg;
-+	return 0;
-+}
-+
-+void memcg_release_cache(struct kmem_cache *s)
-+{
-+	kfree(s->memcg_params);
-+}
-+
- /*
-  * We need to verify if the allocation against current->mm->owner's memcg is
-  * possible for the given order. But the page is not allocated yet, so we'll
++	memcg_release_pages(cachep, cachep->gfporder);
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += nr_freed;
+ 	free_accounted_pages((unsigned long)addr, cachep->gfporder);
 diff --git a/mm/slab.h b/mm/slab.h
-index 5ee1851..c35ecce 100644
+index b9b5f1f..ab57462 100644
 --- a/mm/slab.h
 +++ b/mm/slab.h
-@@ -35,12 +35,15 @@ extern struct kmem_cache *kmem_cache;
- /* Functions provided by the slab allocators */
- extern int __kmem_cache_create(struct kmem_cache *, unsigned long flags);
- 
-+struct mem_cgroup;
- #ifdef CONFIG_SLUB
--struct kmem_cache *__kmem_cache_alias(const char *name, size_t size,
--	size_t align, unsigned long flags, void (*ctor)(void *));
-+struct kmem_cache *
-+__kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
-+		   size_t align, unsigned long flags, void (*ctor)(void *));
- #else
--static inline struct kmem_cache *__kmem_cache_alias(const char *name, size_t size,
--	size_t align, unsigned long flags, void (*ctor)(void *))
-+static inline struct kmem_cache *
-+__kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
-+		   size_t align, unsigned long flags, void (*ctor)(void *))
- { return NULL; }
- #endif
- 
-@@ -98,11 +101,23 @@ static inline bool is_root_cache(struct kmem_cache *s)
- {
- 	return !s->memcg_params || s->memcg_params->is_root_cache;
+@@ -1,5 +1,6 @@
+ #ifndef MM_SLAB_H
+ #define MM_SLAB_H
++#include <linux/memcontrol.h>
+ /*
+  * Internal slab definitions
+  */
+@@ -109,6 +110,21 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
+ 		(cachep->memcg_params->memcg == memcg);
  }
-+
-+static inline bool cache_match_memcg(struct kmem_cache *cachep,
-+				     struct mem_cgroup *memcg)
+ 
++static inline void memcg_bind_pages(struct kmem_cache *s, int order)
 +{
-+	return (is_root_cache(cachep) && !memcg) ||
-+		(cachep->memcg_params->memcg == memcg);
++	if (!is_root_cache(s))
++		atomic_add(1 << order, &s->memcg_params->nr_pages);
 +}
- #else
- static inline bool is_root_cache(struct kmem_cache *s)
++
++static inline void memcg_release_pages(struct kmem_cache *s, int order)
++{
++	if (is_root_cache(s))
++		return;
++
++	if (atomic_sub_and_test((1 << order), &s->memcg_params->nr_pages))
++		mem_cgroup_destroy_cache(s);
++}
++
+ static inline bool slab_equal_or_root(struct kmem_cache *s,
+ 					struct kmem_cache *p)
  {
+@@ -127,6 +143,14 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
  	return true;
  }
  
-+static inline bool cache_match_memcg(struct kmem_cache *cachep,
-+				     struct mem_cgroup *memcg)
++static inline void memcg_bind_pages(struct kmem_cache *s, int order)
 +{
-+	return true;
 +}
- #endif
- #endif
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index bf4b4f1..f97f7b8 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -18,6 +18,7 @@
- #include <asm/cacheflush.h>
- #include <asm/tlbflush.h>
- #include <asm/page.h>
-+#include <linux/memcontrol.h>
- 
- #include "slab.h"
- 
-@@ -27,7 +28,8 @@ DEFINE_MUTEX(slab_mutex);
- struct kmem_cache *kmem_cache;
- 
- #ifdef CONFIG_DEBUG_VM
--static int kmem_cache_sanity_check(const char *name, size_t size)
-+static int kmem_cache_sanity_check(struct mem_cgroup *memcg, const char *name,
-+				   size_t size)
- {
- 	struct kmem_cache *s = NULL;
- 
-@@ -53,7 +55,7 @@ static int kmem_cache_sanity_check(const char *name, size_t size)
- 			continue;
- 		}
- 
--		if (!strcmp(s->name, name)) {
-+		if (cache_match_memcg(s, memcg) && !strcmp(s->name, name)) {
- 			pr_err("%s (%s): Cache name already exists.\n",
- 			       __func__, name);
- 			dump_stack();
-@@ -66,7 +68,8 @@ static int kmem_cache_sanity_check(const char *name, size_t size)
- 	return 0;
- }
- #else
--static inline int kmem_cache_sanity_check(const char *name, size_t size)
-+static inline int kmem_cache_sanity_check(struct mem_cgroup *memcg,
-+					  const char *name, size_t size)
- {
- 	return 0;
- }
-@@ -97,8 +100,9 @@ static inline int kmem_cache_sanity_check(const char *name, size_t size)
-  * as davem.
-  */
- 
--struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align,
--		unsigned long flags, void (*ctor)(void *))
-+struct kmem_cache *
-+kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
-+			size_t align, unsigned long flags, void (*ctor)(void *))
- {
- 	struct kmem_cache *s = NULL;
- 	int err = 0;
-@@ -106,7 +110,7 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align
- 	get_online_cpus();
- 	mutex_lock(&slab_mutex);
- 
--	if (!kmem_cache_sanity_check(name, size) == 0)
-+	if (!kmem_cache_sanity_check(memcg, name, size) == 0)
- 		goto out_locked;
- 
- 	/*
-@@ -117,7 +121,7 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align
- 	 */
- 	flags &= CACHE_CREATE_MASK;
- 
--	s = __kmem_cache_alias(name, size, align, flags, ctor);
-+	s = __kmem_cache_alias(memcg, name, size, align, flags, ctor);
- 	if (s)
- 		goto out_locked;
- 
-@@ -126,6 +130,13 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align
- 		s->object_size = s->size = size;
- 		s->align = align;
- 		s->ctor = ctor;
 +
-+		if (memcg_register_cache(memcg, s)) {
-+			kmem_cache_free(kmem_cache, s);
-+			err = -ENOMEM;
-+			goto out_locked;
-+		}
-+
- 		s->name = kstrdup(name, GFP_KERNEL);
- 		if (!s->name) {
- 			kmem_cache_free(kmem_cache, s);
-@@ -135,10 +146,11 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align
- 
- 		err = __kmem_cache_create(s, flags);
- 		if (!err) {
--
- 			s->refcount = 1;
--			list_add(&s->list, &slab_caches);
--
-+			if (!memcg)
-+				list_add(&s->list, &slab_caches);
-+			else
-+				memcg_cache_list_add(memcg, s);
- 		} else {
- 			kfree(s->name);
- 			kmem_cache_free(kmem_cache, s);
-@@ -166,6 +178,13 @@ out_locked:
- 
- 	return s;
- }
-+
-+struct kmem_cache *
-+kmem_cache_create(const char *name, size_t size, size_t align,
-+		  unsigned long flags, void (*ctor)(void *))
++static inline void memcg_release_pages(struct kmem_cache *s, int order)
 +{
-+	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor);
 +}
- EXPORT_SYMBOL(kmem_cache_create);
- 
- void kmem_cache_destroy(struct kmem_cache *s)
-@@ -180,6 +199,7 @@ void kmem_cache_destroy(struct kmem_cache *s)
- 
- 			list_del(&s->list);
- 
-+			memcg_release_cache(s);
- 			kfree(s->name);
- 			kmem_cache_free(kmem_cache, s);
- 		} else {
++
+ static inline bool slab_equal_or_root(struct kmem_cache *s,
+ 					struct kmem_cache *p)
+ {
 diff --git a/mm/slub.c b/mm/slub.c
-index a34548e..05aefe2 100644
+index 257e130..e98fdf0 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -31,6 +31,7 @@
- #include <linux/fault-inject.h>
- #include <linux/stacktrace.h>
- #include <linux/prefetch.h>
-+#include <linux/memcontrol.h>
+@@ -1344,6 +1344,7 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
+ 	void *start;
+ 	void *last;
+ 	void *p;
++	int order;
  
- #include <trace/events/kmem.h>
+ 	BUG_ON(flags & GFP_SLAB_BUG_MASK);
  
-@@ -3880,7 +3881,7 @@ static int slab_unmergeable(struct kmem_cache *s)
- 	return 0;
- }
+@@ -1352,7 +1353,9 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
+ 	if (!page)
+ 		goto out;
  
--static struct kmem_cache *find_mergeable(size_t size,
-+static struct kmem_cache *find_mergeable(struct mem_cgroup *memcg, size_t size,
- 		size_t align, unsigned long flags, const char *name,
- 		void (*ctor)(void *))
- {
-@@ -3916,17 +3917,20 @@ static struct kmem_cache *find_mergeable(size_t size,
- 		if (s->size - size >= sizeof(void *))
- 			continue;
++	order = compound_order(page);
+ 	inc_slabs_node(s, page_to_nid(page), page->objects);
++	memcg_bind_pages(s, order);
+ 	page->slab = s;
+ 	__SetPageSlab(page);
+ 	if (page->pfmemalloc)
+@@ -1361,7 +1364,7 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
+ 	start = page_address(page);
  
-+		if (!cache_match_memcg(s, memcg))
-+			continue;
- 		return s;
- 	}
- 	return NULL;
- }
+ 	if (unlikely(s->flags & SLAB_POISON))
+-		memset(start, POISON_INUSE, PAGE_SIZE << compound_order(page));
++		memset(start, POISON_INUSE, PAGE_SIZE << order);
  
--struct kmem_cache *__kmem_cache_alias(const char *name, size_t size,
--		size_t align, unsigned long flags, void (*ctor)(void *))
-+struct kmem_cache *
-+__kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
-+		   size_t align, unsigned long flags, void (*ctor)(void *))
- {
- 	struct kmem_cache *s;
+ 	last = start;
+ 	for_each_object(p, s, start, page->objects) {
+@@ -1402,6 +1405,8 @@ static void __free_slab(struct kmem_cache *s, struct page *page)
  
--	s = find_mergeable(size, align, flags, name, ctor);
-+	s = find_mergeable(memcg, size, align, flags, name, ctor);
- 	if (s) {
- 		s->refcount++;
- 		/*
-@@ -5246,6 +5250,10 @@ static char *create_unique_id(struct kmem_cache *s)
- 	if (p != name + 1)
- 		*p++ = '-';
- 	p += sprintf(p, "%07d", s->size);
-+#ifdef CONFIG_MEMCG_KMEM
-+	if (!is_root_cache(s))
-+		p += sprintf(p, "-%08d", memcg_css_id(s->memcg_params->memcg));
-+#endif
- 	BUG_ON(p > name + ID_STR_LENGTH - 1);
- 	return name;
- }
+ 	__ClearPageSlabPfmemalloc(page);
+ 	__ClearPageSlab(page);
++
++	memcg_release_pages(s, order);
+ 	reset_page_mapcount(page);
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += pages;
 -- 
 1.7.11.4
