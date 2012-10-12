@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v4 11/19] sl[au]b: always get the cache from its page in kfree
-Date: Fri, 12 Oct 2012 17:41:05 +0400
-Message-ID: <1350049273-17213-12-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 15/19] memcg/sl[au]b: shrink dead caches
+Date: Fri, 12 Oct 2012 17:41:09 +0400
+Message-ID: <1350049273-17213-16-git-send-email-glommer@parallels.com>
 References: <1350049273-17213-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1350049273-17213-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,20 +13,31 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-struct page already have this information. If we start chaining
-caches, this information will always be more trustworthy than
-whatever is passed into the function
+In the slub allocator, when the last object of a page goes away, we
+don't necessarily free it - there is not necessarily a test for empty
+page in any slab_free path.
 
-A parent pointer is added to the slub structure, so we can make sure
-the freeing comes from either the right slab, or from its rightful
-parent.
+This means that when we destroy a memcg cache that happened to be empty,
+those caches may take a lot of time to go away: removing the memcg
+reference won't destroy them - because there are pending references, and
+the empty pages will stay there, until a shrinker is called upon for any
+reason.
 
-[ v3: added parent testing with VM_BUG_ON ]
-[ v4: make it faster when kmemcg not in use ]
+This patch marks all memcg caches as dead. kmem_cache_shrink is called
+for the ones who are not yet dead - this will force internal cache
+reorganization, and then all references to empty pages will be removed.
+
+An unlikely branch is used to make sure this case does not affect
+performance in the usual slab_free path.
+
+The slab allocator has a time based reaper that would eventually get rid
+of the objects, but we can also call it explicitly, since dead caches
+are not a likely event.
+
+[ v2: also call verify_dead for the slab ]
+[ v3: use delayed_work to avoid calling verify_dead at every free]
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
@@ -35,112 +46,78 @@ CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/memcontrol.h |  4 ++++
- mm/slab.c                  | 17 ++++++++++++++++-
- mm/slab.h                  | 13 +++++++++++++
- mm/slub.c                  | 14 ++++++++++++--
- 4 files changed, 45 insertions(+), 3 deletions(-)
+ include/linux/slab.h |  2 +-
+ mm/memcontrol.c      | 28 ++++++++++++++++++++++------
+ 2 files changed, 23 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index c7886aa..4c94182 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -536,6 +536,10 @@ static inline void sock_release_memcg(struct sock *sk)
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index e17d348..9ed1a98 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -214,7 +214,7 @@ struct memcg_cache_params {
+ 			struct kmem_cache *cachep;
+ 			bool dead;
+ 			atomic_t nr_pages;
+-			struct work_struct destroy;
++			struct delayed_work destroy;
+ 		};
+ 	};
+ };
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8cf8b4d..b52e6b9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2955,11 +2955,27 @@ static void kmem_cache_destroy_work_func(struct work_struct *w)
  {
- }
+ 	struct kmem_cache *cachep;
+ 	struct memcg_cache_params *p;
++	struct delayed_work *dw = to_delayed_work(w);
  
-+static inline bool memcg_kmem_enabled(void)
-+{
-+	return false;
-+}
- static inline bool
- memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
- {
-diff --git a/mm/slab.c b/mm/slab.c
-index 98b3460..6f22067 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -3911,9 +3911,24 @@ EXPORT_SYMBOL(__kmalloc);
-  * Free an object which was previously allocated from this
-  * cache.
-  */
--void kmem_cache_free(struct kmem_cache *cachep, void *objp)
-+void kmem_cache_free(struct kmem_cache *s, void *objp)
- {
- 	unsigned long flags;
-+	struct kmem_cache *cachep;
-+
+-	p = container_of(w, struct memcg_cache_params, destroy);
++	p = container_of(dw, struct memcg_cache_params, destroy);
+ 	cachep = p->cachep;
+ 
+-	if (!atomic_read(&cachep->memcg_params->nr_pages))
 +	/*
-+	 * When kmemcg is not being used, both assignments should return the
-+	 * same value. but we don't want to pay the assignment price in that
-+	 * case. If it is not compiled in, the compiler should be smart enough
-+	 * to not do even the assignment. In that case, slab_equal_or_root
-+	 * will also be a constant.
++	 * If we get down to 0 after shrink, we could delete right away.
++	 * However, memcg_release_pages() already puts us back in the workqueue
++	 * in that case. If we proceed deleting, we'll get a dangling
++	 * reference, and removing the object from the workqueue in that case is
++	 * unnecessary complication. We are not a fast path.
++	 *
++	 * If we aren't down to zero, we'll schedule a slow worker and try again
 +	 */
-+	if (memcg_kmem_enabled()) {
-+		cachep = virt_to_cache(objp);
-+		VM_BUG_ON(!slab_equal_or_root(cachep, s));
++	if (atomic_read(&cachep->memcg_params->nr_pages) != 0) {
++		kmem_cache_shrink(cachep);
++		if (atomic_read(&cachep->memcg_params->nr_pages) == 0)
++			return;
++		/* Once per minute should be good enough. */
++		schedule_delayed_work(&cachep->memcg_params->destroy, 60 * HZ);
 +	} else
-+		cachep = s;
-+
- 
- 	local_irq_save(flags);
- 	debug_check_no_locks_freed(objp, cachep->object_size);
-diff --git a/mm/slab.h b/mm/slab.h
-index c35ecce..b9b5f1f 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -108,6 +108,13 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
- 	return (is_root_cache(cachep) && !memcg) ||
- 		(cachep->memcg_params->memcg == memcg);
+ 		kmem_cache_destroy(cachep);
  }
-+
-+static inline bool slab_equal_or_root(struct kmem_cache *s,
-+					struct kmem_cache *p)
-+{
-+	return (p == s) ||
-+		(s->memcg_params && (p == s->memcg_params->root_cache));
-+}
- #else
- static inline bool is_root_cache(struct kmem_cache *s)
- {
-@@ -119,5 +126,11 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
- {
- 	return true;
+ static DECLARE_WORK(kmem_cache_destroy_work, kmem_cache_destroy_work_func);
+@@ -2973,7 +2989,7 @@ void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
+ 	 * We have to defer the actual destroying to a workqueue, because
+ 	 * we might currently be in a context that cannot sleep.
+ 	 */
+-	schedule_work(&cachep->memcg_params->destroy);
++	schedule_delayed_work(&cachep->memcg_params->destroy, 0);
  }
-+
-+static inline bool slab_equal_or_root(struct kmem_cache *s,
-+					struct kmem_cache *p)
-+{
-+	return true;
-+}
- #endif
- #endif
-diff --git a/mm/slub.c b/mm/slub.c
-index 05aefe2..6e1a90f 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -2609,9 +2609,19 @@ redo:
  
- void kmem_cache_free(struct kmem_cache *s, void *x)
- {
--	struct page *page;
-+	struct page *page = virt_to_head_page(x);
+ /*
+@@ -3137,9 +3153,9 @@ static void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
+ 	list_for_each_entry(cachep, &memcg->memcg_slab_caches, list) {
  
--	page = virt_to_head_page(x);
-+	/*
-+	 * When kmemcg is not being used, both assignments should return the
-+	 * same value. but we don't want to pay the assignment price in that
-+	 * case. If it is not compiled in, the compiler should be smart enough
-+	 * to not do even the assignment. In that case, slab_equal_or_root
-+	 * will also be a constant.
-+	 */
-+	if (memcg_kmem_enabled()) {
-+		VM_BUG_ON(!slab_equal_or_root(page->slab, s));
-+		s = page->slab;
-+	}
- 
- 	if (kmem_cache_debug(s) && page->slab != s) {
- 		pr_err("kmem_cache_free: Wrong slab cache. %s but object"
+ 		cachep->memcg_params->dead = true;
+-		INIT_WORK(&cachep->memcg_params->destroy,
+-			  kmem_cache_destroy_work_func);
+-		schedule_work(&cachep->memcg_params->destroy);
++		INIT_DELAYED_WORK(&cachep->memcg_params->destroy,
++				  kmem_cache_destroy_work_func);
++		schedule_delayed_work(&cachep->memcg_params->destroy, 0);
+ 	}
+ 	mutex_unlock(&memcg->slab_caches_mutex);
+ }
 -- 
 1.7.11.4
