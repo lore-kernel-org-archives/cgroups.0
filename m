@@ -1,70 +1,97 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v4 04/14] kmem accounting basic infrastructure
-Date: Fri, 12 Oct 2012 10:27:28 +0200
-Message-ID: <20121012082728.GC10110@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v4 06/14] memcg: kmem controller infrastructure
+Date: Fri, 12 Oct 2012 10:39:45 +0200
+Message-ID: <20121012083944.GD10110@dhcp22.suse.cz>
 References: <1349690780-15988-1-git-send-email-glommer@parallels.com>
- <1349690780-15988-5-git-send-email-glommer@parallels.com>
- <20121011101119.GB29295@dhcp22.suse.cz>
- <5077C886.2030609@parallels.com>
+ <1349690780-15988-7-git-send-email-glommer@parallels.com>
+ <20121011124212.GC29295@dhcp22.suse.cz>
+ <5077CAAA.3090709@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <5077C886.2030609-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <5077CAAA.3090709@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, Suleiman Souhlal <suleiman@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, devel@openvz.org, Frederic Weisbecker <fweisbec@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On Fri 12-10-12 11:36:38, Glauber Costa wrote:
-> On 10/11/2012 02:11 PM, Michal Hocko wrote:
-> > On Mon 08-10-12 14:06:10, Glauber Costa wrote:
+On Fri 12-10-12 11:45:46, Glauber Costa wrote:
+> On 10/11/2012 04:42 PM, Michal Hocko wrote:
+> > On Mon 08-10-12 14:06:12, Glauber Costa wrote:
 [...]
-> >> +	if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
+> >> +	/*
+> >> +	 * Conditions under which we can wait for the oom_killer.
+> >> +	 * __GFP_NORETRY should be masked by __mem_cgroup_try_charge,
+> >> +	 * but there is no harm in being explicit here
+> >> +	 */
+> >> +	may_oom = (gfp & __GFP_WAIT) && !(gfp & __GFP_NORETRY);
 > > 
-> > Just a nit but wouldn't memcg_kmem_is_accounted(memcg) be better than
-> > directly checking kmem_accounted?
-> > Besides that I am not sure I fully understand RESOURCE_MAX test. Say I
-> > want to have kmem accounting for monitoring so I do 
-> > echo -1 > memory.kmem.limit_in_bytes
+> > Well we _have to_ check __GFP_NORETRY here because if we don't then we
+> > can end up in OOM. mem_cgroup_do_charge returns CHARGE_NOMEM for
+> > __GFP_NORETRY (without doing any reclaim) and of oom==true we decrement
+> > oom retries counter and eventually hit OOM killer. So the comment is
+> > misleading.
+> 
+> I will update. What i understood from your last message is that we don't
+> really need to, because try_charge will do it.
+
+IIRC I just said it couldn't happen before because migration doesn't go
+through charge and thp disable oom by default.
+
+> >> +
+> >> +	_memcg = memcg;
+> >> +	ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
+> >> +				      &_memcg, may_oom);
+> >> +
+> >> +	if (!ret) {
+> >> +		ret = res_counter_charge(&memcg->kmem, size, &fail_res);
 > > 
-> > so you set the value but do not activate it. Isn't this just a reminder
-> > from the time when the accounting could be deactivated?
+> > Now that I'm thinking about the charging ordering we should charge the
+> > kmem first because we would like to hit kmem limit before we hit u+k
+> > limit, don't we. 
+> > Say that you have kmem limit 10M and the total limit 50M. Current `u'
+> > would be 40M and this charge would cause kmem to hit the `k' limit. I
+> > think we should fail to charge kmem before we go to u+k and potentially
+> > reclaim/oom.
+> > Or has this been alredy discussed and I just do not remember?
 > > 
+> This has never been discussed as far as I remember. We charged u first
+> since day0, and you are so far the first one to raise it...
 > 
-> No, not at all.
-> 
-> I see you have talked about that in other e-mails, (I was on sick leave
-> yesterday), so let me consolidate it all here:
-> 
-> What we discussed before, regarding to echo -1 > ... was around the
-> disable code, something that we no longer allow. So now, if you will
-> echo -1 to that file *after* it is limited, you get in track only mode.
-> 
-> But for you to start that, you absolutely have to write something
-> different than -1.
-> 
-> Just one example: libcgroup, regardless of how lame we think it is in
-> this regard, will write to all cgroup files by default when a file is
-> updated. If you haven't written anything, it will still write the same
-> value that the file had before.
+> One of the things in favor of charging 'u' first is that
+> mem_cgroup_try_charge is already equipped to make a lot of decisions,
+> like when to allow reclaim, when to bypass charges, and it would be good
+> if we can reuse all that.
 
-Ohh, I wasn't aware of that and it sounds pretty lame.
- 
-> This means that an already deployed libcg-managed installation will
-> suddenly enable kmem for every cgroup. Sure this can be fixed in
-> userspace, but:
+Hmm, I think that we should prevent from those decisions if kmem charge
+would fail anyway (especially now when we do not have targeted slab
+reclaim).
+
+> You oom-based argument makes some sense, if all other scenarios are
+> unchanged by this, I can change it. I will give this some more
+> consideration.
 > 
-> 1) There is no reason to break it, if we can
+[...]
+> > 	/*
+> > 	 * Keep reference on memcg while the page is charged to prevent
+> > 	 * group from vanishing because allocation can outlive their
+> > 	 * tasks. The reference is dropped in __memcg_kmem_uncharge_page
+> > 	 */
+> > 
+> > please
+> 
+> I can do that, but keep in mind this piece of code is going away soon =)
 
-You are right
-
-> 2) It is perfectly reasonable to expect that if you write to a file the
-> same value that was already there, nothing happens.
-
-Fair enough
+Yes I have noticed that and replied to myself that it is not necessary.
 
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
