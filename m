@@ -1,81 +1,59 @@
-From: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
-Subject: Re: [PATCH 1/2] block: lift the initial queue bypass mode on
- blk_register_queue() instead of blk_init_allocated_queue()
-Date: Tue, 16 Oct 2012 21:00:30 +1100
-Message-ID: <CAOzFzEiCWazLEfjo=w8c+7qCce98Q6faW1uwGm-tRmCNPJUztw@mail.gmail.com>
-References: <CAOzFzEhf2LfT0BCNPAgPgxZ3=pj2KvJ4Z6kP7XF8nnxag1dfvg@mail.gmail.com>
-	<CAOzFzEiC4313K4H9393ffzNyBo398BPYSxTk7ZEmuH4GfW5qtw@mail.gmail.com>
-	<CAOzFzEhWk_7oQFOyW6Ri_9Cvsshj2s3pa=Oo-p8uL6r340MoTw@mail.gmail.com>
-	<20120919194231.GF31860@redhat.com>
-	<20120920183153.GI28934@google.com>
-	<20120920184219.GH4681@redhat.com>
-	<20120920191716.GI4681@redhat.com>
-	<20120920192038.GJ28934@google.com>
-	<20120920195759.GK4681@redhat.com>
-	<20120920201815.GB7264@google.com>
-	<20120920210852.GC7264@google.com>
-	<505C6AD4.6030206@kernel.dk>
-Mime-Version: 1.0
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] oom, memcg: handle sysctl oom_kill_allocating_task while memcg oom happening
+Date: Tue, 16 Oct 2012 18:12:08 +0800
+Message-ID: <1350382328-28977-1-git-send-email-handai.szj@taobao.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <505C6AD4.6030206-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=GHLB8klPPOWpjeK2oSOjYbVy9ePFeuoRG9oKBZEQLA8=;
+        b=LUd7ebOHQFWmCOHudT/YvFfpxm/jvUY+N7i4nKvyoHghOBxCbLRoVf3l5NhCxim2em
+         LU2i8fYBzoNnlxFQDCBI2+VoZNe5AkAIgHz9WmrdokS73CeveGmDDRhXYJfN4Jv6uDr9
+         fuT5taoHkKSMZXPkmkJNKzx8oJKPbc/93GOlw6huVOwsDAWu6vIfdAquk4H2XpzdfgVz
+         lu08EbmuYv9Anf+pVltxoh9RzTk+Kfk4bWQSZb54tN45yX7/KcqZn0rmXhmC3EV1wxJN
+         mrAwXaGlZmchZh8nq+rPSEhh75ywNWql3pb1UFrulVFS73aboidsWpXOkbJH2NL6ZQpt
+         5swQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On 21 September 2012 23:25, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
-> On 09/20/2012 11:08 PM, Tejun Heo wrote:
->> b82d4b197c ("blkcg: make request_queue bypassing on allocation") made
->> request_queues bypassed on allocation to avoid switching on and off
->> bypass mode on a queue being initialized.  Some drivers allocate and
->> then destroy a lot of queues without fully initializing them and
->> incurring bypass latency overhead on each of them could add upto
->> significant overhead.
->>
->> Unfortunately, blk_init_allocated_queue() is never used by queues of
->> bio-based drivers, which means that all bio-based driver queues are in
->> bypass mode even after initialization and registration complete
->> successfully.
->>
->> Due to the limited way request_queues are used by bio drivers, this
->> problem is hidden pretty well but it shows up when blk-throttle is
->> used in combination with a bio-based driver.  Trying to configure
->> (echoing to cgroupfs file) blk-throttle for a bio-based driver hangs
->> indefinitely in blkg_conf_prep() waiting for bypass mode to end.
->>
->> This patch moves the initial blk_queue_bypass_end() call from
->> blk_init_allocated_queue() to blk_register_queue() which is called for
->> any userland-visible queues regardless of its type.
->>
->> I believe this is correct because I don't think there is any block
->> driver which needs or wants working elevator and blk-cgroup on a queue
->> which isn't visible to userland.  If there are such users, we need a
->> different solution.
->>
->> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> Reported-by: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
->> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> ---
->> Jens, while these are fixes, I think it isn't extremely urgent and
->> routing these through 3.7-rc1 should be enough.
->
-> Agree, I'll shove them into for-3.7/core
->
-> --
-> Jens Axboe
->
+From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Hi,
+Sysctl oom_kill_allocating_task enables or disables killing the OOM-triggering
+task in out-of-memory situations, but it only works on overall system-wide oom.
+But it's also a useful indication in memcg so we take it into consideration
+while oom happening in memcg. Other sysctl such as panic_on_oom has already
+been memcg-ware.
 
-Has this patch been marked for stable?
-This is still currently broken on 3.6.2 (and I would assume other
-stable kernels since 3.5)
 
-Joseph.
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e4e9b18..c329940 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1486,6 +1486,15 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 
+ 	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
+ 	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
++	if (sysctl_oom_kill_allocating_task && current->mm &&
++	    !oom_unkillable_task(current, memcg, NULL) &&
++	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
++		get_task_struct(current);
++		oom_kill_process(current, gfp_mask, order, 0, totalpages, memcg, NULL,
++				 "Memory cgroup out of memory (oom_kill_allocating_task)");
++		return;
++	}
++
+ 	for_each_mem_cgroup_tree(iter, memcg) {
+ 		struct cgroup *cgroup = iter->css.cgroup;
+ 		struct cgroup_iter it;
 -- 
-CTO | Orion Virtualisation Solutions | www.orionvm.com.au
-Phone: 1300 56 99 52 | Mobile: 0428 754 846
+1.7.6.1
