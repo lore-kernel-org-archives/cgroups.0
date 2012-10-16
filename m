@@ -1,98 +1,157 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH] memory cgroup: update root memory cgroup when node is
- onlined
-Date: Tue, 16 Oct 2012 16:21:06 +0900
-Message-ID: <507D0AE2.1020604@jp.fujitsu.com>
-References: <505187D4.7070404@cn.fujitsu.com> <20120913205935.GK1560@cmpxchg.org> <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH v4 06/14] memcg: kmem controller infrastructure
+Date: Tue, 16 Oct 2012 17:00:03 +0900
+Message-ID: <507D1403.2070205@jp.fujitsu.com>
+References: <1349690780-15988-1-git-send-email-glommer@parallels.com> <1349690780-15988-7-git-send-email-glommer@parallels.com> <20121011124212.GC29295@dhcp22.suse.cz> <5077CAAA.3090709@parallels.com> <20121012083944.GD10110@dhcp22.suse.cz> <5077D889.2040100@parallels.com> <20121012085740.GG10110@dhcp22.suse.cz> <5077DF20.7020200@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5077DF20.7020200-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Hugh Dickins <hughd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Wen Congyang <wency@cn.fujitsu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Jiang Liu <liuj97@gmail.com>, mhocko@suse.cz, bsingharora@gmail.com, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@openvz.org>, paul.gortmaker@windriver.com
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-(2012/09/14 10:36), Hugh Dickins wrote:
-> On Thu, 13 Sep 2012, Johannes Weiner wrote:
->> On Thu, Sep 13, 2012 at 03:14:28PM +0800, Wen Congyang wrote:
->>> root_mem_cgroup->info.nodeinfo is initialized when the system boots.
->>> But NODE_DATA(nid) is null if the node is not onlined, so
->>> root_mem_cgroup->info.nodeinfo[nid]->zoneinfo[zone].lruvec.zone contains
->>> an invalid pointer. If we use numactl to bind a program to the node
->>> after onlining the node and its memory, it will cause the kernel
->>> panicked:
+(2012/10/12 18:13), Glauber Costa wrote:
+> On 10/12/2012 12:57 PM, Michal Hocko wrote:
+>> On Fri 12-10-12 12:44:57, Glauber Costa wrote:
+>>> On 10/12/2012 12:39 PM, Michal Hocko wrote:
+>>>> On Fri 12-10-12 11:45:46, Glauber Costa wrote:
+>>>>> On 10/11/2012 04:42 PM, Michal Hocko wrote:
+>>>>>> On Mon 08-10-12 14:06:12, Glauber Costa wrote:
+>>>> [...]
+>>>>>>> +	/*
+>>>>>>> +	 * Conditions under which we can wait for the oom_killer.
+>>>>>>> +	 * __GFP_NORETRY should be masked by __mem_cgroup_try_charge,
+>>>>>>> +	 * but there is no harm in being explicit here
+>>>>>>> +	 */
+>>>>>>> +	may_oom = (gfp & __GFP_WAIT) && !(gfp & __GFP_NORETRY);
+>>>>>>
+>>>>>> Well we _have to_ check __GFP_NORETRY here because if we don't then we
+>>>>>> can end up in OOM. mem_cgroup_do_charge returns CHARGE_NOMEM for
+>>>>>> __GFP_NORETRY (without doing any reclaim) and of oom==true we decrement
+>>>>>> oom retries counter and eventually hit OOM killer. So the comment is
+>>>>>> misleading.
+>>>>>
+>>>>> I will update. What i understood from your last message is that we don't
+>>>>> really need to, because try_charge will do it.
+>>>>
+>>>> IIRC I just said it couldn't happen before because migration doesn't go
+>>>> through charge and thp disable oom by default.
+>>>>
+>>>
+>>> I had it changed to:
+>>>
+>>>          /*
+>>>           * Conditions under which we can wait for the oom_killer.
+>>>           * We have to be able to wait, but also, if we can't retry,
+>>>           * we obviously shouldn't go mess with oom.
+>>>           */
+>>>          may_oom = (gfp & __GFP_WAIT) && !(gfp & __GFP_NORETRY);
 >>
->> Is there any chance we could get rid of the zone backpointer in lruvec
->> again instead?
->
-> It could be done, but it would make me sad :(
->
->> Adding new nodes is a rare event and so updating every
->> single memcg in the system might be just borderline crazy.
->
-> Not horribly crazy, but rather ugly, yes.
->
->> But can't
->> we just go back to passing the zone along with the lruvec down
->> vmscan.c paths?  I agree it's ugly to pass both, given their
->> relationship.  But I don't think the backpointer is any cleaner but in
->> addition less robust.
->
-> It's like how we use vma->mm: we could change everywhere to pass mm with
-> vma, but it looks cleaner and cuts down on long arglists to have mm in vma.
->  From past experience, one of the things I worried about was adding extra
-> args to the reclaim stack.
->
+>> OK
 >>
->> That being said, the crashing code in particular makes me wonder:
+>>>
+>>>>>>> +
+>>>>>>> +	_memcg = memcg;
+>>>>>>> +	ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
+>>>>>>> +				      &_memcg, may_oom);
+>>>>>>> +
+>>>>>>> +	if (!ret) {
+>>>>>>> +		ret = res_counter_charge(&memcg->kmem, size, &fail_res);
+>>>>>>
+>>>>>> Now that I'm thinking about the charging ordering we should charge the
+>>>>>> kmem first because we would like to hit kmem limit before we hit u+k
+>>>>>> limit, don't we.
+>>>>>> Say that you have kmem limit 10M and the total limit 50M. Current `u'
+>>>>>> would be 40M and this charge would cause kmem to hit the `k' limit. I
+>>>>>> think we should fail to charge kmem before we go to u+k and potentially
+>>>>>> reclaim/oom.
+>>>>>> Or has this been alredy discussed and I just do not remember?
+>>>>>>
+>>>>> This has never been discussed as far as I remember. We charged u first
+>>>>> since day0, and you are so far the first one to raise it...
+>>>>>
+>>>>> One of the things in favor of charging 'u' first is that
+>>>>> mem_cgroup_try_charge is already equipped to make a lot of decisions,
+>>>>> like when to allow reclaim, when to bypass charges, and it would be good
+>>>>> if we can reuse all that.
+>>>>
+>>>> Hmm, I think that we should prevent from those decisions if kmem charge
+>>>> would fail anyway (especially now when we do not have targeted slab
+>>>> reclaim).
+>>>>
+>>>
+>>> Let's revisit this discussion when we do have targeted reclaim. For now,
+>>> I'll agree that charging kmem first would be acceptable.
+>>>
+>>> This will only make a difference when K < U anyway.
 >>
->> static __always_inline void add_page_to_lru_list(struct page *page,
->> 				struct lruvec *lruvec, enum lru_list lru)
->> {
->> 	int nr_pages = hpage_nr_pages(page);
->> 	mem_cgroup_update_lru_size(lruvec, lru, nr_pages);
->> 	list_add(&page->lru, &lruvec->lists[lru]);
->> 	__mod_zone_page_state(lruvec_zone(lruvec), NR_LRU_BASE + lru, nr_pages);
->> }
+>> Yes and it should work as advertised (aka hit the k limit first).
 >>
->> Why did we ever pass zone in here and then felt the need to replace it
->> with lruvec->zone in fa9add6 "mm/memcg: apply add/del_page to lruvec"?
->> A page does not roam between zones, its zone is a static property that
->> can be retrieved with page_zone().
+> Just so we don't ping-pong in another submission:
 >
-> Just as in vmscan.c, we have the lruvec to hand, and that's what we
-> mainly want to operate upon, but there is also some need for zone.
+> I changed memcontrol.h's memcg_kmem_newpage_charge to include:
 >
-> (Both Konstantin and I were looking towards the day when we move the
-> lru_lock into the lruvec, removing more dependence on "zone".  Pretty
-> much the only reason that hasn't happened yet, is that we have not found
-> time to make a performance case convincingly - but that's another topic.)
+>          /* If the test is dying, just let it go. */
+>          if (unlikely(test_thread_flag(TIF_MEMDIE)
+>                       || fatal_signal_pending(current)))
+>                  return true;
 >
-> Yes, page_zone(page) is a static property of the page, but it's not
-> necessarily cheap to evaluate: depends on how complex the memory model
-> and the spare page flags space, doesn't it?  We both preferred to
-> derive zone from lruvec where convenient.
 >
-> How do you feel about this patch, and does it work for you guys?
+> I'm also attaching the proposed code in memcontrol.c
 >
-> You'd be right if you guessed that I started out without the
-> mem_cgroup_zone_lruvec part of it, but oops in get_scan_count
-> told me that's needed too.
->
-> Description to be filled in later: would it be needed for -stable,
-> or is onlining already broken in other ways that you're now fixing up?
->
-> Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
-> Signed-off-by: Hugh Dickins <hughd@google.com>
+> +static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
+> +{
+> +	struct res_counter *fail_res;
+> +	struct mem_cgroup *_memcg;
+> +	int ret = 0;
+> +	bool may_oom;
+> +
+> +	ret = res_counter_charge(&memcg->kmem, size, &fail_res);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/*
+> +	 * Conditions under which we can wait for the oom_killer.
+> +	 * We have to be able to wait, but also, if we can't retry,
+> +	 * we obviously shouldn't go mess with oom.
+> +	 */
+> +	may_oom = (gfp & __GFP_WAIT) && !(gfp & __GFP_NORETRY);
+> +
+> +	_memcg = memcg;
+> +	ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
+> +				      &_memcg, may_oom);
+> +
+> +	if (ret == -EINTR)  {
+> +		/*
+> +		 * __mem_cgroup_try_charge() chosed to bypass to root due to
+> +		 * OOM kill or fatal signal.  Since our only options are to
+> +		 * either fail the allocation or charge it to this cgroup, do
+> +		 * it as a temporary condition. But we can't fail. From a
+> +		 * kmem/slab perspective, the cache has already been selected,
+> +		 * by mem_cgroup_get_kmem_cache(), so it is too late to change
+> +		 * our minds. This condition will only trigger if the task
+> +		 * entered memcg_charge_kmem in a sane state, but was
+> +		 * OOM-killed.  during __mem_cgroup_try_charge. Tasks that are
+> +		 * already dying when the allocation triggers should have been
+> +		 * already directed to the root cgroup.
+> +		 */
+> +		res_counter_charge_nofail(&memcg->res, size, &fail_res);
+> +		if (do_swap_account)
+> +			res_counter_charge_nofail(&memcg->memsw, size,
+> +						  &fail_res);
+> +		ret = 0;
+> +	} else if (ret)
+> +		res_counter_uncharge(&memcg->kmem, size);
+> +
+> +	return ret;
+> +}
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+seems ok to me. but we'll need a patch to hide the usage > limit situation from
+users.
 
+Thanks,
+-Kame
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
