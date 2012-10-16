@@ -1,43 +1,79 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v4 08/14] res_counter: return amount of charges after
- res_counter_uncharge
-Date: Tue, 16 Oct 2012 17:20:34 +0900
-Message-ID: <507D18D2.5020707@jp.fujitsu.com>
-References: <1349690780-15988-1-git-send-email-glommer@parallels.com> <1349690780-15988-9-git-send-email-glommer@parallels.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v4 09/14] memcg: kmem accounting lifecycle management
+Date: Tue, 16 Oct 2012 17:41:32 +0900
+Message-ID: <507D1DBC.8030805@jp.fujitsu.com>
+References: <1349690780-15988-1-git-send-email-glommer@parallels.com> <1349690780-15988-10-git-send-email-glommer@parallels.com> <20121011131143.GF29295@dhcp22.suse.cz> <5077CB05.907@parallels.com> <20121012084100.GE10110@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1349690780-15988-9-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20121012084100.GE10110@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Glauber Costa <glommer@parallels.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, Suleiman Souhlal <suleiman@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, devel@openvz.org, Frederic Weisbecker <fweisbec@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
 
-(2012/10/08 19:06), Glauber Costa wrote:
-> It is useful to know how many charges are still left after a call to
-> res_counter_uncharge. While it is possible to issue a res_counter_read
-> after uncharge, this can be racy.
-> 
-> If we need, for instance, to take some action when the counters drop
-> down to 0, only one of the callers should see it. This is the same
-> semantics as the atomic variables in the kernel.
-> 
-> Since the current return value is void, we don't need to worry about
-> anything breaking due to this change: nobody relied on that, and only
-> users appearing from now on will be checking this value.
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> ---
->   Documentation/cgroups/resource_counter.txt |  7 ++++---
->   include/linux/res_counter.h                | 12 +++++++-----
->   kernel/res_counter.c                       | 20 +++++++++++++-------
->   3 files changed, 24 insertions(+), 15 deletions(-)
+(2012/10/12 17:41), Michal Hocko wrote:
+> On Fri 12-10-12 11:47:17, Glauber Costa wrote:
+>> On 10/11/2012 05:11 PM, Michal Hocko wrote:
+>>> On Mon 08-10-12 14:06:15, Glauber Costa wrote:
+>>>> Because kmem charges can outlive the cgroup, we need to make sure that
+>>>> we won't free the memcg structure while charges are still in flight.
+>>>> For reviewing simplicity, the charge functions will issue
+>>>> mem_cgroup_get() at every charge, and mem_cgroup_put() at every
+>>>> uncharge.
+>>>>
+>>>> This can get expensive, however, and we can do better. mem_cgroup_get()
+>>>> only really needs to be issued once: when the first limit is set. In the
+>>>> same spirit, we only need to issue mem_cgroup_put() when the last charge
+>>>> is gone.
+>>>>
+>>>> We'll need an extra bit in kmem_accounted for that: KMEM_ACCOUNTED_DEAD.
+>>>> it will be set when the cgroup dies, if there are charges in the group.
+>>>> If there aren't, we can proceed right away.
+>>>>
+>>>> Our uncharge function will have to test that bit every time the charges
+>>>> drop to 0. Because that is not the likely output of
+>>>> res_counter_uncharge, this should not impose a big hit on us: it is
+>>>> certainly much better than a reference count decrease at every
+>>>> operation.
+>>>>
+>>>> [ v3: merged all lifecycle related patches in one ]
+>>>>
+>>>> Signed-off-by: Glauber Costa <glommer@parallels.com>
+>>>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>>>> CC: Christoph Lameter <cl@linux.com>
+>>>> CC: Pekka Enberg <penberg@cs.helsinki.fi>
+>>>> CC: Michal Hocko <mhocko@suse.cz>
+>>>> CC: Johannes Weiner <hannes@cmpxchg.org>
+>>>> CC: Suleiman Souhlal <suleiman@google.com>
+>>>
+>>> OK, I like the optimization. I have just one comment to the
+>>> memcg_kmem_dead naming but other than that
+>>>
+>>> Acked-by: Michal Hocko <mhocko@suse.cz>
+>>>
+>>> [...]
+>>>> +static bool memcg_kmem_dead(struct mem_cgroup *memcg)
+>>>
+>>> The name is tricky because it doesn't tell you that it clears the flag
+>>> which made me scratch my head when reading comment in kmem_cgroup_destroy
+>>>
+>> memcg_kmem_finally_kill_that_bastard() ?
+>
+> memcg_kmem_test_and_clear_dead? I know long but at least clear that the
+> flag is cleared. Or just open code it.
+>
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+I agree. Ack by me with that naming.
+
+Thanks,
+-Kame
 
 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
