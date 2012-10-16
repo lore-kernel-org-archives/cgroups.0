@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v5 01/14] memcg: Make it possible to use the stock for more than one page.
-Date: Tue, 16 Oct 2012 14:16:38 +0400
-Message-ID: <1350382611-20579-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH v5 08/14] res_counter: return amount of charges after res_counter_uncharge
+Date: Tue, 16 Oct 2012 14:16:45 +0400
+Message-ID: <1350382611-20579-9-git-send-email-glommer@parallels.com>
 References: <1350382611-20579-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1350382611-20579-1-git-send-email-glommer@parallels.com>
@@ -11,90 +11,134 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Suleiman Souhlal <suleiman@google.com>, Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Glauber Costa <glommer@parallels.com>, Suleiman Souhlal <suleiman@google.com>
 
-From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+It is useful to know how many charges are still left after a call to
+res_counter_uncharge. While it is possible to issue a res_counter_read
+after uncharge, this can be racy.
 
-We currently have a percpu stock cache scheme that charges one page at a
-time from memcg->res, the user counter. When the kernel memory
-controller comes into play, we'll need to charge more than that.
+If we need, for instance, to take some action when the counters drop
+down to 0, only one of the callers should see it. This is the same
+semantics as the atomic variables in the kernel.
 
-This is because kernel memory allocations will also draw from the user
-counter, and can be bigger than a single page, as it is the case with
-the stack (usually 2 pages) or some higher order slabs.
+Since the current return value is void, we don't need to worry about
+anything breaking due to this change: nobody relied on that, and only
+users appearing from now on will be checking this value.
 
-[ glommer@parallels.com: added a changelog ]
-
-Signed-off-by: Suleiman Souhlal <suleiman@google.com>
 Signed-off-by: Glauber Costa <glommer@parallels.com>
-Acked-by: David Rientjes <rientjes@google.com>
+Reviewed-by: Michal Hocko <mhocko@suse.cz>
 Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+CC: Johannes Weiner <hannes@cmpxchg.org>
+CC: Suleiman Souhlal <suleiman@google.com>
 CC: Tejun Heo <tj@kernel.org>
 ---
- mm/memcontrol.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ Documentation/cgroups/resource_counter.txt |  7 ++++---
+ include/linux/res_counter.h                | 12 +++++++-----
+ kernel/res_counter.c                       | 20 +++++++++++++-------
+ 3 files changed, 24 insertions(+), 15 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7acf43b..47cb019 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2028,20 +2028,28 @@ struct memcg_stock_pcp {
- static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
- static DEFINE_MUTEX(percpu_charge_mutex);
+diff --git a/Documentation/cgroups/resource_counter.txt b/Documentation/cgroups/resource_counter.txt
+index 0c4a344..c4d99ed 100644
+--- a/Documentation/cgroups/resource_counter.txt
++++ b/Documentation/cgroups/resource_counter.txt
+@@ -83,16 +83,17 @@ to work with it.
+ 	res_counter->lock internally (it must be called with res_counter->lock
+ 	held). The force parameter indicates whether we can bypass the limit.
  
--/*
-- * Try to consume stocked charge on this cpu. If success, one page is consumed
-- * from local stock and true is returned. If the stock is 0 or charges from a
-- * cgroup which is not current target, returns false. This stock will be
-- * refilled.
-+/**
-+ * consume_stock: Try to consume stocked charge on this cpu.
-+ * @memcg: memcg to consume from.
-+ * @nr_pages: how many pages to charge.
+- e. void res_counter_uncharge[_locked]
++ e. u64 res_counter_uncharge[_locked]
+ 			(struct res_counter *rc, unsigned long val)
+ 
+ 	When a resource is released (freed) it should be de-accounted
+ 	from the resource counter it was accounted to.  This is called
+-	"uncharging".
++	"uncharging". The return value of this function indicate the amount
++	of charges still present in the counter.
+ 
+ 	The _locked routines imply that the res_counter->lock is taken.
+ 
+- f. void res_counter_uncharge_until
++ f. u64 res_counter_uncharge_until
+ 		(struct res_counter *rc, struct res_counter *top,
+ 		 unsinged long val)
+ 
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+index 7d7fbe2..4b173b6 100644
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -130,14 +130,16 @@ int res_counter_charge_nofail(struct res_counter *counter,
+  *
+  * these calls check for usage underflow and show a warning on the console
+  * _locked call expects the counter->lock to be taken
 + *
-+ * The charges will only happen if @memcg matches the current cpu's memcg
-+ * stock, and at least @nr_pages are available in that stock.  Failure to
-+ * service an allocation will refill the stock.
-+ *
-+ * returns true if succesfull, false otherwise.
++ * returns the total charges still present in @counter.
   */
--static bool consume_stock(struct mem_cgroup *memcg)
-+static bool consume_stock(struct mem_cgroup *memcg, int nr_pages)
- {
- 	struct memcg_stock_pcp *stock;
- 	bool ret = true;
  
-+	if (nr_pages > CHARGE_BATCH)
-+		return false;
-+
- 	stock = &get_cpu_var(memcg_stock);
--	if (memcg == stock->cached && stock->nr_pages)
--		stock->nr_pages--;
-+	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
-+		stock->nr_pages -= nr_pages;
- 	else /* need to call res_counter_charge */
- 		ret = false;
- 	put_cpu_var(memcg_stock);
-@@ -2340,7 +2348,7 @@ again:
- 		VM_BUG_ON(css_is_removed(&memcg->css));
- 		if (mem_cgroup_is_root(memcg))
- 			goto done;
--		if (nr_pages == 1 && consume_stock(memcg))
-+		if (consume_stock(memcg, nr_pages))
- 			goto done;
- 		css_get(&memcg->css);
- 	} else {
-@@ -2365,7 +2373,7 @@ again:
- 			rcu_read_unlock();
- 			goto done;
- 		}
--		if (nr_pages == 1 && consume_stock(memcg)) {
-+		if (consume_stock(memcg, nr_pages)) {
- 			/*
- 			 * It seems dagerous to access memcg without css_get().
- 			 * But considering how consume_stok works, it's not
+-void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+-void res_counter_uncharge(struct res_counter *counter, unsigned long val);
++u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
++u64 res_counter_uncharge(struct res_counter *counter, unsigned long val);
+ 
+-void res_counter_uncharge_until(struct res_counter *counter,
+-				struct res_counter *top,
+-				unsigned long val);
++u64 res_counter_uncharge_until(struct res_counter *counter,
++			       struct res_counter *top,
++			       unsigned long val);
+ /**
+  * res_counter_margin - calculate chargeable space of a counter
+  * @cnt: the counter
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index ad581aa..7b3d6dc 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -86,33 +86,39 @@ int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
+ 	return __res_counter_charge(counter, val, limit_fail_at, true);
+ }
+ 
+-void res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
++u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
+ {
+ 	if (WARN_ON(counter->usage < val))
+ 		val = counter->usage;
+ 
+ 	counter->usage -= val;
++	return counter->usage;
+ }
+ 
+-void res_counter_uncharge_until(struct res_counter *counter,
+-				struct res_counter *top,
+-				unsigned long val)
++u64 res_counter_uncharge_until(struct res_counter *counter,
++			       struct res_counter *top,
++			       unsigned long val)
+ {
+ 	unsigned long flags;
+ 	struct res_counter *c;
++	u64 ret = 0;
+ 
+ 	local_irq_save(flags);
+ 	for (c = counter; c != top; c = c->parent) {
++		u64 r;
+ 		spin_lock(&c->lock);
+-		res_counter_uncharge_locked(c, val);
++		r = res_counter_uncharge_locked(c, val);
++		if (c == counter)
++			ret = r;
+ 		spin_unlock(&c->lock);
+ 	}
+ 	local_irq_restore(flags);
++	return ret;
+ }
+ 
+-void res_counter_uncharge(struct res_counter *counter, unsigned long val)
++u64 res_counter_uncharge(struct res_counter *counter, unsigned long val)
+ {
+-	res_counter_uncharge_until(counter, NULL, val);
++	return res_counter_uncharge_until(counter, NULL, val);
+ }
+ 
+ static inline unsigned long long *
 -- 
 1.7.11.7
 
