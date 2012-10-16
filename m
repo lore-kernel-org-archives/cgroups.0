@@ -1,24 +1,95 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v5 14/14] Add documentation about the kmem controller
-Date: Tue, 16 Oct 2012 19:30:23 +0000
-Message-ID: <0000013a6b0e332a-81258f37-814f-4b7e-8b95-193ecb9d7b9d-000000@email.amazonses.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-15-git-send-email-glommer@parallels.com> <0000013a6ad26c73-d043cf97-c44a-45c1-9cae-0a962e93a005-000000@email.amazonses.com> <507DAF56.9010403@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: Is not locking task_lock in cgroup_fork() safe?
+Date: Tue, 16 Oct 2012 12:33:41 -0700
+Message-ID: <20121016193341.GD16166@google.com>
+References: <20121008020000.GB2575@localhost>
+	<CAFTL4hzXWtzp7megsCAEuak5=_2SWmp9age-+wrpyQAU4BRZ0w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <507DAF56.9010403-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=VxYrnZIPvGwPD1TM3Gq7AUSYOLNBloShm8SmkfLzyYM=;
+	b=SyPyb7tqtUklCAnD8DRQx3A9vMJTeIOwIcGSyhFKUxSV1yrvwUfQpRzdTYTkls1EV0
+	ha1Ks1YN5V1eL2WNOtx6tDxKhwPN8xzetlxMsEcrWW9vVag8bp+A9q45DKNg74jFBv6X
+	V0ULrRqTVt9GAr1WddlttNc/b/yywoIFwhKUVgRS6rcmMAgkrMjmbpDk8m9TzlGlMS20
+	B2DMykMJrROIoX7t5DfwdhL8290AFaaE9qlr1GPOeAm8L9d4XM/K79HN/g4Zt2FiTD92
+	emIvnkmqq0pDiGeHympMkUZPbcHsbMptzDnndqgQ+xMZv92ANjunZWSUxM5+wLLAxKQv
+	gcxw==
+Content-Disposition: inline
+In-Reply-To: <CAFTL4hzXWtzp7megsCAEuak5=_2SWmp9age-+wrpyQAU4BRZ0w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Tue, 16 Oct 2012, Glauber Costa wrote:
+Hey, Frederic.
 
-> A limitation of kernel memory use would be good, for example, to prevent
-> abuse from non-trusted containers in a high density, shared, container
-> environment.
+On Mon, Oct 08, 2012 at 02:48:58PM +0200, Frederic Weisbecker wrote:
+> Yeah I missed this one.
+> Now the whole cgroup_attach_task() is clusteracy without the
 
-But that would be against intentional abuse by someone who has code that
-causes the kernel to use a lot of memory on its behalf. We already need
-protection from that without memcg.
+Clusteracy?
+
+> threadgroup lock anyway:
+> 
+> * The PF_EXITING check is racy (we are neither holding tsk->flags nor
+> threagroup lock).
+
+PF_EXITING is *always* protected by threadgroup_change_begin/end().
+
+> * The cgrp == oldcgrp is racy (exit() can change the oldcgrp anytime.
+
+So, as long as this happens after PF_EXITING check, it should be safe.
+
+> * can_attach / attach / cancel_attach can race against fork/exit (and
+> post_fork if you consider those interested in cgroup task link like
+> the freezer. But that is racy in any case already even with
+> threadgroup lock)
+
+Against exit, no.  Against forking a new process, can they?  If so, we
+need to fix it.
+
+> It has been designed to be called under that lock. So I suspect the
+
+Ummm.... threadgroup_lock is a recent addition so things couldn't have
+been designed to be called under that lock.  threadgroup_lock protects
+the *threadgroup* - creating a new task in the same process or a task
+of the process exiting.  It doesn't do anything about other processes.
+In fact, the lock itself is per-process.
+
+> best, at least for now, is to threadgroup lock from
+> cgroup_attach_task_all(). And also make cgroup_attach_task() static to
+> avoid future unsafe callers.
+
+Oh, from that call path, sure.  Can someone teach me why we need that
+one at all?  I think we're confusing each other here.  I was talking
+about the usual migration path not protected against forking a new
+process.
+
+> There is no harm yet because the only user of it calls that with
+> current as the "task" parameter, in a place that is
+> not in the middle of a fork. So no need to worry about some stable backport.
+> 
+> Also, looking at cgroup_attach_task_all(), what guarantee do we have
+> that "from" is not concurrently exiting and removing its cgrp. Which
+> is a separate problem. But we probably need to do some css_set_get()
+> before playing with it.
+
+I really don't know.  Why isn't it locking the threadgroup to begin
+with?
+
+Thanks.
+
+-- 
+tejun
