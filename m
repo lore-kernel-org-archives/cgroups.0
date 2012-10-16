@@ -1,54 +1,64 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] oom, memcg: handle sysctl oom_kill_allocating_task while
- memcg oom happening
-Date: Tue, 16 Oct 2012 11:44:24 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1210161142390.2910@chino.kir.corp.google.com>
-References: <1350382328-28977-1-git-send-email-handai.szj@taobao.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 07/14] mm: Allocate kernel pages to the right memcg
+Date: Tue, 16 Oct 2012 22:55:30 +0400
+Message-ID: <507DADA2.2040308@parallels.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-8-git-send-email-glommer@parallels.com> <0000013a6a333867-52b0d904-5ca2-4095-8c46-5a4dfc021cde-000000@email.amazonses.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=J98pmGPNEyHmNLNRpdvTvWrg4wEjK7nhqAAsLT3Skrw=;
-        b=LgW0P64awiX2VGpLE/wxfl/Lc8WrpR7A75SxGvgAbZIjNukfZbfGoyG83YwwjIViq0
-         K+kvdBSNkiXF9nz0oY2tzCMtwfY9oYJDRviQkr3kshCy656fFXih18dYmDG/FZOoEEGu
-         VZ42znqRXIKVQ+PaDw9b+oPMhQ+FEazbE2zTLRr8SQ31uzWlzkYOCstvszfxIbou0LQm
-         HaN3gDJ3iR4zksSD+WjBni9LIQBoOOHFxSQ7H3iu6EnIdz/NDU5GO11fVb4z9lzI55FF
-         5d38NDhaS1tJMdrY2bm+13zdO4vK7J2aEe9BsB6RC+X8j2D4GSydKBJOhPhQWDN2/jv1
-         Glyw==
-In-Reply-To: <1350382328-28977-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <0000013a6a333867-52b0d904-5ca2-4095-8c46-5a4dfc021cde-000000-p/GC64/jrecnJqMo6gzdpkEOCMrvLtNR@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, 16 Oct 2012, Sha Zhengju wrote:
+On 10/16/2012 07:31 PM, Christoph Lameter wrote:
+> On Tue, 16 Oct 2012, Glauber Costa wrote:
+> 
+>> To avoid adding markers to the page - and a kmem flag that would
+>> necessarily follow, as much as doing page_cgroup lookups for no reason,
+>> whoever is marking its allocations with __GFP_KMEMCG flag is responsible
+>> for telling the page allocator that this is such an allocation at
+>> free_pages() time. This is done by the invocation of
+>> __free_accounted_pages() and free_accounted_pages().
+> 
+> Hmmm... The code paths to free pages are often shared between multiple
+> subsystems. Are you sure that this is actually working and accurately
+> tracks the MEMCG pages?
+> 
 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e4e9b18..c329940 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1486,6 +1486,15 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  
->  	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
->  	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
-> +	if (sysctl_oom_kill_allocating_task && current->mm &&
-> +	    !oom_unkillable_task(current, memcg, NULL) &&
-> +	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
-> +		get_task_struct(current);
-> +		oom_kill_process(current, gfp_mask, order, 0, totalpages, memcg, NULL,
-> +				 "Memory cgroup out of memory (oom_kill_allocating_task)");
-> +		return;
-> +	}
-> +
->  	for_each_mem_cgroup_tree(iter, memcg) {
->  		struct cgroup *cgroup = iter->css.cgroup;
->  		struct cgroup_iter it;
+As described above, only call sites that are switched to
+free_accounted_pages are affected. There are very few of them. The stack
+case is particularly easy to test: every time a process appears, usage
+is increased in 8k. Every time a process dies, usage decreases by 8k.
 
-Please try to compile your patches and run scripts/checkpatch.pl on them 
-before proposing them.
+In my other patchseries, I include the object allocators into this. So
+again: there are very few call sites actually being patched.
 
-You'll also need to update Documentation/sysctl/vm.txt.
+
+>> +/*
+>> + * __free_accounted_pages and free_accounted_pages will free pages allocated
+>> + * with __GFP_KMEMCG.
+>> + *
+>> + * Those pages are accounted to a particular memcg, embedded in the
+>> + * corresponding page_cgroup. To avoid adding a hit in the allocator to search
+>> + * for that information only to find out that it is NULL for users who have no
+>> + * interest in that whatsoever, we provide these functions.
+>> + *
+>> + * The caller knows better which flags it relies on.
+>> + */
+>> +void __free_accounted_pages(struct page *page, unsigned int order)
+>> +{
+>> +	memcg_kmem_uncharge_page(page, order);
+>> +	__free_pages(page, order);
+>> +}
+> 
+> If we already are introducing such an API: Could it not be made more
+> general so that it can also be used in the future to communicate other
+> characteristics of a page on free?
+> 
+
+I guess so. Which other use case do you have in mind?
+In any case, I don't see this as a blocker to this patchset. There is no
+reason why it can't be done should the need arise.
