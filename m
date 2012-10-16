@@ -1,59 +1,117 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] oom, memcg: handle sysctl oom_kill_allocating_task while memcg oom happening
-Date: Tue, 16 Oct 2012 18:12:08 +0800
-Message-ID: <1350382328-28977-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=GHLB8klPPOWpjeK2oSOjYbVy9ePFeuoRG9oKBZEQLA8=;
-        b=LUd7ebOHQFWmCOHudT/YvFfpxm/jvUY+N7i4nKvyoHghOBxCbLRoVf3l5NhCxim2em
-         LU2i8fYBzoNnlxFQDCBI2+VoZNe5AkAIgHz9WmrdokS73CeveGmDDRhXYJfN4Jv6uDr9
-         fuT5taoHkKSMZXPkmkJNKzx8oJKPbc/93GOlw6huVOwsDAWu6vIfdAquk4H2XpzdfgVz
-         lu08EbmuYv9Anf+pVltxoh9RzTk+Kfk4bWQSZb54tN45yX7/KcqZn0rmXhmC3EV1wxJN
-         mrAwXaGlZmchZh8nq+rPSEhh75ywNWql3pb1UFrulVFS73aboidsWpXOkbJH2NL6ZQpt
-         5swQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v5 03/14] memcg: change defines to an enum
+Date: Tue, 16 Oct 2012 14:16:40 +0400
+Message-ID: <1350382611-20579-4-git-send-email-glommer@parallels.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1350382611-20579-1-git-send-email-glommer@parallels.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Glauber Costa <glommer@parallels.com>
 
-From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+This is just a cleanup patch for clarity of expression.  In earlier
+submissions, people asked it to be in a separate patch, so here it is.
 
-Sysctl oom_kill_allocating_task enables or disables killing the OOM-triggering
-task in out-of-memory situations, but it only works on overall system-wide oom.
-But it's also a useful indication in memcg so we take it into consideration
-while oom happening in memcg. Other sysctl such as panic_on_oom has already
-been memcg-ware.
+[ v2: use named enum as type throughout the file as well ]
 
-
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+CC: Tejun Heo <tj@kernel.org>
 ---
- mm/memcontrol.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ mm/memcontrol.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e4e9b18..c329940 100644
+index 7a9652a..71d259e 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1486,6 +1486,15 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+@@ -386,9 +386,12 @@ enum charge_type {
+ };
  
- 	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
- 	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
-+	if (sysctl_oom_kill_allocating_task && current->mm &&
-+	    !oom_unkillable_task(current, memcg, NULL) &&
-+	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
-+		get_task_struct(current);
-+		oom_kill_process(current, gfp_mask, order, 0, totalpages, memcg, NULL,
-+				 "Memory cgroup out of memory (oom_kill_allocating_task)");
-+		return;
-+	}
+ /* for encoding cft->private value on file */
+-#define _MEM			(0)
+-#define _MEMSWAP		(1)
+-#define _OOM_TYPE		(2)
++enum res_type {
++	_MEM,
++	_MEMSWAP,
++	_OOM_TYPE,
++};
 +
- 	for_each_mem_cgroup_tree(iter, memcg) {
- 		struct cgroup *cgroup = iter->css.cgroup;
- 		struct cgroup_iter it;
+ #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
+ #define MEMFILE_TYPE(val)	((val) >> 16 & 0xffff)
+ #define MEMFILE_ATTR(val)	((val) & 0xffff)
+@@ -3915,7 +3918,8 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 	char str[64];
+ 	u64 val;
+-	int type, name, len;
++	int name, len;
++	enum res_type type;
+ 
+ 	type = MEMFILE_TYPE(cft->private);
+ 	name = MEMFILE_ATTR(cft->private);
+@@ -3951,7 +3955,8 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 			    const char *buffer)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int type, name;
++	enum res_type type;
++	int name;
+ 	unsigned long long val;
+ 	int ret;
+ 
+@@ -4027,7 +4032,8 @@ out:
+ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int type, name;
++	int name;
++	enum res_type type;
+ 
+ 	type = MEMFILE_TYPE(event);
+ 	name = MEMFILE_ATTR(event);
+@@ -4363,7 +4369,7 @@ static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 	u64 threshold, usage;
+ 	int i, size, ret;
+ 
+@@ -4446,7 +4452,7 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 	u64 usage;
+ 	int i, j, size;
+ 
+@@ -4524,7 +4530,7 @@ static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_eventfd_list *event;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 
+ 	BUG_ON(type != _OOM_TYPE);
+ 	event = kmalloc(sizeof(*event),	GFP_KERNEL);
+@@ -4549,7 +4555,7 @@ static void mem_cgroup_oom_unregister_event(struct cgroup *cgrp,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+ 	struct mem_cgroup_eventfd_list *ev, *tmp;
+-	int type = MEMFILE_TYPE(cft->private);
++	enum res_type type = MEMFILE_TYPE(cft->private);
+ 
+ 	BUG_ON(type != _OOM_TYPE);
+ 
 -- 
-1.7.6.1
+1.7.11.7
