@@ -1,98 +1,81 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v4 10/14] memcg: use static branches when code not in
- use
-Date: Tue, 16 Oct 2012 17:48:29 +0900
-Message-ID: <507D1F5D.8080709@jp.fujitsu.com>
-References: <1349690780-15988-1-git-send-email-glommer@parallels.com> <1349690780-15988-11-git-send-email-glommer@parallels.com> <20121011134028.GH29295@dhcp22.suse.cz> <5077CB29.2000505@parallels.com>
+From: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
+Subject: Re: [PATCH 1/2] block: lift the initial queue bypass mode on
+ blk_register_queue() instead of blk_init_allocated_queue()
+Date: Tue, 16 Oct 2012 21:00:30 +1100
+Message-ID: <CAOzFzEiCWazLEfjo=w8c+7qCce98Q6faW1uwGm-tRmCNPJUztw@mail.gmail.com>
+References: <CAOzFzEhf2LfT0BCNPAgPgxZ3=pj2KvJ4Z6kP7XF8nnxag1dfvg@mail.gmail.com>
+	<CAOzFzEiC4313K4H9393ffzNyBo398BPYSxTk7ZEmuH4GfW5qtw@mail.gmail.com>
+	<CAOzFzEhWk_7oQFOyW6Ri_9Cvsshj2s3pa=Oo-p8uL6r340MoTw@mail.gmail.com>
+	<20120919194231.GF31860@redhat.com>
+	<20120920183153.GI28934@google.com>
+	<20120920184219.GH4681@redhat.com>
+	<20120920191716.GI4681@redhat.com>
+	<20120920192038.GJ28934@google.com>
+	<20120920195759.GK4681@redhat.com>
+	<20120920201815.GB7264@google.com>
+	<20120920210852.GC7264@google.com>
+	<505C6AD4.6030206@kernel.dk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <5077CB29.2000505@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <505C6AD4.6030206-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, Suleiman Souhlal <suleiman@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, devel@openvz.org, Frederic Weisbecker <fweisbec@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-(2012/10/12 16:47), Glauber Costa wrote:
-> On 10/11/2012 05:40 PM, Michal Hocko wrote:
->> On Mon 08-10-12 14:06:16, Glauber Costa wrote:
->>> We can use static branches to patch the code in or out when not used.
->>>
->>> Because the _ACTIVE bit on kmem_accounted is only set after the
->>> increment is done, we guarantee that the root memcg will always be
->>> selected for kmem charges until all call sites are patched (see
->>> memcg_kmem_enabled).  This guarantees that no mischarges are applied.
->>>
->>> static branch decrement happens when the last reference count from the
->>> kmem accounting in memcg dies. This will only happen when the charges
->>> drop down to 0.
->>>
->>> When that happen, we need to disable the static branch only on those
->>> memcgs that enabled it. To achieve this, we would be forced to
->>> complicate the code by keeping track of which memcgs were the ones
->>> that actually enabled limits, and which ones got it from its parents.
->>>
->>> It is a lot simpler just to do static_key_slow_inc() on every child
->>> that is accounted.
->>>
->>> [ v4: adapted this patch to the changes in kmem_accounted ]
->>>
->>> Signed-off-by: Glauber Costa <glommer@parallels.com>
->>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
->>> CC: Christoph Lameter <cl@linux.com>
->>> CC: Pekka Enberg <penberg@cs.helsinki.fi>
->>> CC: Michal Hocko <mhocko@suse.cz>
->>> CC: Johannes Weiner <hannes@cmpxchg.org>
->>> CC: Suleiman Souhlal <suleiman@google.com>
+On 21 September 2012 23:25, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
+> On 09/20/2012 11:08 PM, Tejun Heo wrote:
+>> b82d4b197c ("blkcg: make request_queue bypassing on allocation") made
+>> request_queues bypassed on allocation to avoid switching on and off
+>> bypass mode on a queue being initialized.  Some drivers allocate and
+>> then destroy a lot of queues without fully initializing them and
+>> incurring bypass latency overhead on each of them could add upto
+>> significant overhead.
 >>
->> Looks reasonable to me
->> Acked-by: Michal Hocko <mhocko@suse.cz>
+>> Unfortunately, blk_init_allocated_queue() is never used by queues of
+>> bio-based drivers, which means that all bio-based driver queues are in
+>> bypass mode even after initialization and registration complete
+>> successfully.
 >>
->> Just a little nit.
+>> Due to the limited way request_queues are used by bio drivers, this
+>> problem is hidden pretty well but it shows up when blk-throttle is
+>> used in combination with a bio-based driver.  Trying to configure
+>> (echoing to cgroupfs file) blk-throttle for a bio-based driver hangs
+>> indefinitely in blkg_conf_prep() waiting for bypass mode to end.
 >>
->> [...]
+>> This patch moves the initial blk_queue_bypass_end() call from
+>> blk_init_allocated_queue() to blk_register_queue() which is called for
+>> any userland-visible queues regardless of its type.
 >>
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index 634c7b5..724a08b 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -344,11 +344,15 @@ struct mem_cgroup {
->>>   /* internal only representation about the status of kmem accounting. */
->>>   enum {
->>>   	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
->>> +	KMEM_ACCOUNTED_ACTIVATED, /* static key enabled. */
->>>   	KMEM_ACCOUNTED_DEAD, /* dead memcg, pending kmem charges */
->>>   };
->>>
->>> -/* first bit */
->>> -#define KMEM_ACCOUNTED_MASK 0x1
->>> +/*
->>> + * first two bits. We account when limit is on, but only after
->>> + * call sites are patched
->>> + */
->>> +#define KMEM_ACCOUNTED_MASK 0x3
+>> I believe this is correct because I don't think there is any block
+>> driver which needs or wants working elevator and blk-cgroup on a queue
+>> which isn't visible to userland.  If there are such users, we need a
+>> different solution.
 >>
->> The names are long but why not use KMEM_ACCOUNTED_ACTIVE*
->> #define KMEM_ACCOUNTED_MASK 1<<KMEM_ACCOUNTED_ACTIVE | 1<<KMEM_ACCOUNTED_ACTIVATED
->>
-> Because the names are long! =)
+>> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>> Reported-by: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
+>> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> ---
+>> Jens, while these are fixes, I think it isn't extremely urgent and
+>> routing these through 3.7-rc1 should be enough.
+>
+> Agree, I'll shove them into for-3.7/core
+>
+> --
+> Jens Axboe
 >
 
-please use "long" macros ;) it's not bad.
+Hi,
 
-Anyway,
+Has this patch been marked for stable?
+This is still currently broken on 3.6.2 (and I would assume other
+stable kernels since 3.5)
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Joseph.
 
-
-
-
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+CTO | Orion Virtualisation Solutions | www.orionvm.com.au
+Phone: 1300 56 99 52 | Mobile: 0428 754 846
