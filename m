@@ -1,81 +1,48 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] oom, memcg: handle sysctl oom_kill_allocating_task while
- memcg oom happening
-Date: Tue, 16 Oct 2012 15:34:39 +0200
-Message-ID: <20121016133439.GI13991@dhcp22.suse.cz>
-References: <1350382328-28977-1-git-send-email-handai.szj@taobao.com>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v5 07/14] mm: Allocate kernel pages to the right memcg
+Date: Tue, 16 Oct 2012 15:31:13 +0000
+Message-ID: <0000013a6a333867-52b0d904-5ca2-4095-8c46-5a4dfc021cde-000000@email.amazonses.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-8-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1350382328-28977-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1350382611-20579-8-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue 16-10-12 18:12:08, Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-> 
-> Sysctl oom_kill_allocating_task enables or disables killing the OOM-triggering
-> task in out-of-memory situations, but it only works on overall system-wide oom.
-> But it's also a useful indication in memcg so we take it into consideration
-> while oom happening in memcg. Other sysctl such as panic_on_oom has already
-> been memcg-ware.
+On Tue, 16 Oct 2012, Glauber Costa wrote:
 
-Could you be more specific about the motivation for this patch? Is it
-"let's be consistent with the global oom" or you have a real use case
-for this knob.
+> To avoid adding markers to the page - and a kmem flag that would
+> necessarily follow, as much as doing page_cgroup lookups for no reason,
+> whoever is marking its allocations with __GFP_KMEMCG flag is responsible
+> for telling the page allocator that this is such an allocation at
+> free_pages() time. This is done by the invocation of
+> __free_accounted_pages() and free_accounted_pages().
 
-The primary motivation for oom_kill_allocating_task AFAIU was to reduce
-search over huge tasklists and reduce task_lock holding times. I am not
-sure whether the original concern is still valid since 6b0c81b (mm,
-oom: reduce dependency on tasklist_lock) as the tasklist_lock usage has
-been reduced conciderably in favor of RCU read locks is taken but maybe
-even that can be too disruptive?
-David?
+Hmmm... The code paths to free pages are often shared between multiple
+subsystems. Are you sure that this is actually working and accurately
+tracks the MEMCG pages?
 
-Moreover memcg oom killer doesn't iterate over tasklist (it uses
-cgroup_iter*) so this shouldn't cause the performance problem like
-for the global case.
-On the other hand we are taking css_set_lock for reading for the whole
-iteration which might cause some issues as well but those should better
-be described in the changelog.
+> +/*
+> + * __free_accounted_pages and free_accounted_pages will free pages allocated
+> + * with __GFP_KMEMCG.
+> + *
+> + * Those pages are accounted to a particular memcg, embedded in the
+> + * corresponding page_cgroup. To avoid adding a hit in the allocator to search
+> + * for that information only to find out that it is NULL for users who have no
+> + * interest in that whatsoever, we provide these functions.
+> + *
+> + * The caller knows better which flags it relies on.
+> + */
+> +void __free_accounted_pages(struct page *page, unsigned int order)
+> +{
+> +	memcg_kmem_uncharge_page(page, order);
+> +	__free_pages(page, order);
+> +}
 
-> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e4e9b18..c329940 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1486,6 +1486,15 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  
->  	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
->  	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
-> +	if (sysctl_oom_kill_allocating_task && current->mm &&
-> +	    !oom_unkillable_task(current, memcg, NULL) &&
-> +	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
-> +		get_task_struct(current);
-> +		oom_kill_process(current, gfp_mask, order, 0, totalpages, memcg, NULL,
-> +				 "Memory cgroup out of memory (oom_kill_allocating_task)");
-> +		return;
-> +	}
-> +
->  	for_each_mem_cgroup_tree(iter, memcg) {
->  		struct cgroup *cgroup = iter->css.cgroup;
->  		struct cgroup_iter it;
-> -- 
-> 1.7.6.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Michal Hocko
-SUSE Labs
+If we already are introducing such an API: Could it not be made more
+general so that it can also be used in the future to communicate other
+characteristics of a page on free?
