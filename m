@@ -1,171 +1,144 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/7] cgroup_freezer: make it official that writes to
-	freezer.state don't fail
-Date: Tue, 16 Oct 2012 15:28:42 -0700
-Message-ID: <1350426526-14254-4-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 5/7] cgroup_freezer: allow moving tasks in and out of a frozen cgroup
+Date: Tue, 16 Oct 2012 15:28:44 -0700
+Message-ID: <1350426526-14254-6-git-send-email-tj@kernel.org>
 References: <1350426526-14254-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=T2kCfA6SisGK7QcTYbdQYMVXLFf5uPuULiUDNCBC8G4=;
+        b=fXe6IRaQSintNk3rhnxgmNma0J4vuYUa6S6x4HhNeh6WC8P/AFHCth0g994ABGXNX4
+         CzNKJAfCd3VIjar/+YMAIgjV7ukYSUWu0H9vETjPENCLEgCONN/b69akSjnT2RjzBJWK
+         OEX+2R9ZTlscv6J840D5bVqt9cD9zPZghEBziKsBuWRvRCNsXcSU6UjWeyQ52wv+w11G
+         EevtgV+CJPSfI1KQPj7MTZaKJU+uKC7i/0CkVq1UBIepXG1TfoRu0wLbkUtSvafhb1qp
+         pW1ArCmZZl379w2ykbmV+CwRTGOkC69xw//IE78WWgDBvwpxPiRBdiE+uYgO59gJwojN
+         Y9UQ==
+In-Reply-To: <1350426526-14254-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=Pbd70afWsxg6uD7HXGSq5Km9Br41ZEuoPkMJM0OXg3Y=;
-	b=he8pjU/XBbKqsR0IMzhmTncpp0yrekzoKOG2a+PpsfA1i5i6KTJ+2sJv86no/irzdM
-	ZPi3q4cm8A6bu8rnmMnC9hin9P39ECOrN5dQac3xUPxNQzVVZ4gIRWvQ1kmsyJgr/J3Y
-	UpSPjkmzO8440miXLgmeCZxPOTNl8+FA3LPQdrEyKjUnK8gaifWbb92E3LFjOOtWB2yY
-	qGSblq+MeS1Ch5pgEaQpkgascJQeiPi+5XWbRKIfXuksgUX8j8MqRH5n8ReqOBJGYcxw
-	Ibp5KFqYMoU3EyHSxV9Jn/U/kWp7ru1FxzkSGGZicaJa2J1Q4Cud2daRmPju6Uw04Aet
-	soJg==
-In-Reply-To: <1350426526-14254-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: rjw-KKrjLPT3xs0@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: rjw@sisk.pl, oleg@redhat.com
+Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-try_to_freeze_cgroup() has condition checks which are intended to fail
-the write operation to freezer.state if there are tasks which can't be
-frozen.  The condition checks have been broken for quite some time
-now.  freeze_task() returns %false if the target task can't be frozen,
-so num_cant_freeze_now is never incremented.
+cgroup_freezer is one of the few users of cgroup_subsys->can_attach()
+and uses it to prevent tasks from being migrated into or out of a
+frozen cgroup.  This makes cgroup_freezer cumbersome to use especially
+when co-mounted with other controllers.
 
-In addition, strangely, cgroup freezing proceeds even after the write
-is failed, which is rather broken.
+->can_attach() is problematic in general as it can make co-mounting
+multiple cgroups difficult - migrating tasks may fail for reasons
+completely irrelevant for other controllers.  freezer_can_attach() in
+particular is more problematic because it messes with cgroup internal
+locking to ensure that the state verification performed at
+freezer_can_attach() stays valid until migration is complete.
 
-This patch rips out the non-working code intended to fail the write to
-freezer.state when the cgroup contains non-freezable tasks and makes
-it official that writes to freezer.state succeed whether there are
-non-freezable tasks in the cgroup or not.
+This patch replaces freezer_can_attach() with freezer_attach() so that
+tasks are always allowed to migrate - they are nudged into the
+conforming state from freezer_attach().  This means that there can be
+tasks which are being migrated which don't conform to the current
+cgroup_freezer state until freezer_attach() is complete.  Under the
+current locking scheme, the only such place is freezer_fork() which is
+updated to handle such window.
 
-This leaves is_task_frozen_enough() with only one user -
-upste_if_frozen().  Collapse it into the caller.  Note that this
-removes an extra call to freezing().
+While this patch doesn't remove the use of internal cgroup locking
+from freezer_read/write() paths, it removes the requirement to keep
+the freezer state constant while migrating and enables such change.
 
-This doesn't cause any userland behavior changes.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: Li Zefan <lizefan@huawei.com>
 ---
- kernel/cgroup_freezer.c |   43 +++++++++++--------------------------------
- 1 files changed, 11 insertions(+), 32 deletions(-)
+ kernel/cgroup_freezer.c |   51 ++++++++++++++++++++++++++++------------------
+ 1 files changed, 31 insertions(+), 20 deletions(-)
 
 diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index 12bfedb..05d5218 100644
+index 557f367..0b0e105 100644
 --- a/kernel/cgroup_freezer.c
 +++ b/kernel/cgroup_freezer.c
-@@ -150,13 +150,6 @@ static void freezer_destroy(struct cgroup *cgroup)
- 	kfree(freezer);
- }
+@@ -152,27 +152,38 @@ static void freezer_destroy(struct cgroup *cgroup)
  
--/* task is frozen or will freeze immediately when next it gets woken */
--static bool is_task_frozen_enough(struct task_struct *task)
--{
--	return frozen(task) ||
--		(task_is_stopped_or_traced(task) && freezing(task));
--}
--
  /*
   * The call to cgroup_lock() in the freezer.state write method prevents
-  * a write to that file racing against an attach, and hence the
-@@ -222,7 +215,8 @@ static void update_if_frozen(struct cgroup *cgroup,
- 	cgroup_iter_start(cgroup, &it);
- 	while ((task = cgroup_iter_next(cgroup, &it))) {
- 		ntotal++;
--		if (freezing(task) && is_task_frozen_enough(task))
-+		if (freezing(task) && (frozen(task) ||
-+				       task_is_stopped_or_traced(task)))
- 			nfrozen++;
- 	}
- 
-@@ -264,24 +258,15 @@ static int freezer_read(struct cgroup *cgroup, struct cftype *cft,
- 	return 0;
- }
- 
--static int try_to_freeze_cgroup(struct cgroup *cgroup, struct freezer *freezer)
-+static void freeze_cgroup(struct cgroup *cgroup, struct freezer *freezer)
- {
- 	struct cgroup_iter it;
- 	struct task_struct *task;
--	unsigned int num_cant_freeze_now = 0;
- 
- 	cgroup_iter_start(cgroup, &it);
--	while ((task = cgroup_iter_next(cgroup, &it))) {
--		if (!freeze_task(task))
--			continue;
--		if (is_task_frozen_enough(task))
--			continue;
--		if (!freezing(task) && !freezer_should_skip(task))
--			num_cant_freeze_now++;
--	}
-+	while ((task = cgroup_iter_next(cgroup, &it)))
-+		freeze_task(task);
- 	cgroup_iter_end(cgroup, &it);
--
--	return num_cant_freeze_now ? -EBUSY : 0;
- }
- 
- static void unfreeze_cgroup(struct cgroup *cgroup, struct freezer *freezer)
-@@ -295,13 +280,10 @@ static void unfreeze_cgroup(struct cgroup *cgroup, struct freezer *freezer)
- 	cgroup_iter_end(cgroup, &it);
- }
- 
--static int freezer_change_state(struct cgroup *cgroup,
--				enum freezer_state goal_state)
-+static void freezer_change_state(struct cgroup *cgroup,
-+				 enum freezer_state goal_state)
+- * a write to that file racing against an attach, and hence the
+- * can_attach() result will remain valid until the attach completes.
++ * a write to that file racing against an attach, and hence we don't need
++ * to worry about racing against migration.
+  */
+-static int freezer_can_attach(struct cgroup *new_cgroup,
+-			      struct cgroup_taskset *tset)
++static void freezer_attach(struct cgroup *new_cgrp, struct cgroup_taskset *tset)
  {
 -	struct freezer *freezer;
--	int retval = 0;
++	struct freezer *freezer = cgroup_freezer(new_cgrp);
+ 	struct task_struct *task;
+ 
++	spin_lock_irq(&freezer->lock);
++
+ 	/*
+-	 * Anything frozen can't move or be moved to/from.
++	 * Make the new tasks conform to the current state of @new_cgrp.
++	 * For simplicity, when migrating any task to a FROZEN cgroup, we
++	 * revert it to FREEZING and let update_if_frozen() determine the
++	 * correct state later.
++	 *
++	 * Tasks in @tset are on @new_cgrp but may not conform to its
++	 * current state before executing the following - !frozen tasks may
++	 * be visible in a FROZEN cgroup and frozen tasks in a THAWED one.
++	 * This means that, to determine whether to freeze, one should test
++	 * whether the state equals THAWED.
+ 	 */
+-	cgroup_taskset_for_each(task, new_cgroup, tset)
+-		if (cgroup_freezing(task))
+-			return -EBUSY;
 -
--	freezer = cgroup_freezer(cgroup);
-+	struct freezer *freezer = cgroup_freezer(cgroup);
+-	freezer = cgroup_freezer(new_cgroup);
+-	if (freezer->state != CGROUP_THAWED)
+-		return -EBUSY;
++	cgroup_taskset_for_each(task, new_cgrp, tset) {
++		if (freezer->state == CGROUP_THAWED) {
++			__thaw_task(task);
++		} else {
++			freeze_task(task);
++			freezer->state = CGROUP_FREEZING;
++		}
++	}
+ 
+-	return 0;
++	spin_unlock_irq(&freezer->lock);
+ }
+ 
+ static void freezer_fork(struct task_struct *task)
+@@ -190,12 +201,12 @@ static void freezer_fork(struct task_struct *task)
+ 		goto out;
  
  	spin_lock_irq(&freezer->lock);
- 
-@@ -318,22 +300,19 @@ static int freezer_change_state(struct cgroup *cgroup,
- 		if (freezer->state == CGROUP_THAWED)
- 			atomic_inc(&system_freezing_cnt);
- 		freezer->state = CGROUP_FREEZING;
--		retval = try_to_freeze_cgroup(cgroup, freezer);
-+		freeze_cgroup(cgroup, freezer);
- 		break;
- 	default:
- 		BUG();
- 	}
- 
- 	spin_unlock_irq(&freezer->lock);
+-	BUG_ON(freezer->state == CGROUP_FROZEN);
 -
--	return retval;
- }
+-	/* Locking avoids race with FREEZING -> THAWED transitions. */
+-	if (freezer->state == CGROUP_FREEZING)
++	/*
++	 * @task might have been just migrated into a FROZEN cgroup.  Test
++	 * equality with THAWED.  Read the comment in freezer_attach().
++	 */
++	if (freezer->state != CGROUP_THAWED)
+ 		freeze_task(task);
+-
+ 	spin_unlock_irq(&freezer->lock);
+ out:
+ 	rcu_read_unlock();
+@@ -352,7 +363,7 @@ struct cgroup_subsys freezer_subsys = {
+ 	.create		= freezer_create,
+ 	.destroy	= freezer_destroy,
+ 	.subsys_id	= freezer_subsys_id,
+-	.can_attach	= freezer_can_attach,
++	.attach		= freezer_attach,
+ 	.fork		= freezer_fork,
+ 	.base_cftypes	= files,
  
- static int freezer_write(struct cgroup *cgroup,
- 			 struct cftype *cft,
- 			 const char *buffer)
- {
--	int retval;
- 	enum freezer_state goal_state;
- 
- 	if (strcmp(buffer, freezer_state_strs[CGROUP_THAWED]) == 0)
-@@ -345,9 +324,9 @@ static int freezer_write(struct cgroup *cgroup,
- 
- 	if (!cgroup_lock_live_group(cgroup))
- 		return -ENODEV;
--	retval = freezer_change_state(cgroup, goal_state);
-+	freezer_change_state(cgroup, goal_state);
- 	cgroup_unlock();
--	return retval;
-+	return 0;
- }
- 
- static struct cftype files[] = {
 -- 
 1.7.7.3
