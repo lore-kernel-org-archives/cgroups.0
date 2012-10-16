@@ -1,39 +1,50 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH v5 14/14] Add documentation about the kmem controller
-Date: Tue, 16 Oct 2012 18:25:06 +0000
-Message-ID: <0000013a6ad26c73-d043cf97-c44a-45c1-9cae-0a962e93a005-000000@email.amazonses.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-15-git-send-email-glommer@parallels.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] oom, memcg: handle sysctl oom_kill_allocating_task while
+ memcg oom happening
+Date: Tue, 16 Oct 2012 11:39:33 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1210161136470.2910@chino.kir.corp.google.com>
+References: <1350382328-28977-1-git-send-email-handai.szj@taobao.com> <20121016133439.GI13991@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1350382611-20579-15-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=cK/uZQYaGjSvDVqdEkRQXbXrO7cLLaPxoaVud841dVU=;
+        b=EvmEwlxfHxUdvAYH2NzJPdCorsFOeEcGpKfM3nkZWKMYJUIKBls+llFF7jvl2XNXe5
+         O7w7HlskJrkvcTzdDL0YNmFSXMYwY3pdKkb5fatVj/nofIRT/mR8x48/bQAc9LF47bcB
+         rRzKqSXimeY1QqM95Re2DJtQF3PqPFLoWATEvhyRImXKtWc3Q8oDcEsDEp/uZol+s25M
+         82bsUgm+li9/n0pdiC9WaJasIMUmJbWV82xG8Pr1tRvLlSSNUTcs85ghwaxXDJhPAd8y
+         31DMNDCsEhXbG18G33MANipDiik08uTpoMzmLPVd/2KvGcyr7ztmqfS5vcEtf+U2ymYp
+         nEag==
+In-Reply-To: <20121016133439.GI13991-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbec@redhat.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, 16 Oct 2012, Glauber Costa wrote:
+On Tue, 16 Oct 2012, Michal Hocko wrote:
 
->
-> + memory.kmem.limit_in_bytes      # set/show hard limit for kernel memory
-> + memory.kmem.usage_in_bytes      # show current kernel memory allocation
-> + memory.kmem.failcnt             # show the number of kernel memory usage hits limits
-> + memory.kmem.max_usage_in_bytes  # show max kernel memory usage recorded
+> The primary motivation for oom_kill_allocating_task AFAIU was to reduce
+> search over huge tasklists and reduce task_lock holding times. I am not
+> sure whether the original concern is still valid since 6b0c81b (mm,
+> oom: reduce dependency on tasklist_lock) as the tasklist_lock usage has
+> been reduced conciderably in favor of RCU read locks is taken but maybe
+> even that can be too disruptive?
+> David?
+> 
 
-Does it actually make sense to limit kernel memory? The user generally has
-no idea how much kernel memory a process is using and kernel changes can
-change the memory footprint. Given the fuzzy accounting in the kernel a
-large cache refill (if someone configures the slab batch count to be
-really big f.e.) can account a lot of memory to the wrong cgroup. The
-allocation could fail.
+When the oom killer became serialized, the folks from SGI requested this 
+tunable to be able to avoid the expensive tasklist scan on their systems 
+and to be able to avoid killing threads that aren't allocating memory at 
+all in a steady state.  It wasn't necessarily about tasklist_lock holding 
+time but rather the expensive iteration over such a large number of 
+processes.
 
-Limiting the total memory use of a process (U+K) would make more sense I
-guess. Only U is probably sufficient? In what way would a limitation on
-kernel memory in use be good?
+> Moreover memcg oom killer doesn't iterate over tasklist (it uses
+> cgroup_iter*) so this shouldn't cause the performance problem like
+> for the global case.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Depends on how many threads are attached to a memcg.
