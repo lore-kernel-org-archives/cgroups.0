@@ -1,63 +1,77 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH 6/6] hugetlb: do not fail in hugetlb_cgroup_pre_destroy
-Date: Wed, 17 Oct 2012 15:30:48 +0200
-Message-ID: <1350480648-10905-7-git-send-email-mhocko@suse.cz>
-References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [PATCH v0 3/4] cgroup: net_cls: Pass in task to
+ sock_update_classid()
+Date: Wed, 17 Oct 2012 15:37:21 +0200
+Message-ID: <1350481041.26103.454.camel@edumazet-glaptop>
+References: <1350479078-29361-1-git-send-email-wagi@monom.org>
+	 <1350479078-29361-4-git-send-email-wagi@monom.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=subject:from:to:cc:in-reply-to:references:content-type:date
+         :message-id:mime-version:x-mailer:content-transfer-encoding;
+        bh=BWbShpLLL59pPMwHxH/gF1o1SXrwAxNZFsaiT86B8tc=;
+        b=ijXuckmz+TbsUcGMfrC8LlaZICkQr/iJxiU4Xaa1TA+jBzzZjBUyEcTpH9rM5OhKfp
+         oWILNQTc0JOcgCrSzZ67ZAI3Tx09SCi8ZJTblAR6kBA3yO2cGP/3Kreti7MebwWiMRzH
+         FaBy8DJqPCCKqi7zFTVB8oADhme+gA68w1yMiL++e714/CWyXQ1OCDBTwEiSArBEkqnB
+         ZPYORRDDTUhIh/MpCPPEuY1lc2h0swFQG/iGI9x/j7gRkj3gmf10QbdANGUQghuGpem4
+         tusD3EGdZdglw4uQ6+4EdVeWVKpMrU09msndfj72IRRcply6KjTGDewPY+kvLZwtaPnx
+         XNjA==
+In-Reply-To: <1350479078-29361-4-git-send-email-wagi@monom.org>
+Sender: netdev-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Daniel Wagner <wagi@monom.org>
+Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, "Michael S. Tsirkin" <mst@redhat.com>, Eric Dumazet <edumazet@google.com>, Glauber Costa <glommer@parallels.com>, Joe Perches <joe@perches.com>, Neil Horman <nhorman@tuxdriver.com>, Stanislav Kinsbursky <skinsbursky@parallels.com>, Tejun Heo <tj@kernel.org>
 
-Now that pre_destroy callbacks are called from within cgroup_lock and
-the cgroup has been checked to be empty without any children then there
-is no other way to fail.
+On Wed, 2012-10-17 at 15:04 +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> 
+> sock_update_classid() assumes that the update operation always are
+> applied on the current task. sock_update_classid() needs to know on
+> which tasks to work on in order to be able to migrate task between
+> cgroups using the struct cgroup_subsys attach() callback.
+> 
+...
 
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/hugetlb_cgroup.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+>  
+> -extern void sock_update_classid(struct sock *sk);
+> +extern void sock_update_classid(struct sock *sk, struct task_struct *task);
+>  
+>  #if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
+>  static inline u32 task_cls_classid(struct task_struct *p)
+> diff --git a/net/core/sock.c b/net/core/sock.c
+> index 8a146cf..68c2f3b 100644
+> --- a/net/core/sock.c
+> +++ b/net/core/sock.c
+> @@ -1214,12 +1214,12 @@ static void sk_prot_free(struct proto *prot, struct sock *sk)
+>  
+>  #ifdef CONFIG_CGROUPS
+>  #if IS_ENABLED(CONFIG_NET_CLS_CGROUP)
+> -void sock_update_classid(struct sock *sk)
+> +void sock_update_classid(struct sock *sk, struct task_struct *task)
+>  {
+>  	u32 classid;
+>  
+>  	rcu_read_lock();  /* doing current task, which cannot vanish. */
+> -	classid = task_cls_classid(current);
+> +	classid = task_cls_classid(task);
+>  	rcu_read_unlock();
 
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index a3f358f..dc595c6 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -159,14 +159,9 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
- {
- 	struct hstate *h;
- 	struct page *page;
--	int ret = 0, idx = 0;
-+	int idx = 0;
- 
- 	do {
--		if (cgroup_task_count(cgroup) ||
--		    !list_empty(&cgroup->children)) {
--			ret = -EBUSY;
--			goto out;
--		}
- 		for_each_hstate(h) {
- 			spin_lock(&hugetlb_lock);
- 			list_for_each_entry(page, &h->hugepage_activelist, lru)
-@@ -177,8 +172,8 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
- 		}
- 		cond_resched();
- 	} while (hugetlb_cgroup_have_usage(cgroup));
--out:
--	return ret;
-+
-+	return 0;
- }
- 
- int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
--- 
-1.7.10.4
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Comment is now misleading (since task might not be current) and
+rcu_read_lock()/rcu_read_unlock() protects nothing here, but avoid a
+lockdep splat...
+
+Hey task_cls_classid() has its own rcu protection since commit
+3fb5a991916091a908d (cls_cgroup: Fix rcu lockdep warning)
+
+So we can safely revert Paul commit (1144182a8757f2a1)
+(We no longer need rcu_read_lock/unlock here)
+
+(BTW net-next is not opened yet, its content outdated, although I like
+your patch series !)
+
+
