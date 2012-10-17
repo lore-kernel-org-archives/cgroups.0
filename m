@@ -1,61 +1,69 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [RFC] memcg/cgroup: do not fail fail on pre_destroy callbacks
-Date: Wed, 17 Oct 2012 19:30:48 +0400
-Message-ID: <507ECF28.1060602@parallels.com>
-References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [PATCH v0 3/4] cgroup: net_cls: Pass in task to sock_update_classid()
+Date: Wed, 17 Oct 2012 17:54:40 +0200
+Message-ID: <507ED4C0.7070408@monom.org>
+References: <1350479078-29361-1-git-send-email-wagi@monom.org>  <1350479078-29361-4-git-send-email-wagi@monom.org> <1350481041.26103.454.camel@edumazet-glaptop>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1350481041.26103.454.camel@edumazet-glaptop>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Stanislav Kinsbursky <skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 10/17/2012 05:30 PM, Michal Hocko wrote:
-> Hi,
-> memcg is the only controller which might fail in its pre_destroy
-> callback which makes the cgroup core more complicated for no good
-> reason. This is an attempt to change this unfortunate state. 
-> 
-> I am sending this a RFC because I would like to hear back whether the
-> approach is correct. I thought that the changes would be more invasive
-> but it seems that the current code was mostly prepared for this and it
-> needs just some small tweaks (so I might be missing something important
-> here).
-> 
-> The first two patches are just clean ups. They could be merged even
-> without the rest.
-> 
-> The real change, although the code is not changed that much, is the 3rd
-> patch. It changes the way how we handle mem_cgroup_move_parent failures.
-> We have to realize that all those failures are *temporal*. Because we
-> are either racing with the page removal or the page is temporarily off
-> the LRU because of migration resp. global reclaim. As a result we do
-> not fail mem_cgroup_force_empty_list if the page cannot be moved to the
-> parent and rather retry until the LRU is empty.
-> 
-> The 4th patch is for cgroup core. I have moved cgroup_call_pre_destroy
-> inside the cgroup_lock which is not very nice because the callbacks
-> can take some time. Maybe we can move this call at the very end of the
-> function?
-> All I need for memcg is that cgroup_call_pre_destroy has been called and
-> that no new cgroups can be attached to the group. The cgroup_lock is
-> necessary for the later condition but if we move after CGRP_REMOVED flag
-> is set then we are safe as well.
-> 
-> The last two patches are trivial follow ups for the cgroups core change
-> because now we know that nobody will interfere with us so we can drop
-> those empty && no child condition.
-> 
-> Comments, thoughts?
-> 
+On 17.10.2012 15:37, Eric Dumazet wrote:
+> On Wed, 2012-10-17 at 15:04 +0200, Daniel Wagner wrote:
+>> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+>>
+>> sock_update_classid() assumes that the update operation always are
+>> applied on the current task. sock_update_classid() needs to know on
+>> which tasks to work on in order to be able to migrate task between
+>> cgroups using the struct cgroup_subsys attach() callback.
+>>
+> ...
+>
+>>
+>> -extern void sock_update_classid(struct sock *sk);
+>> +extern void sock_update_classid(struct sock *sk, struct task_struct *task);
+>>
+>>   #if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
+>>   static inline u32 task_cls_classid(struct task_struct *p)
+>> diff --git a/net/core/sock.c b/net/core/sock.c
+>> index 8a146cf..68c2f3b 100644
+>> --- a/net/core/sock.c
+>> +++ b/net/core/sock.c
+>> @@ -1214,12 +1214,12 @@ static void sk_prot_free(struct proto *prot, struct sock *sk)
+>>
+>>   #ifdef CONFIG_CGROUPS
+>>   #if IS_ENABLED(CONFIG_NET_CLS_CGROUP)
+>> -void sock_update_classid(struct sock *sk)
+>> +void sock_update_classid(struct sock *sk, struct task_struct *task)
+>>   {
+>>   	u32 classid;
+>>
+>>   	rcu_read_lock();  /* doing current task, which cannot vanish. */
+>> -	classid = task_cls_classid(current);
+>> +	classid = task_cls_classid(task);
+>>   	rcu_read_unlock();
+>
+>
+> Comment is now misleading (since task might not be current) and
+> rcu_read_lock()/rcu_read_unlock() protects nothing here, but avoid a
+> lockdep splat...
+>
+> Hey task_cls_classid() has its own rcu protection since commit
+> 3fb5a991916091a908d (cls_cgroup: Fix rcu lockdep warning)
+>
+> So we can safely revert Paul commit (1144182a8757f2a1)
+> (We no longer need rcu_read_lock/unlock here)
 
-I personally don't see anything fundamentally wrong with this.
+Good point. Will update the series accordingly.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> (BTW net-next is not opened yet, its content outdated, although I like
+> your patch series !)
+
+I still have not figured all details on the patch submission procedure. 
+Sorry about that. The time to send patches for net-next will be annonced 
+by David, is this correct?
