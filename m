@@ -1,255 +1,47 @@
 From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v5 04/14] kmem accounting basic infrastructure
-Date: Wed, 17 Oct 2012 15:08:04 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1210171455010.20712@chino.kir.corp.google.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-5-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v5 05/14] Add a __GFP_KMEMCG flag
+Date: Wed, 17 Oct 2012 15:09:04 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1210171508530.20712@chino.kir.corp.google.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-6-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=wASiiGqw4GV5ELb/ApalZrMjSYUjd0uYthYDy/AGgBo=;
-        b=lJ/hDTWq9ua7RtzP9mwW8uoae/Yf0xHUUG/rkOLYOUns8fA59ZTICg1jZDjSkPj6Ym
-         EhPHwJ4fsw1ndzWiDNmmXpqazcxTrxd7QYcVygni+usWEP/s+q1kI+L78Bbn5Qx3JYW4
-         x8rx44VYSgoiCRnH/OjtFrR4NENl5CY4xQuIIn9VDjYszrV7pVGBImCuywP0Y6liyuCf
-         4KXgeOGrM16jHmOOdIihtb3mKWRD2MeCccR6lSQ1V9u/Pv+EPdJ58hgthGEr4aYEIYTC
-         5ih5AShBfCy4KZ5I8zpBU2atQ95n+zZh0iJEm4v37ez+uW7Ze3vsMybU68R96ozfsuCH
-         COjw==
-In-Reply-To: <1350382611-20579-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+        bh=sdpxyABYjQLLzaaa4e81yFBD2H7zrHQ41qAwFVm3rHY=;
+        b=Pl1MkOFOqqfwDGWCMXk6dDuSVAw32sX/d9lcKO1oHrQo1XBd+PpO5Wilc20xkux8MZ
+         XhCJ5xrVO9sFF/AbI+PjrflmnlK+jFWKXoirw1R7CZ9F49pQdtPlyfhUWtXD8EWL8ac8
+         vyFOefHERoaRqEU4FX7EoMaxESTOUwbYnbo66Q7grpepRxT3K3uqLiPiiqnQjdtBozLj
+         UEYrHWVYnhjAErwWAoTtQgX7POjXjMw7QjYnwdWlef8DUJc88JmTyRKUY70siAgm9sVz
+         NUiidNVqg83QVIMlegIJ5X6g/VuSwZDFZUY8iDeSR3vaaf1SJohiTkvDu7ElwfuNU96N
+         GwuQ==
+In-Reply-To: <1350382611-20579-6-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
 On Tue, 16 Oct 2012, Glauber Costa wrote:
 
-> This patch adds the basic infrastructure for the accounting of kernel
-> memory. To control that, the following files are created:
+> This flag is used to indicate to the callees that this allocation is a
+> kernel allocation in process context, and should be accounted to
+> current's memcg. It takes numerical place of the of the recently removed
+> __GFP_NO_KSWAPD.
 > 
->  * memory.kmem.usage_in_bytes
->  * memory.kmem.limit_in_bytes
->  * memory.kmem.failcnt
->  * memory.kmem.max_usage_in_bytes
-> 
-> They have the same meaning of their user memory counterparts. They
-> reflect the state of the "kmem" res_counter.
-> 
-> Per cgroup kmem memory accounting is not enabled until a limit is set
-> for the group. Once the limit is set the accounting cannot be disabled
-> for that group.  This means that after the patch is applied, no
-> behavioral changes exists for whoever is still using memcg to control
-> their memory usage, until memory.kmem.limit_in_bytes is set for the
-> first time.
-> 
-> We always account to both user and kernel resource_counters. This
-> effectively means that an independent kernel limit is in place when the
-> limit is set to a lower value than the user memory. A equal or higher
-> value means that the user limit will always hit first, meaning that kmem
-> is effectively unlimited.
-> 
-> People who want to track kernel memory but not limit it, can set this
-> limit to a very high number (like RESOURCE_MAX - 1page - that no one
-> will ever hit, or equal to the user memory)
-> 
-> [ v4: make kmem files part of the main array;
->       do not allow limit to be set for non-empty cgroups ]
-> [ v5: cosmetic changes ]
+> [ v4: make flag unconditional, also declare it in trace code ]
 > 
 > Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Acked-by: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Mel Gorman <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>
 > Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+> CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 > CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> ---
->  mm/memcontrol.c | 116 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 115 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 71d259e..30eafeb 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -266,6 +266,10 @@ struct mem_cgroup {
->  	};
->  
->  	/*
-> +	 * the counter to account for kernel memory usage.
-> +	 */
-> +	struct res_counter kmem;
-> +	/*
->  	 * Per cgroup active and inactive list, similar to the
->  	 * per zone LRU lists.
->  	 */
-> @@ -280,6 +284,7 @@ struct mem_cgroup {
->  	 * Should the accounting and control be hierarchical, per subtree?
->  	 */
->  	bool use_hierarchy;
-> +	unsigned long kmem_accounted; /* See KMEM_ACCOUNTED_*, below */
 
-I think this should be named kmem_account_flags or kmem_flags, otherwise 
-it appears that this is the actual account.
-
->  
->  	bool		oom_lock;
->  	atomic_t	under_oom;
-> @@ -332,6 +337,20 @@ struct mem_cgroup {
->  #endif
->  };
->  
-> +/* internal only representation about the status of kmem accounting. */
-> +enum {
-> +	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
-> +};
-> +
-> +#define KMEM_ACCOUNTED_MASK (1 << KMEM_ACCOUNTED_ACTIVE)
-> +
-> +#ifdef CONFIG_MEMCG_KMEM
-
-memcg->kmem_accounted isn't only defined for this configuration, so would 
-it be simpler to define this unconditionally?
-
-> +static void memcg_kmem_set_active(struct mem_cgroup *memcg)
-
-inline?
-
-> +{
-> +	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
-> +}
-> +#endif
-> +
->  /* Stuffs for move charges at task migration. */
->  /*
->   * Types of charges to be moved. "move_charge_at_immitgrate" is treated as a
-> @@ -390,6 +409,7 @@ enum res_type {
->  	_MEM,
->  	_MEMSWAP,
->  	_OOM_TYPE,
-> +	_KMEM,
->  };
->  
->  #define MEMFILE_PRIVATE(x, val)	((x) << 16 | (val))
-> @@ -1433,6 +1453,10 @@ done:
->  		res_counter_read_u64(&memcg->memsw, RES_USAGE) >> 10,
->  		res_counter_read_u64(&memcg->memsw, RES_LIMIT) >> 10,
->  		res_counter_read_u64(&memcg->memsw, RES_FAILCNT));
-> +	printk(KERN_INFO "kmem: usage %llukB, limit %llukB, failcnt %llu\n",
-> +		res_counter_read_u64(&memcg->kmem, RES_USAGE) >> 10,
-> +		res_counter_read_u64(&memcg->kmem, RES_LIMIT) >> 10,
-> +		res_counter_read_u64(&memcg->kmem, RES_FAILCNT));
->  }
->  
->  /*
-> @@ -3940,6 +3964,9 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
->  		else
->  			val = res_counter_read_u64(&memcg->memsw, name);
->  		break;
-> +	case _KMEM:
-> +		val = res_counter_read_u64(&memcg->kmem, name);
-> +		break;
->  	default:
->  		BUG();
->  	}
-> @@ -3947,6 +3974,57 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
->  	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
->  	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
->  }
-> +
-> +static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
-> +{
-> +	int ret = -EINVAL;
-> +#ifdef CONFIG_MEMCG_KMEM
-> +	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-> +	/*
-> +	 * For simplicity, we won't allow this to be disabled.  It also can't
-> +	 * be changed if the cgroup has children already, or if tasks had
-> +	 * already joined.
-> +	 *
-> +	 * If tasks join before we set the limit, a person looking at
-> +	 * kmem.usage_in_bytes will have no way to determine when it took
-> +	 * place, which makes the value quite meaningless.
-> +	 *
-> +	 * After it first became limited, changes in the value of the limit are
-> +	 * of course permitted.
-> +	 *
-> +	 * Taking the cgroup_lock is really offensive, but it is so far the only
-> +	 * way to guarantee that no children will appear. There are plenty of
-> +	 * other offenders, and they should all go away. Fine grained locking
-> +	 * is probably the way to go here. When we are fully hierarchical, we
-> +	 * can also get rid of the use_hierarchy check.
-
-Not sure it's so offensive, it's a pretty standard way of ensuring that 
-cont->children doesn't get manipulated in a race.
-
-> +	 */
-> +	cgroup_lock();
-> +	mutex_lock(&set_limit_mutex);
-> +	if (!memcg->kmem_accounted && val != RESOURCE_MAX) {
-> +		if (cgroup_task_count(cont) || (memcg->use_hierarchy &&
-> +						!list_empty(&cont->children))) {
-> +			ret = -EBUSY;
-> +			goto out;
-> +		}
-> +		ret = res_counter_set_limit(&memcg->kmem, val);
-> +		VM_BUG_ON(ret);
-> +
-> +		memcg_kmem_set_active(memcg);
-> +	} else
-> +		ret = res_counter_set_limit(&memcg->kmem, val);
-> +out:
-> +	mutex_unlock(&set_limit_mutex);
-> +	cgroup_unlock();
-> +#endif
-> +	return ret;
-> +}
-> +
-> +static void memcg_propagate_kmem(struct mem_cgroup *memcg,
-> +				 struct mem_cgroup *parent)
-> +{
-> +	memcg->kmem_accounted = parent->kmem_accounted;
-> +}
-> +
->  /*
->   * The user of this function is...
->   * RES_LIMIT.
-> @@ -3978,8 +4056,12 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
->  			break;
->  		if (type == _MEM)
->  			ret = mem_cgroup_resize_limit(memcg, val);
-> -		else
-> +		else if (type == _MEMSWAP)
->  			ret = mem_cgroup_resize_memsw_limit(memcg, val);
-> +		else if (type == _KMEM)
-> +			ret = memcg_update_kmem_limit(cont, val);
-> +		else
-> +			return -EINVAL;
-
-I like how this is done in a maintainable way to ensure no other types can 
-inadvertently update the memsw limit as it was previously written.  All 
-other returns of -EINVAL just cause the switch statement to break, though, 
-rather than return directly.
-
->  		break;
->  	case RES_SOFT_LIMIT:
->  		ret = res_counter_memparse_write_strategy(buffer, &val);
-> @@ -4045,12 +4127,16 @@ static int mem_cgroup_reset(struct cgroup *cont, unsigned int event)
->  	case RES_MAX_USAGE:
->  		if (type == _MEM)
->  			res_counter_reset_max(&memcg->res);
-> +		else if (type == _KMEM)
-> +			res_counter_reset_max(&memcg->kmem);
-
-Could this be written in the same way above, i.e. check _MEMSWAP to pass 
-memcg->memsw, _KMEM for memcg->kmem, etc?
-
->  		else
->  			res_counter_reset_max(&memcg->memsw);
->  		break;
->  	case RES_FAILCNT:
->  		if (type == _MEM)
->  			res_counter_reset_failcnt(&memcg->res);
-> +		else if (type == _KMEM)
-> +			res_counter_reset_failcnt(&memcg->kmem);
-
-Same.
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
