@@ -1,49 +1,70 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v5 08/14] res_counter: return amount of charges after
- res_counter_uncharge
-Date: Wed, 17 Oct 2012 16:23:19 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1210171623040.20813@chino.kir.corp.google.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-9-git-send-email-glommer@parallels.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH v5 09/14] memcg: kmem accounting lifecycle management
+Date: Wed, 17 Oct 2012 16:28:38 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1210171624540.20813@chino.kir.corp.google.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-10-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=GToyqFMMAL0PYh1AzQs6wnlcD/uD1pYmlxiRPyVVJQU=;
-        b=n1rga5Hr/e9eGSUojsbRrhTKUrGO8GXhNpyoXKRNv5m2IByz9X/Bmxj5yZuN9f8OGO
-         8fImg3QHVBQxLAVPNuIV1shKc32Ls0CBUzMnluceRZXyh40bUnWE0aSzwgnLNkGmonLJ
-         4GizkX8A5goYmWFLF1iZ/iBRgoMJVQCeCuMjdoqoli+li2e7Z1egh/VuXivKtwN9aU5n
-         XFYHEbkVo9JIfTlsWQzhxjmfpTxhUp5ORmiMSBr/8jPB5/2rOH4qyPYgLT4wxw2iMJNc
-         WugBFWtTxUt+lMAQg9qLdixzqkmwPk3PgcY1K7lYPSNzOcFVobDBg/YOFN3EI9k3YoWY
-         2nrg==
-In-Reply-To: <1350382611-20579-9-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=3/7w/g/Ez/mtDNpVkWeK1nKKXMaFbFYD1UWYVoi+Xds=;
+        b=PS32P2DXZqcC3QXPT+auLO3ZSHlpT9C6+ntfoMNz7k15tgKH/9yOTXtf/MGWU/i6z4
+         46OuPimxE3tWACA4qJbwCCsNYqnoTl+c5V/Bp9Kj3hHqzk/GoJB/CUP+bC3uOPPpTB0h
+         wY2rLEeJmIH43LU/EREdp5TCklRoZ5muNNC45PRoAX83qCAaF8HtpV2MCFnJWZSqxncW
+         zPBY0RDIqM/92mwHi8KTdJUi/oAOe0es5GONm7It/p8FH5sir27x7N2D1WT+wC+zKItC
+         KrT1ZpQuEN27yqYJCUJnzi22QT6v2ZjFD3qQ2DE3WeohioA0YCrYc5umDmk6yzUaY6hb
+         HfGQ==
+In-Reply-To: <1350382611-20579-10-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
 On Tue, 16 Oct 2012, Glauber Costa wrote:
 
-> It is useful to know how many charges are still left after a call to
-> res_counter_uncharge. While it is possible to issue a res_counter_read
-> after uncharge, this can be racy.
-> 
-> If we need, for instance, to take some action when the counters drop
-> down to 0, only one of the callers should see it. This is the same
-> semantics as the atomic variables in the kernel.
-> 
-> Since the current return value is void, we don't need to worry about
-> anything breaking due to this change: nobody relied on that, and only
-> users appearing from now on will be checking this value.
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Acked-by: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1182188..e24b388 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -344,6 +344,7 @@ struct mem_cgroup {
+>  /* internal only representation about the status of kmem accounting. */
+>  enum {
+>  	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
+> +	KMEM_ACCOUNTED_DEAD, /* dead memcg, pending kmem charges */
 
-Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+"dead memcg with pending kmem charges" seems better.
+
+>  };
+>  
+>  #define KMEM_ACCOUNTED_MASK (1 << KMEM_ACCOUNTED_ACTIVE)
+> @@ -353,6 +354,22 @@ static void memcg_kmem_set_active(struct mem_cgroup *memcg)
+>  {
+>  	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
+>  }
+> +
+> +static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
+> +{
+> +	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted);
+> +}
+
+I think all of these should be inline.
+
+> +
+> +static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
+> +{
+> +	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_accounted))
+> +		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_accounted);
+> +}
+
+The set_bit() doesn't happen atomically with the test_bit(), what 
+synchronization is required for this?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
