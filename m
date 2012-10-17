@@ -1,7 +1,7 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
-Date: Wed, 17 Oct 2012 15:30:46 +0200
-Message-ID: <1350480648-10905-5-git-send-email-mhocko@suse.cz>
+Subject: [PATCH 6/6] hugetlb: do not fail in hugetlb_cgroup_pre_destroy
+Date: Wed, 17 Oct 2012 15:30:48 +0200
+Message-ID: <1350480648-10905-7-git-send-email-mhocko@suse.cz>
 References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
@@ -13,89 +13,46 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
-safely move on and forbit all the callbacks to fail. The last missing
-piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
-that css_tryget fails so no new charges for the memcg can happen.
-The callbacks are also called from within cgroup_lock to guarantee that
-no new tasks show up. We could theoretically call them outside of the
-lock but then we have to move after CGRP_REMOVED flag is set.
+Now that pre_destroy callbacks are called from within cgroup_lock and
+the cgroup has been checked to be empty without any children then there
+is no other way to fail.
 
 Signed-off-by: Michal Hocko <mhocko@suse.cz>
 ---
- kernel/cgroup.c |   30 +++++++++---------------------
- 1 file changed, 9 insertions(+), 21 deletions(-)
+ mm/hugetlb_cgroup.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b7d9606..00729c1 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -855,7 +855,7 @@ static struct inode *cgroup_new_inode(umode_t mode, struct super_block *sb)
-  * Call subsys's pre_destroy handler.
-  * This is called before css refcnt check.
-  */
--static int cgroup_call_pre_destroy(struct cgroup *cgrp)
-+static void cgroup_call_pre_destroy(struct cgroup *cgrp)
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index a3f358f..dc595c6 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -159,14 +159,9 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
  {
- 	struct cgroup_subsys *ss;
- 	int ret = 0;
-@@ -864,15 +864,8 @@ static int cgroup_call_pre_destroy(struct cgroup *cgrp)
- 		if (!ss->pre_destroy)
- 			continue;
+ 	struct hstate *h;
+ 	struct page *page;
+-	int ret = 0, idx = 0;
++	int idx = 0;
  
--		ret = ss->pre_destroy(cgrp);
--		if (ret) {
--			/* ->pre_destroy() failure is being deprecated */
--			WARN_ON_ONCE(!ss->__DEPRECATED_clear_css_refs);
--			break;
+ 	do {
+-		if (cgroup_task_count(cgroup) ||
+-		    !list_empty(&cgroup->children)) {
+-			ret = -EBUSY;
+-			goto out;
 -		}
-+		BUG_ON(ss->pre_destroy(cgrp));
- 	}
--
+ 		for_each_hstate(h) {
+ 			spin_lock(&hugetlb_lock);
+ 			list_for_each_entry(page, &h->hugepage_activelist, lru)
+@@ -177,8 +172,8 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+ 		}
+ 		cond_resched();
+ 	} while (hugetlb_cgroup_have_usage(cgroup));
+-out:
 -	return ret;
++
++	return 0;
  }
  
- static void cgroup_diput(struct dentry *dentry, struct inode *inode)
-@@ -4161,7 +4154,6 @@ again:
- 		mutex_unlock(&cgroup_mutex);
- 		return -EBUSY;
- 	}
--	mutex_unlock(&cgroup_mutex);
- 
- 	/*
- 	 * In general, subsystem has no css->refcnt after pre_destroy(). But
-@@ -4174,17 +4166,6 @@ again:
- 	 */
- 	set_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
- 
--	/*
--	 * Call pre_destroy handlers of subsys. Notify subsystems
--	 * that rmdir() request comes.
--	 */
--	ret = cgroup_call_pre_destroy(cgrp);
--	if (ret) {
--		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
--		return ret;
--	}
--
--	mutex_lock(&cgroup_mutex);
- 	parent = cgrp->parent;
- 	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children)) {
- 		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-@@ -4206,6 +4187,13 @@ again:
- 			return -EINTR;
- 		goto again;
- 	}
-+
-+	/*
-+	 * Call pre_destroy handlers of subsys. Notify subsystems
-+	 * that rmdir() request comes.
-+	 */
-+	cgroup_call_pre_destroy(cgrp);
-+
- 	/* NO css_tryget() can success after here. */
- 	finish_wait(&cgroup_rmdir_waitq, &wait);
- 	clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+ int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
 -- 
 1.7.10.4
 
