@@ -1,77 +1,68 @@
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [PATCH v0 3/4] cgroup: net_cls: Pass in task to
- sock_update_classid()
-Date: Wed, 17 Oct 2012 15:37:21 +0200
-Message-ID: <1350481041.26103.454.camel@edumazet-glaptop>
-References: <1350479078-29361-1-git-send-email-wagi@monom.org>
-	 <1350479078-29361-4-git-send-email-wagi@monom.org>
+From: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v0 4/4] cgroup: net_cls: Rework update socket logic
+Date: Wed, 17 Oct 2012 07:02:01 -0700
+Message-ID: <507EBA59.9080307@intel.com>
+References: <1350479078-29361-1-git-send-email-wagi@monom.org> <1350479078-29361-5-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=subject:from:to:cc:in-reply-to:references:content-type:date
-         :message-id:mime-version:x-mailer:content-transfer-encoding;
-        bh=BWbShpLLL59pPMwHxH/gF1o1SXrwAxNZFsaiT86B8tc=;
-        b=ijXuckmz+TbsUcGMfrC8LlaZICkQr/iJxiU4Xaa1TA+jBzzZjBUyEcTpH9rM5OhKfp
-         oWILNQTc0JOcgCrSzZ67ZAI3Tx09SCi8ZJTblAR6kBA3yO2cGP/3Kreti7MebwWiMRzH
-         FaBy8DJqPCCKqi7zFTVB8oADhme+gA68w1yMiL++e714/CWyXQ1OCDBTwEiSArBEkqnB
-         ZPYORRDDTUhIh/MpCPPEuY1lc2h0swFQG/iGI9x/j7gRkj3gmf10QbdANGUQghuGpem4
-         tusD3EGdZdglw4uQ6+4EdVeWVKpMrU09msndfj72IRRcply6KjTGDewPY+kvLZwtaPnx
-         XNjA==
-In-Reply-To: <1350479078-29361-4-git-send-email-wagi@monom.org>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1350479078-29361-5-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Daniel Wagner <wagi@monom.org>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, "Michael S. Tsirkin" <mst@redhat.com>, Eric Dumazet <edumazet@google.com>, Glauber Costa <glommer@parallels.com>, Joe Perches <joe@perches.com>, Neil Horman <nhorman@tuxdriver.com>, Stanislav Kinsbursky <skinsbursky@parallels.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Stanislav Kinsbursky <skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Wed, 2012-10-17 at 15:04 +0200, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> 
-> sock_update_classid() assumes that the update operation always are
-> applied on the current task. sock_update_classid() needs to know on
-> which tasks to work on in order to be able to migrate task between
-> cgroups using the struct cgroup_subsys attach() callback.
-> 
-...
+On 10/17/2012 6:04 AM, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+>
+> The cgroup logic part of net_cls is very similar as the one in
+> net_prio. Let's stream line the net_cls logic with the net_prio one.
+>
 
->  
-> -extern void sock_update_classid(struct sock *sk);
-> +extern void sock_update_classid(struct sock *sk, struct task_struct *task);
->  
->  #if IS_BUILTIN(CONFIG_NET_CLS_CGROUP)
->  static inline u32 task_cls_classid(struct task_struct *p)
-> diff --git a/net/core/sock.c b/net/core/sock.c
-> index 8a146cf..68c2f3b 100644
-> --- a/net/core/sock.c
-> +++ b/net/core/sock.c
-> @@ -1214,12 +1214,12 @@ static void sk_prot_free(struct proto *prot, struct sock *sk)
->  
->  #ifdef CONFIG_CGROUPS
->  #if IS_ENABLED(CONFIG_NET_CLS_CGROUP)
-> -void sock_update_classid(struct sock *sk)
-> +void sock_update_classid(struct sock *sk, struct task_struct *task)
->  {
->  	u32 classid;
->  
->  	rcu_read_lock();  /* doing current task, which cannot vanish. */
-> -	classid = task_cls_classid(current);
-> +	classid = task_cls_classid(task);
->  	rcu_read_unlock();
+[...]
 
 
-Comment is now misleading (since task might not be current) and
-rcu_read_lock()/rcu_read_unlock() protects nothing here, but avoid a
-lockdep splat...
+>
+> +static void cgrp_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+> +{
+> +	struct task_struct *p;
+> +
+> +	cgroup_taskset_for_each(p, cgrp, tset) {
+> +		unsigned int fd;
+> +		struct fdtable *fdt;
+> +		struct files_struct *files;
+> +
+> +		task_lock(p);
+> +		files = p->files;
+> +		if (!files) {
+> +			task_unlock(p);
+> +			continue;
+> +		}
+> +
+> +		spin_lock(&files->file_lock);
+> +		fdt = files_fdtable(files);
+> +		for (fd = 0; fd < fdt->max_fds; fd++) {
+> +			struct file *file;
+> +			struct socket *sock;
+> +			int err;
+> +
+> +			file = fcheck_files(files, fd);
+> +			if (!file)
+> +				continue;
+> +
+> +			sock = sock_from_file(file, &err);
+> +			if (sock)
+> +				sock_update_classid(sock->sk, p);
+> +		}
+> +		spin_unlock(&files->file_lock);
 
-Hey task_cls_classid() has its own rcu protection since commit
-3fb5a991916091a908d (cls_cgroup: Fix rcu lockdep warning)
+This block should probably use iterate_fd() instead of open coding
+this. See the latest net_prio_attach().
 
-So we can safely revert Paul commit (1144182a8757f2a1)
-(We no longer need rcu_read_lock/unlock here)
+.John
 
-(BTW net-next is not opened yet, its content outdated, although I like
-your patch series !)
-
-
+> +		task_unlock(p);
+> +	}
+> +}
+> +
