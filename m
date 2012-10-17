@@ -1,65 +1,46 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v5 12/14] execute the whole memcg freeing in free_worker
-Date: Wed, 17 Oct 2012 15:56:33 +0900
-Message-ID: <507E56A1.90809@jp.fujitsu.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-13-git-send-email-glommer@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Is not locking task_lock in cgroup_fork() safe?
+Date: Wed, 17 Oct 2012 15:26:26 +0800
+Message-ID: <507E5DA2.7080902@huawei.com>
+References: <20121008020000.GB2575@localhost> <20121008020138.GA4188@localhost> <507268AA.8050509@huawei.com> <20121008065752.GA5931@localhost> <20121016193428.GE16166@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1350382611-20579-13-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121016193428.GE16166-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-(2012/10/16 19:16), Glauber Costa wrote:
-> A lot of the initialization we do in mem_cgroup_create() is done with
-> softirqs enabled. This include grabbing a css id, which holds
-> &ss->id_lock->rlock, and the per-zone trees, which holds
-> rtpz->lock->rlock. All of those signal to the lockdep mechanism that
-> those locks can be used in SOFTIRQ-ON-W context. This means that the
-> freeing of memcg structure must happen in a compatible context,
-> otherwise we'll get a deadlock, like the one bellow, caught by lockdep:
-> 
->    [<ffffffff81103095>] free_accounted_pages+0x47/0x4c
->    [<ffffffff81047f90>] free_task+0x31/0x5c
->    [<ffffffff8104807d>] __put_task_struct+0xc2/0xdb
->    [<ffffffff8104dfc7>] put_task_struct+0x1e/0x22
->    [<ffffffff8104e144>] delayed_put_task_struct+0x7a/0x98
->    [<ffffffff810cf0e5>] __rcu_process_callbacks+0x269/0x3df
->    [<ffffffff810cf28c>] rcu_process_callbacks+0x31/0x5b
->    [<ffffffff8105266d>] __do_softirq+0x122/0x277
-> 
-> This usage pattern could not be triggered before kmem came into play.
-> With the introduction of kmem stack handling, it is possible that we
-> call the last mem_cgroup_put() from the task destructor, which is run in
-> an rcu callback. Such callbacks are run with softirqs disabled, leading
-> to the offensive usage pattern.
-> 
-> In general, we have little, if any, means to guarantee in which context
-> the last memcg_put will happen. The best we can do is test it and try to
-> make sure no invalid context releases are happening. But as we add more
-> code to memcg, the possible interactions grow in number and expose more
-> ways to get context conflicts. One thing to keep in mind, is that part
-> of the freeing process is already deferred to a worker, such as vfree(),
-> that can only be called from process context.
-> 
-> For the moment, the only two functions we really need moved away are:
-> 
->    * free_css_id(), and
->    * mem_cgroup_remove_from_trees().
-> 
-> But because the later accesses per-zone info,
-> free_mem_cgroup_per_zone_info() needs to be moved as well. With that, we
-> are left with the per_cpu stats only. Better move it all.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> Tested-by: Greg Thelen <gthelen@google.com>
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-> CC: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Tejun Heo <tj@kernel.org>
+=E4=BA=8E 2012/10/17 3:34, Tejun Heo =E5=86=99=E9=81=93:
+> On Mon, Oct 08, 2012 at 03:57:52PM +0900, Tejun Heo wrote:
+>> Hello, Li, Frederic.
+>>
+>> On Mon, Oct 08, 2012 at 01:46:18PM +0800, Li Zefan wrote:
+>>> You're right. threadgroup lock is held unconditionally in attach_ta=
+sk_py_pid(),
+>>> but it's held only for CLONE_THREAD in fork path, which I guess I o=
+verlooked
+>>> when reviewing the patch.
+>>>
+>>>> Also, please note that task_lock is likely to be hot on local CPU =
+at
+>>>> that point and avoiding it there might not really buy much.
+>>>
+>>> Reverting that commit should be fine.
+>>
+>> There are other commits which perform similar optimization
+>>
+>>  7e3aa30ac8 ("cgroup: Remove task_lock() from cgroup_post_fork()")
+>>  c84cdf75cc ("cgroup: Remove unnecessary task_lock before fetching c=
+ss_set on migration")
+>>
+>> Are they wrong too?
+>=20
+> Frederic, Li, Ping?
+>=20
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-
+Yes, they're wrong. I sugguest we revert those commits, and then fix cg=
+roup_attach_task_all()
+and others if still any.
