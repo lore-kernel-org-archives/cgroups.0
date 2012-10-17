@@ -1,68 +1,61 @@
-From: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v0 4/4] cgroup: net_cls: Rework update socket logic
-Date: Wed, 17 Oct 2012 07:02:01 -0700
-Message-ID: <507EBA59.9080307@intel.com>
-References: <1350479078-29361-1-git-send-email-wagi@monom.org> <1350479078-29361-5-git-send-email-wagi@monom.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC] memcg/cgroup: do not fail fail on pre_destroy callbacks
+Date: Wed, 17 Oct 2012 19:30:48 +0400
+Message-ID: <507ECF28.1060602@parallels.com>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1350479078-29361-5-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jamal Hadi Salim <jhs-jkUAjuhPggJWk0Htik3J/w@public.gmane.org>, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Stanislav Kinsbursky <skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-On 10/17/2012 6:04 AM, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
->
-> The cgroup logic part of net_cls is very similar as the one in
-> net_prio. Let's stream line the net_cls logic with the net_prio one.
->
+On 10/17/2012 05:30 PM, Michal Hocko wrote:
+> Hi,
+> memcg is the only controller which might fail in its pre_destroy
+> callback which makes the cgroup core more complicated for no good
+> reason. This is an attempt to change this unfortunate state. 
+> 
+> I am sending this a RFC because I would like to hear back whether the
+> approach is correct. I thought that the changes would be more invasive
+> but it seems that the current code was mostly prepared for this and it
+> needs just some small tweaks (so I might be missing something important
+> here).
+> 
+> The first two patches are just clean ups. They could be merged even
+> without the rest.
+> 
+> The real change, although the code is not changed that much, is the 3rd
+> patch. It changes the way how we handle mem_cgroup_move_parent failures.
+> We have to realize that all those failures are *temporal*. Because we
+> are either racing with the page removal or the page is temporarily off
+> the LRU because of migration resp. global reclaim. As a result we do
+> not fail mem_cgroup_force_empty_list if the page cannot be moved to the
+> parent and rather retry until the LRU is empty.
+> 
+> The 4th patch is for cgroup core. I have moved cgroup_call_pre_destroy
+> inside the cgroup_lock which is not very nice because the callbacks
+> can take some time. Maybe we can move this call at the very end of the
+> function?
+> All I need for memcg is that cgroup_call_pre_destroy has been called and
+> that no new cgroups can be attached to the group. The cgroup_lock is
+> necessary for the later condition but if we move after CGRP_REMOVED flag
+> is set then we are safe as well.
+> 
+> The last two patches are trivial follow ups for the cgroups core change
+> because now we know that nobody will interfere with us so we can drop
+> those empty && no child condition.
+> 
+> Comments, thoughts?
+> 
 
-[...]
+I personally don't see anything fundamentally wrong with this.
 
-
->
-> +static void cgrp_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-> +{
-> +	struct task_struct *p;
-> +
-> +	cgroup_taskset_for_each(p, cgrp, tset) {
-> +		unsigned int fd;
-> +		struct fdtable *fdt;
-> +		struct files_struct *files;
-> +
-> +		task_lock(p);
-> +		files = p->files;
-> +		if (!files) {
-> +			task_unlock(p);
-> +			continue;
-> +		}
-> +
-> +		spin_lock(&files->file_lock);
-> +		fdt = files_fdtable(files);
-> +		for (fd = 0; fd < fdt->max_fds; fd++) {
-> +			struct file *file;
-> +			struct socket *sock;
-> +			int err;
-> +
-> +			file = fcheck_files(files, fd);
-> +			if (!file)
-> +				continue;
-> +
-> +			sock = sock_from_file(file, &err);
-> +			if (sock)
-> +				sock_update_classid(sock->sk, p);
-> +		}
-> +		spin_unlock(&files->file_lock);
-
-This block should probably use iterate_fd() instead of open coding
-this. See the latest net_prio_attach().
-
-.John
-
-> +		task_unlock(p);
-> +	}
-> +}
-> +
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
