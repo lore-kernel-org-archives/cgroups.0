@@ -1,113 +1,99 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] oom, memcg: handle sysctl oom_kill_allocating_task while
- memcg oom happening
-Date: Thu, 18 Oct 2012 21:51:57 +0800
-Message-ID: <5080097D.5020501@gmail.com>
-References: <1350382328-28977-1-git-send-email-handai.szj@taobao.com> <20121016133439.GI13991@dhcp22.suse.cz> <CAFj3OHVW-betpEnauzk-vQEfw_7bJxFneQb2oWpAZzOpZuMDiQ@mail.gmail.com> <20121018115640.GB24295@dhcp22.suse.cz>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Is not locking task_lock in cgroup_fork() safe?
+Date: Thu, 18 Oct 2012 16:50:59 +0200
+Message-ID: <CAFTL4hzo_w7HTgC9ApTk113X8WdZSpV+D+VSEe=604YEJFmKsg@mail.gmail.com>
+References: <20121008020000.GB2575@localhost>
+	<CAFTL4hzXWtzp7megsCAEuak5=_2SWmp9age-+wrpyQAU4BRZ0w@mail.gmail.com>
+	<20121016193341.GD16166@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=gljtvi3l1KhJlFefNmCou1+VhYKgPeWRoW6LEFIoyZQ=;
-        b=tyiqaNol3wDoXIlkrEi/Tng6vo3fu+ij6u7EWLytYaNAj54nmz+KxeA/mdHSpBODPr
-         SdBorSitNqMOWW9QJfnBJySizWq3iBeb9Q5f871VdN3pzlIJwBAfbGBFpNu1RaQ285HR
-         QshYMZ7kstgt4z1MwTD116Mt+riOnmIg6YMBdony9GOznXFGqmfX9skmwzBbNx2khtND
-         q8DcGN9UQk1WJyFGZd0eubvVCvzb7RORsKtuei4yAAZfsj+QaNDGSRZGAlYGYD+u7d+O
-         9czjbWBUiqMrb5xwjQvS8YhF+vswHH7p+PTQ47UHAj+5vXbtqRi3gPRGksUwoYb6qBUV
-         2IGQ==
-In-Reply-To: <20121018115640.GB24295-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=PYNGFKojFyRznQoQxPnn7Nzs9akVZBL6v01efp2jV2k=;
+        b=xNdIA+0WsYIged+QgL67N61M28BoTB9/iDibPZoCJW1Ig1p+XLMVlhPq2ZHvNkE0Xb
+         5g3qy2vKPFwEpBaoi+u6HkyJoThnjVToq87DdHbUgb6r/I6VBDWT8i8gBRbQneUYVzfs
+         KvjFRmaKww/XVxgzV+4zBey/0sCLF4q/5uI+iYhPQg47xqi4XDvn7IcpkR9uq1CzVugb
+         lWRAjkmf8GHki8IhqPAikPX1mRjX+HrD2AGKgOjsWYgoN+rASvoVbyvOuWClpy/UOpSp
+         fU5pPcrIyEfFpHpfSN35YzLeQsoNJmmz8ZSrxi0egkgLPPpvq0vEnyORqpsbqe/0If3E
+         uYGg==
+In-Reply-To: <20121016193341.GD16166-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 10/18/2012 07:56 PM, Michal Hocko wrote:
-> On Wed 17-10-12 01:14:48, Sha Zhengju wrote:
->> On Tuesday, October 16, 2012, Michal Hocko<mhocko-AlSwsSmVLrQ@public.gmane.org>  wrote:
-> [...]
->>> Could you be more specific about the motivation for this patch? Is it
->>> "let's be consistent with the global oom" or you have a real use case
->>> for this knob.
->>>
->> In our environment(rhel6), we encounter a memcg oom 'deadlock'
->> problem.  Simply speaking, suppose process A is selected to be killed
->> by memcg oom killer, but A is uninterruptible sleeping on a page
->> lock. What's worse, the exact page lock is holding by another memcg
->> process B which is trapped in mem_croup_oom_lock(proves to be a
->> livelock).
-> Hmm, this is strange. How can you get down that road with the page lock
-> held? Is it possible this is related to the issue fixed by: 1d65f86d
-> (mm: preallocate page before lock_page() at filemap COW)?
-
-No, it has nothing with the cow page. By checking stack of the process A
-selected to be killed(uninterruptible sleeping), it was stuck at:
-__do_fault->filemap_fault->__lock_page_or_retry->wait_on_page_bit--(D 
-state).
-The person B holding the exactly page lock is on the following path:
-__do_fault->filemap_fault->__do_page_cache_readahead->..->mpage_readpages
-->add_to_page_cache_locked ---- >(in memcg oom and cannot exit)
-In mpage_readpages, B tends to read a dozen of pages in: for each of 
-page will do
-locking, charging, and then send out a big bio. And A is waiting for one 
-of the pages
-and stuck.
-
-As I said, 37b23e05 has made pagefault killable by changing 
-uninterruptible sleeping
-to killable sleeping. So A can be woke up to exit successfully and free 
-the memory which
-can in turn help B pass memcg charging period.
-
-(By the way, it seems commit 37b23e05 and 7d9fdac need to be backported 
-to --stable tree
-to deliver RHEL users. ;-) )
-
->> Then A can not exit successfully to free the memory and both of them
->> can not moving on.
->> Indeed, we should dig into these locks to find the solution and
->> in fact the 37b23e05 (x86, mm: make pagefault killable) and
->> 7d9fdac(Memcg: make oom_lock 0 and 1 based other than counter) have
->> already solved the problem, but if oom_killing_allocating_task is
->> memcg aware, enabling this suicide oom behavior will be a simpler
->> workaround. What's more, enabling the sysctl can avoid other potential
->> oom problems to some extent.
-> As I said, I am not against this but I really want to see a valid use
-> case first. So far I haven't seen any because what you mention above is
-> a clear bug which should be fixed. I can imagine the huge number of
-> tasks in the group could be a problem as well but I would like to see
-> what are those problems first.
+2012/10/16 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
+> Hey, Frederic.
 >
-
-In view of consistent with global oom and performance benefit, I suggest
-we may as well open it in memcg oom as there's no obvious harm.
-As refer to the bug I mentioned, obviously the key solution is the above two
-patchset, but considing other *potential* memcg oom bugs, the sysctl may
-be a role of temporary workaround to some extent... but it's just a 
-workaround.
-
-
-Thanks,
-Sha
-
->>> The primary motivation for oom_kill_allocating_tas AFAIU was to reduce
->>> search over huge tasklists and reduce task_lock holding times. I am not
->>> sure whether the original concern is still valid since 6b0c81b (mm,
->>> oom: reduce dependency on tasklist_lock) as the tasklist_lock usage has
->>> been reduced conciderably in favor of RCU read locks is taken but maybe
->>> even that can be too disruptive?
->>> David?
+> On Mon, Oct 08, 2012 at 02:48:58PM +0200, Frederic Weisbecker wrote:
+>> Yeah I missed this one.
+>> Now the whole cgroup_attach_task() is clusteracy without the
+>
+> Clusteracy?
+>
+>> threadgroup lock anyway:
 >>
->> On the other hand, from the semantic meaning of oom_kill_allocating_task,
->> it implies to allow suicide-like oom, which has no obvious relationship
->> with performance problems(such as huge task lists or task_lock holding
->> time).
-> I guess that suicide-like oom in fact means "kill the poor soul that
-> happened to charge the last". I do not see any use case for this from
-> top of my head (appart from the performance benefits of course).
+>> * The PF_EXITING check is racy (we are neither holding tsk->flags nor
+>> threagroup lock).
 >
->> So make the sysctl be consistent with global oom will be better or set
->> an individual option for memcg oom just as panic_on_oom does.
+> PF_EXITING is *always* protected by threadgroup_change_begin/end().
+>
+>> * The cgrp == oldcgrp is racy (exit() can change the oldcgrp anytime.
+>
+> So, as long as this happens after PF_EXITING check, it should be safe.
+>
+>> * can_attach / attach / cancel_attach can race against fork/exit (and
+>> post_fork if you consider those interested in cgroup task link like
+>> the freezer. But that is racy in any case already even with
+>> threadgroup lock)
+>
+> Against exit, no.  Against forking a new process, can they?  If so, we
+> need to fix it.
+>
+>> It has been designed to be called under that lock. So I suspect the
+>
+> Ummm.... threadgroup_lock is a recent addition so things couldn't have
+> been designed to be called under that lock.  threadgroup_lock protects
+> the *threadgroup* - creating a new task in the same process or a task
+> of the process exiting.  It doesn't do anything about other processes.
+> In fact, the lock itself is per-process.
+>
+>> best, at least for now, is to threadgroup lock from
+>> cgroup_attach_task_all(). And also make cgroup_attach_task() static to
+>> avoid future unsafe callers.
+>
+> Oh, from that call path, sure.  Can someone teach me why we need that
+> one at all?  I think we're confusing each other here.  I was talking
+> about the usual migration path not protected against forking a new
+> process.
+
+Ah right I was confused. Hmm, indeed we have a race here on
+cgroup_fork(). How about using css_try_get() in cgroup_fork() and
+refetch the parent's css until we succeed? This requires rcu_read_lock
+though, and freeing the css_set under RCU.
+
+Don't know which is better.
+
+Different problem but I really would like we sanitize the cgroup hooks
+in fork. There is cgroup_fork(), cgroup_post_fork() which takes that
+big css_set_lock, plus the big threadgroup lock... I hope we can
+simplify the mess there.
+
+>
+>> There is no harm yet because the only user of it calls that with
+>> current as the "task" parameter, in a place that is
+>> not in the middle of a fork. So no need to worry about some stable backport.
+>>
+>> Also, looking at cgroup_attach_task_all(), what guarantee do we have
+>> that "from" is not concurrently exiting and removing its cgrp. Which
+>> is a separate problem. But we probably need to do some css_set_get()
+>> before playing with it.
+>
+> I really don't know.  Why isn't it locking the threadgroup to begin
+> with?
+
+No idea, sounds like something to fix.
