@@ -1,59 +1,43 @@
-From: Matt Helsley <matthltc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: allow migration
-	regardless of freezer state and update locking
-Date: Wed, 17 Oct 2012 12:16:06 -0700
-Message-ID: <20121017191606.GA6223@us.ibm.com>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v5 07/14] mm: Allocate kernel pages to the right memcg
+Date: Thu, 18 Oct 2012 13:44:57 -0700
+Message-ID: <20121018134457.5e7edd19.akpm@linux-foundation.org>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com>
+	<1350382611-20579-8-git-send-email-glommer@parallels.com>
+	<20121017151221.4c420e5a.akpm@linux-foundation.org>
+	<507FCADF.20109@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1350426526-14254-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <507FCADF.20109-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Oct 16, 2012 at 03:28:39PM -0700, Tejun Heo wrote:
-> Hello,
+On Thu, 18 Oct 2012 13:24:47 +0400
+Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+
+> On 10/18/2012 02:12 AM, Andrew Morton wrote:
+> > On Tue, 16 Oct 2012 14:16:44 +0400
+> > Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> > 
+> >> When a process tries to allocate a page with the __GFP_KMEMCG flag, the
+> >> page allocator will call the corresponding memcg functions to validate
+> >> the allocation. Tasks in the root memcg can always proceed.
+> >>
+> >> To avoid adding markers to the page - and a kmem flag that would
+> >> necessarily follow, as much as doing page_cgroup lookups for no reason,
+> >> whoever is marking its allocations with __GFP_KMEMCG flag is responsible
+> >> for telling the page allocator that this is such an allocation at
+> >> free_pages() time.
+> > 
+> > Well, why?  Was that the correct decision?
+> > 
 > 
-> This patchset updates cgroup_freezer so that
-> 
-> * Unfreezable kernel tasks don't prevent a cgroup from transitioning
->   into FROZEN from FREEZING.  There's nothing userland can do with or
->   about such tasks.
+> I don't fully understand your question. Is this the same question you
+> posed in patch 0, about marking some versus marking all? If so, I
+> believe I should have answered it there.
 
-Seems like a non-problem. Do you have a testcase showing how kernel
-threads prevent cgroups that should be freezable from being frozen?
-It used to be that you couldn't move kernel threads out of the root
-cgroup and the root cgroup was not freezable. So this was never a
-problem before. Is there some change here that I'm unaware of?
-
-> 
-> * Tasks can be moved in and out of a frozen cgroup.  Tasks are made to
->   conform to the state of the new cgroup during migration.  This
->   behavior makes a lot more sense and removes the use of
->   ->can_attach() which makes co-mounting difficult.
-
-One nice aspect of freezing the set of tasks in the cgroup as well as the
-tasks themselves was you had a fixed set of tasks to work with (from
-userspace or otherwise). With this change that will no longer be true.
-This is a userspace-visible behavior change and userspace code may
-have relied on this feature.
-
-Will this work for the CRIU folks? With this patch one of the tasks being
-checkpointed could become thawed simply by some other process writing
-the pid into a different cgroup's tasks file. In contrast, with the
-current code they'd have to explicitly thaw its cgroup first.
-
-Cheers,
-	-Matt Helsley
+Yes, it's the same question.  The one which has not yet been fully answered ;)
