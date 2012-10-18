@@ -1,87 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: allow migration
-	regardless of freezer state and update locking
-Date: Thu, 18 Oct 2012 15:35:17 -0700
-Message-ID: <20121018223517.GQ13370@google.com>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
-	<20121017191606.GA6223@us.ibm.com>
-	<20121018211434.GI13370@google.com>
-	<20121018222155.GB6223@us.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
+Date: Thu, 18 Oct 2012 15:41:48 -0700
+Message-ID: <20121018224148.GR13370@google.com>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+ <1350480648-10905-5-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=D0oCIRKDf2hwW94fy+BaDQlE8fblehxGUVF65yflQzw=;
+        b=rA1ln5NN+M6FOmdcj6btEW3jemNcm+Cu3TU0vINBzuTl8oqwkQkBdrNNgw6sL7zcIi
+         lF39IrXhkhrvwG3dQKh7pUX21FDOLtlUDfCKMsrNFLa/+nc2uscvbLLDV2YtH9EFA43b
+         7IqQVz1KYu0bC9XwQa0f7yThHmZyOf7aF/D/f9xN6HQHSUXkxOWHzL4auK8StmYRqN8s
+         CSJWqdgmFi7NeO+281Tkoc3KBzTcy+6avjCu4Nd/kNjp0I9dN1ebDESwRkkuvxeu97xE
+         DZ7ZHbdKPrV7c60326iPLTlmRYFrlN/5cjdoj9wG4lHgBStBz6K+iX44rFbSXFEy8KqE
+         4MAA==
+Content-Disposition: inline
+In-Reply-To: <1350480648-10905-5-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=taYJBIfxSo6czEkg/tJSvmm1HJjdrcpiD6EhcKHTaK4=;
-	b=ZY6tTicZcDuyJtGxuQDrHvRe7bLHXhN3aU7rknhGwgPL0BpyQ2m2rzbPvO5/QkQrpb
-	fkOM8Ml0hbmtCUvhX8apWBzfVdmunnBKxNgRIU1cgf6VNZ5kWhLGfTj/l0AZlWLRkSam
-	ZQagXvOllbnaqYntbA5Gko4aGG67o7cCdfDJ2bSkR3qW/V/0qKCCfLq+It+P9pZULY5r
-	7BczFiCwIjVzkRGTFpsZXCw1vl5y10a1d1Rqs2XVVWbVCiMImbwFeSCxJz0zUk/kMBya
-	87X9wr25OGOd+UTKSbeYsdo4CyENYj1L7OfE5mTyEIH4/2GRCcHjqru/uTjUaCVNFJlc
-	CwcQ==
-Content-Disposition: inline
-In-Reply-To: <20121018222155.GB6223-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matt Helsley <matthltc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-Hello, Matt.
+Hello, Michal.
 
-On Thu, Oct 18, 2012 at 03:21:55PM -0700, Matt Helsley wrote:
-> > Hmmm?  Nothing prevents kthreads from being moved around.  We only
-> > recently added the restriction to prevent migration of the kthreadd
-> > (the one which creates other kthreads).  You can reproduce it with
-> > khungtask or any other !freezable kthreads.
+On Wed, Oct 17, 2012 at 03:30:46PM +0200, Michal Hocko wrote:
+> Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
+> safely move on and forbit all the callbacks to fail. The last missing
+> piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
+> that css_tryget fails so no new charges for the memcg can happen.
+> The callbacks are also called from within cgroup_lock to guarantee that
+> no new tasks show up. We could theoretically call them outside of the
+> lock but then we have to move after CGRP_REMOVED flag is set.
 > 
-> Ok. I don't immmediately see why that'd be a good idea but it's
-> possible..
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
 
-Beats me too.  There were talks about restricting all kthreads from
-being moved out of the root cgroup.  Dunno.  Maybe.
+So, the plan is to do something like the following once memcg is
+ready.
 
-> <off_topic>
-> "Whoever" did the freeze needs a way to "lock" access to the freezer state,
-> change the freezer state itself, do something (e.g. CRIU) which relies on
-> the state not changing, and then release the lock. Plus the lock has to be
-> released by the kernel if "Whoever" dies without the chance to release it.
-> So I was thinking who holds the lock and its lifetime could be represented
-> in userspace by file descriptor(s).
-> </off_topic>
+  http://thread.gmane.org/gmane.linux.kernel.containers/22559/focus=75251
 
-Long term, I don't think it's feasible to continue to use cgroup
-kernel interface as the multiplexing layer among different users.
-cgroup core simply doesn't have enough context or infrastructure to
-support such usages.  It's somewhere between being a pure interface to
-the provided kernel feature and fully multiplexed interface which
-userland applications can depend on for arbitration.  It tries to have
-the appearance of the latter but fails.
-
-I think the only sane way would be having a userland arbitrator which
-owns the kernel interface to itself and makes policy decisions from
-userland clients and configures cgroup accordingly.
-
-> > As for CRIU, it isn't using cgroup freezer at the moment because
-> > frozen tasks can't be ptraced currently.  Something I'm hoping to
-> > change but not sure when it can be done.
-> 
-> OK, but that doesn't mean the frozen nature of the task list itself
-> won't be useful in the future.
-
-I think that should be solved via userland policies rather than
-depending on this accidental cgroup_freezer feature.
+Note that the patch is broken in a couple places but it does show the
+general direction.  I'd prefer if patch #3 simply makes pre_destroy()
+return 0 and drop __DEPRECATED_clear_css_refs from mem_cgroup_subsys.
+Then, I can pull the branch in and drop all the unnecessary cruft.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
