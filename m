@@ -1,76 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: allow migration
- regardless of freezer state and update locking
-Date: Thu, 18 Oct 2012 14:14:34 -0700
-Message-ID: <20121018211434.GI13370@google.com>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
- <20121017191606.GA6223@us.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/6] memcg: split mem_cgroup_force_empty into
+ reclaiming and reparenting parts
+Date: Thu, 18 Oct 2012 14:56:07 -0700
+Message-ID: <20121018215607.GN13370@google.com>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+ <1350480648-10905-2-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=2xh9RUbJfuqRDj58gBzDPcDRgzcStUYblBSADkz/2hQ=;
-        b=Mw15TM3bnOynYznm8FvTprPcJL28hIKg3DJu8wgTC1SgWA82asfz8bH1p5cv4wzsa4
-         TddBZUZrWChCYcqVQYHbBIfD01qVVmsiKyjc7bSXJaJEocFY4vrnLQWaBn6M6gD1os0m
-         bgUa/ZVYEuvB4o7lkYZIlbZm9W5UXk68PoZJ0iiXdmDQu01vBM3cxtAU0rM0BcJ729G9
-         JaxicjqVPVL3/MZlHvs4+L7dG2vrt9NPgBAyTiSujw8m7acBfUeZc/Vtbo0CHryAUmrs
-         8VqLSdZFOfV+GWrW6XOwnu6mPcNXpbr8bkqBeYP2VyJGyJjkxX7sTLVax9ylhbdK92P+
-         lKAQ==
+        bh=KVzf7wBisjE7iRHoRaXKH5tr4hkk9PEtf3LpDPF9UDA=;
+        b=sU+nHDpu3OzGiCxfV6gW1nLEqOcALkcblXNWsvDrjIdWnR5bP0BMGGI5EoKwOzy2Ok
+         BqAJ1O8zzhgRAe1EiN2V3euaWt+L7Rxvp58BAEOyWX3m3Pe3tOZBN+8Im/SmPLWMoGFE
+         CmMazxGCzD5Ek4dwuHCg6oCPIVKhVOWzhM7k4OTO2QZA4c1Reotm1AiNve6zxtY82QB3
+         LMohX6tYl4v3ftKAgfPEcjp7O+H6VgSLT46Ljc88qM5dggKS4rh+H1wqBHXry2gcFVhY
+         o/cvJcem1N5giQGu461QqCXAjXgnz3vcVTbL+nncmcsfMijSLFv+nsXU9Fm+TAcLHiNf
+         BD9A==
 Content-Disposition: inline
-In-Reply-To: <20121017191606.GA6223-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1350480648-10905-2-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Matt Helsley <matthltc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-Hello, Matt.
-
-On Wed, Oct 17, 2012 at 12:16:06PM -0700, Matt Helsley wrote:
-> > * Unfreezable kernel tasks don't prevent a cgroup from transitioning
-> >   into FROZEN from FREEZING.  There's nothing userland can do with or
-> >   about such tasks.
+On Wed, Oct 17, 2012 at 03:30:43PM +0200, Michal Hocko wrote:
+> mem_cgroup_force_empty did two separate things depending on free_all
+> parameter from the very beginning. It either reclaimed as many pages as
+> possible and moved the rest to the parent or just moved charges to the
+> parent. The first variant is used as memory.force_empty callback while
+> the later is used from the mem_cgroup_pre_destroy.
 > 
-> Seems like a non-problem. Do you have a testcase showing how kernel
-> threads prevent cgroups that should be freezable from being frozen?
-> It used to be that you couldn't move kernel threads out of the root
-> cgroup and the root cgroup was not freezable. So this was never a
-> problem before. Is there some change here that I'm unaware of?
-
-Hmmm?  Nothing prevents kthreads from being moved around.  We only
-recently added the restriction to prevent migration of the kthreadd
-(the one which creates other kthreads).  You can reproduce it with
-khungtask or any other !freezable kthreads.
-
-> > * Tasks can be moved in and out of a frozen cgroup.  Tasks are made to
-> >   conform to the state of the new cgroup during migration.  This
-> >   behavior makes a lot more sense and removes the use of
-> >   ->can_attach() which makes co-mounting difficult.
+> The whole games around gotos are far from being nice and there is no
+> reason to keep those two functions inside one. Let's split them and
+> also move the responsibility for css reference counting to their callers
+> to make to code easier.
 > 
-> One nice aspect of freezing the set of tasks in the cgroup as well as the
-> tasks themselves was you had a fixed set of tasks to work with (from
-> userspace or otherwise). With this change that will no longer be true.
-> This is a userspace-visible behavior change and userspace code may
-> have relied on this feature.
->
-> Will this work for the CRIU folks? With this patch one of the tasks being
-> checkpointed could become thawed simply by some other process writing
-> the pid into a different cgroup's tasks file. In contrast, with the
-> current code they'd have to explicitly thaw its cgroup first.
+> This patch doesn't have any functional changes.
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
 
-Yeap, this is a userland visible behavior change.  Don't see any other
-way around it tho and if you can't prevent someone else moving things
-in/out of your cgroup, what prevents someone else echoing THAWED to
-freezer.state?
-
-As for CRIU, it isn't using cgroup freezer at the moment because
-frozen tasks can't be ptraced currently.  Something I'm hoping to
-change but not sure when it can be done.
+Reviewed-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
