@@ -1,56 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 04/14] kmem accounting basic infrastructure
-Date: Thu, 18 Oct 2012 12:47:27 -0700
-Message-ID: <20121018194727.GB13370@google.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com>
- <1350382611-20579-5-git-send-email-glommer@parallels.com>
- <alpine.DEB.2.00.1210171455010.20712@chino.kir.corp.google.com>
- <508035E3.4080508@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: Is not locking task_lock in cgroup_fork() safe?
+Date: Thu, 18 Oct 2012 13:07:05 -0700
+Message-ID: <20121018200705.GG13370@google.com>
+References: <20121008020000.GB2575@localhost>
+	<CAFTL4hzXWtzp7megsCAEuak5=_2SWmp9age-+wrpyQAU4BRZ0w@mail.gmail.com>
+	<20121016193341.GD16166@google.com>
+	<CAFTL4hzo_w7HTgC9ApTk113X8WdZSpV+D+VSEe=604YEJFmKsg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=8juk3OCF47JbBIRsXz9uZ/s3yc/N/sp4lLm0Mnk7NH0=;
-        b=wDfKrAU8nLoG5/8CYV8MafKWcvNS/aS9Xxa3Chjlnc4WppI8PKvkdkhqq3SqqIM5Xd
-         4wFf7PSwSfBS/wuK/4yql6PRZU6N0QHDcOLzyyWGfb07wwum+c2nqkifNNF8LR4Hc1d9
-         2t2qs0uHiERAWEWG0VYU60jwHD5R6teefjAyaXr6nH8DGJgw5xC6sWY/hw0BaZIa/ny5
-         q5xFTXuzhOyeE5v6PNQRpIsch6OyYtnR0oJoLAYp88+9e6KW7uKoaz9k5q4ptcc7R80C
-         eSuU7dT2MVqPimWMWJLv+XkLI0TAxbjn4jOGIQnqifLSZhVI+3ePgpWHnYVB7oTtoCSG
-         shqQ==
-Content-Disposition: inline
-In-Reply-To: <508035E3.4080508@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=3lmEO8vPi7bSYNScGJH9/fHJUpueFb9aB39qTaZsscg=;
+	b=qEwQMkGE4n8xCr2SBifyV/K361ycXXNmVtK3NoSpMqavmSM3/bC3d2C6P7ltgGssg/
+	P3BNM9fw8q0z0deNW3hXx6YULPakkOEQ2+wMYZoh93OurJJyzXCK4fF6Sfz6pJyOM6j0
+	7YKQf9aj0ibTw35k4VQHpuTv28JEHMqQTTCOJEmJcDLN/1JhRSLSMU4ncegwDWX2sk2t
+	wdXd5J/0jiGDMUlxUWgoBY5kkIJtDYQBdXqKBF5LbHvrlX4efIqEk8Rtaxaa3MktZ1f3
+	oBLEjwNZ/J44opsPZw9Mc5gWk/EoizHIkufGYc+nSuf1Eijt3eV4nlHNUwPXocafiOS+
+	iU1g==
+Content-Disposition: inline
+In-Reply-To: <CAFTL4hzo_w7HTgC9ApTk113X8WdZSpV+D+VSEe=604YEJFmKsg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hey, Glauber.
+Hello, Frederic.
 
-On Thu, Oct 18, 2012 at 09:01:23PM +0400, Glauber Costa wrote:
-> That is the offensive part. But it is also how things are done in memcg
-> right now, and there is nothing fundamentally different in this one.
-> Whatever lands in the remaining offenders, can land in here.
+On Thu, Oct 18, 2012 at 04:50:59PM +0200, Frederic Weisbecker wrote:
+> Ah right I was confused. Hmm, indeed we have a race here on
+> cgroup_fork(). How about using css_try_get() in cgroup_fork() and
+> refetch the parent's css until we succeed? This requires rcu_read_lock
+> though, and freeing the css_set under RCU.
+> 
+> Don't know which is better.
 
-I think the problem here is that we don't have "you're committing to
-creation of a new cgroup" callback and thus subsystem can't
-synchronize locally against cgroup creation.  For task migration
-->attach() does that but cgroup creation may fail after ->create()
-succeeded so that doesn't work.
+For now, I'll revert the patches and cc stable.  Let's think about
+improving it later.
 
-We'll probably need to add ->post_create() which is invoked after
-creation is complete.  Li?
+> Different problem but I really would like we sanitize the cgroup hooks
+> in fork. There is cgroup_fork(), cgroup_post_fork() which takes that
+> big css_set_lock, plus the big threadgroup lock... I hope we can
+> simplify the mess there.
+
+Oh yeah, I've been looking at that one too.  There are a few problems
+in that area.  I think all we need is clearing ->cgroups to NULL on
+copy_process() and all the rest can be moved to cgroup_post_fork().
+I'd also like to make it very explicit that migration can't happen
+before post_fork is complete.
+
+> > I really don't know.  Why isn't it locking the threadgroup to begin
+> > with?
+> 
+> No idea, sounds like something to fix.
+
+Alrighty.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
