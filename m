@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v5 15/18] Aggregate memcg cache values in slabinfo
-Date: Fri, 19 Oct 2012 18:20:39 +0400
-Message-ID: <1350656442-1523-16-git-send-email-glommer@parallels.com>
+Subject: [PATCH v5 08/18] memcg: infrastructure to match an allocation to the right cache
+Date: Fri, 19 Oct 2012 18:20:32 +0400
+Message-ID: <1350656442-1523-9-git-send-email-glommer@parallels.com>
 References: <1350656442-1523-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1350656442-1523-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
@@ -13,12 +13,29 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-When we create caches in memcgs, we need to display their usage
-information somewhere. We'll adopt a scheme similar to /proc/meminfo,
-with aggregate totals shown in the global file, and per-group
-information stored in the group itself.
+The page allocator is able to bind a page to a memcg when it is
+allocated. But for the caches, we'd like to have as many objects as
+possible in a page belonging to the same cache.
 
-For the time being, only reads are allowed in the per-group cache.
+This is done in this patch by calling memcg_kmem_get_cache in the
+beginning of every allocation function. This routing is patched out by
+static branches when kernel memory controller is not being used.
+
+It assumes that the task allocating, which determines the memcg in the
+page allocator, belongs to the same cgroup throughout the whole process.
+Misacounting can happen if the task calls memcg_kmem_get_cache() while
+belonging to a cgroup, and later on changes. This is considered
+acceptable, and should only happen upon task migration.
+
+Before the cache is created by the memcg core, there is also a possible
+imbalance: the task belongs to a memcg, but the cache being allocated
+from is the global cache, since the child cache is not yet guaranteed to
+be ready. This case is also fine, since in this case the GFP_KMEMCG will
+not be passed and the page allocator will not attempt any cgroup
+accounting.
+
+[ v4: use a standard workqueue mechanism, create right away if
+  possible, index from cache side ]
 
 Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
@@ -29,223 +46,297 @@ CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 CC: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/memcontrol.h |  8 ++++++++
- include/linux/slab.h       |  4 ++++
- mm/memcontrol.c            | 27 ++++++++++++++++++++++++++-
- mm/slab.h                  | 27 +++++++++++++++++++++++++++
- mm/slab_common.c           | 42 ++++++++++++++++++++++++++++++++++++++----
- 5 files changed, 103 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h |  41 ++++++++++
+ init/Kconfig               |   2 +-
+ mm/memcontrol.c            | 186 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 228 insertions(+), 1 deletion(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5c1d234..14def0b 100644
+index 491d96c..92fc47a 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -404,6 +404,11 @@ void sock_update_memcg(struct sock *sk);
- void sock_release_memcg(struct sock *sk);
+@@ -422,6 +422,10 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep);
  
- extern struct static_key memcg_kmem_enabled_key;
+ int memcg_update_cache_size(struct kmem_cache *s, int num_groups);
+ void memcg_update_array_size(int num_groups);
 +
-+extern int memcg_limited_groups_array_size;
-+#define for_each_memcg_cache_index(_idx)	\
-+	for ((_idx) = 0; i < memcg_limited_groups_array_size; (_idx)++)
++struct kmem_cache *
++__memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp);
 +
- static inline bool memcg_kmem_enabled(void)
- {
- 	return static_key_false(&memcg_kmem_enabled_key);
-@@ -537,6 +542,9 @@ static inline void sock_release_memcg(struct sock *sk)
- {
+ /**
+  * memcg_kmem_newpage_charge: verify if a new kmem allocation is allowed.
+  * @gfp: the gfp allocation flags.
+@@ -491,6 +495,37 @@ memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg, int order)
+ 		__memcg_kmem_commit_charge(page, memcg, order);
  }
  
-+#define for_each_memcg_cache_index(_idx)	\
-+	for (; NULL; )
-+
- static inline bool memcg_kmem_enabled(void)
- {
- 	return false;
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 4a3a749..b521426 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -219,6 +219,10 @@ struct memcg_cache_params {
- 
- int memcg_update_all_caches(int num_memcgs);
- 
-+struct seq_file;
-+int cache_show(struct kmem_cache *s, struct seq_file *m);
-+void print_slabinfo_header(struct seq_file *m);
-+
- /*
-  * Common kmalloc functions provided by all allocators
-  */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c7732fa..e7f3458 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -551,7 +551,7 @@ static void disarm_sock_keys(struct mem_cgroup *memcg)
- #endif
- 
- #ifdef CONFIG_MEMCG_KMEM
--static int memcg_limited_groups_array_size;
-+int memcg_limited_groups_array_size;
- #define MEMCG_CACHES_MIN_SIZE 64
- /*
-  * MAX_SIZE should be as large as the number of css_ids. Ideally, we could get
-@@ -2724,6 +2724,27 @@ static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
- 		(memcg->kmem_account_flags & KMEM_ACCOUNTED_MASK);
- }
- 
-+
-+static int mem_cgroup_slabinfo_read(struct cgroup *cont, struct cftype *cft,
-+					struct seq_file *m)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-+	struct kmem_cache *s;
-+
-+	if (!memcg_can_account_kmem(memcg))
-+		return -EIO;
-+
-+	print_slabinfo_header(m);
-+
-+	mutex_lock(&memcg->slab_caches_mutex);
-+	list_for_each_entry(s, &memcg->memcg_slab_caches, list)
-+		cache_show(s, m);
-+
-+	mutex_unlock(&memcg->slab_caches_mutex);
-+
-+	return 0;
-+}
-+
- static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
- {
- 	struct res_counter *fail_res;
-@@ -5687,6 +5708,10 @@ static struct cftype mem_cgroup_files[] = {
- 		.trigger = mem_cgroup_reset,
- 		.read = mem_cgroup_read,
- 	},
-+	{
-+		.name = "kmem.slabinfo",
-+		.read_seq_string = mem_cgroup_slabinfo_read,
-+	},
- #endif
- 	{ },	/* terminate */
- };
-diff --git a/mm/slab.h b/mm/slab.h
-index ab57462..c60f649 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -131,6 +131,23 @@ static inline bool slab_equal_or_root(struct kmem_cache *s,
- 	return (p == s) ||
- 		(s->memcg_params && (p == s->memcg_params->root_cache));
- }
-+
-+/*
-+ * We use suffixes to the name in memcg because we can't have caches
-+ * created in the system with the same name. But when we print them
-+ * locally, better refer to them with the base name
++/**
++ * memcg_kmem_get_cache: selects the correct per-memcg cache for allocation
++ * @cachep: the original global kmem cache
++ * @gfp: allocation flags.
++ *
++ * This function assumes that the task allocating, which determines the memcg
++ * in the page allocator, belongs to the same cgroup throughout the whole
++ * process.  Misacounting can happen if the task calls memcg_kmem_get_cache()
++ * while belonging to a cgroup, and later on changes. This is considered
++ * acceptable, and should only happen upon task migration.
++ *
++ * Before the cache is created by the memcg core, there is also a possible
++ * imbalance: the task belongs to a memcg, but the cache being allocated from
++ * is the global cache, since the child cache is not yet guaranteed to be
++ * ready. This case is also fine, since in this case the GFP_KMEMCG will not be
++ * passed and the page allocator will not attempt any cgroup accounting.
 + */
-+static inline const char *cache_name(struct kmem_cache *s)
++static __always_inline struct kmem_cache *
++memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
 +{
-+	if (!is_root_cache(s))
-+		return s->memcg_params->root_cache->name;
-+	return s->name;
-+}
++	if (!memcg_kmem_enabled())
++		return cachep;
++	if (gfp & __GFP_NOFAIL)
++		return cachep;
++	if (in_interrupt() || (!current->mm) || (current->flags & PF_KTHREAD))
++		return cachep;
++	if (unlikely(fatal_signal_pending(current)))
++		return cachep;
 +
-+static inline struct kmem_cache *cache_from_memcg(struct kmem_cache *s, int idx)
-+{
-+	return s->memcg_params->memcg_caches[idx];
++	return __memcg_kmem_get_cache(cachep, gfp);
 +}
  #else
- static inline bool is_root_cache(struct kmem_cache *s)
+ static inline void sock_update_memcg(struct sock *sk)
  {
-@@ -156,5 +173,15 @@ static inline bool slab_equal_or_root(struct kmem_cache *s,
+@@ -529,6 +564,12 @@ static inline void memcg_cache_list_add(struct mem_cgroup *memcg,
  {
- 	return true;
+ 	BUG();
  }
 +
-+static inline const char *cache_name(struct kmem_cache *s)
++static inline struct kmem_cache *
++memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
 +{
-+	return s->name;
++	return cachep;
 +}
+ #endif /* CONFIG_MEMCG_KMEM */
+ #endif /* _LINUX_MEMCONTROL_H */
+ 
+diff --git a/init/Kconfig b/init/Kconfig
+index af6c7f8..62b1f28 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -741,7 +741,7 @@ config MEMCG_SWAP_ENABLED
+ 	  then swapaccount=0 does the trick).
+ config MEMCG_KMEM
+ 	bool "Memory Resource Controller Kernel Memory accounting (EXPERIMENTAL)"
+-	depends on MEMCG && EXPERIMENTAL
++	depends on MEMCG && EXPERIMENTAL && !SLOB
+ 	default n
+ 	help
+ 	  The Kernel Memory extension for Memory Resource Controller can limit
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index dd6ac6a..ac2e621 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -562,7 +562,14 @@ static int memcg_limited_groups_array_size;
+  */
+ #define MEMCG_CACHES_MAX_SIZE 65535
+ 
++/*
++ * A lot of the calls to the cache allocation functions are expected to be
++ * inlined by the compiler. Since the calls to memcg_kmem_get_cache are
++ * conditional to this static branch, we'll have to allow modules that does
++ * kmem_cache_alloc and the such to see this symbol as well
++ */
+ struct static_key memcg_kmem_enabled_key;
++EXPORT_SYMBOL(memcg_kmem_enabled_key);
+ 
+ static void disarm_kmem_keys(struct mem_cgroup *memcg)
+ {
+@@ -2930,9 +2937,188 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s)
+ 
+ void memcg_release_cache(struct kmem_cache *s)
+ {
++	struct kmem_cache *root;
++	int id = memcg_css_id(s->memcg_params->memcg);
 +
-+static inline struct kmem_cache *cache_from_memcg(struct kmem_cache *s, int idx)
-+{
-+	return NULL;
-+}
- #endif
- #endif
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index c02faf5..7e6d503 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -247,7 +247,7 @@ int slab_is_available(void)
++	if (s->memcg_params->is_root_cache)
++		goto out;
++
++	root = s->memcg_params->root_cache;
++	root->memcg_params->memcg_caches[id] = NULL;
++	mem_cgroup_put(s->memcg_params->memcg);
++out:
+ 	kfree(s->memcg_params);
  }
  
- #ifdef CONFIG_SLABINFO
--static void print_slabinfo_header(struct seq_file *m)
-+void print_slabinfo_header(struct seq_file *m)
- {
- 	/*
- 	 * Output format version, so at least we can change it
-@@ -291,16 +291,43 @@ static void s_stop(struct seq_file *m, void *p)
- 	mutex_unlock(&slab_mutex);
- }
- 
--static int s_show(struct seq_file *m, void *p)
-+static void
-+memcg_accumulate_slabinfo(struct kmem_cache *s, struct slabinfo *info)
++static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *cachep)
 +{
-+	struct kmem_cache *c;
-+	struct slabinfo sinfo;
-+	int i;
++	char *name;
++	struct dentry *dentry;
 +
-+	if (!is_root_cache(s))
++	rcu_read_lock();
++	dentry = rcu_dereference(memcg->css.cgroup->dentry);
++	rcu_read_unlock();
++
++	BUG_ON(dentry == NULL);
++
++	name = kasprintf(GFP_KERNEL, "%s(%d:%s)",
++	    cachep->name, css_id(&memcg->css), dentry->d_name.name);
++
++	return name;
++}
++
++static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
++					 struct kmem_cache *s)
++{
++	char *name;
++	struct kmem_cache *new;
++
++	name = memcg_cache_name(memcg, s);
++	if (!name)
++		return NULL;
++
++	new = kmem_cache_create_memcg(memcg, name, s->object_size, s->align,
++				      (s->flags & ~SLAB_PANIC), s->ctor);
++
++	kfree(name);
++	return new;
++}
++
++/*
++ * This lock protects updaters, not readers. We want readers to be as fast as
++ * they can, and they will either see NULL or a valid cache value. Our model
++ * allow them to see NULL, in which case the root memcg will be selected.
++ *
++ * We need this lock because multiple allocations to the same cache from a non
++ * GFP_WAIT area will span more than one worker. Only one of them can create
++ * the cache.
++ */
++static DEFINE_MUTEX(memcg_cache_mutex);
++static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
++						  struct kmem_cache *cachep)
++{
++	struct kmem_cache *new_cachep;
++	int idx;
++
++	BUG_ON(!memcg_can_account_kmem(memcg));
++
++	idx = memcg_css_id(memcg);
++
++	mutex_lock(&memcg_cache_mutex);
++	new_cachep = cachep->memcg_params->memcg_caches[idx];
++	if (new_cachep)
++		goto out;
++
++	new_cachep = kmem_cache_dup(memcg, cachep);
++
++	if (new_cachep == NULL) {
++		new_cachep = cachep;
++		goto out;
++	}
++
++	mem_cgroup_get(memcg);
++	cachep->memcg_params->memcg_caches[idx] = new_cachep;
++	wmb(); /* the readers won't lock, make sure everybody sees it */
++	new_cachep->memcg_params->memcg = memcg;
++	new_cachep->memcg_params->root_cache = cachep;
++out:
++	mutex_unlock(&memcg_cache_mutex);
++	return new_cachep;
++}
++
++struct create_work {
++	struct mem_cgroup *memcg;
++	struct kmem_cache *cachep;
++	struct work_struct work;
++};
++
++static void memcg_create_cache_work_func(struct work_struct *w)
++{
++	struct create_work *cw;
++
++	cw = container_of(w, struct create_work, work);
++	memcg_create_kmem_cache(cw->memcg, cw->cachep);
++	/* Drop the reference gotten when we enqueued. */
++	css_put(&cw->memcg->css);
++	kfree(cw);
++}
++
++/*
++ * Enqueue the creation of a per-memcg kmem_cache.
++ * Called with rcu_read_lock.
++ */
++static void memcg_create_cache_enqueue(struct mem_cgroup *memcg,
++				       struct kmem_cache *cachep)
++{
++	struct create_work *cw;
++
++	cw = kmalloc(sizeof(struct create_work), GFP_NOWAIT);
++	if (cw == NULL)
 +		return;
 +
-+	for_each_memcg_cache_index(i) {
-+		c = cache_from_memcg(s, i);
-+		if (!c)
-+			continue;
++	/* The corresponding put will be done in the workqueue. */
++	if (!css_tryget(&memcg->css))
++		return;
 +
-+		memset(&sinfo, 0, sizeof(sinfo));
-+		get_slabinfo(c, &sinfo);
++	cw->memcg = memcg;
++	cw->cachep = cachep;
 +
-+		info->active_slabs += sinfo.active_slabs;
-+		info->num_slabs += sinfo.num_slabs;
-+		info->shared_avail += sinfo.shared_avail;
-+		info->active_objs += sinfo.active_objs;
-+		info->num_objs += sinfo.num_objs;
-+	}
++	INIT_WORK(&cw->work, memcg_create_cache_work_func);
++	schedule_work(&cw->work);
 +}
 +
-+int cache_show(struct kmem_cache *s, struct seq_file *m)
- {
--	struct kmem_cache *s = list_entry(p, struct kmem_cache, list);
- 	struct slabinfo sinfo;
- 
- 	memset(&sinfo, 0, sizeof(sinfo));
- 	get_slabinfo(s, &sinfo);
- 
-+	memcg_accumulate_slabinfo(s, &sinfo);
-+
- 	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
--		   s->name, sinfo.active_objs, sinfo.num_objs, s->size,
-+		   cache_name(s), sinfo.active_objs, sinfo.num_objs, s->size,
- 		   sinfo.objects_per_slab, (1 << sinfo.cache_order));
- 
- 	seq_printf(m, " : tunables %4u %4u %4u",
-@@ -312,6 +339,13 @@ static int s_show(struct seq_file *m, void *p)
- 	return 0;
- }
- 
-+static int s_show(struct seq_file *m, void *p)
++/*
++ * Return the kmem_cache we're supposed to use for a slab allocation.
++ * We try to use the current memcg's version of the cache.
++ *
++ * If the cache does not exist yet, if we are the first user of it,
++ * we either create it immediately, if possible, or create it asynchronously
++ * in a workqueue.
++ * In the latter case, we will let the current allocation go through with
++ * the original cache.
++ *
++ * Can't be called in interrupt context or from kernel threads.
++ * This function needs to be called with rcu_read_lock() held.
++ */
++struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
++					  gfp_t gfp)
 +{
-+	struct kmem_cache *s = list_entry(p, struct kmem_cache, list);
++	struct mem_cgroup *memcg;
++	int idx;
 +
-+	return cache_show(s, m);
++	if (cachep->memcg_params && cachep->memcg_params->memcg)
++		return cachep;
++
++	rcu_read_lock();
++	memcg = mem_cgroup_from_task(rcu_dereference(current->mm->owner));
++	rcu_read_unlock();
++
++	if (!memcg_can_account_kmem(memcg))
++		return cachep;
++
++	idx = memcg_css_id(memcg);
++	VM_BUG_ON(idx == -1);
++
++	if (cachep->memcg_params->memcg_caches[idx] == NULL) {
++		/*
++		 * If we are in a safe context, better to be predictable and
++		 * return right away. This guarantees that the allocation being
++		 * performed already belongs in the new cache. When we enqueue,
++		 * we can't do that, and at least the current allocation will
++		 * be relayed to the root cache while our cache is being
++		 * created.
++		 */
++		if ((gfp & __GFP_WAIT) && !in_interrupt())
++			return memcg_create_kmem_cache(memcg, cachep);
++
++		memcg_create_cache_enqueue(memcg, cachep);
++		return cachep;
++	}
++
++	return cachep->memcg_params->memcg_caches[idx];
 +}
++EXPORT_SYMBOL(__memcg_kmem_get_cache);
 +
  /*
-  * slabinfo_op - iterator that generates /proc/slabinfo
-  *
+  * We need to verify if the allocation against current->mm->owner's memcg is
+  * possible for the given order. But the page is not allocated yet, so we'll
 -- 
 1.7.11.7
