@@ -1,51 +1,61 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: Is not locking task_lock in cgroup_fork() safe?
-Date: Thu, 18 Oct 2012 17:38:35 -0700
-Message-ID: <20121019003835.GE13370@google.com>
+Date: Thu, 18 Oct 2012 17:58:01 -0700
+Message-ID: <20121019005801.GF13370@google.com>
 References: <20121008020000.GB2575@localhost>
- <CAFTL4hzXWtzp7megsCAEuak5=_2SWmp9age-+wrpyQAU4BRZ0w@mail.gmail.com>
- <20121016193341.GD16166@google.com>
- <CAFTL4hzo_w7HTgC9ApTk113X8WdZSpV+D+VSEe=604YEJFmKsg@mail.gmail.com>
- <20121018200705.GG13370@google.com>
- <CAFTL4hy7g4e11OUOyoihrEU8hiVgZoV1=141UtUpj9a72SNs_Q@mail.gmail.com>
+	<CAFTL4hzXWtzp7megsCAEuak5=_2SWmp9age-+wrpyQAU4BRZ0w@mail.gmail.com>
+	<20121016193341.GD16166@google.com>
+	<CAFTL4hzo_w7HTgC9ApTk113X8WdZSpV+D+VSEe=604YEJFmKsg@mail.gmail.com>
+	<20121018200705.GG13370@google.com>
+	<CAFTL4hy7g4e11OUOyoihrEU8hiVgZoV1=141UtUpj9a72SNs_Q@mail.gmail.com>
+	<20121019003835.GE13370@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=eTk3L9JwO/0D22ocx5QYNXoi9RZnE3C9NNWzJJbTzF8=;
-        b=wRewKOMAVg2Fi5sKzxpLRv18HxVP+MnOUKwqegYihqjl8F0wDu2m1r5EAAzynX/ByR
-         ieTO/a0Xn4TKRkLXXZKZdrRCO0r4SKeOVxyjXYu1ASLTMGGeiomyRrkk5x+hEmtL1LiS
-         vgrn9nCpbG2wkXWZDimVf9ac9LJEV7E5U7h86YLoKAoesERp3hTgFf6cDs8BXNoty8bb
-         fTHPtB0Za0By6LdS890oCVutBeGfGGnpXJIodO+N5+h4QuDymQhmpKgQ4kXEw7n6f0Md
-         7u+hvmPLunVeWmTq2UnQwGc3cDV3Qal0pAqiFuzgdwjBpufcuefoiLllAc+LAmc15+Qy
-         oHAg==
-Content-Disposition: inline
-In-Reply-To: <CAFTL4hy7g4e11OUOyoihrEU8hiVgZoV1=141UtUpj9a72SNs_Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=be/xKmR3vCBJbQ6bTn7hOh/pcxIyGSgvvUUF2UgGqjM=;
+	b=e1FsCOFqBa36/L00lfQSG3aNJxL2SyLJXV0qebcbhUyrzUUZuPiot7ySD1EhUOCAmD
+	eAbXpMNgkHyhTLibqbymeBw2GGGuoGm5QKBL9Si+84zWS6+36jChEe9EFePns4NCCh38
+	hOcvqfdZgjzeEWkCZap5KvivenpUM8z2WPEcKi7p5KDxmsy079yUkq3mTmjbvL5EAE1X
+	pARnl26/10DZQ4VaQw75iUCaQVSH67TUEvXcCMGTaSi6XA0IO2Il94cFGjIV5/bYE59L
+	bqyJEZ4LfuMZvj4NoOUwIGc3ERfG3pL3MdJIxnvw57j24OcA9rQ3q+w4lAy1lEMkhRwT
+	3wtg==
+Content-Disposition: inline
+In-Reply-To: <20121019003835.GE13370-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Frederic.
+Hello, again.
 
-On Thu, Oct 18, 2012 at 10:53:47PM +0200, Frederic Weisbecker wrote:
-> > For now, I'll revert the patches and cc stable.  Let's think about
-> > improving it later.
+On Thu, Oct 18, 2012 at 05:38:35PM -0700, Tejun Heo wrote:
+> Even if there isn't an actual race, the comment is dead wrong.  I'm
+> reverting the following three patches.  Let's try again later.
 > 
-> Ok for reverting in cgroup_fork(). Is it necessary for the
-> cgroup_post_fork() thing? I don't immediately see any race involved
-> there.
+>   7e381b0eb1 ("cgroup: Drop task_lock(parent) on cgroup_fork()")
+>   7e3aa30ac8 ("cgroup: Remove task_lock() from cgroup_post_fork()")
 
-Even if there isn't an actual race, the comment is dead wrong.  I'm
-reverting the following three patches.  Let's try again later.
+So, after some more looking, I think the following is correct and
+doesn't need to be reverted.  It's depending on threadgroup locking
+from migration path to synchronize against exit path which is always
+performed.
 
-  7e381b0eb1 ("cgroup: Drop task_lock(parent) on cgroup_fork()")
-  7e3aa30ac8 ("cgroup: Remove task_lock() from cgroup_post_fork()")
-  c84cdf75cc ("cgroup: Remove unnecessary task_lock before fetching css_set on migration")
+>   c84cdf75cc ("cgroup: Remove unnecessary task_lock before fetching css_set on migration")
+
+Frederic, were you trying to say that the above commit is correct?
+Li, do you agree?
 
 Thanks.
 
