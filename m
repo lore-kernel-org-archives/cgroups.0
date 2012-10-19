@@ -1,74 +1,143 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v5 06/14] memcg: kmem controller infrastructure
-Date: Fri, 19 Oct 2012 14:08:27 +0400
-Message-ID: <5081269B.5000603@parallels.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-7-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1210171515290.20712@chino.kir.corp.google.com> <507FCA90.8060307@parallels.com> <alpine.DEB.2.00.1210181454100.30894@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
+Date: Fri, 19 Oct 2012 13:09:49 +0200
+Message-ID: <20121019110949.GC799@dhcp22.suse.cz>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+ <1350480648-10905-5-git-send-email-mhocko@suse.cz>
+ <50811E5E.1090205@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.00.1210181454100.30894-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <50811E5E.1090205-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 10/19/2012 01:59 AM, David Rientjes wrote:
-> On Thu, 18 Oct 2012, Glauber Costa wrote:
+On Fri 19-10-12 17:33:18, Li Zefan wrote:
+> On 2012/10/17 21:30, Michal Hocko wrote:
+> > Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
+> > safely move on and forbit all the callbacks to fail. The last missing
+> > piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
+> > that css_tryget fails so no new charges for the memcg can happen.
 > 
->>>> @@ -2630,6 +2634,171 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
->>>>  	memcg_check_events(memcg, page);
->>>>  }
->>>>  
->>>> +#ifdef CONFIG_MEMCG_KMEM
->>>> +static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
->>>> +{
->>>> +	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
->>>> +		(memcg->kmem_accounted & KMEM_ACCOUNTED_MASK);
->>>> +}
->>>> +
->>>> +static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
->>>> +{
->>>> +	struct res_counter *fail_res;
->>>> +	struct mem_cgroup *_memcg;
->>>> +	int ret = 0;
->>>> +	bool may_oom;
->>>> +
->>>> +	ret = res_counter_charge(&memcg->kmem, size, &fail_res);
->>>> +	if (ret)
->>>> +		return ret;
->>>> +
->>>> +	/*
->>>> +	 * Conditions under which we can wait for the oom_killer.
->>>> +	 * We have to be able to wait, but also, if we can't retry,
->>>> +	 * we obviously shouldn't go mess with oom.
->>>> +	 */
->>>> +	may_oom = (gfp & __GFP_WAIT) && !(gfp & __GFP_NORETRY);
->>>
->>> What about gfp & __GFP_FS?
->>>
->>
->> Do you intend to prevent or allow OOM under that flag? I personally
->> think that anything that accepts to be OOM-killed should have GFP_WAIT
->> set, so that ought to be enough.
->>
+> > The callbacks are also called from within cgroup_lock to guarantee that
+> > no new tasks show up. 
 > 
-> The oom killer in the page allocator cannot trigger without __GFP_FS 
-> because direct reclaim has little chance of being very successful and 
-> thus we end up needlessly killing processes, and that tends to happen 
-> quite a bit if we dont check for it.  Seems like this would also happen 
-> with memcg if mem_cgroup_reclaim() has a large probability of failing?
-> 
+> I'm afraid this won't work. See commit 3fa59dfbc3b223f02c26593be69ce6fc9a940405
+> ("cgroup: fix potential deadlock in pre_destroy")
 
-I can indeed see tests for GFP_FS in some key locations in mm/ before
-calling the OOM Killer.
+Very good point. Thanks for poiting this out. So we should call
+pre_destroy at the very end? What about the following?
+Or should be rather drop the lock after check_for_release(parent) or
+sooner but after CGRP_REMOVED is set?
+---
+From 70ea8718aba1c1784b94bfb26aa2307195c07c0b Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Wed, 17 Oct 2012 13:42:06 +0200
+Subject: [PATCH] cgroups: forbid pre_destroy callback to fail
 
-Should I test for GFP_IO as well? If the idea is preventing OOM to
-trigger for allocations that can write their pages back, how would you
-feel about the following test:
+Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
+safely move on and forbit all the callbacks to fail. The last missing
+piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
+that css_tryget fails so no new charges for the memcg can happen.
+We cannot, however, move cgroup_call_pre_destroy right after because we
+cannot call mem_cgroup_pre_destroy with the cgroup_lock held (see
+3fa59dfb cgroup: fix potential deadlock in pre_destroy) so we have to
+move it after the lock is released.
 
-may_oom = (gfp & GFP_KERNEL) && !(gfp & __GFP_NORETRY) ?
+Changes since v1
+- Li Zefan pointed out that mem_cgroup_pre_destroy cannot be called with
+  cgroup_lock held
 
-Michal, what is your take in here?
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ kernel/cgroup.c |   30 +++++++++---------------------
+ 1 file changed, 9 insertions(+), 21 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index b7d9606..4c6adbd 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -855,7 +855,7 @@ static struct inode *cgroup_new_inode(umode_t mode, struct super_block *sb)
+  * Call subsys's pre_destroy handler.
+  * This is called before css refcnt check.
+  */
+-static int cgroup_call_pre_destroy(struct cgroup *cgrp)
++static void cgroup_call_pre_destroy(struct cgroup *cgrp)
+ {
+ 	struct cgroup_subsys *ss;
+ 	int ret = 0;
+@@ -864,15 +864,8 @@ static int cgroup_call_pre_destroy(struct cgroup *cgrp)
+ 		if (!ss->pre_destroy)
+ 			continue;
+ 
+-		ret = ss->pre_destroy(cgrp);
+-		if (ret) {
+-			/* ->pre_destroy() failure is being deprecated */
+-			WARN_ON_ONCE(!ss->__DEPRECATED_clear_css_refs);
+-			break;
+-		}
++		BUG_ON(ss->pre_destroy(cgrp));
+ 	}
+-
+-	return ret;
+ }
+ 
+ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+@@ -4161,7 +4154,6 @@ again:
+ 		mutex_unlock(&cgroup_mutex);
+ 		return -EBUSY;
+ 	}
+-	mutex_unlock(&cgroup_mutex);
+ 
+ 	/*
+ 	 * In general, subsystem has no css->refcnt after pre_destroy(). But
+@@ -4174,17 +4166,6 @@ again:
+ 	 */
+ 	set_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+ 
+-	/*
+-	 * Call pre_destroy handlers of subsys. Notify subsystems
+-	 * that rmdir() request comes.
+-	 */
+-	ret = cgroup_call_pre_destroy(cgrp);
+-	if (ret) {
+-		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+-		return ret;
+-	}
+-
+-	mutex_lock(&cgroup_mutex);
+ 	parent = cgrp->parent;
+ 	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children)) {
+ 		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+@@ -4206,6 +4187,7 @@ again:
+ 			return -EINTR;
+ 		goto again;
+ 	}
++
+ 	/* NO css_tryget() can success after here. */
+ 	finish_wait(&cgroup_rmdir_waitq, &wait);
+ 	clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+@@ -4244,6 +4226,12 @@ again:
+ 	spin_unlock(&cgrp->event_list_lock);
+ 
+ 	mutex_unlock(&cgroup_mutex);
++
++	/*
++	 * Call pre_destroy handlers of subsys. Notify subsystems
++	 * that rmdir() request comes.
++	 */
++	cgroup_call_pre_destroy(cgrp);
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
 
+-- 
+Michal Hocko
+SUSE Labs
