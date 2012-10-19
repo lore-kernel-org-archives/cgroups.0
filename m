@@ -1,121 +1,87 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v5 05/18] slab/slub: struct memcg_params
-Date: Fri, 19 Oct 2012 18:20:29 +0400
-Message-ID: <1350656442-1523-6-git-send-email-glommer@parallels.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH v5 00/18] slab accounting for memcg
+Date: Fri, 19 Oct 2012 18:20:24 +0400
+Message-ID: <1350656442-1523-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1350656442-1523-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-For the kmem slab controller, we need to record some extra
-information in the kmem_cache structure.
+Note: This is basically the same as v4. During this week, I made some changes
+to this series in advance based on the feedback I had in the kmemcg-stack
+last submission. Although the last series was not yet extensively reviewed,
+I opted for sending this out so you guys have the most up2date code to review.
+So please review this one instead.
 
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Signed-off-by: Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-CC: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-CC: Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
-CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/slab.h     | 25 +++++++++++++++++++++++++
- include/linux/slab_def.h |  3 +++
- include/linux/slub_def.h |  3 +++
- mm/slab.h                | 13 +++++++++++++
- 4 files changed, 44 insertions(+)
+This is a followup to the previous kmem series. I divided them logically
+so it gets easier for reviewers. But I believe they are ready to be merged
+together (although we can do a two-pass merge if people would prefer)
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 0dd2dfa..e4ea48a 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -177,6 +177,31 @@ unsigned int kmem_cache_size(struct kmem_cache *);
- #define ARCH_SLAB_MINALIGN __alignof__(unsigned long long)
- #endif
- 
-+#include <linux/workqueue.h>
-+/*
-+ * This is the main placeholder for memcg-related information in kmem caches.
-+ * struct kmem_cache will hold a pointer to it, so the memory cost while
-+ * disabled is 1 pointer. The runtime cost while enabled, gets bigger than it
-+ * would otherwise be if that would be bundled in kmem_cache: we'll need an
-+ * extra pointer chase. But the trade off clearly lays in favor of not
-+ * penalizing non-users.
-+ *
-+ * Both the root cache and the child caches will have it. For the root cache,
-+ * this will hold a dynamically allocated array large enough to hold
-+ * information about the currently limited memcgs in the system.
-+ *
-+ * Child caches will hold extra metadata needed for its operation. Fields are:
-+ *
-+ * @memcg: pointer to the memcg this cache belongs to
-+ */
-+struct memcg_cache_params {
-+	bool is_root_cache;
-+	union {
-+		struct kmem_cache *memcg_caches[0];
-+		struct mem_cgroup *memcg;
-+	};
-+};
-+
- /*
-  * Common kmalloc functions provided by all allocators
-  */
-diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-index 36d7031..665afa4 100644
---- a/include/linux/slab_def.h
-+++ b/include/linux/slab_def.h
-@@ -81,6 +81,9 @@ struct kmem_cache {
- 	 */
- 	int obj_offset;
- #endif /* CONFIG_DEBUG_SLAB */
-+#ifdef CONFIG_MEMCG_KMEM
-+	struct memcg_cache_params *memcg_params;
-+#endif
- 
- /* 6) per-cpu/per-node data, touched during every alloc/free */
- 	/*
-diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-index df448ad..961e72e 100644
---- a/include/linux/slub_def.h
-+++ b/include/linux/slub_def.h
-@@ -101,6 +101,9 @@ struct kmem_cache {
- #ifdef CONFIG_SYSFS
- 	struct kobject kobj;	/* For sysfs */
- #endif
-+#ifdef CONFIG_MEMCG_KMEM
-+	struct memcg_cache_params *memcg_params;
-+#endif
- 
- #ifdef CONFIG_NUMA
- 	/*
-diff --git a/mm/slab.h b/mm/slab.h
-index 66a62d3..5ee1851 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -92,4 +92,17 @@ void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo);
- void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *s);
- ssize_t slabinfo_write(struct file *file, const char __user *buffer,
- 		       size_t count, loff_t *ppos);
-+
-+#ifdef CONFIG_MEMCG_KMEM
-+static inline bool is_root_cache(struct kmem_cache *s)
-+{
-+	return !s->memcg_params || s->memcg_params->is_root_cache;
-+}
-+#else
-+static inline bool is_root_cache(struct kmem_cache *s)
-+{
-+	return true;
-+}
-+
-+#endif
- #endif
+Throwaway git tree found at:
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git kmemcg-slab
+
+v5:
+* code reorganization, name changes, etc.
+v4:
+* no more messing with the cache name after destruction: aggregated figures
+  are shown in /proc/slabinfo.
+* memory.kmem.slabinfo file with memcg-specific cache information during its
+  lifespan.
+* full slub attribute propagation.
+* reusing the standard workqueue mechanism.
+* cache-side indexing, instead of memcg-side indexing. The memcg css_id serves
+  as an index, and we don't need extra indexes for that.
+* struct memcg_cache_params no longer bundled in struct kmem_cache: We now will
+  have only a pointer in the struct, allowing memory consumption when disable to
+  fall down ever further.
+
+Patches need to be adjusted to cope with those changes, but other than that,
+look the same - just a lot simpler.
+
+I also put quite some effort to overcome my writing disability and get some
+decent changelogs in place.
+
+For a detailed explanation about this whole effort, please refer to my previous
+post (https://lkml.org/lkml/2012/10/8/119)
+
+Glauber Costa (18):
+  move slabinfo processing to slab_common.c
+  move print_slabinfo_header to slab_common.c
+  sl[au]b: process slabinfo_show in common code
+  slab: don't preemptively remove element from list in cache destroy
+  slab/slub: struct memcg_params
+  consider a memcg parameter in kmem_create_cache
+  Allocate memory for memcg caches whenever a new memcg appears
+  memcg: infrastructure to match an allocation to the right cache
+  memcg: skip memcg kmem allocations in specified code regions
+  sl[au]b: always get the cache from its page in kfree
+  sl[au]b: Allocate objects from memcg cache
+  memcg: destroy memcg caches
+  memcg/sl[au]b Track all the memcg children of a kmem_cache.
+  memcg/sl[au]b: shrink dead caches
+  Aggregate memcg cache values in slabinfo
+  slab: propagate tunables values
+  slub: slub-specific propagation changes.
+  Add slab-specific documentation about the kmem controller
+
+ Documentation/cgroups/memory.txt |   7 +
+ include/linux/memcontrol.h       |  86 ++++++
+ include/linux/sched.h            |   1 +
+ include/linux/slab.h             |  46 +++
+ include/linux/slab_def.h         |   3 +
+ include/linux/slub_def.h         |  19 +-
+ init/Kconfig                     |   2 +-
+ mm/memcontrol.c                  | 613 +++++++++++++++++++++++++++++++++++++--
+ mm/slab.c                        | 188 ++++++------
+ mm/slab.h                        | 132 ++++++++-
+ mm/slab_common.c                 | 217 +++++++++++++-
+ mm/slub.c                        | 195 ++++++++-----
+ 12 files changed, 1294 insertions(+), 215 deletions(-)
+
 -- 
 1.7.11.7
