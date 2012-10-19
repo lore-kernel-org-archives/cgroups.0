@@ -1,67 +1,49 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH v5 06/14] memcg: kmem controller infrastructure
-Date: Fri, 19 Oct 2012 13:34:04 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1210191331400.17804@chino.kir.corp.google.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-7-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1210171515290.20712@chino.kir.corp.google.com> <507FCA90.8060307@parallels.com>
- <alpine.DEB.2.00.1210181454100.30894@chino.kir.corp.google.com> <5081269B.5000603@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.7-fixes 1/2] Revert "cgroup: Remove
+ task_lock() from cgroup_post_fork()"
+Date: Fri, 19 Oct 2012 14:07:38 -0700
+Message-ID: <20121019210738.GA1180@google.com>
+References: <20121008020000.GB2575@localhost>
+ <20121019005922.GG13370@google.com>
+ <CAFTL4hz82==b3ioSMhbKzh0CN1ivR7RQMKKMFFWu5PHPjg=Bfg@mail.gmail.com>
+ <20121019193808.GL13370@google.com>
+ <CAFTL4hwQ6Ntn5GJwj=jiO2p3GdwhEMp0MyR8dgUj_Lx0U4kNqg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=zqwIb9BppTXaEw2IShDqBt8AqcBM/LUoYTMf3a59X4w=;
-        b=dcdlkq1SV7VVSTvZ5MmEqlpv+rOjS8bZVMHrXO4vd3OZcMIt/3DyRR7cmQsQR9Lmrt
-         97mPhtrrv8GiEkaa45p+BkE8bMGvj/4jcZWasd6eTw/i0uBbZ7moi29sCpjL0T+plcMJ
-         xBxMorU+agTXPcO5jFWX0SmUlH8q5cAc/ECEdjpy3bW5p2SAT6nYqdTMNVI85+CgvGqA
-         oVY6OJIfPfLFyoGWZx5yGZHdv/cM4W9aketRooaxmSW4mXohQ4z9gC5LrnrDhggvxoiO
-         msr2AiBU+rdFl1mwfRDaDH7tIecnBPOedZgNQCIsfP/ptDW4M9UFP8oKHpIGWMpCYDBw
-         193Q==
-In-Reply-To: <5081269B.5000603@parallels.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=4O49wvpyhZsiuVl7clhouilHSGks13rTdwSn7K41z+o=;
+        b=cFzerI7ZixmXzqPxS8aJ2ERL0E5RCAIBAWGq50Hg0a2Bekj04WK87rU/m6+wv0D0Cg
+         tbSJ6nEElZL7py7CAEqfso2U+tmdkDCqf/6iFnbopaBC+983fNkuFrMRR1Cu8BvmpU/Z
+         v0xnCq8kwzM9jd84tPg+5ToUlSb+35+4VTxUdpApu2EMvRL1aXXQ6AYcU35mDvij92G6
+         Rjt5MykYPPbIqk8k8tuu2UeRvs7lmqvN3ql9ZjSGrFG3pHJ7xCZnnPUfMy6jkqpTSKnF
+         xNCQcEI+jA2c29oWM/Nd80xwuXQRqphjI+f5Jw2zYrBq8lt461Re5TeHLAM4xyYp/VFX
+         2JFg==
+Content-Disposition: inline
+In-Reply-To: <CAFTL4hwQ6Ntn5GJwj=jiO2p3GdwhEMp0MyR8dgUj_Lx0U4kNqg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, 19 Oct 2012, Glauber Costa wrote:
+Hello, Frederic.
 
-> >>> What about gfp & __GFP_FS?
-> >>>
-> >>
-> >> Do you intend to prevent or allow OOM under that flag? I personally
-> >> think that anything that accepts to be OOM-killed should have GFP_WAIT
-> >> set, so that ought to be enough.
-> >>
-> > 
-> > The oom killer in the page allocator cannot trigger without __GFP_FS 
-> > because direct reclaim has little chance of being very successful and 
-> > thus we end up needlessly killing processes, and that tends to happen 
-> > quite a bit if we dont check for it.  Seems like this would also happen 
-> > with memcg if mem_cgroup_reclaim() has a large probability of failing?
-> > 
+On Fri, Oct 19, 2012 at 03:44:20PM -0400, Frederic Weisbecker wrote:
+> > For -stable, I think it's better to revert.  If you want to remove
+> > task_lock, let's do it for 3.8.
 > 
-> I can indeed see tests for GFP_FS in some key locations in mm/ before
-> calling the OOM Killer.
-> 
-> Should I test for GFP_IO as well?
+> I don't think that a wrong comment justifies a patch to stable.
 
-It's not really necessary, if __GFP_IO isn't set then it wouldn't make 
-sense for __GFP_FS to be set.
+I'm not really sure whether it's safe or not.  It seems all usages are
+protected by write locking css_set_lock but maybe I'm missing
+something and as the commit is born out of confusion, I'm very
+inclined to revert it by default.  Are you sure this one is safe?
 
-> If the idea is preventing OOM to
-> trigger for allocations that can write their pages back, how would you
-> feel about the following test:
-> 
-> may_oom = (gfp & GFP_KERNEL) && !(gfp & __GFP_NORETRY) ?
-> 
+Thanks.
 
-I would simply copy the logic from the page allocator and only trigger oom 
-for __GFP_FS and !__GFP_NORETRY.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
