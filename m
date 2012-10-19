@@ -1,73 +1,36 @@
-From: Aristeu Rozanski <aris@redhat.com>
-Subject: [PATCH 3/3] device_cgroup: add proper checking when changing default behavior
-Date: Fri, 19 Oct 2012 17:16:29 -0400
-Message-ID: <20121019211627.206543551@napanee.usersys.redhat.com>
-References: <20121019211626.219447423@napanee.usersys.redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=fix-perm.patch
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 1/3] device_cgroup: rename deny_all to behavior
+Date: Fri, 19 Oct 2012 23:45:06 +0200
+Message-ID: <5081C9E2.8080601@suse.cz>
+References: <20121019211626.219447423@napanee.usersys.redhat.com> <20121019211626.583893413@napanee.usersys.redhat.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, Jiri Slaby <jslaby@suse.cz>, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:x-enigmail-version:content-type
+         :content-transfer-encoding;
+        bh=qNezFMndKtZg/h7m0+s8SFKyx4mwm7j16zVrvjMxeNo=;
+        b=YkPw1Hk+Hl6FmJx4o/6TavvFHPlJghHmFwBesNLlJhILHbPXWAkNLcwqk2wzr+Gj21
+         JQk1q1U83VkKVh/04KlvUPk4bN/fGIf2DPWo2Xk6GFUjdGPsnS8PY4Ti5orpG6288qdv
+         2W6KrytGXBabxEoIDD3xwf8nhyzlqaAGqTZdYfOmaP8EBaUTRbH3qoxrKpeT5RCq3tDc
+         z+hIfIkNcm8XN8soZ9Hlfy+SMZjj14NfZk1Nnqw7vOn4FSsBea69WSHte9/TUU65LYA5
+         d8b8o4d7sGzbYi47rCyj6lBtk9fTcCXdN7yYl0rLAewLYgNQLKHjIKE8EGVHgPQ/J9k2
+         E63Q==
+In-Reply-To: <20121019211626.583893413-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Before changing a group's default behavior to ALLOW, we must check if its
-parent's behavior is also ALLOW.
+> Signed-off-by: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: James Morris <jmorris@namei.org>
-Cc: Pavel Emelyanov <xemul@openvz.org>
-Cc: Serge Hallyn <serge.hallyn@canonical.com>
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
+R U sure?        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As I don't remember myself ever seeing this patch...
+Maybe I should start smoking some crap to refresh my memory?
 
----
- security/device_cgroup.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
-
---- github.orig/security/device_cgroup.c	2012-10-19 16:36:50.135790476 -0400
-+++ github/security/device_cgroup.c	2012-10-19 16:48:50.710978125 -0400
-@@ -344,6 +344,17 @@ static int parent_has_perm(struct dev_cg
- 	return may_access(parent, ex);
- }
- 
-+/**
-+ * may_allow_all - checks if it's possible to change the behavior to
-+ *		   allow based on parent's rules.
-+ * @parent: device cgroup's parent
-+ * returns: != 0 in case it's allowed, 0 otherwise
-+ */
-+static inline int may_allow_all(struct dev_cgroup *parent)
-+{
-+	return parent->behavior == DEVCG_DEFAULT_ALLOW;
-+}
-+
- /*
-  * Modify the exception list using allow/deny rules.
-  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
-@@ -364,6 +375,8 @@ static int devcgroup_update_access(struc
- 	char temp[12];		/* 11 + 1 characters needed for a u32 */
- 	int count, rc;
- 	struct dev_exception_item ex;
-+	struct cgroup *p = devcgroup->css.cgroup;
-+	struct dev_cgroup *parent = cgroup_to_devcgroup(p->parent);
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
-@@ -375,9 +388,13 @@ 	memset(&ex, 0, sizeof(ex));
- 	case 'a':
- 		switch (filetype) {
- 		case DEVCG_ALLOW:
--			if (!parent_has_perm(devcgroup, &ex))
-+			if (!may_allow_all(parent))
- 				return -EPERM;
- 			dev_exception_clean(devcgroup);
-+			rc = dev_exceptions_copy(&devcgroup->exceptions,
-+						 &parent->exceptions);
-+			if (rc)
-+				return rc;
- 			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
- 			break;
- 		case DEVCG_DENY:
+-- 
+js
+suse labs
