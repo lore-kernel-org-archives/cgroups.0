@@ -1,11 +1,11 @@
 From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH v5 15/18] Aggregate memcg cache values in slabinfo
-Date: Fri, 19 Oct 2012 19:50:37 +0000
-Message-ID: <0000013a7a93cb72-588b2a69-ebb0-4b5f-9040-102800d3bef4-000000@email.amazonses.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-16-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v5 16/18] slab: propagate tunables values
+Date: Fri, 19 Oct 2012 19:51:42 +0000
+Message-ID: <0000013a7a94c439-825659cc-8e6a-4905-909c-db1b230a4086-000000@email.amazonses.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-17-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1350656442-1523-16-git-send-email-glommer@parallels.com>
+In-Reply-To: <1350656442-1523-17-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -15,21 +15,13 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, M
 
 On Fri, 19 Oct 2012, Glauber Costa wrote:
 
-> +
-> +/*
-> + * We use suffixes to the name in memcg because we can't have caches
-> + * created in the system with the same name. But when we print them
-> + * locally, better refer to them with the base name
-> + */
-> +static inline const char *cache_name(struct kmem_cache *s)
-> +{
-> +	if (!is_root_cache(s))
-> +		return s->memcg_params->root_cache->name;
-> +	return s->name;
-> +}
+> SLAB allows us to tune a particular cache behavior with tunables.
+> When creating a new memcg cache copy, we'd like to preserve any tunables
+> the parent cache already had.
 
-Could we avoid this uglyness? You can ID a slab cache by combining a memcg
-pointer and a slabname.
+SLAB and SLUB allow tuning. Could you come up with some way to put these
+things into slab common and make it flexible so that the tuning could be
+used for future allocators (like SLAM etc)?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
