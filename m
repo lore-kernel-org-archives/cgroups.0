@@ -1,143 +1,176 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
-Date: Fri, 19 Oct 2012 13:09:49 +0200
-Message-ID: <20121019110949.GC799@dhcp22.suse.cz>
+Subject: Re: [PATCH 3/6] memcg: Simplify mem_cgroup_force_empty_list error
+ handling
+Date: Fri, 19 Oct 2012 15:24:38 +0200
+Message-ID: <20121019132438.GD799@dhcp22.suse.cz>
 References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
- <1350480648-10905-5-git-send-email-mhocko@suse.cz>
- <50811E5E.1090205@huawei.com>
+ <1350480648-10905-4-git-send-email-mhocko@suse.cz>
+ <20121018221654.GP13370@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <50811E5E.1090205-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20121018221654.GP13370-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri 19-10-12 17:33:18, Li Zefan wrote:
-> On 2012/10/17 21:30, Michal Hocko wrote:
-> > Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
-> > safely move on and forbit all the callbacks to fail. The last missing
-> > piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
-> > that css_tryget fails so no new charges for the memcg can happen.
+On Thu 18-10-12 15:16:54, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> > The callbacks are also called from within cgroup_lock to guarantee that
-> > no new tasks show up. 
+> On Wed, Oct 17, 2012 at 03:30:45PM +0200, Michal Hocko wrote:
+> > mem_cgroup_force_empty_list currently tries to remove all pages from
+> > the given LRU. To prevent from temoporary failures (EBUSY returned by
+> > mem_cgroup_move_parent) it uses a margin to the current LRU pages and
+> > returns the true if there are still some pages left on the list.
+> > 
+> > If we consider that mem_cgroup_move_parent fails only when we are racing
+> > with somebody else removing the page (resp. uncharging it) or when the
+> > page is migrated then it is obvious that all those failures are only
+> > temporal and so we can safely retry later.
+> > Let's get rid of the safety margin and make the loop really wait for the
+> > empty LRU. The caller should still make sure that all charges have been
+> > removed from the res_counter because mem_cgroup_replace_page_cache might
+> > add a page to the LRU after the check (it doesn't touch res_counter
+> > though).
+> > This catches most of the cases except for shmem which might call
+> > mem_cgroup_replace_page_cache with a page which is not charged and on
+> > the LRU yet but this was the case also without this patch. In order to
+> > fix this we need a guarantee that try_get_mem_cgroup_from_page falls
+> > back to the current mm's cgroup so it needs css_tryget to fail. This
+> > will be fixed up in a later patch because it nees a help from cgroup
+> > core.
+> > 
+> > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 > 
-> I'm afraid this won't work. See commit 3fa59dfbc3b223f02c26593be69ce6fc9a940405
-> ("cgroup: fix potential deadlock in pre_destroy")
+> In the sense that "I looked at it and nothing seemed too scary".
+> 
+>  Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Very good point. Thanks for poiting this out. So we should call
-pre_destroy at the very end? What about the following?
-Or should be rather drop the lock after check_for_release(parent) or
-sooner but after CGRP_REMOVED is set?
----
-From 70ea8718aba1c1784b94bfb26aa2307195c07c0b Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Date: Wed, 17 Oct 2012 13:42:06 +0200
-Subject: [PATCH] cgroups: forbid pre_destroy callback to fail
+Thanks
 
-Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
-safely move on and forbit all the callbacks to fail. The last missing
-piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
-that css_tryget fails so no new charges for the memcg can happen.
-We cannot, however, move cgroup_call_pre_destroy right after because we
-cannot call mem_cgroup_pre_destroy with the cgroup_lock held (see
-3fa59dfb cgroup: fix potential deadlock in pre_destroy) so we have to
-move it after the lock is released.
+> 
+> Some nitpicks below.
+> 
+> >  /*
+> > - * move charges to its parent.
+> > + * move charges to its parent or the root cgroup if the group
+> > + * has no parent (aka use_hierarchy==0).
+> > + * Although this might fail the failure is always temporary and it
+> > + * signals a race with a page removal/uncharge or migration. In the
+> > + * first case the page will vanish from the LRU on the next attempt
+> > + * and the call should be retried later.
+> >   */
+> > -
+> 
+> Maybe convert to proper /** function comment while at it?  
 
-Changes since v1
-- Li Zefan pointed out that mem_cgroup_pre_destroy cannot be called with
-  cgroup_lock held
+these are internal functions and we usually do not create kerneldoc for
+them. But I can surely change it - it would deserve a bigger clean up
+then.
 
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
----
- kernel/cgroup.c |   30 +++++++++---------------------
- 1 file changed, 9 insertions(+), 21 deletions(-)
+> I also think it would be helpful to actually comment on each possible
+> failure case explaining why the failure condition is temporal.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b7d9606..4c6adbd 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -855,7 +855,7 @@ static struct inode *cgroup_new_inode(umode_t mode, struct super_block *sb)
-  * Call subsys's pre_destroy handler.
-  * This is called before css refcnt check.
-  */
--static int cgroup_call_pre_destroy(struct cgroup *cgrp)
-+static void cgroup_call_pre_destroy(struct cgroup *cgrp)
- {
- 	struct cgroup_subsys *ss;
- 	int ret = 0;
-@@ -864,15 +864,8 @@ static int cgroup_call_pre_destroy(struct cgroup *cgrp)
- 		if (!ss->pre_destroy)
- 			continue;
- 
--		ret = ss->pre_destroy(cgrp);
--		if (ret) {
--			/* ->pre_destroy() failure is being deprecated */
--			WARN_ON_ONCE(!ss->__DEPRECATED_clear_css_refs);
--			break;
--		}
-+		BUG_ON(ss->pre_destroy(cgrp));
- 	}
--
--	return ret;
- }
- 
- static void cgroup_diput(struct dentry *dentry, struct inode *inode)
-@@ -4161,7 +4154,6 @@ again:
- 		mutex_unlock(&cgroup_mutex);
- 		return -EBUSY;
- 	}
--	mutex_unlock(&cgroup_mutex);
- 
- 	/*
- 	 * In general, subsystem has no css->refcnt after pre_destroy(). But
-@@ -4174,17 +4166,6 @@ again:
- 	 */
- 	set_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
- 
--	/*
--	 * Call pre_destroy handlers of subsys. Notify subsystems
--	 * that rmdir() request comes.
--	 */
--	ret = cgroup_call_pre_destroy(cgrp);
--	if (ret) {
--		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
--		return ret;
--	}
--
--	mutex_lock(&cgroup_mutex);
- 	parent = cgrp->parent;
- 	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children)) {
- 		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-@@ -4206,6 +4187,7 @@ again:
- 			return -EINTR;
- 		goto again;
- 	}
-+
- 	/* NO css_tryget() can success after here. */
- 	finish_wait(&cgroup_rmdir_waitq, &wait);
- 	clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-@@ -4244,6 +4226,12 @@ again:
- 	spin_unlock(&cgrp->event_list_lock);
- 
- 	mutex_unlock(&cgroup_mutex);
-+
-+	/*
-+	 * Call pre_destroy handlers of subsys. Notify subsystems
-+	 * that rmdir() request comes.
-+	 */
-+	cgroup_call_pre_destroy(cgrp);
- 	return 0;
- }
- 
--- 
-1.7.10.4
+What about:
+"
+ * Although this might fail (get_page_unless_zero, isolate_lru_page or
+ * mem_cgroup_move_account fails) the failure is always temporary and
+ * it signals a race with a page removal/uncharge or migration. In the
+ * first case the page is on the way out and it will vanish from the LRU
+ * on the next attempt and the call should be retried later.
+ * Isolation from the LRU fails only if page has been isolated from
+ * the LRU since we looked at it and that usually means either global
+ * reclaim or migration going on. The page will either get back to the
+ * LRU or vanish.
+ * Finaly mem_cgroup_move_account fails only if the page got uncharged
+ * (!PageCgroupUsed) or moved to a different group. The page will
+ * disappear in the next attempt.
+"
 
+Better? Or should it rather be in the changelog?
 
+> 
+> >  /*
+> >   * Traverse a specified page_cgroup list and try to drop them all.  This doesn't
+> > - * reclaim the pages page themselves - it just removes the page_cgroups.
+> > - * Returns true if some page_cgroups were not freed, indicating that the caller
+> > - * must retry this operation.
+> > + * reclaim the pages page themselves - pages are moved to the parent (or root)
+> > + * group.
+> >   */
+> 
+> Ditto.
+> 
+> > -static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+> > +static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+> >  				int node, int zid, enum lru_list lru)
+> >  {
+> >  	struct mem_cgroup_per_zone *mz;
+> > -	unsigned long flags, loop;
+> > +	unsigned long flags;
+> >  	struct list_head *list;
+> >  	struct page *busy;
+> >  	struct zone *zone;
+> > @@ -3696,11 +3701,8 @@ static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+> >  	mz = mem_cgroup_zoneinfo(memcg, node, zid);
+> >  	list = &mz->lruvec.lists[lru];
+> >  
+> > -	loop = mz->lru_size[lru];
+> > -	/* give some margin against EBUSY etc...*/
+> > -	loop += 256;
+> >  	busy = NULL;
+> > -	while (loop--) {
+> > +	do {
+> >  		struct page_cgroup *pc;
+> >  		struct page *page;
+> >  
+> > @@ -3726,8 +3728,7 @@ static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+> >  			cond_resched();
+> >  		} else
+> >  			busy = NULL;
+> > -	}
+> > -	return !list_empty(list);
+> > +	} while (!list_empty(list));
+> >  }
+> 
+> Is there anything which can keep failing until migration to another
+> cgroup is complete?  
+
+This is not about migration to another cgroup. Remember there are no
+tasks in the group so we have no origin for the migration. I was talking
+about migrate_pages.
+
+> I think there is, e.g., if mmap_sem is busy or memcg is co-mounted
+> with other controllers and another controller's ->attach() is blocking
+> on something.
+
+I am not sure I understand your concern. There are no tasks and we will
+break out the loop if some appear. And yes we can retry a lot in
+pathological cases. But this is a group removal path which is not hot.
+
+> If so, busy-looping blindly probably isn't a good idea and we would
+> want at least msleep between retries (e.g. have two lists, throw
+> failed ones to the other and sleep shortly when switching the front
+> and back lists).
+
+we do cond_resched if we fail.
+
+> > +		/*
+> > +		 * This is a safety check because mem_cgroup_force_empty_list
+> > +		 * could have raced with mem_cgroup_replace_page_cache callers
+> > +		 * so the lru seemed empty but the page could have been added
+> > +		 * right after the check. RES_USAGE should be safe as we always
+> > +		 * charge before adding to the LRU.
+> > +		 */
+> > +	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0);
+> 
+> Maybe we want to trigger some warning if retry count gets too high?
+> At least for now?
+
+We can but is this really worth it?
 -- 
 Michal Hocko
 SUSE Labs
