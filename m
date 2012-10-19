@@ -1,31 +1,84 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/3] Rebase device_cgroup v2 patchset
-Date: Fri, 19 Oct 2012 17:16:26 -0400
-Message-ID: <20121019211626.219447423@napanee.usersys.redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Aristeu Rozanski <aris@redhat.com>
+Subject: [PATCH 2/3] device_cgroup: stop using simple_strtoul()
+Date: Fri, 19 Oct 2012 17:16:28 -0400
+Message-ID: <20121019211626.903894692@napanee.usersys.redhat.com>
+References: <20121019211626.219447423@napanee.usersys.redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=kstrtou32.patch
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org
+Cc: Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, Jiri Slaby <jslaby@suse.cz>, cgroups@vger.kernel.org
 
-This patchset rebases the v2 of the patchset since the v1 was pushed into -rc1
-instead. The last patch, not present on previous patchset, fixes the
-permission check when allowing everything in a cgroup.
+This patch converts the code to use kstrtou32() instead of simple_strtoul()
+which is deprecated. The real size of the variables are u32, so use kstrtou32
+instead of kstrtoul
 
- device_cgroup.c |   87 +++++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 61 insertions(+), 26 deletions(-)
 
-Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
-Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Dave Jones <davej@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: James Morris <jmorris@namei.org>
+Cc: Pavel Emelyanov <xemul@openvz.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 
--- 
-Aristeu
+---
+ security/device_cgroup.c |   28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
+
+--- github.orig/security/device_cgroup.c	2012-10-19 16:35:46.366102913 -0400
++++ github/security/device_cgroup.c	2012-10-19 16:35:50.801229331 -0400
+@@ -361,8 +361,8 @@ static int devcgroup_update_access(struc
+ 				   int filetype, const char *buffer)
+ {
+ 	const char *b;
+-	char *endp;
+-	int count;
++	char temp[12];		/* 11 + 1 characters needed for a u32 */
++	int count, rc;
+ 	struct dev_exception_item ex;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -405,8 +405,16 @@ 		return 0;
+ 		ex.major = ~0;
+ 		b++;
+ 	} else if (isdigit(*b)) {
+-		ex.major = simple_strtoul(b, &endp, 10);
+-		b = endp;
++		memset(temp, 0, sizeof(temp));
++		for (count = 0; count < sizeof(temp) - 1; count++) {
++			temp[count] = *b;
++			b++;
++			if (!isdigit(*b))
++				break;
++		}
++		rc = kstrtou32(temp, 10, &ex.major);
++		if (rc)
++			return -EINVAL;
+ 	} else {
+ 		return -EINVAL;
+ 	}
+@@ -419,8 +427,16 @@ 		ex.major = simple_strtoul(b, &endp, 10
+ 		ex.minor = ~0;
+ 		b++;
+ 	} else if (isdigit(*b)) {
+-		ex.minor = simple_strtoul(b, &endp, 10);
+-		b = endp;
++		memset(temp, 0, sizeof(temp));
++		for (count = 0; count < sizeof(temp) - 1; count++) {
++			temp[count] = *b;
++			b++;
++			if (!isdigit(*b))
++				break;
++		}
++		rc = kstrtou32(temp, 10, &ex.minor);
++		if (rc)
++			return -EINVAL;
+ 	} else {
+ 		return -EINVAL;
+ 	}
