@@ -1,72 +1,26 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: allow migration regardless of freezer state and update locking
-Date: Fri, 19 Oct 2012 18:54:42 +0200
-Message-ID: <2424755.Pg0O5tTD3k@vostro.rjw.lan>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v5 04/18] slab: don't preemptively remove element from
+ list in cache destroy
+Date: Fri, 19 Oct 2012 19:34:14 +0000
+Message-ID: <0000013a7a84cb28-334eab12-33c4-4a92-bd9c-e5ad938f83d0-000000@email.amazonses.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7Bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1350426526-14254-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <1350656442-1523-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tuesday 16 of October 2012 15:28:39 Tejun Heo wrote:
-> Hello,
-> 
-> This patchset updates cgroup_freezer so that
-> 
-> * Unfreezable kernel tasks don't prevent a cgroup from transitioning
->   into FROZEN from FREEZING.  There's nothing userland can do with or
->   about such tasks.
-> 
-> * Tasks can be moved in and out of a frozen cgroup.  Tasks are made to
->   conform to the state of the new cgroup during migration.  This
->   behavior makes a lot more sense and removes the use of
->   ->can_attach() which makes co-mounting difficult.
-> 
-> * Remove use of cgroup_lock_live_group().  Grabbing cgroup_lock from
->   outside cgroup proper creates a painful locking dependency and is
->   being phased out.  With the above behavior change, removing
->   dependency on cgroup_lock is pretty easy.  IMHO, it was simply the
->   wrong behavior to implement which forced the wrong implementation.
-> 
-> This patchset contains the following seven patches.
-> 
->  0001-cgroup-cgroup_subsys-fork-should-be-called-after-the.patch
->  0002-freezer-add-missing-mb-s-to-freezer_count-and-freeze.patch
->  0003-cgroup_freezer-make-it-official-that-writes-to-freez.patch
->  0004-cgroup_freezer-don-t-stall-transition-to-FROZEN-for-.patch
->  0005-cgroup_freezer-allow-moving-tasks-in-and-out-of-a-fr.patch
->  0006-cgroup_freezer-prepare-update_if_frozen-for-locking-.patch
->  0007-cgroup_freezer-don-t-use-cgroup_lock_live_group.patch
-> 
-> 0001 is a fix for a rather embarrassing bug in cgroup core.  It does
-> things in the wrong order leaving a window for racing during fork.
-> 
-> 0002 adds a missing mb() around freezing condition updates / checks.
-> 
-> 0003-0004 make cgroup_freezer ignore unfreezable kernel tasks and
-> handle PF_FREEZER_SKIP correctly.
-> 
-> 0005 allows migrating tasks in and out of a frozen cgroup.
-> 
-> 0006-0007 remove the use of cgroup_lock_live_group().
-> 
-> This patchset is on top of v3.7-rc1 and available in the following git
-> branch.
-> 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup_freezer-locking
+On Fri, 19 Oct 2012, Glauber Costa wrote:
 
-It seems that no one has any comments. :-)
+> I, however, see no reason why we need to do so, since we are now locked
+> during the whole deletion (which wasn't necessarily true before).  I
+> propose a simplification in which we delete it only when there is no
+> more going back, so we don't need to add it again.
 
-Are you going to prepare a branch for me to pull from?
+Ok lets hope that holding the lock does not cause issues.
 
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Acked-by: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
