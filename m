@@ -1,12 +1,11 @@
 From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v5 10/18] sl[au]b: always get the cache from its page in
- kfree
-Date: Fri, 19 Oct 2012 19:44:49 +0000
-Message-ID: <0000013a7a8e764d-5cef2c85-993f-4600-85c7-ce3fe137f16f-000000@email.amazonses.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-11-git-send-email-glommer@parallels.com>
+Subject: Re: [PATCH v5 11/18] sl[au]b: Allocate objects from memcg cache
+Date: Fri, 19 Oct 2012 19:46:06 +0000
+Message-ID: <0000013a7a8fa99f-7e29b325-7cd3-4295-a568-dcfd536d92e6-000000@email.amazonses.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-12-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1350656442-1523-11-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1350656442-1523-12-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -16,12 +15,10 @@ Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76
 
 On Fri, 19 Oct 2012, Glauber Costa wrote:
 
-> struct page already have this information. If we start chaining
-> caches, this information will always be more trustworthy than
-> whatever is passed into the function
+> We are able to match a cache allocation to a particular memcg.  If the
+> task doesn't change groups during the allocation itself - a rare event,
+> this will give us a good picture about who is the first group to touch a
+> cache page.
 
-Yes it does but the information is not standardized between the allocators
-yet. Coul you unify that? Come out with a struct page overlay that is as
-much the same as possible. Then kfree can also be unified because the
-lookup is always the same. That way you can move kfree into slab_common
-and avoid modifying multiple allocators.
+No that the infrastructure is being reworked currently which will allow
+you to do this without much of a modification of individual allocators.
