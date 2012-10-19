@@ -1,42 +1,38 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.7-fixes 2/2] Revert "cgroup: Drop task_lock(parent)
- on cgroup_fork()"
-Date: Fri, 19 Oct 2012 16:51:58 +0800
-Message-ID: <508114AE.207@huawei.com>
-References: <20121008020000.GB2575@localhost> <20121019005951.GH13370@google.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v5 06/14] memcg: kmem controller infrastructure
+Date: Fri, 19 Oct 2012 13:10:27 +0400
+Message-ID: <50811903.9000105@parallels.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-7-git-send-email-glommer@parallels.com> <20121017151214.e3d2aa3b.akpm@linux-foundation.org> <507FC8E3.8020006@parallels.com> <alpine.DEB.2.00.1210181502270.30894@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121019005951.GH13370-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.00.1210181502270.30894@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
-On 2012/10/19 8:59, Tejun Heo wrote:
->>From c8b27924a8b6fd74066088f1cf07c256bbc6ed74 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Thu, 18 Oct 2012 17:52:07 -0700
+On 10/19/2012 02:06 AM, David Rientjes wrote:
+> On Thu, 18 Oct 2012, Glauber Costa wrote:
 > 
-> This reverts commit 7e381b0eb1e1a9805c37335562e8dc02e7d7848c.
+>>> Do we actually need to test PF_KTHREAD when current->mm == NULL? 
+>>> Perhaps because of aio threads whcih temporarily adopt a userspace mm?
+>>
+>> I believe so. I remember I discussed this in the past with David
+>> Rientjes and he advised me to test for both.
+>>
 > 
-> The commit incorrectly assumed that fork path always performed
-> threadgroup_change_begin/end() and depended on that for
-> synchronization against task exit and cgroup migration paths instead
-> of explicitly grabbing task_lock().
+> PF_KTHREAD can do use_mm() to assume an ->mm but hopefully they aren't 
+> allocating slab while doing so.  Have you considered actually charging 
+> current->mm->owner for that memory, though, since the kthread will have 
+> freed the memory before unuse_mm() or otherwise have charged it on behalf 
+> of a user process, i.e. only exempting PF_KTHREAD?
 > 
-> threadgroup_change is not locked when forking a new process (as
-> opposed to a new thread in the same process) and even if it were it
-> wouldn't be effective as different processes use different threadgroup
-> locks.
-> 
-> Revert the incorrect optimization.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> LKML-Reference: <20121008020000.GB2575@localhost>
-> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+I always charge current->mm->owner.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
