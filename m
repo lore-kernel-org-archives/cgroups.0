@@ -1,104 +1,120 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.7-fixes 2/2] Revert "cgroup: Drop
- task_lock(parent) on cgroup_fork()"
-Date: Fri, 19 Oct 2012 09:45:15 -0400
-Message-ID: <CAFTL4hzH6mj-UqGx1CaOyJTtwWPEQU97537+-ooivzr+8vXVGQ@mail.gmail.com>
-References: <20121008020000.GB2575@localhost>
-	<20121019005951.GH13370@google.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 5/6] memcg: make mem_cgroup_reparent_charges non failing
+Date: Fri, 19 Oct 2012 15:49:34 +0200
+Message-ID: <20121019134934.GG799@dhcp22.suse.cz>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+ <1350480648-10905-6-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=C6QlWA6RZdjpa7SvTdHWb5w6Olbq8v0AM8SVrbnMG4c=;
-        b=Va2/gbagv6AaKe/X95KB9Pdp5HjnAqsSLsPs36X+Nhdba1EjQtaXgW9ovdLxwoi2tO
-         96mFtb/8gd7tCBifDD75VovF4lGKnjcdLRGmyq8STmweV+6ctvD8cJuxGOEtlbHtB7wz
-         oIeny5BojDFTzOgh0dUfV74Dbjc5quyBKykWsy5j3R0+mkanLuUF6A5HQo4b4ZUIEhgx
-         +fubYOSuSfOZpi8FyL3VnYrgEKKg1qZx61V0+flvkxKunKOZBrpEvNXpXoDgNPudvi0D
-         jRByTa36GCzXc0Gv104UUrXshOS6NE9FMqRu60BNDgs2XGP90RlSA7tfiN0yJXMWsf/3
-         MWNQ==
-In-Reply-To: <20121019005951.GH13370-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1350480648-10905-6-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-2012/10/18 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
-> From c8b27924a8b6fd74066088f1cf07c256bbc6ed74 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Thu, 18 Oct 2012 17:52:07 -0700
->
-> This reverts commit 7e381b0eb1e1a9805c37335562e8dc02e7d7848c.
->
-> The commit incorrectly assumed that fork path always performed
-> threadgroup_change_begin/end() and depended on that for
-> synchronization against task exit and cgroup migration paths instead
-> of explicitly grabbing task_lock().
->
-> threadgroup_change is not locked when forking a new process (as
-> opposed to a new thread in the same process) and even if it were it
-> wouldn't be effective as different processes use different threadgroup
-> locks.
->
-> Revert the incorrect optimization.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> LKML-Reference: <20121008020000.GB2575@localhost>
+This is an updated version of the patch. I have dropped
+.__DEPRECATED_clear_css_refs in this one as it makes the best sense to
+me. I didn't add Tejun's Reviewed-by because of this change. Could you
+recheck, please?
+---
+From 6c1f2e76e254e7638ad8cc87f319e3492ac80c5b Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.cz>
+Date: Wed, 17 Oct 2012 14:15:09 +0200
+Subject: [PATCH] memcg: make mem_cgroup_reparent_charges non failing
 
-(bitterly) Acked-by: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> :-)
+Now that pre_destroy callbacks are called from within cgroup_lock and
+the cgroup has been checked to be empty without any children then there
+is no other way to fail.
+mem_cgroup_pre_destroy doesn't have to take a reference to memcg's css
+because all css' are marked dead already.
 
+mem_cgroup_subsys.__DEPRECATED_clear_css_refs can be dropped as
+mem_cgroup_pre_destroy cannot fail now.
 
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  kernel/cgroup.c |   23 ++++++-----------------
->  1 files changed, 6 insertions(+), 17 deletions(-)
->
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 2990dc7..f24f724 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -4814,31 +4814,20 @@ static const struct file_operations proc_cgroupstats_operations = {
->   *
->   * A pointer to the shared css_set was automatically copied in
->   * fork.c by dup_task_struct().  However, we ignore that copy, since
-> - * it was not made under the protection of RCU, cgroup_mutex or
-> - * threadgroup_change_begin(), so it might no longer be a valid
-> - * cgroup pointer.  cgroup_attach_task() might have already changed
-> - * current->cgroups, allowing the previously referenced cgroup
-> - * group to be removed and freed.
-> - *
-> - * Outside the pointer validity we also need to process the css_set
-> - * inheritance between threadgoup_change_begin() and
-> - * threadgoup_change_end(), this way there is no leak in any process
-> - * wide migration performed by cgroup_attach_proc() that could otherwise
-> - * miss a thread because it is too early or too late in the fork stage.
-> + * it was not made under the protection of RCU or cgroup_mutex, so
-> + * might no longer be a valid cgroup pointer.  cgroup_attach_task() might
-> + * have already changed current->cgroups, allowing the previously
-> + * referenced cgroup group to be removed and freed.
->   *
->   * At the point that cgroup_fork() is called, 'current' is the parent
->   * task, and the passed argument 'child' points to the child task.
->   */
->  void cgroup_fork(struct task_struct *child)
->  {
-> -       /*
-> -        * We don't need to task_lock() current because current->cgroups
-> -        * can't be changed concurrently here. The parent obviously hasn't
-> -        * exited and called cgroup_exit(), and we are synchronized against
-> -        * cgroup migration through threadgroup_change_begin().
-> -        */
-> +       task_lock(current);
->         child->cgroups = current->cgroups;
->         get_css_set(child->cgroups);
-> +       task_unlock(current);
->         INIT_LIST_HEAD(&child->cg_list);
->  }
->
-> --
-> 1.7.7.3
->
+Changes since v1
+- drop __DEPRECATED_clear_css_refs
+
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+---
+ mm/memcontrol.c |   19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f57ba4c..b4d854e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3738,14 +3738,12 @@ static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+  *
+  * Caller is responsible for holding css reference on the memcg.
+  */
+-static int mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
++static void mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
+ {
+ 	struct cgroup *cgrp = memcg->css.cgroup;
+ 	int node, zid;
+ 
+ 	do {
+-		if (cgroup_task_count(cgrp) || !list_empty(&cgrp->children))
+-			return -EBUSY;
+ 		/* This is for making all *used* pages to be on LRU. */
+ 		lru_add_drain_all();
+ 		drain_all_stock_sync(memcg);
+@@ -3771,8 +3769,6 @@ static int mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
+ 		 * charge before adding to the LRU.
+ 		 */
+ 	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0);
+-
+-	return 0;
+ }
+ 
+ /*
+@@ -3809,7 +3805,9 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+ 
+ 	}
+ 	lru_add_drain();
+-	return mem_cgroup_reparent_charges(memcg);
++	mem_cgroup_reparent_charges(memcg);
++
++	return 0;
+ }
+ 
+ static int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
+@@ -5013,13 +5011,9 @@ free_out:
+ static int mem_cgroup_pre_destroy(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	int ret;
+ 
+-	css_get(&memcg->css);
+-	ret = mem_cgroup_reparent_charges(memcg);
+-	css_put(&memcg->css);
+-
+-	return ret;
++	mem_cgroup_reparent_charges(memcg);
++	return 0;
+ }
+ 
+ static void mem_cgroup_destroy(struct cgroup *cont)
+@@ -5621,7 +5615,6 @@ struct cgroup_subsys mem_cgroup_subsys = {
+ 	.base_cftypes = mem_cgroup_files,
+ 	.early_init = 0,
+ 	.use_id = 1,
+-	.__DEPRECATED_clear_css_refs = true,
+ };
+ 
+ #ifdef CONFIG_MEMCG_SWAP
+-- 
+1.7.10.4
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
