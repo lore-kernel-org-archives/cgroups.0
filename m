@@ -1,42 +1,47 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: allow migration
- regardless of freezer state and update locking
-Date: Fri, 19 Oct 2012 13:04:21 -0700
-Message-ID: <20121019200421.GO13370@google.com>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
- <2424755.Pg0O5tTD3k@vostro.rjw.lan>
+Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
+Date: Fri, 19 Oct 2012 13:17:36 -0700
+Message-ID: <20121019201736.GQ13370@google.com>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+ <1350480648-10905-5-git-send-email-mhocko@suse.cz>
+ <50811E5E.1090205@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=qdrK1iuCSDgplXscH3E+C74uj4Rav0LYj6G340kTEYE=;
-        b=R6Y2q6UPW7OOkhqLJ5eA43Xh7JVy0KNHU0TEOLqjE5mHCua7KGRHOirE6LX+3/TYib
-         rW3nruF7p/JkuGU4WpzkgmkXFl7t67fog8X3zrl3mh6Irqnx3vGvq7w7UK9h9y10SiI9
-         gZi+TMWTAV6qtMyCa5z+RP5wKo5SLIuG/qgXhkr9k3SybaJczRAkwZ8kuKLoSCYUy3Dw
-         3cNc+67QhMFDLQrASNDFrbaUs0q19qWvOfO33qHix4mazrClTzV7W5FDYV7QqDHS/Oud
-         J5q70vtHQxwlQUBiGC288sdwHcC3dnm1tTp8vppHyq5v3i66u0bAfyc3f8vT5ZrxxctA
-         CCTA==
+        bh=RXGwCGy0eZuC3XKzo4P3ScIX5bwbLADIEXYpFsh8Bmk=;
+        b=WN039gaeoyNY5u5oVqO8ueDzkALjrf6PSZrvPnvNoiu2ZYRZvzfVV4UKiS5HcW8hn5
+         I9bGl4BsWzZzqSLpVH/MT9/UYY+r2HACvwjEfogn4Qr3WjWBDPac//YYmt2OTGOkfME2
+         vCU8eWTu4pMDIgZWGj9FE6T3MQitt3n2YDFT3QH/yaU6lxpKB/n+aNQsrZuqx2yBDrZ0
+         wF47rRFfEFs6eb/ChYJzV78Q/OJWf3L4uX7luroLBJfnEurfXlBRlfy7e7gfFLSSeO95
+         KJm4LhqIQ9SBNuwPoZUe7PgOJCobvCOUoaYecQ3YH6nBGE0RK/G+f9STLiA4X3c/srk9
+         JlpQ==
 Content-Disposition: inline
-In-Reply-To: <2424755.Pg0O5tTD3k-sKB8Sp2ER+y1GS7QM15AGw@public.gmane.org>
+In-Reply-To: <50811E5E.1090205-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Cc: oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri, Oct 19, 2012 at 06:54:42PM +0200, Rafael J. Wysocki wrote:
-> >  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup_freezer-locking
+On Fri, Oct 19, 2012 at 05:33:18PM +0800, Li Zefan wrote:
+> On 2012/10/17 21:30, Michal Hocko wrote:
+> > Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
+> > safely move on and forbit all the callbacks to fail. The last missing
+> > piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
+> > that css_tryget fails so no new charges for the memcg can happen.
 > 
-> It seems that no one has any comments. :-)
+> > The callbacks are also called from within cgroup_lock to guarantee that
+> > no new tasks show up. 
 > 
-> Are you going to prepare a branch for me to pull from?
+> I'm afraid this won't work. See commit 3fa59dfbc3b223f02c26593be69ce6fc9a940405
+> ("cgroup: fix potential deadlock in pre_destroy")
 
-I'm waiting for Oleg to poke some holes in the synchronization
-department but if that doesn't happen you can pull from the above
-branch.  I'll pull it into cgroup/for-3.8 too.
+Yeah, you're right.  Argh... we really should unexport cgroup_lock
+soon.
 
 Thanks.
 
