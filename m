@@ -1,55 +1,37 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH v5 06/14] memcg: kmem controller infrastructure
-Date: Fri, 19 Oct 2012 02:31:33 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1210190229450.26815@chino.kir.corp.google.com>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-7-git-send-email-glommer@parallels.com> <20121017151214.e3d2aa3b.akpm@linux-foundation.org> <507FC8E3.8020006@parallels.com> <alpine.DEB.2.00.1210181502270.30894@chino.kir.corp.google.com>
- <50811903.9000105@parallels.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
+Date: Fri, 19 Oct 2012 17:33:18 +0800
+Message-ID: <50811E5E.1090205@huawei.com>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz> <1350480648-10905-5-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=72z53lzBMxR3uaP//qrOh5v7KwumDpnDnHW7Lc0d66M=;
-        b=ie+XnTsiDdoj9Hx7RRYXdX75cSEW521NwAWVJzA7mHGws2PlHWieuSoQ10sK4utkdu
-         XnhyM/DNGSsgPORAQtswY+S5bHkYPB1kw6yVujgeyIW93ifumUj1g0nwChMxJHKxwX+L
-         nUROnd6WbLBy8k44/5cfwSCunjUV/akCfZDHf75j0BzHkI9enpMCiQlUrdY8KPjc/i3+
-         dXDN3HhcYH3WEzTPPlPn1dP1w6jHpgwie4I7ohnNTo8AI524Jg4OZAHgq6u0pm28yRgn
-         U4OiOCDuSbWv5188sjuR/9j/Ph/NGwi3kkP3SkEohPNmnb5uZtGsuGClPmT3XZJRH4PP
-         KduQ==
-In-Reply-To: <50811903.9000105@parallels.com>
+In-Reply-To: <1350480648-10905-5-git-send-email-mhocko@suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Fri, 19 Oct 2012, Glauber Costa wrote:
+On 2012/10/17 21:30, Michal Hocko wrote:
+> Now that mem_cgroup_pre_destroy callback doesn't fail finally we can
+> safely move on and forbit all the callbacks to fail. The last missing
+> piece is moving cgroup_call_pre_destroy after cgroup_clear_css_refs so
+> that css_tryget fails so no new charges for the memcg can happen.
 
-> >>> Do we actually need to test PF_KTHREAD when current->mm == NULL? 
-> >>> Perhaps because of aio threads whcih temporarily adopt a userspace mm?
-> >>
-> >> I believe so. I remember I discussed this in the past with David
-> >> Rientjes and he advised me to test for both.
-> >>
-> > 
-> > PF_KTHREAD can do use_mm() to assume an ->mm but hopefully they aren't 
-> > allocating slab while doing so.  Have you considered actually charging 
-> > current->mm->owner for that memory, though, since the kthread will have 
-> > freed the memory before unuse_mm() or otherwise have charged it on behalf 
-> > of a user process, i.e. only exempting PF_KTHREAD?
-> > 
-> I always charge current->mm->owner.
+> The callbacks are also called from within cgroup_lock to guarantee that
+> no new tasks show up. 
+
+I'm afraid this won't work. See commit 3fa59dfbc3b223f02c26593be69ce6fc9a940405
+("cgroup: fix potential deadlock in pre_destroy")
+
+> We could theoretically call them outside of the
+> lock but then we have to move after CGRP_REMOVED flag is set.
 > 
-
-Yeah, I'm asking have you considered charging current->mm->owner for the 
-memory when a kthread (current) assumes the mm of a user process via 
-use_mm()?  It may free the memory before calling unuse_mm(), but it's also 
-allocating the memory on behalf of a user so this exemption might be 
-dangerous if use_mm() becomes more popular.  I don't think there's 
-anything that prevents that charge, I'm just wondering if you considered 
-doing it even for kthreads with an mm.
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
+> ---
+>  kernel/cgroup.c |   30 +++++++++---------------------
+>  1 file changed, 9 insertions(+), 21 deletions(-)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
