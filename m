@@ -1,36 +1,81 @@
-From: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 1/3] device_cgroup: rename deny_all to behavior
-Date: Fri, 19 Oct 2012 23:45:06 +0200
-Message-ID: <5081C9E2.8080601@suse.cz>
-References: <20121019211626.219447423@napanee.usersys.redhat.com> <20121019211626.583893413@napanee.usersys.redhat.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.7-fixes 1/2] Revert "cgroup: Remove
+	task_lock() from cgroup_post_fork()"
+Date: Sat, 20 Oct 2012 14:21:43 -0400
+Message-ID: <CAFTL4hy+vrvJKrc1Y2FW44k=LBi72H=34337xALpbtG_3u5O7w@mail.gmail.com>
+References: <20121008020000.GB2575@localhost>
+	<20121019005922.GG13370@google.com>
+	<CAFTL4hz82==b3ioSMhbKzh0CN1ivR7RQMKKMFFWu5PHPjg=Bfg@mail.gmail.com>
+	<20121019193808.GL13370@google.com>
+	<CAFTL4hwQ6Ntn5GJwj=jiO2p3GdwhEMp0MyR8dgUj_Lx0U4kNqg@mail.gmail.com>
+	<20121019210738.GA1180@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:x-enigmail-version:content-type
-         :content-transfer-encoding;
-        bh=qNezFMndKtZg/h7m0+s8SFKyx4mwm7j16zVrvjMxeNo=;
-        b=YkPw1Hk+Hl6FmJx4o/6TavvFHPlJghHmFwBesNLlJhILHbPXWAkNLcwqk2wzr+Gj21
-         JQk1q1U83VkKVh/04KlvUPk4bN/fGIf2DPWo2Xk6GFUjdGPsnS8PY4Ti5orpG6288qdv
-         2W6KrytGXBabxEoIDD3xwf8nhyzlqaAGqTZdYfOmaP8EBaUTRbH3qoxrKpeT5RCq3tDc
-         z+hIfIkNcm8XN8soZ9Hlfy+SMZjj14NfZk1Nnqw7vOn4FSsBea69WSHte9/TUU65LYA5
-         d8b8o4d7sGzbYi47rCyj6lBtk9fTcCXdN7yYl0rLAewLYgNQLKHjIKE8EGVHgPQ/J9k2
-         E63Q==
-In-Reply-To: <20121019211626.583893413-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+	:cc:content-type;
+	bh=efhk+K0D90wXph5SZ3jle6711hAtmvzudi2wrppA3Dc=;
+	b=WZZxUWlCN0ivpfuKPqrdm3gXiPwtjVCYT4wAIi25Hm/Wt8kJ0Dux+b1Z5Wa55ttlcK
+	ubpIr0jZ+1IPr+Nh6IwWUKNdKtb3Gv/akWrwG6dwWFdDKyFWqQRjIUVZbSc6eEAa4RkB
+	B5ZAXPsLu7wn2MGaIMmff91/0LDURCF+icRdh50ZVAaFCDFpfKsGZ6RB9hLcIT9F05DD
+	2gRQCgUPBJrOSpdra0RTph7vD0Ze9d0Zz5TGmSD76AtrExQ3ZD1Su/rT8gXZRAVvz4hc
+	WQh5btQw9zaMNrfWMMhxYlOCoCAYg9bP6p+Kd5FVxAXMvtJNNQd9UMRuxqmAREXGf8i8
+	n9AQ==
+In-Reply-To: <20121019210738.GA1180-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-> Signed-off-by: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+2012/10/19 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
+> Hello, Frederic.
+>
+> On Fri, Oct 19, 2012 at 03:44:20PM -0400, Frederic Weisbecker wrote:
+>> > For -stable, I think it's better to revert.  If you want to remove
+>> > task_lock, let's do it for 3.8.
+>>
+>> I don't think that a wrong comment justifies a patch to stable.
+>
+> I'm not really sure whether it's safe or not.  It seems all usages are
+> protected by write locking css_set_lock but maybe I'm missing
+> something and as the commit is born out of confusion, I'm very
+> inclined to revert it by default.  Are you sure this one is safe?
 
-R U sure?        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-As I don't remember myself ever seeing this patch...
-Maybe I should start smoking some crap to refresh my memory?
+Thinking about it further, one scenario is worrying me but it
+eventually looks safe but by accident.
 
--- 
-js
-suse labs
+CPU 0
+                    CPU 1
+
+cgroup_task_migrate {
+        task_lock(p)
+        rcu_assign_pointer(tsk->cgroups, newcg);
+        task_unlock(tsk);
+
+        write_lock(&css_set_lock);
+        if (!list_empty(&tsk->cg_list))
+            list_move(&tsk->cg_list, &newcg->tasks);
+        write_unlock(&css_set_lock);
+
+                          write_lock(&css_set_lock);
+	put_css_set(oldcg);
+         list_add(&child->cg_list, &child->cgroups->tasks); (1)
+
+On (1), child->cgroups should have the value of newcg and not oldcg
+due to the memory ordering implied by the locking of css_set_lock. Now
+I can't guarantee that because I'm no memory ordering expert. And even
+if it's safe, it's so very non obvious that I now agree with you:
+let's revert  the patch and restart with a better base by gathering
+all the cgroup fork code in the current cgroup_post_fork place.
+
+Thanks.
