@@ -1,41 +1,106 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/4] Rebase device_cgroup v2 patchset
-Date: Mon, 22 Oct 2012 16:14:22 -0400
-Message-ID: <20121022201422.GA14085@redhat.com>
-References: <20121022134536.172969567@napanee.usersys.redhat.com>
- <20121022125838.20cdc240.akpm@linux-foundation.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/7] freezer: add missing mb's to freezer_count() and
+	freezer_should_skip()
+Date: Mon, 22 Oct 2012 17:13:17 -0400
+Message-ID: <20121022211317.GD5951@atj.dyndns.org>
+References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+	<1350426526-14254-3-git-send-email-tj@kernel.org>
+	<20121022174404.GA21553@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121022125838.20cdc240.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=DCx6w+TCudcga1FPKCpVTnrqhGBpgePXOy1dOjKbDIM=;
+	b=A7kMj56TeFDCUEnjARJGxIxH87ShwAHld1KFUtHv5mlh62JWJunsDbs856TLUVRKmF
+	gPuH2IHRp8gmQgcAYJP2Kea7rgmGRus5ULMfcYo0QMUGR6NDXwPPk3D48WBe7ycP1P6Z
+	pzNBOWul61w+/ssWamFOXtvUozdOJ5yMT3IcQTakoYbVWcDalRNc40zvbuN8FZVLajM3
+	vSrMNfxPt2LWp0H2zdw2+Gux1O6DDZKnBs3cCQ0AzCb/qFeoMNLo/9CYHvMgaA/Xscvh
+	lOWueRQfg083QC5hyqIAr5e6Ip6apbz1B4vkParVIDDrwLu+S67pZxmB6xZHx695jFMv
+	CJCg==
+Content-Disposition: inline
+In-Reply-To: <20121022174404.GA21553-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Andrew,
-On Mon, Oct 22, 2012 at 12:58:38PM -0700, Andrew Morton wrote:
-> On Mon, 22 Oct 2012 09:45:36 -0400
-> Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+Hello, Oleg.
+
+On Mon, Oct 22, 2012 at 07:44:04PM +0200, Oleg Nesterov wrote:
+> >  static inline void freezer_count(void)
+> >  {
+> >  	current->flags &= ~PF_FREEZER_SKIP;
+> > +	/*
+> > +	 * If freezing is in progress, the following paired with smp_mb()
+> > +	 * in freezer_should_skip() ensures that either we see %true
+> > +	 * freezing() or freezer_should_skip() sees !PF_FREEZER_SKIP.
+> > +	 */
+> > +	smp_mb();
+> >  	try_to_freeze();
 > 
-> > This patchset rebases the v2 of the patchset since the v1 was pushed into -rc1
-> > instead. The last patch, not present on previous patchset, fixes the
-> > permission check when allowing everything in a cgroup.
-> > 
+> I agree, this looks like a bug fix.
+
+Yeah, and this isn't dangerous at all.  I'll ping -stable.
+
+> > -static inline int freezer_should_skip(struct task_struct *p)
+> > +static inline bool freezer_should_skip(struct task_struct *p)
+> >  {
+> > -	return !!(p->flags & PF_FREEZER_SKIP);
+> > +	/*
+> > +	 * The following smp_mb() paired with the one in freezer_count()
+> > +	 * ensures that either freezer_count() sees %true freezing() or we
+> > +	 * see cleared %PF_FREEZER_SKIP and return %false.  This makes it
+> > +	 * impossible for a task to slip frozen state testing after
+> > +	 * clearing %PF_FREEZER_SKIP.
+> > +	 */
+> > +	smp_mb();
+> > +	return p->flags & PF_FREEZER_SKIP;
+> >  }
 > 
-> I grabbed all four, thanks.  Shall send them on to Linus in a week or
-> so, after a bit more review and some linux-next testing.
+> I am not sure we really need smp_mb() here. Speaking of cgroup_freezer,
+> it seems that a single mb() after "->state = CGROUP_FREEZING" should be
+> enough.
 
-thanks, much appreciated
+Hmmm... I agree pairing there would work too.
 
-> I've been trying to work out why I merged the v1 patchset rather than
-> v2 and cannot find that v2 patchset anywhere.  When was it sent out?
+> But even if I am right, I agree that it looks better in freezer_should_skip()
+> and this is more robust.
 
-It was sent to linux-kernel and cgroups@vger on Sep 04th, here's the
-msgid of patch 0 for reference:
-<20120904143419.892872876-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org> 
+But, yeah, performance implications at this level are almost
+completely irrelavent here and I think pairing freezer_should_skip()
+is easier to read.
 
--- 
-Aristeu
+> So I think the patch is fine and fixes the bug.
+
+Awesome.
+
+> We probably have another similar race. If ptrace_stop()->may_ptrace_stop()
+> returns false, the task does
+> 
+> 	__set_current_state(TASK_RUNNING);
+> 	// no mb in between
+> 	try_to_freeze();
+> 
+> And this can race with task_is_stopped_or_traced() check in the same way.
+> (of course this is only theoretical).
+> 
+> do_signal_stop() is probably fine, we can rely on ->siglock.
+
+Hmm....  Guess we should drop __ from set_current_state.  I wonder
+whether we should just add mb to freezing()?  What do you think?
+
+Thanks.
+
+--
+tejun
