@@ -1,137 +1,128 @@
-From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [PATCH 1/4] cgroup: fix invalid rcu dereference
-Date: Mon, 22 Oct 2012 11:11:30 -0500
-Message-ID: <20121022161130.GA23199@sergelap>
+From: Serge Hallyn <serge.hallyn@canonical.com>
+Subject: Re: [PATCH 2/4] device_cgroup: rename deny_all to behavior
+Date: Mon, 22 Oct 2012 11:12:57 -0500
+Message-ID: <20121022161257.GB23199@sergelap>
 References: <20121022134536.172969567@napanee.usersys.redhat.com>
- <20121022134536.543579196@napanee.usersys.redhat.com>
+ <20121022134536.839559616@napanee.usersys.redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20121022134536.543579196-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20121022134536.839559616@napanee.usersys.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aristeu Rozanski <aris@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Jiri Slaby <jslaby@suse.cz>, cgroups@vger.kernel.org
 
-Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> From: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+Quoting Aristeu Rozanski (aris@redhat.com):
+> This was done in a v2 patch but v1 ended up being committed. The variable name
+> is less confusing and stores the default behavior when no matching exception
+> exists.
 > 
-> Commit "device_cgroup: convert device_cgroup internally to policy +
-> exceptions" removed rcu locks which are needed in task_devcgroup
-> called in this chain: devcgroup_inode_mknod OR
-> __devcgroup_inode_permission -> __devcgroup_inode_permission ->
-> task_devcgroup -> task_subsys_state -> task_subsys_state_check.
 > 
-> Change the code so that task_devcgroup is safely called with rcu read
-> lock held.
-> 
-> ===============================
-> [ INFO: suspicious RCU usage. ]
-> 3.6.0-rc5-next-20120913+ #42 Not tainted
-> -------------------------------
-> include/linux/cgroup.h:553 suspicious rcu_dereference_check() usage!
-> 
-> other info that might help us debug this:
-> 
-> rcu_scheduler_active = 1, debug_locks = 0
-> 2 locks held by kdevtmpfs/23:
->  #0:  (sb_writers){.+.+.+}, at: [<ffffffff8116873f>]
-> mnt_want_write+0x1f/0x50
->  #1:  (&sb->s_type->i_mutex_key#3/1){+.+.+.}, at: [<ffffffff811558af>]
-> kern_path_create+0x7f/0x170
-> 
-> stack backtrace:
-> Pid: 23, comm: kdevtmpfs Not tainted 3.6.0-rc5-next-20120913+ #42
-> Call Trace:
->  [<ffffffff810c638d>] lockdep_rcu_suspicious+0xfd/0x130
->  [<ffffffff8121541d>] devcgroup_inode_mknod+0x19d/0x240
->  [<ffffffff8107bf54>] ? ns_capable+0x44/0x80
->  [<ffffffff81156b21>] vfs_mknod+0x71/0xf0
->  [<ffffffff813a8332>] handle_create.isra.2+0x72/0x200
->  [<ffffffff813a85d4>] devtmpfsd+0x114/0x140
->  [<ffffffff813a84c0>] ? handle_create.isra.2+0x200/0x200
->  [<ffffffff81093ad6>] kthread+0xd6/0xe0
->  [<ffffffff81654f24>] kernel_thread_helper+0x4/0x10
->  [<ffffffff8165369d>] ? retint_restore_args+0xe/0xe
->  [<ffffffff81093a00>] ? kthread_create_on_node+0x140/0x140
->  [<ffffffff81654f20>] ? gs_change+0xb/0xb
-> 
-> Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
-> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> Cc: Dave Jones <davej@redhat.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: James Morris <jmorris@namei.org>
+> Cc: Pavel Emelyanov <xemul@openvz.org>
+> Cc: Serge Hallyn <serge.hallyn@canonical.com>
 
-Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Acked-by: Serge E. Hallyn <serge.hallyn@ubuntu.com>
 
-> Signed-off-by: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Jiri Slaby <jslaby@suse.cz>
+> Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 > 
 > ---
+>  security/device_cgroup.c |   25 ++++++++++++++-----------
+>  1 file changed, 14 insertions(+), 11 deletions(-)
 > 
-> And this should fix it.
-> 
->  security/device_cgroup.c |   15 +++++++--------
->  1 file changed, 7 insertions(+), 8 deletions(-)
-> 
-> --- github.orig/security/device_cgroup.c	2012-10-17 11:11:08.514793906 -0400
-> +++ github/security/device_cgroup.c	2012-10-19 16:35:37.936804289 -0400
-> @@ -533,10 +533,10 @@ struct cgroup_subsys devices_subsys = {
->   *
->   * returns 0 on success, -EPERM case the operation is not permitted
->   */
-> -static int __devcgroup_check_permission(struct dev_cgroup *dev_cgroup,
-> -					short type, u32 major, u32 minor,
-> +static int __devcgroup_check_permission(short type, u32 major, u32 minor,
->  				        short access)
->  {
-> +	struct dev_cgroup *dev_cgroup;
->  	struct dev_exception_item ex;
->  	int rc;
+> --- github.orig/security/device_cgroup.c	2012-10-19 16:35:37.936804289 -0400
+> +++ github/security/device_cgroup.c	2012-10-19 16:35:46.366102913 -0400
+> @@ -42,7 +42,10 @@ struct dev_exception_item {
+>  struct dev_cgroup {
+>  	struct cgroup_subsys_state css;
+>  	struct list_head exceptions;
+> -	bool deny_all;
+> +	enum {
+> +		DEVCG_DEFAULT_ALLOW,
+> +		DEVCG_DEFAULT_DENY,
+> +	} behavior;
+>  };
 >  
-> @@ -547,6 +547,7 @@ 	memset(&ex, 0, sizeof(ex));
->  	ex.access = access;
+>  static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+> @@ -182,13 +185,13 @@ static struct cgroup_subsys_state *devcg
+>  	parent_cgroup = cgroup->parent;
 >  
->  	rcu_read_lock();
-> +	dev_cgroup = task_devcgroup(current);
->  	rc = may_access(dev_cgroup, &ex);
->  	rcu_read_unlock();
->  
-> @@ -558,7 +559,6 @@ 	return 0;
->  
->  int __devcgroup_inode_permission(struct inode *inode, int mask)
->  {
-> -	struct dev_cgroup *dev_cgroup = task_devcgroup(current);
->  	short type, access = 0;
->  
->  	if (S_ISBLK(inode->i_mode))
-> @@ -570,13 +570,12 @@ 	short type, access = 0;
->  	if (mask & MAY_READ)
->  		access |= ACC_READ;
->  
-> -	return __devcgroup_check_permission(dev_cgroup, type, imajor(inode),
-> -					    iminor(inode), access);
-> +	return __devcgroup_check_permission(type, imajor(inode), iminor(inode),
-> +			access);
+>  	if (parent_cgroup == NULL)
+> -		dev_cgroup->deny_all = false;
+> +		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+>  	else {
+>  		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+>  		mutex_lock(&devcgroup_mutex);
+>  		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
+>  					  &parent_dev_cgroup->exceptions);
+> -		dev_cgroup->deny_all = parent_dev_cgroup->deny_all;
+> +		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+>  		mutex_unlock(&devcgroup_mutex);
+>  		if (ret) {
+>  			kfree(dev_cgroup);
+> @@ -260,7 +263,7 @@ static int devcgroup_seq_read(struct cgr
+>  	 * - List the exceptions in case the default policy is to deny
+>  	 * This way, the file remains as a "whitelist of devices"
+>  	 */
+> -	if (devcgroup->deny_all == false) {
+> +	if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+>  		set_access(acc, ACC_MASK);
+>  		set_majmin(maj, ~0);
+>  		set_majmin(min, ~0);
+> @@ -314,12 +317,12 @@ 		if (ex->minor != ~0 && ex->minor != re
+>  	 * In two cases we'll consider this new exception valid:
+>  	 * - the dev cgroup has its default policy to allow + exception list:
+>  	 *   the new exception should *not* match any of the exceptions
+> -	 *   (!deny_all, !match)
+> +	 *   (behavior == DEVCG_DEFAULT_ALLOW, !match)
+>  	 * - the dev cgroup has its default policy to deny + exception list:
+>  	 *   the new exception *should* match the exceptions
+> -	 *   (deny_all, match)
+> +	 *   (behavior == DEVCG_DEFAULT_DENY, match)
+>  	 */
+> -	if (dev_cgroup->deny_all == match)
+> +	if ((dev_cgroup->behavior == DEVCG_DEFAULT_DENY) == match)
+>  		return 1;
+>  	return 0;
 >  }
->  
->  int devcgroup_inode_mknod(int mode, dev_t dev)
->  {
-> -	struct dev_cgroup *dev_cgroup = task_devcgroup(current);
->  	short type;
->  
->  	if (!S_ISBLK(mode) && !S_ISCHR(mode))
-> @@ -587,7 +586,7 @@ 		return 0;
->  	else
->  		type = DEV_CHAR;
->  
-> -	return __devcgroup_check_permission(dev_cgroup, type, MAJOR(dev),
-> -					    MINOR(dev), ACC_MKNOD);
-> +	return __devcgroup_check_permission(type, MAJOR(dev), MINOR(dev),
-> +			ACC_MKNOD);
->  
->  }
+> @@ -375,11 +378,11 @@ 	memset(&ex, 0, sizeof(ex));
+>  			if (!parent_has_perm(devcgroup, &ex))
+>  				return -EPERM;
+>  			dev_exception_clean(devcgroup);
+> -			devcgroup->deny_all = false;
+> +			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+>  			break;
+>  		case DEVCG_DENY:
+>  			dev_exception_clean(devcgroup);
+> -			devcgroup->deny_all = true;
+> +			devcgroup->behavior = DEVCG_DEFAULT_DENY;
+>  			break;
+>  		default:
+>  			return -EINVAL;
+> @@ -452,7 +455,7 @@ 		case '\0':
+>  		 * an matching exception instead. And be silent about it: we
+>  		 * don't want to break compatibility
+>  		 */
+> -		if (devcgroup->deny_all == false) {
+> +		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+>  			dev_exception_rm(devcgroup, &ex);
+>  			return 0;
+>  		}
+> @@ -463,7 +466,7 @@ 			return 0;
+>  		 * an matching exception instead. And be silent about it: we
+>  		 * don't want to break compatibility
+>  		 */
+> -		if (devcgroup->deny_all == true) {
+> +		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+>  			dev_exception_rm(devcgroup, &ex);
+>  			return 0;
+>  		}
 > 
