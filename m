@@ -1,64 +1,42 @@
-From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: process hangs on do_exit when oom happens
-Date: Mon, 22 Oct 2012 11:08:40 +0530
-Message-ID: <CAKTCnzmDhSd-POHSC0wx-ziVPUg9wFverK33Q1_SvCx3Gzuugg@mail.gmail.com>
-References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
-	<20121019160425.GA10175@dhcp22.suse.cz>
-	<CAKWKT+Z-SZb1=3rwLm+urs3fghQ3M6pdOR_rzXKCevoad11a5g@mail.gmail.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 14/18] memcg/sl[au]b: shrink dead caches
+Date: Mon, 22 Oct 2012 11:37:22 +0400
+Message-ID: <5084F7B2.7000105@parallels.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-15-git-send-email-glommer@parallels.com> <0000013a7a9144d1-de184c46-2a7d-4e6c-8606-927cc1f48969-000000@email.amazonses.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=LsYoRbOGi+ZWYur2JGn1597fe2lywvh0rX/dItEWNTc=;
-        b=Xur4ydDDz13EtoJgEaRfm5Yylh3ALc/j9m8sgzq/VijWHQfm3ioBKmybTBdeMp3F24
-         5w9QJ1dhvqXuGsOumBm+64NIKkmu+a6fA9NTP83y2lRFR4VjkY0tBHkEiypjxRpXEkky
-         RZx7XPNvEmbXGwyYSYdm7oJkHTbMD7hmF9ASokCvfk7tZgrBjk3bcwQAVTF0ZZ2RnRTc
-         09eVABNTB5d1iOlnc1pgHfj1j3IPGAG4b1HVypXn/q6WkkHOIDUbhj1tPeNRBM0rWfWY
-         qmkHuhGIc9JLCM+MNvZGplj/KUkeIaURf069BBxdOC6ScMZ5Ot/PUxfDlNZDrv05wxmW
-         dEPw==
-In-Reply-To: <CAKWKT+Z-SZb1=3rwLm+urs3fghQ3M6pdOR_rzXKCevoad11a5g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <0000013a7a9144d1-de184c46-2a7d-4e6c-8606-927cc1f48969-000000-p/GC64/jrecnJqMo6gzdpkEOCMrvLtNR@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qiang Gao <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Oct 22, 2012 at 7:46 AM, Qiang Gao <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> I don't know whether  the process will exit finally, bug this stack lasts
-> for hours, which is obviously unnormal.
-> The situation:  we use a command calld "cglimit" to fork-and-exec the worker
-> process,and the "cglimit" will
-> set some limitation on the worker with cgroup. for now,we limit the
-> memory,and we also use cpu cgroup,but with
-> no limiation,so when the worker is running, the cgroup directory looks like
-> following:
->
-> /cgroup/memory/worker : this directory limit the memory
-> /cgroup/cpu/worker :with no limit,but worker process is in.
->
-> for some reason(some other process we didn't consider),  the worker process
-> invoke global oom-killer,
-> not cgroup-oom-killer.  then the worker process hangs there.
->
-> Actually, if we didn't set the worker process into the cpu cgroup, this will
-> never happens.
->
+On 10/19/2012 11:47 PM, Christoph Lameter wrote:
+> On Fri, 19 Oct 2012, Glauber Costa wrote:
+> 
+>> An unlikely branch is used to make sure this case does not affect
+>> performance in the usual slab_free path.
+>>
+>> The slab allocator has a time based reaper that would eventually get rid
+>> of the objects, but we can also call it explicitly, since dead caches
+>> are not a likely event.
+> 
+> This is also something that could be done from slab_common since all
+> allocators have kmem_cache_shrink and kmem_cache_shrink can be used to
+> drain the caches and free up empty slab pages.
+> 
 
-You said you don't use CPU limits right? can you also send in the
-output of /proc/sched_debug. Can you also send in your
-/etc/cgconfig.conf? If the OOM is not caused by cgroup memory limit
-and the global system is under pressure in 2.6.32, it can trigger an
-OOM.
+The changelog needs to be updated. I updated the code, forgot the
+changelog =(
 
-Also
+I am actually now following Tejun's last suggestion, and no longer using
+my old verify_dead code.
 
-1. Have you turned off swapping (seems like it) right?
-2. Do you have a NUMA policy setup for this task?
+So I am basically calling shrink_slab every once in a while until the
+cache disappears.
 
-Can you also share the .config (not sure if any special patches are
-being used) in the version you've mentioned.
-
-Balbir
+The only change I still need in the allocators is to count the amount of
+pages they have, so I can differentiate between need-to-shrink and
+need-to-destroy
