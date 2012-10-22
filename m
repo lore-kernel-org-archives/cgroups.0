@@ -1,30 +1,74 @@
 From: Aristeu Rozanski <aris@redhat.com>
-Subject: Re: [PATCH 1/3] device_cgroup: rename deny_all to behavior
-Date: Mon, 22 Oct 2012 09:35:12 -0400
-Message-ID: <20121022133512.GD10122@redhat.com>
-References: <20121019211626.219447423@napanee.usersys.redhat.com>
- <20121019211626.583893413@napanee.usersys.redhat.com>
- <5081C9E2.8080601@suse.cz>
-Mime-Version: 1.0
+Subject: [PATCH 4/4] device_cgroup: add proper checking when changing default behavior
+Date: Mon, 22 Oct 2012 09:45:40 -0400
+Message-ID: <20121022134537.447117744@napanee.usersys.redhat.com>
+References: <20121022134536.172969567@napanee.usersys.redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5081C9E2.8080601@suse.cz>
+Content-Disposition: inline; filename=fix-perm.patch
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: linux-kernel@vger.kernel.org, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, cgroups@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, James Morris <jmorris@namei.org>, Pavel Emelyanov <xemul@openvz.org>, Serge Hallyn <serge.hallyn@canonical.com>, Jiri Slaby <jslaby@suse.cz>, cgroups@vger.kernel.org
 
-On Fri, Oct 19, 2012 at 11:45:06PM +0200, Jiri Slaby wrote:
-> > Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> 
-> R U sure?        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> As I don't remember myself ever seeing this patch...
-> Maybe I should start smoking some crap to refresh my memory?
+Before changing a group's default behavior to ALLOW, we must check if its
+parent's behavior is also ALLOW.
 
-argh, sorry. wanted to include everyone and ended up copying/pasting it.
-will resubmit
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: James Morris <jmorris@namei.org>
+Cc: Pavel Emelyanov <xemul@openvz.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Cc: Jiri Slaby <jslaby@suse.cz>
+Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 
--- 
-Aristeu
+---
+ security/device_cgroup.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+--- github.orig/security/device_cgroup.c	2012-10-19 16:36:50.135790476 -0400
++++ github/security/device_cgroup.c	2012-10-19 16:48:50.710978125 -0400
+@@ -344,6 +344,17 @@ static int parent_has_perm(struct dev_cg
+ 	return may_access(parent, ex);
+ }
+ 
++/**
++ * may_allow_all - checks if it's possible to change the behavior to
++ *		   allow based on parent's rules.
++ * @parent: device cgroup's parent
++ * returns: != 0 in case it's allowed, 0 otherwise
++ */
++static inline int may_allow_all(struct dev_cgroup *parent)
++{
++	return parent->behavior == DEVCG_DEFAULT_ALLOW;
++}
++
+ /*
+  * Modify the exception list using allow/deny rules.
+  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
+@@ -364,6 +375,8 @@ static int devcgroup_update_access(struc
+ 	char temp[12];		/* 11 + 1 characters needed for a u32 */
+ 	int count, rc;
+ 	struct dev_exception_item ex;
++	struct cgroup *p = devcgroup->css.cgroup;
++	struct dev_cgroup *parent = cgroup_to_devcgroup(p->parent);
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+@@ -375,9 +388,13 @@ 	memset(&ex, 0, sizeof(ex));
+ 	case 'a':
+ 		switch (filetype) {
+ 		case DEVCG_ALLOW:
+-			if (!parent_has_perm(devcgroup, &ex))
++			if (!may_allow_all(parent))
+ 				return -EPERM;
+ 			dev_exception_clean(devcgroup);
++			rc = dev_exceptions_copy(&devcgroup->exceptions,
++						 &parent->exceptions);
++			if (rc)
++				return rc;
+ 			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+ 			break;
+ 		case DEVCG_DENY:
