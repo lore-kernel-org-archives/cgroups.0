@@ -1,84 +1,90 @@
-From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [PATCH 4/4] device_cgroup: add proper checking when changing
- default behavior
-Date: Mon, 22 Oct 2012 11:16:10 -0500
-Message-ID: <20121022161610.GD23199@sergelap>
-References: <20121022134536.172969567@napanee.usersys.redhat.com>
- <20121022134537.447117744@napanee.usersys.redhat.com>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/7] freezer: add missing mb's to freezer_count() and
+	freezer_should_skip()
+Date: Mon, 22 Oct 2012 19:44:04 +0200
+Message-ID: <20121022174404.GA21553@redhat.com>
+References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+	<1350426526-14254-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121022134537.447117744-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1350426526-14254-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> Before changing a group's default behavior to ALLOW, we must check if its
-> parent's behavior is also ALLOW.
-> 
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
-> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-
-Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-
-Thanks, Aristeu.
-
-> Cc: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
-> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> 
-> ---
->  security/device_cgroup.c |   19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-> --- github.orig/security/device_cgroup.c	2012-10-19 16:36:50.135790476 -0400
-> +++ github/security/device_cgroup.c	2012-10-19 16:48:50.710978125 -0400
-> @@ -344,6 +344,17 @@ static int parent_has_perm(struct dev_cg
->  	return may_access(parent, ex);
->  }
->  
+On 10/16, Tejun Heo wrote:
+>
 > +/**
-> + * may_allow_all - checks if it's possible to change the behavior to
-> + *		   allow based on parent's rules.
-> + * @parent: device cgroup's parent
-> + * returns: != 0 in case it's allowed, 0 otherwise
-> + */
-> +static inline int may_allow_all(struct dev_cgroup *parent)
-> +{
-> +	return parent->behavior == DEVCG_DEFAULT_ALLOW;
-> +}
-> +
->  /*
->   * Modify the exception list using allow/deny rules.
->   * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
-> @@ -364,6 +375,8 @@ static int devcgroup_update_access(struc
->  	char temp[12];		/* 11 + 1 characters needed for a u32 */
->  	int count, rc;
->  	struct dev_exception_item ex;
-> +	struct cgroup *p = devcgroup->css.cgroup;
-> +	struct dev_cgroup *parent = cgroup_to_devcgroup(p->parent);
->  
->  	if (!capable(CAP_SYS_ADMIN))
->  		return -EPERM;
-> @@ -375,9 +388,13 @@ 	memset(&ex, 0, sizeof(ex));
->  	case 'a':
->  		switch (filetype) {
->  		case DEVCG_ALLOW:
-> -			if (!parent_has_perm(devcgroup, &ex))
-> +			if (!may_allow_all(parent))
->  				return -EPERM;
->  			dev_exception_clean(devcgroup);
-> +			rc = dev_exceptions_copy(&devcgroup->exceptions,
-> +						 &parent->exceptions);
-> +			if (rc)
-> +				return rc;
->  			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
->  			break;
->  		case DEVCG_DENY:
-> 
+> + * freezer_count - tell freezer to stop ignoring %current
+> + *
+> + * Undo freezer_do_not_count().  It tells freezers that %current should be
+> + * considered again and tries to freeze if freezing condition is already in
+> + * effect.
+>   */
+>  static inline void freezer_count(void)
+>  {
+>  	current->flags &= ~PF_FREEZER_SKIP;
+> +	/*
+> +	 * If freezing is in progress, the following paired with smp_mb()
+> +	 * in freezer_should_skip() ensures that either we see %true
+> +	 * freezing() or freezer_should_skip() sees !PF_FREEZER_SKIP.
+> +	 */
+> +	smp_mb();
+>  	try_to_freeze();
+
+I agree, this looks like a bug fix.
+
+> -static inline int freezer_should_skip(struct task_struct *p)
+> +static inline bool freezer_should_skip(struct task_struct *p)
+>  {
+> -	return !!(p->flags & PF_FREEZER_SKIP);
+> +	/*
+> +	 * The following smp_mb() paired with the one in freezer_count()
+> +	 * ensures that either freezer_count() sees %true freezing() or we
+> +	 * see cleared %PF_FREEZER_SKIP and return %false.  This makes it
+> +	 * impossible for a task to slip frozen state testing after
+> +	 * clearing %PF_FREEZER_SKIP.
+> +	 */
+> +	smp_mb();
+> +	return p->flags & PF_FREEZER_SKIP;
+>  }
+
+I am not sure we really need smp_mb() here. Speaking of cgroup_freezer,
+it seems that a single mb() after "->state = CGROUP_FREEZING" should be
+enough.
+
+But even if I am right, I agree that it looks better in freezer_should_skip()
+and this is more robust.
+
+So I think the patch is fine and fixes the bug.
+
+
+
+
+
+We probably have another similar race. If ptrace_stop()->may_ptrace_stop()
+returns false, the task does
+
+	__set_current_state(TASK_RUNNING);
+	// no mb in between
+	try_to_freeze();
+
+And this can race with task_is_stopped_or_traced() check in the same way.
+(of course this is only theoretical).
+
+
+do_signal_stop() is probably fine, we can rely on ->siglock.
+
+Oleg.
