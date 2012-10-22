@@ -1,70 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Glauber Costa <glommer@parallels.com>
 Subject: Re: [PATCH v5 06/14] memcg: kmem controller infrastructure
-Date: Mon, 22 Oct 2012 14:51:24 +0200
-Message-ID: <20121022125124.GA8344@dhcp22.suse.cz>
-References: <1350382611-20579-1-git-send-email-glommer@parallels.com>
- <1350382611-20579-7-git-send-email-glommer@parallels.com>
- <alpine.DEB.2.00.1210171515290.20712@chino.kir.corp.google.com>
- <507FCA90.8060307@parallels.com>
- <alpine.DEB.2.00.1210181454100.30894@chino.kir.corp.google.com>
- <5081269B.5000603@parallels.com>
- <alpine.DEB.2.00.1210191331400.17804@chino.kir.corp.google.com>
- <50853D47.4030409@parallels.com>
+Date: Mon, 22 Oct 2012 16:52:41 +0400
+Message-ID: <50854199.9020804@parallels.com>
+References: <1350382611-20579-1-git-send-email-glommer@parallels.com> <1350382611-20579-7-git-send-email-glommer@parallels.com> <alpine.DEB.2.00.1210171515290.20712@chino.kir.corp.google.com> <507FCA90.8060307@parallels.com> <alpine.DEB.2.00.1210181454100.30894@chino.kir.corp.google.com> <5081269B.5000603@parallels.com> <alpine.DEB.2.00.1210191331400.17804@chino.kir.corp.google.com> <50853D47.4030409@parallels.com> <20121022125124.GA8344@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <50853D47.4030409-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20121022125124.GA8344@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@cs.helsinki.fi>
 
-[Sorry for the late reply]
-
-On Mon 22-10-12 16:34:15, Glauber Costa wrote:
-> On 10/20/2012 12:34 AM, David Rientjes wrote:
-> > On Fri, 19 Oct 2012, Glauber Costa wrote:
-> > 
-> >>>>> What about gfp & __GFP_FS?
-> >>>>>
-> >>>>
-> >>>> Do you intend to prevent or allow OOM under that flag? I personally
-> >>>> think that anything that accepts to be OOM-killed should have GFP_WAIT
-> >>>> set, so that ought to be enough.
-> >>>>
-> >>>
-> >>> The oom killer in the page allocator cannot trigger without __GFP_FS 
-> >>> because direct reclaim has little chance of being very successful and 
-> >>> thus we end up needlessly killing processes, and that tends to happen 
-> >>> quite a bit if we dont check for it.  Seems like this would also happen 
-> >>> with memcg if mem_cgroup_reclaim() has a large probability of failing?
-> >>>
-> >>
-> >> I can indeed see tests for GFP_FS in some key locations in mm/ before
-> >> calling the OOM Killer.
-> >>
-> >> Should I test for GFP_IO as well?
-> > 
-> > It's not really necessary, if __GFP_IO isn't set then it wouldn't make 
-> > sense for __GFP_FS to be set.
-> > 
-> >> If the idea is preventing OOM to
-> >> trigger for allocations that can write their pages back, how would you
-> >> feel about the following test:
-> >>
-> >> may_oom = (gfp & GFP_KERNEL) && !(gfp & __GFP_NORETRY) ?
-> >>
-> > 
-> > I would simply copy the logic from the page allocator and only trigger oom 
-> > for __GFP_FS and !__GFP_NORETRY.
-> > 
+On 10/22/2012 04:51 PM, Michal Hocko wrote:
+> [Sorry for the late reply]
 > 
-> That seems reasonable to me. Michal ?
+> On Mon 22-10-12 16:34:15, Glauber Costa wrote:
+>> On 10/20/2012 12:34 AM, David Rientjes wrote:
+>>> On Fri, 19 Oct 2012, Glauber Costa wrote:
+>>>
+>>>>>>> What about gfp & __GFP_FS?
+>>>>>>>
+>>>>>>
+>>>>>> Do you intend to prevent or allow OOM under that flag? I personally
+>>>>>> think that anything that accepts to be OOM-killed should have GFP_WAIT
+>>>>>> set, so that ought to be enough.
+>>>>>>
+>>>>>
+>>>>> The oom killer in the page allocator cannot trigger without __GFP_FS 
+>>>>> because direct reclaim has little chance of being very successful and 
+>>>>> thus we end up needlessly killing processes, and that tends to happen 
+>>>>> quite a bit if we dont check for it.  Seems like this would also happen 
+>>>>> with memcg if mem_cgroup_reclaim() has a large probability of failing?
+>>>>>
+>>>>
+>>>> I can indeed see tests for GFP_FS in some key locations in mm/ before
+>>>> calling the OOM Killer.
+>>>>
+>>>> Should I test for GFP_IO as well?
+>>>
+>>> It's not really necessary, if __GFP_IO isn't set then it wouldn't make 
+>>> sense for __GFP_FS to be set.
+>>>
+>>>> If the idea is preventing OOM to
+>>>> trigger for allocations that can write their pages back, how would you
+>>>> feel about the following test:
+>>>>
+>>>> may_oom = (gfp & GFP_KERNEL) && !(gfp & __GFP_NORETRY) ?
+>>>>
+>>>
+>>> I would simply copy the logic from the page allocator and only trigger oom 
+>>> for __GFP_FS and !__GFP_NORETRY.
+>>>
+>>
+>> That seems reasonable to me. Michal ?
+> 
+> Yes it makes sense to be consistent with the global case. While we are
+> at it, do we need to consider PF_DUMPCORE resp. !__GFP_NOFAIL?
+> 
+at least from kmem, GFP_NOFAIL will not reach this codepath. We will
+ditch it to the root in memcontrol.h
 
-Yes it makes sense to be consistent with the global case. While we are
-at it, do we need to consider PF_DUMPCORE resp. !__GFP_NOFAIL?
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
