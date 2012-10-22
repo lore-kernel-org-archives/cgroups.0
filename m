@@ -1,45 +1,137 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v5 15/18] Aggregate memcg cache values in slabinfo
-Date: Mon, 22 Oct 2012 19:11:24 +0400
-Message-ID: <5085621C.3040904@parallels.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-16-git-send-email-glommer@parallels.com> <0000013a7a93cb72-588b2a69-ebb0-4b5f-9040-102800d3bef4-000000@email.amazonses.com>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [PATCH 1/4] cgroup: fix invalid rcu dereference
+Date: Mon, 22 Oct 2012 11:11:30 -0500
+Message-ID: <20121022161130.GA23199@sergelap>
+References: <20121022134536.172969567@napanee.usersys.redhat.com>
+ <20121022134536.543579196@napanee.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <0000013a7a93cb72-588b2a69-ebb0-4b5f-9040-102800d3bef4-000000@email.amazonses.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121022134536.543579196-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl@linux.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+Content-Transfer-Encoding: 7bit
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 10/19/2012 11:50 PM, Christoph Lameter wrote:
-> On Fri, 19 Oct 2012, Glauber Costa wrote:
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> From: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
 > 
->> +
->> +/*
->> + * We use suffixes to the name in memcg because we can't have caches
->> + * created in the system with the same name. But when we print them
->> + * locally, better refer to them with the base name
->> + */
->> +static inline const char *cache_name(struct kmem_cache *s)
->> +{
->> +	if (!is_root_cache(s))
->> +		return s->memcg_params->root_cache->name;
->> +	return s->name;
->> +}
+> Commit "device_cgroup: convert device_cgroup internally to policy +
+> exceptions" removed rcu locks which are needed in task_devcgroup
+> called in this chain: devcgroup_inode_mknod OR
+> __devcgroup_inode_permission -> __devcgroup_inode_permission ->
+> task_devcgroup -> task_subsys_state -> task_subsys_state_check.
 > 
-> Could we avoid this uglyness? You can ID a slab cache by combining a memcg
-> pointer and a slabname.
+> Change the code so that task_devcgroup is safely called with rcu read
+> lock held.
 > 
-But that is not what I want.
+> ===============================
+> [ INFO: suspicious RCU usage. ]
+> 3.6.0-rc5-next-20120913+ #42 Not tainted
+> -------------------------------
+> include/linux/cgroup.h:553 suspicious rcu_dereference_check() usage!
+> 
+> other info that might help us debug this:
+> 
+> rcu_scheduler_active = 1, debug_locks = 0
+> 2 locks held by kdevtmpfs/23:
+>  #0:  (sb_writers){.+.+.+}, at: [<ffffffff8116873f>]
+> mnt_want_write+0x1f/0x50
+>  #1:  (&sb->s_type->i_mutex_key#3/1){+.+.+.}, at: [<ffffffff811558af>]
+> kern_path_create+0x7f/0x170
+> 
+> stack backtrace:
+> Pid: 23, comm: kdevtmpfs Not tainted 3.6.0-rc5-next-20120913+ #42
+> Call Trace:
+>  [<ffffffff810c638d>] lockdep_rcu_suspicious+0xfd/0x130
+>  [<ffffffff8121541d>] devcgroup_inode_mknod+0x19d/0x240
+>  [<ffffffff8107bf54>] ? ns_capable+0x44/0x80
+>  [<ffffffff81156b21>] vfs_mknod+0x71/0xf0
+>  [<ffffffff813a8332>] handle_create.isra.2+0x72/0x200
+>  [<ffffffff813a85d4>] devtmpfsd+0x114/0x140
+>  [<ffffffff813a84c0>] ? handle_create.isra.2+0x200/0x200
+>  [<ffffffff81093ad6>] kthread+0xd6/0xe0
+>  [<ffffffff81654f24>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff8165369d>] ? retint_restore_args+0xe/0xe
+>  [<ffffffff81093a00>] ? kthread_create_on_node+0x140/0x140
+>  [<ffffffff81654f20>] ? gs_change+0xb/0xb
+> 
+> Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
+> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-What I want is to show the cache by its root name in memcg-specific
-slabinfo.
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> Signed-off-by: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+> 
+> ---
+> 
+> And this should fix it.
+> 
+>  security/device_cgroup.c |   15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+> 
+> --- github.orig/security/device_cgroup.c	2012-10-17 11:11:08.514793906 -0400
+> +++ github/security/device_cgroup.c	2012-10-19 16:35:37.936804289 -0400
+> @@ -533,10 +533,10 @@ struct cgroup_subsys devices_subsys = {
+>   *
+>   * returns 0 on success, -EPERM case the operation is not permitted
+>   */
+> -static int __devcgroup_check_permission(struct dev_cgroup *dev_cgroup,
+> -					short type, u32 major, u32 minor,
+> +static int __devcgroup_check_permission(short type, u32 major, u32 minor,
+>  				        short access)
+>  {
+> +	struct dev_cgroup *dev_cgroup;
+>  	struct dev_exception_item ex;
+>  	int rc;
+>  
+> @@ -547,6 +547,7 @@ 	memset(&ex, 0, sizeof(ex));
+>  	ex.access = access;
+>  
+>  	rcu_read_lock();
+> +	dev_cgroup = task_devcgroup(current);
+>  	rc = may_access(dev_cgroup, &ex);
+>  	rcu_read_unlock();
+>  
+> @@ -558,7 +559,6 @@ 	return 0;
+>  
+>  int __devcgroup_inode_permission(struct inode *inode, int mask)
+>  {
+> -	struct dev_cgroup *dev_cgroup = task_devcgroup(current);
+>  	short type, access = 0;
+>  
+>  	if (S_ISBLK(inode->i_mode))
+> @@ -570,13 +570,12 @@ 	short type, access = 0;
+>  	if (mask & MAY_READ)
+>  		access |= ACC_READ;
+>  
+> -	return __devcgroup_check_permission(dev_cgroup, type, imajor(inode),
+> -					    iminor(inode), access);
+> +	return __devcgroup_check_permission(type, imajor(inode), iminor(inode),
+> +			access);
+>  }
+>  
+>  int devcgroup_inode_mknod(int mode, dev_t dev)
+>  {
+> -	struct dev_cgroup *dev_cgroup = task_devcgroup(current);
+>  	short type;
+>  
+>  	if (!S_ISBLK(mode) && !S_ISCHR(mode))
+> @@ -587,7 +586,7 @@ 		return 0;
+>  	else
+>  		type = DEV_CHAR;
+>  
+> -	return __devcgroup_check_permission(dev_cgroup, type, MAJOR(dev),
+> -					    MINOR(dev), ACC_MKNOD);
+> +	return __devcgroup_check_permission(type, MAJOR(dev), MINOR(dev),
+> +			ACC_MKNOD);
+>  
+>  }
+> 
