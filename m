@@ -1,133 +1,55 @@
-From: JoonSoo Kim <js1304@gmail.com>
-Subject: Re: [PATCH v5 08/18] memcg: infrastructure to match an allocation to
- the right cache
-Date: Thu, 25 Oct 2012 03:10:29 +0900
-Message-ID: <CAAmzW4N40MedsCfcj+eiM-i6cU65n3z7uy08YFyknXbBKj7Z-g@mail.gmail.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com>
-	<1350656442-1523-9-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/7] freezer: add missing mb's to freezer_count() and
+ freezer_should_skip()
+Date: Wed, 24 Oct 2012 14:57:10 -0400
+Message-ID: <20121024185710.GA12182@atj.dyndns.org>
+References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+ <1350426526-14254-3-git-send-email-tj@kernel.org>
+ <20121022174404.GA21553@redhat.com>
+ <20121022211317.GD5951@atj.dyndns.org>
+ <20121023153919.GA16201@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=USv2xOlrlt96QwTOdOLCh7RyYgYDbENK3Dqhh/35aB0=;
-        b=HIF20p/TvZ44uHoh59DKDJvncKV1fpQoySHCXaNg649LuC/iG1eeih4PT6RG6SU3I8
-         8BSNk6u+KzvOQAL8D1nZ+NV+MF3vqnDXTb6mSfnE/ckar5CyYobVJ6LajKxc7Pfu4c3H
-         +37iFd8rfnOw63h64ripoKTfePlr4iymHIhBWlFguopfhRpY8CYiWmz8l5j9GqIXoi0k
-         EtNqTKjSTbL74DvyNmVzAoPQNpxFYwhDVK1P65WsDFZ7HImv9oUT5EpD3h8wSob2mdli
-         Rx0gxdJkIEr8V5PZTcEbiaUt73JPxm6PALZEqCWAF3Db0rrSSbu5blhoM08b7fgjPKGm
-         PmIQ==
-In-Reply-To: <1350656442-1523-9-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=vP6/hJo5giHlnI74RCKj22lLDf+B1QNQZPjPWRCJ2sQ=;
+        b=D3bdo8SMaXlY4qVEbNIfu2zP2F/mRoHyKeCR6S/AAQIji9btZNWMlUDo+LFlRBakx2
+         QDjvUV87ib7xECHxnk+mEyOxDuwBxzytRtrnd1tMUDtqugb1CxzQvLZMWnK+zOKPb4P+
+         gksfCcxJ7qRRGIVQs4JFFoI5QorGJkOJuf4UvFKTQggx/bCZeCLEo2LisbDCitc3DYj4
+         xK544xcXqKEIq/WZM3opQ5jsIQXrLc9c3yRLkLGs+AfIKEAfHSmcDRNqSzZEnFHb4gA0
+         JVwV9Ne08ZzN1G+PGdwf+QYF6/ib7IKQk8O7jgtlEycMtxl+DrAV2r7NCVm+3HV/GRVk
+         +RHA==
+Content-Disposition: inline
+In-Reply-To: <20121023153919.GA16201-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-2012/10/19 Glauber Costa <glommer@parallels.com>:
-> @@ -2930,9 +2937,188 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s)
->
->  void memcg_release_cache(struct kmem_cache *s)
->  {
-> +       struct kmem_cache *root;
-> +       int id = memcg_css_id(s->memcg_params->memcg);
-> +
-> +       if (s->memcg_params->is_root_cache)
-> +               goto out;
-> +
-> +       root = s->memcg_params->root_cache;
-> +       root->memcg_params->memcg_caches[id] = NULL;
-> +       mem_cgroup_put(s->memcg_params->memcg);
-> +out:
->         kfree(s->memcg_params);
->  }
+Hello, Oleg.
 
-memcg_css_id should be called after checking "s->memcg_params->is_root_cache".
-Because when is_root_cache == true, memcg_params has no memcg object.
+On Tue, Oct 23, 2012 at 05:39:19PM +0200, Oleg Nesterov wrote:
+> > Hmm....  Guess we should drop __ from set_current_state.
+> 
+> Yes.
+> 
+> Or we can change ptrace_stop() and do_signal_stop() to use freezer_do_not_count/
+> freezer_count and remove task_is_stopped_or_traced() from update_if_frozen()
+> and try_to_freeze_tasks(). But this means that do_signal_stop() will call
+> try_to_freeze() twice, unless we add __freezer_count() which only clears
+> PF_FREEZER_SKIP.
 
-
-> +/*
-> + * This lock protects updaters, not readers. We want readers to be as fast as
-> + * they can, and they will either see NULL or a valid cache value. Our model
-> + * allow them to see NULL, in which case the root memcg will be selected.
-> + *
-> + * We need this lock because multiple allocations to the same cache from a non
-> + * GFP_WAIT area will span more than one worker. Only one of them can create
-> + * the cache.
-> + */
-> +static DEFINE_MUTEX(memcg_cache_mutex);
-> +static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
-> +                                                 struct kmem_cache *cachep)
-> +{
-> +       struct kmem_cache *new_cachep;
-> +       int idx;
-> +
-> +       BUG_ON(!memcg_can_account_kmem(memcg));
-> +
-> +       idx = memcg_css_id(memcg);
-> +
-> +       mutex_lock(&memcg_cache_mutex);
-> +       new_cachep = cachep->memcg_params->memcg_caches[idx];
-> +       if (new_cachep)
-> +               goto out;
-> +
-> +       new_cachep = kmem_cache_dup(memcg, cachep);
-> +
-> +       if (new_cachep == NULL) {
-> +               new_cachep = cachep;
-> +               goto out;
-> +       }
-> +
-> +       mem_cgroup_get(memcg);
-> +       cachep->memcg_params->memcg_caches[idx] = new_cachep;
-> +       wmb(); /* the readers won't lock, make sure everybody sees it */
-
-Is there any rmb() pair?
-As far as I know, without rmb(), wmb() doesn't guarantee anything.
-
-> +       new_cachep->memcg_params->memcg = memcg;
-> +       new_cachep->memcg_params->root_cache = cachep;
-
-It may be better these assignment before the statement
-"cachep->memcg_params->memcg_caches[idx] = new_cachep".
-Otherwise, it may produce race situation.
-
-And assigning value to memcg_params->memcg and root_cache is redundant,
-because it is already done in memcg_register_cache().
-
-> +/*
-> + * Return the kmem_cache we're supposed to use for a slab allocation.
-> + * We try to use the current memcg's version of the cache.
-> + *
-> + * If the cache does not exist yet, if we are the first user of it,
-> + * we either create it immediately, if possible, or create it asynchronously
-> + * in a workqueue.
-> + * In the latter case, we will let the current allocation go through with
-> + * the original cache.
-> + *
-> + * Can't be called in interrupt context or from kernel threads.
-> + * This function needs to be called with rcu_read_lock() held.
-> + */
-> +struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
-> +                                         gfp_t gfp)
-> +{
-> +       struct mem_cgroup *memcg;
-> +       int idx;
-> +
-> +       if (cachep->memcg_params && cachep->memcg_params->memcg)
-> +               return cachep;
-
-In __memcg_kmem_get_cache, cachep may be always root cache.
-So checking "cachep->memcg_params->memcg" is somewhat strange.
-Is it right?
-
+Ooh, I like this idea.  If we have a mechanism to mark a task "frozen
+enough", it makes sense to use it universally.  As long as
+try_to_freeze() invocation stays outside fast path, I don't think
+invoking it twice really matters.  Can you please cook up a patch for
+it?
 
 Thanks.
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
