@@ -1,52 +1,177 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v5 04/18] slab: don't preemptively remove element from
- list in cache destroy
-Date: Wed, 24 Oct 2012 20:19:12 +0400
-Message-ID: <50881500.9030604@parallels.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-5-git-send-email-glommer@parallels.com> <0000013a7a84cb28-334eab12-33c4-4a92-bd9c-e5ad938f83d0-000000@email.amazonses.com> <5085068E.5080304@parallels.com> <CAOJsxLFxQuC9mRb=ZMoqdxS6fyLHCg1LxyfF9wAR1hiOL5i93g@mail.gmail.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 06/18] consider a memcg parameter in kmem_create_cache
+Date: Wed, 24 Oct 2012 12:42:09 +0400
+Message-ID: <5087A9E1.2030405@parallels.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-7-git-send-email-glommer@parallels.com> <CAAmzW4OJGSpEO2_p3v1MZJrh6G=+NSS5UoGqFDvxeaQ0qryvpw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAOJsxLFxQuC9mRb=ZMoqdxS6fyLHCg1LxyfF9wAR1hiOL5i93g@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAAmzW4OJGSpEO2_p3v1MZJrh6G=+NSS5UoGqFDvxeaQ0qryvpw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Pekka Enberg <penberg@kernel.org>
-Cc: Christoph Lameter <cl@linux.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, David Rientjes <rientjes@google.com>, devel@openvz.org, Suleiman Souhlal <suleiman@google.com>
+To: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 10/24/2012 10:54 AM, Pekka Enberg wrote:
-> On Mon, Oct 22, 2012 at 11:40 AM, Glauber Costa <glommer@parallels.com> wrote:
->> On 10/19/2012 11:34 PM, Christoph Lameter wrote:
->>> On Fri, 19 Oct 2012, Glauber Costa wrote:
->>>
->>>> I, however, see no reason why we need to do so, since we are now locked
->>>> during the whole deletion (which wasn't necessarily true before).  I
->>>> propose a simplification in which we delete it only when there is no
->>>> more going back, so we don't need to add it again.
->>>
->>> Ok lets hope that holding the lock does not cause issues.
->>>
->>> Acked-by: Christoph Lameter <cl@linux.com>
->>>
->> BTW: One of the good things about this set, is that we are naturally
->> exercising cache destruction a lot more than we did before. So if there
->> is any problem, either with this or anything related to cache
->> destruction, it should at least show up a lot more frequently. So far,
->> this does not seem to cause any problems.
+On 10/23/2012 09:50 PM, JoonSoo Kim wrote:
+> 2012/10/19 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
 > 
-> We no longer hold the mutex the whole time after. See commit 210ed9d
-> ("mm, slab: release slab_mutex earlier in kmem_cache_destroy()") for
-> details.
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 6a1e096..59f6d54 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -339,6 +339,12 @@ struct mem_cgroup {
+>>  #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_INET)
+>>         struct tcp_memcontrol tcp_mem;
+>>  #endif
+>> +#if defined(CONFIG_MEMCG_KMEM)
+>> +       /* analogous to slab_common's slab_caches list. per-memcg */
+>> +       struct list_head memcg_slab_caches;
+>> +       /* Not a spinlock, we can take a lot of time walking the list */
+>> +       struct mutex slab_caches_mutex;
+>> +#endif
+>>  };
 > 
-I will resubmit then.
+> It is better to change name of "slab_caches_mutex to something
+> representing slab cache mutex of memcg.
+> 
 
-It doesn't really change the spirit of the patch. I took a look at that
-fix, and what it does, is it releases the mutex right after
-kmem_cache_shutdown() succeeds. Removing from the list in there would do
-the trick.
+Why do you think so? I particularly think keeping the same name is
+better, because it shows us that this is a memcg version of the global
+mutex, and wraps all caches. One is unlikely to confuse between them,
+because one of them is a global name, and the other is always inside a
+struct.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>> +int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s)
+>> +{
+>> +       size_t size = sizeof(struct memcg_cache_params);
+>> +
+>> +       if (!memcg_kmem_enabled())
+>> +               return 0;
+>> +
+>> +       s->memcg_params = kzalloc(size, GFP_KERNEL);
+>> +       if (!s->memcg_params)
+>> +               return -ENOMEM;
+>> +
+>> +       if (memcg)
+>> +               s->memcg_params->memcg = memcg;
+>> +       return 0;
+>> +}
+> 
+> Now, I don't read full-patchset and I have not enough knowledge about cgroup.
+> So I have a question.
+> When memcg_kmem_enable, creation kmem_cache of normal user(not
+> included in cgroup) also allocate memcg_params.
+> Is it right behavior?
+>
+Yes. I would even add that *specially* the normal kmem cache gets this.
+This is where it will hold the vector of memcg caches.
+
+Also note this only happens when a memcg becomes kmem-limited, so people
+not using memcg at all won't pay this price.
+
+This should be documented over struct memcg_params.
+
+
+>> +static inline bool cache_match_memcg(struct kmem_cache *cachep,
+>> +                                    struct mem_cgroup *memcg)
+>> +{
+>> +       return (is_root_cache(cachep) && !memcg) ||
+>> +               (cachep->memcg_params->memcg == memcg);
+>> +}
+> 
+> When cachep->memcg_params == NULL and memcg is not NULL, NULL pointer
+> deref may be occurred.
+> Is there no situation like above?
+> 
+
+is_root_cache already test for this, so if this is the case, we'll exit
+the conditional on that test.
+
+Every cache without a valid memcg_params pointer is a root cache.
+
+If memcg != NULL, and memcg_params == NULL, this is a serious bug.
+I just didn't BUG(), because I really didn't see the point. It is just
+added instructions, and we're unlikely to make that far in that case.
+
+>>                         dump_stack();
+>> @@ -66,7 +68,8 @@ static int kmem_cache_sanity_check(const char *name, size_t size)
+>>         return 0;
+>>  }
+>>  #else
+>> -static inline int kmem_cache_sanity_check(const char *name, size_t size)
+>> +static inline int kmem_cache_sanity_check(struct mem_cgroup *memcg,
+>> +                                         const char *name, size_t size)
+>>  {
+>>         return 0;
+>>  }
+>> @@ -97,8 +100,9 @@ static inline int kmem_cache_sanity_check(const char *name, size_t size)
+>>   * as davem.
+>>   */
+>>
+>> -struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align,
+>> -               unsigned long flags, void (*ctor)(void *))
+>> +struct kmem_cache *
+>> +kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+>> +                       size_t align, unsigned long flags, void (*ctor)(void *))
+>>  {
+>>         struct kmem_cache *s = NULL;
+>>         int err = 0;
+>> @@ -106,7 +110,7 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, size_t align
+>>         get_online_cpus();
+>>         mutex_lock(&slab_mutex);
+>>
+>> -       if (!kmem_cache_sanity_check(name, size) == 0)
+>> +       if (!kmem_cache_sanity_check(memcg, name, size) == 0)
+>>                 goto out_locked;
+> 
+> This compare is somewhat ugly.
+> How about "if(kmem_cache_sanity_check(memcg, name, size))"?
+> 
+
+Well, the check was already there =)
+At least it becomes clear that the only thing I am changing is that i
+know pass a memcg pointer.
+
+As for the proposed change, it gives the impression that if you succeed
+in the check, you will exit the function.
+
+At least this way, it becomes clear that you exit when you fail a
+sanity_check. So taking the semantics into consideration, I don't really
+dislike it.
+
+>>  {
+>> @@ -3916,17 +3917,20 @@ static struct kmem_cache *find_mergeable(size_t size,
+>>                 if (s->size - size >= sizeof(void *))
+>>                         continue;
+>>
+>> +               if (!cache_match_memcg(s, memcg))
+>> +                       continue;
+>>                 return s;
+>>         }
+>>         return NULL;
+>>  }
+>>
+>> -struct kmem_cache *__kmem_cache_alias(const char *name, size_t size,
+>> -               size_t align, unsigned long flags, void (*ctor)(void *))
+>> +struct kmem_cache *
+>> +__kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
+>> +                  size_t align, unsigned long flags, void (*ctor)(void *))
+>>  {
+>>         struct kmem_cache *s;
+>>
+>> -       s = find_mergeable(size, align, flags, name, ctor);
+>> +       s = find_mergeable(memcg, size, align, flags, name, ctor);
+>>         if (s) {
+>>                 s->refcount++;
+>>                 /*
+> 
+> If your intention is that find_mergeable() works for memcg-slab-caches properly,
+> it cannot works properly with this code.
+> When memcg is not NULL, slab cache is only added to memcg's slab cache list.
+> find_mergeable() only interate on original-slab-cache list.
+> So memcg slab cache never be mergeable.
+> 
+
+Damn, you're right. In earlier submissions, we had a single list =(
+I'll have to adapt this code, thanks for spotting this!
