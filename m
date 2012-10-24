@@ -1,53 +1,70 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/7] freezer: add missing mb's to freezer_count() and
- freezer_should_skip()
-Date: Wed, 24 Oct 2012 14:57:10 -0400
-Message-ID: <20121024185710.GA12182@atj.dyndns.org>
+Subject: Re: [PATCH 1/7] cgroup: cgroup_subsys->fork() should be called after
+	the task is added to css_set
+Date: Wed, 24 Oct 2012 15:04:58 -0400
+Message-ID: <20121024190458.GB12182@atj.dyndns.org>
 References: <1350426526-14254-1-git-send-email-tj@kernel.org>
- <1350426526-14254-3-git-send-email-tj@kernel.org>
- <20121022174404.GA21553@redhat.com>
- <20121022211317.GD5951@atj.dyndns.org>
- <20121023153919.GA16201@redhat.com>
+	<1350426526-14254-2-git-send-email-tj@kernel.org>
+	<20121021191141.GA26218@redhat.com>
+	<20121021192222.GB5951@atj.dyndns.org>
+	<20121022180445.GB21553@redhat.com>
+	<20121022211631.GE5951@atj.dyndns.org>
+	<20121023155128.GB16201@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=vP6/hJo5giHlnI74RCKj22lLDf+B1QNQZPjPWRCJ2sQ=;
-        b=D3bdo8SMaXlY4qVEbNIfu2zP2F/mRoHyKeCR6S/AAQIji9btZNWMlUDo+LFlRBakx2
-         QDjvUV87ib7xECHxnk+mEyOxDuwBxzytRtrnd1tMUDtqugb1CxzQvLZMWnK+zOKPb4P+
-         gksfCcxJ7qRRGIVQs4JFFoI5QorGJkOJuf4UvFKTQggx/bCZeCLEo2LisbDCitc3DYj4
-         xK544xcXqKEIq/WZM3opQ5jsIQXrLc9c3yRLkLGs+AfIKEAfHSmcDRNqSzZEnFHb4gA0
-         JVwV9Ne08ZzN1G+PGdwf+QYF6/ib7IKQk8O7jgtlEycMtxl+DrAV2r7NCVm+3HV/GRVk
-         +RHA==
-Content-Disposition: inline
-In-Reply-To: <20121023153919.GA16201-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=79Zqq30O/elrJ8jfOTLM6cMb07QR3TsyyCByVN2Z25I=;
+	b=nL98Y+a8EXMwwSfLgKwN83PAN3tZ31ymt+PZP24QAcLt9YMNdewgslN+Qu5FvOOUqQ
+	0eRXt3VGxfxyIRBH3+uXEt1wFrV09uuVUbRaixCHT7Jn4klUExgPYnKV4I/3Zvu0+wvv
+	gVOiEAJzAfrINizvS6T3CFFxIaM43uFp8IC8uBOkNfV1QSnj+KcM/gF431boS+Ut02N2
+	Sl2+mjMtOTSoXINzvt4QjpfsQTeroNM7qPDF4anUATOSWuCjsqT6HRJl5ADRUzYUjnXz
+	PcTMVNy6M8NOsDSaBsCt9prAv2j7PbVjoVpR1FFML/NDao+c6wTAGHxiCDhCPMQCyXMx
+	ZVtg==
+Content-Disposition: inline
+In-Reply-To: <20121023155128.GB16201-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Oleg.
+Hello,
 
-On Tue, Oct 23, 2012 at 05:39:19PM +0200, Oleg Nesterov wrote:
-> > Hmm....  Guess we should drop __ from set_current_state.
+On Tue, Oct 23, 2012 at 05:51:28PM +0200, Oleg Nesterov wrote:
+> Yes, yes. But in this case (I mean, for uprobes) "threadgroup" in the name
+> is misleading. It should be called unconditially without any argument.
 > 
-> Yes.
+> Please see
 > 
-> Or we can change ptrace_stop() and do_signal_stop() to use freezer_do_not_count/
-> freezer_count and remove task_is_stopped_or_traced() from update_if_frozen()
-> and try_to_freeze_tasks(). But this means that do_signal_stop() will call
-> try_to_freeze() twice, unless we add __freezer_count() which only clears
-> PF_FREEZER_SKIP.
+> 	[PATCH 1/2] brw_mutex: big read-write mutex
+> 	http://marc.info/?l=linux-kernel&m=135032816223715
 
-Ooh, I like this idea.  If we have a mechanism to mark a task "frozen
-enough", it makes sense to use it universally.  As long as
-try_to_freeze() invocation stays outside fast path, I don't think
-invoking it twice really matters.  Can you please cook up a patch for
-it?
+Ooh... that's something completely different.
+
+> 	[PATCH 2/2] uprobes: Use brw_mutex to fix register/unregister vs dup_mmap() race
+> 	http://marc.info/?l=linux-kernel&m=135032817823720
+> 
+> for details, but in short 2/2 needs this giant lock to block dup_mmap()
+> system-wide, while cgroup (currently) only needs threadgroup lock if
+> CLONE_THREAD (ignoring do_exit) and per-task.
+> 
+> So please forget, I no longer think it makes sense to use the same
+> thing for uprobes and cgroups.
+
+It is quite tempting to reduce hot path overhead and penalize cgroup
+migration ops more tho.  Write-locking brw_mutex on migration might
+not be too bad.  Why did you change your mind?
 
 Thanks.
 
