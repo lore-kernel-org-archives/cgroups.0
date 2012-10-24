@@ -1,58 +1,95 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/7] cgroup_freezer: don't stall transition to FROZEN for
-	PF_NOFREEZE or PF_FREEZER_SKIP tasks
-Date: Wed, 24 Oct 2012 15:06:51 -0400
-Message-ID: <20121024190651.GC12182@atj.dyndns.org>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
-	<1350426526-14254-5-git-send-email-tj@kernel.org>
-	<20121022183453.GA24687@redhat.com>
-	<20121022211822.GF5951@atj.dyndns.org>
-	<20121023155533.GC16201@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
+Date: Wed, 24 Oct 2012 12:25:35 -0700
+Message-ID: <20121024192535.GG12182@atj.dyndns.org>
+References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
+ <1350480648-10905-5-git-send-email-mhocko@suse.cz>
+ <20121018224148.GR13370@google.com>
+ <20121019133244.GE799@dhcp22.suse.cz>
+ <20121019202405.GR13370@google.com>
+ <20121022103021.GA6367@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=MLIagzEoqT5/U8AAdMNS6Mf9WGdS+4BxlZi2eaaiyUc=;
+        b=FujGUU8whqMjxobD1Y++b+uxG+c8PWK2MY63lxkXT4rrSEuSQnTMBkU1hFthW/U94C
+         a3dH4vzNZ7oHBpZokgnuXqOnJAakONurOj8Yrp7s6GOr8NF0YpTPkALn6wrbXdvE+/R2
+         MjKhYGaZqDodE0qe4RDvHth4AQWQZwLSyo0iHfX0y2+uHszwHC60cljnkPHciUEVyor1
+         bNDtO36EaqYRJHx0jDajzIMae1XQUrvY/ayQ3+pzStZrdGWlHhyKdQsgp4/33hZ4femw
+         duAJlj2BA0SGkRFE1M2dna3I8FhW1vxRB5EeT91KlhRIKrzFxJaqVYAFRM9cMHfdzzzI
+         1Ngw==
+Content-Disposition: inline
+In-Reply-To: <20121022103021.GA6367@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=HffANWoRCEuwvJ/4UtmPrwHJWQTwIGEJ4Ey1X+IWgbY=;
-	b=esQaWI3e8mleQJRtlTKZPFoXS8XE+21n6+enPUWCJHaxXFd2/KBZX/VzFcOc4Nup8z
-	sWpc7Zp/ismbV+loKpPgVJZtMHWgwYoUVqVnYZzUNSDGIymZGsZ9jwJaW4vfcRpUpn5+
-	F804yh8/dCWDayX3gzrBe/0vsXJzK+hr2p7ZUcr5nkVUpuNK6rinm6dHMlWj1E1FEHjy
-	6QS9sPcgiOfhqDXnVAhR1V94v8i22herTKL/kkuvSW9dpnyG72ACKN5v/h15ZdK1OYKR
-	VoA3mmzE6LFYFUrQ6FIa7Wk8xqC6E5BYQGrLZ9t8T249FMpSUBzuQvWoUy5g7xLBucf+
-	3jHg==
-Content-Disposition: inline
-In-Reply-To: <20121023155533.GC16201-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-Hello, Oleg.
+Hello, Michal.
 
-On Tue, Oct 23, 2012 at 05:55:33PM +0200, Oleg Nesterov wrote:
-> > Ooh, ouch, definitely.  We should clear that.  Can you please make a
-> > patch?
+On Mon, Oct 22, 2012 at 12:30:21PM +0200, Michal Hocko wrote:
+> > > We can still fail inn #3 without this patch becasuse there are is no
+> > > guarantee that a new task is attached to the group. And I wanted to keep
+> > > memcg and generic cgroup parts separated.
+> > 
+> > Yes, but all other controllers are broken that way too
 > 
-> Sure... but what do you think is better?
+> It's just hugetlb and memcg that have pre_destroy.
 > 
-> I'd prefer to simply clear PF_NOFREEZE (without set_freezable), but
-> obviously this doesn't look exactly right from cgroup_freezer pov.
+> > and the worst thing which will hapen is triggering WARN_ON_ONCE().
+> 
+> The patch does BUG_ON(ss->pre_destroy(cgrp)). I am not sure WARN_ON_ONCE is
+> appropriate here because we would like to have it at least per
+> controller warning. I do not see any reason why to make this more
+> complicated but I am open to suggestions.
 
-I don't think it matters all that much.  It's a pretty special case.
-Maybe define PF_CLEAR_ON_EXEC_MASK or something and just include
-PF_NOFREEZE in it?
+Once it's dropped from memcg, the next patch can update cgroup core
+accordingly and the bug will exist for a single commit and the failure
+mode would be triggering of WARN_ON_ONCE().  Seems pretty simple to
+me.
+
+> > Let's note the failure in the commit and remove
+> > DEPREDATED_clear_css_refs in the previous patch.  Then, I can pull
+> > from you, clean up pre_destroy mess and then you can pull back for
+> > further cleanups.
+> 
+> Well this will get complicated as there are dependencies between memcg
+> parts (based on Andrew's tree) and your tree. My tree is not pullable as
+> all the patches go via Andrew. I am not sure how to get out of this.
+> There is only one cgroup patch so what about pushing all of this via
+> Andrew and do the follow up cleanups once they get merged? We are not in
+> hurry, are we?
+
+Let's create a cgroup branch and build things there.  I don't think
+cgroup changes are gonna be a single patch and expect to see at least
+some bug fixes afterwards and don't wanna keep them floating separate
+from other cgroup changes.  mm being based on top of -next, that
+should work, right?
+
+> Anyway does it really make sense to drop DEPREDATED_clear_css_refs
+> already in the previous patch when it is _not_ guaranteed that
+> pre_destroy succeeds?
+
+It makes things simpler here by decoupling memcg change with core
+cgroup changes and the introduced bug isn't too easy to trigger and
+even when triggered the failure mode isn't critical.  It's not gonna
+break normal common operations or bisection.  As long as the issue is
+clearly documented, I think it should be fine.  Just note that this
+opens up a race window from deficient cgroup API and the following
+commits will address it.
 
 Thanks.
 
 --
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
