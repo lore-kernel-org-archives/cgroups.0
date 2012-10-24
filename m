@@ -1,57 +1,130 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v5 05/18] slab/slub: struct memcg_params
-Date: Wed, 24 Oct 2012 12:42:31 +0400
-Message-ID: <5087A9F7.7070804@parallels.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-6-git-send-email-glommer@parallels.com> <CAAmzW4PVEb6WezFAjgNwYiAkNXE745ys6HejeNA4uRhUXqWe_g@mail.gmail.com>
+From: JoonSoo Kim <js1304@gmail.com>
+Subject: Re: [PATCH v5 08/18] memcg: infrastructure to match an allocation to
+ the right cache
+Date: Thu, 25 Oct 2012 03:10:29 +0900
+Message-ID: <CAAmzW4N40MedsCfcj+eiM-i6cU65n3z7uy08YFyknXbBKj7Z-g@mail.gmail.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com>
+	<1350656442-1523-9-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAAmzW4PVEb6WezFAjgNwYiAkNXE745ys6HejeNA4uRhUXqWe_g@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=USv2xOlrlt96QwTOdOLCh7RyYgYDbENK3Dqhh/35aB0=;
+        b=HIF20p/TvZ44uHoh59DKDJvncKV1fpQoySHCXaNg649LuC/iG1eeih4PT6RG6SU3I8
+         8BSNk6u+KzvOQAL8D1nZ+NV+MF3vqnDXTb6mSfnE/ckar5CyYobVJ6LajKxc7Pfu4c3H
+         +37iFd8rfnOw63h64ripoKTfePlr4iymHIhBWlFguopfhRpY8CYiWmz8l5j9GqIXoi0k
+         EtNqTKjSTbL74DvyNmVzAoPQNpxFYwhDVK1P65WsDFZ7HImv9oUT5EpD3h8wSob2mdli
+         Rx0gxdJkIEr8V5PZTcEbiaUt73JPxm6PALZEqCWAF3Db0rrSSbu5blhoM08b7fgjPKGm
+         PmIQ==
+In-Reply-To: <1350656442-1523-9-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: JoonSoo Kim <js1304@gmail.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, Suleiman Souhlal <suleiman@google.com>, Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
 
-On 10/23/2012 09:25 PM, JoonSoo Kim wrote:
-> Hi, Glauber.
-> 
-> 2012/10/19 Glauber Costa <glommer@parallels.com>:
->> For the kmem slab controller, we need to record some extra
->> information in the kmem_cache structure.
->>
->> Signed-off-by: Glauber Costa <glommer@parallels.com>
->> Signed-off-by: Suleiman Souhlal <suleiman@google.com>
->> CC: Christoph Lameter <cl@linux.com>
->> CC: Pekka Enberg <penberg@cs.helsinki.fi>
->> CC: Michal Hocko <mhocko@suse.cz>
->> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
->> CC: Johannes Weiner <hannes@cmpxchg.org>
->> CC: Tejun Heo <tj@kernel.org>
->> ---
->>  include/linux/slab.h     | 25 +++++++++++++++++++++++++
->>  include/linux/slab_def.h |  3 +++
->>  include/linux/slub_def.h |  3 +++
->>  mm/slab.h                | 13 +++++++++++++
->>  4 files changed, 44 insertions(+)
->>
->> diff --git a/include/linux/slab.h b/include/linux/slab.h
->> index 0dd2dfa..e4ea48a 100644
->> --- a/include/linux/slab.h
->> +++ b/include/linux/slab.h
->> @@ -177,6 +177,31 @@ unsigned int kmem_cache_size(struct kmem_cache *);
->>  #define ARCH_SLAB_MINALIGN __alignof__(unsigned long long)
->>  #endif
->>
->> +#include <linux/workqueue.h>
-> 
-> Why workqueue.h is includede at this time?
-> It may be future use, so is it better to add it later?
-> Adding it at proper time makes git blame works better.
-> 
-It is for later, I missed this.
+2012/10/19 Glauber Costa <glommer@parallels.com>:
+> @@ -2930,9 +2937,188 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s)
+>
+>  void memcg_release_cache(struct kmem_cache *s)
+>  {
+> +       struct kmem_cache *root;
+> +       int id = memcg_css_id(s->memcg_params->memcg);
+> +
+> +       if (s->memcg_params->is_root_cache)
+> +               goto out;
+> +
+> +       root = s->memcg_params->root_cache;
+> +       root->memcg_params->memcg_caches[id] = NULL;
+> +       mem_cgroup_put(s->memcg_params->memcg);
+> +out:
+>         kfree(s->memcg_params);
+>  }
 
-Thanks for spotting.
+memcg_css_id should be called after checking "s->memcg_params->is_root_cache".
+Because when is_root_cache == true, memcg_params has no memcg object.
+
+
+> +/*
+> + * This lock protects updaters, not readers. We want readers to be as fast as
+> + * they can, and they will either see NULL or a valid cache value. Our model
+> + * allow them to see NULL, in which case the root memcg will be selected.
+> + *
+> + * We need this lock because multiple allocations to the same cache from a non
+> + * GFP_WAIT area will span more than one worker. Only one of them can create
+> + * the cache.
+> + */
+> +static DEFINE_MUTEX(memcg_cache_mutex);
+> +static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+> +                                                 struct kmem_cache *cachep)
+> +{
+> +       struct kmem_cache *new_cachep;
+> +       int idx;
+> +
+> +       BUG_ON(!memcg_can_account_kmem(memcg));
+> +
+> +       idx = memcg_css_id(memcg);
+> +
+> +       mutex_lock(&memcg_cache_mutex);
+> +       new_cachep = cachep->memcg_params->memcg_caches[idx];
+> +       if (new_cachep)
+> +               goto out;
+> +
+> +       new_cachep = kmem_cache_dup(memcg, cachep);
+> +
+> +       if (new_cachep == NULL) {
+> +               new_cachep = cachep;
+> +               goto out;
+> +       }
+> +
+> +       mem_cgroup_get(memcg);
+> +       cachep->memcg_params->memcg_caches[idx] = new_cachep;
+> +       wmb(); /* the readers won't lock, make sure everybody sees it */
+
+Is there any rmb() pair?
+As far as I know, without rmb(), wmb() doesn't guarantee anything.
+
+> +       new_cachep->memcg_params->memcg = memcg;
+> +       new_cachep->memcg_params->root_cache = cachep;
+
+It may be better these assignment before the statement
+"cachep->memcg_params->memcg_caches[idx] = new_cachep".
+Otherwise, it may produce race situation.
+
+And assigning value to memcg_params->memcg and root_cache is redundant,
+because it is already done in memcg_register_cache().
+
+> +/*
+> + * Return the kmem_cache we're supposed to use for a slab allocation.
+> + * We try to use the current memcg's version of the cache.
+> + *
+> + * If the cache does not exist yet, if we are the first user of it,
+> + * we either create it immediately, if possible, or create it asynchronously
+> + * in a workqueue.
+> + * In the latter case, we will let the current allocation go through with
+> + * the original cache.
+> + *
+> + * Can't be called in interrupt context or from kernel threads.
+> + * This function needs to be called with rcu_read_lock() held.
+> + */
+> +struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
+> +                                         gfp_t gfp)
+> +{
+> +       struct mem_cgroup *memcg;
+> +       int idx;
+> +
+> +       if (cachep->memcg_params && cachep->memcg_params->memcg)
+> +               return cachep;
+
+In __memcg_kmem_get_cache, cachep may be always root cache.
+So checking "cachep->memcg_params->memcg" is somewhat strange.
+Is it right?
+
+
+Thanks.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
