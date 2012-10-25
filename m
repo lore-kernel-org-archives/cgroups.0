@@ -1,65 +1,80 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.7-rc2
-Date: Wed, 24 Oct 2012 12:54:41 -0700
-Message-ID: <20121024195441.GI12182@atj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: process hangs on do_exit when oom happens
+Date: Thu, 25 Oct 2012 11:57:19 +0200
+Message-ID: <20121025095719.GA11105@dhcp22.suse.cz>
+References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
+ <20121019160425.GA10175@dhcp22.suse.cz>
+ <CAKWKT+ZRMHzgCLJ1quGnw-_T1b9OboYKnQdRc2_Z=rdU_PFVtw@mail.gmail.com>
+ <CAKTCnzkMQQXRdx=ikydsD9Pm3LuRgf45_=m7ozuFmSZyxazXyA@mail.gmail.com>
+ <CAKWKT+bYOf0cEDuiibf6eV2raMxe481y-D+nrBgPWR3R+53zvg@mail.gmail.com>
+ <20121023095028.GD15397@dhcp22.suse.cz>
+ <CAKWKT+b2s4E7Nne5d0UJwfLGiCXqAUgrCzuuZi6ZPdjszVSmWg@mail.gmail.com>
+ <20121023101500.GE15397@dhcp22.suse.cz>
+ <CAKTCnzkiabWK8tAORkhg6oW11VvXS-YqBwDzED_3=J1buhaQnQ@mail.gmail.com>
+ <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=8RqsEOUrUkUGjAAbM2f5W9e67Nwvo6/JzExpIR4I+f4=;
-	b=CdZQYXMhsiB7uU8eNgXY3RYJt/t6xP0L/LNqeR2fCDcIeNENmDrh0KTIrPkTiwZ/zV
-	PU01wq+vRoExg+wP1Rs0Jlwtc0f4uACXwljvpUuiW6A7ON8Eqx34NVc73I3VdC8WMh/h
-	KCtuPBbZbDiSDg+JM5p7sygBVWZlcm3LDtl1BVmbjiqMnzBtNg5j01eY0KEqeDimXMCE
-	mKL8Y/uNSpymuaXinh8ZnVjzmmE/OShdwuXJmDQSd8r2/vY4cnenVFR5ARJIHtW8Wc5d
-	eA5d4Clb4Xbc3+mUKlfMsdqpFHCwB5hlXUBErqpawQseymx3j4CJaY+oMTYGeAiL9Cfw
-	bBZw==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Qiang Gao <gaoqiangscut@gmail.com>
+Cc: Balbir Singh <bsingharora@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-Hello, Linus.
+On Wed 24-10-12 11:44:17, Qiang Gao wrote:
+> On Wed, Oct 24, 2012 at 1:43 AM, Balbir Singh <bsingharora@gmail.com> wrote:
+> > On Tue, Oct 23, 2012 at 3:45 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> >> On Tue 23-10-12 18:10:33, Qiang Gao wrote:
+> >>> On Tue, Oct 23, 2012 at 5:50 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> >>> > On Tue 23-10-12 15:18:48, Qiang Gao wrote:
+> >>> >> This process was moved to RT-priority queue when global oom-killer
+> >>> >> happened to boost the recovery of the system..
+> >>> >
+> >>> > Who did that? oom killer doesn't boost the priority (scheduling class)
+> >>> > AFAIK.
+> >>> >
+> >>> >> but it wasn't get properily dealt with. I still have no idea why where
+> >>> >> the problem is ..
+> >>> >
+> >>> > Well your configuration says that there is no runtime reserved for the
+> >>> > group.
+> >>> > Please refer to Documentation/scheduler/sched-rt-group.txt for more
+> >>> > information.
+> >>> >
+> >> [...]
+> >>> maybe this is not a upstream-kernel bug. the centos/redhat kernel
+> >>> would boost the process to RT prio when the process was selected
+> >>> by oom-killer.
+> >>
+> >> This still looks like your cpu controller is misconfigured. Even if the
+> >> task is promoted to be realtime.
+> >
+> >
+> > Precisely! You need to have rt bandwidth enabled for RT tasks to run,
+> > as a workaround please give the groups some RT bandwidth and then work
+> > out the migration to RT and what should be the defaults on the distro.
+> >
+> > Balbir
+> 
+> 
+> see https://patchwork.kernel.org/patch/719411/
 
-This pull request contains three fixes.  Two are reverts of
-task_lock() removal in cgroup fork path.  The optimizations
-incorrectly assumed that threadgroup_lock can protect process forks
-(as opposed to thread creations) too.  Further cleanup of cgroup fork
-path is scheduled.  The third fixes cgroup emptiness notification
-loss.
+The patch surely "fixes" your problem but the primary fault here is the
+mis-configured cpu cgroup. If the value for the bandwidth is zero by
+default then all realtime processes in the group a screwed. The value
+should be set to something more reasonable.
+I am not familiar with the cpu controller but it seems that
+alloc_rt_sched_group needs some treat. Care to look into it and send a
+patch to the cpu controller and cgroup maintainers, please?
 
-Please pull from the following git branch to receive the above
-changes.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.7-fixes
-
-for you to fetch changes up to d87838321124061f6c935069d97f37010fa417e6:
-
-  Revert "cgroup: Remove task_lock() from cgroup_post_fork()" (2012-10-19 14:09:35 -0700)
-
-----------------------------------------------------------------
-Daisuke Nishimura (1):
-      cgroup: notify_on_release may not be triggered in some cases
-
-Tejun Heo (2):
-      Revert "cgroup: Drop task_lock(parent) on cgroup_fork()"
-      Revert "cgroup: Remove task_lock() from cgroup_post_fork()"
-
- kernel/cgroup.c | 41 ++++++++++-------------------------------
- 1 file changed, 10 insertions(+), 31 deletions(-)
-
-Thanks.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
-tejun
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
