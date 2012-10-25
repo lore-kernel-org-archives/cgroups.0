@@ -1,58 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 08/18] memcg: infrastructure to match an allocation to
- the right cache
-Date: Thu, 25 Oct 2012 11:08:12 -0700
-Message-ID: <20121025180812.GN11442@htj.dyndns.org>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com>
- <1350656442-1523-9-git-send-email-glommer@parallels.com>
- <CAAmzW4N40MedsCfcj+eiM-i6cU65n3z7uy08YFyknXbBKj7Z-g@mail.gmail.com>
- <50891CF2.3030400@parallels.com>
- <20121025180652.GM11442@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v1 4/5] cgroup: net_cls: Pass in task to
+ sock_update_classid()
+Date: Thu, 25 Oct 2012 11:11:14 -0700
+Message-ID: <20121025181114.GO11442@htj.dyndns.org>
+References: <1351174619-5096-1-git-send-email-wagi@monom.org>
+ <1351174619-5096-5-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=4Vyg53IcPz0XksIephJsV4D5dNyMesfV2/NdaVr1Ybk=;
-        b=s6VoXvtugz6Zp0f3JVAUS5/k9rldgu7F9LfbMwcWhSRxuUkDGlZs7VhdPZbyfn7qgQ
-         JzYh8Q7KVi+ZwBRFan7V3e21SBNb2wdb6RC8w8wf+lykn8P350LvD15CkzNyq0l4aCJm
-         8DwNlLBOTgocQ6fsL7UOy+X78XgQKCaOrGzOrqiAoGR+6v+P/8L75tUgRJDkUcgBUe8g
-         nbeM80BZsE+PYwMXU8IMHy4ReN/VosrLOjwuNvg16iI8T33Jf8xJ0u10RPLJRIra+D6S
-         vXzuVC0JOYviGi0DmrutgFK8tEKGLKwzXfi3P/cn+A5Uo29WPuianl47BLQbXKe0qiq4
-         5XTQ==
+        bh=r6/rOyba2nniJsfbO1AUH1hvVb/fgUW0vZ4zMYpJRMk=;
+        b=TAiV8fyB2jsrd6qOTrXU5+5vqHfmTDa72udKUb/rIUrgmS5UseUdyzE/M2wCoQP79Q
+         sM8UsfkDvSVqnVzx+v4nAMEO1dvs4DLYR7Vu8RIBBy0NDpYAXZRVhIAdtwJBXN4bkx4A
+         +8ve18m+oG8GCIxzaczt+Vi8YCwPvcal+fDQA9+zBHRlO/jNX7SDsJCmi1cFZXUtRZvT
+         Gf3qykPnIiva8cCl6BsQv4Me8h135Ay0wF67bhe+xys23BoDyt9rxnb6rPLHwt+Kp8LR
+         j+FMfkttgsFXnIFFIqVit3TH9fbENI5uLMX3TOWoXbiwoo2lTPWaUWqzPGfRBI1aUmVV
+         ypoQ==
 Content-Disposition: inline
-In-Reply-To: <20121025180652.GM11442@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1351174619-5096-5-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: JoonSoo Kim <js1304@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, devel@openvz.org, Pekka Enberg <penberg@cs.helsinki.fi>, Suleiman Souhlal <suleiman@google.com>
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Stanislav Kinsbursky <skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Thu, Oct 25, 2012 at 11:06:52AM -0700, Tejun Heo wrote:
-> Hello, Glauber.
+On Thu, Oct 25, 2012 at 04:16:58PM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 > 
-> On Thu, Oct 25, 2012 at 03:05:22PM +0400, Glauber Costa wrote:
-> > > Is there any rmb() pair?
-> > > As far as I know, without rmb(), wmb() doesn't guarantee anything.
-> > > 
-> > 
-> > There should be. But it seems I missed it. Speaking of which, I should
+> sock_update_classid() assumes that the update operation always are
+> applied on the current task. sock_update_classid() needs to know on
+> which tasks to work on in order to be able to migrate task between
+> cgroups using the struct cgroup_subsys attach() callback.
 > 
-> You probably can use read_barrier_depends().
+> Signed-off-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> Cc: "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> Cc: Stanislav Kinsbursky <skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> Cc: <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Ooh, and when you use memory barrier pairs, please make sure to
-comment on both sides explaining how they're paired and why.  There's
-nothing more frustrating than barriers without clear annotation.
+1-4 look good to me.  I have no idea about 5. :)
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
