@@ -1,80 +1,138 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: process hangs on do_exit when oom happens
-Date: Thu, 25 Oct 2012 11:57:19 +0200
-Message-ID: <20121025095719.GA11105@dhcp22.suse.cz>
-References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
- <20121019160425.GA10175@dhcp22.suse.cz>
- <CAKWKT+ZRMHzgCLJ1quGnw-_T1b9OboYKnQdRc2_Z=rdU_PFVtw@mail.gmail.com>
- <CAKTCnzkMQQXRdx=ikydsD9Pm3LuRgf45_=m7ozuFmSZyxazXyA@mail.gmail.com>
- <CAKWKT+bYOf0cEDuiibf6eV2raMxe481y-D+nrBgPWR3R+53zvg@mail.gmail.com>
- <20121023095028.GD15397@dhcp22.suse.cz>
- <CAKWKT+b2s4E7Nne5d0UJwfLGiCXqAUgrCzuuZi6ZPdjszVSmWg@mail.gmail.com>
- <20121023101500.GE15397@dhcp22.suse.cz>
- <CAKTCnzkiabWK8tAORkhg6oW11VvXS-YqBwDzED_3=J1buhaQnQ@mail.gmail.com>
- <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 08/18] memcg: infrastructure to match an allocation
+ to the right cache
+Date: Thu, 25 Oct 2012 15:05:22 +0400
+Message-ID: <50891CF2.3030400@parallels.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-9-git-send-email-glommer@parallels.com> <CAAmzW4N40MedsCfcj+eiM-i6cU65n3z7uy08YFyknXbBKj7Z-g@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAAmzW4N40MedsCfcj+eiM-i6cU65n3z7uy08YFyknXbBKj7Z-g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qiang Gao <gaoqiangscut@gmail.com>
-Cc: Balbir Singh <bsingharora@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, linux-mm@kvack.org
+To: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed 24-10-12 11:44:17, Qiang Gao wrote:
-> On Wed, Oct 24, 2012 at 1:43 AM, Balbir Singh <bsingharora@gmail.com> wrote:
-> > On Tue, Oct 23, 2012 at 3:45 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> >> On Tue 23-10-12 18:10:33, Qiang Gao wrote:
-> >>> On Tue, Oct 23, 2012 at 5:50 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> >>> > On Tue 23-10-12 15:18:48, Qiang Gao wrote:
-> >>> >> This process was moved to RT-priority queue when global oom-killer
-> >>> >> happened to boost the recovery of the system..
-> >>> >
-> >>> > Who did that? oom killer doesn't boost the priority (scheduling class)
-> >>> > AFAIK.
-> >>> >
-> >>> >> but it wasn't get properily dealt with. I still have no idea why where
-> >>> >> the problem is ..
-> >>> >
-> >>> > Well your configuration says that there is no runtime reserved for the
-> >>> > group.
-> >>> > Please refer to Documentation/scheduler/sched-rt-group.txt for more
-> >>> > information.
-> >>> >
-> >> [...]
-> >>> maybe this is not a upstream-kernel bug. the centos/redhat kernel
-> >>> would boost the process to RT prio when the process was selected
-> >>> by oom-killer.
-> >>
-> >> This still looks like your cpu controller is misconfigured. Even if the
-> >> task is promoted to be realtime.
-> >
-> >
-> > Precisely! You need to have rt bandwidth enabled for RT tasks to run,
-> > as a workaround please give the groups some RT bandwidth and then work
-> > out the migration to RT and what should be the defaults on the distro.
-> >
-> > Balbir
+On 10/24/2012 10:10 PM, JoonSoo Kim wrote:
+> 2012/10/19 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
+>> @@ -2930,9 +2937,188 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s)
+>>
+>>  void memcg_release_cache(struct kmem_cache *s)
+>>  {
+>> +       struct kmem_cache *root;
+>> +       int id = memcg_css_id(s->memcg_params->memcg);
+>> +
+>> +       if (s->memcg_params->is_root_cache)
+>> +               goto out;
+>> +
+>> +       root = s->memcg_params->root_cache;
+>> +       root->memcg_params->memcg_caches[id] = NULL;
+>> +       mem_cgroup_put(s->memcg_params->memcg);
+>> +out:
+>>         kfree(s->memcg_params);
+>>  }
+> 
+> memcg_css_id should be called after checking "s->memcg_params->is_root_cache".
+> Because when is_root_cache == true, memcg_params has no memcg object.
+> 
+
+Good catch.
+
+>> +/*
+>> + * This lock protects updaters, not readers. We want readers to be as fast as
+>> + * they can, and they will either see NULL or a valid cache value. Our model
+>> + * allow them to see NULL, in which case the root memcg will be selected.
+>> + *
+>> + * We need this lock because multiple allocations to the same cache from a non
+>> + * GFP_WAIT area will span more than one worker. Only one of them can create
+>> + * the cache.
+>> + */
+>> +static DEFINE_MUTEX(memcg_cache_mutex);
+>> +static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+>> +                                                 struct kmem_cache *cachep)
+>> +{
+>> +       struct kmem_cache *new_cachep;
+>> +       int idx;
+>> +
+>> +       BUG_ON(!memcg_can_account_kmem(memcg));
+>> +
+>> +       idx = memcg_css_id(memcg);
+>> +
+>> +       mutex_lock(&memcg_cache_mutex);
+>> +       new_cachep = cachep->memcg_params->memcg_caches[idx];
+>> +       if (new_cachep)
+>> +               goto out;
+>> +
+>> +       new_cachep = kmem_cache_dup(memcg, cachep);
+>> +
+>> +       if (new_cachep == NULL) {
+>> +               new_cachep = cachep;
+>> +               goto out;
+>> +       }
+>> +
+>> +       mem_cgroup_get(memcg);
+>> +       cachep->memcg_params->memcg_caches[idx] = new_cachep;
+>> +       wmb(); /* the readers won't lock, make sure everybody sees it */
+> 
+> Is there any rmb() pair?
+> As far as I know, without rmb(), wmb() doesn't guarantee anything.
+> 
+
+There should be. But it seems I missed it. Speaking of which, I should
+wmb() after the NULL assignment in release cache as well.
+
+Thanks
+>> +       new_cachep->memcg_params->memcg = memcg;
+>> +       new_cachep->memcg_params->root_cache = cachep;
+> 
+> It may be better these assignment before the statement
+> "cachep->memcg_params->memcg_caches[idx] = new_cachep".
+> Otherwise, it may produce race situation.
+> 
+> And assigning value to memcg_params->memcg and root_cache is redundant,
+> because it is already done in memcg_register_cache().
+> 
+
+Thanks.
+
+As for the redundancy, for memcg you are right. For root cache,
+unfortunately not. Up to this patch, this is the only reference to it.
+This reference will be moved to a different location in a further patch.
+But then, IIRC, I delete it from here.
+
+>> +/*
+>> + * Return the kmem_cache we're supposed to use for a slab allocation.
+>> + * We try to use the current memcg's version of the cache.
+>> + *
+>> + * If the cache does not exist yet, if we are the first user of it,
+>> + * we either create it immediately, if possible, or create it asynchronously
+>> + * in a workqueue.
+>> + * In the latter case, we will let the current allocation go through with
+>> + * the original cache.
+>> + *
+>> + * Can't be called in interrupt context or from kernel threads.
+>> + * This function needs to be called with rcu_read_lock() held.
+>> + */
+>> +struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
+>> +                                         gfp_t gfp)
+>> +{
+>> +       struct mem_cgroup *memcg;
+>> +       int idx;
+>> +
+>> +       if (cachep->memcg_params && cachep->memcg_params->memcg)
+>> +               return cachep;
+> 
+> In __memcg_kmem_get_cache, cachep may be always root cache.
+> So checking "cachep->memcg_params->memcg" is somewhat strange.
+> Is it right?
 > 
 > 
-> see https://patchwork.kernel.org/patch/719411/
+Yes, this is somewhat paranoid, and a bit historical. We were
+anticipating that we could call the allocation already with the right
+cache set, and in this case we would just return it.
 
-The patch surely "fixes" your problem but the primary fault here is the
-mis-configured cpu cgroup. If the value for the bandwidth is zero by
-default then all realtime processes in the group a screwed. The value
-should be set to something more reasonable.
-I am not familiar with the cpu controller but it seems that
-alloc_rt_sched_group needs some treat. Care to look into it and send a
-patch to the cpu controller and cgroup maintainers, please?
+I think I'll just VM_BUG_ON this.
 
--- 
-Michal Hocko
-SUSE Labs
+Thanks for you review here.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
