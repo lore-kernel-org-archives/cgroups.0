@@ -1,89 +1,57 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 4/6] cgroups: forbid pre_destroy callback to fail
-Date: Thu, 25 Oct 2012 16:37:56 +0200
-Message-ID: <20121025143756.GI11105@dhcp22.suse.cz>
-References: <1350480648-10905-1-git-send-email-mhocko@suse.cz>
- <1350480648-10905-5-git-send-email-mhocko@suse.cz>
- <20121018224148.GR13370@google.com>
- <20121019133244.GE799@dhcp22.suse.cz>
- <20121019202405.GR13370@google.com>
- <20121022103021.GA6367@dhcp22.suse.cz>
- <20121024192535.GG12182@atj.dyndns.org>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 0/1] (Was: freezer: add missing mb's to freezer_count() and
+	freezer_should_skip())
+Date: Thu, 25 Oct 2012 18:39:41 +0200
+Message-ID: <20121025163941.GA3801@redhat.com>
+References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+	<1350426526-14254-3-git-send-email-tj@kernel.org>
+	<20121022174404.GA21553@redhat.com>
+	<20121022211317.GD5951@atj.dyndns.org>
+	<20121023153919.GA16201@redhat.com>
+	<20121024185710.GA12182@atj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121024192535.GG12182-OlzNCW9NnSVy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121024185710.GA12182-OlzNCW9NnSVy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 24-10-12 12:25:35, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Mon, Oct 22, 2012 at 12:30:21PM +0200, Michal Hocko wrote:
-> > > > We can still fail inn #3 without this patch becasuse there are is no
-> > > > guarantee that a new task is attached to the group. And I wanted to keep
-> > > > memcg and generic cgroup parts separated.
-> > > 
-> > > Yes, but all other controllers are broken that way too
-> > 
-> > It's just hugetlb and memcg that have pre_destroy.
-> > 
-> > > and the worst thing which will hapen is triggering WARN_ON_ONCE().
-> > 
-> > The patch does BUG_ON(ss->pre_destroy(cgrp)). I am not sure WARN_ON_ONCE is
-> > appropriate here because we would like to have it at least per
-> > controller warning. I do not see any reason why to make this more
-> > complicated but I am open to suggestions.
-> 
-> Once it's dropped from memcg, the next patch can update cgroup core
-> accordingly and the bug will exist for a single commit and the failure
-> mode would be triggering of WARN_ON_ONCE().  Seems pretty simple to
-> me.
+Hi Tejun,
 
-I am not sure I understand you here. So are you suggesting
-s/BUG_ON/WARN_ON_ONCE/ in this patch?
-It is true that this will not break bisectability but it is still not
-correct (strictly speaking because any load that can race group removal
-with new tasks addition would hit BUG/WARN and we will remove a group
-with a task inside).
-The patchset as posted makes sure that none of the stages adds a
-regression and I would like to stick with that as much as possible if it
-doesn't cause too much of a hassle.
+On 10/24, Tejun Heo wrote:
+> Hello, Oleg.
+>
+> On Tue, Oct 23, 2012 at 05:39:19PM +0200, Oleg Nesterov wrote:
+> > > Hmm....  Guess we should drop __ from set_current_state.
+> >
+> > Yes.
+> >
+> > Or we can change ptrace_stop() and do_signal_stop() to use freezer_do_not_count/
+> > freezer_count and remove task_is_stopped_or_traced() from update_if_frozen()
+> > and try_to_freeze_tasks(). But this means that do_signal_stop() will call
+> > try_to_freeze() twice, unless we add __freezer_count() which only clears
+> > PF_FREEZER_SKIP.
+>
+> Ooh, I like this idea.  If we have a mechanism to mark a task "frozen
+> enough", it makes sense to use it universally.
 
-> > > Let's note the failure in the commit and remove
-> > > DEPREDATED_clear_css_refs in the previous patch.  Then, I can pull
-> > > from you, clean up pre_destroy mess and then you can pull back for
-> > > further cleanups.
-> > 
-> > Well this will get complicated as there are dependencies between memcg
-> > parts (based on Andrew's tree) and your tree. My tree is not pullable as
-> > all the patches go via Andrew. I am not sure how to get out of this.
-> > There is only one cgroup patch so what about pushing all of this via
-> > Andrew and do the follow up cleanups once they get merged? We are not in
-> > hurry, are we?
-> 
-> Let's create a cgroup branch and build things there.  I don't think
-> cgroup changes are gonna be a single patch and expect to see at least
-> some bug fixes afterwards and don't wanna keep them floating separate
-> from other cgroup changes.  
+Yes, I agree.
 
-> mm being based on top of -next, that should work, right?
+Fortunately we already have freezable_schedule() so this patch is
+really simple.
 
-Well, a tree based on -next is, ehm, impractical. I can create a bug on
-top of my -mm git branch (where I merge your cgroup common changes) for
-development and then when we are ready we can send it as a series and
-push it via Andrew. Would that work for you?
-Or we can push the core part via Andrew, wait for the merge and work on
-the follow up cleanups later?
-It is not like the follow up part is really urgent, isn't it? I would
-just like the memcg part settled first because this can potentially
-conflict with other memcg work.
+On top of this series.
 
-[...]
--- 
-Michal Hocko
-SUSE Labs
+Oleg.
