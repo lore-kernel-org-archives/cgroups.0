@@ -1,117 +1,73 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/1] freezer: change ptrace_stop/do_signal_stop to use
- freezable_schedule()
-Date: Thu, 25 Oct 2012 10:18:12 -0700
-Message-ID: <20121025171812.GE11442@htj.dyndns.org>
+Subject: Re: [PATCH 1/1] freezer: exec should clear PF_NOFREEZE along with
+ PF_KTHREAD
+Date: Thu, 25 Oct 2012 10:20:16 -0700
+Message-ID: <20121025172016.GF11442@htj.dyndns.org>
 References: <1350426526-14254-1-git-send-email-tj@kernel.org>
- <1350426526-14254-3-git-send-email-tj@kernel.org>
- <20121022174404.GA21553@redhat.com>
- <20121022211317.GD5951@atj.dyndns.org>
- <20121023153919.GA16201@redhat.com>
- <20121024185710.GA12182@atj.dyndns.org>
- <20121025163941.GA3801@redhat.com>
- <20121025163959.GB3801@redhat.com>
+ <1350426526-14254-5-git-send-email-tj@kernel.org>
+ <20121022183453.GA24687@redhat.com>
+ <20121022211822.GF5951@atj.dyndns.org>
+ <20121023155533.GC16201@redhat.com>
+ <20121024190651.GC12182@atj.dyndns.org>
+ <20121025171236.GA6776@redhat.com>
+ <20121025171256.GB6776@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=VYFPX/M6QDDv1nO/pnvaLgu6my9UohJrNTy0oL/ASYc=;
-        b=WYwwPcUOtikYH3SpZwmVzYO43JxNKzO721/pRhNVFYO/7PQCxIfepAulfsJNms35rA
-         FE5+QwLAVGOVTiMiKgRYj07jo/teJ1U0Iw+FaA+PAcgGfczRxwqbRaiyyDguWSwcq372
-         UQLeawWPFQx/MAGNqNzH1e3aenChI0aJi08EvaZszwr3j2FryED4b/ZdfSi570pqf20v
-         8a9MSOi/nBuOxnYXPp2x9ZowdoodVHEpZROSedjaozSHGvdLBI09894mOM8psOPHpYr6
-         WayXnySrMtvtJbYQjbEPTRfp6tJBTj1KD9Myv/731dYM8Dk5qs0kVUAdixoLLy325MkG
-         trBw==
+        bh=DshS5joPjOvBGiRzcdya2vwFhnfgitkJbhwKe981NtY=;
+        b=t3+oig9+zRStT5Ng0t32FDVxk2Bv8lxNeDzW4Dzr4vBVIV9uYTvjuqPI01nWLcppT7
+         wCaqX1Q99uxGQKnXu+EDQ8F37GwwPGksfURybd7tQw4GblLWcYj7Ibbww7sBiIcEm3/U
+         JKE2Vs7aZpoEB2Ld8PyumbVqz/sIM69u+gILIdf7iId1KhMj0HsV4y3QO3j3s5vMMCCj
+         YkVX+9AT79kcmvFEutwhtf6n9J/On1a5jFupurRaKWm/g9HxkS/3ijANn4k/UeQkh1/Q
+         uI6ZHpjcIEbfmjHAvH77EztQeubFeJq790PkY0Uk1msqEsaqbbeQ8rmlsb8uSXTK2QL3
+         voBw==
 Content-Disposition: inline
-In-Reply-To: <20121025163959.GB3801-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20121025171256.GB6776-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hello, Oleg.
-
-On Thu, Oct 25, 2012 at 06:39:59PM +0200, Oleg Nesterov wrote:
-> Change ptrace_stop() and do_signal_stop() to use freezable_schedule()
-> rather than rely on subsequent try_to_freeze().
+On Thu, Oct 25, 2012 at 07:12:56PM +0200, Oleg Nesterov wrote:
+> flush_old_exec() clears PF_KTHREAD but forgets about PF_NOFREEZE.
 > 
-> This allows to remove the task_is_stopped_or_traced() checks from
-> try_to_freeze_tasks() and update_if_frozen(), and this fixes the
-> unlikely race with ptrace_stop(). If the tracee does not schedule()
-> it can miss a freezing condition.
+> Signed-off-by: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-I think it would be great if the description is more detailed.  This
-code path always makes my head spin and I think we can definitely use
-some more guiding in understanding this dang thing. :)
+Probably needs Cc: stable.
 
-> @@ -48,18 +48,7 @@ static int try_to_freeze_tasks(bool user_only)
->  			if (p == current || !freeze_task(p))
->  				continue;
->  
-> -			/*
-> -			 * Now that we've done set_freeze_flag, don't
-> -			 * perturb a task in TASK_STOPPED or TASK_TRACED.
-> -			 * It is "frozen enough".  If the task does wake
-> -			 * up, it will immediately call try_to_freeze.
-> -			 *
-> -			 * Because freeze_task() goes through p's scheduler lock, it's
-> -			 * guaranteed that TASK_STOPPED/TRACED -> TASK_RUNNING
-> -			 * transition can't race with task state testing here.
-> -			 */
-> -			if (!task_is_stopped_or_traced(p) &&
-> -			    !freezer_should_skip(p))
-> +			if (!freezer_should_skip(p))
->  				todo++;
->  		} while_each_thread(g, p);
->  		read_unlock(&tasklist_lock);
+  Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-This looks really good.
-
-> diff --git a/kernel/signal.c b/kernel/signal.c
-> index 0af8868..1660d7d 100644
-> --- a/kernel/signal.c
-> +++ b/kernel/signal.c
-> @@ -1908,7 +1908,7 @@ static void ptrace_stop(int exit_code, int why, int clear_code, siginfo_t *info)
->  		preempt_disable();
->  		read_unlock(&tasklist_lock);
->  		preempt_enable_no_resched();
-> -		schedule();
-> +		freezable_schedule();
->  	} else {
->  		/*
->  		 * By the time we got the lock, our tracer went away.
-> @@ -1930,13 +1930,6 @@ static void ptrace_stop(int exit_code, int why, int clear_code, siginfo_t *info)
->  	}
->  
->  	/*
-> -	 * While in TASK_TRACED, we were considered "frozen enough".
-> -	 * Now that we woke up, it's crucial if we're supposed to be
-> -	 * frozen that we freeze now before running anything substantial.
-> -	 */
-> -	try_to_freeze();
-> -
-> -	/*
->  	 * We are back.  Now reacquire the siglock before touching
->  	 * last_siginfo, so that we are sure to have synchronized with
->  	 * any signal-sending on another CPU that wants to examine it.
-> @@ -2092,7 +2085,7 @@ static bool do_signal_stop(int signr)
->  		}
->  
->  		/* Now we don't run again until woken by SIGCONT or SIGKILL */
-> -		schedule();
-> +		freezable_schedule();
-
-This makes me wonder whether we still need try_to_freeze() in
-get_signal_to_deliver() right after the relock: label.  Freezer no
-longer treats STOPPED/TRACED special and both sleeping sites in signal
-deliver path are marked freezable_schedule().  We shouldn't need the
-explicit try_to_freeze(), right?
+How should this be routed?  -mm?  Andrew, can you please pick this up?
 
 Thanks.
+
+> ---
+>  fs/exec.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/exec.c b/fs/exec.c
+> index 8b9011b..0039055 100644
+> --- a/fs/exec.c
+> +++ b/fs/exec.c
+> @@ -1083,7 +1083,8 @@ int flush_old_exec(struct linux_binprm * bprm)
+>  	bprm->mm = NULL;		/* We're using it now */
+>  
+>  	set_fs(USER_DS);
+> -	current->flags &= ~(PF_RANDOMIZE | PF_FORKNOEXEC | PF_KTHREAD);
+> +	current->flags &=
+> +		~(PF_RANDOMIZE | PF_FORKNOEXEC | PF_KTHREAD | PF_NOFREEZE);
+>  	flush_thread();
+>  	current->personality &= ~bprm->per_clear;
+>  
+> -- 
+> 1.5.5.1
+> 
+> 
 
 -- 
 tejun
