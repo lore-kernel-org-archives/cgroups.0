@@ -1,94 +1,32 @@
-From: Qiang Gao <gaoqiangscut@gmail.com>
-Subject: Re: process hangs on do_exit when oom happens
-Date: Fri, 26 Oct 2012 10:42:37 +0800
-Message-ID: <CAKWKT+ZRTUwer8qhjWGjkra63e10R67UQzezdaCaStz+rvGjxw@mail.gmail.com>
-References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
-	<20121019160425.GA10175@dhcp22.suse.cz>
-	<CAKWKT+ZRMHzgCLJ1quGnw-_T1b9OboYKnQdRc2_Z=rdU_PFVtw@mail.gmail.com>
-	<CAKTCnzkMQQXRdx=ikydsD9Pm3LuRgf45_=m7ozuFmSZyxazXyA@mail.gmail.com>
-	<CAKWKT+bYOf0cEDuiibf6eV2raMxe481y-D+nrBgPWR3R+53zvg@mail.gmail.com>
-	<20121023095028.GD15397@dhcp22.suse.cz>
-	<CAKWKT+b2s4E7Nne5d0UJwfLGiCXqAUgrCzuuZi6ZPdjszVSmWg@mail.gmail.com>
-	<20121023101500.GE15397@dhcp22.suse.cz>
-	<CAKTCnzkiabWK8tAORkhg6oW11VvXS-YqBwDzED_3=J1buhaQnQ@mail.gmail.com>
-	<CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
-	<20121025095719.GA11105@dhcp22.suse.cz>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH v1 1/5] cgroup: net_prio: Mark local used function
+ static
+Date: Fri, 26 Oct 2012 03:41:45 -0400 (EDT)
+Message-ID: <20121026.034145.1107343238754328094.davem@davemloft.net>
+References: <1351174619-5096-1-git-send-email-wagi@monom.org>
+	<1351174619-5096-2-git-send-email-wagi@monom.org>
+	<20121025182858.GA15105@hmsreliant.think-freely.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=XOmdzUn+lfanxK4/NW5xGNhYg2HSRbLqWEU4V/p5Xzk=;
-        b=zGM4ymiLg+9XhjhY8TNLJCRuDM4dQ6SW4MCg//ABKwBa9Ar7Gv1zIksv5EHiwzvmJZ
-         6X1PgpUINqUWn65T5a23EFGvz2l0rFsnOlcAdnM0moU5MMN5+Gu3kHfs/oNQ1BXJUwmx
-         zjLmXCvrE/xPjeqgO5uVeAO7dmnx2EfgwJ18hLwBJLydsTfgi2byYt7zOAvDudaYGRi+
-         BdBJYgs+nHnAFfYFAUzH5J9bnQ9UuMSp80P65P8E64+4pYE5zhEVuNuZUbhkf3uZtTF2
-         jg7NFajTmbn5RwXU01SEJizE3yfTwQDoBIOhhq7JcFxcG6h5ce/j6ZcT8anwnFFF/eFi
-         GEAg==
-In-Reply-To: <20121025095719.GA11105@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Balbir Singh <bsingharora@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, linux-mm@kvack.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20121025182858.GA15105@hmsreliant.think-freely.org>
+Sender: netdev-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: Text/Plain; charset="us-ascii"
+To: nhorman@tuxdriver.com
+Cc: wagi@monom.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, daniel.wagner@bmw-carit.de, john.r.fastabend@intel.com, lizefan@huawei.com, tj@kernel.org
 
-On Thu, Oct 25, 2012 at 5:57 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> On Wed 24-10-12 11:44:17, Qiang Gao wrote:
->> On Wed, Oct 24, 2012 at 1:43 AM, Balbir Singh <bsingharora@gmail.com> wrote:
->> > On Tue, Oct 23, 2012 at 3:45 PM, Michal Hocko <mhocko@suse.cz> wrote:
->> >> On Tue 23-10-12 18:10:33, Qiang Gao wrote:
->> >>> On Tue, Oct 23, 2012 at 5:50 PM, Michal Hocko <mhocko@suse.cz> wrote:
->> >>> > On Tue 23-10-12 15:18:48, Qiang Gao wrote:
->> >>> >> This process was moved to RT-priority queue when global oom-killer
->> >>> >> happened to boost the recovery of the system..
->> >>> >
->> >>> > Who did that? oom killer doesn't boost the priority (scheduling class)
->> >>> > AFAIK.
->> >>> >
->> >>> >> but it wasn't get properily dealt with. I still have no idea why where
->> >>> >> the problem is ..
->> >>> >
->> >>> > Well your configuration says that there is no runtime reserved for the
->> >>> > group.
->> >>> > Please refer to Documentation/scheduler/sched-rt-group.txt for more
->> >>> > information.
->> >>> >
->> >> [...]
->> >>> maybe this is not a upstream-kernel bug. the centos/redhat kernel
->> >>> would boost the process to RT prio when the process was selected
->> >>> by oom-killer.
->> >>
->> >> This still looks like your cpu controller is misconfigured. Even if the
->> >> task is promoted to be realtime.
->> >
->> >
->> > Precisely! You need to have rt bandwidth enabled for RT tasks to run,
->> > as a workaround please give the groups some RT bandwidth and then work
->> > out the migration to RT and what should be the defaults on the distro.
->> >
->> > Balbir
->>
->>
->> see https://patchwork.kernel.org/patch/719411/
->
-> The patch surely "fixes" your problem but the primary fault here is the
-> mis-configured cpu cgroup. If the value for the bandwidth is zero by
-> default then all realtime processes in the group a screwed. The value
-> should be set to something more reasonable.
-> I am not familiar with the cpu controller but it seems that
-> alloc_rt_sched_group needs some treat. Care to look into it and send a
-> patch to the cpu controller and cgroup maintainers, please?
->
-> --
-> Michal Hocko
-> SUSE Labs
+From: Neil Horman <nhorman@tuxdriver.com>
+Date: Thu, 25 Oct 2012 14:28:58 -0400
 
-I'm trying to fix the problem. but no substantive progress yet.
+> On Thu, Oct 25, 2012 at 04:16:55PM +0200, Daniel Wagner wrote:
+>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+>> 
+>> net_prio_attach() is only access via cgroup_subsys callbacks,
+>> therefore we can reduce the visibility of this function.
+>> 
+>> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+ ...
+> Acked-by: Neil Horman <nhorman@tuxdriver.com>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Applied.
