@@ -1,72 +1,60 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: memcg/cgroup: do not fail fail on pre_destroy callbacks
-Date: Fri, 26 Oct 2012 13:37:27 +0200
-Message-ID: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Michal Hocko <mhocko@suse.cz>
+Subject: [PATCH v3 2/6] memcg: root_cgroup cannot reach mem_cgroup_move_parent
+Date: Fri, 26 Oct 2012 13:37:29 +0200
+Message-ID: <1351251453-6140-3-git-send-email-mhocko@suse.cz>
+References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@parallels.com>
 
-Hi,
-memcg is the only controller which might fail in its pre_destroy
-callback which makes the cgroup core more complicated for no good
-reason. This is an attempt to change this unfortunate state.
+The root cgroup cannot be destroyed so we never hit it down the
+mem_cgroup_pre_destroy path and mem_cgroup_force_empty_write shouldn't
+even try to do anything if called for the root.
 
-I have previously posted this as an RFC https://lkml.org/lkml/2012/10/17/246
-and the feedback was mostly positive. Nobody seem to see any issues with
-the approach so let's move on from the RFC. The patchset still needs
-good portion of testing and I am working on it. I would also like to see some
-Acks ;)
-The patchset is posted as v3 because some of the patches went trough 2
-revisions during RFC.
+This means that mem_cgroup_move_parent doesn't have to bother with the
+root cgroup and it can assume it can always move charges upwards.
 
-The first two patches are just clean ups. They could be merged even
-without the rest.
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+---
+ mm/memcontrol.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The real change, although the code is not changed that much, is the 3rd
-patch. It changes the way how we handle mem_cgroup_move_parent failures.
-We have to realize that all those failures are *temporal*. Because we
-are either racing with the page removal or the page is temporarily off
-the LRU because of migration resp. global reclaim. As a result we do
-not fail mem_cgroup_force_empty_list if the page cannot be moved to the
-parent and rather retry until the LRU is empty.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 07d92b8..916132a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2715,9 +2715,7 @@ static int mem_cgroup_move_parent(struct page *page,
+ 	unsigned long uninitialized_var(flags);
+ 	int ret;
+ 
+-	/* Is ROOT ? */
+-	if (mem_cgroup_is_root(child))
+-		return -EINVAL;
++	VM_BUG_ON(mem_cgroup_is_root(child));
+ 
+ 	ret = -EBUSY;
+ 	if (!get_page_unless_zero(page))
+@@ -3823,6 +3821,8 @@ static int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 	int ret;
+ 
++	if (mem_cgroup_is_root(memcg))
++		return -EINVAL;
+ 	css_get(&memcg->css);
+ 	ret = mem_cgroup_force_empty(memcg);
+ 	css_put(&memcg->css);
+-- 
+1.7.10.4
 
-The 4th patch is for cgroup core. I have moved cgroup_call_pre_destroy
-after css are frozen and the group is marked as removed which means
-that all css_tryget will fail as well as no new task can attach the group
-resp. no new child group can be added.
-
-Tejun is planning to build on top of that and make some more cleanups
-in the cgroup core (namely get rid of of the whole retry code in
-cgroup_rmdir).
-This makes unfortunate inter-tree dependency between Andrew's and
-Tejun's tree therefore I have based all the work on 3.6 kernel so that
-it can be merged into Tejun's cgroup tree as well into -mm git tree
-(Andrew will see all the changes from linux-next). I do not like to
-push memcg changes through other than Andrew's tree but this seems to
-be easier as other cgroup changes will probably depend on the Tejun's
-cleanups. Is everybody OK with this?
-
-The last two patches are trivial follow ups for the cgroups core change
-because now we know that nobody will interfere with us so we can drop
-those empty && no child condition.
-
-See the specific patches for the changelogs.
-
-Michal Hocko (6):
-      memcg: split mem_cgroup_force_empty into reclaiming and reparenting parts
-      memcg: root_cgroup cannot reach mem_cgroup_move_parent
-      memcg: Simplify mem_cgroup_force_empty_list error handling
-      cgroups: forbid pre_destroy callback to fail
-      memcg: make mem_cgroup_reparent_charges non failing
-      hugetlb: do not fail in hugetlb_cgroup_pre_destroy
-
-Cumulative diffstat:
- kernel/cgroup.c     |   30 ++++-------
- mm/hugetlb_cgroup.c |   11 ++--
- mm/memcontrol.c     |  148 ++++++++++++++++++++++++++++++---------------------
- 3 files changed, 99 insertions(+), 90 deletions(-)
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
