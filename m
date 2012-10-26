@@ -1,102 +1,52 @@
-From: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
-Subject: Re: process hangs on do_exit when oom happens
-Date: Fri, 26 Oct 2012 10:03:10 -0700
-Message-ID: <1351270990.16639.92.camel@maggy.simpson.net>
-References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
-	 <20121019160425.GA10175@dhcp22.suse.cz>
-	 <CAKWKT+ZRMHzgCLJ1quGnw-_T1b9OboYKnQdRc2_Z=rdU_PFVtw@mail.gmail.com>
-	 <CAKTCnzkMQQXRdx=ikydsD9Pm3LuRgf45_=m7ozuFmSZyxazXyA@mail.gmail.com>
-	 <CAKWKT+bYOf0cEDuiibf6eV2raMxe481y-D+nrBgPWR3R+53zvg@mail.gmail.com>
-	 <20121023095028.GD15397@dhcp22.suse.cz>
-	 <CAKWKT+b2s4E7Nne5d0UJwfLGiCXqAUgrCzuuZi6ZPdjszVSmWg@mail.gmail.com>
-	 <20121023101500.GE15397@dhcp22.suse.cz>
-	 <CAKTCnzkiabWK8tAORkhg6oW11VvXS-YqBwDzED_3=J1buhaQnQ@mail.gmail.com>
-	 <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
-	 <20121025095719.GA11105@dhcp22.suse.cz>
-	 <CAKWKT+ZRTUwer8qhjWGjkra63e10R67UQzezdaCaStz+rvGjxw@mail.gmail.com>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 0/1] freezer: change ptrace_stop/do_signal_stop to use
+	freezable_schedule()
+Date: Fri, 26 Oct 2012 19:45:45 +0200
+Message-ID: <20121026174545.GA21639@redhat.com>
+References: <1350426526-14254-3-git-send-email-tj@kernel.org>
+	<20121022174404.GA21553@redhat.com>
+	<20121022211317.GD5951@atj.dyndns.org>
+	<20121023153919.GA16201@redhat.com>
+	<20121024185710.GA12182@atj.dyndns.org>
+	<20121025163941.GA3801@redhat.com>
+	<20121025163959.GB3801@redhat.com>
+	<20121025171812.GE11442@htj.dyndns.org>
+	<20121025173433.GA7650@redhat.com>
+	<20121025173632.GI11442@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAKWKT+ZRTUwer8qhjWGjkra63e10R67UQzezdaCaStz+rvGjxw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Qiang Gao <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121025173632.GI11442-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, 2012-10-26 at 10:42 +0800, Qiang Gao wrote: 
-> On Thu, Oct 25, 2012 at 5:57 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> > On Wed 24-10-12 11:44:17, Qiang Gao wrote:
-> >> On Wed, Oct 24, 2012 at 1:43 AM, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> >> > On Tue, Oct 23, 2012 at 3:45 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> >> >> On Tue 23-10-12 18:10:33, Qiang Gao wrote:
-> >> >>> On Tue, Oct 23, 2012 at 5:50 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> >> >>> > On Tue 23-10-12 15:18:48, Qiang Gao wrote:
-> >> >>> >> This process was moved to RT-priority queue when global oom-killer
-> >> >>> >> happened to boost the recovery of the system..
-> >> >>> >
-> >> >>> > Who did that? oom killer doesn't boost the priority (scheduling class)
-> >> >>> > AFAIK.
-> >> >>> >
-> >> >>> >> but it wasn't get properily dealt with. I still have no idea why where
-> >> >>> >> the problem is ..
-> >> >>> >
-> >> >>> > Well your configuration says that there is no runtime reserved for the
-> >> >>> > group.
-> >> >>> > Please refer to Documentation/scheduler/sched-rt-group.txt for more
-> >> >>> > information.
-> >> >>> >
-> >> >> [...]
-> >> >>> maybe this is not a upstream-kernel bug. the centos/redhat kernel
-> >> >>> would boost the process to RT prio when the process was selected
-> >> >>> by oom-killer.
-> >> >>
-> >> >> This still looks like your cpu controller is misconfigured. Even if the
-> >> >> task is promoted to be realtime.
-> >> >
-> >> >
-> >> > Precisely! You need to have rt bandwidth enabled for RT tasks to run,
-> >> > as a workaround please give the groups some RT bandwidth and then work
-> >> > out the migration to RT and what should be the defaults on the distro.
-> >> >
-> >> > Balbir
-> >>
-> >>
-> >> see https://patchwork.kernel.org/patch/719411/
-> >
-> > The patch surely "fixes" your problem but the primary fault here is the
-> > mis-configured cpu cgroup. If the value for the bandwidth is zero by
-> > default then all realtime processes in the group a screwed. The value
-> > should be set to something more reasonable.
-> > I am not familiar with the cpu controller but it seems that
-> > alloc_rt_sched_group needs some treat. Care to look into it and send a
-> > patch to the cpu controller and cgroup maintainers, please?
-> >
-> > --
-> > Michal Hocko
-> > SUSE Labs
-> 
-> I'm trying to fix the problem. but no substantive progress yet.
+Hi Tejun,
 
-The throttle tracks a finite resource for an arbitrary number of groups,
-so there's no sane rt_runtime default other than zero.
+On 10/25, Tejun Heo wrote:
+>
+> > But! the comment above try_to_freeze() becomes misleading with
+> > this patch, so this really needs v2.
+>
+> But, yeah, I think we should move it above relock: and update the
+> comment to explain that that's the usual freezing site.
 
-Most folks only want the top level throttle warm fuzzy, so a complete
-runtime RT_GROUP_SCHED on/off switch with default to off, ie rt tasks
-cannot be moved until switched on would fix some annoying "Oopsie, I
-forgot" allocation troubles.  If you turn it on, shame on you if you
-fail to allocate, you asked for it, you're not just stuck with it
-because your distro enabled it in their config.
+Yeeeeeeees, I knew that you won't allow me to simply remove the old
+comment without adding the new one ;)
 
-Or, perhaps just make zero rt_runtime always mean traverse up to first
-non-zero rt_runtime, ie zero allocation children may consume parental
-runtime as they see fit on first come first served basis, when it's
-gone, tough, parent/children all wait for refill.
+And you can't imagine how many time I spent trying to invent something
+meaningful. Please feel free to update/rewrite it, I am not sure it
+is good enough. Or I can send v3 if you suggest something better.
 
-Or whatever, as long as you don't bust distribution/tracking for those
-crazy people who intentionally use RT_GROUP_SCHED ;-)
-
-The bug is in the patch that used sched_setscheduler_nocheck().  Plain
-sched_setscheduler() would have replied -EGOAWAY.
-
--Mike
+Oleg.
