@@ -1,64 +1,102 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH v3 6/6] hugetlb: do not fail in hugetlb_cgroup_pre_destroy
-Date: Fri, 26 Oct 2012 13:37:33 +0200
-Message-ID: <1351251453-6140-7-git-send-email-mhocko@suse.cz>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
+Subject: Re: process hangs on do_exit when oom happens
+Date: Fri, 26 Oct 2012 10:03:10 -0700
+Message-ID: <1351270990.16639.92.camel@maggy.simpson.net>
+References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
+	 <20121019160425.GA10175@dhcp22.suse.cz>
+	 <CAKWKT+ZRMHzgCLJ1quGnw-_T1b9OboYKnQdRc2_Z=rdU_PFVtw@mail.gmail.com>
+	 <CAKTCnzkMQQXRdx=ikydsD9Pm3LuRgf45_=m7ozuFmSZyxazXyA@mail.gmail.com>
+	 <CAKWKT+bYOf0cEDuiibf6eV2raMxe481y-D+nrBgPWR3R+53zvg@mail.gmail.com>
+	 <20121023095028.GD15397@dhcp22.suse.cz>
+	 <CAKWKT+b2s4E7Nne5d0UJwfLGiCXqAUgrCzuuZi6ZPdjszVSmWg@mail.gmail.com>
+	 <20121023101500.GE15397@dhcp22.suse.cz>
+	 <CAKTCnzkiabWK8tAORkhg6oW11VvXS-YqBwDzED_3=J1buhaQnQ@mail.gmail.com>
+	 <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
+	 <20121025095719.GA11105@dhcp22.suse.cz>
+	 <CAKWKT+ZRTUwer8qhjWGjkra63e10R67UQzezdaCaStz+rvGjxw@mail.gmail.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@parallels.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAKWKT+ZRTUwer8qhjWGjkra63e10R67UQzezdaCaStz+rvGjxw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Qiang Gao <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Now that pre_destroy callbacks are called from the context where neither
-any task can attach the group nor any children group can be added there
-is no other way to fail from hugetlb_pre_destroy.
+On Fri, 2012-10-26 at 10:42 +0800, Qiang Gao wrote: 
+> On Thu, Oct 25, 2012 at 5:57 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> > On Wed 24-10-12 11:44:17, Qiang Gao wrote:
+> >> On Wed, Oct 24, 2012 at 1:43 AM, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >> > On Tue, Oct 23, 2012 at 3:45 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> >> >> On Tue 23-10-12 18:10:33, Qiang Gao wrote:
+> >> >>> On Tue, Oct 23, 2012 at 5:50 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> >> >>> > On Tue 23-10-12 15:18:48, Qiang Gao wrote:
+> >> >>> >> This process was moved to RT-priority queue when global oom-killer
+> >> >>> >> happened to boost the recovery of the system..
+> >> >>> >
+> >> >>> > Who did that? oom killer doesn't boost the priority (scheduling class)
+> >> >>> > AFAIK.
+> >> >>> >
+> >> >>> >> but it wasn't get properily dealt with. I still have no idea why where
+> >> >>> >> the problem is ..
+> >> >>> >
+> >> >>> > Well your configuration says that there is no runtime reserved for the
+> >> >>> > group.
+> >> >>> > Please refer to Documentation/scheduler/sched-rt-group.txt for more
+> >> >>> > information.
+> >> >>> >
+> >> >> [...]
+> >> >>> maybe this is not a upstream-kernel bug. the centos/redhat kernel
+> >> >>> would boost the process to RT prio when the process was selected
+> >> >>> by oom-killer.
+> >> >>
+> >> >> This still looks like your cpu controller is misconfigured. Even if the
+> >> >> task is promoted to be realtime.
+> >> >
+> >> >
+> >> > Precisely! You need to have rt bandwidth enabled for RT tasks to run,
+> >> > as a workaround please give the groups some RT bandwidth and then work
+> >> > out the migration to RT and what should be the defaults on the distro.
+> >> >
+> >> > Balbir
+> >>
+> >>
+> >> see https://patchwork.kernel.org/patch/719411/
+> >
+> > The patch surely "fixes" your problem but the primary fault here is the
+> > mis-configured cpu cgroup. If the value for the bandwidth is zero by
+> > default then all realtime processes in the group a screwed. The value
+> > should be set to something more reasonable.
+> > I am not familiar with the cpu controller but it seems that
+> > alloc_rt_sched_group needs some treat. Care to look into it and send a
+> > patch to the cpu controller and cgroup maintainers, please?
+> >
+> > --
+> > Michal Hocko
+> > SUSE Labs
+> 
+> I'm trying to fix the problem. but no substantive progress yet.
 
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
-Reviewed-by: Tejun Heo <tj@kernel.org>
----
- mm/hugetlb_cgroup.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+The throttle tracks a finite resource for an arbitrary number of groups,
+so there's no sane rt_runtime default other than zero.
 
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index a3f358f..dc595c6 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -159,14 +159,9 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
- {
- 	struct hstate *h;
- 	struct page *page;
--	int ret = 0, idx = 0;
-+	int idx = 0;
- 
- 	do {
--		if (cgroup_task_count(cgroup) ||
--		    !list_empty(&cgroup->children)) {
--			ret = -EBUSY;
--			goto out;
--		}
- 		for_each_hstate(h) {
- 			spin_lock(&hugetlb_lock);
- 			list_for_each_entry(page, &h->hugepage_activelist, lru)
-@@ -177,8 +172,8 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
- 		}
- 		cond_resched();
- 	} while (hugetlb_cgroup_have_usage(cgroup));
--out:
--	return ret;
-+
-+	return 0;
- }
- 
- int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
--- 
-1.7.10.4
+Most folks only want the top level throttle warm fuzzy, so a complete
+runtime RT_GROUP_SCHED on/off switch with default to off, ie rt tasks
+cannot be moved until switched on would fix some annoying "Oopsie, I
+forgot" allocation troubles.  If you turn it on, shame on you if you
+fail to allocate, you asked for it, you're not just stuck with it
+because your distro enabled it in their config.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Or, perhaps just make zero rt_runtime always mean traverse up to first
+non-zero rt_runtime, ie zero allocation children may consume parental
+runtime as they see fit on first come first served basis, when it's
+gone, tough, parent/children all wait for refill.
+
+Or whatever, as long as you don't bust distribution/tracking for those
+crazy people who intentionally use RT_GROUP_SCHED ;-)
+
+The bug is in the patch that used sched_setscheduler_nocheck().  Plain
+sched_setscheduler() would have replied -EGOAWAY.
+
+-Mike
