@@ -1,34 +1,97 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/1] freezer: change ptrace_stop/do_signal_stop to
-	use freezable_schedule()
-Date: Fri, 26 Oct 2012 20:01:49 +0200
-Message-ID: <20121026180149.GA22421@redhat.com>
-References: <20121023153919.GA16201@redhat.com> <20121024185710.GA12182@atj.dyndns.org> <20121025163941.GA3801@redhat.com> <20121025163959.GB3801@redhat.com> <20121025171812.GE11442@htj.dyndns.org> <20121025173433.GA7650@redhat.com> <20121025173632.GI11442@htj.dyndns.org> <20121026174545.GA21639@redhat.com> <20121026174606.GB21639@redhat.com> <20121026175258.GV11442@htj.dyndns.org>
+From: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
+Subject: Re: process hangs on do_exit when oom happens
+Date: Fri, 26 Oct 2012 13:04:37 -0700
+Message-ID: <1351281877.16639.98.camel@maggy.simpson.net>
+References: <op.wmbi5kbrn27o5l@gaoqiang-d1.corp.qihoo.net>
+	 <20121019160425.GA10175@dhcp22.suse.cz>
+	 <CAKWKT+ZRMHzgCLJ1quGnw-_T1b9OboYKnQdRc2_Z=rdU_PFVtw@mail.gmail.com>
+	 <CAKTCnzkMQQXRdx=ikydsD9Pm3LuRgf45_=m7ozuFmSZyxazXyA@mail.gmail.com>
+	 <CAKWKT+bYOf0cEDuiibf6eV2raMxe481y-D+nrBgPWR3R+53zvg@mail.gmail.com>
+	 <20121023095028.GD15397@dhcp22.suse.cz>
+	 <CAKWKT+b2s4E7Nne5d0UJwfLGiCXqAUgrCzuuZi6ZPdjszVSmWg@mail.gmail.com>
+	 <20121023101500.GE15397@dhcp22.suse.cz>
+	 <CAKTCnzkiabWK8tAORkhg6oW11VvXS-YqBwDzED_3=J1buhaQnQ@mail.gmail.com>
+	 <CAKWKT+ZahFTnPRJ4FCebxfcrcYEBf+PL9Wa_Foygep_gFst4_g@mail.gmail.com>
+	 <20121025095719.GA11105@dhcp22.suse.cz>
+	 <CAKWKT+ZRTUwer8qhjWGjkra63e10R67UQzezdaCaStz+rvGjxw@mail.gmail.com>
+	 <1351270990.16639.92.camel@maggy.simpson.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121026175258.GV11442-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <1351270990.16639.92.camel-sZ+7a5bGyC/1wTEvPJ5Q0F6hYfS7NtTn@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Qiang Gao <gaoqiangscut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 
-On 10/26, Tejun Heo wrote:
->
->  Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+On Fri, 2012-10-26 at 10:03 -0700, Mike Galbraith wrote:
 
-Thanks!
+> The bug is in the patch that used sched_setscheduler_nocheck().  Plain
+> sched_setscheduler() would have replied -EGOAWAY.
 
-> Rafael, sorry that this one doesn't have pm cc'd
+sched_setscheduler_nocheck() should say go away too methinks.  This
+isn't about permissions, it's about not being stupid in general.
 
-Ah, sorry Rafael. Yes, I have read you email, and I was going to
-add linux-pm but forgot.
+sched: fix __sched_setscheduler() RT_GROUP_SCHED conditionals
 
-> but can you please
-> pick up this one too?
+Remove user and rt_bandwidth_enabled() RT_GROUP_SCHED conditionals in
+__sched_setscheduler().  The end result of kernel OR user promoting a
+task in a group with zero rt_runtime allocated is the same bad thing,
+and throttle switch position matters little.  It's safer to just say
+no solely based upon bandwidth existence, may save the user a nasty
+surprise if he later flips the throttle switch to 'on'.
 
-Please, and thanks.
+The commit below came about due to sched_setscheduler_nocheck()
+allowing a task in a task group with zero rt_runtime allocated to
+be promoted by the kernel oom logic, thus marooning it forever.
 
-Oleg.
+<quote>
+commit 341aea2bc48bf652777fb015cc2b3dfa9a451817
+Author: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Date:   Thu Apr 14 15:22:13 2011 -0700
+
+    oom-kill: remove boost_dying_task_prio()
+    
+    This is an almost-revert of commit 93b43fa ("oom: give the dying task a
+    higher priority").
+    
+    That commit dramatically improved oom killer logic when a fork-bomb
+    occurs.  But I've found that it has nasty corner case.  Now cpu cgroup has
+    strange default RT runtime.  It's 0!  That said, if a process under cpu
+    cgroup promote RT scheduling class, the process never run at all.
+</quote>
+
+Signed-off-by: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 2d8927f..d3a35f8 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3810,17 +3810,14 @@ recheck:
+ 	}
+ 
+ #ifdef CONFIG_RT_GROUP_SCHED
+-	if (user) {
+-		/*
+-		 * Do not allow realtime tasks into groups that have no runtime
+-		 * assigned.
+-		 */
+-		if (rt_bandwidth_enabled() && rt_policy(policy) &&
+-				task_group(p)->rt_bandwidth.rt_runtime == 0 &&
+-				!task_group_is_autogroup(task_group(p))) {
+-			task_rq_unlock(rq, p, &flags);
+-			return -EPERM;
+-		}
++	/*
++	 * Do not allow realtime tasks into groups that have no runtime
++	 * assigned.
++	 */
++	if (rt_policy(policy) && task_group(p)->rt_bandwidth.rt_runtime == 0 &&
++			!task_group_is_autogroup(task_group(p))) {
++		task_rq_unlock(rq, p, &flags);
++		return -EPERM;
+ 	}
+ #endif
+ 
+
