@@ -1,62 +1,42 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead N_HIGH_MEMORY
-Date: Mon, 29 Oct 2012 22:34:12 +0100
-Message-ID: <20121029213412.GC21640@dhcp22.suse.cz>
-References: <1351523301-20048-1-git-send-email-laijs@cn.fujitsu.com>
- <1351524078-20363-7-git-send-email-laijs@cn.fujitsu.com>
- <20121029162212.GE20757@dhcp22.suse.cz>
- <alpine.DEB.2.00.1210291340100.18552@chino.kir.corp.google.com>
- <20121029205806.GB21640@dhcp22.suse.cz>
- <alpine.DEB.2.00.1210291405100.18552@chino.kir.corp.google.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list
+ error handling
+Date: Mon, 29 Oct 2012 15:00:22 -0700
+Message-ID: <20121029150022.a595b866.akpm@linux-foundation.org>
+References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
+	<1351251453-6140-4-git-send-email-mhocko@suse.cz>
+	<508E8B95.406@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1210291405100.18552-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <508E8B95.406@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jiang Liu <jiang.liu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Yasuaki ISIMATU <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Mon 29-10-12 14:08:05, David Rientjes wrote:
-> On Mon, 29 Oct 2012, Michal Hocko wrote:
+On Mon, 29 Oct 2012 17:58:45 +0400
+Glauber Costa <glommer@parallels.com> wrote:
+
+> > + * move charges to its parent or the root cgroup if the group has no
+> > + * parent (aka use_hierarchy==0).
+> > + * Although this might fail (get_page_unless_zero, isolate_lru_page or
+> > + * mem_cgroup_move_account fails) the failure is always temporary and
+> > + * it signals a race with a page removal/uncharge or migration. In the
+> > + * first case the page is on the way out and it will vanish from the LRU
+> > + * on the next attempt and the call should be retried later.
+> > + * Isolation from the LRU fails only if page has been isolated from
+> > + * the LRU since we looked at it and that usually means either global
+> > + * reclaim or migration going on. The page will either get back to the
+> > + * LRU or vanish.
 > 
-> > > > > N_HIGH_MEMORY stands for the nodes that has normal or high memory.
-> > > > > N_MEMORY stands for the nodes that has any memory.
-> > > > 
-> > > > What is the difference of those two?
-> > > > 
-> > > 
-> > > Patch 5 in the series 
-> > 
-> > Strange, I do not see that one at the mailing list.
-> > 
-> 
-> http://marc.info/?l=linux-kernel&m=135152595827692
+> I just wonder for how long can it go in the worst case?
 
-Thanks!
+If the kernel is uniprocessor and the caller is SCHED_FIFO: ad infinitum!
 
-> > > introduces it to be equal to N_HIGH_MEMORY, so 
-> > 
-> > So this is just a rename? If yes it would be much esier if it was
-> > mentioned in the patch description.
-> > 
-> 
-> It's not even a rename even though it should be, it's adding yet another 
-> node_states that is equal to N_HIGH_MEMORY since that state already 
-> includes all memory.  
-
-Which is really strange because I do not see any reason for yet another
-alias if the follow up patches rename all of them (I didn't try to apply
-the whole series to check that so I might be wrong here).
-
-> It's just a matter of taste but I think we should be renaming it
-> instead of aliasing it (unless you actually want to make N_HIGH_MEMORY
-> only include nodes with highmem, but nothing depends on that).
-
-Agreed, I've always considered N_HIGH_MEMORY misleading and confusing so
-renaming it would really make a lot of sense to me.
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
