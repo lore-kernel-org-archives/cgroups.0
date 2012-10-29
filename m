@@ -1,131 +1,44 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead N_HIGH_MEMORY
-Date: Mon, 29 Oct 2012 17:22:12 +0100
-Message-ID: <20121029162212.GE20757@dhcp22.suse.cz>
-References: <1351523301-20048-1-git-send-email-laijs@cn.fujitsu.com>
- <1351524078-20363-7-git-send-email-laijs@cn.fujitsu.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead
+ N_HIGH_MEMORY
+Date: Mon, 29 Oct 2012 13:40:39 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1210291340100.18552@chino.kir.corp.google.com>
+References: <1351523301-20048-1-git-send-email-laijs@cn.fujitsu.com> <1351524078-20363-7-git-send-email-laijs@cn.fujitsu.com> <20121029162212.GE20757@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1351524078-20363-7-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=h8IdUH/RCkxb5q/PbPm1abBgD9RIEAM79iSQv/NaqaE=;
+        b=MnaVZk+coSXHDe96woD1vJ46hYdgGZXJy2wZt7co60ssyKhDbPtiEtwlzSImGvUEws
+         6r5uLIG51o4riVze54qVberFap75GlnUSQ3mRsvQg/uLxPWAY5LdYsSGhSXtn9s9hYM2
+         RXhbrv+VT+N3w7JwlnIm+sjORvR9Ymq288yscHSdcUmI+Nc+4COJsM66pSN8SzZ2DLvQ
+         gZObYbCc8y5/NggvTDVNZ8TLYNR6af3UIjsHa+6iNWXSI1se9PkQqzyBdrONYuXA/zZh
+         D+RPc5mJJlYOwbM3d3BeQINJj0+nlwvoympudP2nPihUEAFNkVkiL1rlJDLtfOD3cisk
+         xv6g==
+In-Reply-To: <20121029162212.GE20757@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jiang Liu <jiang.liu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Yasuaki ISIMATU <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Lai Jiangshan <laijs@cn.fujitsu.com>, Mel Gorman <mgorman@suse.de>, LKML <linux-kernel@vger.kernel.org>, x86 maintainers <x86@kernel.org>, Jiang Liu <jiang.liu@huawei.com>, Rusty Russell <rusty@rustcorp.com.au>, Yinghai Lu <yinghai@kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Yasuaki ISIMATU <isimatu.yasuaki@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
 
-On Mon 29-10-12 23:20:58, Lai Jiangshan wrote:
-> N_HIGH_MEMORY stands for the nodes that has normal or high memory.
-> N_MEMORY stands for the nodes that has any memory.
+On Mon, 29 Oct 2012, Michal Hocko wrote:
 
-What is the difference of those two?
-
-> The code here need to handle with the nodes which have memory, we should
-> use N_MEMORY instead.
+> > N_HIGH_MEMORY stands for the nodes that has normal or high memory.
+> > N_MEMORY stands for the nodes that has any memory.
 > 
-> Signed-off-by: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> ---
->  mm/memcontrol.c  |   18 +++++++++---------
->  mm/page_cgroup.c |    2 +-
->  2 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 7acf43b..1b69665 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -800,7 +800,7 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
->  	int nid;
->  	u64 total = 0;
->  
-> -	for_each_node_state(nid, N_HIGH_MEMORY)
-> +	for_each_node_state(nid, N_MEMORY)
->  		total += mem_cgroup_node_nr_lru_pages(memcg, nid, lru_mask);
->  	return total;
->  }
-> @@ -1611,9 +1611,9 @@ static void mem_cgroup_may_update_nodemask(struct mem_cgroup *memcg)
->  		return;
->  
->  	/* make a nodemask where this memcg uses memory from */
-> -	memcg->scan_nodes = node_states[N_HIGH_MEMORY];
-> +	memcg->scan_nodes = node_states[N_MEMORY];
->  
-> -	for_each_node_mask(nid, node_states[N_HIGH_MEMORY]) {
-> +	for_each_node_mask(nid, node_states[N_MEMORY]) {
->  
->  		if (!test_mem_cgroup_node_reclaimable(memcg, nid, false))
->  			node_clear(nid, memcg->scan_nodes);
-> @@ -1684,7 +1684,7 @@ static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
->  	/*
->  	 * Check rest of nodes.
->  	 */
-> -	for_each_node_state(nid, N_HIGH_MEMORY) {
-> +	for_each_node_state(nid, N_MEMORY) {
->  		if (node_isset(nid, memcg->scan_nodes))
->  			continue;
->  		if (test_mem_cgroup_node_reclaimable(memcg, nid, noswap))
-> @@ -3759,7 +3759,7 @@ move_account:
->  		drain_all_stock_sync(memcg);
->  		ret = 0;
->  		mem_cgroup_start_move(memcg);
-> -		for_each_node_state(node, N_HIGH_MEMORY) {
-> +		for_each_node_state(node, N_MEMORY) {
->  			for (zid = 0; !ret && zid < MAX_NR_ZONES; zid++) {
->  				enum lru_list lru;
->  				for_each_lru(lru) {
-> @@ -4087,7 +4087,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
->  
->  	total_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL);
->  	seq_printf(m, "total=%lu", total_nr);
-> -	for_each_node_state(nid, N_HIGH_MEMORY) {
-> +	for_each_node_state(nid, N_MEMORY) {
->  		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid, LRU_ALL);
->  		seq_printf(m, " N%d=%lu", nid, node_nr);
->  	}
-> @@ -4095,7 +4095,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
->  
->  	file_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_FILE);
->  	seq_printf(m, "file=%lu", file_nr);
-> -	for_each_node_state(nid, N_HIGH_MEMORY) {
-> +	for_each_node_state(nid, N_MEMORY) {
->  		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
->  				LRU_ALL_FILE);
->  		seq_printf(m, " N%d=%lu", nid, node_nr);
-> @@ -4104,7 +4104,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
->  
->  	anon_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_ANON);
->  	seq_printf(m, "anon=%lu", anon_nr);
-> -	for_each_node_state(nid, N_HIGH_MEMORY) {
-> +	for_each_node_state(nid, N_MEMORY) {
->  		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
->  				LRU_ALL_ANON);
->  		seq_printf(m, " N%d=%lu", nid, node_nr);
-> @@ -4113,7 +4113,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
->  
->  	unevictable_nr = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_UNEVICTABLE));
->  	seq_printf(m, "unevictable=%lu", unevictable_nr);
-> -	for_each_node_state(nid, N_HIGH_MEMORY) {
-> +	for_each_node_state(nid, N_MEMORY) {
->  		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
->  				BIT(LRU_UNEVICTABLE));
->  		seq_printf(m, " N%d=%lu", nid, node_nr);
-> diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-> index 5ddad0c..c1054ad 100644
-> --- a/mm/page_cgroup.c
-> +++ b/mm/page_cgroup.c
-> @@ -271,7 +271,7 @@ void __init page_cgroup_init(void)
->  	if (mem_cgroup_disabled())
->  		return;
->  
-> -	for_each_node_state(nid, N_HIGH_MEMORY) {
-> +	for_each_node_state(nid, N_MEMORY) {
->  		unsigned long start_pfn, end_pfn;
->  
->  		start_pfn = node_start_pfn(nid);
-> -- 
-> 1.7.4.4
+> What is the difference of those two?
 > 
 
--- 
-Michal Hocko
-SUSE Labs
+Patch 5 in the series introduces it to be equal to N_HIGH_MEMORY, so 
+accepting this patch would be an implicit ack of the direction taken 
+there.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
