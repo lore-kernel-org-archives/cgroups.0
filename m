@@ -1,69 +1,129 @@
-From: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v5 13/18] memcg/sl[au]b Track all the memcg children of a kmem_cache.
-Date: Tue, 30 Oct 2012 00:26:43 +0900
-Message-ID: <CAAmzW4MGdj-jL_FJ2Nkoa4Hx8KUDCeVK6HFidYQLauu_0vHhCg@mail.gmail.com>
-References: <1350656442-1523-1-git-send-email-glommer@parallels.com>
-	<1350656442-1523-14-git-send-email-glommer@parallels.com>
+From: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead N_HIGH_MEMORY
+Date: Mon, 29 Oct 2012 23:20:58 +0800
+Message-ID: <1351524078-20363-7-git-send-email-laijs@cn.fujitsu.com>
+References: <1351523301-20048-1-git-send-email-laijs@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=8GDGNSXKB1rpFA3MisBzUIUZn4J0HMHSpLWj22xdsJI=;
-        b=RdgzlH0xWRsE4jCjhKAtO05mWCWQOPafslhvkTqR01XTRSqjkxGnsfQn2Bvgo3voB5
-         T46jkaYJGs0yUfXGQV2J3jsOzk9tccw39+BIgrWB2U65KZhKDYDJnbCmKm1w+CazD7oU
-         w/QG4nra9Fy78Z17noWqynzrAaLLHxoAz7LFcoI+3ql544oi0B3oWs1/VWTMwBhPbI7y
-         ytwoF9nOJAczM/9YWICurnP03bdM8FGl4m6aqn9ka/kQuIgYJgdDNsJj1OzVOAPmOM2/
-         c5cABZtAK5UgRmhOjt/nGYcTnWifzqpdN9vyUHo1AqACvGH97Jy+ptLfLjfZP3zw+pVd
-         veeA==
-In-Reply-To: <1350656442-1523-14-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1351523301-20048-1-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jiang Liu <jiang.liu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yasuaki ISIMATU <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-2012/10/19 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
-> +void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
-> +{
-> +       struct kmem_cache *c;
-> +       int i;
-> +
-> +       if (!s->memcg_params)
-> +               return;
-> +       if (!s->memcg_params->is_root_cache)
-> +               return;
-> +
-> +       /*
-> +        * If the cache is being destroyed, we trust that there is no one else
-> +        * requesting objects from it. Even if there are, the sanity checks in
-> +        * kmem_cache_destroy should caught this ill-case.
-> +        *
-> +        * Still, we don't want anyone else freeing memcg_caches under our
-> +        * noses, which can happen if a new memcg comes to life. As usual,
-> +        * we'll take the set_limit_mutex to protect ourselves against this.
-> +        */
-> +       mutex_lock(&set_limit_mutex);
-> +       for (i = 0; i < memcg_limited_groups_array_size; i++) {
-> +               c = s->memcg_params->memcg_caches[i];
-> +               if (c)
-> +                       kmem_cache_destroy(c);
-> +       }
-> +       mutex_unlock(&set_limit_mutex);
-> +}
+N_HIGH_MEMORY stands for the nodes that has normal or high memory.
+N_MEMORY stands for the nodes that has any memory.
 
-It may cause NULL deref.
-Look at the following scenario.
+The code here need to handle with the nodes which have memory, we should
+use N_MEMORY instead.
 
-1. some memcg slab caches has remained object.
-2. start to destroy memcg.
-3. schedule_delayed_work(kmem_cache_destroy_work_func, @delay 60hz)
-4. all remained object is freed.
-5. start to destroy root cache.
-6. kmem_cache_destroy makes 's->memcg_params->memcg_caches[i]" NULL!!
-7. Start delayed work function.
-8. cachep in kmem_cache_destroy_work_func() may be NULL
+Signed-off-by: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ mm/memcontrol.c  |   18 +++++++++---------
+ mm/page_cgroup.c |    2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-Thanks.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7acf43b..1b69665 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -800,7 +800,7 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
+ 	int nid;
+ 	u64 total = 0;
+ 
+-	for_each_node_state(nid, N_HIGH_MEMORY)
++	for_each_node_state(nid, N_MEMORY)
+ 		total += mem_cgroup_node_nr_lru_pages(memcg, nid, lru_mask);
+ 	return total;
+ }
+@@ -1611,9 +1611,9 @@ static void mem_cgroup_may_update_nodemask(struct mem_cgroup *memcg)
+ 		return;
+ 
+ 	/* make a nodemask where this memcg uses memory from */
+-	memcg->scan_nodes = node_states[N_HIGH_MEMORY];
++	memcg->scan_nodes = node_states[N_MEMORY];
+ 
+-	for_each_node_mask(nid, node_states[N_HIGH_MEMORY]) {
++	for_each_node_mask(nid, node_states[N_MEMORY]) {
+ 
+ 		if (!test_mem_cgroup_node_reclaimable(memcg, nid, false))
+ 			node_clear(nid, memcg->scan_nodes);
+@@ -1684,7 +1684,7 @@ static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+ 	/*
+ 	 * Check rest of nodes.
+ 	 */
+-	for_each_node_state(nid, N_HIGH_MEMORY) {
++	for_each_node_state(nid, N_MEMORY) {
+ 		if (node_isset(nid, memcg->scan_nodes))
+ 			continue;
+ 		if (test_mem_cgroup_node_reclaimable(memcg, nid, noswap))
+@@ -3759,7 +3759,7 @@ move_account:
+ 		drain_all_stock_sync(memcg);
+ 		ret = 0;
+ 		mem_cgroup_start_move(memcg);
+-		for_each_node_state(node, N_HIGH_MEMORY) {
++		for_each_node_state(node, N_MEMORY) {
+ 			for (zid = 0; !ret && zid < MAX_NR_ZONES; zid++) {
+ 				enum lru_list lru;
+ 				for_each_lru(lru) {
+@@ -4087,7 +4087,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+ 
+ 	total_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL);
+ 	seq_printf(m, "total=%lu", total_nr);
+-	for_each_node_state(nid, N_HIGH_MEMORY) {
++	for_each_node_state(nid, N_MEMORY) {
+ 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid, LRU_ALL);
+ 		seq_printf(m, " N%d=%lu", nid, node_nr);
+ 	}
+@@ -4095,7 +4095,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+ 
+ 	file_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_FILE);
+ 	seq_printf(m, "file=%lu", file_nr);
+-	for_each_node_state(nid, N_HIGH_MEMORY) {
++	for_each_node_state(nid, N_MEMORY) {
+ 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
+ 				LRU_ALL_FILE);
+ 		seq_printf(m, " N%d=%lu", nid, node_nr);
+@@ -4104,7 +4104,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+ 
+ 	anon_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_ANON);
+ 	seq_printf(m, "anon=%lu", anon_nr);
+-	for_each_node_state(nid, N_HIGH_MEMORY) {
++	for_each_node_state(nid, N_MEMORY) {
+ 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
+ 				LRU_ALL_ANON);
+ 		seq_printf(m, " N%d=%lu", nid, node_nr);
+@@ -4113,7 +4113,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+ 
+ 	unevictable_nr = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_UNEVICTABLE));
+ 	seq_printf(m, "unevictable=%lu", unevictable_nr);
+-	for_each_node_state(nid, N_HIGH_MEMORY) {
++	for_each_node_state(nid, N_MEMORY) {
+ 		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
+ 				BIT(LRU_UNEVICTABLE));
+ 		seq_printf(m, " N%d=%lu", nid, node_nr);
+diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+index 5ddad0c..c1054ad 100644
+--- a/mm/page_cgroup.c
++++ b/mm/page_cgroup.c
+@@ -271,7 +271,7 @@ void __init page_cgroup_init(void)
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
+-	for_each_node_state(nid, N_HIGH_MEMORY) {
++	for_each_node_state(nid, N_MEMORY) {
+ 		unsigned long start_pfn, end_pfn;
+ 
+ 		start_pfn = node_start_pfn(nid);
+-- 
+1.7.4.4
