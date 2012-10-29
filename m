@@ -1,44 +1,51 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead
- N_HIGH_MEMORY
-Date: Mon, 29 Oct 2012 13:40:39 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1210291340100.18552@chino.kir.corp.google.com>
-References: <1351523301-20048-1-git-send-email-laijs@cn.fujitsu.com> <1351524078-20363-7-git-send-email-laijs@cn.fujitsu.com> <20121029162212.GE20757@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead N_HIGH_MEMORY
+Date: Mon, 29 Oct 2012 21:58:06 +0100
+Message-ID: <20121029205806.GB21640@dhcp22.suse.cz>
+References: <1351523301-20048-1-git-send-email-laijs@cn.fujitsu.com>
+	<1351524078-20363-7-git-send-email-laijs@cn.fujitsu.com>
+	<20121029162212.GE20757@dhcp22.suse.cz>
+	<alpine.DEB.2.00.1210291340100.18552@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=h8IdUH/RCkxb5q/PbPm1abBgD9RIEAM79iSQv/NaqaE=;
-        b=MnaVZk+coSXHDe96woD1vJ46hYdgGZXJy2wZt7co60ssyKhDbPtiEtwlzSImGvUEws
-         6r5uLIG51o4riVze54qVberFap75GlnUSQ3mRsvQg/uLxPWAY5LdYsSGhSXtn9s9hYM2
-         RXhbrv+VT+N3w7JwlnIm+sjORvR9Ymq288yscHSdcUmI+Nc+4COJsM66pSN8SzZ2DLvQ
-         gZObYbCc8y5/NggvTDVNZ8TLYNR6af3UIjsHa+6iNWXSI1se9PkQqzyBdrONYuXA/zZh
-         D+RPc5mJJlYOwbM3d3BeQINJj0+nlwvoympudP2nPihUEAFNkVkiL1rlJDLtfOD3cisk
-         xv6g==
-In-Reply-To: <20121029162212.GE20757@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Lai Jiangshan <laijs@cn.fujitsu.com>, Mel Gorman <mgorman@suse.de>, LKML <linux-kernel@vger.kernel.org>, x86 maintainers <x86@kernel.org>, Jiang Liu <jiang.liu@huawei.com>, Rusty Russell <rusty@rustcorp.com.au>, Yinghai Lu <yinghai@kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Yasuaki ISIMATU <isimatu.yasuaki@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1210291340100.18552-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yasuaki ISIMATU <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Jiang Liu <jiang.liu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Mon, 29 Oct 2012, Michal Hocko wrote:
-
-> > N_HIGH_MEMORY stands for the nodes that has normal or high memory.
-> > N_MEMORY stands for the nodes that has any memory.
+On Mon 29-10-12 13:40:39, David Rientjes wrote:
+> On Mon, 29 Oct 2012, Michal Hocko wrote:
 > 
-> What is the difference of those two?
+> > > N_HIGH_MEMORY stands for the nodes that has normal or high memory.
+> > > N_MEMORY stands for the nodes that has any memory.
+> > 
+> > What is the difference of those two?
+> > 
 > 
+> Patch 5 in the series 
 
-Patch 5 in the series introduces it to be equal to N_HIGH_MEMORY, so 
-accepting this patch would be an implicit ack of the direction taken 
-there.
+Strange, I do not see that one at the mailing list.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> introduces it to be equal to N_HIGH_MEMORY, so 
+
+So this is just a rename? If yes it would be much esier if it was
+mentioned in the patch description.
+
+> accepting this patch would be an implicit ack of the direction taken 
+> there.
+
+-- 
+Michal Hocko
+SUSE Labs
