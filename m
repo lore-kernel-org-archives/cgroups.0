@@ -1,65 +1,40 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/1] freezer: change ptrace_stop/do_signal_stop to
-	use freezable_schedule()
-Date: Sun, 28 Oct 2012 14:45:33 +0100
-Message-ID: <20121028134533.GA30847@redhat.com>
-References: <20121023153919.GA16201@redhat.com>
-	<20121024185710.GA12182@atj.dyndns.org>
-	<20121025163941.GA3801@redhat.com>
-	<20121025163959.GB3801@redhat.com>
-	<20121025171812.GE11442@htj.dyndns.org>
-	<20121025173433.GA7650@redhat.com>
-	<20121025173632.GI11442@htj.dyndns.org>
-	<20121026174545.GA21639@redhat.com>
-	<20121026174606.GB21639@redhat.com>
-	<1351376558.21585.1.camel@deadeye.wl.decadent.org.uk>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v3 1/6] memcg: split mem_cgroup_force_empty into reclaiming
+ and reparenting parts
+Date: Mon, 29 Oct 2012 17:45:16 +0400
+Message-ID: <508E886C.20908@parallels.com>
+References: <1351251453-6140-1-git-send-email-mhocko@suse.cz> <1351251453-6140-2-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1351376558.21585.1.camel-nDn/Rdv9kqW9Jme8/bJn5UCKIB8iOfG2tUK59QYPAWc@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1351251453-6140-2-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
 
-On 10/27, Ben Hutchings wrote:
->
-> On Fri, 2012-10-26 at 19:46 +0200, Oleg Nesterov wrote:
-> > try_to_freeze_tasks() and cgroup_freezer rely on scheduler locks
-> > to ensure that a task doing STOPPED/TRACED -> RUNNING transition
-> > can't escape freezing. This mostly works, but ptrace_stop() does
-> > not necessarily call schedule(), it can change task->state back to
-> > RUNNING and check freezing() without any lock/barrier in between.
-> >
-> > We could add the necessary barrier, but this patch changes
-> > ptrace_stop() and do_signal_stop() to use freezable_schedule().
-> > This fixes the race, freezer_count() and freezer_should_skip()
-> > carefully avoid the race.
-> >
-> > And this simplifies the code, try_to_freeze_tasks/update_if_frozen
-> > no longer need to use task_is_stopped_or_traced() checks with the
-> > non trivial assumptions. We can rely on the mechanism which was
-> > specially designed to mark the sleeping task as "frozen enough".
-> >
-> > v2: As Tejun pointed out, we can also change get_signal_to_deliver()
-> > and move try_to_freeze() up before 'relock' label.
-> >
-> > Signed-off-by: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> [...]
->
-> This is not the correct way to submit a change to stable.  Please see
-> Documentation/stable_kernel_rules.txt
+On 10/26/2012 03:37 PM, Michal Hocko wrote:
+> mem_cgroup_force_empty did two separate things depending on free_all
+> parameter from the very beginning. It either reclaimed as many pages as
+> possible and moved the rest to the parent or just moved charges to the
+> parent. The first variant is used as memory.force_empty callback while
+> the later is used from the mem_cgroup_pre_destroy.
+> 
+> The whole games around gotos are far from being nice and there is no
+> reason to keep those two functions inside one. Let's split them and
+> also move the responsibility for css reference counting to their callers
+> to make to code easier.
+> 
+> This patch doesn't have any functional changes.
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
+> Reviewed-by: Tejun Heo <tj@kernel.org>
 
-Sorry for confusion, it is not for stable@, it was cc'ed by mistake.
+Reviewed-by: Glauber Costa <glommer@parallels.com>
 
-Oleg.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
