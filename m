@@ -1,48 +1,39 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v3 2/6] memcg: root_cgroup cannot reach
- mem_cgroup_move_parent
-Date: Mon, 29 Oct 2012 14:52:03 +0100
-Message-ID: <20121029135203.GA20757@dhcp22.suse.cz>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
- <1351251453-6140-3-git-send-email-mhocko@suse.cz>
- <508E8910.40203@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list error
+ handling
+Date: Mon, 29 Oct 2012 17:58:45 +0400
+Message-ID: <508E8B95.406@parallels.com>
+References: <1351251453-6140-1-git-send-email-mhocko@suse.cz> <1351251453-6140-4-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <508E8910.40203-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1351251453-6140-4-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon 29-10-12 17:48:00, Glauber Costa wrote:
-> On 10/26/2012 03:37 PM, Michal Hocko wrote:
-> > The root cgroup cannot be destroyed so we never hit it down the
-> > mem_cgroup_pre_destroy path and mem_cgroup_force_empty_write shouldn't
-> > even try to do anything if called for the root.
-> > 
-> > This means that mem_cgroup_move_parent doesn't have to bother with the
-> > root cgroup and it can assume it can always move charges upwards.
-> > 
-> > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> > Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> I think it would be safer to have this folded in the last patch, to
-> avoid a weird intermediate state (specially for force_empty).
 
-force_empty excludes root cgroup explicitly so there is no way to fail
-here. I have kept VM_BUG_ON for future reference but it also can go away
-completely.
+> 
+> Changes since v1
+> - use kerndoc
+> - be more specific about mem_cgroup_move_parent possible failures
+> 
+> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reviewed-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-> Being a single statement, it doesn't confuse review so much.
-> 
-> However, this is also pretty much just a nitpick, do as you prefer.
-> 
-> Reviewed-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> 
+> + * move charges to its parent or the root cgroup if the group has no
+> + * parent (aka use_hierarchy==0).
+> + * Although this might fail (get_page_unless_zero, isolate_lru_page or
+> + * mem_cgroup_move_account fails) the failure is always temporary and
+> + * it signals a race with a page removal/uncharge or migration. In the
+> + * first case the page is on the way out and it will vanish from the LRU
+> + * on the next attempt and the call should be retried later.
+> + * Isolation from the LRU fails only if page has been isolated from
+> + * the LRU since we looked at it and that usually means either global
+> + * reclaim or migration going on. The page will either get back to the
+> + * LRU or vanish.
 
--- 
-Michal Hocko
-SUSE Labs
+I just wonder for how long can it go in the worst case?
