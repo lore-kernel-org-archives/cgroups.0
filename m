@@ -1,52 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: memcg/cgroup: do not fail fail on pre_destroy callbacks
-Date: Mon, 29 Oct 2012 16:26:02 -0700
-Message-ID: <20121029232602.GF4066@htj.dyndns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list error
+ handling
+Date: Tue, 30 Oct 2012 11:35:59 +0100
+Message-ID: <20121030103559.GA7394@dhcp22.suse.cz>
 References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
+ <1351251453-6140-4-git-send-email-mhocko@suse.cz>
+ <508E8B95.406@parallels.com>
+ <20121029150022.a595b866.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=FiqSyIXiPwbDGT4wzNBvgujJevB3jr0FmQOcuIcg/Ek=;
-        b=WObyup9uppXz8vNDzxwTgoRB+rKbq72e2eYbF8Zg+7GEK5zCCFxU1QFO9HoVCOQmH7
-         dVuCPnZ+/oYRLwbrrlyadlcsNhN5BL/g8jSbwPaxCsIejwAZHQ4UAo6lWihQDfFZqPHR
-         in/9i8ASKFF7EMq7TCZ86v2cXA0QJoQv4BzVfFX7R5WxFNWTbqaKEXP8fhArVBf1SF8Z
-         5zgVeEaznfNAt4Uey4J0Ump4MJ+fgwq4OtG6ppSqTsd5flp4Jce0+XVVh0+DmUwMFYTB
-         +LFjB2t95beD50OPOxsNe6/Oer++x6K9KwIErfyvcQF83/nv0tMqfo9qFnKdnM6TypNI
-         PyRg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20121029150022.a595b866.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@parallels.com>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Hello, Michal.
+On Mon 29-10-12 15:00:22, Andrew Morton wrote:
+> On Mon, 29 Oct 2012 17:58:45 +0400
+> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> 
+> > > + * move charges to its parent or the root cgroup if the group has no
+> > > + * parent (aka use_hierarchy==0).
+> > > + * Although this might fail (get_page_unless_zero, isolate_lru_page or
+> > > + * mem_cgroup_move_account fails) the failure is always temporary and
+> > > + * it signals a race with a page removal/uncharge or migration. In the
+> > > + * first case the page is on the way out and it will vanish from the LRU
+> > > + * on the next attempt and the call should be retried later.
+> > > + * Isolation from the LRU fails only if page has been isolated from
+> > > + * the LRU since we looked at it and that usually means either global
+> > > + * reclaim or migration going on. The page will either get back to the
+> > > + * LRU or vanish.
+> > 
+> > I just wonder for how long can it go in the worst case?
+> 
+> If the kernel is uniprocessor and the caller is SCHED_FIFO: ad infinitum!
 
-> Tejun is planning to build on top of that and make some more cleanups
-> in the cgroup core (namely get rid of of the whole retry code in
-> cgroup_rmdir).
+You are right, if the rmdir (resp. echo > force_empty) at SCHED_FIFO
+races with put_page (on a shared page) which gets preempted after
+put_page_testzero and before __page_cache_release then we are screwed:
 
-I applied 1-3 to the following branch which is based on top of v3.6.
+						put_page(page)
+						  put_page_testzero
+						  <preempted and page still on LRU>
+mem_cgroup_force_empty_list
+  page = list_entry(list->prev, struct page, lru);
+  mem_cgroup_move_parent(page)
+    get_page_unless_zero <fails>
+  cond_resched() <scheduled again>
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git cgroup-destroy-updates
+The race window is really small but it is definitely possible. I am not
+happy about this state and it should be probably mentioned in the
+patch description but I do not see any way around (except for hacks like
+sched_setscheduler for the current which is, ehm...) and still keep
+do_not_fail contract here.
 
-I'll follow up with updates to the destroy path which will replace #4.
-#5 and #6 should be stackable on top.  So, Andrew, there's likely be a
-conflict in the near future.  Just dropping #4-#6 till Michal and I
-sort it out should be enough.
-
-Thanks.
+Can we consider this as a corner case (it is much easier to kill a
+machine with SCHED_FIFO than this anyway) or the concern is really
+strong and we should come with a solution before this can get merged?
 
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
