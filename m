@@ -1,66 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list error
- handling
-Date: Tue, 30 Oct 2012 11:35:59 +0100
-Message-ID: <20121030103559.GA7394@dhcp22.suse.cz>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
- <1351251453-6140-4-git-send-email-mhocko@suse.cz>
- <508E8B95.406@parallels.com>
- <20121029150022.a595b866.akpm@linux-foundation.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 13/18] memcg/sl[au]b Track all the memcg children of
+ a kmem_cache.
+Date: Tue, 30 Oct 2012 15:31:37 +0400
+Message-ID: <508FBA99.3010009@parallels.com>
+References: <1350656442-1523-1-git-send-email-glommer@parallels.com> <1350656442-1523-14-git-send-email-glommer@parallels.com> <CAAmzW4MGdj-jL_FJ2Nkoa4Hx8KUDCeVK6HFidYQLauu_0vHhCg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121029150022.a595b866.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <CAAmzW4MGdj-jL_FJ2Nkoa4Hx8KUDCeVK6HFidYQLauu_0vHhCg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: JoonSoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-bbCR+/B0CizivPeTLB3BmA@public.gmane.org>
 
-On Mon 29-10-12 15:00:22, Andrew Morton wrote:
-> On Mon, 29 Oct 2012 17:58:45 +0400
-> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+On 10/29/2012 07:26 PM, JoonSoo Kim wrote:
+> 2012/10/19 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>:
+>> +void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
+>> +{
+>> +       struct kmem_cache *c;
+>> +       int i;
+>> +
+>> +       if (!s->memcg_params)
+>> +               return;
+>> +       if (!s->memcg_params->is_root_cache)
+>> +               return;
+>> +
+>> +       /*
+>> +        * If the cache is being destroyed, we trust that there is no one else
+>> +        * requesting objects from it. Even if there are, the sanity checks in
+>> +        * kmem_cache_destroy should caught this ill-case.
+>> +        *
+>> +        * Still, we don't want anyone else freeing memcg_caches under our
+>> +        * noses, which can happen if a new memcg comes to life. As usual,
+>> +        * we'll take the set_limit_mutex to protect ourselves against this.
+>> +        */
+>> +       mutex_lock(&set_limit_mutex);
+>> +       for (i = 0; i < memcg_limited_groups_array_size; i++) {
+>> +               c = s->memcg_params->memcg_caches[i];
+>> +               if (c)
+>> +                       kmem_cache_destroy(c);
+>> +       }
+>> +       mutex_unlock(&set_limit_mutex);
+>> +}
 > 
-> > > + * move charges to its parent or the root cgroup if the group has no
-> > > + * parent (aka use_hierarchy==0).
-> > > + * Although this might fail (get_page_unless_zero, isolate_lru_page or
-> > > + * mem_cgroup_move_account fails) the failure is always temporary and
-> > > + * it signals a race with a page removal/uncharge or migration. In the
-> > > + * first case the page is on the way out and it will vanish from the LRU
-> > > + * on the next attempt and the call should be retried later.
-> > > + * Isolation from the LRU fails only if page has been isolated from
-> > > + * the LRU since we looked at it and that usually means either global
-> > > + * reclaim or migration going on. The page will either get back to the
-> > > + * LRU or vanish.
-> > 
-> > I just wonder for how long can it go in the worst case?
+> It may cause NULL deref.
+> Look at the following scenario.
 > 
-> If the kernel is uniprocessor and the caller is SCHED_FIFO: ad infinitum!
+> 1. some memcg slab caches has remained object.
+> 2. start to destroy memcg.
+> 3. schedule_delayed_work(kmem_cache_destroy_work_func, @delay 60hz)
+> 4. all remained object is freed.
+> 5. start to destroy root cache.
+> 6. kmem_cache_destroy makes 's->memcg_params->memcg_caches[i]" NULL!!
+> 7. Start delayed work function.
+> 8. cachep in kmem_cache_destroy_work_func() may be NULL
+> 
+> Thanks.
+> 
+Thanks for spotting. This is the same problem we have in
+memcg_cache_destroy(),
+which I solved by not respawning the worker.
 
-You are right, if the rmdir (resp. echo > force_empty) at SCHED_FIFO
-races with put_page (on a shared page) which gets preempted after
-put_page_testzero and before __page_cache_release then we are screwed:
+In here, I believe it should be possible to just cancel all remaining
+pending work, since we are now in the process of deleting the caches
+ourselves.
 
-						put_page(page)
-						  put_page_testzero
-						  <preempted and page still on LRU>
-mem_cgroup_force_empty_list
-  page = list_entry(list->prev, struct page, lru);
-  mem_cgroup_move_parent(page)
-    get_page_unless_zero <fails>
-  cond_resched() <scheduled again>
 
-The race window is really small but it is definitely possible. I am not
-happy about this state and it should be probably mentioned in the
-patch description but I do not see any way around (except for hacks like
-sched_setscheduler for the current which is, ehm...) and still keep
-do_not_fail contract here.
-
-Can we consider this as a corner case (it is much easier to kill a
-machine with SCHED_FIFO than this anyway) or the concern is really
-strong and we should come with a solution before this can get merged?
-
--- 
-Michal Hocko
-SUSE Labs
