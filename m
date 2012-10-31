@@ -1,57 +1,34 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/8] cgroup: deactivate CSS's and mark cgroup dead before
-	invoking ->pre_destroy()
-Date: Wed, 31 Oct 2012 14:27:25 -0700
-Message-ID: <20121031212725.GA2945@htj.dyndns.org>
-References: <1351712650-23709-1-git-send-email-tj@kernel.org>
-	<1351712650-23709-5-git-send-email-tj@kernel.org>
-	<20121031212359.GC5286@dhcp22.suse.cz>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list
+ error handling
+Date: Wed, 31 Oct 2012 14:30:47 -0700
+Message-ID: <20121031143047.95587bff.akpm@linux-foundation.org>
+References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
+	<1351251453-6140-4-git-send-email-mhocko@suse.cz>
+	<508E8B95.406@parallels.com>
+	<20121029150022.a595b866.akpm@linux-foundation.org>
+	<20121030103559.GA7394@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=Dg7P0Vf3Cw94nj+j0Uyq4Vt4aSfK1R/JcL3rvhxg8U0=;
-	b=zYpZQk/N515qb+BIviCcoHKYK6sy+P7Wpg/7uI6HxZb3S9qps7Zv4ovaWMII7wr0gr
-	ubocsd9zQwTg67fh6U/DGgCsBoy/YT7beX8X7vU0WGW15u8wjeDRgnzTsWz4plpNXMCE
-	2uWgiSiYnt7gbn6vil8ZIDFTxjIR2uSHrDSNrLgFrzkv86D7pHyOPdcH29bGEtXYUfmf
-	ZE6uLrGL5StQRDMBzdyU+cz5aucYudqOGjQ8LYn5SInUJDhZ+Yk/ZEuc42V+xojG91vG
-	Af4HCb7xUfJq7mkgsTQ63KfhAYrvPOouAReSe48np/4o5Qsu9rPOUsxEXGgO/eKkqkdB
-	kTrw==
-Content-Disposition: inline
-In-Reply-To: <20121031212359.GC5286-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121030103559.GA7394-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Hey, Michal.
+On Tue, 30 Oct 2012 11:35:59 +0100
+Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
 
-On Wed, Oct 31, 2012 at 10:23:59PM +0100, Michal Hocko wrote:
-> > +	for_each_subsys(cgrp->root, ss)
-> > +		if (ss->pre_destroy)
-> > +			WARN_ON_ONCE(ss->pre_destroy(cgrp));
-> 
-> Do you think that BUG_ON would be too harsh?
+> > If the kernel is uniprocessor and the caller is SCHED_FIFO: ad infinitum!
+>
+> ...
+>
+> Can we consider this as a corner case (it is much easier to kill a
+> machine with SCHED_FIFO than this anyway) or the concern is really
+> strong and we should come with a solution before this can get merged?
 
-Yeah, I do think so.  In general, I think the consensus now is to
-prefer WARN_ON[_ONCE]() over BUG_ON() whenever possible.  It's not
-like we can get more information from BUG_ON()s (more likely to get
-less reporting actually by taking down the machine).  Limping machines
-are better than dead ones and there just isn't much to gain here by
-killing it.
-
-Thanks.
-
--- 
-tejun
+Sure.  SCHED_FIFO can be used to permanently block all kernel threads
+which pretty quickly results in a very sick kernel.  My observation was
+just a general moan about the SCHED_FIFO wontfix problem :)
