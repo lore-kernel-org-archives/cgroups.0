@@ -1,27 +1,27 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/8] cgroup: kill CSS_REMOVED
-Date: Wed, 31 Oct 2012 10:10:44 -0700
-Message-ID: <CAOS58YP=CjTPFdETLRXnc3gXEzX2=EEe2dMdSh3Eov7zRfV4Qg@mail.gmail.com>
+Subject: Re: [PATCH 5/8] cgroup: remove CGRP_WAIT_ON_RMDIR,
+	cgroup_exclude_rmdir() and cgroup_release_and_wakeup_rmdir()
+Date: Wed, 31 Oct 2012 10:16:44 -0700
+Message-ID: <20121031171644.GG2945@htj.dyndns.org>
 References: <1351657365-25055-1-git-send-email-tj@kernel.org>
-	<1351657365-25055-3-git-send-email-tj@kernel.org>
-	<20121031153926.GC22809@dhcp22.suse.cz>
-	<20121031165739.GE2945@htj.dyndns.org>
-	<50915A87.4070504@parallels.com>
+	<1351657365-25055-6-git-send-email-tj@kernel.org>
+	<20121031162735.GF22809@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:sender:in-reply-to:references:date
-	:x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-	bh=xwMS956PA6TGnBhny07YvxqJVsV1/V+xycIdJVmtQIQ=;
-	b=lFGj7fr2lg8XZoRrjqBL1gF4RCKSaSFygs98hsVOqx4VUMtq5wZaEfhRv3lEaUe6rs
-	xOKtbQOdfJf93Q1dLN1iz/wgKyPJwD10uUQMy6QONpLPtisWzdVxKG58csoCpt3NXxX+
-	zjxYV/01xVVXYkGDQhw/O/Po7RtKDvusT8w9dqb8rPIAxXTcFTf7w6H8+Ghe+fKZ81jC
-	gObNHl/5tHFjNuh+TKCshTjGO/uc6X8KNSMK12tLZC6ZtyOH8R1Ogs0VWneTJ9r3tnad
-	RZCDHsdRZX1eqBgMzJYwzaYg8Axg1hSM7FRQq2VV/LbDIDaZWwfZ9fQEYCXKZwIjLxJd
-	mczA==
-In-Reply-To: <50915A87.4070504-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=M6A/xyXRvYsRVwcKonRob0lztJ8v3xMve0KXYoCnzsM=;
+	b=AYyW0PfaOCvdgqkOxzQ9gJp3vwjhJUNptGM72w5vRFDQH1o/1vgLJdHEw4PhfHc2PT
+	rGiHiD68wibWnFlYsxv/aN6dETnWEDuWpOjENqqpmQQwwaCwXNX47EVTihZkpUnRpuZz
+	a+czwwm1XiuF1Ti+ln7XovNMfhEkKlQgnmsFyS7TcuDfWLeP/t6AoaZ4+ZtuBda6qbsj
+	M/8beFfOskU/STszJaH/+PgEVDpFSycPyme1gSLSahB0wY6m9iRK1b8gUOM7ynr5d10y
+	erWC0otvYZwps7EBaxdUHLRRBndmH4/q1L2I7tWtNUxw2V108hufKNdm+r4KIwMNOP4N
+	ehRA==
+Content-Disposition: inline
+In-Reply-To: <20121031162735.GF22809-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -32,28 +32,21 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hello, Glauber.
+On Wed, Oct 31, 2012 at 05:27:35PM +0100, Michal Hocko wrote:
+> > ---
+> >  include/linux/cgroup.h | 21 ---------------------
+> >  kernel/cgroup.c        | 51 --------------------------------------------------
+> >  mm/memcontrol.c        | 24 +-----------------------
+> >  3 files changed, 1 insertion(+), 95 deletions(-)
+> 
+> /me likes this
 
-On Wed, Oct 31, 2012 at 10:06 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> This is not the topic of this thread, but since you brought it:
-> If you take a look at the description patch in the patch I sent, the
-> problem I outlined is that at create time, we don't know anything about
-> which will the css_id be - and I would like to avoid creating yet
-> another index.
->
-> Is there any way you would suggest of handling this ? Any chance of us
-> allocating the css_id earlier then?
-
-I only glanced the patch description but the problem I'm trying to
-solve is locking - currently we don't have a place where a controller
-can tell a cgroup is becoming online; thus it has nothing to
-synchronized against and tell that a cgroup is alive or not.  As for
-css_id allocation, maybe you can deal with that in ->post_create() or
-maybe we can allocate css_id earlier (but where would it be stored?).
-I'll look into it.
+Amen, Michal.  The amount of code deleted isn't much but it was one
+ugly thing.  The comment in memcg around the use of exclude_rmdir was
+very depressing.
 
 Thanks.
 
