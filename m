@@ -1,67 +1,81 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 2/8] cgroup: kill CSS_REMOVED
-Date: Wed, 31 Oct 2012 21:19:51 +0400
-Message-ID: <50915DB7.5020706@parallels.com>
-References: <1351657365-25055-1-git-send-email-tj@kernel.org>
-	<1351657365-25055-3-git-send-email-tj@kernel.org>
-	<20121031153926.GC22809@dhcp22.suse.cz>
-	<20121031165739.GE2945@htj.dyndns.org>
-	<50915A87.4070504@parallels.com>
-	<CAOS58YP=CjTPFdETLRXnc3gXEzX2=EEe2dMdSh3Eov7zRfV4Qg@mail.gmail.com>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [PATCH] device_cgroup: fix unchecked cgroup parent usage
+Date: Wed, 31 Oct 2012 18:21:01 +0100
+Message-ID: <20121031172101.GC20848@serge-ThinkPad-X130e>
+References: <20121031160430.GD14789@redhat.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121031160430.GD14789-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <CAOS58YP=CjTPFdETLRXnc3gXEzX2=EEe2dMdSh3Eov7zRfV4Qg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 10/31/2012 09:10 PM, Tejun Heo wrote:
-> Hello, Glauber.
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> In 4cef7299b4786879a3e113e84084a72b24590c5b the cgroup parent usage is
+> unchecked. root will not have a parent and trying to use
+> device.{allow,deny} will cause problems. For some reason my stressing
+> scripts didn't test the root directory so I didn't catch it on my
+> regular tests.
 > 
-> On Wed, Oct 31, 2012 at 10:06 AM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
->> This is not the topic of this thread, but since you brought it:
->> If you take a look at the description patch in the patch I sent, the
->> problem I outlined is that at create time, we don't know anything about
->> which will the css_id be - and I would like to avoid creating yet
->> another index.
->>
->> Is there any way you would suggest of handling this ? Any chance of us
->> allocating the css_id earlier then?
+> Andrew, Tejun, this patch needs to make Linus tree ASAP or a revert for
+> 4cef7299b4786879a3e113e84084a72b24590c5b.
 > 
-> I only glanced the patch description but the problem I'm trying to
-> solve is locking - currently we don't have a place where a controller
-> can tell a cgroup is becoming online; thus it has nothing to
-> synchronized against and tell that a cgroup is alive or not.  As for
-> css_id allocation, maybe you can deal with that in ->post_create() or
-> maybe we can allocate css_id earlier (but where would it be stored?).
-> I'll look into it.
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>
+> Cc: Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+
+> Cc: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
-
-The css_id is allocated right after ->create(). So if post_create() is
-called after that, I can use it just fine - which is what I do in my
-patch. Problem is, since I do memory allocation based on that, it can fail.
-
-So although I would have to look at your series myself to see exactly
-what you are trying to achieve (looking forward), I seemed natural to me
-to think about it terms of "early_create" + "late_create" (->create())
-and ->post_create()), where the later is a callback when things are
-readier (in this case, the css_id).
-
-I don't see post_create failing as a huge problem. The natural
-synchronization point would be "right after post_create" - then you can
-definitely tell that it is online. Although this can be viewed a bit as
-"exposing internals", creating is different then destroying: When you
-create, you may not have all data yet. When destroying, you do - and
-want to get rid of it. So this kind of bootstrapping is pretty standard
-and common.
+> --- github.orig/security/device_cgroup.c	2012-10-26 17:18:01.739366780 -0400
+> +++ github/security/device_cgroup.c	2012-10-29 10:03:33.221918003 -0400
+> @@ -352,6 +352,8 @@
+>   */
+>  static inline int may_allow_all(struct dev_cgroup *parent)
+>  {
+> +	if (!parent)
+> +		return 1;
+>  	return parent->behavior == DEVCG_DEFAULT_ALLOW;
+>  }
+>  
+> @@ -376,11 +378,14 @@
+>  	int count, rc;
+>  	struct dev_exception_item ex;
+>  	struct cgroup *p = devcgroup->css.cgroup;
+> -	struct dev_cgroup *parent = cgroup_to_devcgroup(p->parent);
+> +	struct dev_cgroup *parent = NULL;
+>  
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EPERM;
+>  
+> +	if (p->parent)
+> +		parent = cgroup_to_devcgroup(p->parent);
+> +
+>  	memset(&ex, 0, sizeof(ex));
+>  	b = buffer;
+>  
+> @@ -391,11 +396,14 @@
+>  			if (!may_allow_all(parent))
+>  				return -EPERM;
+>  			dev_exception_clean(devcgroup);
+> +			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+> +			if (!parent)
+> +				break;
+> +
+>  			rc = dev_exceptions_copy(&devcgroup->exceptions,
+>  						 &parent->exceptions);
+>  			if (rc)
+>  				return rc;
+> -			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+>  			break;
+>  		case DEVCG_DENY:
+>  			dev_exception_clean(devcgroup);
