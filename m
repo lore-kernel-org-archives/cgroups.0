@@ -1,43 +1,99 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: memcg/cgroup: do not fail fail on pre_destroy callbacks
-Date: Wed, 31 Oct 2012 00:37:36 +0100
-Message-ID: <20121030233356.GA19496@dhcp22.suse.cz>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
- <20121029232602.GF4066@htj.dyndns.org>
-Mime-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] cgroup: simplify cgroup removal path
+Date: Tue, 30 Oct 2012 21:22:37 -0700
+Message-ID: <1351657365-25055-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121029232602.GF4066-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=vekFumjNhG7DWnauEeS0WSJFrZTHx9pxgJj0sRceBlU=;
+        b=lRgX8GMhKfOMDRXUpEGGYWvebmo8cZr73icdWhzV+JIh12RstlZJuLujtjdj9Qc7r2
+         TwpmRCH0U2C3BpikNMnDg+rZyfwJeOPWlx4W8M1wYMjsu+rAU0JEn1Yg7CwnXBZIaqcs
+         MYooFgKNKixfEYpLtYUkwq7aAoMlatt1/Ak6tmvmFOu+gdkrlelWL8xhL25Ld8GNYDxW
+         /Ko3DshTRE3bEFtUd4ntDidAe2M9I7vuKEBRMV+w6CndnwEbbfhYqq3MKFZVBcepq8Xq
+         DQknMF3QtYMqkEVepmKLuS42KPmqY0bp019SFI09eW/2wi24ae08d59FeH0r98xoqn4y
+         TgVQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 29-10-12 16:26:02, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> > Tejun is planning to build on top of that and make some more cleanups
-> > in the cgroup core (namely get rid of of the whole retry code in
-> > cgroup_rmdir).
-> 
-> I applied 1-3 to the following branch which is based on top of v3.6.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git cgroup-destroy-updates
+Hello, guys.
 
-Ok, Andrew droped all the patches from his tree and I set up this
-branch for automerging to -mm git tree.
+cgroup removal path is quite ugly.  A lot of the ugliness comes from
+the weird design which allows ->pre_destroy() to fail and the feature
+to drain existing CSS reference counts before committing to removal.
+Both mean that it should be possible to roll-back cgroup destruction
+after some or all ->pre_destroy() invocations.
 
-> I'll follow up with updates to the destroy path which will replace #4.
-> #5 and #6 should be stackable on top.
+This weird design has never really worked.  To list a couple examples.
 
-Could you take care of them and apply those two on top of the first one
-which guarantees that css_tryget fails and no new task can appear in the
-group (aka #4 without follow up cleanups)? So that Andrew doesn't have
-to care about them later.
+ * Some ->pre_destroy() implementations aren't side-effect free.
+   Roll-back happens after a lot of state is already lost.
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+ * Some ->pre_destroy() implementations (naturally) assume that the
+   cgroup being destroyed would stay quiescent between successful
+   ->pre_destroy() and its destruction.  Unfortunately, any operation
+   can happen inbetween and the cgroup could be in a very different
+   state by the time it actually gets destroyed.
+
+It's just such an unusual design which unnecessarily contains weird
+code path combinations which are tricky to hit, reproduce and expect.
+Moreover, the design's deficiencies attracts kludges on top as
+workarounds and we end up with stuff like cgroup_exclude_rmdir() and
+cgroup_release_and_wakeup_rmdir() which really make me want to cry.
+
+Now that memcg has moved away from failable ->pre_destroy(), we can do
+away with all these.  I tested some basic operations and some corner
+cases but am still a bit scared.  Would love to get acks from Li and
+memcg people.
+
+This patchset contains the following eight patches.
+
+ 0001-cgroup-kill-cgroup_subsys-__DEPRECATED_clear_css_ref.patch
+ 0002-cgroup-kill-CSS_REMOVED.patch
+ 0003-cgroup-use-cgroup_lock_live_group-parent-in-cgroup_c.patch
+ 0004-cgroup-deactivate-CSS-s-and-mark-cgroup-dead-before-.patch
+ 0005-cgroup-remove-CGRP_WAIT_ON_RMDIR-cgroup_exclude_rmdi.patch
+ 0006-memcg-make-mem_cgroup_reparent_charges-non-failing.patch
+ 0007-hugetlb-do-not-fail-in-hugetlb_cgroup_pre_destroy.patch
+ 0008-cgroup-make-pre_destroy-return-void.patch
+
+0001-0002 remove now unused ->pre_destroy() failure handling and do
+follow-up simplification.
+
+0003-0004 update removal path such that each ->pre_destroy() is
+guaranteed to be invoked once per removal and the cgroup being
+destroyed stays quiescent until destruction is complete.
+
+0005 removes the scary CGRP_WAIT_ON_RMDIR mechanism.
+
+0006-0008 are follow-up clean-ups.  0006 and 0007 are from Michal's
+patchset[1].
+
+This patchset is on top of
+
+  v3.6 (a0d271cbfe)
++ [1] the first three patches of
+      "memcg/cgroup: do not fail fail on pre_destroy callbacks" patchset
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-rmdir-updates
+
+Thanks.
+
+ block/blk-cgroup.c     |    3 
+ include/linux/cgroup.h |   41 -------
+ kernel/cgroup.c        |  256 +++++++++++--------------------------------------
+ mm/hugetlb_cgroup.c    |   11 --
+ mm/memcontrol.c        |   51 +--------
+ 5 files changed, 75 insertions(+), 287 deletions(-)
+
+--
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.kernel.cgroups/4757
