@@ -1,34 +1,45 @@
 From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list
- error handling
-Date: Wed, 31 Oct 2012 14:30:47 -0700
-Message-ID: <20121031143047.95587bff.akpm@linux-foundation.org>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
-	<1351251453-6140-4-git-send-email-mhocko@suse.cz>
-	<508E8B95.406@parallels.com>
-	<20121029150022.a595b866.akpm@linux-foundation.org>
-	<20121030103559.GA7394@dhcp22.suse.cz>
+Subject: Re: [PATCH] device_cgroup: fix unchecked cgroup parent usage
+Date: Wed, 31 Oct 2012 16:35:01 -0700
+Message-ID: <20121031163501.79a0950e.akpm@linux-foundation.org>
+References: <20121031160430.GD14789@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121030103559.GA7394-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20121031160430.GD14789-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 30 Oct 2012 11:35:59 +0100
-Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+On Wed, 31 Oct 2012 12:04:30 -0400
+Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
 
-> > If the kernel is uniprocessor and the caller is SCHED_FIFO: ad infinitum!
->
-> ...
->
-> Can we consider this as a corner case (it is much easier to kill a
-> machine with SCHED_FIFO than this anyway) or the concern is really
-> strong and we should come with a solution before this can get merged?
+> In 4cef7299b4786879a3e113e84084a72b24590c5b the cgroup parent usage is
+> unchecked. root will not have a parent and trying to use
+> device.{allow,deny} will cause problems.
 
-Sure.  SCHED_FIFO can be used to permanently block all kernel threads
-which pretty quickly results in a very sick kernel.  My observation was
-just a general moan about the SCHED_FIFO wontfix problem :)
+From my reading of the code "problems" means "kernel null pointer
+dereference".
+
+> For some reason my stressing
+> scripts didn't test the root directory so I didn't catch it on my
+> regular tests.
+> 
+> --- github.orig/security/device_cgroup.c	2012-10-26 17:18:01.739366780 -0400
+> +++ github/security/device_cgroup.c	2012-10-29 10:03:33.221918003 -0400
+> @@ -352,6 +352,8 @@
+>   */
+>  static inline int may_allow_all(struct dev_cgroup *parent)
+
+offtopic: this function could quite neatly have a bool return type.
+
+>  {
+> +	if (!parent)
+> +		return 1;
+
+hm.  Does it need a comment explaining what and why?  I guess not...  just.
+
+>  	return parent->behavior == DEVCG_DEFAULT_ALLOW;
+>  }
