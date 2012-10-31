@@ -1,179 +1,62 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 1/2] generalize post_clone into post_create
-Date: Wed, 31 Oct 2012 16:29:13 +0400
-Message-ID: <1351686554-22592-2-git-send-email-glommer@parallels.com>
-References: <1351686554-22592-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1351686554-22592-1-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [V5 PATCH 08/26] memcontrol: use N_MEMORY instead N_HIGH_MEMORY
+Date: Wed, 31 Oct 2012 14:18:10 +0100
+Message-ID: <20121031131810.GA27381@dhcp22.suse.cz>
+References: <5090CD48.30604@cn.fujitsu.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <5090CD48.30604-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+ <1351524078-20363-7-git-send-email-laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Peter Zijlstra <a.p.zijlstra@chello.nl>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizefan@huawei.com>
+To: Lai Jiangshan <laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jiang Liu <jiang.liu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Yasuaki ISIMATU <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-When we call create_cgroup(), the css_ids are not yet initialized. The
-only creation-time hook that is called with everything already setup is
-post_clone().
+On Wed 31-10-12 15:03:36, Wen Congyang wrote:
+> At 10/30/2012 04:46 AM, David Rientjes Wrote:
+> > On Mon, 29 Oct 2012, Lai Jiangshan wrote:
+[...]
+> >> In one word, we need a N_MEMORY. We just intrude it as an alias to
+> >> N_HIGH_MEMORY and fix all im-proper usages of N_HIGH_MEMORY in late patches.
+> >>
+> > 
+> > If this is really that problematic (and it appears it's not given that 
+> > there are many use cases of it and people tend to get it right), then why 
+> > not simply rename N_HIGH_MEMORY instead of introducing yet another 
+> > nodemask to the equation?
+> 
+> The reason is that we need a node which only contains movable memory. This
+> feature is very important for node hotplug. So we will add a new nodemask
+> for movable memory. N_MEMORY contains movable memory but N_HIGH_MEMORY
+> doesn't contain it.
 
-However, post_clone is too fragile, in the sense that whether or not it
-will be called depends on flag that can be switched on or off at
-userspace will. So if any cgroup wants to do any mandatory
-initialization, this won't hold.
+OK, so the N_MOVABLE_MEMORY (or how you will call it) requires that all
+the allocations will be migrateable?
+How do you want to achieve that with the page_cgroup descriptors? (see
+bellow)
 
-The proposal of this patch is to generalize this into "post_create()",
-which will always be called after create. The subsystem may then check
-for the clone_children flag itself, and act accordingly. The cpuset
-controller is currently the only in-tree user, and is converted.
+On Mon 29-10-12 23:20:58, Lai Jiangshan wrote:
+[...]
+> diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+> index 5ddad0c..c1054ad 100644
+> --- a/mm/page_cgroup.c
+> +++ b/mm/page_cgroup.c
+> @@ -271,7 +271,7 @@ void __init page_cgroup_init(void)
+>  	if (mem_cgroup_disabled())
+>  		return;
+>  
+> -	for_each_node_state(nid, N_HIGH_MEMORY) {
+> +	for_each_node_state(nid, N_MEMORY) {
+>  		unsigned long start_pfn, end_pfn;
+>  
+>  		start_pfn = node_start_pfn(nid);
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Tejun Heo <tj@kernel.org>
-CC: Michal Hocko <mhocko@suse.cz>
-CC: Li Zefan <lizefan@huawei.com>
----
- Documentation/cgroups/cgroups.txt | 13 +++++++------
- include/linux/cgroup.h            |  7 ++++++-
- kernel/cgroup.c                   |  9 ++-------
- kernel/cpuset.c                   | 15 +++++++++------
- 4 files changed, 24 insertions(+), 20 deletions(-)
-
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index 4a0b64c..5bc08f1 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -298,11 +298,12 @@ a cgroup hierarchy's release_agent path is empty.
- 1.5 What does clone_children do ?
- ---------------------------------
- 
--If the clone_children flag is enabled (1) in a cgroup, then all
--cgroups created beneath will call the post_clone callbacks for each
--subsystem of the newly created cgroup. Usually when this callback is
--implemented for a subsystem, it copies the values of the parent
--subsystem, this is the case for the cpuset.
-+If the clone_children flag is enabled (1) in a cgroup, the group may perform
-+specific initialization on its attributes based on the values in the parent,
-+for each subsystem of the newly created cgroup that implements the
-+post_create() callback. Usually when this callback is implemented for a
-+subsystem, it copies the values of the parent subsystem, this is the case for
-+the cpuset.
- 
- 1.6 How do I use cgroups ?
- --------------------------
-@@ -634,7 +635,7 @@ void exit(struct task_struct *task)
- 
- Called during task exit.
- 
--void post_clone(struct cgroup *cgrp)
-+void post_create(struct cgroup *cgrp)
- (cgroup_mutex held by caller)
- 
- Called during cgroup_create() to do any parameter
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 68e8df7..7f422ba 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -218,6 +218,11 @@ struct cgroup {
- 	spinlock_t event_list_lock;
- };
- 
-+static inline bool clone_children(const struct cgroup *cgrp)
-+{
-+	return test_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
-+}
-+
- /*
-  * A css_set is a structure holding pointers to a set of
-  * cgroup_subsys_state objects. This saves space in the task struct
-@@ -472,7 +477,7 @@ struct cgroup_subsys {
- 	void (*fork)(struct task_struct *task);
- 	void (*exit)(struct cgroup *cgrp, struct cgroup *old_cgrp,
- 		     struct task_struct *task);
--	void (*post_clone)(struct cgroup *cgrp);
-+	void (*post_create)(struct cgroup *cgrp);
- 	void (*bind)(struct cgroup *root);
- 
- 	int subsys_id;
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b7d9606..40caab1 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -292,11 +292,6 @@ static int notify_on_release(const struct cgroup *cgrp)
- 	return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
- }
- 
--static int clone_children(const struct cgroup *cgrp)
--{
--	return test_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
--}
--
- /*
-  * for_each_subsys() allows you to iterate on each subsystem attached to
-  * an active hierarchy
-@@ -3968,8 +3963,8 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 				goto err_destroy;
- 		}
- 		/* At error, ->destroy() callback has to free assigned ID. */
--		if (clone_children(parent) && ss->post_clone)
--			ss->post_clone(cgrp);
-+		if (ss->post_create)
-+			ss->post_create(cgrp);
- 
- 		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
- 		    parent->parent) {
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index f33c715..ca97af8 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1784,9 +1784,9 @@ static struct cftype files[] = {
- };
- 
- /*
-- * post_clone() is called during cgroup_create() when the
-- * clone_children mount argument was specified.  The cgroup
-- * can not yet have any tasks.
-+ * post_create() is called during cgroup_create() if create succeeds. The
-+ * cgroup can not yet have any tasks. In here, we will take action based
-+ * on the value of the clone_children flag.
-  *
-  * Currently we refuse to set up the cgroup - thereby
-  * refusing the task to be entered, and as a result refusing
-@@ -1794,16 +1794,19 @@ static struct cftype files[] = {
-  * sibling cpusets have exclusive cpus or mem.
-  *
-  * If this becomes a problem for some users who wish to
-- * allow that scenario, then cpuset_post_clone() could be
-+ * allow that scenario, then cpuset_post_create() could be
-  * changed to grant parent->cpus_allowed-sibling_cpus_exclusive
-  * (and likewise for mems) to the new cgroup. Called with cgroup_mutex
-  * held.
-  */
--static void cpuset_post_clone(struct cgroup *cgroup)
-+static void cpuset_post_create(struct cgroup *cgroup)
- {
- 	struct cgroup *parent, *child;
- 	struct cpuset *cs, *parent_cs;
- 
-+	if (!clone_children(cgroup))
-+		return;
-+
- 	parent = cgroup->parent;
- 	list_for_each_entry(child, &parent->children, sibling) {
- 		cs = cgroup_cs(child);
-@@ -1882,7 +1885,7 @@ struct cgroup_subsys cpuset_subsys = {
- 	.destroy = cpuset_destroy,
- 	.can_attach = cpuset_can_attach,
- 	.attach = cpuset_attach,
--	.post_clone = cpuset_post_clone,
-+	.post_create = cpuset_post_create,
- 	.subsys_id = cpuset_subsys_id,
- 	.base_cftypes = files,
- 	.early_init = 1,
+This will call init_section_page_cgroup(pfn, nid) later which allocates
+page_cgroup descriptors which are not movable. Or is there any code in
+your patchset that handles this?
 -- 
-1.7.11.7
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
