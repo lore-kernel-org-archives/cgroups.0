@@ -1,103 +1,58 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/8] cgroup: kill CSS_REMOVED
-Date: Wed, 31 Oct 2012 09:57:39 -0700
-Message-ID: <20121031165739.GE2945@htj.dyndns.org>
+Subject: Re: [PATCH 3/8] cgroup: use cgroup_lock_live_group(parent) in
+ cgroup_create()
+Date: Wed, 31 Oct 2012 10:04:31 -0700
+Message-ID: <20121031170431.GF2945@htj.dyndns.org>
 References: <1351657365-25055-1-git-send-email-tj@kernel.org>
-	<1351657365-25055-3-git-send-email-tj@kernel.org>
-	<20121031153926.GC22809@dhcp22.suse.cz>
+ <1351657365-25055-4-git-send-email-tj@kernel.org>
+ <20121031155514.GD22809@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=a0TZ+3vmb96pP+6ucrqVzmhcRGUIRvc94rgssRz0qcI=;
+        b=bCaqTbKNsNOoLMAUadUnoi7br3whdj9SM1zM/+xpl1C58LZSKFPKWEYfJq43mh3nGx
+         ekQsWeXz98FbRme+uf3uDuO6H/1WHlNwNsU3jQ0wSDDEaeblSSCeimqsOv+3YMojFmeJ
+         OcMLAzTTjtpV7j60wtta1M3NzNXE/lPYE+PkbpndGhutI2KUWjJNFbA8c8b6l7W+KPbp
+         m87pARXeXPf+jyb6xjwgxT0EPTntg4oa6d5B4dSEWoLR758RZqkiO70LS+tYoahitIh8
+         ivH09MPfcVcOx67LjdBxXKAMUZH5P5Yw3oDrCk6xv4yEFoDDVfI9rIEdmD81d7KHYwWE
+         YFHg==
+Content-Disposition: inline
+In-Reply-To: <20121031155514.GD22809-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=0H2LQYmG5CesU3No8LA0i2ARIdeQSOaluUVNRyDB9fU=;
-	b=ljbepB0wyOgkaE8qPsBO5ZBjUP91/VN4+OtXxk690kd6M8aa4RAkauxHvvqMQAowmn
-	IJwnmRF6b5HoStN/HqxyWkJjH8xp33OoHD4YidbTqpY9j1aUzJ0RuavWypXSLAsqRBMJ
-	WMRnfIqM2NLOqubKiQNRGs9kqIKVieQfj4Ja9gJzWmQVB6GN6r1ahu8G0FI/SJ61boZY
-	Vrj+1azez599tDQ/E7imM7PPUtIKfIOC5+d4PvjurY4xm0Q4BBN8rEQazeecTaBVnmIB
-	2NQ5bBXD8BKop0/PozDlrUQ7kfVWpS5+lpiF+vk1+LuEp4ADDD/IL0vZGCwRHSEJWhMb
-	a07g==
-Content-Disposition: inline
-In-Reply-To: <20121031153926.GC22809-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hey, Michal.
 
-On Wed, Oct 31, 2012 at 04:39:26PM +0100, Michal Hocko wrote:
-> >  	prepare_to_wait(&cgroup_rmdir_waitq, &wait, TASK_INTERRUPTIBLE);
-> >  
-> > -	local_irq_disable();
-> > -
+On Wed, Oct 31, 2012 at 04:55:14PM +0100, Michal Hocko wrote:
+> > +	/*
+> > +	 * Only live parents can have children.  Note that the liveliness
+> > +	 * check isn't strictly necessary because cgroup_mkdir() and
+> > +	 * cgroup_rmdir() are fully synchronized by i_mutex; however, do it
+> > +	 * anyway so that locking is contained inside cgroup proper and we
+> > +	 * don't get nasty surprises if we ever grow another caller.
+> > +	 */
+> > +	if (!cgroup_lock_live_group(parent)) {
+> > +		err = -ENODEV;
+> > +		goto err_free;
+> > +	}
+> > +
 > 
-> OK, so the new charges shouldn't come from the IRQ context so we cannot
-> race with css_tryget but why did we need this in the first place?
-> A separate patch which removes this with an explanation would be nice.
+> I think this should be moved up before we try to allocate any memory.
+> Or is your motivation to keep cgroup_lock held for shorter time?
+> I could agree with that but a small comment would be helpful.
 
-The change is actually tied to this one.  Because css_tryget() busy
-loops on DEACT_BIAS && !CSS_REMOVED and css_tryget() may happen from
-an IRQ context, we need to disable IRQ while deactivating refcnts and
-setting CSS_REMOVED.  I'll mention it in the commit message.
+Then I have to change the error out path more and I'm not sure I wanna
+call deactivate_super() under cgroup_mutex.  It's just simpler this
+way.
 
-> > @@ -2343,7 +2343,6 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
-> >  again:
-> >  	if (*ptr) { /* css should be a valid one */
-> >  		memcg = *ptr;
-> > -		VM_BUG_ON(css_is_removed(&memcg->css));
-> 
-> All the callers seem to be fine but this was a safety net that something
-> didn't leak out. Can we keep it and test that the reference counter has
-> been disabled already (css_refcnt(&memcg->css) < 0 - I do not care
-> whether open coded or wrapped innsude css_is_removed albeit helper
-> sounds nicer)?
-
-I don't think that's a good idea.  In general, I think too much of
-cgroup internals are exposed to controllers.  People try to implement
-weird behaviors and expose cgroup internals for that, which in turn
-attracts more weirdness, and there seems to be a pattern - cgroup core
-is unnecessarily coupled with VFS locking like controllers are
-unnecessarily coupled with cgroup internal locking.  I really wanna
-move away from such pattern.  I mean, you can't even know
-css_is_removed() isn't gonna change while the function is in progress.
-
-I have a patch queued to add ->pre_destroy() - different from
-Glauber's in that it can't fail, so we'll have
-
-	->create()
-		->post_create()
-		->pre_destroy()
-	->destroy()
-
-Where ->create() may fail but none other can.  ->post_create() and
-->pre_destroy() mark the point where a cgroup is committed to and
-decommissioned from active service and thus can be used as
-synchronization points.  If you want liveliness check inside memcg,
-please take the necessary actions (synchronization and marking) from
-->post_create() and ->pre_destroy() and check against that.  That way,
-you control your locking and there will also be a general mechanism to
-iterate through a cgroup's children/descendants which can also be
-synchronized that way.  I'm planning to send the series out later
-today.
-
-> I think that something like the following would be more instructive:
-> 
-> + * rcu_read_lock(). The caller is responsible for calling css_tryget
-> + * if the mem_cgroup is used for charging. (dropping refcnt from swap can be
-> + * called against removed memcg.)
-
-So updated.  Thanks!
+Thanks.
 
 -- 
 tejun
