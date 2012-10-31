@@ -1,53 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH 1/8] cgroup: kill
- cgroup_subsys->__DEPRECATED_clear_css_refs
-Date: Wed, 31 Oct 2012 09:41:23 -0700
-Message-ID: <20121031164123.GD2945@htj.dyndns.org>
+	cgroup_subsys->__DEPRECATED_clear_css_refs
+Date: Wed, 31 Oct 2012 17:48:55 +0100
+Message-ID: <20121031164855.GI22809@dhcp22.suse.cz>
 References: <1351657365-25055-1-git-send-email-tj@kernel.org>
- <1351657365-25055-2-git-send-email-tj@kernel.org>
- <20121031143751.GA22809@dhcp22.suse.cz>
+	<1351657365-25055-2-git-send-email-tj@kernel.org>
+	<20121031143751.GA22809@dhcp22.suse.cz>
+	<20121031164123.GD2945@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Zely8lQuDQlP9kDjnJ/FW9hSNRPZ1ZDFczF6q/aD20M=;
-        b=Jk49A92Kz24YtoQiSaPcmX96rU7HLWqADDHAqpUMXSkzfT2ZoytL1uTNRFPPmFyIee
-         Uo8AtGRVxzoeq8sVl9AAVQgidHnzS3xvp+Yr+QrvrnJYN7svrWXc0J5ehkPYk/6r53+V
-         cbE/Oe4iNl6X09ZIi4bFBv9PvomuIAN1VfeCGZS7nBdAovj5fabcJDtuWtQEYFCl5iy+
-         uzJAlHegRiG4KKhknSYinMhaobUbRWZpDiA8tOcWs69ctptx2sF2kzwuHC+RVb/9SlmV
-         HCY1qU8p9qexHoQ8pXfH+DQXA+VaL6NuUnvz/TRKZ0+yRYVk4UXeb8sy7Qg4NoNcFXys
-         qGxA==
-Content-Disposition: inline
-In-Reply-To: <20121031143751.GA22809-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121031164123.GD2945-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hey, Michal.
-
-On Wed, Oct 31, 2012 at 03:37:51PM +0100, Michal Hocko wrote:
-> > +	for_each_subsys(cgrp->root, ss)
-> > +		if (ss->pre_destroy)
-> > +			WARN_ON_ONCE(ss->pre_destroy(cgrp));
+On Wed 31-10-12 09:41:23, Tejun Heo wrote:
+> Hey, Michal.
 > 
-> Hmm, I am not sure I like this WARN_ON_ONCE. First it can happen for
-> more than one controller and second we can just clear CGRP_WAIT_ON_RMDIR
-> and return with EBUSY. The only possible failure at the moment is when a
-> new task or a child group appear.
-> I know it is not a big deal because it will disappear later in the
-> series but it would be more readable IMO.
+> On Wed, Oct 31, 2012 at 03:37:51PM +0100, Michal Hocko wrote:
+> > > +	for_each_subsys(cgrp->root, ss)
+> > > +		if (ss->pre_destroy)
+> > > +			WARN_ON_ONCE(ss->pre_destroy(cgrp));
+> > 
+> > Hmm, I am not sure I like this WARN_ON_ONCE. First it can happen for
+> > more than one controller and second we can just clear CGRP_WAIT_ON_RMDIR
+> > and return with EBUSY. The only possible failure at the moment is when a
+> > new task or a child group appear.
+> > I know it is not a big deal because it will disappear later in the
+> > series but it would be more readable IMO.
+> 
+> The WARN_ON_ONCE() is just moved from the original
+> cgroup_call_pre_destroy().  We can add an error out there but that
+> makes future changes difficult.  It's a chicken and egg problem.  You
+> gotta break the loop somewhere.
 
-The WARN_ON_ONCE() is just moved from the original
-cgroup_call_pre_destroy().  We can add an error out there but that
-makes future changes difficult.  It's a chicken and egg problem.  You
-gotta break the loop somewhere.
-
-Thanks.
-
+I do not think this is that hard. You can simply change the return path
+on pre_destroy error by BUG_ON in "cgroup: deactivate CSS's and mark
+cgroup dead before invoking ->pre_destroy()". There is no chicke&egg
+problem here because once the group is marked dead and css frozen then
+the existing callbacks cannot possibly fail.
+Or am I missing your point?
 -- 
-tejun
+Michal Hocko
+SUSE Labs
