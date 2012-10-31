@@ -1,12 +1,9 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 1/8] cgroup: kill
-	cgroup_subsys->__DEPRECATED_clear_css_refs
-Date: Wed, 31 Oct 2012 22:23:42 +0100
-Message-ID: <20121031212342.GA5286@dhcp22.suse.cz>
+Subject: Re: [PATCH 8/8] cgroup: make ->pre_destroy() return void
+Date: Wed, 31 Oct 2012 22:23:51 +0100
+Message-ID: <20121031212351.GB5286@dhcp22.suse.cz>
 References: <1351712650-23709-1-git-send-email-tj@kernel.org>
-	<1351712650-23709-2-git-send-email-tj@kernel.org>
-	<20121031201227.GF1271@dhcp22.suse.cz>
-	<CAOS58YOHjLyKFeah+h+qOrAWvfi1O5eL7m-AMbqAdcP=EOFb6g@mail.gmail.com>
+	<1351712650-23709-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -14,15 +11,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=L/CqU7/a+VZRj0psfN9r+ujilJhwvTi7pW4PivY9WZQ=;
-	b=Gcoyx1D8Yda0Aa0zMARwgBb4M1U1ZELt5DjjU+McyBxCU9C3kYm/f5Jno+VU4HLsMC
-	ifCp1/kyAqvkocwmgz4tWWGJ/2QUmab57QMcTN4+L0ECIa0ngb6QVTpLjPm8X9QuS9II
-	dHUrNHbE6GA+4XDzV7DyfTlcxkrSvB2lM3782Cgviy/xk2Khi3WyXH0H+cFGwp+2T3wj
-	7nN32lfABvPZs2MVtmiFiPja48jPVUKIyn7dLT/tqlBtcX+dY+Nr7LYmowdJ0SWXHSZi
-	srXOwcPoWqd8c8TZdRLStbHZXz1On9MwGagh3886lLYjYOPT3nAenxIFVjgog9L9bP+Y
-	rG3Q==
+	bh=rkGeAsBLbKSJLnzGVqZ66jfbKAJATxD/nPr94EcG1+4=;
+	b=ddU24RxaANgwBB8F2SBeFFHrdcOxa5n7P+2wtyY1HwVEsCJNxxKTbst0GPt7B0Skc/
+	c0QKKjksfdxN1azmaEQE+rjco9uSCJSC0+WgWwiXHdym4bsi/m7d//jz3BPt5PQNR9XP
+	rvPrfnl7h3OQTasAf8JJLY5CeZ5WIVQqYki7X5UAB2OPB2hRmy4+yWbfkruRL6tJOxml
+	BuS7krf8/BBPUL7n/QTjOXCR37Mlmi+CmLugBvw78JFIF4iCGzeOV+XI3UbsJJ/u+hNl
+	jBcQNS1M4+MVXmjWTiSNOpeKg7fuhSJ+bAy0U+xbv8M7nA7DXDB7rO+2OA6QLSt1QMuJ
+	L5Sw==
 Content-Disposition: inline
-In-Reply-To: <CAOS58YOHjLyKFeah+h+qOrAWvfi1O5eL7m-AMbqAdcP=EOFb6g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <1351712650-23709-9-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -34,27 +31,120 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Wed 31-10-12 13:14:07, Tejun Heo wrote:
-> Hey, Michal.
+On Wed 31-10-12 12:44:10, Tejun Heo wrote:
+> All ->pre_destory() implementations return 0 now, which is the only
+> allowed return value.  Make it return void.
 > 
-> On Wed, Oct 31, 2012 at 1:12 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> > And sorry for being to annoying about this WARN_ON_ONCE but I really
-> > don't see any reason for it. pre_destroy can still happen and now it is
-> > even reduced to a reasonable condition (somebody shown up). So I would
-> > put it out of way as it doesn't give us anything and as I've already
-> > mentioned one can trigger it really easily.
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+I thought I already gave my r-b but anyway
+Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+> ---
+>  block/blk-cgroup.c     | 3 +--
+>  include/linux/cgroup.h | 2 +-
+>  kernel/cgroup.c        | 2 +-
+>  mm/hugetlb_cgroup.c    | 4 +---
+>  mm/memcontrol.c        | 3 +--
+>  5 files changed, 5 insertions(+), 9 deletions(-)
 > 
-> It was there before and goes away in several commits.  I have to
-> explain all that to remove it in this patch.  Why do that when the
-> whole thing is just gonna disappear anyway?
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index f3b44a6..a7816f3 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -600,7 +600,7 @@ struct cftype blkcg_files[] = {
+>   *
+>   * This is the blkcg counterpart of ioc_release_fn().
+>   */
+> -static int blkcg_pre_destroy(struct cgroup *cgroup)
+> +static void blkcg_pre_destroy(struct cgroup *cgroup)
+>  {
+>  	struct blkcg *blkcg = cgroup_to_blkcg(cgroup);
+>  
+> @@ -622,7 +622,6 @@ static int blkcg_pre_destroy(struct cgroup *cgroup)
+>  	}
+>  
+>  	spin_unlock_irq(&blkcg->lock);
+> -	return 0;
+>  }
+>  
+>  static void blkcg_destroy(struct cgroup *cgroup)
+> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+> index 47868a8..adb2adc 100644
+> --- a/include/linux/cgroup.h
+> +++ b/include/linux/cgroup.h
+> @@ -436,7 +436,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
+>  
+>  struct cgroup_subsys {
+>  	struct cgroup_subsys_state *(*create)(struct cgroup *cgrp);
+> -	int (*pre_destroy)(struct cgroup *cgrp);
+> +	void (*pre_destroy)(struct cgroup *cgrp);
+>  	void (*destroy)(struct cgroup *cgrp);
+>  	int (*can_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
+>  	void (*cancel_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index c5f6fb2..83cd7d0 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -4054,7 +4054,7 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
+>  	mutex_unlock(&cgroup_mutex);
+>  	for_each_subsys(cgrp->root, ss)
+>  		if (ss->pre_destroy)
+> -			WARN_ON_ONCE(ss->pre_destroy(cgrp));
+> +			ss->pre_destroy(cgrp);
+>  	mutex_lock(&cgroup_mutex);
+>  
+>  	/*
+> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+> index dc595c6..0d3a1a3 100644
+> --- a/mm/hugetlb_cgroup.c
+> +++ b/mm/hugetlb_cgroup.c
+> @@ -155,7 +155,7 @@ out:
+>   * Force the hugetlb cgroup to empty the hugetlb resources by moving them to
+>   * the parent cgroup.
+>   */
+> -static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+> +static void hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+>  {
+>  	struct hstate *h;
+>  	struct page *page;
+> @@ -172,8 +172,6 @@ static int hugetlb_cgroup_pre_destroy(struct cgroup *cgroup)
+>  		}
+>  		cond_resched();
+>  	} while (hugetlb_cgroup_have_usage(cgroup));
+> -
+> -	return 0;
+>  }
+>  
+>  int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6678f99..a1811ce 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5002,12 +5002,11 @@ free_out:
+>  	return ERR_PTR(error);
+>  }
+>  
+> -static int mem_cgroup_pre_destroy(struct cgroup *cont)
+> +static void mem_cgroup_pre_destroy(struct cgroup *cont)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+>  
+>  	mem_cgroup_reparent_charges(memcg);
+> -	return 0;
+>  }
+>  
+>  static void mem_cgroup_destroy(struct cgroup *cont)
+> -- 
+> 1.7.11.7
+> 
 
-I would consider it nicer but if you feel it is not worth it then don't
-worry. It is not a big deal. The important part is that we do not ignore
-the return value now.
-
-Thanks
 -- 
 Michal Hocko
 SUSE Labs
