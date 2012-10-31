@@ -1,22 +1,16 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 6/8] memcg: make mem_cgroup_reparent_charges non failing
-Date: Wed, 31 Oct 2012 11:16:29 -0700
-Message-ID: <1351707391-22287-7-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 1/8] cgroup: kill
+	cgroup_subsys->__DEPRECATED_clear_css_refs
+Date: Wed, 31 Oct 2012 20:02:37 +0100
+Message-ID: <20121031190237.GA1271@dhcp22.suse.cz>
 References: <1351707391-22287-1-git-send-email-tj@kernel.org>
+	<1351707391-22287-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=fsEyp9idQ4XV1WS20U5BROEiYb9CJh3gSiRpd1JF928=;
-	b=XWUZHYxGVqRnLHSCFX8mKyGnxn4wCjOWumCWTSwb2NB+YUYHs9pflmCgXT30OLd2VC
-	qtaKRGwA9dFUXsx1eToTVShIp8hqRxnAQwPK9NKAeZBTfH09PQwd108kwu2yZSxe3U5Q
-	LMd3vejcF+8pUIUkFbfo4Hv4mfbZQdwv7+VGg2Sqx77w6O+D2/S4I6TnGR1l7CcRyzRI
-	xL39DNilWsXmtOjBIBM7/yzeZklSho0qn2ogdawSSjP2ihgfLs+m+FdMe6A91Ozeg1Z+
-	3EKPuLWrbEZuZPIqiNu4ziLW2VCRavHJp2jFk4qeqP788+9LSb8qOhPCKIga+NBj+wK8
-	S0aA==
-In-Reply-To: <1351707391-22287-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1351707391-22287-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -27,82 +21,59 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On Wed 31-10-12 11:16:24, Tejun Heo wrote:
+> 2ef37d3fe4 ("memcg: Simplify mem_cgroup_force_empty_list error
+> handling") removed the last user of __DEPRECATED_clear_css_refs.  This
+> patch removes __DEPRECATED_clear_css_refs and mechanisms to support
+> it.
+> 
+> * Conditionals dependent on __DEPRECATED_clear_css_refs removed.
+> 
+> * ->pre_destroy() now can only fail if a new task is attached or child
+>   cgroup is created while ->pre_destroy()s are being called.  As the
+>   condition is checked again after re-acquiring cgroup_mutex
+>   afterwards, we don't need to take any immediate action on
+>   ->pre_destroy() failures.  
 
-Now that pre_destroy callbacks are called from the context where neither
-any task can attach the group nor any children group can be added there
-is no other way to fail from mem_cgroup_pre_destroy.
-mem_cgroup_pre_destroy doesn't have to take a reference to memcg's css
-because all css' are marked dead already.
+Well, this is racy because the task can exit until we reach the
+re-check. As the result there might still be some pages on the memcg
+LRUs left.
+As I said in the previous version, I do not see any reason why we
+shouldn't just return EBUSY here. I would even skip WARN_ON_ONCE because
+it doesn't give us any valueable information. One can trigger that
+easily as well.
 
-tj: Remove now unused local variable @cgrp from
-    mem_cgroup_reparent_charges().
-
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Reviewed-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- mm/memcontrol.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1033b2b..47c4680 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3740,14 +3740,11 @@ static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-  *
-  * Caller is responsible for holding css reference on the memcg.
-  */
--static int mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
-+static void mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
- {
--	struct cgroup *cgrp = memcg->css.cgroup;
- 	int node, zid;
- 
- 	do {
--		if (cgroup_task_count(cgrp) || !list_empty(&cgrp->children))
--			return -EBUSY;
- 		/* This is for making all *used* pages to be on LRU. */
- 		lru_add_drain_all();
- 		drain_all_stock_sync(memcg);
-@@ -3773,8 +3770,6 @@ static int mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
- 		 * charge before adding to the LRU.
- 		 */
- 	} while (res_counter_read_u64(&memcg->res, RES_USAGE) > 0);
--
--	return 0;
- }
- 
- /*
-@@ -3811,7 +3806,9 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
- 
- 	}
- 	lru_add_drain();
--	return mem_cgroup_reparent_charges(memcg);
-+	mem_cgroup_reparent_charges(memcg);
-+
-+	return 0;
- }
- 
- static int mem_cgroup_force_empty_write(struct cgroup *cont, unsigned int event)
-@@ -5008,13 +5005,9 @@ free_out:
- static int mem_cgroup_pre_destroy(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
--	int ret;
- 
--	css_get(&memcg->css);
--	ret = mem_cgroup_reparent_charges(memcg);
--	css_put(&memcg->css);
--
--	return ret;
-+	mem_cgroup_reparent_charges(memcg);
-+	return 0;
- }
- 
- static void mem_cgroup_destroy(struct cgroup *cont)
+[...]
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 7981850..033bf4b 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+[...]
+> @@ -4168,11 +4075,9 @@ again:
+>  	 * Call pre_destroy handlers of subsys. Notify subsystems
+>  	 * that rmdir() request comes.
+>  	 */
+> -	ret = cgroup_call_pre_destroy(cgrp);
+> -	if (ret) {
+> -		clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+> -		return ret;
+> -	}
+> +	for_each_subsys(cgrp->root, ss)
+> +		if (ss->pre_destroy)
+> +			WARN_ON_ONCE(ss->pre_destroy(cgrp));
+	for_each_subsys(cgrp->root, ss)
+		if (ss->pre_destroy) {
+			int ret = ss->pre_destroy(cgrp);
+			clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+			return ret;
+		}
+>  
+>  	mutex_lock(&cgroup_mutex);
+>  	parent = cgrp->parent;
+[...]
 -- 
-1.7.11.7
+Michal Hocko
+SUSE Labs
