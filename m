@@ -1,7 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/8] cgroup: kill CSS_REMOVED
-Date: Wed, 31 Oct 2012 11:16:25 -0700
-Message-ID: <1351707391-22287-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/8] cgroup: deactivate CSS's and mark cgroup dead before
+	invoking ->pre_destroy()
+Date: Wed, 31 Oct 2012 11:16:27 -0700
+Message-ID: <1351707391-22287-5-git-send-email-tj@kernel.org>
 References: <1351707391-22287-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=jIAvmc0jXVkBZRPxpa4Z6A0ntaiqdWgGumG+Q92QSgo=;
-	b=dIQuqYxarfsfDLDCJrEkRk4vkzC6Mffzjg5N/b3Xr7O/CrsgK4S89bl55CC07Zk6IW
-	1lSHin24MSkDacP+Idh7UH1RMIh/QaBEhRLmYHFNFppbdetcJsZX+IQcD6ZgzfUPfnfm
-	i72hgERJoeOXbJI5EzcX9phWbe6nmANRgSZnv27q5h3CKzcFlX6Et1mAPDCFZRfQXr3s
-	lUZgiFV71Snkb7Jcpcfj8S94iLJ+tpLULEv49LgwzqfE/HMzAQovgH1N4prqBurl4Rsm
-	1bmC0QYf85kwyvE+48JiGCruG0o8VLUFYsvbDG9YDJQE6+4S2+9ZUbEAMP60iYFRKDDR
-	k3uA==
+	:references; bh=0zdUb3n/3XzSXFKa1JoASODsvyZOjG9PtteXv3hd6T4=;
+	b=ucpBfIZHfZ2RB2nYAY+d9WVmlqZY2ou8h8L6njomqEq00sEawIVmiLEeabQntcj1ns
+	6OgRaX9kRgO517ZTwRvf76jL3av5oQzfJzlyJnDVcZxZy1A971xmXwW4fBWxjYr4dmTH
+	6GyO3WAzCQH5bQFyKHwizZt31ChB/AEHDiU3K4OlxSGmPDCFTxtRdz+jG8IRFSUG4QJR
+	AZCZLgATOZgfkaQBVURA/rnI745Gt5BkOf2+cqZ5I+M+hkP8BWtPWz9VdGXwKWuSlgBJ
+	gKy5seIKiA+r4BJ5VXguuxkdqopSetDO/f8yzKG+9cTHbPRBdQ2qf4/Pr6mE8acyCSbt
+	FZLA==
 In-Reply-To: <1351707391-22287-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,161 +31,125 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-CSS_REMOVED is one of the several contortions which were necessary to
-support css reference draining on cgroup removal.  All css->refcnts
-which need draining should be deactivated and verified to equal zero
-atomically w.r.t. css_tryget().  If any one isn't zero, all refcnts
-needed to be re-activated and css_tryget() shouldn't fail in the
-process.
+Because ->pre_destroy() could fail and can't be called under
+cgroup_mutex, cgroup destruction did something very ugly.
 
-This was achieved by letting css_tryget() busy-loop until either the
-refcnt is reactivated (failed removal attempt) or CSS_REMOVED is set
-(committing to removal).
+  1. Grab cgroup_mutex and verify it can be destroyed; fail otherwise.
 
-Now that css refcnt draining is no longer used, there's no need for
-atomic rollback mechanism.  css_tryget() simply can look at the
-reference count and fail if the it's deactivated - it's never getting
-re-activated.
+  2. Release cgroup_mutex and call ->pre_destroy().
 
-This patch removes CSS_REMOVED and updates __css_tryget() to fail if
-the refcnt is deactivated.
+  3. Re-grab cgroup_mutex and verify it can still be destroyed; fail
+     otherwise.
 
-Note that this removes css_is_removed() whose only user is VM_BUG_ON()
-in memcontrol.c.  We can replace it with a check on the refcnt but
-given that the only use case is a debug assert, I think it's better to
-simply unexport it.
+  4. Continue destroying.
+
+In addition to being ugly, it has been always broken in various ways.
+For example, memcg ->pre_destroy() expects the cgroup to be inactive
+after it's done but tasks can be attached and detached between #2 and
+#3 and the conditions that memcg verified in ->pre_destroy() might no
+longer hold by the time control reaches #3.
+
+Now that ->pre_destroy() is no longer allowed to fail.  We can switch
+to the following.
+
+  1. Grab cgroup_mutex and fail if it can't be destroyed; fail
+     otherwise.
+
+  2. Deactivate CSS's and mark the cgroup removed thus preventing any
+     further operations which can invalidate the verification from #1.
+
+  3. Release cgroup_mutex and call ->pre_destroy().
+
+  4. Re-grab cgroup_mutex and continue destroying.
+
+After this change, controllers can safely assume that ->pre_destroy()
+will only be called only once for a given cgroup and, once
+->pre_destroy() is called, the cgroup will stay dormant till it's
+destroyed.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- include/linux/cgroup.h |  6 ------
- kernel/cgroup.c        | 31 ++++++++++++-------------------
- mm/memcontrol.c        |  7 +++----
- 3 files changed, 15 insertions(+), 29 deletions(-)
+ kernel/cgroup.c | 41 +++++++++++++++++++----------------------
+ 1 file changed, 19 insertions(+), 22 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 02e09c0..a309804 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -85,7 +85,6 @@ struct cgroup_subsys_state {
- /* bits in struct cgroup_subsys_state flags field */
- enum {
- 	CSS_ROOT, /* This CSS is the root of the subsystem */
--	CSS_REMOVED, /* This CSS is dead */
- };
- 
- /* Caller must verify that the css is not for root cgroup */
-@@ -108,11 +107,6 @@ static inline void css_get(struct cgroup_subsys_state *css)
- 		__css_get(css, 1);
- }
- 
--static inline bool css_is_removed(struct cgroup_subsys_state *css)
--{
--	return test_bit(CSS_REMOVED, &css->flags);
--}
--
- /*
-  * Call css_tryget() to take a reference on a css if your existing
-  * (known-valid) reference isn't already ref-counted. Returns false if
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 033bf4b..a49cdbc 100644
+index b3010ae..66204a6 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -170,8 +170,8 @@ struct css_id {
- 	 * The css to which this ID points. This pointer is set to valid value
- 	 * after cgroup is populated. If cgroup is removed, this will be NULL.
- 	 * This pointer is expected to be RCU-safe because destroy()
--	 * is called after synchronize_rcu(). But for safe use, css_is_removed()
--	 * css_tryget() should be used for avoiding race.
-+	 * is called after synchronize_rcu(). But for safe use, css_tryget()
-+	 * should be used for avoiding race.
- 	 */
- 	struct cgroup_subsys_state __rcu *css;
+@@ -4058,18 +4058,6 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
+ 	struct cgroup_event *event, *tmp;
+ 	struct cgroup_subsys *ss;
+ 
+-	/* the vfs holds both inode->i_mutex already */
+-	mutex_lock(&cgroup_mutex);
+-	if (atomic_read(&cgrp->count) != 0) {
+-		mutex_unlock(&cgroup_mutex);
+-		return -EBUSY;
+-	}
+-	if (!list_empty(&cgrp->children)) {
+-		mutex_unlock(&cgroup_mutex);
+-		return -EBUSY;
+-	}
+-	mutex_unlock(&cgroup_mutex);
+-
  	/*
-@@ -4088,8 +4088,6 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
+ 	 * In general, subsystem has no css->refcnt after pre_destroy(). But
+ 	 * in racy cases, subsystem may have to get css->refcnt after
+@@ -4081,14 +4069,7 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
+ 	 */
+ 	set_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
+ 
+-	/*
+-	 * Call pre_destroy handlers of subsys. Notify subsystems
+-	 * that rmdir() request comes.
+-	 */
+-	for_each_subsys(cgrp->root, ss)
+-		if (ss->pre_destroy)
+-			WARN_ON_ONCE(ss->pre_destroy(cgrp));
+-
++	/* the vfs holds both inode->i_mutex already */
+ 	mutex_lock(&cgroup_mutex);
+ 	parent = cgrp->parent;
+ 	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children)) {
+@@ -4098,13 +4079,30 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
  	}
  	prepare_to_wait(&cgroup_rmdir_waitq, &wait, TASK_INTERRUPTIBLE);
  
--	local_irq_disable();
--
- 	/* block new css_tryget() by deactivating refcnt */
+-	/* block new css_tryget() by deactivating refcnt */
++	/*
++	 * Block new css_tryget() by deactivating refcnt and mark @cgrp
++	 * removed.  This makes future css_tryget() and child creation
++	 * attempts fail thus maintaining the removal conditions verified
++	 * above.
++	 */
  	for_each_subsys(cgrp->root, ss) {
  		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
-@@ -4099,21 +4097,14 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
+ 
+ 		WARN_ON(atomic_read(&css->refcnt) < 0);
+ 		atomic_add(CSS_DEACT_BIAS, &css->refcnt);
  	}
++	set_bit(CGRP_REMOVED, &cgrp->flags);
++
++	/*
++	 * Tell subsystems to initate destruction.  pre_destroy() should be
++	 * called with cgroup_mutex unlocked.  See 3fa59dfbc3 ("cgroup: fix
++	 * potential deadlock in pre_destroy") for details.
++	 */
++	mutex_unlock(&cgroup_mutex);
++	for_each_subsys(cgrp->root, ss)
++		if (ss->pre_destroy)
++			WARN_ON_ONCE(ss->pre_destroy(cgrp));
++	mutex_lock(&cgroup_mutex);
  
  	/*
--	 * Set REMOVED.  All in-progress css_tryget() will be released.
  	 * Put all the base refs.  Each css holds an extra reference to the
- 	 * cgroup's dentry and cgroup removal proceeds regardless of css
- 	 * refs.  On the last put of each css, whenever that may be, the
- 	 * extra dentry ref is put so that dentry destruction happens only
- 	 * after all css's are released.
- 	 */
--	for_each_subsys(cgrp->root, ss) {
--		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
--
--		set_bit(CSS_REMOVED, &css->flags);
--		css_put(css);
--	}
--
--	local_irq_enable();
-+	for_each_subsys(cgrp->root, ss)
-+		css_put(cgrp->subsys[ss->subsys_id]);
- 
- 	finish_wait(&cgroup_rmdir_waitq, &wait);
+@@ -4120,7 +4118,6 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
  	clear_bit(CGRP_WAIT_ON_RMDIR, &cgrp->flags);
-@@ -4837,15 +4828,17 @@ static void check_for_release(struct cgroup *cgrp)
- /* Caller must verify that the css is not for root cgroup */
- bool __css_tryget(struct cgroup_subsys_state *css)
- {
--	do {
--		int v = css_refcnt(css);
-+	while (true) {
-+		int t, v;
  
--		if (atomic_cmpxchg(&css->refcnt, v, v + 1) == v)
-+		v = css_refcnt(css);
-+		t = atomic_cmpxchg(&css->refcnt, v, v + 1);
-+		if (likely(t == v))
- 			return true;
-+		else if (t < 0)
-+			return false;
- 		cpu_relax();
--	} while (!test_bit(CSS_REMOVED, &css->flags));
--
--	return false;
-+	}
- }
- EXPORT_SYMBOL_GPL(__css_tryget);
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5a1d584..6f8bd9d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2343,7 +2343,6 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
- again:
- 	if (*ptr) { /* css should be a valid one */
- 		memcg = *ptr;
--		VM_BUG_ON(css_is_removed(&memcg->css));
- 		if (mem_cgroup_is_root(memcg))
- 			goto done;
- 		if (nr_pages == 1 && consume_stock(memcg))
-@@ -2483,9 +2482,9 @@ static void __mem_cgroup_cancel_local_charge(struct mem_cgroup *memcg,
- 
- /*
-  * A helper function to get mem_cgroup from ID. must be called under
-- * rcu_read_lock(). The caller must check css_is_removed() or some if
-- * it's concern. (dropping refcnt from swap can be called against removed
-- * memcg.)
-+ * rcu_read_lock(). The caller is responsible for verifying the returned
-+ * memcg is still alive if necessary. (dropping refcnt from swap can be
-+ * called against removed memcg.)
-  */
- static struct mem_cgroup *mem_cgroup_lookup(unsigned short id)
- {
+ 	raw_spin_lock(&release_list_lock);
+-	set_bit(CGRP_REMOVED, &cgrp->flags);
+ 	if (!list_empty(&cgrp->release_list))
+ 		list_del_init(&cgrp->release_list);
+ 	raw_spin_unlock(&release_list_lock);
 -- 
 1.7.11.7
