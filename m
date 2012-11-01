@@ -1,47 +1,55 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] device_cgroup: fix unchecked cgroup parent usage
-Date: Thu, 1 Nov 2012 09:28:38 -0400
-Message-ID: <20121101132837.GE14789@redhat.com>
-References: <20121031160430.GD14789@redhat.com>
- <20121031163501.79a0950e.akpm@linux-foundation.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/8] cgroup: use cgroup_lock_live_group(parent) in
+	cgroup_create()
+Date: Thu, 1 Nov 2012 07:52:24 -0700
+Message-ID: <CAOS58YM+kRtspVUzmnSmOmrDoNS_kF6KA02zWGxqH5FUcRWo1Q@mail.gmail.com>
+References: <1351657365-25055-1-git-send-email-tj@kernel.org>
+	<1351657365-25055-4-git-send-email-tj@kernel.org>
+	<20121031155514.GD22809@dhcp22.suse.cz>
+	<20121031170431.GF2945@htj.dyndns.org>
+	<20121101091644.GA8533@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121031163501.79a0950e.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:sender:in-reply-to:references:date
+	:x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+	bh=oVrGCrCYkcguWmh4UNVB8VsvdpKkLBl9CQ4DD3wGcSo=;
+	b=chq0XLpNSISCwGeUsfkDzMDmWYrWC8fdIB/oqPxS8Tms9q7kseD2Ytl2Zd8vVRh+8N
+	YyFJ71ha1f9BQgXsgGV5BHg1BzdE2vXKVW5oUhYhts7CQUZ43eZ/xcsVPYk9WtJtzz8V
+	ZOGZyv/kAiTWk/kwz8u/PTQANHUoN5PD7TZRZgMFsGhSpoW7ISDUssOQJB7szCCWaHv3
+	lvMtq+quDAWIVUZMvnIspUwJxSeGXm2gkDik5IIUxcWCie5ZEhl4RR2b3mWmExfmo8bJ
+	fMe2z/9V0+iO8USj0yZK3vmaf70tlg/PaPLO57R2oXmGyZ2uOvu1K5Ly0JMXgPiQ3Cng
+	sWWw==
+In-Reply-To: <20121101091644.GA8533-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Wed, Oct 31, 2012 at 04:35:01PM -0700, Andrew Morton wrote:
-> On Wed, 31 Oct 2012 12:04:30 -0400
-> Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> 
-> > In 4cef7299b4786879a3e113e84084a72b24590c5b the cgroup parent usage is
-> > unchecked. root will not have a parent and trying to use
-> > device.{allow,deny} will cause problems.
-> 
-> From my reading of the code "problems" means "kernel null pointer
-> dereference".
+Hey, Michal.
 
-yes. you want me to resubmit it fixing it or you want to update it?
+On Thu, Nov 1, 2012 at 2:16 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> I am not sure I understand. What does deactivate_super has to do with
+> the above suggestion? cgroup_lock_live_group will take the cgroup_mutex
+> on the success or frees the previously allocated&unused memory. The
+> only thing I was suggesting is to do cgroup_lock_live_group first and
+> allocate the cgroup only if it doesn't fail.
 
-> >  static inline int may_allow_all(struct dev_cgroup *parent)
-> 
-> offtopic: this function could quite neatly have a bool return type.
+It complicates updates to the error exit path. You end up having to
+update a lot more and it's not like grabbing lock first is
+substantially better in any way, so why bother?
 
-ok, will do.
-
-> >  {
-> > +	if (!parent)
-> > +		return 1;
-> 
-> hm.  Does it need a comment explaining what and why?  I guess not...  just.
-
-it's because the root's parent has to always allows full access to all
-devices. I can add a comment when I turn into a bool if you want.
+Thanks.
 
 -- 
-Aristeu
+tejun
