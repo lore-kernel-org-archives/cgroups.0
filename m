@@ -1,45 +1,50 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH] device_cgroup: fix unchecked cgroup parent usage
-Date: Wed, 31 Oct 2012 16:35:01 -0700
-Message-ID: <20121031163501.79a0950e.akpm@linux-foundation.org>
-References: <20121031160430.GD14789@redhat.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 4/8] cgroup: deactivate CSS's and mark cgroup dead before
+	invoking ->pre_destroy()
+Date: Thu, 1 Nov 2012 09:58:32 +0100
+Message-ID: <20121101085832.GB8525@dhcp22.suse.cz>
+References: <1351712650-23709-1-git-send-email-tj@kernel.org>
+	<1351712650-23709-5-git-send-email-tj@kernel.org>
+	<20121031212359.GC5286@dhcp22.suse.cz>
+	<20121031212725.GA2945@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121031160430.GD14789-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Pavel Emelyanov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121031212725.GA2945-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Wed, 31 Oct 2012 12:04:30 -0400
-Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-
-> In 4cef7299b4786879a3e113e84084a72b24590c5b the cgroup parent usage is
-> unchecked. root will not have a parent and trying to use
-> device.{allow,deny} will cause problems.
-
-From my reading of the code "problems" means "kernel null pointer
-dereference".
-
-> For some reason my stressing
-> scripts didn't test the root directory so I didn't catch it on my
-> regular tests.
+On Wed 31-10-12 14:27:25, Tejun Heo wrote:
+> Hey, Michal.
 > 
-> --- github.orig/security/device_cgroup.c	2012-10-26 17:18:01.739366780 -0400
-> +++ github/security/device_cgroup.c	2012-10-29 10:03:33.221918003 -0400
-> @@ -352,6 +352,8 @@
->   */
->  static inline int may_allow_all(struct dev_cgroup *parent)
+> On Wed, Oct 31, 2012 at 10:23:59PM +0100, Michal Hocko wrote:
+> > > +	for_each_subsys(cgrp->root, ss)
+> > > +		if (ss->pre_destroy)
+> > > +			WARN_ON_ONCE(ss->pre_destroy(cgrp));
+> > 
+> > Do you think that BUG_ON would be too harsh?
+> 
+> Yeah, I do think so.  In general, I think the consensus now is to
+> prefer WARN_ON[_ONCE]() over BUG_ON() whenever possible.  It's not
+> like we can get more information from BUG_ON()s (more likely to get
+> less reporting actually by taking down the machine).  Limping machines
+> are better than dead ones and there just isn't much to gain here by
+> killing it.
 
-offtopic: this function could quite neatly have a bool return type.
+Fair enough
 
->  {
-> +	if (!parent)
-> +		return 1;
-
-hm.  Does it need a comment explaining what and why?  I guess not...  just.
-
->  	return parent->behavior == DEVCG_DEFAULT_ALLOW;
->  }
+-- 
+Michal Hocko
+SUSE Labs
