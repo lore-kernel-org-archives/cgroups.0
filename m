@@ -1,120 +1,56 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] memcg: fix hotplugged memory zone oops
-Date: Fri, 2 Nov 2012 11:54:20 +0100
-Message-ID: <20121102105420.GB24073@dhcp22.suse.cz>
-References: <505187D4.7070404@cn.fujitsu.com>
- <20120913205935.GK1560@cmpxchg.org>
- <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
- <507CF789.6050307@cn.fujitsu.com>
- <alpine.LSU.2.00.1210181129180.2137@eggly.anvils>
- <20121018220306.GA1739@cmpxchg.org>
- <alpine.LNX.2.00.1211011822190.20048@eggly.anvils>
- <20121102102159.GA24073@dhcp22.suse.cz>
+Date: Fri, 2 Nov 2012 16:31:18 -0700 (PDT)
+Message-ID: <alpine.LNX.2.00.1211021626150.11106@eggly.anvils>
+References: <505187D4.7070404@cn.fujitsu.com> <20120913205935.GK1560@cmpxchg.org> <alpine.LSU.2.00.1209131816070.1908@eggly.anvils> <507CF789.6050307@cn.fujitsu.com> <alpine.LSU.2.00.1210181129180.2137@eggly.anvils> <20121018220306.GA1739@cmpxchg.org>
+ <alpine.LNX.2.00.1211011822190.20048@eggly.anvils> <20121102102159.GA24073@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20121102102159.GA24073@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=4iZ/DC/zeAVorP0BPVTCEF1pU4trKTuDgJcAoR5qzkI=;
+        b=H7Q4L+19LZYC8eFiabTag9BDHprNjmr4UIXtOcv6Mn947wCAVtM0/4hhOyF0IU5Ci0
+         3IWRc2aeIncR6Jw9YB7n9Amrnlunl0U9GBGvdIaNT8PjO1aRNMOkD4xY28CFnt1kexV7
+         ZwfAVxoCKqGDPnRhQTxZtz8eTQS/2PYCxF76Cy4ZzXrx0YatLIHisceJwIRo1X06SaCQ
+         ztZZ181qL0DD/PjWgVgrydMRFbToa3fNo0u+8KGV64cyHwizIRPFQXxAfG4w8nEePd9r
+         KDiSKOIIXaEOZlx3WN9GV84qV1P+EdnhgldO0MzWj8Z7wdJ/6/WDOnJ/L+tXzl7SpRty
+         40AQ==
+In-Reply-To: <20121102102159.GA24073-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Wen Congyang <wency@cn.fujitsu.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Jiang Liu <liuj97@gmail.com>, bsingharora@gmail.com, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Konstantin Khlebnikov <khlebnikov@openvz.org>, paul.gortmaker@windriver.com, Tang Chen <tangchen@cn.fujitsu.com>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jiang Liu <liuj97-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org, Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-On Fri 02-11-12 11:21:59, Michal Hocko wrote:
-> On Thu 01-11-12 18:28:02, Hugh Dickins wrote:
-[...]
+On Fri, 2 Nov 2012, Michal Hocko wrote:
+> 
+> OK, it adds "an overhead" also when there is no hotadd going on but this
+> is just one additional mem access&cmp&je so it shouldn't be noticable
+> (lruvec->zone is used most of the time later so it not a pointless
+> load).
 
-And I forgot to mention that the following hunk will clash with
-"memcg: Simplify mem_cgroup_force_empty_list error handling" which is in
-linux-next already (via Tejun's tree). 
-Would it be easier to split the patch into the real fix and the hunk
-bellow? That one doesn't have to go into stable anyway and we would save
-some merging conflicts. The updated fix on top of -mm tree is bellow for
-your convinience.
+I think so too.
 
-> >  /**
-> > @@ -3688,17 +3712,17 @@ unsigned long mem_cgroup_soft_limit_recl
-> >  static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-> >  				int node, int zid, enum lru_list lru)
-> >  {
-> > -	struct mem_cgroup_per_zone *mz;
-> > +	struct lruvec *lruvec;
-> >  	unsigned long flags, loop;
-> >  	struct list_head *list;
-> >  	struct page *busy;
-> >  	struct zone *zone;
-> >  
-> >  	zone = &NODE_DATA(node)->node_zones[zid];
-> > -	mz = mem_cgroup_zoneinfo(memcg, node, zid);
-> > -	list = &mz->lruvec.lists[lru];
-> > +	lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> > +	list = &lruvec->lists[lru];
-> >  
-> > -	loop = mz->lru_size[lru];
-> > +	loop = mem_cgroup_get_lru_size(lruvec, lru);
-> >  	/* give some margin against EBUSY etc...*/
-> >  	loop += 256;
-> >  	busy = NULL;
+> It is also easier to backport for stable.
 
----
-From 0e55c305a050502a4b2f5167efed58bb6585520b Mon Sep 17 00:00:00 2001
-From: Hugh Dickins <hughd@google.com>
-Date: Fri, 2 Nov 2012 11:47:48 +0100
-Subject: [PATCH] memcg: use mem_cgroup_zone_lruvec in
- mem_cgroup_force_empty_list
+Yes.
 
-For no particularly good reason, mem_cgroup_force_empty_list() has
-its own code for deciding lruvec. Change it to use the standard
-mem_cgroup_zone_lruvec() and mem_cgroup_get_lru_size() too.
-In fact it was already safe against oops after memory hotadd (see
-"memcg: fix hotplugged memory zone oops" for more details) when lruvec
-is not initialized yet (the lru lists in danger could only be empty),
-but we're better proofed against future changes this way.
+> But is there any reason to fix it later properly in the hotadd hook?
 
-Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Hugh Dickins <hughd@google.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Wen Congyang <wency@cn.fujitsu.com>
----
- mm/memcontrol.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I don't know.  Not everybody liked it fixed this way: it's not
+unreasonable to see this as a quick hack rather than the right fix.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6c72d65..32f0ecf 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3710,15 +3710,15 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
- static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
- 				int node, int zid, enum lru_list lru)
- {
--	struct mem_cgroup_per_zone *mz;
-+	struct lruvec *lruvec;
- 	unsigned long flags;
- 	struct list_head *list;
- 	struct page *busy;
- 	struct zone *zone;
- 
- 	zone = &NODE_DATA(node)->node_zones[zid];
--	mz = mem_cgroup_zoneinfo(memcg, node, zid);
--	list = &mz->lruvec.lists[lru];
-+	lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-+	list = &lruvec->lists[lru];
- 
- 	busy = NULL;
- 	do {
--- 
-1.7.10.4
+I was expecting objectors to post alternative hotadd hook patches,
+then we could compare and decide.  That didn't happen; but we can
+certainly look to taking out these lines later if something we
+agree is better comes along.  Not high on anyone's agenda, I think.
 
--- 
-Michal Hocko
-SUSE Labs
+> 
+> Anyway
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+Hugh
