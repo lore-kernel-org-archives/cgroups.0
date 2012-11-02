@@ -1,47 +1,56 @@
 From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 1/8] cgroup: kill cgroup_subsys->__DEPRECATED_clear_css_refs
-Date: Fri, 02 Nov 2012 18:23:10 +0900
-Message-ID: <509390FE.1010304@jp.fujitsu.com>
-References: <1351657365-25055-1-git-send-email-tj@kernel.org> <1351657365-25055-2-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 2/8] cgroup: kill CSS_REMOVED
+Date: Fri, 02 Nov 2012 18:30:26 +0900
+Message-ID: <509392B2.5030300@jp.fujitsu.com>
+References: <1351657365-25055-1-git-send-email-tj@kernel.org>
+	<1351657365-25055-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1351657365-25055-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1351657365-25055-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
 (2012/10/31 13:22), Tejun Heo wrote:
-> 2ef37d3fe4 ("memcg: Simplify mem_cgroup_force_empty_list error
-> handling") removed the last user of __DEPRECATED_clear_css_refs.  This
-> patch removes __DEPRECATED_clear_css_refs and mechanisms to support
-> it.
+> CSS_REMOVED is one of the several contortions which were necessary to
+> support css reference draining on cgroup removal.  All css->refcnts
+> which need draining should be deactivated and verified to equal zero
+> atomically w.r.t. css_tryget().  If any one isn't zero, all refcnts
+> needed to be re-activated and css_tryget() shouldn't fail in the
+> process.
 > 
-> * Conditionals dependent on __DEPRECATED_clear_css_refs removed.
+> This was achieved by letting css_tryget() busy-loop until either the
+> refcnt is reactivated (failed removal attempt) or CSS_REMOVED is set
+> (committing to removal).
 > 
-> * ->pre_destroy() now can only fail if a new task is attached or child
->    cgroup is created while ->pre_destroy()s are being called.  As the
->    condition is checked again after re-acquiring cgroup_mutex
->    afterwards, we don't need to take any immediate action on
->    ->pre_destroy() failures.  This reduces cgroup_call_pre_destroy() to
->    a simple loop surrounding ->pre_destory().  Remove
->    cgroup_call_pre_destroy() and open-code the loop into
->    cgroup_rmdir().
+> Now that css refcnt draining is no longer used, there's no need for
+> atomic rollback mechanism.  css_tryget() simply can look at the
+> reference count and fail if the it's deactivated - it's never getting
+> re-activated.
 > 
-> * cgroup_clear_css_refs() can no longer fail.  All that needs to be
->    done are deactivating refcnts, setting CSS_REMOVED and putting the
->    base reference on each css.  Remove cgroup_clear_css_refs() and the
->    failure path, and open-code the loops into cgroup_rmdir().
+> This patch removes CSS_REMOVED and updates __css_tryget() to fail if
+> the refcnt is deactivated.
 > 
-> Note that cgroup_rmdir() will see more cleanup soon.
+> Note that this removes css_is_removed() whose only user is VM_BUG_ON()
+> in memcontrol.c.  We can replace it with a check on the refcnt but
+> given that the only use case is a debug assert, I think it's better to
+> simply unexport it.
 > 
 > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-I thank you and Michal for this work.
-
-Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-c2VE3kR2zFovtab9mdV7tw@public.gmane.org>
-
-
-
+Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
