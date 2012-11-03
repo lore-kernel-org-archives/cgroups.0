@@ -1,97 +1,95 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: fix hotplugged memory zone oops
-Date: Sat, 3 Nov 2012 08:00:06 +0100
-Message-ID: <20121103070006.GA12038@dhcp22.suse.cz>
-References: <505187D4.7070404@cn.fujitsu.com>
- <20120913205935.GK1560@cmpxchg.org>
- <alpine.LSU.2.00.1209131816070.1908@eggly.anvils>
- <507CF789.6050307@cn.fujitsu.com>
- <alpine.LSU.2.00.1210181129180.2137@eggly.anvils>
- <20121018220306.GA1739@cmpxchg.org>
- <alpine.LNX.2.00.1211011822190.20048@eggly.anvils>
- <20121102102159.GA24073@dhcp22.suse.cz>
- <20121102105420.GB24073@dhcp22.suse.cz>
- <alpine.LNX.2.00.1211021631260.11106@eggly.anvils>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-3.8] cgroup_freezer: implement proper hierarchy
+	support
+Date: Sat,  3 Nov 2012 01:38:26 -0700
+Message-ID: <1351931915-1701-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=4gQuruoMa+9TCmGmfAAe3rggnoTabyoyRbhG1+gdWIw=;
-        b=pFh5yhSTFi7zaFhHsXUOHnOaWPevnnaxeotdS86anta0ah/+J8qHqNjJgfVHDm1Lg1
-         FrRiWFq87GsxibBLBt4nJXH2eW6JNYsJRsxBo5ozgdu3SCrjGsLpXYH7FctbaAv6EXNa
-         nLMdv5vAVjAwpNsK5kBqLKcxhR55H6Xi25vzekp0fsAou3NG5MQ8ASUVM34dIYHGBMZN
-         F5WVSY6e/0GPS8OhFEQ4wDWuLnUavKDn7dOj8PBoahjLesSpFV5jVSm2yv1i36swcZ15
-         sLThFB3I8NPHT89iSjX8EQqgK/9/EnbfzIw/1U2xxCr3E2NhjVU0R4jSDeSjV0DqCIFz
-         5fAA==
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1211021631260.11106-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wen Congyang <wency-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jiang Liu <liuj97-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org, Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer;
+	bh=FIO12yTAoQpf+Q6xVJNoWaWC9NW5Jsh5jA9KD+qACc0=;
+	b=bFjML/DBKW1cJAKvtsbSAhRwfnt4BED3d3T4DZhFcq7IVVm2IZB3yl2MIb21GOMH4y
+	1MYdsH3dldhZXlBJq68rEICmNMduyAymxfvdEI/eRTiPjr0ib1kjnyWp+Iineh2aIYlP
+	XSE4Cm/h9yC+PQcvQn8e/8gXfLE+FiyhB/DW4XBXBEQZfunWeg4pbSUOdlRPJlHmIAqc
+	vPsvfrQo1+K6bToUqpGf08q8Nkpg8mjo2EpE8tuj5ruSeAbf/LB+jqqLeZeb0RSk22HW
+	hxQ5RUgqH6PcLvdVMP2O507ifZc/SoaryYrBAwTGGHuA2Z1n/qJ8PBF/v2FFRfEDd3Hw
+	Dfbw==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 02-11-12 16:37:37, Hugh Dickins wrote:
-> On Fri, 2 Nov 2012, Michal Hocko wrote:
-> > On Fri 02-11-12 11:21:59, Michal Hocko wrote:
-> > > On Thu 01-11-12 18:28:02, Hugh Dickins wrote:
-> > [...]
-> > 
-> > And I forgot to mention that the following hunk will clash with
-> > "memcg: Simplify mem_cgroup_force_empty_list error handling" which is in
-> > linux-next already (via Tejun's tree). 
-> 
-> Oh, via Tejun's tree.  Right, when I checked mmotm there was no problem.
+Hello,
 
-Yeah, whole that thing goes through Tejun's tree because there are many
-follow up clean ups depending on that change.
+This patchset implement proper hierarchy support for cgroup_freezer as
+discussed in "[RFC] cgroup TODOs"[1].
 
-> > Would it be easier to split the patch into the real fix and the hunk
-> > bellow? That one doesn't have to go into stable anyway and we would save
-> > some merging conflicts. The updated fix on top of -mm tree is bellow for
-> > your convinience.
-> 
-> I'd prefer to leave it as one patch, so even the "future proof" part
-> of the fix goes into 3.7 and stable.  But your point is that you have
-> already seen the future, and it forks in a slightly different direction!
-> 
-> Well, I don't want to be obstructive, but it doesn't look difficult
-> to resolve.  
+The patchset first implements generic cgroup iteration macros -
+cgroup_for_each_children(), cgroup_for_each_descendant_{pre|post}().
+Combined with the newly introduced ->post_create() callback, this
+allows controllers to implement reliable iteration over descendants
+without messing with cgroup internal locking.  Controllers can perform
+reliable walking using simple hierarchy-wide locking or finer-grained
+parent-children locking.
 
-True.
+Using the iteration macros and ->post_create(), cgroup_freezer is
+updated to propagate state updates to and collect FROZEN completions
+from the descendants.  This removes .broken_hierarchy marking from
+cgroup_freezer.
 
-> Perhaps if I hold off on splitting them, and see if akpm barks at me
-> or not :)
-> 
-> Hugh
-> 
-> > > >  /**
-> > > > @@ -3688,17 +3712,17 @@ unsigned long mem_cgroup_soft_limit_recl
-> > > >  static bool mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
-> > > >  				int node, int zid, enum lru_list lru)
-> > > >  {
-> > > > -	struct mem_cgroup_per_zone *mz;
-> > > > +	struct lruvec *lruvec;
-> > > >  	unsigned long flags, loop;
-> > > >  	struct list_head *list;
-> > > >  	struct page *busy;
-> > > >  	struct zone *zone;
-> > > >  
-> > > >  	zone = &NODE_DATA(node)->node_zones[zid];
-> > > > -	mz = mem_cgroup_zoneinfo(memcg, node, zid);
-> > > > -	list = &mz->lruvec.lists[lru];
-> > > > +	lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> > > > +	list = &lruvec->lists[lru];
-> > > >  
-> > > > -	loop = mz->lru_size[lru];
-> > > > +	loop = mem_cgroup_get_lru_size(lruvec, lru);
-> > > >  	/* give some margin against EBUSY etc...*/
-> > > >  	loop += 256;
-> > > >  	busy = NULL;
+cgroup_freezer hierarchy support is implemented using finer-grained
+locking not necessarily because it's necessary but more because I
+wanted an example controller doing that.
 
--- 
-Michal Hocko
-SUSE Labs
+This patchset contains the following nine patches.
+
+ 0001-cgroup-add-cgroup_subsys-post_create.patch
+ 0002-cgroup-Use-rculist-ops-for-cgroup-children.patch
+ 0003-cgroup-implement-generic-child-descendant-walk-macro.patch
+ 0004-cgroup_freezer-trivial-cleanups.patch
+ 0005-cgroup_freezer-prepare-freezer_change_state-for-full.patch
+ 0006-cgroup_freezer-make-freezer-state-mask-of-flags.patch
+ 0007-cgroup_freezer-introduce-CGROUP_FREEZING_-SELF-PAREN.patch
+ 0008-cgroup_freezer-add-post_create-and-pre_destroy-and-t.patch
+ 0009-cgroup_freezer-implement-proper-hierarchy-support.patch
+
+0001-0003 implement cgroup descendant iterators.
+
+0004-0008 prepare cgroup_freezer for hierarchy support.  0009
+implements it.
+
+This patchset is on top of
+
+ v3.6 (a0d271cbfe)
++ [2] the first three patches of
+      "memcg/cgroup: do not fail fail on pre_destroy callbacks" patchset
++ [3] "cgroup: simplify cgroup removal path" v2 patchset
+
+with cgroup/for-3.8 pulled into it.  The branch is rather floaty at
+the moment so it would be the easiest to pull the following branch for
+review.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup_freezer-hierarchy
+
+Thanks.
+
+ kernel/cgroup.c         |  106 +++++++++++++-
+ kernel/cgroup_freezer.c |  359 +++++++++++++++++++++++++++++++++++-------------
+ 3 files changed, 445 insertions(+), 104 deletions(-)
+
+--
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.kernel.containers/23698
+[2] http://thread.gmane.org/gmane.linux.kernel.cgroups/4757
+[3] http://thread.gmane.org/gmane.linux.kernel.cgroups/4861
