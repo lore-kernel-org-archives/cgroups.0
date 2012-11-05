@@ -1,52 +1,34 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 1/9] cgroup: add cgroup_subsys->post_create()
-Date: Mon, 5 Nov 2012 14:42:19 +0100
-Message-ID: <5097C23B.3040808@parallels.com>
-References: <1351931915-1701-1-git-send-email-tj@kernel.org>
-	<1351931915-1701-2-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET RESEND v2] cgroup: simplify cgroup removal path
+Date: Mon, 5 Nov 2012 09:30:24 -0800
+Message-ID: <20121105173024.GA19354@mtj.dyndns.org>
+References: <1351712650-23709-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=6fyzmdphXBmbIJiqwj7k08rb/m/l2RQ3FTDW3sTk0Oo=;
+        b=LBxDOLg0q6POQ8tdFq/pJaOTvD9I5hsFV1vyTOzIExzbM1HbLlyD6CAlJedvZ7CBZU
+         5gNzDD70ufok6DX33LqbDxH1+S+UUtoGzO2FwM3dd8VmHoZbmAgBTmlzMgAdcwvpCzI6
+         8WdgwM631VftaBU1oEG5ZDHNSlWLDb6A/glgBHRNOUMjnZlWjAjHWF1iHg7tcf5Dj7f3
+         qt9nPg3C0qFAEXntLfNS1+re+Ynu+Z6AjM54Qdu1Ru7xa1d7f7WONdhcJ//u3qNdKYb+
+         K3w2uo090kAoxh5dQ2oBCTG4K8b444r10YUNMYHFgWrtYDbpZMpz2ScLePWDjCWlcETZ
+         QBRQ==
+Content-Disposition: inline
+In-Reply-To: <1351712650-23709-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1351931915-1701-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 11/03/2012 09:38 AM, Tejun Heo wrote:
-> Currently, there's no way for a controller to find out whether a new
-> cgroup finished all ->create() allocatinos successfully and is
-> considered "live" by cgroup.
-> 
-> This becomes a problem later when we add generic descendants walking
-> to cgroup which can be used by controllers as controllers don't have a
-> synchronization point where it can synchronize against new cgroups
-> appearing in such walks.
-> 
-> This patch adds ->post_create().  It's called after all ->create()
-> succeeded and the cgroup is linked into the generic cgroup hierarchy.
-> This plays the counterpart of ->pre_destroy().
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Applied to cgroup/cgroup-rmdir-updates and then pulled into
+cgroup/for-3.8 w/ Li's acks added.
 
-Tejun, If we do it this way, we end up with two callbacks that are
-called after create: post_clone and post_create. I myself prefer the
-approach I took, that convert post_clone into post_create, and would
-prefer if you would pick that up.
+Thanks.
 
-For me, post_clone is totally a glitch that should not exist. Merging
-this with post_create gives the following semantics:
-
-* A while after cgroup creation, you will get a callback. In that
-callback, you do whatever initialization you may need that you could not
-in create. Why is reacting to a flag being set any different?
+-- 
+tejun
