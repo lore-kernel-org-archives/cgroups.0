@@ -1,34 +1,96 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET RESEND v2] cgroup: simplify cgroup removal path
-Date: Mon, 5 Nov 2012 09:30:24 -0800
-Message-ID: <20121105173024.GA19354@mtj.dyndns.org>
-References: <1351712650-23709-1-git-send-email-tj@kernel.org>
+Subject: [RFC] cgroup: deprecate clone_children
+Date: Mon, 5 Nov 2012 10:02:13 -0800
+Message-ID: <20121105180213.GB19354@mtj.dyndns.org>
+References: <1351931915-1701-1-git-send-email-tj@kernel.org>
+	<1351931915-1701-2-git-send-email-tj@kernel.org>
+	<5097C23B.3040808@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=6fyzmdphXBmbIJiqwj7k08rb/m/l2RQ3FTDW3sTk0Oo=;
-        b=LBxDOLg0q6POQ8tdFq/pJaOTvD9I5hsFV1vyTOzIExzbM1HbLlyD6CAlJedvZ7CBZU
-         5gNzDD70ufok6DX33LqbDxH1+S+UUtoGzO2FwM3dd8VmHoZbmAgBTmlzMgAdcwvpCzI6
-         8WdgwM631VftaBU1oEG5ZDHNSlWLDb6A/glgBHRNOUMjnZlWjAjHWF1iHg7tcf5Dj7f3
-         qt9nPg3C0qFAEXntLfNS1+re+Ynu+Z6AjM54Qdu1Ru7xa1d7f7WONdhcJ//u3qNdKYb+
-         K3w2uo090kAoxh5dQ2oBCTG4K8b444r10YUNMYHFgWrtYDbpZMpz2ScLePWDjCWlcETZ
-         QBRQ==
-Content-Disposition: inline
-In-Reply-To: <1351712650-23709-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=5kIOMyfjN+5gV8f53RlQUGiyR1MhCQdaK03PwUwH7Hc=;
+	b=htWwLHmLBblNYYJ3BlXxgpaFFIAe9x/Zy7ZSS9VVePr9qUSM+iNoU7D7dr4ojtjFtu
+	yUgira0/Lda1F2JGdVkUlMZ3vLNK1jDlr6yZJ1XI38LovSvqlPjUuX4JDwr28fvMSn+L
+	7+pAuk66VDjzVKYCk+3Itxv9VoRxy/wJ0oSCgWyXnNcgIGbGWoQiu5pqAhCE78KIggHC
+	ONA+orsBMPLJNR8omavdqsfDkjhoyEjna+fSI/7yKJRCxvakoy1hpoN236hYHyq544/i
+	hamHF/13R39X2SKPXNiwwtJzAFeSxF1RC9hnQf7RhngcaTg+do6tiF+q6Ze076+3B5ms
+	Ia2g==
+Content-Disposition: inline
+In-Reply-To: <5097C23B.3040808-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Applied to cgroup/cgroup-rmdir-updates and then pulled into
-cgroup/for-3.8 w/ Li's acks added.
+clone_children makes cgroup invoke ->post_clone() callback if it
+exists and sets CGRP_CLONE_CHILDREN.  ->post_clone(), while being
+named generically, is only supposed to copy configuration from its
+parent.
+
+This is an entirely convenience feature which is only used by cpuset
+to alter its configuration propagation.  As the mount option and
+cgroupfs knobs are cgroup-wide and different controllers differ in
+their configuration propagations, it's awkward to use for multiple
+controllers especially if they're co-mounted.  At this point, we can't
+use this flag for any other controller anyway as it would implicitly
+change the behavior.
+
+As this is unnecessary feature with very limited use and awkward in
+co-mounted use cases, let's try to deprecate it.  Whine on the mount
+option and accesses to cgroupfs knobs.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+---
+Glauber, I think this is more befitting change for .post_clone().  If
+people aren't depending on this, I'd much prefer to just remove it.
 
 Thanks.
 
--- 
-tejun
+ kernel/cgroup.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1162,6 +1162,8 @@ static int parse_cgroupfs_options(char *
+ 			continue;
+ 		}
+ 		if (!strcmp(token, "clone_children")) {
++			pr_warning("cgroup: mount option clone_children is deprecated (pid=%d comm=%s)\n",
++				   task_tgid_nr(current), current->comm);
+ 			opts->clone_children = true;
+ 			continue;
+ 		}
+@@ -3837,6 +3839,9 @@ fail:
+ static u64 cgroup_clone_children_read(struct cgroup *cgrp,
+ 				    struct cftype *cft)
+ {
++	printk_ratelimited(KERN_WARNING "cgroup: clone_children is deprecated (pid=%d comm=%s)\n",
++			   task_tgid_nr(current), current->comm);
++
+ 	return clone_children(cgrp);
+ }
+ 
+@@ -3844,6 +3849,9 @@ static int cgroup_clone_children_write(s
+ 				     struct cftype *cft,
+ 				     u64 val)
+ {
++	printk_ratelimited(KERN_WARNING "cgroup: clone_children is deprecated (pid=%d comm=%s)\n",
++			   task_tgid_nr(current), current->comm);
++
+ 	if (val)
+ 		set_bit(CGRP_CLONE_CHILDREN, &cgrp->flags);
+ 	else
