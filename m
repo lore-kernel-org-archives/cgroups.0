@@ -1,32 +1,15 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Why does devices cgroup check for CAP_SYS_ADMIN explicitly?
-Date: Tue, 6 Nov 2012 09:41:30 -0800
-Message-ID: <20121106174130.GL30069@mtj.dyndns.org>
-References: <20121106023845.GI19354@mtj.dyndns.org>
-	<877gpzrlir.fsf@xmission.com> <20121106150131.GA14640@sergelap>
-	<20121106150639.GB30069@mtj.dyndns.org>
-	<871ug6rbio.fsf@xmission.com>
-	<20121106154320.GE30069@mtj.dyndns.org>
-	<87sj8mogpp.fsf@xmission.com>
-	<20121106165246.GF30069@mtj.dyndns.org>
-	<20121106173104.GA27990@sergelap>
-	<20121106173823.GK30069@mtj.dyndns.org>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [PATCH 1/2] device_cgroup: fix RCU usage
+Date: Tue, 6 Nov 2012 11:48:41 -0600
+Message-ID: <20121106174841.GB28916@sergelap>
+References: <20121106171612.GH30069@mtj.dyndns.org>
+	<20121106171737.GJ30069@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=AZ5f6MMuG+YZzJKbVH4zISt9ICaaf8qFweqwqr96uY4=;
-	b=Ue8Rmn5MNd1oBmTIvud6l4Cnq2CQ8rA2yoc3OWOmhmdDMstFX00HuiJmVbxqbjF5fs
-	DJ2EPz8+N5ylrKRWJVPFsjtxvt2wbGI5TlE50h5L9upE2Yxcd0uGekyo0meVGLC1UxXC
-	JOGR8Q+LoEj9o3K/S6+E6m238kA2m1zzOfAlgk7zI7QYI2ozeQDoQ6tNoUnbEPX0a0au
-	95sk335I1Y5X20K8scHJa1N9p3j8nABIbog+JarakVnWekGSYMlBURPqHBBEf+W40GVo
-	vHUkU0hT/art9lI40FUWT7MuMcPxior8sFBuAHPB7Ucqf5L82sqCdtQgV7kiu+V7+8CO
-	vjlQ==
 Content-Disposition: inline
-In-Reply-To: <20121106173823.GK30069-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20121106171737.GJ30069-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -37,33 +20,59 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Just one more thing.
-
-On Tue, Nov 06, 2012 at 09:38:23AM -0800, Tejun Heo wrote:
-> Hello,
+Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> dev_cgroup->exceptions is protected with devcgroup_mutex for writes
+> and RCU for reads; however, RCU usage isn't correct.
 > 
-> On Tue, Nov 06, 2012 at 11:31:04AM -0600, Serge Hallyn wrote:
-> > We can't generally require a capability to move tasks between cgroups,
-> > as that will break currently intended uses.  I can create two cgroups,
-> > chown them to serge, and let serge move between them.
+> * dev_exception_clean() doesn't use RCU variant of list_del() and
+>   kfree().  The function can race with may_access() and may_access()
+>   may end up dereferencing already freed memory.  Use list_del_rcu()
+>   and kfree_rcu() instead.
 > 
-> Sure, then just live with the cgroupfs based permission check.  What
-> next?  Should we add CAP_SYS_RESOURCE check to all resource related
-> controllers?  Moreover, We're headed to unified hierarchy, so in the
-> end that means only the user with almost all CAP_* can manipulate
-> cgroups at all making the whole thing meaningless.
+> * may_access() may be called only with RCU read locked but doesn't use
+>   RCU safe traversal over ->exceptions.  Use list_for_each_entry_rcu().
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-As for using cgroup as !root user, I would advise not doing that.
-Again, we're moving toward a unified cgroup hierarchy.  You wouldn't
-be creating multiple cgroup hierarchies and assigning different user
-accesses to them.  Also, I would strongly discourage chowning sub
-directories in cgroupfs and letting non-priviledged users modify them
-directly.
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-Thanks.
+thanks,
+-serge
 
--- 
-tejun
+> ---
+> Oops, wrong patch.  This is the correct one.
+> 
+> Thanks.
+> 
+>  security/device_cgroup.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> --- a/security/device_cgroup.c
+> +++ b/security/device_cgroup.c
+> @@ -164,8 +164,8 @@ static void dev_exception_clean(struct d
+>  	struct dev_exception_item *ex, *tmp;
+>  
+>  	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
+> -		list_del(&ex->list);
+> -		kfree(ex);
+> +		list_del_rcu(&ex->list);
+> +		kfree_rcu(ex, rcu);
+>  	}
+>  }
+>  
+> @@ -298,7 +298,7 @@ static int may_access(struct dev_cgroup
+>  	struct dev_exception_item *ex;
+>  	bool match = false;
+>  
+> -	list_for_each_entry(ex, &dev_cgroup->exceptions, list) {
+> +	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+>  		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+>  			continue;
+>  		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
