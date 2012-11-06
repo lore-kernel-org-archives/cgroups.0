@@ -1,84 +1,32 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] cgroup: deprecate clone_children
-Date: Mon, 5 Nov 2012 11:26:36 -0800
-Message-ID: <20121105192636.GG19354@mtj.dyndns.org>
-References: <1351931915-1701-1-git-send-email-tj@kernel.org>
-	<1351931915-1701-2-git-send-email-tj@kernel.org>
-	<5097C23B.3040808@parallels.com>
-	<20121105180213.GB19354@mtj.dyndns.org>
-	<20121105191714.GA24560@sergelap>
+Subject: Why does devices cgroup check for CAP_SYS_ADMIN explicitly?
+Date: Mon, 5 Nov 2012 18:38:45 -0800
+Message-ID: <20121106023845.GI19354@mtj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=TI6h2GoVrVbDqmDjIoNS+TFhdhQDBJO35CdgM7v8huw=;
+        b=hUEa5uCg0nTGkw4QmY0qv94k0ojQTsWvjkt350Y+6BJcMGH2AOXzV0SgfseEOnfO3B
+         Qkklh8v/QBqI8aC93N8ezektU41Lw+5qy6F9c4knjQPm0AHPZKiHSDNcAFx6XShELZFQ
+         wVhDuuaUkrKKoqjN7hEMEmCAV/rL7MHLJXQyuXHnwmQ9UGjiQ0m9o66E1FNJ2zqXyq3V
+         3nv9ip+Ma17RvKWf3GOxHt3nWTT5OQr/D5kR+ml6e0rB8l0GJAn/rwLEBDYKSR2DT/Bh
+         hbvXvZg4+fRDSdx4tJPfskrf8f2Y55kiLEQP/WLGdX/hgKLUZI7V96vT8c0zxlwZI2gc
+         PAPg==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=c60cNH0G/u8jz2Rc5+tJ6unyGsQO08nI1/8pbG8iWXY=;
-	b=CFZQUkVLXvC5P1d22MCc58FJyI3te5GcEbA6Xd7IeFgRNwS6kRAAhNzsRck3cvAwpm
-	aieo6PWLAH+O7q0yM7cg8xs7i+rWp5TeXus5Z2aIrwcHkS37TRQ7qioPRaDS/sqviysh
-	xE7H1mHDjUoeoUeksvA32I4fKuo1DPp9MknVRiiGvsLwG8VTxc9BsFYocE5qGthFm/jf
-	r7ZNWwfviCvcA4bcD1ONmzqY60jpI0y76u5eB4BBkNXeMJYk+RsBM//1jdOnaVZc0vWh
-	GRg/S8Ur9uE+OW+icEWELzCAytYDreZhh7OWa62Fp1syHjNWyMZVN5qwKfzQnThA1gHt
-	Qc8w==
-Content-Disposition: inline
-In-Reply-To: <20121105191714.GA24560@sergelap>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Serge.
+Hello, guys.
 
-On Mon, Nov 05, 2012 at 01:17:14PM -0600, Serge Hallyn wrote:
-> > As this is unnecessary feature with very limited use and awkward in
-> 
-> clone_children is currently required by lxc.  Of course lxc could
-> manually set the .cpus and .mems in the newly created child, but if
-> those interfaces or others like it ever change (i.e. any new ones which
-> must be set before a task can join a cgroup) we'll get into yet more of
-> a rats nets of code to support different kernel versions.
-
-If lxc is using it, this will have to stay then.  I'll try to make it
-a cpuset specific thing.
-
-> (Just as an idea, if there was a way to generically tell from the list
-> of files in my cgroups dir which files need to be initialized before a
-> task can join, I think that would suffice.  Maybe a cgroups.needssetup
-> file which right now contains 'cpuset.mems\ncpuset.cpus'. Then if we
-> find a file we don't recognize in there we can throw an intelligent
-> error, or guess at duplicating the parent value.)
-
-Hmmm... I think the root problem is that different controllers don't
-agree on the way they inherit configurations from parents.  cgroup
-really is a trainwreck.  :(
-
-I don't know whether "needssetup" is the right way to deal with it.
-I'll think more about it.
-
-> > co-mounted use cases, let's try to deprecate it.  Whine on the mount
-> > option and accesses to cgroupfs knobs.
-> > 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> > Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> > ---
-> > Glauber, I think this is more befitting change for .post_clone().  If
-> 
-> What do you mean by that?  That he is working on a patch-set which will
-> remove post_clone and this belongs there, or that there is a proposed
-> alternative?
-
-The former.  There was a patchset from Glauber updating ->post_clone()
-(which didn't change the behavior).
+Why doesn't it follow the usual security enforced by cgroupfs
+permissions?  Why is the explicit check necessary?
 
 Thanks.
 
