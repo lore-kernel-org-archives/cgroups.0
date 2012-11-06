@@ -1,47 +1,54 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] device_cgroup: add lockdep asserts
-Date: Tue, 6 Nov 2012 12:29:45 -0800
-Message-ID: <20121106202945.GU30069@mtj.dyndns.org>
-References: <20121106171612.GH30069@mtj.dyndns.org>
- <20121106174036.GA28916@sergelap>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/9] cgroup: implement generic child / descendant walk
+ macros
+Date: Tue, 6 Nov 2012 12:31:54 -0800
+Message-ID: <20121106203154.GV30069@mtj.dyndns.org>
+References: <1351931915-1701-1-git-send-email-tj@kernel.org>
+ <1351931915-1701-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=1TMxyp9zwexqs85Stn6gTO1EeRGEwKuOcfFglD3bURM=;
-        b=tEWFjq2XLN5vRL0znuE9SpFwCe9DtG0imnEVwhDiPY9/jmYI9py6vK9RuXTwQh3d74
-         854Te2LHKKZLUvukJM9wJ3F3sU+vRLGAWzA9QzF7BTYkj3EMT6DkrFtkQk2OfEmYFU7l
-         JVaWXNcam5L33l8el7z0ZlzhchIiA/4hfu2PtqeKUiYbkhwkZ55X2PQeErGwTmFCX7fJ
-         NzAztXLZH+loDXJ2Bmg13KRJXfxZ7TfmR/UXNbYsEuquMEBulfiDodUFhuvxDfjr+DsT
-         N3jPG7N+RLTV0R4WeQ8x4lPmoe8qAnfri2iFKrPi18jUZVvNI5cYFDl+i5ZQ8r+SYUBG
-         7fAw==
+        bh=IqH6kxv3RKuZNwdbI1fOvbeTGBklY1wE9hCOzOv0aXI=;
+        b=kL9eeveWeCQyQVTKZZ7cZR2jpyWbz0ZvOsJOLmYyk0u28SNPKxAundFZnaF5DzGF2j
+         Q71BKRitaDcx1imQv7ZufOGmxd2EmcKkINdonW/sQ4rWWbac40wBpqdKnHcFVLMEOVZt
+         tny1wZBr99Q6Ey2kCmkluR18a604IB2SJzur7aagCABo6vRdaNKfb5d1WIRQ9iy5jn0v
+         vbvQqM/+NnqEfVtAWmBibPWcb3rJteYwrvF0+zD8c+mAuSVt4rSW2xSTYORhPd7kHqUB
+         YKRo+AfKyYXK4j+mBXGHHQzKEMw6LE+fgXPKSXOyHnATWGLtQ2yaEfq/fH3HS8jJHPYc
+         TK8Q==
 Content-Disposition: inline
-In-Reply-To: <20121106174036.GA28916@sergelap>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1351931915-1701-4-git-send-email-tj@kernel.org>
+Sender: linux-pm-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com, mhocko@suse.cz, rjw@sisk.pl
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, fweisbec@gmail.com
 
-On Tue, Nov 06, 2012 at 11:40:36AM -0600, Serge Hallyn wrote:
-> Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> > device_cgroup uses RCU safe ->exceptions list which is write-protected
-> > by devcgroup_mutex and has had some issues using locking correctly.
-> > Add lockdep asserts to utility functions so that future errors can be
-> > easily detected.
-> > 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > Cc: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+On Sat, Nov 03, 2012 at 01:38:29AM -0700, Tejun Heo wrote:
+> Currently, cgroup doesn't provide any generic helper for walking a
+> given cgroup's children or descendants.  This patch adds the following
+> three macros.
 > 
-> Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+> * cgroup_for_each_child() - walk immediate children of a cgroup.
+> 
+> * cgroup_for_each_descendant_pre() - visit all descendants of a cgroup
+>   in pre-order tree traversal.
+> 
+> * cgroup_for_each_descendant_post() - visit all descendants of a
+>   cgroup in post-order tree traversal.
+> 
+> All three only require the user to hold RCU read lock during
+> traversal.  Verifying that each iterated cgroup is online is the
+> responsibility of the user.  When used with proper synchronization,
+> cgroup_for_each_descendant_pre() can be used to propagate config
+> updates to descendants in reliable way.  See comments for details.
 
-Applied to cgroup/for-3.8.
+Michal, Li, how does this look to you?  Would this be okay for memcg
+too?  Li, do you think the comment on cgroup_for_each_descendant_pre()
+is correct?
 
 Thanks.
 
