@@ -1,43 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Subject: Re: Why does devices cgroup check for CAP_SYS_ADMIN explicitly?
-Date: Tue, 6 Nov 2012 07:43:20 -0800
-Message-ID: <20121106154320.GE30069@mtj.dyndns.org>
+Date: Tue, 6 Nov 2012 09:45:34 -0600
+Message-ID: <20121106154534.GA20237@sergelap>
 References: <20121106023845.GI19354@mtj.dyndns.org>
-	<877gpzrlir.fsf@xmission.com> <20121106150131.GA14640@sergelap>
-	<20121106150639.GB30069@mtj.dyndns.org>
-	<871ug6rbio.fsf@xmission.com>
+ <877gpzrlir.fsf@xmission.com>
+ <20121106150131.GA14640@sergelap>
+ <20121106150639.GB30069@mtj.dyndns.org>
+ <871ug6rbio.fsf@xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=/Uujj6cwiKPWhRHDHUn4fwrzMkCBfxs5sqf7ITIxCKw=;
-	b=WO5LvmcvEs+wGuMoPVWg7qw3x+RZe4Mj3G4o7hTBoJSl6ETUM2jlPuRc+NsVReEZL5
-	cZNhwLP043u7oGSVdoyk9Q9LX/fRBDvwdshCSCMhcsMCJ8LRjDF7+ZCU8UoNWtAgxf70
-	zJ5IS5jXoIWlY9xpRn1iSrUz6SfSQLqOcE2L57C56fAkE8XCO+juFDS8uqL/w/EiTjqg
-	DqGrElHZJDfEq67Qr19bhQu5W+pZhQzGhj9mTA2SLdyKyM2aBZn/hAXyPJ2/NAr8fyf3
-	cHfQQQguixJQO0lpuYeb45tj/gX9nf1RK0dMrLIWEKQwae3gJ9f7ICd94+nN7zFPpRag
-	RiKA==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
 In-Reply-To: <871ug6rbio.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hey, Eric.
-
-On Tue, Nov 06, 2012 at 07:34:07AM -0800, Eric W. Biederman wrote:
+Quoting Eric W. Biederman (ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org):
+> Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+> 
+> > Hello, Serge.
+> >
+> > On Tue, Nov 06, 2012 at 09:01:32AM -0600, Serge Hallyn wrote:
+> >> More practically, lacking user namespaces you can create a full (i.e.
+> >> ubuntu) container that doesn't have CAP_SYS_ADMIN, but not one without
+> >> root.  So this allows you to prevent containers from bypassing devices
+> >> cgroup restrictions set by the parent.  (In reality we are not using
+> >> that in ubuntu - we grant CAP_SYS_ADMIN and use apparmor to restrict -
+> >> but other distros do.)
+> >
+> > Do you even mount cgroupfs in containers?  If you just bind-mount
+> > cgroupfs verbatim in containers, I don't think that's gonna work very
+> > well.  If not, all this doesn't make any difference for containers.
+> >
+> > So, you don't really have any actual use case for the explicit CAP_*
+> > checks, right?
+> 
 > Having thought about this a little more I can give a definitive answer.
 > 
 > Adding a process to the device control group is equivalent to calling
@@ -48,10 +48,31 @@ On Tue, Nov 06, 2012 at 07:34:07AM -0800, Eric W. Biederman wrote:
 > Without a capability check it would be possible to remove access to
 > /dev/console for a suid root application keeping it from reporting
 > attempts to hack it for example.
-
-You understand that the whole thing is gated by VFS permission check,
-right?  I'm kinda lost what you're talking about.
-
+> 
+> update_access can allow access to previously unaccessible devices
+> and so is equivalent to mknod and as such requires a capability call.
+> 
+> static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+> 				   int filetype, const char *buffer)
+> {
+> ....
+> 	if (!capable(CAP_SYS_ADMIN))
+> 		return -EPERM;
+> 
+> 
+> Likewise move to a different cgroup can give you a completely different
+> set of devices you can use.  And is roughly equivalent to mknod, and
+> needs a capability call. 
+> 
+> static int devcgroup_can_attach(struct cgroup *new_cgrp,
+> 				struct cgroup_taskset *set)
+> {
+> 	struct task_struct *task = cgroup_taskset_first(set);
+> 
+> 	if (current != task && !capable(CAP_SYS_ADMIN))
+> 		return -EPERM;
+> 
+> 
 > The generic cgroup check in attach_task_by_pid to see if you can move
 > another process into a cgroup needs to be a capability call and not a
 > test for uid == 0.
@@ -73,11 +94,16 @@ right?  I'm kinda lost what you're talking about.
 > 			rcu_read_unlock();
 > 			ret = -EACCES;
 > 			goto out_unlock_cgroup;
+> 
+> Eric
 
-This one isn't gated by VFS so we need to add CAP check to this
-function.  No?
+(full context kept, though long, bc it's all important)
 
-Thanks.
+Note that part of the problem is simply that the devices cgroup is serving
+as a stand-in for the lack of both user and device namespaces.  If those
+both existed, we could get rid of the devices cgroup.  Likewise, the
+presence of the devices cgroup makes a device namespace far less
+compelling :)  We can play games with bind mounts into /dev and devcgroup
+to do most of what we want a devicens for.
 
--- 
-tejun
+-serge
