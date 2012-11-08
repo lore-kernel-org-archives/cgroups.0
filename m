@@ -1,100 +1,79 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 9/9 v2] cgroup_freezer: implement proper hierarchy support
-Date: Thu, 8 Nov 2012 15:08:52 +0100
-Message-ID: <20121108140852.GI31821@dhcp22.suse.cz>
+Date: Thu, 8 Nov 2012 06:18:48 -0800
+Message-ID: <20121108141848.GA12973@htj.dyndns.org>
 References: <1351931915-1701-1-git-send-email-tj@kernel.org>
-	<1351931915-1701-10-git-send-email-tj@kernel.org>
-	<20121107163919.GC2660@mtj.dyndns.org>
+ <1351931915-1701-10-git-send-email-tj@kernel.org>
+ <20121107163919.GC2660@mtj.dyndns.org>
+ <20121108140852.GI31821@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=F9LgQMiVjvsuDntRVh/BPzbhBwjLEXg/1QUoe+F2QJ4=;
+        b=BRrZXKaIhZNN3qpV9/gQyuirbw0Q7mB2y9KufCdHgqmSZ/TYoGKn2iVEybKTsSqc57
+         3ABuMuJ+eqwT6vo0WRdLUS+3ZMB2Yx3eIb/Ud7qYkZvxEvANQ6CNMrHXRmHNcMeMj7BR
+         C5Hwn2SsBAWyb6kxHtpUgG3KHCCLKbqgi0RQD+GEPVB9py/aLq34e8nDRQt3aWcSJ6Z/
+         7gty9KibS+TNqCUDx4s0KchEmF7fm/Zl7neI/vo9Eb8MWpmqhB5ZSuiWRe51D9eA3F6s
+         iTzqSQtoY9AqwRW4pXa8/mgWtQLIq0+aBN++Ntq+i6UiDkJmK4EH7WECZkYgHtmsvxyn
+         lFzQ==
+Content-Disposition: inline
+In-Reply-To: <20121108140852.GI31821-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121107163919.GC2660-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Wed 07-11-12 08:39:19, Tejun Heo wrote:
-[...]
-> --- a/kernel/cgroup_freezer.c
-> +++ b/kernel/cgroup_freezer.c
-[...]
-> @@ -320,14 +388,39 @@ static void freezer_apply_state(struct f
->   * @freezer: freezer of interest
->   * @freeze: whether to freeze or thaw
->   *
-> - * Freeze or thaw @cgroup according to @freeze.
-> + * Freeze or thaw @freezer according to @freeze.  The operations are
-> + * recursive - all descendants of @freezer will be affected.
->   */
->  static void freezer_change_state(struct freezer *freezer, bool freeze)
->  {
-> +	struct cgroup *pos;
-> +
->  	/* update @freezer */
->  	spin_lock_irq(&freezer->lock);
->  	freezer_apply_state(freezer, freeze, CGROUP_FREEZING_SELF);
->  	spin_unlock_irq(&freezer->lock);
-> +
-> +	/*
-> +	 * Update all its descendants in pre-order traversal.  Each
-> +	 * descendant will try to inherit its parent's FREEZING state as
-> +	 * CGROUP_FREEZING_PARENT.
-> +	 */
-> +	rcu_read_lock();
-> +	cgroup_for_each_descendant_pre(pos, freezer->css.cgroup) {
-> +		struct freezer *pos_f = cgroup_freezer(pos);
-> +		struct freezer *parent = parent_freezer(pos_f);
-> +
-> +		/*
-> +		 * Our update to @parent->state is already visible which is
-> +		 * all we need.  No need to lock @parent.  For more info on
-> +		 * synchronization, see freezer_post_create().
-> +		 */
-> +		spin_lock_irq(&pos_f->lock);
-> +		freezer_apply_state(pos_f, parent->state & CGROUP_FREEZING,
-> +				    CGROUP_FREEZING_PARENT);
-> +		spin_unlock_irq(&pos_f->lock);
-> +	}
-> +	rcu_read_unlock();
->  }
+Hello, Michal.
 
-This seems to be racy because parent->state access is not linearized.
-Say we have parallel freeze and thawing on a tree like the following:
-	A
-	|
-	B
-        |
-        C 
+On Thu, Nov 08, 2012 at 03:08:52PM +0100, Michal Hocko wrote:
+> This seems to be racy because parent->state access is not linearized.
+> Say we have parallel freeze and thawing on a tree like the following:
+> 	A
+> 	|
+> 	B
+>         |
+>         C 
+> 
+> pre_order will visit them in B, C order.
+> 	CPU1						CPU2
+> freezer_apply_state(A, true)
+> A->state & FREEZING == true		freezer_apply_state(A, false)
+> 					A->state & FREEZING == false
+> 					freezer_apply_state(B, false)
+> 					B->state & FREEZING == false
+> freezer_apply_state(B, true)
+> 
+> B->state & FREEZING == true
+> freezer_apply_state(C, true)
+> 					freezer_apply_state(C, false)
+> 
+> So A, C are thawed while B is frozen. Or am I missing something which
+> would prevent from this kind of race?
 
-pre_order will visit them in B, C order.
-	CPU1						CPU2
-freezer_apply_state(A, true)
-A->state & FREEZING == true		freezer_apply_state(A, false)
-					A->state & FREEZING == false
-					freezer_apply_state(B, false)
-					B->state & FREEZING == false
-freezer_apply_state(B, true)
+The rule is that there will be at least one inheritance operation
+after a parent is updated.  The exact order of propagation doesn't
+matter as long as there's at least one inheritance event after the
+latest update to a parent.  This works because inheritance operations
+are atomic to each other.  If one inheritance operation "saw" an
+update to its parent, the next inheritance operation is guaranteed to
+see at least upto that update.
 
-B->state & FREEZING == true
-freezer_apply_state(C, true)
-					freezer_apply_state(C, false)
+So, in the above example in CPU2, (B->state & FREEZING) test and
+freezer_apply_state(C, false) can't be interleaved with the same
+inheritance operation from CPU1.  They either happen before or after.
 
-So A, C are thawed while B is frozen. Or am I missing something which
-would prevent from this kind of race?
+Maybe it's too subtle.  The only reason I didn't use a giant
+freezer_mutex was that I wanted to demonstrate how to do state
+propagation without depending on single giant lock.  Maybe nobody
+wants that and this should use one mutex to protect the hierarchy.  I
+don't know.
 
-The easy fix is to move spin_unlock_irq(&freezer->lock); after
-rcu_read_unlock.
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
