@@ -1,69 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/9] cgroup: implement generic child / descendant walk
- macros
-Date: Thu, 8 Nov 2012 09:15:32 -0800
-Message-ID: <20121108171532.GI12973@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 8/9] cgroup_freezer: add ->post_create() and
+ ->pre_destroy() and track online state
+Date: Thu, 8 Nov 2012 09:17:42 -0800
+Message-ID: <20121108171742.GJ12973@htj.dyndns.org>
 References: <1351931915-1701-1-git-send-email-tj@kernel.org>
- <1351931915-1701-4-git-send-email-tj@kernel.org>
- <20121108095013.GA31821@dhcp22.suse.cz>
+ <1351931915-1701-9-git-send-email-tj@kernel.org>
+ <20121108132306.GH31821@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-pm-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=T/x/QLUY42d8ekz9YEkY3vj/WBgF0ZVomtgFdbkEOa8=;
-        b=JUi7OjpV6BUFewBq7DJxHB1Eq5h/RQcDRV+M6fp94CFlZiAt3tjNLPtBoGlINUBav0
-         lxG0j8SiNXmgjF43630hZY6LYPftBUIrI+v3TWsPtv/iY3P0Rm58nbiXYXErh4aThX6N
-         9Glyh9EhmAg1u/21c02MdJ8lc4ZQPKT4h/lp03pQH+Xl5bZOD8k3RJRNAUFHjNGZ+zrc
-         CNrHvzGL/rZHvyml2VC8Ou6poDuycKfCJoWMLJ+qWJem1KVCA0HmIsMebVBQwwPNXhxF
-         Fz8mTdZ7o1z7Zl6bMeT7YJW4xM5EdewyR33zNl/4qEKyBdC3n1vYuXKda0AxY6BxD3CM
-         lbDA==
+        bh=7FWPXDMalA71f9HUOPwTZ8nPpx3lVd6aPE8SLoIYOss=;
+        b=jSbREIg8909n+igy0cKT5/NWYu1ymizrjVuFD3MqF8hl5ZTEKOGV2FHvdYK3uv7XuY
+         x/3xtmvGTdBPEoL+DNaliPR4/tIrV9Zr2isXCZKYwUjkmY+mY9fpOyxUPqs0s0U6cBV0
+         IwF0pRS1hl0kIPl+u57dDvkVQ/ba6ymwaGSIR1wmsO0WBC2q2sHTQHHvSrMNcxNMT0vg
+         dc4nDvljpooUNMIGUAKCnV+nqFXHDoaXTK9vtIAUu/Z+pxJSIiA15cwVT4F9SxwIH5wq
+         4yljkYjOuwj5Ei+SX5w+iqZplZsFIx5hf0Hb4wGc+7qwLw8gN3iuiPZ+4KGz1JFHmdWH
+         zRug==
 Content-Disposition: inline
-In-Reply-To: <20121108095013.GA31821@dhcp22.suse.cz>
-Sender: linux-pm-owner@vger.kernel.org
+In-Reply-To: <20121108132306.GH31821-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: lizefan@huawei.com, rjw@sisk.pl, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, fweisbec@gmail.com
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Hey, Michal.
+Hello,
 
-On Thu, Nov 08, 2012 at 10:50:13AM +0100, Michal Hocko wrote:
-> On Sat 03-11-12 01:38:29, Tejun Heo wrote:
-> > Currently, cgroup doesn't provide any generic helper for walking a
-> > given cgroup's children or descendants.  This patch adds the following
-> > three macros.
-> > 
-> > * cgroup_for_each_child() - walk immediate children of a cgroup.
-> > 
-> > * cgroup_for_each_descendant_pre() - visit all descendants of a cgroup
-> >   in pre-order tree traversal.
-> > 
-> > * cgroup_for_each_descendant_post() - visit all descendants of a
-> >   cgroup in post-order tree traversal.
-> > 
-> > All three only require the user to hold RCU read lock during
-> > traversal.  Verifying that each iterated cgroup is online is the
-> > responsibility of the user.  When used with proper synchronization,
-> > cgroup_for_each_descendant_pre() can be used to propagate config
-> > updates to descendants in reliable way.  See comments for details.
-> > 
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
+On Thu, Nov 08, 2012 at 02:23:06PM +0100, Michal Hocko wrote:
+> On Sat 03-11-12 01:38:34, Tejun Heo wrote:
+> > A cgroup is online and visible to iteration between ->post_create()
+> > and ->pre_destroy().  This patch introduces CGROUP_FREEZER_ONLINE and
+> > toggles it from the newly added freezer_post_create() and
+> > freezer_pre_destroy() while holding freezer->lock such that a
+> > cgroup_freezer can be reilably distinguished to be online.  This will
+> > be used by full hierarchy support.
 > 
-> I will convert mem_cgroup_iter to use this rather than css_get_next
-> after this gets into the next tree so that it can fly via Andrew.
-> 
-> Reviewed-by: Michal Hocko <mhocko@suse.cz>
-> 
-> Just a minor knit. You are talking about a config propagation while I
-> would consider state propagation more clear and less confusing. Config
-> is usually stable enough so that post_create is not necessary for
-> syncing (e.g. memcg.swappiness). It is a state which must be consistent
-> throughout the hierarchy which matters here.
+> I am thinking whether freezer_pre_destroy is really needed. Once we
+> reach pre_destroy then there are no tasks nor any children in the group
+> so there is nobody to wake up if the group was frozen and the destroy
+> callback is called after synchronize_rcu so the traversing should be
+> safe.
 
-Did s/config/state/g
+Yeah, it might be true, but I'd still like to keep the offlining in
+->pre_destroy() so that it's symmetrical w/ ->post_create().  I'll
+rename and document the ops so that the roles of each are clearer.
 
 Thanks.
 
