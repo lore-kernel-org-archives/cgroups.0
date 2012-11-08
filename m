@@ -1,10 +1,13 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 6/9] cgroup_freezer: make freezer->state mask of flags
-Date: Thu, 8 Nov 2012 06:39:52 -0800
-Message-ID: <20121108143952.GD12973@htj.dyndns.org>
+Subject: Re: [PATCH 7/9] cgroup_freezer: introduce
+	CGROUP_FREEZING_[SELF|PARENT]
+Date: Thu, 8 Nov 2012 06:41:30 -0800
+Message-ID: <20121108144130.GE12973@htj.dyndns.org>
 References: <1351931915-1701-1-git-send-email-tj@kernel.org>
-	<1351931915-1701-7-git-send-email-tj@kernel.org>
-	<20121108103928.GD31821@dhcp22.suse.cz>
+	<1351931915-1701-8-git-send-email-tj@kernel.org>
+	<509B382E.4030707@jp.fujitsu.com>
+	<20121108044521.GH2660@mtj.dyndns.org>
+	<509B3B94.1070407@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -12,15 +15,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=SrL+qE0AbDTF1t3T1lfWRYZ2QxRb3kee9WA7JehDFHw=;
-	b=1BRv74wamV/O6q98JLfYn0FpqgXWxbVUh6A9aq7qk8Q0oLuT7K0YAbtKNT9rX6aD0U
-	Yl7LszDKCVxJ8MCIT15mYf0xFp4PjNAKlVW3xmmsjcwqRmWLtHF2BchjhExd65ThpvnI
-	NXy0aD70BXrfHPlO5PVqesE86lSlechk73oPNcXG1o2EngLJv8Rp5Z7p+YYE2qyvqo0x
-	Nsvj+ydoUIJoCd7qus9uht4SIzXfFXKjA5bPrChV5fjFmqQsdX45gdEDBejve+Q2EPB0
-	EjUxgz8dos5bfqC/9Q/zRjTy3kKC3VUmrgbTF1UEyD8cZasJr4fiXuBPt5pmsXQF5bK2
-	cqWg==
+	bh=3HnKFOq4EYP+BMts0+Zll1B56dNjogXw9FNDCSFM3UM=;
+	b=XUIiCHJ1hJF2sgtkpQwlEm63aWqzh1u11J5iykME4/w4zmBtAnrhIYaMmH1kdtzaVa
+	2165LyFAwZdIxGk/APqzG8fEShGccbcX3xjJiTJnMX7MCjLtXZyOdPyvZ2D5eLnmHCVd
+	FWaTX1lgoW/ErbKA/EdvKCdhwVLJ7kAhl7/WxIK8bjdzzrWdyjRbmZNS70CwTXtLvxmb
+	/x4Z2QoHgt0xZgVGyPhrThh/mYDz1/mtJqDjDc8dER9pLFahZ3e6ZJydcN9BQV9R86QV
+	duWpz7ZHKvb7dnJok/6VESYUmf8G3T1GvnuIlge5KcN4hOSHu/1AzsLTFe94a7w4bE+5
+	m8Xw==
 Content-Disposition: inline
-In-Reply-To: <20121108103928.GD31821-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <509B3B94.1070407-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -31,32 +34,18 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Michal.
+Hello, Kamezawa.
 
-On Thu, Nov 08, 2012 at 11:39:28AM +0100, Michal Hocko wrote:
-> On Sat 03-11-12 01:38:32, Tejun Heo wrote:
-> > freezer->state was an enum value - one of THAWED, FREEZING and FROZEN.
-> > As the scheduled full hierarchy support requires more than one
-> > freezing condition, switch it to mask of flags.  If FREEZING is not
-> > set, it's thawed.  FREEZING is set if freezing or frozen.  If frozen,
-> > both FREEZING and FROZEN are set.  Now that tasks can be attached to
-> > an already frozen cgroup, this also makes freezing condition checks
-> > more natural.
-> > 
-> > This patch doesn't introduce any behavior change.
-> > 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> I think it would be nicer to use freezer_state_flags enum rather than
-> unsigned int for the state. I would even expect gcc to complain about
-> that but it looks like -fstrict-enums is c++ specific (so long enum
-> safety).
+On Thu, Nov 08, 2012 at 01:56:52PM +0900, Kamezawa Hiroyuki wrote:
+> Got it, thank you. I'm glad if you add some more explanation in comments
+> and considered use-case in changelog.
 
-But if you use it as flag bits, the resulting value no longer is
-inside the defined enum values.  Isn't that weird?
+I explained it in the last patch because it was a bit weird to explain
+stuff which isn't implemented yet.  If it doesn't feel sufficient
+after the last patch, please let me know.
 
 Thanks.
 
