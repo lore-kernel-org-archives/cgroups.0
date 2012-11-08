@@ -1,52 +1,100 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/2] oom: rework dump_tasks to optimize memcg-oom situation
-Date: Thu, 08 Nov 2012 21:58:52 +0800
-Message-ID: <509BBA9C.7050007@gmail.com>
-References: <1352277602-21687-1-git-send-email-handai.szj@taobao.com> <1352277719-21760-1-git-send-email-handai.szj@taobao.com> <20121107223437.GC26382@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 9/9 v2] cgroup_freezer: implement proper hierarchy support
+Date: Thu, 8 Nov 2012 15:08:52 +0100
+Message-ID: <20121108140852.GI31821@dhcp22.suse.cz>
+References: <1351931915-1701-1-git-send-email-tj@kernel.org>
+	<1351931915-1701-10-git-send-email-tj@kernel.org>
+	<20121107163919.GC2660@mtj.dyndns.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=UguCFhAsL3Vjc3lrI4VK4LbuC5L6yrIWIGb4jSI3BEY=;
-        b=MApKHgYksUmRlK7ni83pqlYgp699U1UouXrPq+VQPqdki+UeolrI+0zhhWF7vFWWWd
-         N3A8Rps3h9bNf3OQxZK93DK+Qas94Wf7U0dVjxs9P+4WwYxlWJcsOj2c65sZvR3jZFJf
-         cAqECIuT1auZQW91ZL9zm2uDGpkkPyY8sYA3xmNKqyUaFsnnXRekE0ZfC9nXxezIx95t
-         7IMi48Pmldu+rnEQ0AXQk/sm01etTUnpAvq4lykcDVYQrdZ1VACbr7fsxDSt+mxjC03I
-         vBp+KuF0OZ9AzaDRZo7+HQe4dsCv0C5AZ/hZoH9rl3biSYIRUoCQ+xeTUvSjRX+kiB1i
-         oGOw==
-In-Reply-To: <20121107223437.GC26382-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121107163919.GC2660-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 11/08/2012 06:34 AM, Michal Hocko wrote:
-> On Wed 07-11-12 16:41:59, Sha Zhengju wrote:
->> From: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->>
->> If memcg oom happening, don't scan all system tasks to dump memory state of
->> eligible tasks, instead we iterates only over the process attached to the oom
->> memcg and avoid the rcu lock.
-> you have replaced rcu lock by css_set_lock which is, well, heavier than
-> rcu. Besides that the patch is not correct because you have excluded
-> all tasks that are from subgroups because you iterate only through the
-> top level one.
-> I am not sure the whole optimization would be a win even if implemented
-> correctly. Well, we scan through more tasks currently and most of them
-> are not relevant but then you would need to exclude task_in_mem_cgroup
-> from oom_unkillable_task and that would be more code churn than the
-> win.
+On Wed 07-11-12 08:39:19, Tejun Heo wrote:
+[...]
+> --- a/kernel/cgroup_freezer.c
+> +++ b/kernel/cgroup_freezer.c
+[...]
+> @@ -320,14 +388,39 @@ static void freezer_apply_state(struct f
+>   * @freezer: freezer of interest
+>   * @freeze: whether to freeze or thaw
+>   *
+> - * Freeze or thaw @cgroup according to @freeze.
+> + * Freeze or thaw @freezer according to @freeze.  The operations are
+> + * recursive - all descendants of @freezer will be affected.
+>   */
+>  static void freezer_change_state(struct freezer *freezer, bool freeze)
+>  {
+> +	struct cgroup *pos;
+> +
+>  	/* update @freezer */
+>  	spin_lock_irq(&freezer->lock);
+>  	freezer_apply_state(freezer, freeze, CGROUP_FREEZING_SELF);
+>  	spin_unlock_irq(&freezer->lock);
+> +
+> +	/*
+> +	 * Update all its descendants in pre-order traversal.  Each
+> +	 * descendant will try to inherit its parent's FREEZING state as
+> +	 * CGROUP_FREEZING_PARENT.
+> +	 */
+> +	rcu_read_lock();
+> +	cgroup_for_each_descendant_pre(pos, freezer->css.cgroup) {
+> +		struct freezer *pos_f = cgroup_freezer(pos);
+> +		struct freezer *parent = parent_freezer(pos_f);
+> +
+> +		/*
+> +		 * Our update to @parent->state is already visible which is
+> +		 * all we need.  No need to lock @parent.  For more info on
+> +		 * synchronization, see freezer_post_create().
+> +		 */
+> +		spin_lock_irq(&pos_f->lock);
+> +		freezer_apply_state(pos_f, parent->state & CGROUP_FREEZING,
+> +				    CGROUP_FREEZING_PARENT);
+> +		spin_unlock_irq(&pos_f->lock);
+> +	}
+> +	rcu_read_unlock();
+>  }
 
-Thanks for your and David's advice.
-This piece is trying to save some expense while dumping memcg tasks, but 
-failed to
-scanning subgroups by iterating the cgroup. I'm agreed with your cost&win
-opinion, so I decide to give up this one. : )
+This seems to be racy because parent->state access is not linearized.
+Say we have parallel freeze and thawing on a tree like the following:
+	A
+	|
+	B
+        |
+        C 
 
+pre_order will visit them in B, C order.
+	CPU1						CPU2
+freezer_apply_state(A, true)
+A->state & FREEZING == true		freezer_apply_state(A, false)
+					A->state & FREEZING == false
+					freezer_apply_state(B, false)
+					B->state & FREEZING == false
+freezer_apply_state(B, true)
 
-Thanks,
-Sha
+B->state & FREEZING == true
+freezer_apply_state(C, true)
+					freezer_apply_state(C, false)
+
+So A, C are thawed while B is frozen. Or am I missing something which
+would prevent from this kind of race?
+
+The easy fix is to move spin_unlock_irq(&freezer->lock); after
+rcu_read_unlock.
+-- 
+Michal Hocko
+SUSE Labs
