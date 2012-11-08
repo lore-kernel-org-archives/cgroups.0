@@ -1,130 +1,135 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] memcg, oom: provide more precise dump info while
- memcg oom happening
-Date: Thu, 08 Nov 2012 21:12:00 +0800
-Message-ID: <509BAFA0.4010604@gmail.com>
-References: <1352277602-21687-1-git-send-email-handai.szj@taobao.com> <1352277696-21724-1-git-send-email-handai.szj@taobao.com> <509B7658.1020807@jp.fujitsu.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 8/9] cgroup_freezer: add ->post_create() and
+ ->pre_destroy() and track online state
+Date: Thu, 8 Nov 2012 14:23:06 +0100
+Message-ID: <20121108132306.GH31821@dhcp22.suse.cz>
+References: <1351931915-1701-1-git-send-email-tj@kernel.org>
+ <1351931915-1701-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=o3sovKB/3dZN9LoVgKBxiKGrbrvjX1wvYss2U921ObI=;
-        b=aqSq4cOGs5mEjAfayTg8C4t/9ra8Jf7TiVb/ZHpRV1mxoxz8/ZShdiaLaBGeOScvzq
-         Vz7sb8RmWwPYLQNUZZBeg6WzhVJscs+kp/zpQ1b40M/J6l6b0yaUR1LS0eqMBLTFFfsU
-         lKizbJJbsC7uKE/L5+iS686Sh33FYVu0Wj++flGrcD2oXEsZP/yjnpz1zN9bqYUdCX4Q
-         63YryifPGjF/dJ1TI5MXxXzOzCyS5VLOr9sq1WefYDjiE51MR6HWBMnRH46WQQbyKQMj
-         L9ZNPAnIFeTYgDASmLZwB+W6MCj2pYI3dB7ANKjq1XlEppv9fCIN32BKzxb4TfXdiiWk
-         E1PA==
-In-Reply-To: <509B7658.1020807-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1351931915-1701-9-git-send-email-tj@kernel.org>
+Sender: linux-pm-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, rjw@sisk.pl, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, fweisbec@gmail.com
 
-On 11/08/2012 05:07 PM, Kamezawa Hiroyuki wrote:
-> (2012/11/07 17:41), Sha Zhengju wrote:
->> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->>
->> Current, when a memcg oom is happening the oom dump messages is still global
->> state and provides few useful info for users. This patch prints more pointed
->> memcg page statistics for memcg-oom.
->>
->> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
->> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
->> ---
->>   mm/memcontrol.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++-------
->>   mm/oom_kill.c   |    6 +++-
->>   2 files changed, 66 insertions(+), 11 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 0eab7d5..2df5e72 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -118,6 +118,14 @@ static const char * const mem_cgroup_events_names[] = {
->>   	"pgmajfault",
->>   };
->>   
->> +static const char * const mem_cgroup_lru_names[] = {
->> +	"inactive_anon",
->> +	"active_anon",
->> +	"inactive_file",
->> +	"active_file",
->> +	"unevictable",
->> +};
->> +
-> Is this for the same strings with show_free_areas() ?
->
+On Sat 03-11-12 01:38:34, Tejun Heo wrote:
+> A cgroup is online and visible to iteration between ->post_create()
+> and ->pre_destroy().  This patch introduces CGROUP_FREEZER_ONLINE and
+> toggles it from the newly added freezer_post_create() and
+> freezer_pre_destroy() while holding freezer->lock such that a
+> cgroup_freezer can be reilably distinguished to be online.  This will
+> be used by full hierarchy support.
 
-I just move the declaration here from the bottom of source file to make
-the following use error-free.
+I am thinking whether freezer_pre_destroy is really needed. Once we
+reach pre_destroy then there are no tasks nor any children in the group
+so there is nobody to wake up if the group was frozen and the destroy
+callback is called after synchronize_rcu so the traversing should be
+safe.
 
->>   /*
->>    * Per memcg event counter is incremented at every pagein/pageout. With THP,
->>    * it will be incremated by the number of pages. This counter is used for
->> @@ -1501,8 +1509,59 @@ static void move_unlock_mem_cgroup(struct mem_cgroup *memcg,
->>   	spin_unlock_irqrestore(&memcg->move_lock, *flags);
->>   }
->>   
->> +#define K(x) ((x) << (PAGE_SHIFT-10))
->> +static void mem_cgroup_print_oom_stat(struct mem_cgroup *memcg)
->> +{
->> +	struct mem_cgroup *mi;
->> +	unsigned int i;
->> +
->> +	if (!memcg->use_hierarchy && memcg != root_mem_cgroup) {
-> Why do you need to have this condition check ?
->
+> ONLINE test is added to freezer_apply_state() but it currently doesn't
+> make any difference as freezer_write() can only be called for an
+> online cgroup.
+> 
+> Adjusting system_freezing_cnt on destruction is moved from
+> freezer_destroy() to the new freezer_pre_destroy() for consistency.
+> 
+> This patch doesn't introduce any noticeable behavior change.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-Yes, the check is unnecessary... I'll remove it next version.
+Reviewed-by: Michal Hocko <mhocko@suse.cz>
 
->> +		for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
->> +			if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
->> +				continue;
->> +			printk(KERN_CONT "%s:%ldKB ", mem_cgroup_stat_names[i],
->> +				K(mem_cgroup_read_stat(memcg, i)));
-> Hm, how about using the same style with show_free_areas() ?
->
+> ---
+>  kernel/cgroup_freezer.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 40 insertions(+), 2 deletions(-)
+> 
+> diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+> index b8ad93c..4f12d31 100644
+> --- a/kernel/cgroup_freezer.c
+> +++ b/kernel/cgroup_freezer.c
+> @@ -23,6 +23,7 @@
+>  #include <linux/seq_file.h>
+>  
+>  enum freezer_state_flags {
+> +	CGROUP_FREEZER_ONLINE	= (1 << 0), /* freezer is fully online */
+>  	CGROUP_FREEZING_SELF	= (1 << 1), /* this freezer is freezing */
+>  	CGROUP_FREEZING_PARENT	= (1 << 2), /* the parent freezer is freezing */
+>  	CGROUP_FROZEN		= (1 << 3), /* this and its descendants frozen */
+> @@ -98,13 +99,45 @@ static struct cgroup_subsys_state *freezer_create(struct cgroup *cgroup)
+>  	return &freezer->css;
+>  }
+>  
+> -static void freezer_destroy(struct cgroup *cgroup)
+> +/**
+> + * freezer_post_create - commit creation of a freezer cgroup
+> + * @cgroup: cgroup being created
+> + *
+> + * We're committing to creation of @cgroup.  Mark it online.
+> + */
+> +static void freezer_post_create(struct cgroup *cgroup)
+>  {
+>  	struct freezer *freezer = cgroup_freezer(cgroup);
+>  
+> +	spin_lock_irq(&freezer->lock);
+> +	freezer->state |= CGROUP_FREEZER_ONLINE;
+> +	spin_unlock_irq(&freezer->lock);
+> +}
+> +
+> +/**
+> + * freezer_pre_destroy - initiate destruction of @cgroup
+> + * @cgroup: cgroup being destroyed
+> + *
+> + * @cgroup is going away.  Mark it dead and decrement system_freezing_count
+> + * if it was holding one.
+> + */
+> +static void freezer_pre_destroy(struct cgroup *cgroup)
+> +{
+> +	struct freezer *freezer = cgroup_freezer(cgroup);
+> +
+> +	spin_lock_irq(&freezer->lock);
+> +
+>  	if (freezer->state & CGROUP_FREEZING)
+>  		atomic_dec(&system_freezing_cnt);
+> -	kfree(freezer);
+> +
+> +	freezer->state = 0;
+> +
+> +	spin_unlock_irq(&freezer->lock);
+> +}
+> +
+> +static void freezer_destroy(struct cgroup *cgroup)
+> +{
+> +	kfree(cgroup_freezer(cgroup));
+>  }
+>  
+>  /*
+> @@ -260,6 +293,9 @@ static void freezer_apply_state(struct freezer *freezer, bool freeze,
+>  	/* also synchronizes against task migration, see freezer_attach() */
+>  	lockdep_assert_held(&freezer->lock);
+>  
+> +	if (!(freezer->state & CGROUP_FREEZER_ONLINE))
+> +		return;
+> +
+>  	if (freeze) {
+>  		if (!(freezer->state & CGROUP_FREEZING))
+>  			atomic_inc(&system_freezing_cnt);
+> @@ -347,6 +383,8 @@ static struct cftype files[] = {
+>  struct cgroup_subsys freezer_subsys = {
+>  	.name		= "freezer",
+>  	.create		= freezer_create,
+> +	.post_create	= freezer_post_create,
+> +	.pre_destroy	= freezer_pre_destroy,
+>  	.destroy	= freezer_destroy,
+>  	.subsys_id	= freezer_subsys_id,
+>  	.attach		= freezer_attach,
+> -- 
+> 1.7.11.7
+> 
 
-I'm also trying do so. show_free_areas() prints the memory related info
-in two style:
-one is in page unit and the oher is in KB (I've no idea why we distinct
-them), but
-I think the KB format is more readable.
-
-
->> +		}
->> +
->> +		for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++)
->> +			printk(KERN_CONT "%s:%lu ", mem_cgroup_events_names[i],
->> +				mem_cgroup_read_events(memcg, i));
->> +
-> I don't think EVENTS info is useful for oom.
->
-
-It seems you're right. : )
-
->> +		for (i = 0; i < NR_LRU_LISTS; i++)
->> +			printk(KERN_CONT "%s:%luKB ", mem_cgroup_lru_names[i],
->> +				K(mem_cgroup_nr_lru_pages(memcg, BIT(i))));
-> How far does your new information has different format than usual oom ?
-> Could you show a sample and difference in changelog ?
->
-> Of course, I prefer both of them has similar format.
->
->
->
-The new memcg-oom info excludes global state out and prints the memcg
-statistics instead
-which seems more brevity. I'll add a sample next time. Thanks for
-reminding me!
-
-
-Thanks,
-Sha
+-- 
+Michal Hocko
+SUSE Labs
