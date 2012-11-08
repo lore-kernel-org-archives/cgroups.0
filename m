@@ -1,77 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 9/9 v2] cgroup_freezer: implement proper hierarchy support
-Date: Thu, 8 Nov 2012 06:18:48 -0800
-Message-ID: <20121108141848.GA12973@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 6/9] cgroup_freezer: make freezer->state mask of flags
+Date: Thu, 8 Nov 2012 06:38:53 -0800
+Message-ID: <20121108143853.GC12973@htj.dyndns.org>
 References: <1351931915-1701-1-git-send-email-tj@kernel.org>
- <1351931915-1701-10-git-send-email-tj@kernel.org>
- <20121107163919.GC2660@mtj.dyndns.org>
- <20121108140852.GI31821@dhcp22.suse.cz>
+ <1351931915-1701-7-git-send-email-tj@kernel.org>
+ <509B371E.9050005@jp.fujitsu.com>
+ <20121108044255.GG2660@mtj.dyndns.org>
+ <509B3C72.3050904@jp.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=F9LgQMiVjvsuDntRVh/BPzbhBwjLEXg/1QUoe+F2QJ4=;
-        b=BRrZXKaIhZNN3qpV9/gQyuirbw0Q7mB2y9KufCdHgqmSZ/TYoGKn2iVEybKTsSqc57
-         3ABuMuJ+eqwT6vo0WRdLUS+3ZMB2Yx3eIb/Ud7qYkZvxEvANQ6CNMrHXRmHNcMeMj7BR
-         C5Hwn2SsBAWyb6kxHtpUgG3KHCCLKbqgi0RQD+GEPVB9py/aLq34e8nDRQt3aWcSJ6Z/
-         7gty9KibS+TNqCUDx4s0KchEmF7fm/Zl7neI/vo9Eb8MWpmqhB5ZSuiWRe51D9eA3F6s
-         iTzqSQtoY9AqwRW4pXa8/mgWtQLIq0+aBN++Ntq+i6UiDkJmK4EH7WECZkYgHtmsvxyn
-         lFzQ==
+        bh=pDSxK0JnBQrC1A+zQ1MsCG/7ILxI40wnDKx64R0ielg=;
+        b=P3ajJOmMbKweytiXzdqRzdSYg5uRNKo4mFDxYDxGFxdQP52GNydi3iMUKqcDsJTjeB
+         s7LCxMGUYXb9XeDgkP5Lr2r9CqlMn4JfmOEIn9w/lplJZFTzYqI5e7+9yh/cTD6hkPNr
+         fbGlGSwyFq9D65KyxOvNwXVpjb5gNwyp/708zs8HBdWXIfDZnms9MvNkd5A9vByd9JRw
+         NFNGmQMR+EAMNTa2eoJK729E0UqXx7NdszSeJkX36PNX+yLO+N+52RX+LhgyxT4FajD1
+         xYOOnLSf/H4Me33J1L0iRWkBmUKcYSIQvDZehP9pAGi9nG4z8fKRUSBx6Y0DH6hThNBb
+         rGgw==
 Content-Disposition: inline
-In-Reply-To: <20121108140852.GI31821-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <509B3C72.3050904@jp.fujitsu.com>
+Sender: linux-pm-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: lizefan@huawei.com, mhocko@suse.cz, rjw@sisk.pl, linux-pm@vger.kernel.org, fweisbec@gmail.com, containers@lists.linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Hello, Michal.
+Hello, Kamezawa.
 
-On Thu, Nov 08, 2012 at 03:08:52PM +0100, Michal Hocko wrote:
-> This seems to be racy because parent->state access is not linearized.
-> Say we have parallel freeze and thawing on a tree like the following:
-> 	A
-> 	|
-> 	B
->         |
->         C 
+On Thu, Nov 08, 2012 at 02:00:34PM +0900, Kamezawa Hiroyuki wrote:
+> (2012/11/08 13:42), Tejun Heo wrote:
+> >Hello, Kame.
+> >
+> >On Thu, Nov 08, 2012 at 01:37:50PM +0900, Kamezawa Hiroyuki wrote:
+> >>How about
+> >>enum {
+> >>    __CGROUP_FREEZING,
+> >>    __CGROUP_FROZEN,
+> >>};
+> >>
+> >>#define CGROUP_FREEZER_STATE_MASK  0x3
+> >>#define CGROUP_FREEZER_STATE(state)	((state) & CGROUP_FREEZER_STATE_MASK)
+> >>#define CGROUP_THAW(state)	(CGROUP_FREEZER_STATE(state) == 0)
+> >>#define CGROUP_FREEZING(state)	(CGROUP_FREEZER_STATE(state) == __CGROUP_FREEZING)
+> >>#define CGROUP_FROZEN(state)\
+> >>	(CGROUP_FREEZER_STATE(state) == (__CGROUP_FREEZING | __CGROUP_FROZEN))
+> >
+> >I think it's a bit overdone and we have cases where we test for
+> >FREEZING regardless of FROZEN and cases where test for FREEZING &&
+> >!FROZEN.  We can have, say, CGROUP_FREZING() and then
+> >CGROUP_FREEZING_BUT_NOT_FROZEN(), but it feels more like obfuscation
+> >than anything else.
+> >
 > 
-> pre_order will visit them in B, C order.
-> 	CPU1						CPU2
-> freezer_apply_state(A, true)
-> A->state & FREEZING == true		freezer_apply_state(A, false)
-> 					A->state & FREEZING == false
-> 					freezer_apply_state(B, false)
-> 					B->state & FREEZING == false
-> freezer_apply_state(B, true)
-> 
-> B->state & FREEZING == true
-> freezer_apply_state(C, true)
-> 					freezer_apply_state(C, false)
-> 
-> So A, C are thawed while B is frozen. Or am I missing something which
-> would prevent from this kind of race?
+> Hm, then, I'm glad if I can see what combinations of flags are valid and
+> meanings of them in source code comments.
 
-The rule is that there will be at least one inheritance operation
-after a parent is updated.  The exact order of propagation doesn't
-matter as long as there's at least one inheritance event after the
-latest update to a parent.  This works because inheritance operations
-are atomic to each other.  If one inheritance operation "saw" an
-update to its parent, the next inheritance operation is guaranteed to
-see at least upto that update.
+Ooh, the following comment is added by a later patch when the whole
+thing is complete.
 
-So, in the above example in CPU2, (B->state & FREEZING) test and
-freezer_apply_state(C, false) can't be interleaved with the same
-inheritance operation from CPU1.  They either happen before or after.
-
-Maybe it's too subtle.  The only reason I didn't use a giant
-freezer_mutex was that I wanted to demonstrate how to do state
-propagation without depending on single giant lock.  Maybe nobody
-wants that and this should use one mutex to protect the hierarchy.  I
-don't know.
+/*
+ * A cgroup is freezing if any FREEZING flags are set.  FREEZING_SELF is
+ * set if "FROZEN" is written to freezer.state cgroupfs file, and cleared
+ * for "THAWED".  FREEZING_PARENT is set if the parent freezer is FREEZING
+ * for whatever reason.  IOW, a cgroup has FREEZING_PARENT set if one of
+ * its ancestors has FREEZING_SELF set.
+ */
 
 Thanks.
 
