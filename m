@@ -1,49 +1,76 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: implement proper
-	hierarchy support
-Date: Fri, 9 Nov 2012 09:15:12 -0800
-Message-ID: <20121109171512.GA2711@htj.dyndns.org>
+Subject: Re: [PATCH 1/9 v3] cgroup: add cgroup_subsys->post_create()
+Date: Fri, 9 Nov 2012 09:22:11 -0800
+Message-ID: <20121109172211.GB2711@htj.dyndns.org>
 References: <1351931915-1701-1-git-send-email-tj@kernel.org>
+ <1351931915-1701-2-git-send-email-tj@kernel.org>
+ <20121108190715.GD9672@htj.dyndns.org>
+ <509CE472.9040504@monom.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=F7KVo3x5dw9HdS3yCi8tlW4uhlkvotF+vKjzriAeGNE=;
+        b=ok53LI4CO3vGjGpwlp0AUWDi3SA5+7agM97sHoaNw5Z0htHjfsRiLF/KkXrZUvyVnF
+         Xgpv6ZlaBnynoyNxPik/Ps0H+nsW4PTtWHpjyig2xKlLcCGvbVPBpgv0lbpIyWiyq6uz
+         X6PkfyG2VXM14RZAzjF1rWvHyR/fQnIswsD5udvElfbX5k3xoMVRYwh3cIB5CabRlkhO
+         Xi8WprbnERwwZc8Hk7qduuuaQ+DY3v9at4S22UEqf066DZZPvFTD09ZuRRaN1FXCBmes
+         pk0rv1L0+QvQszm34eUNewqQoIPUc/vqopp5G0iSZPW8rND35XyovubnNkWyP7yZZkpE
+         mXTA==
+Content-Disposition: inline
+In-Reply-To: <509CE472.9040504-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=Z4x9GZnVI9GpQrvykBv0f2cTDN95Au9hCKtXiwqkm5k=;
-	b=ImKAoo8gpAe2yIthwwA0HGbuqHLKWm7WgiVuBljXzDL+Gpn0wDtBPHW7CoybXcan/R
-	VXbla4MZQli+21ev47lCT4moUcTaRzDyQsFK/N1gFWwrAqnIMp61dSH2/JtRa9JrU8OQ
-	nQhalQ5Jt+ajMoFieVyr+TCbHd4xLUBiOE4g+vNfxKMkf/f/+8EoLYr/HwyFcTW2JhOG
-	1vCFSkbOv9mtV3aeIfhlBvYRCSBCkeQZBzT1nk82ImqklzqLaDM7BY9IGoAG0i0khbfV
-	xqzzXsbk6NjNdw/Cb6d9HKcwuzhTqeuOEV6rhtYGI6i9e2y00oC8Pu3Pfs+/Z1YAHwlL
-	uxMQ==
-Content-Disposition: inline
-In-Reply-To: <1351931915-1701-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Sat, Nov 03, 2012 at 01:38:26AM -0700, Tejun Heo wrote:
-> Hello,
+Hey, Daniel.
+
+On Fri, Nov 09, 2012 at 12:09:38PM +0100, Daniel Wagner wrote:
+> On 08.11.2012 20:07, Tejun Heo wrote:> Subject: cgroup: add
+> cgroup_subsys->post_create()
+> >
+> > Currently, there's no way for a controller to find out whether a new
+> > cgroup finished all ->create() allocatinos successfully and is
+> > considered "live" by cgroup.
 > 
-> This patchset implement proper hierarchy support for cgroup_freezer as
-> discussed in "[RFC] cgroup TODOs"[1].
+> I'd like add hierarchy support to net_prio and the first thing to
+> do is to get rid of get_prioidx(). It looks like it would be nice to
 
-Applied to cgroup/for-3.8.  Rafael, I applied the cgroup_freezer
-changes there too as there already are and will be more dependencies
-between cgroup_freezer and cgroup changes, and the cgroup_freezer
-changes don't really affect the rest of the freezer.  If you'd like
-them to be routed differently, please let me know.
+Ooh, I'm already working on it.  I *think* I should be able to post
+the patches later today or early next week.
+
+> be able to use use_id and post_create() for this but as I read the
+> code this might not work because the netdev might access resources
+> allocated between create() and post_create(). So my question is
+> would it make sense to move
+> 
+> cgroup_create():
+> 
+> 		if (ss->use_id) {
+> 			err = alloc_css_id(ss, parent, cgrp);
+> 			if (err)
+> 				goto err_destroy;
+> 		}
+> 
+> part before create() or add some protection between create() and
+> post_create() callback in net_prio. I have a patch but I see
+> I could drop it completely if post_create() is there.
+
+Glauber had about similar question about css_id and I need to think
+more about it but currently I think I want to phase out css IDs.  It's
+an id of the wrong thing (CSSes don't need IDs, cgroups do) and
+unnecessarily duplicates its own hierarchy when the hierarchy of
+cgroups already exists.  Once memcontrol moves away from walking using
+css_ids, I *think* I'll try to kill it.
+
+I'll add cgroup ID (no hierarchy funnies, just a single ida allocated
+number) so that it can be used for cgroup indexing.  Glauber, that
+should solve your problem too, right?
 
 Thanks.
 
