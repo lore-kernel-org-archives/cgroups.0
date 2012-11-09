@@ -1,47 +1,51 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH V3] memcg, oom: provide more precise dump info while
- memcg oom happening
-Date: Fri, 9 Nov 2012 13:21:00 +0100
-Message-ID: <20121109122100.GB5006@dhcp22.suse.cz>
-References: <1352389967-23270-1-git-send-email-handai.szj@taobao.com>
- <20121108162539.GP31821@dhcp22.suse.cz>
- <509CD98B.7080503@gmail.com>
- <20121109105040.GA5006@dhcp22.suse.cz>
- <509CF279.1080602@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cgroup_freezer: implement proper
+	hierarchy support
+Date: Fri, 9 Nov 2012 09:15:12 -0800
+Message-ID: <20121109171512.GA2711@htj.dyndns.org>
+References: <1351931915-1701-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <509CF279.1080602@gmail.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, rientjes@google.com, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=Z4x9GZnVI9GpQrvykBv0f2cTDN95Au9hCKtXiwqkm5k=;
+	b=ImKAoo8gpAe2yIthwwA0HGbuqHLKWm7WgiVuBljXzDL+Gpn0wDtBPHW7CoybXcan/R
+	VXbla4MZQli+21ev47lCT4moUcTaRzDyQsFK/N1gFWwrAqnIMp61dSH2/JtRa9JrU8OQ
+	nQhalQ5Jt+ajMoFieVyr+TCbHd4xLUBiOE4g+vNfxKMkf/f/+8EoLYr/HwyFcTW2JhOG
+	1vCFSkbOv9mtV3aeIfhlBvYRCSBCkeQZBzT1nk82ImqklzqLaDM7BY9IGoAG0i0khbfV
+	xqzzXsbk6NjNdw/Cb6d9HKcwuzhTqeuOEV6rhtYGI6i9e2y00oC8Pu3Pfs+/Z1YAHwlL
+	uxMQ==
+Content-Disposition: inline
+In-Reply-To: <1351931915-1701-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 09-11-12 20:09:29, Sha Zhengju wrote:
-> On 11/09/2012 06:50 PM, Michal Hocko wrote:
-> >On Fri 09-11-12 18:23:07, Sha Zhengju wrote:
-[...]
-> >>Another one I'm hesitating is numa stats, it seems the output is
-> >>beginning to get more and more....
-> >NUMA stats are basically per node - per zone LRU data and that the
-> >for(NR_LRU_LISTS) can be easily extended to cover that.
+On Sat, Nov 03, 2012 at 01:38:26AM -0700, Tejun Heo wrote:
+> Hello,
 > 
-> Yes, the numa_stat cgroup file has done works here. I'll add the numa
-> stats if you don't feel improper.
+> This patchset implement proper hierarchy support for cgroup_freezer as
+> discussed in "[RFC] cgroup TODOs"[1].
 
-I just described how it can be done, I am not saying it is really
-needed. What does per-node information tells you during OOM?
-memcg OOM is triggered when we hit the hard limit not when we are not
-able to fulfill allocation because of the node restriction.
-But maybe your use case would benefit from this...
+Applied to cgroup/for-3.8.  Rafael, I applied the cgroup_freezer
+changes there too as there already are and will be more dependencies
+between cgroup_freezer and cgroup changes, and the cgroup_freezer
+changes don't really affect the rest of the freezer.  If you'd like
+them to be routed differently, please let me know.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
