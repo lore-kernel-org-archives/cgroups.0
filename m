@@ -1,17 +1,17 @@
-From: Li Zefan <lizefan@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 1/9 v3] cgroup: add cgroup_subsys->post_create()
-Date: Fri, 9 Nov 2012 17:09:41 +0800
-Message-ID: <509CC855.4070203@huawei.com>
+Date: Fri, 9 Nov 2012 17:09:51 +0800
+Message-ID: <509CC85F.8030607@huawei.com>
 References: <1351931915-1701-1-git-send-email-tj@kernel.org> <1351931915-1701-2-git-send-email-tj@kernel.org> <20121108190715.GD9672@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121108190715.GD9672@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121108190715.GD9672-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: mhocko@suse.cz, rjw@sisk.pl, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, fweisbec@gmail.com, Glauber Costa <glommer@parallels.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
 On 2012/11/9 3:07, Tejun Heo wrote:
 > Subject: cgroup: add cgroup_subsys->post_create()
@@ -39,10 +39,9 @@ On 2012/11/9 3:07, Tejun Heo wrote:
 > v3: Forgot to add ->post_create() invocation to cgroup_load_subsys().
 >     Fixed.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> Cc: Glauber Costa <glommer@parallels.com>
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Li Zefan <lizefan@huawei.com
-
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
