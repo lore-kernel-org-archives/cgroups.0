@@ -1,55 +1,164 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/9 v2] cgroup: implement generic child / descendant walk
-	macros
-Date: Fri, 9 Nov 2012 17:13:01 +0800
-Message-ID: <509CC91D.4050207@huawei.com>
-References: <1351931915-1701-1-git-send-email-tj@kernel.org>
-	<1351931915-1701-4-git-send-email-tj@kernel.org>
-	<20121108175946.GA9672@htj.dyndns.org>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH V3] memcg, oom: provide more precise dump info while memcg
+ oom happening
+Date: Fri, 09 Nov 2012 18:23:07 +0800
+Message-ID: <509CD98B.7080503@gmail.com>
+References: <1352389967-23270-1-git-send-email-handai.szj@taobao.com> <20121108162539.GP31821@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20121108175946.GA9672-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: rjw-KKrjLPT3xs0@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=DhXH9O4PECwpXfp9cz8glSt2wAJUA1/PwgzQKH5v6gA=;
+        b=HkdDGdGfBqAwIylrs+70rySHVG357RPhGRY36a3bDFPjjrRDp2QODs5VsIKzKez77m
+         qsGL6hIrxZ3flONpaQZlIXWRHTaAM8A+kvBPaoEXm43JwvxpBfDa4Ir+pMnrF70J6JBq
+         W75FiHzcYbbK5l/aybr2JcZKg7vSmUsf2d0CyLCpA3zsBQa6SfhW5dWUZ1P+eztsj+Qk
+         nPX0m4nYquBfBOPCU78IMxh51OanU8jL1EMmW1oFDgEmpEnYg4tUq4TevR1jrXSwouk2
+         uXGd9y9mSlEUjmn2ddwpXixO0I9SUCUuljYupr0fRZaHrkdhpOz21mEyo9gkE/DGYXEh
+         7bWg==
+In-Reply-To: <20121108162539.GP31821-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2012/11/9 1:59, Tejun Heo wrote:
-> Currently, cgroup doesn't provide any generic helper for walking a
-> given cgroup's children or descendants.  This patch adds the following
-> three macros.
-> 
-> * cgroup_for_each_child() - walk immediate children of a cgroup.
-> 
-> * cgroup_for_each_descendant_pre() - visit all descendants of a cgroup
->   in pre-order tree traversal.
-> 
-> * cgroup_for_each_descendant_post() - visit all descendants of a
->   cgroup in post-order tree traversal.
-> 
-> All three only require the user to hold RCU read lock during
-> traversal.  Verifying that each iterated cgroup is online is the
-> responsibility of the user.  When used with proper synchronization,
-> cgroup_for_each_descendant_pre() can be used to propagate state
-> updates to descendants in reliable way.  See comments for details.
-> 
-> v2: s/config/state/ in commit message and comments per Michal.  More
->     documentation on synchronization rules.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-c2VE3kR2zFovtab9mdV7tw@public.gmane.org>
-> Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On 11/09/2012 12:25 AM, Michal Hocko wrote:
+> On Thu 08-11-12 23:52:47, Sha Zhengju wrote:
+> [...]
+>> (2) After change
+>> [  269.225628] mal invoked oom-killer: gfp_mask=0xd0, order=0, oom_score_adj=0
+>> [  269.225633] mal cpuset=/ mems_allowed=0-1
+>> [  269.225636] Pid: 4616, comm: mal Not tainted 3.6.0+ #25
+>> [  269.225637] Call Trace:
+>> [  269.225647]  [<ffffffff8111b9c4>] dump_header+0x84/0xd0
+>> [  269.225650]  [<ffffffff8111c691>] oom_kill_process+0x331/0x350
+>> [  269.225710]  .......(call trace)
+>> [  269.225713]  [<ffffffff81517325>] page_fault+0x25/0x30
+>> [  269.225716] Task in /1/2 killed as a result of limit of /1
+>> [  269.225718] memory: usage 511732kB, limit 512000kB, failcnt 5071
+>> [  269.225720] memory+swap: usage 563200kB, limit 563200kB, failcnt 57
+>> [  269.225721] kmem: usage 0kB, limit 9007199254740991kB, failcnt 0
+>> [  269.225722] Memory cgroup stats:cache:8KB rss:511724KB mapped_file:4KB swap:51468KB inactive_anon:265864KB active_anon:245832KB inactive_file:0KB active_file:0KB unevictable:0KB
+>> [  269.225741] [ pid ]   uid  tgid total_vm      rss nr_ptes swapents oom_score_adj name
+>> [  269.225757] [ 4554]     0  4554    16626      473      17       25             0 bash
+>> [  269.225759] [ 4611]     0  4611   103328    90231     208    12260             0 mal
+>> [  269.225762] [ 4616]     0  4616   103328    32799      88     7562             0 mal
+>> [  269.225764] Memory cgroup out of memory: Kill process 4611 (mal) score 699 or sacrifice child
+>> [  269.225766] Killed process 4611 (mal) total-vm:413312kB, anon-rss:360632kB, file-rss:292kB
+>>
+>> This version provides more pointed info for memcg in "Memory cgroup stats" section.
+> Looks much better!
+>
+>> Change log:
+>> v3<--- v2
+>> 	1. fix towards hierarchy
+>> 	2. undo rework dump_tasks
+>> v2<--- v1
+>> 	1. some modification towards hierarchy
+>> 	2. rework dump_tasks
+>> 	3. rebased on Michal's mm tree since-3.6
+>>
+>> Signed-off-by: Sha Zhengju<handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   mm/memcontrol.c |   41 +++++++++++++++++++++++++++++++----------
+>>   mm/oom_kill.c   |    6 ++++--
+>>   2 files changed, 35 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 0eab7d5..17317fa 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+> [...]
+>> @@ -1501,8 +1509,8 @@ static void move_unlock_mem_cgroup(struct mem_cgroup *memcg,
+>>   	spin_unlock_irqrestore(&memcg->move_lock, *flags);
+>>   }
+>>
+>> +#define K(x) ((x)<<  (PAGE_SHIFT-10))
+>>   /**
+>> - * mem_cgroup_print_oom_info: Called from OOM with tasklist_lock held in read mode.
+> No need to remove this just fix it:
+>   * mem_cgroup_print_oom_info: Print OOM information relevant to memory controller.
+>
+>>    * @memcg: The memory cgroup that went over limit
+>>    * @p: Task that is going to be killed
+>>    *
+>> @@ -1520,8 +1528,10 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+>>   	 */
+>>   	static char memcg_name[PATH_MAX];
+>>   	int ret;
+>> +	struct mem_cgroup *mi;
+>> +	unsigned int i;
+>>
+>> -	if (!memcg || !p)
+>> +	if (!p)
+>>   		return;
+>>
+>>   	rcu_read_lock();
+>> @@ -1569,6 +1579,25 @@ done:
+>>   		res_counter_read_u64(&memcg->kmem, RES_USAGE)>>  10,
+>>   		res_counter_read_u64(&memcg->kmem, RES_LIMIT)>>  10,
+>>   		res_counter_read_u64(&memcg->kmem, RES_FAILCNT));
+>> +
+>> +	printk(KERN_INFO "Memory cgroup stats:");
+> "Memory cgroup hierarchy stats" is probably a better fit with the
+> current implementation.
+>
+>> +	for (i = 0; i<  MEM_CGROUP_STAT_NSTATS; i++) {
+>> +		long long val = 0;
+>> +		if (i == MEM_CGROUP_STAT_SWAP&&  !do_swap_account)
+>> +			continue;
+>> +		for_each_mem_cgroup_tree(mi, memcg)
+>> +			val += mem_cgroup_read_stat(mi, i);
+>> +		printk(KERN_CONT "%s:%lldKB ", mem_cgroup_stat_names[i], K(val));
+>> +	}
+>> +
+>> +	for (i = 0; i<  NR_LRU_LISTS; i++) {
+>> +		unsigned long long val = 0;
+>> +
+>> +		for_each_mem_cgroup_tree(mi, memcg)
+>> +			val += mem_cgroup_nr_lru_pages(mi, BIT(i));
+>> +		printk(KERN_CONT "%s:%lluKB ", mem_cgroup_lru_names[i], K(val));
+>> +	}
+>> +	printk(KERN_CONT "\n");
+> This is nice and simple I am just thinking whether it is enough. Say
+> that you have a deeper hierarchy and the there is a safety limit in the
+> its root
+>          A (limit)
+>         /|\
+>        B C D
+>            |\
+> 	  E F
+>
+> and we trigger an OOM on the A's limit. Now we know that something blew
+> up but what it was we do not know. Wouldn't it be better to swap the for
+> and for_each_mem_cgroup_tree loops? Then we would see the whole
+> hierarchy and can potentially point at the group which doesn't behave.
+> Memory cgroup stats for A/: ...
+> Memory cgroup stats for A/B/: ...
+> Memory cgroup stats for A/C/: ...
+> Memory cgroup stats for A/D/: ...
+> Memory cgroup stats for A/D/E/: ...
+> Memory cgroup stats for A/D/F/: ...
+>
+> Would it still fit in with your use case?
+> [...]
 
-I don't see anything wrong with the comment on cgroup_next_descendant_pre().
+We haven't used those complicate hierarchy yet, but it sounds a good 
+suggestion. :)
+Hierarchy is a little complex to use from our experience, and the three 
+cgroups involved in memcg oom can be different: memcg of invoker, killed 
+task, memcg of going over limit.Suppose a process in B triggers oom and 
+a victim in root A is selected to be killed, we may as well want to know 
+memcg stats just local in A cgroup(excludes BCD). So besides hierarchy 
+info, does it acceptable to also print the local root node stats which 
+as I did in the V1 version(https://lkml.org/lkml/2012/7/30/179).
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Another one I'm hesitating is numa stats, it seems the output is 
+beginning to get more and more....
+
+
+Thanks,
+Sha
