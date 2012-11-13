@@ -1,79 +1,91 @@
-From: Daniel Wagner <wagi@monom.org>
-Subject: Re: [PATCH 1/9 v3] cgroup: add cgroup_subsys->post_create()
-Date: Mon, 12 Nov 2012 14:04:56 +0100
-Message-ID: <50A0F3F8.6040000@monom.org>
-References: <1351931915-1701-1-git-send-email-tj@kernel.org> <1351931915-1701-2-git-send-email-tj@kernel.org> <20121108190715.GD9672@htj.dyndns.org> <509CE472.9040504@monom.org> <20121109172211.GB2711@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121109172211.GB2711@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-3.8] cgroup: allow ->post_create() to fail
+Date: Mon, 12 Nov 2012 19:01:27 -0800
+Message-ID: <1352775704-9023-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=SQHI2XtYpIj3LUkK9ZPHXAFvFb10XxL+IXKa4f0T3i4=;
+        b=n1/lsr60EoOziA54oZ1F4tWCGrrnaSjVFwGwlcf7D+oLmGgT8pkpwCqTUFTiGkZb3g
+         Agg5rTciZPhKg0mHODAYhXYjuM4JUmwF0KrfdcCKABi9QMDNdddo7kfOzWMCbmfoB3SN
+         BqbR0JUZ4WHwLrC9S0MTlWQoDGhyAJhvUmPIsJeI09edhRYMXfF4tSMB/BBbps62Pd6L
+         M8Dr+SPe9dZg38l43ak5gqDKmjAaDItrWReoFJZwlyKnobXoVZ00GvCKHrOCkgDOFLeT
+         2w4mNMNo6WnbMv+WM3lss0cop5xtKVKBEKu7yzRwVArDKdtVTkbA9Ybks3vjYDFW1GGE
+         lP3w==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, mhocko@suse.cz, rjw@sisk.pl, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, fweisbec@gmail.com, Glauber Costa <glommer@parallels.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
 
-Hi Tejun,
+Hello,
 
-On 09.11.2012 18:22, Tejun Heo wrote:
-> Hey, Daniel.
->
-> On Fri, Nov 09, 2012 at 12:09:38PM +0100, Daniel Wagner wrote:
->> On 08.11.2012 20:07, Tejun Heo wrote:> Subject: cgroup: add
->> cgroup_subsys->post_create()
->>>
->>> Currently, there's no way for a controller to find out whether a new
->>> cgroup finished all ->create() allocatinos successfully and is
->>> considered "live" by cgroup.
->>
->> I'd like add hierarchy support to net_prio and the first thing to
->> do is to get rid of get_prioidx(). It looks like it would be nice to
->
-> Ooh, I'm already working on it.  I *think* I should be able to post
-> the patches later today or early next week.
+This became a rather large patchset mostly because there are a lot of
+weirdities and subtle breakages in create/destroy/load/unload paths.
+The goal of the patchset is allowing ->post_create() to fail and
+renaming ->create/post_create/pre_destroy/destroy() to
+->css_alloc/css_online/css_offline/css_free().
 
-No problem. I didn't spend too much time in writing the patch. Getting
-rid of get_prioidx() was simple. I just wanted to help out, but then
-I might to slow to keep up with you :)
+This patchset contains the following seventeen patches.
 
-Though I have a question on the patch you are writing. When you disable
-broken_hierarchy for the networking controllers, are you also 
-considering to disable them on the root cgroup? Currently both
-net_prio and net_cls will do work on the root cgroup. I think for
-harmonizing the behavior or all controllers this should also be
-disabled.
+ 0001-cgroup-remove-incorrect-dget-dput-pair-in-cgroup_cre.patch
+ 0002-cgroup-initialize-cgrp-allcg_node-in-init_cgroup_hou.patch
+ 0003-cgroup-open-code-cgroup_create_dir.patch
+ 0004-cgroup-create-directory-before-linking-while-creatin.patch
+ 0005-cgroup-cgroup-dentry-isn-t-a-RCU-pointer.patch
+ 0006-cgroup-remove-duplicate-RCU-free-on-struct-cgroup.patch
+ 0007-cgroup-make-CSS_-flags-bit-masks-instead-of-bit-posi.patch
+ 0008-cgroup-trivial-cleanup-for-cgroup_init-load_subsys.patch
+ 0009-cgroup-lock-cgroup_mutex-in-cgroup_init_subsys.patch
+ 0010-cgroup-fix-harmless-bugs-in-cgroup_load_subsys-fail-.patch
+ 0011-cgroup-separate-out-cgroup_destroy_locked.patch
+ 0012-cgroup-introduce-CSS_ONLINE-flag-and-on-offline_css-.patch
+ 0013-cgroup-simplify-cgroup_load_subsys-failure-path.patch
+ 0014-cgroup-use-mutex_trylock-when-grabbing-i_mutex-of-a-.patch
+ 0015-cgroup-update-cgroup_create-failure-path.patch
+ 0016-cgroup-allow-post_create-to-fail.patch
+ 0017-cgroup-rename-create-post_create-pre_destroy-destroy.patch
 
->> be able to use use_id and post_create() for this but as I read the
->> code this might not work because the netdev might access resources
->> allocated between create() and post_create(). So my question is
->> would it make sense to move
->>
->> cgroup_create():
->>
->> 		if (ss->use_id) {
->> 			err = alloc_css_id(ss, parent, cgrp);
->> 			if (err)
->> 				goto err_destroy;
->> 		}
->>
->> part before create() or add some protection between create() and
->> post_create() callback in net_prio. I have a patch but I see
->> I could drop it completely if post_create() is there.
->
-> Glauber had about similar question about css_id and I need to think
-> more about it but currently I think I want to phase out css IDs.  It's
-> an id of the wrong thing (CSSes don't need IDs, cgroups do) and
-> unnecessarily duplicates its own hierarchy when the hierarchy of
-> cgroups already exists.  Once memcontrol moves away from walking using
-> css_ids, I *think* I'll try to kill it.
->
-> I'll add cgroup ID (no hierarchy funnies, just a single ida allocated
-> number) so that it can be used for cgroup indexing.  Glauber, that
-> should solve your problem too, right?
+0001 is a bugfix.  Tagged for -stable.  I don't I'll push it through
+for-3.7-fixes tho.  This has been broken forever and nobody reported
+anything yet.
 
-net_prio doesn't have any particular requirements on the indexing, 
-unless there is one. So a global ida would work for net_prio.
+0002-0011 are various fixes and cleanups to prepare for the following
+changes.  Each should be self-explanatory.
 
-cheers,
-daniel
+0012-0015 are preparation patches more directly related to allowing
+failure of ->post_create().
 
+0016 allows ->post_create() to fail.
+
+0017 renames ops and updates documentation.
+
+This patchst is on top of cgroup/for-3.8 and available on the
+following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-online-may-fail
+
+and contains the following changes.
+
+ Documentation/cgroups/cgroups.txt |   49 +++---
+ block/blk-cgroup.c                |   14 -
+ include/linux/cgroup.h            |   47 +++---
+ kernel/cgroup.c                   |  288 +++++++++++++++++++++-----------------
+ kernel/cgroup_freezer.c           |   22 +-
+ kernel/cpuset.c                   |   10 -
+ kernel/events/core.c              |    8 -
+ kernel/sched/core.c               |   16 +-
+ mm/hugetlb_cgroup.c               |   14 -
+ mm/memcontrol.c                   |   12 -
+ net/core/netprio_cgroup.c         |    8 -
+ net/sched/cls_cgroup.c            |    8 -
+ security/device_cgroup.c          |    8 -
+ 13 files changed, 278 insertions(+), 226 deletions(-)
+
+Thanks.
+
+--
+tejun
