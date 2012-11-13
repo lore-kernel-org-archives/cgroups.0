@@ -1,143 +1,116 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 16/17] cgroup: allow ->post_create() to fail
-Date: Mon, 12 Nov 2012 19:01:43 -0800
-Message-ID: <1352775704-9023-17-git-send-email-tj@kernel.org>
-References: <1352775704-9023-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-         :references;
-        bh=XEB7hzyX7Rb2RPWa7M2k3klAk1O/HbMjb8y8qv39LTQ=;
-        b=MYD8Qs8IgHpWYatqxe9xCdRk77SJ4MGXoZEXcobx9AfZt4t2m0Fsd42bKLvC+38rgW
-         XIVaVEF5sx6pig3iWHKFVs0Ar5gl/5ha6C47+UZs3d5akFgEt0iPGba4a/L6m94rt5h8
-         Cgm0HjLThFfAFn/4xSGoMcpfaubCQ4zieagJUhcVcg1lSS0tCgVM50BLLOw3n521GNZM
-         U5viuNzKSZZth2k2pzMB4fL3r+xbBVOHKXPT1Y2X2vspjlkaLfpmTMEbXgC7mWp3oCYk
-         lHL0eA43oM8UP15rAQfiNRzSypCdOvvHFunH0PkNkpjV3iHcJ5SvZuFBf2QcSQsAn6lO
-         YHDQ==
-In-Reply-To: <1352775704-9023-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Subject: [GIT PULL] cgroup fixes for v3.7-rc5
+Date: Tue, 13 Nov 2012 08:26:27 -0800
+Message-ID: <20121113162627.GB18227@mtj.dyndns.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=zgAfkg4eEGZfrrw08u7HksWsY6+BaqmJfyd2xF4WdyQ=;
+	b=CIPxrVQV0nSYY4EuoQCGYpv0FaCtcNZL1LiJXlH/AYmlpPfiS+6bG9vh4W1DQxjQWt
+	3evg0cqbYTGfjZniD+0/vPpDkSQViaCQKHkgudHaTF6KXKnqbDJAgZTWk4K9kImUAs6J
+	0FQHtUUb557jAABuC2hZusFUMg2Je6cWfCFDxQ3xR4rcrfAB4iGG4FSprZ2okW4z2nms
+	mssEJHmLNxHhnuRlBThteMEaTuFaq0PuhIb4lGRx9VVIE9owlEqPak9U+4Hxo4EJGlzz
+	6J9kqrwog9NxWNVoL2/WTPsyd+KfzAM+lsrkYCPYAKNW6LEdRzcAVyGejZR36A7AgTJj
+	Y1mQ==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-There could be cases where controllers want to do initialization
-operations which may fail from ->post_create().  This patch makes
-->post_create() return -errno to indicate failure and online_css()
-relay such failures.
+Please pull from the following branch to receive fixes for v3.7-rc5.
+It contains two fix patches for device_cgroup.  One fixes a regression
+introduced earlier in 3.7 cycle where device_cgroup could try to
+dereference the NULL parent of the root cgroup.  The other one is RCU
+usage fix.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.7-fixes
+
+Thanks.
 ---
- include/linux/cgroup.h  |  2 +-
- kernel/cgroup.c         | 29 +++++++++++++++++++----------
- kernel/cgroup_freezer.c |  4 +++-
- 3 files changed, 23 insertions(+), 12 deletions(-)
+Aristeu Rozanski (1):
+      device_cgroup: fix unchecked cgroup parent usage
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c487315..fb79d7a 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -437,7 +437,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
+Tejun Heo (1):
+      device_cgroup: fix RCU usage
+
+ security/device_cgroup.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 842c254..b08d20c 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -164,8 +164,8 @@ static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
+ 	struct dev_exception_item *ex, *tmp;
  
- struct cgroup_subsys {
- 	struct cgroup_subsys_state *(*create)(struct cgroup *cgrp);
--	void (*post_create)(struct cgroup *cgrp);
-+	int (*post_create)(struct cgroup *cgrp);
- 	void (*pre_destroy)(struct cgroup *cgrp);
- 	void (*destroy)(struct cgroup *cgrp);
- 	int (*can_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 63d83d0..de97cf2 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4041,14 +4041,18 @@ static void init_cgroup_css(struct cgroup_subsys_state *css,
- 	INIT_WORK(&css->dput_work, css_dput_fn);
- }
- 
--/* invoke ->post_create() on a new CSS and mark it online */
--static void online_css(struct cgroup_subsys *ss, struct cgroup *cgrp)
-+/* invoke ->post_create() on a new CSS and mark it online if successful */
-+static int online_css(struct cgroup_subsys *ss, struct cgroup *cgrp)
- {
-+	int ret = 0;
-+
- 	lockdep_assert_held(&cgroup_mutex);
- 
- 	if (ss->post_create)
--		ss->post_create(cgrp);
--	cgrp->subsys[ss->subsys_id]->flags |= CSS_ONLINE;
-+		ret = ss->post_create(cgrp);
-+	if (!ret)
-+		cgrp->subsys[ss->subsys_id]->flags |= CSS_ONLINE;
-+	return ret;
- }
- 
- /* if the CSS is online, invoke ->pre_destory() on it and mark it offline */
-@@ -4174,12 +4178,15 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
- 	root->number_of_cgroups++;
- 
--	for_each_subsys(root, ss) {
--		/* each css holds a ref to the cgroup's dentry */
-+	/* each css holds a ref to the cgroup's dentry */
-+	for_each_subsys(root, ss)
- 		dget(dentry);
- 
--		/* creation succeeded, notify subsystems */
--		online_css(ss, cgrp);
-+	/* creation succeeded, notify subsystems */
-+	for_each_subsys(root, ss) {
-+		err = online_css(ss, cgrp);
-+		if (err)
-+			goto err_destroy;
+ 	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
+-		list_del(&ex->list);
+-		kfree(ex);
++		list_del_rcu(&ex->list);
++		kfree_rcu(ex, rcu);
  	}
- 
- 	err = cgroup_populate_dir(cgrp, true, root->subsys_mask);
-@@ -4393,7 +4400,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	BUG_ON(!list_empty(&init_task.tasks));
- 
- 	ss->active = 1;
--	online_css(ss, dummytop);
-+	BUG_ON(online_css(ss, dummytop));
- 
- 	mutex_unlock(&cgroup_mutex);
- 
-@@ -4500,7 +4507,9 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
- 	write_unlock(&css_set_lock);
- 
- 	ss->active = 1;
--	online_css(ss, dummytop);
-+	ret = online_css(ss, dummytop);
-+	if (ret)
-+		goto err_unload;
- 
- 	/* success! */
- 	mutex_unlock(&cgroup_mutex);
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index 670a4af..ee8bb67 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -112,7 +112,7 @@ static struct cgroup_subsys_state *freezer_create(struct cgroup *cgroup)
-  * parent's freezing state while holding both parent's and our
-  * freezer->lock.
-  */
--static void freezer_post_create(struct cgroup *cgroup)
-+static int freezer_post_create(struct cgroup *cgroup)
- {
- 	struct freezer *freezer = cgroup_freezer(cgroup);
- 	struct freezer *parent = parent_freezer(freezer);
-@@ -136,6 +136,8 @@ static void freezer_post_create(struct cgroup *cgroup)
- 	spin_unlock(&freezer->lock);
- 	if (parent)
- 		spin_unlock_irq(&parent->lock);
-+
-+	return 0;
  }
  
- /**
--- 
-1.7.11.7
+@@ -298,7 +298,7 @@ static int may_access(struct dev_cgroup *dev_cgroup,
+ 	struct dev_exception_item *ex;
+ 	bool match = false;
+ 
+-	list_for_each_entry(ex, &dev_cgroup->exceptions, list) {
++	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+ 		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+ 			continue;
+ 		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+@@ -352,6 +352,8 @@ static int parent_has_perm(struct dev_cgroup *childcg,
+  */
+ static inline int may_allow_all(struct dev_cgroup *parent)
+ {
++	if (!parent)
++		return 1;
+ 	return parent->behavior == DEVCG_DEFAULT_ALLOW;
+ }
+ 
+@@ -376,11 +378,14 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 	int count, rc;
+ 	struct dev_exception_item ex;
+ 	struct cgroup *p = devcgroup->css.cgroup;
+-	struct dev_cgroup *parent = cgroup_to_devcgroup(p->parent);
++	struct dev_cgroup *parent = NULL;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
++	if (p->parent)
++		parent = cgroup_to_devcgroup(p->parent);
++
+ 	memset(&ex, 0, sizeof(ex));
+ 	b = buffer;
+ 
+@@ -391,11 +396,14 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 			if (!may_allow_all(parent))
+ 				return -EPERM;
+ 			dev_exception_clean(devcgroup);
++			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
++			if (!parent)
++				break;
++
+ 			rc = dev_exceptions_copy(&devcgroup->exceptions,
+ 						 &parent->exceptions);
+ 			if (rc)
+ 				return rc;
+-			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+ 			break;
+ 		case DEVCG_DENY:
+ 			dev_exception_clean(devcgroup);
