@@ -1,8 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 07/17] cgroup: make CSS_* flags bit masks instead of bit
-	positions
-Date: Mon, 12 Nov 2012 19:01:34 -0800
-Message-ID: <1352775704-9023-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/17] cgroup: trivial cleanup for cgroup_init/load_subsys()
+Date: Mon, 12 Nov 2012 19:01:35 -0800
+Message-ID: <1352775704-9023-9-git-send-email-tj@kernel.org>
 References: <1352775704-9023-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=sKYUD9hEaMLCn+GgduXiv7Xcgv26ZoszaIcdWO0ARmY=;
-	b=Umf2YEGnRe7uomnS6mrAGNqHVwbhwfhZOWIWAwXZXHhHs9gRE1XU1S78bFUyT8pEyz
-	yfTulkcUwId1gCaTYaffUHpg/5Jp2fKxF7G53igiut3N9IJcXxKuvxnuJYeL104RFrq0
-	TSzIzAXgw53KIqq8KqjrAiK3vD8Mzrji5yLWNGd6C1n3lAqubS+kIdDM/2pFOZhyaQJP
-	4/MLaX9Xbb0XYMK8EQJOGFwCx6cp4i1I5BhZ9MBDvnW1q0TDhw/Du5pulDR6z9qBbot7
-	Jl0luwWh1ZgRYtpOSx1e+/OB+WFYQgpcmk6SnSVpB95zIAuQGGaJuLyPnhGFJlHK5IBI
-	cbpg==
+	:references; bh=usbGW2LfJGrjFRu7r70Vw3move6emIAY4tc5DyVscB0=;
+	b=sB1TYqfrfCKpW32HxTbiNCmsjkSzjBB2AHPUSXbuOsMSAEs5cSIBwtHqVKbwVWg9tM
+	BqP1oF85j1Pkmef4By5T6SdxiivGDCtzMgB3B0DjQnJvgSs2POrXMxWJnqEBKCoB3eHT
+	BdqtzHSXaBb40m812+4GxNCDxYOueATE34bLJ4+M+5tPHWlBImfG0VRT9w+66NHHfAJM
+	i0HvitVsl4rFohllR4mYco4cSdiQdMMph/Lwd4JlnHko5QYv9JgBimy8VqHXlSQsHm6S
+	GvOPfE9BL8wFr7Xe2DtXrdbfSPAu9YQduf8mmCVx5/sgP7U1lYyTIihFstHAMERWSHfI
+	3csw==
 In-Reply-To: <1352775704-9023-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -31,70 +30,44 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Currently, CSS_* flags are defined as bit positions and manipulated
-using atomic bitops.  There's no reason to use atomic bitops for them
-and bit positions are clunkier to deal with than bit masks.  Make
-CSS_* bit masks instead and use the usual C bitwise operators to
-access them.
+Consistently use @css and @dummytop in these two functions instead of
+referring to them indirectly.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h | 8 ++++----
- kernel/cgroup.c        | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ kernel/cgroup.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 9dcbfa1..e9f07ef 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -81,7 +81,7 @@ struct cgroup_subsys_state {
- 
- /* bits in struct cgroup_subsys_state flags field */
- enum {
--	CSS_ROOT, /* This CSS is the root of the subsystem */
-+	CSS_ROOT	= (1 << 0), /* this CSS is the root of the subsystem */
- };
- 
- /* Caller must verify that the css is not for root cgroup */
-@@ -100,7 +100,7 @@ static inline void __css_get(struct cgroup_subsys_state *css, int count)
- static inline void css_get(struct cgroup_subsys_state *css)
- {
- 	/* We don't need to reference count the root state */
--	if (!test_bit(CSS_ROOT, &css->flags))
-+	if (!(css->flags & CSS_ROOT))
- 		__css_get(css, 1);
- }
- 
-@@ -113,7 +113,7 @@ static inline void css_get(struct cgroup_subsys_state *css)
- extern bool __css_tryget(struct cgroup_subsys_state *css);
- static inline bool css_tryget(struct cgroup_subsys_state *css)
- {
--	if (test_bit(CSS_ROOT, &css->flags))
-+	if (css->flags & CSS_ROOT)
- 		return true;
- 	return __css_tryget(css);
- }
-@@ -126,7 +126,7 @@ static inline bool css_tryget(struct cgroup_subsys_state *css)
- extern void __css_put(struct cgroup_subsys_state *css);
- static inline void css_put(struct cgroup_subsys_state *css)
- {
--	if (!test_bit(CSS_ROOT, &css->flags))
-+	if (!(css->flags & CSS_ROOT))
- 		__css_put(css);
- }
- 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a91e7ad..d849efd 100644
+index d849efd..6df17cb 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4020,7 +4020,7 @@ static void init_cgroup_css(struct cgroup_subsys_state *css,
- 	css->flags = 0;
- 	css->id = NULL;
- 	if (cgrp == dummytop)
--		set_bit(CSS_ROOT, &css->flags);
-+		css->flags |= CSS_ROOT;
- 	BUG_ON(cgrp->subsys[ss->subsys_id]);
- 	cgrp->subsys[ss->subsys_id] = css;
+@@ -4332,7 +4332,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
+ 	 * pointer to this state - since the subsystem is
+ 	 * newly registered, all tasks and hence the
+ 	 * init_css_set is in the subsystem's top cgroup. */
+-	init_css_set.subsys[ss->subsys_id] = dummytop->subsys[ss->subsys_id];
++	init_css_set.subsys[ss->subsys_id] = css;
  
+ 	need_forkexit_callback |= ss->fork || ss->exit;
+ 
+@@ -4344,7 +4344,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
+ 	ss->active = 1;
+ 
+ 	if (ss->post_create)
+-		ss->post_create(&ss->root->top_cgroup);
++		ss->post_create(dummytop);
+ 
+ 	/* this function shouldn't be used with modular subsystems, since they
+ 	 * need to register a subsys_id, among other things */
+@@ -4456,7 +4456,7 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
+ 	ss->active = 1;
+ 
+ 	if (ss->post_create)
+-		ss->post_create(&ss->root->top_cgroup);
++		ss->post_create(dummytop);
+ 
+ 	/* success! */
+ 	mutex_unlock(&cgroup_mutex);
 -- 
 1.7.11.7
