@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 08/17] cgroup: trivial cleanup for cgroup_init/load_subsys()
-Date: Mon, 12 Nov 2012 19:01:35 -0800
-Message-ID: <1352775704-9023-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 09/17] cgroup: lock cgroup_mutex in cgroup_init_subsys()
+Date: Mon, 12 Nov 2012 19:01:36 -0800
+Message-ID: <1352775704-9023-10-git-send-email-tj@kernel.org>
 References: <1352775704-9023-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=usbGW2LfJGrjFRu7r70Vw3move6emIAY4tc5DyVscB0=;
-	b=sB1TYqfrfCKpW32HxTbiNCmsjkSzjBB2AHPUSXbuOsMSAEs5cSIBwtHqVKbwVWg9tM
-	BqP1oF85j1Pkmef4By5T6SdxiivGDCtzMgB3B0DjQnJvgSs2POrXMxWJnqEBKCoB3eHT
-	BdqtzHSXaBb40m812+4GxNCDxYOueATE34bLJ4+M+5tPHWlBImfG0VRT9w+66NHHfAJM
-	i0HvitVsl4rFohllR4mYco4cSdiQdMMph/Lwd4JlnHko5QYv9JgBimy8VqHXlSQsHm6S
-	GvOPfE9BL8wFr7Xe2DtXrdbfSPAu9YQduf8mmCVx5/sgP7U1lYyTIihFstHAMERWSHfI
-	3csw==
+	:references; bh=JzxyvBnnBoc3vu7vLgRGum0hbK9BXxnXdRjN85LgiMk=;
+	b=WgQBob0sF98CSw8hIrGf6Oe6Qv5na7JBNrlO69Fh9zBVi4/wVfrN54zlVyGT7OxuVT
+	LYx2FF5L8dmb3a9QF7zfkwKZIm7QdmaY8OaWp3QbnWj/wRXv/BAt8mlrKOH0SYB+EwkV
+	a5RToQyR0nT0s8IkCQKZD3hqpyXC8L0gS2Ey26F7LmeQ49NklOP3dRYSw5qhlIVXW/E3
+	VnUwd6tbskXuk3/73r78VczmJEyBWfXOWsnyKsOwb7e7q5x+d9TTALebBt+J40y2NNPt
+	N767gD79F++V+FIXCfQ31+ockjfyEatKcpk0fxOjSt/0RNN2k9rQMgszADAWcwjEtNz2
+	rGOQ==
 In-Reply-To: <1352775704-9023-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,44 +30,38 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Consistently use @css and @dummytop in these two functions instead of
-referring to them indirectly.
+Make cgroup_init_subsys() grab cgroup_mutex while initializing a
+subsystem so that all helpers and callbacks are called under the
+context they expect.  This isn't strictly necessary as
+cgroup_init_subsys() doesn't race with anybody but will allow adding
+lockdep assertions.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ kernel/cgroup.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d849efd..6df17cb 100644
+index 6df17cb..76f1a01 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4332,7 +4332,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	 * pointer to this state - since the subsystem is
- 	 * newly registered, all tasks and hence the
- 	 * init_css_set is in the subsystem's top cgroup. */
--	init_css_set.subsys[ss->subsys_id] = dummytop->subsys[ss->subsys_id];
-+	init_css_set.subsys[ss->subsys_id] = css;
+@@ -4317,6 +4317,8 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
  
- 	need_forkexit_callback |= ss->fork || ss->exit;
+ 	printk(KERN_INFO "Initializing cgroup subsys %s\n", ss->name);
  
-@@ -4344,7 +4344,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	ss->active = 1;
++	mutex_lock(&cgroup_mutex);
++
+ 	/* init base cftset */
+ 	cgroup_init_cftsets(ss);
  
+@@ -4346,6 +4348,8 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
  	if (ss->post_create)
--		ss->post_create(&ss->root->top_cgroup);
-+		ss->post_create(dummytop);
+ 		ss->post_create(dummytop);
  
++	mutex_unlock(&cgroup_mutex);
++
  	/* this function shouldn't be used with modular subsystems, since they
  	 * need to register a subsys_id, among other things */
-@@ -4456,7 +4456,7 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
- 	ss->active = 1;
- 
- 	if (ss->post_create)
--		ss->post_create(&ss->root->top_cgroup);
-+		ss->post_create(dummytop);
- 
- 	/* success! */
- 	mutex_unlock(&cgroup_mutex);
+ 	BUG_ON(ss->module);
 -- 
 1.7.11.7
