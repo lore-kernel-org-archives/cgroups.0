@@ -1,46 +1,55 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 3/6] memcg: Simplify mem_cgroup_force_empty_list error
- handling
-Date: Wed, 14 Nov 2012 13:33:30 -0500
-Message-ID: <20121114183330.GA32421@cmpxchg.org>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
- <1351251453-6140-4-git-send-email-mhocko@suse.cz>
- <508E8B95.406@parallels.com>
- <20121029150022.a595b866.akpm@linux-foundation.org>
- <20121030103559.GA7394@dhcp22.suse.cz>
- <20121113211041.GB1543@cmpxchg.org>
- <20121114135930.GE4929@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 05/17] cgroup: cgroup->dentry isn't a RCU pointer
+Date: Wed, 14 Nov 2012 10:55:04 -0800
+Message-ID: <20121114185504.GG21185@mtj.dyndns.org>
+References: <1352775704-9023-1-git-send-email-tj@kernel.org>
+	<1352775704-9023-6-git-send-email-tj@kernel.org>
+	<50A37B0A.7010608@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20121114135930.GE4929@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=BuMScMWLEWTdqySBE9As4VF+gVDAjZN21lfZJNQTrCA=;
+	b=P7MhrahJ8EXf/3o7yO0o7FAkD+E7F/FAVOrSVnxfPQRNC4ZU/aOsefvnZhMTQ46ME/
+	wVb3kf1XJ9JYCszKo6FFwCySC5Ut9bOrsmZHCQJG5D1kQLJrwh619GRSiUt26NEjY/wh
+	1j9EkX+8KKilzLkyNLkYe7eLJcDq2q5UF5EYBYtEe13KelqScVB6+EY52nd8tRK4eaHC
+	rkMOaB8A4YjHEUBjMQ4mGIBmIVO1J+PplsYZmTkaapS0D3itWoT5bOZGHb4wKFz6pE8u
+	K0D/z7V/B1bPispuLHCFZtgyiZEt04pst9bgi+EEZpC54i17qAUGYQHibydBgKFaPe3N
+	kcSQ==
+Content-Disposition: inline
+In-Reply-To: <50A37B0A.7010608-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 14, 2012 at 02:59:30PM +0100, Michal Hocko wrote:
-> On Tue 13-11-12 16:10:41, Johannes Weiner wrote:
-> > Would it make sense to stick a wait_on_page_locked() in there just so
-> > that we don't busy spin on a page under migration/reclaim?
+Hello, Glauber.
+
+On Wed, Nov 14, 2012 at 03:05:46PM +0400, Glauber Costa wrote:
+> Will memcontrol.c need similar amendments?
 > 
-> Hmm, this would also mean that get_page_unless_zero would fail as well
-> and so we would schedule in mem_cgroup_force_empty_list. It is true that
-> there might be no other runnable task so we can busy loop so yes this
-> would help. Care to cook the patch?
+> The code that lives in -mm and includes kmemcg includes the following
+> excerpt:
+> 
+>         rcu_read_lock();
+>         dentry = rcu_dereference(memcg->css.cgroup->dentry);
+>         rcu_read_unlock();
 
-Eventually get_page_unless_zero() would fail but we could still spin
-on a page while it's off the LRU and migration performs writeback on
-it e.g.  cond_resched() does not necessarily schedule just because
-there is another runnable task, I think, it's voluntary preemption
-when the task needs rescheduling anyway, not yield.
+Ooh, yeah, hmmm... that should happen after this series gets merged.
+I'll mark it as pending.
 
-Maybe not worth bothering...
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
