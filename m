@@ -1,42 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 4/6] cgroups: forbid pre_destroy callback to fail
-Date: Tue, 13 Nov 2012 16:13:24 -0500
-Message-ID: <20121113211324.GC1543@cmpxchg.org>
-References: <1351251453-6140-1-git-send-email-mhocko@suse.cz>
- <1351251453-6140-5-git-send-email-mhocko@suse.cz>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 04/17] cgroup: create directory before linking while
+	creating a new cgroup
+Date: Wed, 14 Nov 2012 11:20:47 +0800
+Message-ID: <50A30E0F.7000408@huawei.com>
+References: <1352775704-9023-1-git-send-email-tj@kernel.org>
+	<1352775704-9023-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1351251453-6140-5-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@parallels.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1352775704-9023-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Oct 26, 2012 at 01:37:31PM +0200, Michal Hocko wrote:
-> Now that mem_cgroup_pre_destroy callback doesn't fail (other than a race
-> with a task attach resp. child group appears) finally we can safely move
-> on and forbit all the callbacks to fail.
-> The last missing piece is moving cgroup_call_pre_destroy after
-> cgroup_clear_css_refs so that css_tryget fails so no new charges for the
-> memcg can happen.
-> We cannot, however, move cgroup_call_pre_destroy right after because we
-> cannot call mem_cgroup_pre_destroy with the cgroup_lock held (see
-> 3fa59dfb cgroup: fix potential deadlock in pre_destroy) so we have to
-> move it after the lock is released.
+On 2012/11/13 11:01, Tejun Heo wrote:
+> While creating a new cgroup, cgroup_create() links the newly allocated
+> cgroup into various places before trying to create its directory.
+> Because cgroup life-cycle is tied to the vfs objects, this makes it
+> impossible to use cgroup_rmdir() for rolling back creation - the
+> removal logic depends on having full vfs objects.
 > 
-> Changes since v1
-> - Li Zefan pointed out that mem_cgroup_pre_destroy cannot be called with
->   cgroup_lock held
+> This patch moves directory creation above linking and collect linking
+> operations to one place.  This allows directory creation failure to
+> share error exit path with css allocation failures and any failure
+> sites afterwards (to be added later) can use cgroup_rmdir() logic to
+> undo creation.
 > 
-> Signed-off-by: Michal Hocko <mhocko@suse.cz>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> It also removes the need to check whether cgroup->dentry is %NULL in
+> cgroup_path.  If a cgroup is visible, its dentry is guaranteed to be
+> visible too.
+> 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I'm afraid this isn't safe.
+
+The cgroup is visible to a controller soon after ss->create(), and then
+the controller might call cgroup_path() while cgrp->dentry is still NULL.
+
+This can happen for cpu cgroup I think, and in fact the NULL check was
+added for this reason IIRC.
+
+> Note that this also makes the memory barriers around cgroup->dentry,
+> which currently is misleadingly using RCU operations, unnecessary.
+> This will be handled in the next patch.
+> 
+> While at it, locking BUG_ON() on i_mutex is converted to
+> lockdep_assert_held().
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+>  kernel/cgroup.c | 32 +++++++++++++-------------------
+>  1 file changed, 13 insertions(+), 19 deletions(-)
