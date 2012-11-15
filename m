@@ -1,122 +1,90 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 04/17] cgroup: create directory before linking while
- creating a new cgroup
-Date: Wed, 14 Nov 2012 11:48:35 -0800
-Message-ID: <20121114194835.GJ21185@mtj.dyndns.org>
-References: <1352775704-9023-1-git-send-email-tj@kernel.org>
- <1352775704-9023-5-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Greg Thelen <gthelen@google.com>
+Subject: [PATCH] res_counter: delete res_counter_write()
+Date: Wed, 14 Nov 2012 16:06:57 -0800
+Message-ID: <1352938017-32568-1-git-send-email-gthelen@google.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=bsDuiSrcV4XJLdrGt3GOBdPGOkv1ZoLoqfbBG0p0ZUg=;
-        b=W0pKAHR4A2/6NbiYDT4fw+8itwEPPK/Per6SBSQlM6nbWBcaOFfBWOGzNKNjmCpoSC
-         Ze90ETRu2qm0LttF9uRQgm9X9cmiGgmjWeb8rIlvanlDKtv4NbgKbLv0IJxUTR2AT6ta
-         3Ty15S7/sp86uUTxUCQWGDxR5tVYfg6RbouDR11sz/2wK/hCiLZVVk2tLDN+J2YbjsSj
-         v2P91fUkWkCywx6XwD5cVzh2Xuza0G0nrrTuw9O6Bxz/If7xfZNB3dv4qFmYYTvtoQth
-         v9hmFCur+wjkUIyiH+zY+EWtIfT+N/TO7ukvvkCjsscruskxNdBhtVGPy8R1ewsw/ghH
-         lYdQ==
-Content-Disposition: inline
-In-Reply-To: <1352775704-9023-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=GG4ujrjhgEdum3tqR4Vrhh+Cmv54l4E06mWAgr9ihIc=;
+        b=PvURuhKyACoLbeh5BYeYLLZVJ6CXQz6i0wC3vOEdad368PO2iTnMPsumHO7T/rKIt8
+         KkOZs8YmdfCXFuvBpg5O7kisWnj69HGLP2sVosZzBV9nt305b/hejmsZKqyNpXIfVQAs
+         z//iLHLmc0Gcivao//lsUYUuATHgH/Im7ow0sHZ8/tGZF8gS7iMjjDxQerwz8CNdKvpJ
+         MT/3pjS57bvBmYH6+A0DyY7AkbryOwprnbR3GVaTULDfnIs4NPYJoWcS7tLpHKPtfrVe
+         SoOJ7rRqyOOsqpG0XDx4QCcDAFoBwHMKsScwE/dFnBcC59Qu3uYnMrM/Qnt1R1Ic67Wz
+         zKPg==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Frederic Weisbecker <fweisbec@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Greg Thelen <gthelen@google.com>
 
-While creating a new cgroup, cgroup_create() links the newly allocated
-cgroup into various places before trying to create its directory.
-Because cgroup life-cycle is tied to the vfs objects, this makes it
-impossible to use cgroup_rmdir() for rolling back creation - the
-removal logic depends on having full vfs objects.
+Since 628f423553 "memcg: limit change shrink usage" both
+res_counter_write() and write_strategy_fn have been unused.  This
+patch deletes them both.
 
-This patch moves directory creation above linking and collect linking
-operations to one place.  This allows directory creation failure to
-share error exit path with css allocation failures and any failure
-sites afterwards (to be added later) can use cgroup_rmdir() logic to
-undo creation.
-
-Note that this also makes the memory barriers around cgroup->dentry,
-which currently is misleadingly using RCU operations, unnecessary.
-This will be handled in the next patch.
-
-While at it, locking BUG_ON() on i_mutex is converted to
-lockdep_assert_held().
-
-v2: Patch originally removed %NULL dentry check in cgroup_path();
-    however, Li pointed out that this patch doesn't make it
-    unnecessary as ->create() may call cgroup_path().  Drop the
-    change for now.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Greg Thelen <gthelen@google.com>
 ---
- kernel/cgroup.c |   30 ++++++++++++------------------
- 1 file changed, 12 insertions(+), 18 deletions(-)
+ include/linux/res_counter.h |    5 -----
+ kernel/res_counter.c        |   22 ----------------------
+ 2 files changed, 0 insertions(+), 27 deletions(-)
 
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4112,15 +4112,22 @@ static long cgroup_create(struct cgroup
- 		}
- 	}
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+index 4b173b6..5ae8456 100644
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -74,14 +74,9 @@ ssize_t res_counter_read(struct res_counter *counter, int member,
+ 		const char __user *buf, size_t nbytes, loff_t *pos,
+ 		int (*read_strategy)(unsigned long long val, char *s));
  
--	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
--	root->number_of_cgroups++;
+-typedef int (*write_strategy_fn)(const char *buf, unsigned long long *val);
 -
-+	/*
-+	 * Create directory.  cgroup_create_file() returns with the new
-+	 * directory locked on success so that it can be populated without
-+	 * dropping cgroup_mutex.
-+	 */
- 	err = cgroup_create_file(dentry, S_IFDIR | mode, sb);
- 	if (err < 0)
--		goto err_remove;
-+		goto err_destroy;
-+	lockdep_assert_held(&dentry->d_inode->i_mutex);
+ int res_counter_memparse_write_strategy(const char *buf,
+ 					unsigned long long *res);
  
-+	/* allocation complete, commit to creation */
- 	dentry->d_fsdata = cgrp;
- 	rcu_assign_pointer(cgrp->dentry, dentry);
-+	list_add_tail(&cgrp->allcg_node, &root->allcg_list);
-+	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
-+	root->number_of_cgroups++;
- 
- 	for_each_subsys(root, ss) {
- 		/* each css holds a ref to the cgroup's dentry */
-@@ -4131,11 +4138,6 @@ static long cgroup_create(struct cgroup
- 			ss->post_create(cgrp);
- 	}
- 
--	/* The cgroup directory was pre-locked for us */
--	BUG_ON(!mutex_is_locked(&cgrp->dentry->d_inode->i_mutex));
+-int res_counter_write(struct res_counter *counter, int member,
+-		      const char *buffer, write_strategy_fn write_strategy);
 -
--	list_add_tail(&cgrp->allcg_node, &root->allcg_list);
--
- 	err = cgroup_populate_dir(cgrp, true, root->subsys_mask);
- 	/* If err < 0, we have a half-filled directory - oh well ;) */
- 
-@@ -4144,20 +4146,12 @@ static long cgroup_create(struct cgroup
- 
+ /*
+  * the field descriptors. one for each member of res_counter
+  */
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index 7b3d6dc..ff55247 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -198,25 +198,3 @@ int res_counter_memparse_write_strategy(const char *buf,
+ 	*res = PAGE_ALIGN(*res);
  	return 0;
- 
-- err_remove:
+ }
 -
--	list_del_rcu(&cgrp->sibling);
--	root->number_of_cgroups--;
+-int res_counter_write(struct res_counter *counter, int member,
+-		      const char *buf, write_strategy_fn write_strategy)
+-{
+-	char *end;
+-	unsigned long flags;
+-	unsigned long long tmp, *val;
 -
-- err_destroy:
--
-+err_destroy:
- 	for_each_subsys(root, ss) {
- 		if (cgrp->subsys[ss->subsys_id])
- 			ss->destroy(cgrp);
- 	}
--
- 	mutex_unlock(&cgroup_mutex);
--
- 	/* Release the reference count that we took on the superblock */
- 	deactivate_super(sb);
- err_free:
+-	if (write_strategy) {
+-		if (write_strategy(buf, &tmp))
+-			return -EINVAL;
+-	} else {
+-		tmp = simple_strtoull(buf, &end, 10);
+-		if (*end != '\0')
+-			return -EINVAL;
+-	}
+-	spin_lock_irqsave(&counter->lock, flags);
+-	val = res_counter_member(counter, member);
+-	*val = tmp;
+-	spin_unlock_irqrestore(&counter->lock, flags);
+-	return 0;
+-}
+-- 
+1.7.7.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
