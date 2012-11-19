@@ -1,103 +1,57 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 2/3] netcls_cgroup: introduce cgroup_cls_state->is_local
-Date: Mon, 19 Nov 2012 09:30:26 -0800
-Message-ID: <20121119173026.GJ15971@htj.dyndns.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] netcls_cgroup: implement hierarchy
+	support
+Date: Mon, 19 Nov 2012 11:01:05 -0800
+Message-ID: <20121119190105.GL15971@htj.dyndns.org>
 References: <1353123062-23193-1-git-send-email-tj@kernel.org>
- <1353123062-23193-3-git-send-email-tj@kernel.org>
+	<50AA3B5E.3080701@bmw-carit.de>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=sicmTfWg8SwZPeHT2wSRC2bDOunXUrr+U+aNZBG/yrg=;
-        b=v0Y6yQzz/5o7CpALSqBRo5u5eI/qaQSGci7DjHSEYihGoAdTzxkIGIYCwN3CsKnpjg
-         4xljL1Gr/G7Qv10ckMTkMpJhjsbdGax24ii2E8PFWAMQR6DPVmZCnkUqmaJcAiPhHxW9
-         kPE5bcoI+VnYU6sb7JQaOXxWeASB+APFTbMqnopciLH+bnfBBY7McZ1GOS9pNuL6GS7M
-         YqPYB40Y4NKQWrFOUp0HkPgVTFehoEFfBSDLR0MJDiKhQKYjMOcOqD5lE+aMcgDP6I42
-         fZgMWvFa9QpYRauVmDQcQaqbvdN5qxkT+lFE/d0L7JBt03F6kZZVZH/t930ZbgswDPC0
-         AuGg==
-Content-Disposition: inline
-In-Reply-To: <1353123062-23193-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=zYdFKkVL3OaPTzYKoHkxgh7XmrIPUGoy/C0skKDdOVM=;
+	b=P4qjJ/I94PT3+tq6tRaHWGUqgK4nuHgGd040ZGm1AVKdjVUzVCPxprFZ26mN69YtyD
+	K5LEugnuI1gNorsYccij6ynd62xI16uI/8dYNofLxCDeV7Js//Tjcfs6qBc+Koxj56KT
+	cb6OPg34+xZCg8fOk5pAVaufnCmS0lDokGgDHXsNi27noqkRkc5SZqFNMjUpLGYrV9Gn
+	oHCxTr1UCshWclXeoTnnSOExsNWDd1/ISv8wPzsfiS2wUt6/HdlTUdVHSGy+dtMX3lWp
+	PBWVb1S9XyR1XIMbugkqSak5XUslLZdSCYixZmxuQnadghRVSn1HbQ7RuyjRNeMjyGdD
+	8/6Q==
+Content-Disposition: inline
+In-Reply-To: <50AA3B5E.3080701-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
 
-cs->is_local will be used to indicate whether the cgroup has its own
-configuration or inherited from the parent.  It's set when classid is
-configured by writing a positive value to cgroup file
-"net_cls.classid" and cleared when a negative value is written.
+Hello, Daniel.
 
-is_local is visible to userland via cgroup file "net_cls.is_local" so
-that userland can know whether a cgroup has its config or not.
+On Mon, Nov 19, 2012 at 02:59:58PM +0100, Daniel Wagner wrote:
+> Sorry to bring this up again: how should to root cgroup behave? If
+> the ultimate goal to have only one single hierarchy then I would
+> assume it is important that the semantic for all controllers are the
+> same. As you pointed out the networking controllers are kind of a
+> strange beast in the zoo of the cgroup controllers.  But still I
+> would assume that all root controllers behave the same. memcg or
+> cpu* are not expected to do any work in the root cgroup.
 
-This patch doesn't yet change hierarchy behavior.  The next patch will
-use is_local to implement proper hierarchy.
+I think the implemented behavior is fine.  memcg or cpu* don't do
+anything on root cgroup as it doesn't make much (or any) sense.  For
+net_prio and cls, I don't see any reason to treat root cgroup
+differently and how that would cause conflict when mounted together
+with other controllers.  So, yeah, things seem okay to me.
 
-v2: Daniel pointed out that cftype->write_u64() accepts base prefix
-    (e.g. 0x10 for 16).  Updated "%lld" to "%lli".
+Thanks.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Cc: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
----
- include/net/cls_cgroup.h |    1 +
- net/sched/cls_cgroup.c   |   23 ++++++++++++++++++++---
- 2 files changed, 21 insertions(+), 3 deletions(-)
-
---- a/include/net/cls_cgroup.h
-+++ b/include/net/cls_cgroup.h
-@@ -22,6 +22,7 @@ struct cgroup_cls_state
- {
- 	struct cgroup_subsys_state css;
- 	u32 classid;
-+	bool is_local;	/* class id is explicitly configured for this cgroup */
- };
- 
- extern void sock_update_classid(struct sock *sk);
---- a/net/sched/cls_cgroup.c
-+++ b/net/sched/cls_cgroup.c
-@@ -70,19 +70,36 @@ static u64 read_classid(struct cgroup *c
- 	return cgrp_cls_state(cgrp)->classid;
- }
- 
--static int write_classid(struct cgroup *cgrp, struct cftype *cft, u64 value)
-+static int write_classid(struct cgroup *cgrp, struct cftype *cft,
-+			 const char *buf)
- {
-+	struct cgroup_cls_state *cs = cgrp_cls_state(cgrp);
-+	s64 v;
-+
-+	if (sscanf(buf, "%lli", &v) != 1)
-+		return -EINVAL;
-+
- 	mutex_lock(&netcls_mutex);
--	cgrp_cls_state(cgrp)->classid = (u32) value;
-+	cs->classid = clamp_val(v, 0, UINT_MAX);
-+	cs->is_local = v >= 0;
- 	mutex_unlock(&netcls_mutex);
- 	return 0;
- }
- 
-+static u64 read_is_local(struct cgroup *cgrp, struct cftype *cft)
-+{
-+	return cgrp_cls_state(cgrp)->is_local;
-+}
-+
- static struct cftype ss_files[] = {
- 	{
- 		.name = "classid",
- 		.read_u64 = read_classid,
--		.write_u64 = write_classid,
-+		.write_string = write_classid,
-+	},
-+	{
-+		.name = "is_local",
-+		.read_u64 = read_is_local,
- 	},
- 	{ }	/* terminate */
- };
+-- 
+tejun
