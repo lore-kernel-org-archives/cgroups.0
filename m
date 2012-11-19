@@ -1,40 +1,82 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup, cpuset: remove cgroup_subsys->post_clone()
-Date: Mon, 19 Nov 2012 08:36:51 -0800
-Message-ID: <20121119163651.GF15971@htj.dyndns.org>
-References: <20121113202714.GA21185@mtj.dyndns.org>
- <20121113202745.GB21185@mtj.dyndns.org>
- <50A9C649.9080602@huawei.com>
+Subject: Re: [PATCH 06/17] cgroup: remove duplicate RCU free on struct cgroup
+Date: Mon, 19 Nov 2012 08:59:03 -0800
+Message-ID: <20121119165903.GG15971@htj.dyndns.org>
+References: <1352775704-9023-1-git-send-email-tj@kernel.org>
+	<1352775704-9023-7-git-send-email-tj@kernel.org>
+	<50A9F5B2.5080509@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=lqjrZYunHBdWjZZaRo2PEiweDa5xL03jmcoOeYivLII=;
-        b=tDPqYA/clvgQ/ZKrED4NkemFOeKd8IgtZKxThs6cJHCVbzHBc57P5yoUWiJVQM0TxZ
-         5voLIa++TQjHyHrb/riTeb7c6howk0qdqv6BQGtIQOuTuN2OApJXTo5NbUf5U6jv4I9b
-         gD7Qtagg5K4kw6zgOkguITM4fPQs9sQN9ZDKKUTRAPekIHbVqLr2yag9Shph14v46iAy
-         jkQ3MnQnGA+J6AIeMnpEgcn6yFyCZMmCyYAhNvDmkOi42Z6SnlVIYMds3SjGO6S1FK6P
-         GxvuYKSZbMkKypljoYyMXOphmKkK1//E127zimOAljQAWvT6ewP6i0xVpSyzsvGm0qB9
-         Am/Q==
-Content-Disposition: inline
-In-Reply-To: <50A9C649.9080602-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=KYQOgSqoYt4tLiE90vLdxsWcwdaWhUUY5MFramU0t3w=;
+	b=UXsfSXN6JMrcJmA9JdTWRTtvLOyCk0wF1bBWJ0cxHjaFjMuHGjRy/hwLgom8MNx1wN
+	DjhyiSE010B+e0W9XEqem4i5cmaX8GCfqGfW5kaIo+8FhC7g4Ub2chnoNuIAVr2Xx7MS
+	kWYPR13w4cVs/0Ja0i5FQ6yA+LhWBGh+aCl0rJ5zFGhiJAFMXpjpvy4MQNgRnLa/BkRJ
+	N4sD4mjh7IMoxNuNlBA5/nHTMbFBojFnHGCRA+HffXpQMkipClgIVtaKwP6Byr54P12T
+	Bg7MeaxUqjdNRl+7jnZ3d+D//xx6UIxjurK5lOLQMGTFa+tBIVLCVlGreT+K5RrHqzh2
+	8Xcg==
+Content-Disposition: inline
+In-Reply-To: <50A9F5B2.5080509-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Original-patch-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> > Original-patch: <1351686554-22592-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> > Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Hello, Li.
+
+On Mon, Nov 19, 2012 at 05:02:42PM +0800, Li Zefan wrote:
+> On 2012/11/13 11:01, Tejun Heo wrote:
+> > struct cgroup is made RCU-safe by synchronize_rcu() in cgroup_diput().
 > 
-> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> but synchronize_rcu() is called before ss->destroy().
+> 
+> rcu_read_lock();
+> for_each_leaf_cfs_rq(cpu_rq(cpu), cfs_rq)
+> 	print_cfs_rq(m, cpu, cfs_rq);
+> 	-> call cgroup_path(task_group->css.cgroup);
+> rcu_read_unlock();
+> 
+> With this patch, if the above code race with cgroup_diput(), we might
+> end up accessing a cgroup which has been freed.
 
-Both patches applied to cgroup/for-3.8.  Thanks.
+Ah, okay.  So, the problem here is that sched is using ->css_free() as
+a de-registration point rather than freeing and may end up walking it
+after ->css_free() is complete inside RCU period.
+
+I think the correct solution is using ->css_offline() for that.  It's
+ugly to require double RCU grace periods.
+
+> > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> > index 278752e..a91e7ad 100644
+> > --- a/kernel/cgroup.c
+> > +++ b/kernel/cgroup.c
+> > @@ -893,7 +893,7 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+> >  
+> >  		simple_xattrs_free(&cgrp->xattrs);
+> >  
+> > -		kfree_rcu(cgrp, rcu_head);
+> > +		kfree(cgrp);
+> 
+> This was also added to prevent a race in group scheduling code, and I think the race still
+> exists.
+
+Care to point out which one?  I don't think the double-RCU workaround
+is a good idea.  We really should sort it out by following object
+lifecycle rules consistently.
+
+Thanks.
 
 -- 
 tejun
