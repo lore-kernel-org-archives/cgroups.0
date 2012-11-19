@@ -1,80 +1,67 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 01/17] cgroup: remove incorrect dget/dput() pair in cgroup_create_dir()
-Date: Mon, 19 Nov 2012 16:08:04 +0800
-Message-ID: <50A9E8E4.4050004@huawei.com>
-References: <1352775704-9023-1-git-send-email-tj@kernel.org> <1352775704-9023-2-git-send-email-tj@kernel.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cgroup: allow ->post_create() to fail
+Date: Mon, 19 Nov 2012 16:54:11 +0800
+Message-ID: <50A9F3B3.2010607@huawei.com>
+References: <1352775704-9023-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1352775704-9023-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <1352775704-9023-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
 
 On 2012/11/13 11:01, Tejun Heo wrote:
-> cgroup_create_dir() does weird dancing with dentry refcnt.  On
-> success, it gets and then puts it achieving nothing.  On failure, it
-> puts but there isn't no matching get anywhere leading to the following
-> oops if cgroup_create_file() fails for whatever reason.
+> Hello,
 > 
->   ------------[ cut here ]------------
->   kernel BUG at /work/os/work/fs/dcache.c:552!
->   invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
->   Modules linked in:
->   CPU 2
->   Pid: 697, comm: mkdir Not tainted 3.7.0-rc4-work+ #3 Bochs Bochs
->   RIP: 0010:[<ffffffff811d9c0c>]  [<ffffffff811d9c0c>] dput+0x1dc/0x1e0
->   RSP: 0018:ffff88001a3ebef8  EFLAGS: 00010246
->   RAX: 0000000000000000 RBX: ffff88000e5b1ef8 RCX: 0000000000000403
->   RDX: 0000000000000303 RSI: 2000000000000000 RDI: ffff88000e5b1f58
->   RBP: ffff88001a3ebf18 R08: ffffffff82c76960 R09: 0000000000000001
->   R10: ffff880015022080 R11: ffd9bed70f48a041 R12: 00000000ffffffea
->   R13: 0000000000000001 R14: ffff88000e5b1f58 R15: 00007fff57656d60
->   FS:  00007ff05fcb3800(0000) GS:ffff88001fd00000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->   CR2: 00000000004046f0 CR3: 000000001315f000 CR4: 00000000000006e0
->   DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->   DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->   Process mkdir (pid: 697, threadinfo ffff88001a3ea000, task ffff880015022080)
->   Stack:
->    ffff88001a3ebf48 00000000ffffffea 0000000000000001 0000000000000000
->    ffff88001a3ebf38 ffffffff811cc889 0000000000000001 ffff88000e5b1ef8
->    ffff88001a3ebf68 ffffffff811d1fc9 ffff8800198d7f18 ffff880019106ef8
->   Call Trace:
->    [<ffffffff811cc889>] done_path_create+0x19/0x50
->    [<ffffffff811d1fc9>] sys_mkdirat+0x59/0x80
->    [<ffffffff811d2009>] sys_mkdir+0x19/0x20
->    [<ffffffff81be1e02>] system_call_fastpath+0x16/0x1b
->   Code: 00 48 8d 90 18 01 00 00 48 89 93 c0 00 00 00 4c 89 a0 18 01 00 00 48 8b 83 a0 00 00 00 83 80 28 01 00 00 01 e8 e6 6f a0 00 eb 92 <0f> 0b 66 90 0f 1f 44 00 00 55 48 89 e5 41 57 41 56 49 89 fe 41
->   RIP  [<ffffffff811d9c0c>] dput+0x1dc/0x1e0
->    RSP <ffff88001a3ebef8>
->   ---[ end trace 1277bcfd9561ddb0 ]---
+> This became a rather large patchset mostly because there are a lot of
+> weirdities and subtle breakages in create/destroy/load/unload paths.
+> The goal of the patchset is allowing ->post_create() to fail and
+> renaming ->create/post_create/pre_destroy/destroy() to
+> ->css_alloc/css_online/css_offline/css_free().
 > 
-> Fix it by dropping the unnecessary dget/dput() pair.
+> This patchset contains the following seventeen patches.
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  kernel/cgroup.c | 2 --
->  1 file changed, 2 deletions(-)
+>  0001-cgroup-remove-incorrect-dget-dput-pair-in-cgroup_cre.patch
+>  0002-cgroup-initialize-cgrp-allcg_node-in-init_cgroup_hou.patch
+>  0003-cgroup-open-code-cgroup_create_dir.patch
+>  0004-cgroup-create-directory-before-linking-while-creatin.patch
+>  0005-cgroup-cgroup-dentry-isn-t-a-RCU-pointer.patch
+>  0006-cgroup-remove-duplicate-RCU-free-on-struct-cgroup.patch
+>  0007-cgroup-make-CSS_-flags-bit-masks-instead-of-bit-posi.patch
+>  0008-cgroup-trivial-cleanup-for-cgroup_init-load_subsys.patch
+>  0009-cgroup-lock-cgroup_mutex-in-cgroup_init_subsys.patch
+>  0010-cgroup-fix-harmless-bugs-in-cgroup_load_subsys-fail-.patch
+>  0011-cgroup-separate-out-cgroup_destroy_locked.patch
+>  0012-cgroup-introduce-CSS_ONLINE-flag-and-on-offline_css-.patch
+>  0013-cgroup-simplify-cgroup_load_subsys-failure-path.patch
+>  0014-cgroup-use-mutex_trylock-when-grabbing-i_mutex-of-a-.patch
+>  0015-cgroup-update-cgroup_create-failure-path.patch
+>  0016-cgroup-allow-post_create-to-fail.patch
+>  0017-cgroup-rename-create-post_create-pre_destroy-destroy.patch
 > 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 0f8fa6a..d0803f0 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -2684,9 +2684,7 @@ static int cgroup_create_dir(struct cgroup *cgrp, struct dentry *dentry,
->  		dentry->d_fsdata = cgrp;
->  		inc_nlink(parent->d_inode);
->  		rcu_assign_pointer(cgrp->dentry, dentry);
-> -		dget(dentry);
->  	}
-> -	dput(dentry);
->  
 
-The code has been there since cgroup was merged into mainline!
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
->  	return error;
->  }
+except 0006-cgroup-remove-duplicate-RCU-free-on-struct-cgroup.patch
+
+> 0001 is a bugfix.  Tagged for -stable.  I don't I'll push it through
+> for-3.7-fixes tho.  This has been broken forever and nobody reported
+> anything yet.
 > 
+> 0002-0011 are various fixes and cleanups to prepare for the following
+> changes.  Each should be self-explanatory.
+> 
+> 0012-0015 are preparation patches more directly related to allowing
+> failure of ->post_create().
+> 
+> 0016 allows ->post_create() to fail.
+> 
+> 0017 renames ops and updates documentation.
+> 
+> This patchst is on top of cgroup/for-3.8 and available on the
+> following git branch.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-online-may-fail
