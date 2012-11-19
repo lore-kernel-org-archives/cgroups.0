@@ -1,10 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/8] cgroup: add cgroup->id
-Date: Mon, 19 Nov 2012 09:05:01 -0800
-Message-ID: <20121119170501.GH15971@htj.dyndns.org>
-References: <1353093624-22608-1-git-send-email-tj@kernel.org>
-	<1353093624-22608-2-git-send-email-tj@kernel.org>
-	<50A9F5F3.3050907@huawei.com>
+Subject: Re: [PATCH 3/3] netcls_cgroup: implement proper hierarchy support
+Date: Mon, 19 Nov 2012 09:08:59 -0800
+Message-ID: <20121119170859.GI15971@htj.dyndns.org>
+References: <1353123062-23193-1-git-send-email-tj@kernel.org>
+	<1353123062-23193-4-git-send-email-tj@kernel.org>
+	<50AA385A.90503@monom.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -12,15 +12,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=92QYF/iU8NcGAXUQvKZIuHPCLztu0yRtwfrjeZRu7mU=;
-	b=eXf/ojXjNtXy7EL+vNVc44+GnETujHVIIpXpqhO4R0SAASt6G10H447KWzDvezDiKe
-	2VXtjV7aTtt5rewMWvOZ2FP4N5CbnSynSHuJDUviJQ1vTM7e43d9sbg59wmigldGEgFW
-	K6yFFoe/3/ZRJb/IAXspykR41tJgAqUoVKdnAYNpLDE+esyirDNPqxkGLZdUuzy9KCKW
-	ohdN1A2NGaHSvmUEXXGjNlddWpuB6ZU7Rw55nZRgN+2M3SWkZy8DvQfSd1CSxzMl3o7M
-	eUc+/HLl7i38vJT97IGJZzTFUO/p7A5xNXPvne87KtgScvCHcqTtAx2gW08nog3SyY4c
-	hLNA==
+	bh=M86RQLzgiU5qpREzBmbKIpEqjJnjgXb8hxpYuyOkCyo=;
+	b=KhHw4g1kS+Z2V28tcRUAyWdzWPF/pwyX13uC4Ev61dZZ5J6nZGQ8HppfT0nHSpJe9x
+	8GuGItqgzFEcAPIAXXCXwu41rNSM9sQU0K4n6j0TItrQc1HPbY/ypFo8nXp0I+xM/S89
+	RChBJDcQVu2CDwnM5paWXPtCfaBlreA2lhMD8cl02trF4/F7o6snjdthtuoQZzfMVRQo
+	ettZ6f2F7hBxxIxweytp2QziBmQLfk5WxjX15d7/FVvASsXxs/r0dnD1veWc7e/U2JTP
+	xPHBSAN0IMdThU7RPxGJ4epmMnFsVQVM/5fhLIwkoo0EcSSSALlwrtLrXLjHne+W90CQ
+	jC/A==
 Content-Disposition: inline
-In-Reply-To: <50A9F5F3.3050907-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <50AA385A.90503-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -31,25 +31,31 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, srivatsa.bhat-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
 
-On Mon, Nov 19, 2012 at 05:03:47PM +0800, Li Zefan wrote:
-> On 2012/11/17 3:20, Tejun Heo wrote:
-> > With the introduction of generic cgroup hierarchy iterators, css_id is
-> > being phased out.  It was unnecessarily complex, id'ing the wrong
-> > thing (cgroups need IDs, not CSSes) and has other oddities like not
-> > being available at ->css_alloc().
-> > 
-> > This patch adds cgroup->id, which is a simple per-hierarchy
-> > ida-allocated ID which is assigned before ->css_alloc() and released
-> > after ->css_free().
-> > 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Hello, Daniel.
+
+On Mon, Nov 19, 2012 at 02:47:06PM +0100, Daniel Wagner wrote:
+> On 17.11.2012 04:31, Tejun Heo wrote:
+> >@@ -112,15 +161,6 @@ struct cgroup_subsys net_cls_subsys = {
+> >  	.subsys_id	= net_cls_subsys_id,
+> >  	.base_cftypes	= ss_files,
+> >  	.module		= THIS_MODULE,
+> >-
+> >-	/*
+> >-	 * While net_cls cgroup has the rudimentary hierarchy support of
+> >-	 * inheriting the parent's classid on cgroup creation, it doesn't
+> >-	 * properly propagates config changes in ancestors to their
+> >-	 * descendents.  A child should follow the parent's configuration
+> >-	 * but be allowed to override it.  Fix it and remove the following.
+> >-	 */
+> >-	.broken_hierarchy = true,
+> >  };
 > 
-> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Are you sure you want to set the default to false at this point?
 
-Applied to cgroup/for-3.8.
+Hmmm.... why not?  It's now implementing proper hierarchy behavior.
 
 Thanks.
 
