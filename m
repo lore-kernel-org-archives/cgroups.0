@@ -1,57 +1,49 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] netcls_cgroup: implement hierarchy
-	support
-Date: Mon, 19 Nov 2012 11:01:05 -0800
-Message-ID: <20121119190105.GL15971@htj.dyndns.org>
-References: <1353123062-23193-1-git-send-email-tj@kernel.org>
-	<50AA3B5E.3080701@bmw-carit.de>
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [PATCH 3/3] netcls_cgroup: implement proper hierarchy support
+Date: Mon, 19 Nov 2012 20:17:39 +0100
+Message-ID: <50AA85D3.7070000@monom.org>
+References: <1353123062-23193-1-git-send-email-tj@kernel.org> <1353123062-23193-4-git-send-email-tj@kernel.org> <50AA385A.90503@monom.org> <20121119170859.GI15971@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=zYdFKkVL3OaPTzYKoHkxgh7XmrIPUGoy/C0skKDdOVM=;
-	b=P4qjJ/I94PT3+tq6tRaHWGUqgK4nuHgGd040ZGm1AVKdjVUzVCPxprFZ26mN69YtyD
-	K5LEugnuI1gNorsYccij6ynd62xI16uI/8dYNofLxCDeV7Js//Tjcfs6qBc+Koxj56KT
-	cb6OPg34+xZCg8fOk5pAVaufnCmS0lDokGgDHXsNi27noqkRkc5SZqFNMjUpLGYrV9Gn
-	oHCxTr1UCshWclXeoTnnSOExsNWDd1/ISv8wPzsfiS2wUt6/HdlTUdVHSGy+dtMX3lWp
-	PBWVb1S9XyR1XIMbugkqSak5XUslLZdSCYixZmxuQnadghRVSn1HbQ7RuyjRNeMjyGdD
-	8/6Q==
-Content-Disposition: inline
-In-Reply-To: <50AA3B5E.3080701-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121119170859.GI15971-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Daniel.
+Hi Tejun,
 
-On Mon, Nov 19, 2012 at 02:59:58PM +0100, Daniel Wagner wrote:
-> Sorry to bring this up again: how should to root cgroup behave? If
-> the ultimate goal to have only one single hierarchy then I would
-> assume it is important that the semantic for all controllers are the
-> same. As you pointed out the networking controllers are kind of a
-> strange beast in the zoo of the cgroup controllers.  But still I
-> would assume that all root controllers behave the same. memcg or
-> cpu* are not expected to do any work in the root cgroup.
+On 19.11.2012 18:08, Tejun Heo wrote:
+> Hello, Daniel.
+> 
+> On Mon, Nov 19, 2012 at 02:47:06PM +0100, Daniel Wagner wrote:
+>> On 17.11.2012 04:31, Tejun Heo wrote:
+>>> @@ -112,15 +161,6 @@ struct cgroup_subsys net_cls_subsys = {
+>>>   	.subsys_id	= net_cls_subsys_id,
+>>>   	.base_cftypes	= ss_files,
+>>>   	.module		= THIS_MODULE,
+>>> -
+>>> -	/*
+>>> -	 * While net_cls cgroup has the rudimentary hierarchy support of
+>>> -	 * inheriting the parent's classid on cgroup creation, it doesn't
+>>> -	 * properly propagates config changes in ancestors to their
+>>> -	 * descendents.  A child should follow the parent's configuration
+>>> -	 * but be allowed to override it.  Fix it and remove the following.
+>>> -	 */
+>>> -	.broken_hierarchy = true,
+>>>   };
+>>
+>> Are you sure you want to set the default to false at this point?
+> 
+> Hmmm.... why not?  It's now implementing proper hierarchy behavior.
 
-I think the implemented behavior is fine.  memcg or cpu* don't do
-anything on root cgroup as it doesn't make much (or any) sense.  For
-net_prio and cls, I don't see any reason to treat root cgroup
-differently and how that would cause conflict when mounted together
-with other controllers.  So, yeah, things seem okay to me.
+Well, I though the rule is to keep API as stable as possible. On second
+though this change will only extend the API, so for the existing
+user base nothing changes.
 
-Thanks.
+Acked-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
--- 
-tejun
+thanks,
+daniel
