@@ -1,61 +1,38 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] netcls_cgroup: implement hierarchy
- support
-Date: Sun, 18 Nov 2012 06:25:34 -0800
-Message-ID: <20121118142534.GF7306@mtj.dyndns.org>
-References: <1353123062-23193-1-git-send-email-tj@kernel.org>
- <20121117.220421.1904738911212014470.davem@davemloft.net>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup:
+	s/CGRP_CLONE_CHILDREN/CGRP_CPUSET_CLONE_CHILDREN/
+Date: Mon, 19 Nov 2012 13:39:49 +0800
+Message-ID: <50A9C625.6020307@huawei.com>
+References: <20121113202714.GA21185@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=pitZjGVZzdptvMBE+4SlcXBW2qVwpLQsTEeZWB1Iifo=;
-        b=nQTuoc9HMg8jnEmDgnGYY9O2sI6wciQ1Zg7HMUdZcWZqslo/RFCRAE9PvyL2mFk5vP
-         qRTwZnwx7GrEtEZlq1KVE+HB/Rv/y/4AiQGHzJRZWy/45M15PkhtHNqiWnwqg6qhZU4W
-         vnEMthLCpl22oXdGsOl+J5uBXIXpcRuqWktgYsG1TWRI0CYVYoJ2O87tlJHNl7A2YzF6
-         69oSYW9itI2+RPkNZF1nuSy8CP1KWIc0FJ1pzKI3DVqe0tUNiTzsLFSnW0WoK9ZwbVbe
-         Y2Id/7Qcr8X5nXF2YgnQ9GREcVounNghVjeAjOlJAydceRG8THjYug5+oHRuIgcEsEgu
-         SlNQ==
-Content-Disposition: inline
-In-Reply-To: <20121117.220421.1904738911212014470.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20121113202714.GA21185-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Sat, Nov 17, 2012 at 10:04:21PM -0500, David Miller wrote:
-> > This patchset implements proper hierarchy support for netcls_cgroup.
-> > Pretty simliar to the netprio one[3].  Simpler as each cgroup has
-> > single config value instead of array of them.
-> > 
-> > This patchset contains the following three patches.
-> > 
-> >  0001-netcls_cgroup-introduce-netcls_mutex.patch
-> >  0002-netcls_cgroup-introduce-cgroup_cls_state-is_local.patch
-> >  0003-netcls_cgroup-implement-proper-hierarchy-support.patch
-> > 
-> > This patchset is on top of
+On 2012/11/14 4:27, Tejun Heo wrote:
+>>From 6e405c1ae4018d813e8ed9e0bd463d6976aebfa8 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Date: Tue, 13 Nov 2012 12:21:50 -0800
 > 
-> I guess you therefore want to put it through your cgroup tree?
+> clone_children is only meaningful for cpuset and will stay that way.
+> Rename the flag to reflect that and update documentation.  Also, drop
+> clone_children() wrapper in cgroup.c.  The thin wrapper is used only a
+> few times and one of them will go away soon.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Yeap.
-
-> Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-
-Great, I forgot to cc you on netprio_cgroup changes.  It's similar to
-this one but larger partly because the configuration is per
-cgroup-netdev pair.  Would it be okay to route the following through
-the cgroup tree?
-
-  https://lkml.org/lkml/2012/11/16/514
-
-Thanks.
-
--- 
-tejun
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
