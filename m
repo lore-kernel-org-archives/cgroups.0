@@ -1,38 +1,50 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [PATCHSET REPOST v2 cgroup/for-3.8] netcls/prio_cgroup: update
-	hierarchy support
-Date: Tue, 20 Nov 2012 13:37:40 -0500 (EST)
-Message-ID: <20121120.133740.2078663535446438063.davem@davemloft.net>
-References: <1353400211-5182-1-git-send-email-tj@kernel.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [patch] mm, memcg: avoid unnecessary function call when memcg
+ is disabled
+Date: Tue, 20 Nov 2012 13:49:32 -0800
+Message-ID: <20121120134932.055bc192.akpm@linux-foundation.org>
+References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1353400211-5182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.00.1211191741060.24618-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Tue, 20 Nov 2012 00:30:04 -0800
+On Mon, 19 Nov 2012 17:44:34 -0800 (PST)
+David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
->  0001-netcls_cgroup-move-config-inheritance-to-css_online-.patch
->  0002-netprio_cgroup-simplify-write_priomap.patch
->  0003-netprio_cgroup-shorten-variable-names-in-extend_netd.patch
->  0004-netprio_cgroup-reimplement-priomap-expansion.patch
->  0005-netprio_cgroup-use-cgroup-id-instead-of-cgroup_netpr.patch
->  0006-netprio_cgroup-implement-netprio-_set-_prio-helpers.patch
->  0007-netprio_cgroup-allow-nesting-and-inherit-config-on-c.patch
+> While profiling numa/core v16 with cgroup_disable=memory on the command 
+> line, I noticed mem_cgroup_count_vm_event() still showed up as high as 
+> 0.60% in perftop.
+> 
+> This occurs because the function is called extremely often even when memcg 
+> is disabled.
+> 
+> To fix this, inline the check for mem_cgroup_disabled() so we avoid the 
+> unnecessary function call if memcg is disabled.
+> 
+> ...
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -181,7 +181,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+>  						gfp_t gfp_mask,
+>  						unsigned long *total_scanned);
+>  
+> -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+> +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+> +static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
+> +					     enum vm_event_item idx)
+> +{
+> +	if (mem_cgroup_disabled() || !mm)
+> +		return;
+> +	__mem_cgroup_count_vm_event(mm, idx);
+> +}
 
-For series:
-
-Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Does the !mm case occur frequently enough to justify inlining it, or
+should that test remain out-of-line?
