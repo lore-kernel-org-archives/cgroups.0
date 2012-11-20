@@ -1,13 +1,14 @@
 From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: [PATCH 2/7] netprio_cgroup: simplify write_priomap()
-Date: Tue, 20 Nov 2012 09:37:13 +0100
-Message-ID: <50AB4139.3030105@monom.org>
+Subject: Re: [PATCH 3/7] netprio_cgroup: shorten variable names in
+	extend_netdev_table()
+Date: Tue, 20 Nov 2012 09:37:42 +0100
+Message-ID: <50AB4156.1040509@monom.org>
 References: <1353400211-5182-1-git-send-email-tj@kernel.org>
-	<1353400211-5182-3-git-send-email-tj@kernel.org>
+	<1353400211-5182-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1353400211-5182-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <1353400211-5182-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -23,7 +24,10 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
 
 On 20.11.2012 09:30, Tejun Heo wrote:
-> sscanf() doesn't bite.
+> The function is about to go through a rewrite.  In preparation,
+> shorten the variable names so that we don't repeat "priomap" so often.
+>
+> This patch is cosmetic.
 >
 > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
