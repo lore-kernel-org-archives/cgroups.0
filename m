@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/7] netprio_cgroup: simplify write_priomap()
-Date: Mon, 19 Nov 2012 23:06:25 -0800
-Message-ID: <1353395190-4530-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/7] netprio_cgroup: reimplement priomap expansion
+Date: Mon, 19 Nov 2012 23:06:27 -0800
+Message-ID: <1353395190-4530-5-git-send-email-tj@kernel.org>
 References: <1353395190-4530-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=AV8tNgfgjBr2S/QpcGJqhF61RUJU8JC10tg3t/oRW7Y=;
-        b=s+AhvJI4wqQPK7hU/6SjgtoTDfKrHRpiXvpJ9Y7JkRI4MM1GumqzlNBJn0Px0pSSWG
-         scNGSBb0aamcs4CuxKbo+wMQp8hAD0vI4rbBEswh6SWIzVSQQoGPlc7LUa2xwVehaK0J
-         bZv20LtDe4X7OS7XUxXOAsFNFprS5HwBtwXD24dOYen11vHiG7fb5tGQTLigoxuhEJje
-         iS0fqOrq1jxVHilwHW3mQfqRz8oUUcg1qJ3bT+5/pJsq+vUE4/7pLMIaE8QZ3JokiVLv
-         DR8xYd7YscynWmdaJUpu0WWrAdAJFzClVQf0gX9G6m3kWAVzvORAxyfhj4AeuJSe9Bc7
-         x8Iw==
+        bh=nxoX7/09XcFlAJtp5JvIN7J7pyG/7u5OouawDeg8wMU=;
+        b=eAlrijW8CKJ4B9zFv5cC51kybrjbk5tPZip+nyF3FxIx7WWhcKLAD7TB0JRhClhD9p
+         fp67us3SC5kgMo4T8LR5VOUjYG6BnpAfDQUh6zPJVIs3Vsu4OoFj5wzFYwbkU/KwnAOg
+         wwcYUmQ1C0uxzmEiw5ZguIiaRvPP92EfLfESFUODvd3Q/CLMfXcERLHm0HMT2ArjGBka
+         QP+xlYoFSN1U4WEPDQ5cc3I5P6hTKNr9KI6Jq6KuZvusDKtCHCygQGHCMcMnJ5PWyG/9
+         hKkvlRLULssNlG1GQ1HrtJiKDNALUB3wfZX7gzugZNaV12eqmZyPb+MKacg8RQbVqb3F
+         N/5Q==
 In-Reply-To: <1353395190-4530-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,95 +24,133 @@ Content-Transfer-Encoding: 7bit
 To: daniel.wagner@bmw-carit.de, serge.hallyn@canonical.com, ebiederm@xmission.com, nhorman@tuxdriver.com, tgraf@suug.ch
 Cc: davem@davemloft.net, lizefan@huawei.com, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-sscanf() doesn't bite.
+netprio kept track of the highest prioidx allocated and resized
+priomaps accordingly when necessary.  This makes it necessary to keep
+track of prioidx allocation and may end up resizing on every new
+prioidx.
+
+Update extend_netdev_table() such that it takes @target_idx which the
+priomap should be able to accomodate.  If the priomap is large enough,
+nothing happens; otherwise, the size is doubled until @target_idx can
+be accomodated.
+
+This makes max_prioidx and write_update_netdev_table() unnecessary.
+write_priomap() now calls extend_netdev_table() directly.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Acked-by: Neil Horman <nhorman@tuxdriver.com>
 ---
- net/core/netprio_cgroup.c | 56 ++++++++++-------------------------------------
- 1 file changed, 11 insertions(+), 45 deletions(-)
+ net/core/netprio_cgroup.c | 56 ++++++++++++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 23 deletions(-)
 
 diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index f0b6b0d..66d98da 100644
+index 92cc54c..569d83d 100644
 --- a/net/core/netprio_cgroup.c
 +++ b/net/core/netprio_cgroup.c
-@@ -176,66 +176,32 @@ static int read_priomap(struct cgroup *cont, struct cftype *cft,
- static int write_priomap(struct cgroup *cgrp, struct cftype *cft,
- 			 const char *buffer)
+@@ -27,11 +27,11 @@
+ 
+ #include <linux/fdtable.h>
+ 
++#define PRIOMAP_MIN_SZ		128
+ #define PRIOIDX_SZ 128
+ 
+ static unsigned long prioidx_map[PRIOIDX_SZ];
+ static DEFINE_SPINLOCK(prioidx_map_lock);
+-static atomic_t max_prioidx = ATOMIC_INIT(0);
+ 
+ static inline struct cgroup_netprio_state *cgrp_netprio_state(struct cgroup *cgrp)
  {
--	char *devname = kstrdup(buffer, GFP_KERNEL);
--	int ret = -EINVAL;
- 	u32 prioidx = cgrp_netprio_state(cgrp)->prioidx;
--	unsigned long priority;
--	char *priostr;
-+	char devname[IFNAMSIZ + 1];
- 	struct net_device *dev;
- 	struct netprio_map *map;
-+	u32 prio;
-+	int ret;
+@@ -51,8 +51,6 @@ static int get_prioidx(u32 *prio)
+ 		return -ENOSPC;
+ 	}
+ 	set_bit(prioidx, prioidx_map);
+-	if (atomic_read(&max_prioidx) < prioidx)
+-		atomic_set(&max_prioidx, prioidx);
+ 	spin_unlock_irqrestore(&prioidx_map_lock, flags);
+ 	*prio = prioidx;
+ 	return 0;
+@@ -67,15 +65,40 @@ static void put_prioidx(u32 idx)
+ 	spin_unlock_irqrestore(&prioidx_map_lock, flags);
+ }
  
--	if (!devname)
--		return -ENOMEM;
--
--	/*
--	 * Minimally sized valid priomap string
--	 */
--	if (strlen(devname) < 3)
--		goto out_free_devname;
--
--	priostr = strstr(devname, " ");
--	if (!priostr)
--		goto out_free_devname;
--
--	/*
--	 *Separate the devname from the associated priority
--	 *and advance the priostr pointer to the priority value
--	 */
--	*priostr = '\0';
--	priostr++;
--
--	/*
--	 * If the priostr points to NULL, we're at the end of the passed
--	 * in string, and its not a valid write
--	 */
--	if (*priostr == '\0')
--		goto out_free_devname;
--
--	ret = kstrtoul(priostr, 10, &priority);
--	if (ret < 0)
--		goto out_free_devname;
--
--	ret = -ENODEV;
-+	if (sscanf(buffer, "%"__stringify(IFNAMSIZ)"s %u", devname, &prio) != 2)
-+		return -EINVAL;
+-static int extend_netdev_table(struct net_device *dev, u32 new_len)
++/*
++ * Extend @dev->priomap so that it's large enough to accomodate
++ * @target_idx.  @dev->priomap.priomap_len > @target_idx after successful
++ * return.  Must be called under rtnl lock.
++ */
++static int extend_netdev_table(struct net_device *dev, u32 target_idx)
+ {
+-	size_t new_size = sizeof(struct netprio_map) +
+-			   ((sizeof(u32) * new_len));
+-	struct netprio_map *new = kzalloc(new_size, GFP_KERNEL);
+-	struct netprio_map *old;
++	struct netprio_map *old, *new;
++	size_t new_sz, new_len;
  
- 	dev = dev_get_by_name(&init_net, devname);
- 	if (!dev)
--		goto out_free_devname;
-+		return -ENODEV;
++	/* is the existing priomap large enough? */
+ 	old = rtnl_dereference(dev->priomap);
++	if (old && old->priomap_len > target_idx)
++		return 0;
++
++	/*
++	 * Determine the new size.  Let's keep it power-of-two.  We start
++	 * from PRIOMAP_MIN_SZ and double it until it's large enough to
++	 * accommodate @target_idx.
++	 */
++	new_sz = PRIOMAP_MIN_SZ;
++	while (true) {
++		new_len = (new_sz - offsetof(struct netprio_map, priomap)) /
++			sizeof(new->priomap[0]);
++		if (new_len > target_idx)
++			break;
++		new_sz *= 2;
++		/* overflowed? */
++		if (WARN_ON(new_sz < PRIOMAP_MIN_SZ))
++			return -ENOSPC;
++	}
+ 
++	/* allocate & copy */
++	new = kzalloc(new_sz, GFP_KERNEL);
+ 	if (!new) {
+ 		pr_warn("Unable to alloc new priomap!\n");
+ 		return -ENOMEM;
+@@ -87,26 +110,13 @@ static int extend_netdev_table(struct net_device *dev, u32 new_len)
+ 
+ 	new->priomap_len = new_len;
+ 
++	/* install the new priomap */
+ 	rcu_assign_pointer(dev->priomap, new);
+ 	if (old)
+ 		kfree_rcu(old, rcu);
+ 	return 0;
+ }
+ 
+-static int write_update_netdev_table(struct net_device *dev)
+-{
+-	int ret = 0;
+-	u32 max_len;
+-	struct netprio_map *map;
+-
+-	max_len = atomic_read(&max_prioidx) + 1;
+-	map = rtnl_dereference(dev->priomap);
+-	if (!map || map->priomap_len < max_len)
+-		ret = extend_netdev_table(dev, max_len);
+-
+-	return ret;
+-}
+-
+ static struct cgroup_subsys_state *cgrp_css_alloc(struct cgroup *cgrp)
+ {
+ 	struct cgroup_netprio_state *cs;
+@@ -191,7 +201,7 @@ static int write_priomap(struct cgroup *cgrp, struct cftype *cft,
  
  	rtnl_lock();
-+
- 	ret = write_update_netdev_table(dev);
--	if (ret < 0)
--		goto out_put_dev;
-+	if (ret)
-+		goto out_unlock;
  
- 	map = rtnl_dereference(dev->priomap);
- 	if (map)
--		map->priomap[prioidx] = priority;
--
--out_put_dev:
-+		map->priomap[prioidx] = prio;
-+out_unlock:
- 	rtnl_unlock();
- 	dev_put(dev);
--
--out_free_devname:
--	kfree(devname);
- 	return ret;
- }
+-	ret = write_update_netdev_table(dev);
++	ret = extend_netdev_table(dev, prioidx);
+ 	if (ret)
+ 		goto out_unlock;
  
 -- 
 1.7.11.7
