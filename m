@@ -1,160 +1,108 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 6/7] netprio_cgroup: implement netprio[_set]_prio() helpers
-Date: Mon, 19 Nov 2012 23:06:29 -0800
-Message-ID: <1353395190-4530-7-git-send-email-tj@kernel.org>
-References: <1353395190-4530-1-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch] mm, memcg: avoid unnecessary function call when memcg is
+ disabled
+Date: Tue, 20 Nov 2012 08:07:28 +0100
+Message-ID: <20121120070728.GA7754@dhcp22.suse.cz>
+References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=ZIiu57p+dkWkuLM/4kMNIZC1u2JlaDMYzU8QlW9VV/8=;
-	b=L4aIBGysbV/iqO/KheykIN/6vUvjNvg+ANLq8++Yk0h8xE7AeZTuk8NEZLF4g0JnIm
-	wgxezMfD5YBlJCDsfphALxCnqn/s93qRBhwAJAMTePDiyD6XuPEl1YoDRZgj5NvrWNnx
-	YDLQ/3ZveyXJbrO2NKw10Dq3qzd0U/NQ3PDN5KVeO8Ph58Eh3aNcDU1N1sVRbmwKjCJB
-	fKfWwCjlE+SsH1tJqtWj8ozGqYVW33na/cul4ZYbziKhVIacyfb7oTyC3b+IEmFdbFZA
-	+RqeFiCIFwRWCrw3lZ4LomQSlN6g/rANLpMPaWZfcL3gJqTNpaAlHtC6g5oBMuAefk/M
-	6Hbw==
-In-Reply-To: <1353395190-4530-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Introduce two helpers - netprio_prio() and netprio_set_prio() - which
-hide the details of priomap access and expansion.  This will help
-implementing hierarchy support.
+On Mon 19-11-12 17:44:34, David Rientjes wrote:
+> While profiling numa/core v16 with cgroup_disable=memory on the command 
+> line, I noticed mem_cgroup_count_vm_event() still showed up as high as 
+> 0.60% in perftop.
+> 
+> This occurs because the function is called extremely often even when memcg 
+> is disabled.
+> 
+> To fix this, inline the check for mem_cgroup_disabled() so we avoid the 
+> unnecessary function call if memcg is disabled.
+> 
+> Signed-off-by: David Rientjes <rientjes@google.com>
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
----
- net/core/netprio_cgroup.c | 72 ++++++++++++++++++++++++++++++++---------------
- 1 file changed, 50 insertions(+), 22 deletions(-)
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 9409cdf..b2af0d0 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -87,6 +87,51 @@ static int extend_netdev_table(struct net_device *dev, u32 target_idx)
- 	return 0;
- }
- 
-+/**
-+ * netprio_prio - return the effective netprio of a cgroup-net_device pair
-+ * @cgrp: cgroup part of the target pair
-+ * @dev: net_device part of the target pair
-+ *
-+ * Should be called under RCU read or rtnl lock.
-+ */
-+static u32 netprio_prio(struct cgroup *cgrp, struct net_device *dev)
-+{
-+	struct netprio_map *map = rcu_dereference_rtnl(dev->priomap);
-+
-+	if (map && cgrp->id < map->priomap_len)
-+		return map->priomap[cgrp->id];
-+	return 0;
-+}
-+
-+/**
-+ * netprio_set_prio - set netprio on a cgroup-net_device pair
-+ * @cgrp: cgroup part of the target pair
-+ * @dev: net_device part of the target pair
-+ * @prio: prio to set
-+ *
-+ * Set netprio to @prio on @cgrp-@dev pair.  Should be called under rtnl
-+ * lock and may fail under memory pressure for non-zero @prio.
-+ */
-+static int netprio_set_prio(struct cgroup *cgrp, struct net_device *dev,
-+			    u32 prio)
-+{
-+	struct netprio_map *map;
-+	int ret;
-+
-+	/* avoid extending priomap for zero writes */
-+	map = rtnl_dereference(dev->priomap);
-+	if (!prio && (!map || map->priomap_len <= cgrp->id))
-+		return 0;
-+
-+	ret = extend_netdev_table(dev, cgrp->id);
-+	if (ret)
-+		return ret;
-+
-+	map = rtnl_dereference(dev->priomap);
-+	map->priomap[cgrp->id] = prio;
-+	return 0;
-+}
-+
- static struct cgroup_subsys_state *cgrp_css_alloc(struct cgroup *cgrp)
- {
- 	struct cgroup_netprio_state *cs;
-@@ -105,14 +150,10 @@ static void cgrp_css_free(struct cgroup *cgrp)
- {
- 	struct cgroup_netprio_state *cs = cgrp_netprio_state(cgrp);
- 	struct net_device *dev;
--	struct netprio_map *map;
- 
- 	rtnl_lock();
--	for_each_netdev(&init_net, dev) {
--		map = rtnl_dereference(dev->priomap);
--		if (map && cgrp->id < map->priomap_len)
--			map->priomap[cgrp->id] = 0;
--	}
-+	for_each_netdev(&init_net, dev)
-+		WARN_ON_ONCE(netprio_set_prio(cgrp, dev, 0));
- 	rtnl_unlock();
- 	kfree(cs);
- }
-@@ -126,16 +167,10 @@ static int read_priomap(struct cgroup *cont, struct cftype *cft,
- 			struct cgroup_map_cb *cb)
- {
- 	struct net_device *dev;
--	u32 id = cont->id;
--	u32 priority;
--	struct netprio_map *map;
- 
- 	rcu_read_lock();
--	for_each_netdev_rcu(&init_net, dev) {
--		map = rcu_dereference(dev->priomap);
--		priority = (map && id < map->priomap_len) ? map->priomap[id] : 0;
--		cb->fill(cb, dev->name, priority);
--	}
-+	for_each_netdev_rcu(&init_net, dev)
-+		cb->fill(cb, dev->name, netprio_prio(cont, dev));
- 	rcu_read_unlock();
- 	return 0;
- }
-@@ -145,7 +180,6 @@ static int write_priomap(struct cgroup *cgrp, struct cftype *cft,
- {
- 	char devname[IFNAMSIZ + 1];
- 	struct net_device *dev;
--	struct netprio_map *map;
- 	u32 prio;
- 	int ret;
- 
-@@ -158,14 +192,8 @@ static int write_priomap(struct cgroup *cgrp, struct cftype *cft,
- 
- 	rtnl_lock();
- 
--	ret = extend_netdev_table(dev, cgrp->id);
--	if (ret)
--		goto out_unlock;
-+	ret = netprio_set_prio(cgrp, dev, prio);
- 
--	map = rtnl_dereference(dev->priomap);
--	if (map)
--		map->priomap[cgrp->id] = prio;
--out_unlock:
- 	rtnl_unlock();
- 	dev_put(dev);
- 	return ret;
+Thanks!
+
+> ---
+>  include/linux/memcontrol.h |    9 ++++++++-
+>  mm/memcontrol.c            |    9 ++++-----
+>  2 files changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -181,7 +181,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+>  						gfp_t gfp_mask,
+>  						unsigned long *total_scanned);
+>  
+> -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+> +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+> +static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
+> +					     enum vm_event_item idx)
+> +{
+> +	if (mem_cgroup_disabled() || !mm)
+> +		return;
+> +	__mem_cgroup_count_vm_event(mm, idx);
+> +}
+>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>  void mem_cgroup_split_huge_fixup(struct page *head);
+>  #endif
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -59,6 +59,8 @@
+>  #include <trace/events/vmscan.h>
+>  
+>  struct cgroup_subsys mem_cgroup_subsys __read_mostly;
+> +EXPORT_SYMBOL(mem_cgroup_subsys);
+> +
+>  #define MEM_CGROUP_RECLAIM_RETRIES	5
+>  static struct mem_cgroup *root_mem_cgroup __read_mostly;
+>  
+> @@ -1015,13 +1017,10 @@ void mem_cgroup_iter_break(struct mem_cgroup *root,
+>  	     iter != NULL;				\
+>  	     iter = mem_cgroup_iter(NULL, iter, NULL))
+>  
+> -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
+> +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
+>  {
+>  	struct mem_cgroup *memcg;
+>  
+> -	if (!mm)
+> -		return;
+> -
+>  	rcu_read_lock();
+>  	memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
+>  	if (unlikely(!memcg))
+> @@ -1040,7 +1039,7 @@ void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
+>  out:
+>  	rcu_read_unlock();
+>  }
+> -EXPORT_SYMBOL(mem_cgroup_count_vm_event);
+> +EXPORT_SYMBOL(__mem_cgroup_count_vm_event);
+>  
+>  /**
+>   * mem_cgroup_zone_lruvec - get the lru list vector for a zone and memcg
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.7.11.7
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
