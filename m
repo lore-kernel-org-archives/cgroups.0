@@ -1,8 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/7] netprio_cgroup: shorten variable names in
-	extend_netdev_table()
-Date: Mon, 19 Nov 2012 23:06:26 -0800
-Message-ID: <1353395190-4530-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/7] netprio_cgroup: use cgroup->id instead of
+	cgroup_netprio_state->prioidx
+Date: Mon, 19 Nov 2012 23:06:28 -0800
+Message-ID: <1353395190-4530-6-git-send-email-tj@kernel.org>
 References: <1353395190-4530-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=sxJE6ulWl83GREpglOjecgmrZKtxrG3QdFhzFownVEM=;
-	b=sz2Ua3rUupv/iKAoiTpSfu1A1nrUChEKb7g+2uux1zSm1mJP/no4pifo5yMbpbBSsm
-	eJ2m1SsLSCYj3A0NXwdyubhZU2pJizDlEcWfk40rYBZM8M0vYgakCnNXbRswBI+/jNX4
-	L+0spS0zC7c7b01SBEhId0hsL/zO/XlUWu3l9Ae1x1sFckgGNtjl2kKALH+g9QIa3b/9
-	HqJ27wMJ8HNg6qfLyv7+z53Smx1R1Jjn7kL8TIqojTAC0Cl+RvCYUm9buRfbO1CTBYAG
-	mqbmATv++Ubvy4TG0BZrLQdjdGfnlu8Y/LD2dJi6qGGFIT8eX4YT0+7r44WwEFPimKm5
-	UTlw==
+	:references; bh=K63khVUuCLJpw+0x43hU5adHBDDeD6jBjJzqrM+N5R4=;
+	b=g9N7eiEh4I1ooMz67u1gBBtO1GZfg7/khphQnfyWTj+fuOGVTF/oBx8EGZyWZW19CJ
+	NOzuUISIyYphUliCdqd/RVIiIc286AdbmzuA3wYXyp3yMxmiYfFlhr7j1wcVonVtodGW
+	1WnZ2ObVDiaIa1Rd7RaDZ5xxSLotSlFAbOlk+Z4uh9X5/okkptqcDHsxNho2L0m2vb5R
+	bTfQUO5HBjMWACJ2GcwUnbBuM3dE65ERRemCDcjpY0+wKTlmRi9P+laBe4MXaNj0bAzp
+	AS4mRO79VOCkZBe5WJ4riW32Z5nCivLc5VOyGe2EwO1z3ae3372lAtDTJK1QNxWWJaAX
+	PqyA==
 In-Reply-To: <1353395190-4530-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -31,58 +31,204 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
 
-The function is about to go through a rewrite.  In preparation,
-shorten the variable names so that we don't repeat "priomap" so often.
+With priomap expansion no longer depending on knowing max id
+allocated, netprio_cgroup can use cgroup->id insted of cs->prioidx.
+Drop prioidx alloc/free logic and convert all uses to cgroup->id.
 
-This patch is cosmetic.
+* In cgrp_css_alloc(), parent->id test is moved above @cs allocation
+  to simplify error path.
+
+* In cgrp_css_free(), @cs assignment is made initialization.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 ---
- net/core/netprio_cgroup.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ include/net/netprio_cgroup.h | 11 +++-----
+ net/core/netprio_cgroup.c    | 65 ++++++++------------------------------------
+ 2 files changed, 15 insertions(+), 61 deletions(-)
 
+diff --git a/include/net/netprio_cgroup.h b/include/net/netprio_cgroup.h
+index 2760f4f..1d04b6f 100644
+--- a/include/net/netprio_cgroup.h
++++ b/include/net/netprio_cgroup.h
+@@ -27,7 +27,6 @@ struct netprio_map {
+ 
+ struct cgroup_netprio_state {
+ 	struct cgroup_subsys_state css;
+-	u32 prioidx;
+ };
+ 
+ extern void sock_update_netprioidx(struct sock *sk, struct task_struct *task);
+@@ -36,13 +35,12 @@ extern void sock_update_netprioidx(struct sock *sk, struct task_struct *task);
+ 
+ static inline u32 task_netprioidx(struct task_struct *p)
+ {
+-	struct cgroup_netprio_state *state;
++	struct cgroup_subsys_state *css;
+ 	u32 idx;
+ 
+ 	rcu_read_lock();
+-	state = container_of(task_subsys_state(p, net_prio_subsys_id),
+-			     struct cgroup_netprio_state, css);
+-	idx = state->prioidx;
++	css = task_subsys_state(p, net_prio_subsys_id);
++	idx = css->cgroup->id;
+ 	rcu_read_unlock();
+ 	return idx;
+ }
+@@ -57,8 +55,7 @@ static inline u32 task_netprioidx(struct task_struct *p)
+ 	rcu_read_lock();
+ 	css = task_subsys_state(p, net_prio_subsys_id);
+ 	if (css)
+-		idx = container_of(css,
+-				   struct cgroup_netprio_state, css)->prioidx;
++		idx = css->cgroup->id;
+ 	rcu_read_unlock();
+ 	return idx;
+ }
 diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 66d98da..92cc54c 100644
+index 569d83d..9409cdf 100644
 --- a/net/core/netprio_cgroup.c
 +++ b/net/core/netprio_cgroup.c
-@@ -71,26 +71,25 @@ static int extend_netdev_table(struct net_device *dev, u32 new_len)
+@@ -28,10 +28,6 @@
+ #include <linux/fdtable.h>
+ 
+ #define PRIOMAP_MIN_SZ		128
+-#define PRIOIDX_SZ 128
+-
+-static unsigned long prioidx_map[PRIOIDX_SZ];
+-static DEFINE_SPINLOCK(prioidx_map_lock);
+ 
+ static inline struct cgroup_netprio_state *cgrp_netprio_state(struct cgroup *cgrp)
  {
- 	size_t new_size = sizeof(struct netprio_map) +
- 			   ((sizeof(u32) * new_len));
--	struct netprio_map *new_priomap = kzalloc(new_size, GFP_KERNEL);
--	struct netprio_map *old_priomap;
-+	struct netprio_map *new = kzalloc(new_size, GFP_KERNEL);
-+	struct netprio_map *old;
- 
--	old_priomap  = rtnl_dereference(dev->priomap);
-+	old = rtnl_dereference(dev->priomap);
- 
--	if (!new_priomap) {
-+	if (!new) {
- 		pr_warn("Unable to alloc new priomap!\n");
- 		return -ENOMEM;
- 	}
- 
--	if (old_priomap)
--		memcpy(new_priomap->priomap, old_priomap->priomap,
--		       old_priomap->priomap_len *
--		       sizeof(old_priomap->priomap[0]));
-+	if (old)
-+		memcpy(new->priomap, old->priomap,
-+		       old->priomap_len * sizeof(old->priomap[0]));
- 
--	new_priomap->priomap_len = new_len;
-+	new->priomap_len = new_len;
- 
--	rcu_assign_pointer(dev->priomap, new_priomap);
--	if (old_priomap)
--		kfree_rcu(old_priomap, rcu);
-+	rcu_assign_pointer(dev->priomap, new);
-+	if (old)
-+		kfree_rcu(old, rcu);
- 	return 0;
+@@ -39,32 +35,6 @@ static inline struct cgroup_netprio_state *cgrp_netprio_state(struct cgroup *cgr
+ 			    struct cgroup_netprio_state, css);
  }
  
+-static int get_prioidx(u32 *prio)
+-{
+-	unsigned long flags;
+-	u32 prioidx;
+-
+-	spin_lock_irqsave(&prioidx_map_lock, flags);
+-	prioidx = find_first_zero_bit(prioidx_map, sizeof(unsigned long) * PRIOIDX_SZ);
+-	if (prioidx == sizeof(unsigned long) * PRIOIDX_SZ) {
+-		spin_unlock_irqrestore(&prioidx_map_lock, flags);
+-		return -ENOSPC;
+-	}
+-	set_bit(prioidx, prioidx_map);
+-	spin_unlock_irqrestore(&prioidx_map_lock, flags);
+-	*prio = prioidx;
+-	return 0;
+-}
+-
+-static void put_prioidx(u32 idx)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&prioidx_map_lock, flags);
+-	clear_bit(idx, prioidx_map);
+-	spin_unlock_irqrestore(&prioidx_map_lock, flags);
+-}
+-
+ /*
+  * Extend @dev->priomap so that it's large enough to accomodate
+  * @target_idx.  @dev->priomap.priomap_len > @target_idx after successful
+@@ -120,62 +90,50 @@ static int extend_netdev_table(struct net_device *dev, u32 target_idx)
+ static struct cgroup_subsys_state *cgrp_css_alloc(struct cgroup *cgrp)
+ {
+ 	struct cgroup_netprio_state *cs;
+-	int ret = -EINVAL;
++
++	if (cgrp->parent && cgrp->parent->id)
++		return ERR_PTR(-EINVAL);
+ 
+ 	cs = kzalloc(sizeof(*cs), GFP_KERNEL);
+ 	if (!cs)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	if (cgrp->parent && cgrp_netprio_state(cgrp->parent)->prioidx)
+-		goto out;
+-
+-	ret = get_prioidx(&cs->prioidx);
+-	if (ret < 0) {
+-		pr_warn("No space in priority index array\n");
+-		goto out;
+-	}
+-
+ 	return &cs->css;
+-out:
+-	kfree(cs);
+-	return ERR_PTR(ret);
+ }
+ 
+ static void cgrp_css_free(struct cgroup *cgrp)
+ {
+-	struct cgroup_netprio_state *cs;
++	struct cgroup_netprio_state *cs = cgrp_netprio_state(cgrp);
+ 	struct net_device *dev;
+ 	struct netprio_map *map;
+ 
+-	cs = cgrp_netprio_state(cgrp);
+ 	rtnl_lock();
+ 	for_each_netdev(&init_net, dev) {
+ 		map = rtnl_dereference(dev->priomap);
+-		if (map && cs->prioidx < map->priomap_len)
+-			map->priomap[cs->prioidx] = 0;
++		if (map && cgrp->id < map->priomap_len)
++			map->priomap[cgrp->id] = 0;
+ 	}
+ 	rtnl_unlock();
+-	put_prioidx(cs->prioidx);
+ 	kfree(cs);
+ }
+ 
+ static u64 read_prioidx(struct cgroup *cgrp, struct cftype *cft)
+ {
+-	return (u64)cgrp_netprio_state(cgrp)->prioidx;
++	return cgrp->id;
+ }
+ 
+ static int read_priomap(struct cgroup *cont, struct cftype *cft,
+ 			struct cgroup_map_cb *cb)
+ {
+ 	struct net_device *dev;
+-	u32 prioidx = cgrp_netprio_state(cont)->prioidx;
++	u32 id = cont->id;
+ 	u32 priority;
+ 	struct netprio_map *map;
+ 
+ 	rcu_read_lock();
+ 	for_each_netdev_rcu(&init_net, dev) {
+ 		map = rcu_dereference(dev->priomap);
+-		priority = (map && prioidx < map->priomap_len) ? map->priomap[prioidx] : 0;
++		priority = (map && id < map->priomap_len) ? map->priomap[id] : 0;
+ 		cb->fill(cb, dev->name, priority);
+ 	}
+ 	rcu_read_unlock();
+@@ -185,7 +143,6 @@ static int read_priomap(struct cgroup *cont, struct cftype *cft,
+ static int write_priomap(struct cgroup *cgrp, struct cftype *cft,
+ 			 const char *buffer)
+ {
+-	u32 prioidx = cgrp_netprio_state(cgrp)->prioidx;
+ 	char devname[IFNAMSIZ + 1];
+ 	struct net_device *dev;
+ 	struct netprio_map *map;
+@@ -201,13 +158,13 @@ static int write_priomap(struct cgroup *cgrp, struct cftype *cft,
+ 
+ 	rtnl_lock();
+ 
+-	ret = extend_netdev_table(dev, prioidx);
++	ret = extend_netdev_table(dev, cgrp->id);
+ 	if (ret)
+ 		goto out_unlock;
+ 
+ 	map = rtnl_dereference(dev->priomap);
+ 	if (map)
+-		map->priomap[prioidx] = prio;
++		map->priomap[cgrp->id] = prio;
+ out_unlock:
+ 	rtnl_unlock();
+ 	dev_put(dev);
 -- 
 1.7.11.7
