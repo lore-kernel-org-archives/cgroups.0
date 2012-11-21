@@ -1,56 +1,66 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch] mm, memcg: avoid unnecessary function call when memcg
- is disabled
-Date: Wed, 21 Nov 2012 10:02:34 +0900
-Message-ID: <50AC282A.4070309@jp.fujitsu.com>
-References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com> <20121120134932.055bc192.akpm@linux-foundation.org>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch] mm, memcg: avoid unnecessary function call when memcg is
+ disabled fix
+Date: Tue, 20 Nov 2012 18:48:52 -0800 (PST)
+Message-ID: <alpine.DEB.2.00.1211201847450.2278@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com> <20121120134932.055bc192.akpm@linux-foundation.org> <50AC282A.4070309@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121120134932.055bc192.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=1wwqERykzeFaO92T6l28rUhXeu1p90F/lUivAaC8O34=;
+        b=LDTzhqeHRtcxVqkhAurctFhnyBg8TlrN71vP9LUXyxFrTQ8RYJvaE0raeYU3iaLP0D
+         S9DLrVGTW1op3EDa82txQa6oyK/QxKyebWWmNyhDLkWtz1+6UfTPKI0f+CDOGtJ9z/72
+         Z4kX++WGyzX3uV1iWFDFHYPLst6AIBG0BI7H52hlSmizze1NtBxJet1MZGLh3ItnaNK/
+         LPwQMTxCiMhl9TDoT01lsS161GM9omp6tfilZp4hiKnvHGXIpkfBYNGiChruFEUMEZQF
+         VM/RI6wiW/lQSlGW5RwrU7M72tdYjdOBJUr8OEuPOaccdIa9nm33bUUzUQziXHLgzOzU
+         Tihw==
+In-Reply-To: <50AC282A.4070309@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-(2012/11/21 6:49), Andrew Morton wrote:
-> On Mon, 19 Nov 2012 17:44:34 -0800 (PST)
-> David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
->> While profiling numa/core v16 with cgroup_disable=memory on the command
->> line, I noticed mem_cgroup_count_vm_event() still showed up as high as
->> 0.60% in perftop.
->>
->> This occurs because the function is called extremely often even when memcg
->> is disabled.
->>
->> To fix this, inline the check for mem_cgroup_disabled() so we avoid the
->> unnecessary function call if memcg is disabled.
->>
->> ...
->>
->> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->> --- a/include/linux/memcontrol.h
->> +++ b/include/linux/memcontrol.h
->> @@ -181,7 +181,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
->>   						gfp_t gfp_mask,
->>   						unsigned long *total_scanned);
->>
->> -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
->> +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
->> +static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
->> +					     enum vm_event_item idx)
->> +{
->> +	if (mem_cgroup_disabled() || !mm)
->> +		return;
->> +	__mem_cgroup_count_vm_event(mm, idx);
->> +}
->
-> Does the !mm case occur frequently enough to justify inlining it, or
-> should that test remain out-of-line?
->
-I think this should be out-of-line.
+Move the check for !mm out of line as suggested by Andrew.
 
-Thanks,
--Kame
+Signed-off-by: David Rientjes <rientjes@google.com>
+---
+ include/linux/memcontrol.h |    2 +-
+ mm/memcontrol.c            |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -185,7 +185,7 @@ void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+ static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
+ 					     enum vm_event_item idx)
+ {
+-	if (mem_cgroup_disabled() || !mm)
++	if (mem_cgroup_disabled())
+ 		return;
+ 	__mem_cgroup_count_vm_event(mm, idx);
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1021,6 +1021,9 @@ void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
+ {
+ 	struct mem_cgroup *memcg;
+ 
++	if (!mm)
++		return;
++
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
+ 	if (unlikely(!memcg))
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
