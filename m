@@ -1,68 +1,77 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch] mm, memcg: avoid unnecessary function call when memcg is
- disabled
-Date: Wed, 21 Nov 2012 09:35:20 +0100
-Message-ID: <20121121083505.GA8761@dhcp22.suse.cz>
-References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com>
- <20121120134932.055bc192.akpm@linux-foundation.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: memory-cgroup bug
+Date: Thu, 22 Nov 2012 16:24:41 +0100
+Message-ID: <20121122152441.GA9609@dhcp22.suse.cz>
+References: <20121121200207.01068046@pobox.sk>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121120134932.055bc192.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: attachment
+In-Reply-To: <20121121200207.01068046@pobox.sk>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: azurIt <azurit@pobox.sk>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>
 
-On Tue 20-11-12 13:49:32, Andrew Morton wrote:
-> On Mon, 19 Nov 2012 17:44:34 -0800 (PST)
-> David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Wed 21-11-12 20:02:07, azurIt wrote:
+> Hi,
 > 
-> > While profiling numa/core v16 with cgroup_disable=memory on the command 
-> > line, I noticed mem_cgroup_count_vm_event() still showed up as high as 
-> > 0.60% in perftop.
-> > 
-> > This occurs because the function is called extremely often even when memcg 
-> > is disabled.
-> > 
-> > To fix this, inline the check for mem_cgroup_disabled() so we avoid the 
-> > unnecessary function call if memcg is disabled.
-> > 
-> > ...
-> >
-> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > --- a/include/linux/memcontrol.h
-> > +++ b/include/linux/memcontrol.h
-> > @@ -181,7 +181,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
-> >  						gfp_t gfp_mask,
-> >  						unsigned long *total_scanned);
-> >  
-> > -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
-> > +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
-> > +static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
-> > +					     enum vm_event_item idx)
-> > +{
-> > +	if (mem_cgroup_disabled() || !mm)
-> > +		return;
-> > +	__mem_cgroup_count_vm_event(mm, idx);
-> > +}
+> i'm using memory cgroup for limiting our users and having a really
+> strange problem when a cgroup gets out of its memory limit. It's very
+> strange because it happens only sometimes (about once per week on
+> random user), out of memory is usually handled ok.
+
+What is your memcg configuration? Do you use deeper hierarchies, is
+use_hierarchy enabled? Is the memcg oom (aka memory.oom_control)
+enabled? Do you use soft limit for those groups? Is memcg swap
+accounting enabled and memsw limits in place?
+Is the machine under global memory pressure as well?
+Could you post sysrq+t or sysrq+w?
+
+> This happens when problem occures:
+>  - no new processes can be started for this cgroup
+>  - current processes are freezed and taking 100% of CPU
+>  - when i try to 'strace' any of current processes, the whole strace
+>    freezes until process is killed (strace cannot be terminated by
+>    CTRL-c)
+>  - problem can be resolved by raising memory limit for cgroup or
+>    killing of few processes inside cgroup so some memory is freed
 > 
-> Does the !mm case occur frequently enough to justify inlining it, or
-> should that test remain out-of-line?
+> I also garbbed the content of /proc/<pid>/stack of freezed process:
+> [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
+> [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
 
-Now that you've asked about it I started looking around and I cannot see
-how mm can ever be NULL. The condition is there since the very beginning
-(456f998e memcg: add the pagefault count into memcg stats) but all the
-callers are page fault handlers and those shouldn't have mm==NULL.
-Or is there anything obvious I am missing?
+Hmm what is this?
 
-Ying, the whole thread starts https://lkml.org/lkml/2012/11/19/545 but
-the primary question is why we need !mm test for mem_cgroup_count_vm_event
-at all.
+> [<ffffffff8110ba56>] mem_cgroup_charge_common+0x56/0xa0
+> [<ffffffff8110bae5>] mem_cgroup_newpage_charge+0x45/0x50
+> [<ffffffff810ec54e>] do_wp_page+0x14e/0x800
+> [<ffffffff810eda34>] handle_pte_fault+0x264/0x940
+> [<ffffffff810ee248>] handle_mm_fault+0x138/0x260
+> [<ffffffff810270ed>] do_page_fault+0x13d/0x460
+> [<ffffffff815b53ff>] page_fault+0x1f/0x30
+> [<ffffffffffffffff>] 0xffffffffffffffff
+>
 
-Thanks!
+How many tasks are hung in mem_cgroup_handle_oom? If there were many
+of them then it'd smell like an issue fixed by 79dfdaccd1d5 (memcg:
+make oom_lock 0 and 1 based rather than counter) and its follow up fix
+23751be00940 (memcg: fix hierarchical oom locking) but you are saying
+that you can reproduce with 3.2 and those went in for 3.1. 2.6.32 would
+make more sense.
+
+> I'm currently using kernel 3.2.34 but i'm having this problem since 2.6.32.
+
+I guess this is a clean vanilla (stable) kernel, right? Are you able to
+reproduce with the latest Linus tree?
+
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
