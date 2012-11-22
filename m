@@ -1,39 +1,123 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET REPOST v2 cgroup/for-3.8] netcls/prio_cgroup: update
-	hierarchy support
-Date: Thu, 22 Nov 2012 07:33:25 -0800
-Message-ID: <20121122153325.GT15971@htj.dyndns.org>
-References: <1353400211-5182-1-git-send-email-tj@kernel.org>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_memory=2Dcgroup_bug?=
+Date: Thu, 22 Nov 2012 19:05:26 +0100
+Message-ID: <20121122190526.390C7A28@pobox.sk>
+References: <20121121200207.01068046@pobox.sk> <20121122152441.GA9609@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20121122152441.GA9609@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=P4eeWAwYskwysDUStW8sxhN7ZdnXpcDg6h3XAUGo0OM=;
-	b=upHBZD7J7LztvVUbxuFRWtz9yiP7KOoJJTfj11Oz3Ewx+Mb4kq3RjDcCGTaB1594z8
-	0pyc7OH6kaB+IZB+eOEabLSyF6dJvZSLKr9ijhY8vmAAGxyYru2VpDLEzosywUK01K3U
-	TBz9tAnG/m3une6w+BZ0OfCcplC00hvjDEmAsqu0gkyoCvBTGjkIJZxhJNLsPi06Ye8Q
-	V6KDW+X9l+j7oCUWY4bl1xonqhfrjk/u6IgnSmy6GQ3zhnFGmKh/gCG5Dg28vWuNnz5M
-	trFYCIpe7i4xqfYGQg4rsLeiftdRZsdwQBJPTH2zbcpOjl5rwpiJiG3GQp6W/zLK9wSu
-	9PYA==
-Content-Disposition: inline
-In-Reply-To: <1353400211-5182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>
 
-Applied to cgroup/for-3.8.  Thanks.
+>> i'm using memory cgroup for limiting our users and having a really
+>> strange problem when a cgroup gets out of its memory limit. It's very
+>> strange because it happens only sometimes (about once per week on
+>> random user), out of memory is usually handled ok.
+>
+>What is your memcg configuration? Do you use deeper hierarchies, is
+>use_hierarchy enabled? Is the memcg oom (aka memory.oom_control)
+>enabled? Do you use soft limit for those groups? Is memcg swap
+>accounting enabled and memsw limits in place?
+>Is the machine under global memory pressure as well?
+>Could you post sysrq+t or sysrq+w?
 
--- 
-tejun
+
+My cgroups hierarchy:
+/cgroups/<user_id>/uid/
+
+where '<user_id>' is system user id and 'uid' is just word 'uid'.
+
+Memory limits are set in /cgroups/<user_id>/ and hierarchy is enabled. Pr=
+ocesses are inside /cgroups/<user_id>/uid/ . I'm using hard limits for me=
+mory and swap BUT system has no swap at all (it has 'only' 16 GB of real =
+RAM). memory.oom_control is set to 'oom_kill_disable 0'. Server has enoug=
+h of free memory when problem occurs.
+
+
+
+
+>> This happens when problem occures:
+>>  - no new processes can be started for this cgroup
+>>  - current processes are freezed and taking 100% of CPU
+>>  - when i try to 'strace' any of current processes, the whole strace
+>>    freezes until process is killed (strace cannot be terminated by
+>>    CTRL-c)
+>>  - problem can be resolved by raising memory limit for cgroup or
+>>    killing of few processes inside cgroup so some memory is freed
+>>=20
+>> I also garbbed the content of /proc/<pid>/stack of freezed process:
+>> [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
+>> [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
+>
+>Hmm what is this?
+
+
+Really doesn't know, i will get stack of all freezed processes next time =
+so we can compare it.
+
+
+
+>> [<ffffffff8110ba56>] mem_cgroup_charge_common+0x56/0xa0
+>> [<ffffffff8110bae5>] mem_cgroup_newpage_charge+0x45/0x50
+>> [<ffffffff810ec54e>] do_wp_page+0x14e/0x800
+>> [<ffffffff810eda34>] handle_pte_fault+0x264/0x940
+>> [<ffffffff810ee248>] handle_mm_fault+0x138/0x260
+>> [<ffffffff810270ed>] do_page_fault+0x13d/0x460
+>> [<ffffffff815b53ff>] page_fault+0x1f/0x30
+>> [<ffffffffffffffff>] 0xffffffffffffffff
+>>
+>
+>How many tasks are hung in mem_cgroup_handle_oom? If there were many
+>of them then it'd smell like an issue fixed by 79dfdaccd1d5 (memcg:
+>make oom_lock 0 and 1 based rather than counter) and its follow up fix
+>23751be00940 (memcg: fix hierarchical oom locking) but you are saying
+>that you can reproduce with 3.2 and those went in for 3.1. 2.6.32 would
+>make more sense.
+
+
+Usually maximum of several 10s of processes but i will check it next time=
+. I was having much worse problems in 2.6.32 - when freezing happens, the=
+ whole server was affected (i wasn't able to do anything and needs to wai=
+t until my scripts takes case of it and killed apache, so i don't have an=
+y detailed info). In 3.2 only target cgroup is affected.
+
+
+
+
+>> I'm currently using kernel 3.2.34 but i'm having this problem since 2.=
+6.32.
+>
+>I guess this is a clean vanilla (stable) kernel, right? Are you able to
+>reproduce with the latest Linus tree?
+
+
+Well, no. I'm using, for example, newest stable grsecurity patch. I'm als=
+o using few of Andrea Righi's cgroup subsystems but i don't believe these=
+ are doing problems:
+ - cgroup-uid which is moving processes into cgroups based on UID
+ - cgroup-task which can limit number of tasks in cgroup (i already tried=
+ to disable this one, it didn't help)
+http://www.develer.com/~arighi/linux/patches/
+
+Unfortunately i cannot just install new and untested kernel version cos i=
+'m not able to reproduce this problem anytime (it's happening randomly in=
+ production environment).
+
+Could it be that OOM cannot start and kill processes because there's no f=
+ree memory in cgroup?
+
+
+
+Thank you!
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
