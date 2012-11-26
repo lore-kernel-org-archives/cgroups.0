@@ -1,76 +1,47 @@
-From: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
-Subject: linux-next: manual merge of the cgroup tree with the net-next tree
-Date: Mon, 26 Nov 2012 15:31:15 +1100
-Message-ID: <20121126153115.682955b2504f3b0af19acbe2@canb.auug.org.au>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: memory-cgroup bug
+Date: Mon, 26 Nov 2012 08:57:07 +0100
+Message-ID: <20121126075656.GA17860@dhcp22.suse.cz>
+References: <20121122190526.390C7A28@pobox.sk>
+ <20121122214249.GA20319@dhcp22.suse.cz>
+ <20121122233434.3D5E35E6@pobox.sk>
+ <20121123074023.GA24698@dhcp22.suse.cz>
+ <20121123102137.10D6D653@pobox.sk>
+ <20121123100438.GF24698@dhcp22.suse.cz>
+ <20121125011047.7477BB5E@pobox.sk>
+ <20121125120524.GB10623@dhcp22.suse.cz>
+ <20121125135542.GE10623@dhcp22.suse.cz>
+ <20121126013855.AF118F5E@pobox.sk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Mon__26_Nov_2012_15_31_15_+1100_ByOEjkozq7Sowsh4"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121126013855.AF118F5E-Rm0zKEqwvD4@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
---Signature=_Mon__26_Nov_2012_15_31_15_+1100_ByOEjkozq7Sowsh4
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Mon 26-11-12 01:38:55, azurIt wrote:
+> >This is hackish but it should help you in this case. Kamezawa, what do
+> >you think about that? Should we generalize this and prepare something
+> >like mem_cgroup_cache_charge_locked which would add __GFP_NORETRY
+> >automatically and use the function whenever we are in a locked context?
+> >To be honest I do not like this very much but nothing more sensible
+> >(without touching non-memcg paths) comes to my mind.
+> 
+> 
+> I installed kernel with this patch, will report back if problem occurs
+> again OR in few weeks if everything will be ok. Thank you!
 
-Hi Tejun,
+Thanks!
 
-Today's linux-next merge of the cgroup tree got a conflict in
-net/sched/cls_cgroup.c between commit 6a328d8c6f03 ("cgroup: net_cls:
-Rework update socket logic") from the net-next tree and commits
-92fb97487a7e ("cgroup: rename ->create/post_create/pre_destroy/destroy()
-to ->css_alloc/online/offline/free()") and 0ba18f7a5e26 ("netcls_cgroup:
-move config inheritance to ->css_online() and remove .broken_hierarchy
-marking") from the cgroup tree.
+> Btw, will this patch be backported to 3.2?
 
-I fixed it up (I think - see below) and can carry the fix as necessary
-(no action is required).
+Once we agree on a proper solution it will be backported to the stable
+trees.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org
-
-diff --cc net/sched/cls_cgroup.c
-index 709b0fb,31f06b6..0000000
---- a/net/sched/cls_cgroup.c
-+++ b/net/sched/cls_cgroup.c
-@@@ -98,9 -79,9 +102,10 @@@ static struct cftype ss_files[] =3D=20
- =20
-  struct cgroup_subsys net_cls_subsys =3D {
-  	.name		=3D "net_cls",
-- 	.create		=3D cgrp_create,
-- 	.destroy	=3D cgrp_destroy,
-+ 	.css_alloc	=3D cgrp_css_alloc,
-+ 	.css_online	=3D cgrp_css_online,
-+ 	.css_free	=3D cgrp_css_free,
- +	.attach		=3D cgrp_attach,
-  	.subsys_id	=3D net_cls_subsys_id,
-  	.base_cftypes	=3D ss_files,
-  	.module		=3D THIS_MODULE,
-
---Signature=_Mon__26_Nov_2012_15_31_15_+1100_ByOEjkozq7Sowsh4
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBCAAGBQJQsvCTAAoJEECxmPOUX5FEw48QAJ1UqQ0Y0bDZLHbUj7urAgS1
-ywPq5QgXAkTDiolBPxXau6fffnKvWnqx/Y9BZV92myrQSMJ+A+3qQVDT1Pr1b61l
-8htsqC7YoPC66405GWyzZXyTEkmQfeR0CRfJreH5PgL4th/OWvH7r28OgeRUMKiq
-NV4hmicwKzob2xOoyhmnmqR1UAjC63EM+2rtN29vbSRCe6ZGycVp/t1V0cWMX70s
-kWexjnyC8ikfG/i0f4UW2UF+7b7hcFHx6dzFka95J6QNCpBTTGFH1k1qm4mL5lJ/
-smphmhmL/RvAFW9HqajK6IxQTUNu3RXavCNWfietHvOPSsjmqwPaGqp3X9/Zx7EJ
-uTwI43HTTsSXf2weej+j97T3YPXK7ojC90nrrsgskFtVN+Mm6DZJJXItjj1stV8v
-7kIxPH7y597qlAPNWUuk/L1hYCYoNecQEq8SYTKBJg6n+DDLgUXH3deo30zO70Ol
-AxyKZQEKQYvXC9b+2l3nXlyyKUQEBoQJmN/ojXm0JvbTKWSyTtpXOi/Tn2DbKnTQ
-9kG4HZJ47Evubt0d79/B3NKr9WVdafOow2bzqzkrADh/GdJfvwne/4X+kjrotm8r
-7KIjwo1S6niP1kHdHCdG5M0ca4XkLCwqPEvIjXuSFct/oliX0Mh7/WrWzhKWdFeX
-tHYzUQH2w4glPr2XYx16
-=ITAP
------END PGP SIGNATURE-----
-
---Signature=_Mon__26_Nov_2012_15_31_15_+1100_ByOEjkozq7Sowsh4--
+-- 
+Michal Hocko
+SUSE Labs
