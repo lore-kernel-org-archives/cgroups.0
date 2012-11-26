@@ -1,46 +1,28 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH -mm] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Mon, 26 Nov 2012 15:53:49 -0500
-Message-ID: <20121126205349.GE2301@cmpxchg.org>
-References: <20121126013855.AF118F5E@pobox.sk>
- <20121126131837.GC17860@dhcp22.suse.cz>
- <20121126174622.GE2799@cmpxchg.org>
- <20121126180444.GA12602@dhcp22.suse.cz>
- <20121126182421.GB2301@cmpxchg.org>
- <20121126190329.GB12602@dhcp22.suse.cz>
- <20121126192941.GC2301@cmpxchg.org>
- <20121126200848.GC12602@dhcp22.suse.cz>
- <20121126201918.GD2301@cmpxchg.org>
- <20121126214638.64723F01@pobox.sk>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Mon, 26 Nov 2012 22:28:26 +0100
+Message-ID: <20121126222826.3843D563@pobox.sk>
+References: <20121122214249.GA20319@dhcp22.suse.cz>, <20121122233434.3D5E35E6@pobox.sk>, <20121123074023.GA24698@dhcp22.suse.cz>, <20121123102137.10D6D653@pobox.sk>, <20121123100438.GF24698@dhcp22.suse.cz>, <20121125011047.7477BB5E@pobox.sk>, <20121125120524.GB10623@dhcp22.suse.cz>, <20121125135542.GE10623@dhcp22.suse.cz>, <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz> <20121126132149.GD17860@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20121126214638.64723F01@pobox.sk>
+In-Reply-To: <20121126132149.GD17860@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-On Mon, Nov 26, 2012 at 09:46:38PM +0100, azurIt wrote:
-> >This issue has been around for a while so frankly I don't think it's
-> >urgent enough to rush things.
-> 
-> 
-> Well, it's quite urgent at least for us :( i wasn't reported this so
-> far cos i wasn't sure it's a kernel thing. I will be really happy
-> and thankfull if fix for this can go to 3.2 in some near
-> future.. Thank you very much!
+>Here we go with the patch for 3.2.34. Could you test with this one,
+>please?
 
-I understand and of course it's important that we get it fixed as soon
-as possible.  All I meant was that this problem has not exactly been
-introduced in 3.7 and the fix is non-trivial so we should not be
-rushing a change like this into 3.7 just days before its release.
+Michal, regarding to your conversation with Johannes Weiner, should i try=
+ this patch or not?
+
+azur
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
