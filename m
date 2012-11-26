@@ -1,9 +1,9 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH -mm] memcg: do not trigger OOM from add_to_page_cache_locked
-Date: Mon, 26 Nov 2012 14:18:37 +0100
-Message-ID: <20121126131837.GC17860@dhcp22.suse.cz>
-References: <20121122190526.390C7A28@pobox.sk>
- <20121122214249.GA20319@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Mon, 26 Nov 2012 14:21:49 +0100
+Message-ID: <20121126132149.GD17860@dhcp22.suse.cz>
+References: <20121122214249.GA20319@dhcp22.suse.cz>
  <20121122233434.3D5E35E6@pobox.sk>
  <20121123074023.GA24698@dhcp22.suse.cz>
  <20121123102137.10D6D653@pobox.sk>
@@ -12,42 +12,23 @@ References: <20121122190526.390C7A28@pobox.sk>
  <20121125120524.GB10623@dhcp22.suse.cz>
  <20121125135542.GE10623@dhcp22.suse.cz>
  <20121126013855.AF118F5E@pobox.sk>
+ <20121126131837.GC17860@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20121126013855.AF118F5E@pobox.sk>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20121126131837.GC17860-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-[CCing also Johannes - the thread started here:
-https://lkml.org/lkml/2012/11/21/497]
-
-On Mon 26-11-12 01:38:55, azurIt wrote:
-> >This is hackish but it should help you in this case. Kamezawa, what do
-> >you think about that? Should we generalize this and prepare something
-> >like mem_cgroup_cache_charge_locked which would add __GFP_NORETRY
-> >automatically and use the function whenever we are in a locked context?
-> >To be honest I do not like this very much but nothing more sensible
-> >(without touching non-memcg paths) comes to my mind.
-> 
-> 
-> I installed kernel with this patch, will report back if problem occurs
-> again OR in few weeks if everything will be ok. Thank you!
-
-Now that I am looking at the patch closer it will not work because it
-depends on other patch which is not merged yet and even that one would
-help on its own because __GFP_NORETRY doesn't break the charge loop.
-Sorry I have missed that...
-
-The patch bellow should help though. (it is based on top of the current
--mm tree but I will send a backport to 3.2 in the reply as well)
+Here we go with the patch for 3.2.34. Could you test with this one,
+please?
 ---
-From 7796f942d62081ad45726efd90b5292b80e7c690 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
+From 0d2d915c16f93918051b7ab8039d30b5a922049c Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Date: Mon, 26 Nov 2012 11:47:57 +0100
 Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
 
@@ -102,28 +83,24 @@ As a possibly visible result add_to_page_cache_lru might fail more often
 with ENOMEM but this is to be expected if the limit is set and it is
 preferable than OOM killer IMO.
 
-__GFP_NORETRY is abused for this memcg specific flag because it has been
-used to prevent from OOM already (since not-merged-yet "memcg: reclaim
-when more than one page needed"). The only difference is that the flag
-doesn't prevent from reclaim anymore which kind of makes sense because
-the global memory allocator triggers reclaim as well. The retry without
-any reclaim on __GFP_NORETRY doesn't make much sense anyway because this
-is effectively a busy loop with allowed OOM in this path.
+__GFP_NORETRY is abused for this memcg specific flag because no user
+accounted allocation use this flag except for THP which have memcg oom
+disabled already.
 
-Reported-by: azurIt <azurit@pobox.sk>
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
+Reported-by: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 ---
  include/linux/gfp.h        |    3 +++
- include/linux/memcontrol.h |   12 ++++++++++++
+ include/linux/memcontrol.h |   13 +++++++++++++
  mm/filemap.c               |    8 +++++++-
- mm/memcontrol.c            |    5 +----
- 4 files changed, 23 insertions(+), 5 deletions(-)
+ mm/memcontrol.c            |    2 +-
+ 4 files changed, 24 insertions(+), 2 deletions(-)
 
 diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index 10e667f..aac9b21 100644
+index 3a76faf..806fb54 100644
 --- a/include/linux/gfp.h
 +++ b/include/linux/gfp.h
-@@ -152,6 +152,9 @@ struct vm_area_struct;
+@@ -146,6 +146,9 @@ struct vm_area_struct;
  /* 4GB DMA on some platforms */
  #define GFP_DMA32	__GFP_DMA32
  
@@ -134,23 +111,24 @@ index 10e667f..aac9b21 100644
  static inline int allocflags_to_migratetype(gfp_t gfp_flags)
  {
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 095d2b4..1ad4bc6 100644
+index 81572af..bf0e575 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -65,6 +65,12 @@ extern void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg);
+@@ -63,6 +63,13 @@ extern void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *ptr);
+ 
  extern int mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
  					gfp_t gfp_mask);
- 
++
 +static inline int mem_cgroup_cache_charge_no_oom(struct page *page,
 +					struct mm_struct *mm, gfp_t gfp_mask)
 +{
 +	return mem_cgroup_cache_charge(page, mm, gfp_mask | GFP_MEMCG_NO_OOM);
 +}
 +
- struct lruvec *mem_cgroup_zone_lruvec(struct zone *, struct mem_cgroup *);
- struct lruvec *mem_cgroup_page_lruvec(struct page *, struct zone *);
- 
-@@ -215,6 +221,12 @@ static inline int mem_cgroup_cache_charge(struct page *page,
+ extern void mem_cgroup_add_lru_list(struct page *page, enum lru_list lru);
+ extern void mem_cgroup_del_lru_list(struct page *page, enum lru_list lru);
+ extern void mem_cgroup_rotate_reclaimable_page(struct page *page);
+@@ -178,6 +185,12 @@ static inline int mem_cgroup_cache_charge(struct page *page,
  	return 0;
  }
  
@@ -161,13 +139,13 @@ index 095d2b4..1ad4bc6 100644
 +}
 +
  static inline int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
- 		struct page *page, gfp_t gfp_mask, struct mem_cgroup **memcgp)
+ 		struct page *page, gfp_t gfp_mask, struct mem_cgroup **ptr)
  {
 diff --git a/mm/filemap.c b/mm/filemap.c
-index 83efee7..ef14351 100644
+index 556858c..ef182a9 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -447,7 +447,13 @@ int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
+@@ -449,7 +449,13 @@ int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
  	VM_BUG_ON(!PageLocked(page));
  	VM_BUG_ON(PageSwapBacked(page));
  
@@ -183,23 +161,13 @@ index 83efee7..ef14351 100644
  	if (error)
  		goto out;
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 02ee2f7..b4754ba 100644
+index c8425b1..1dbbe7f 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2430,9 +2430,6 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (!(gfp_mask & __GFP_WAIT))
- 		return CHARGE_WOULDBLOCK;
- 
--	if (gfp_mask & __GFP_NORETRY)
--		return CHARGE_NOMEM;
--
- 	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
- 	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
- 		return CHARGE_RETRY;
-@@ -3713,7 +3710,7 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
- {
+@@ -2703,7 +2703,7 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
  	struct mem_cgroup *memcg = NULL;
  	unsigned int nr_pages = 1;
+ 	struct page_cgroup *pc;
 -	bool oom = true;
 +	bool oom = !(gfp_mask | GFP_MEMCG_NO_OOM);
  	int ret;
@@ -211,9 +179,3 @@ index 02ee2f7..b4754ba 100644
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
