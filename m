@@ -1,10 +1,9 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: [PATCH -v2 -mm] memcg: do not trigger OOM from
+Subject: Re: [PATCH -v2 -mm] memcg: do not trigger OOM from
  add_to_page_cache_locked
-Date: Tue, 27 Nov 2012 21:54:36 +0100
-Message-ID: <20121127205431.GA2433@dhcp22.suse.cz>
-References: <20121123074023.GA24698@dhcp22.suse.cz>
- <20121123102137.10D6D653@pobox.sk>
+Date: Tue, 27 Nov 2012 21:59:44 +0100
+Message-ID: <20121127205944.GB2433@dhcp22.suse.cz>
+References: <20121123102137.10D6D653@pobox.sk>
  <20121123100438.GF24698@dhcp22.suse.cz>
  <20121125011047.7477BB5E@pobox.sk>
  <20121125120524.GB10623@dhcp22.suse.cz>
@@ -13,21 +12,22 @@ References: <20121123074023.GA24698@dhcp22.suse.cz>
  <20121126131837.GC17860@dhcp22.suse.cz>
  <50B403CA.501@jp.fujitsu.com>
  <20121127194813.GP24381@cmpxchg.org>
+ <20121127205431.GA2433@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ltxRjhfo0fZuyKsZOc00BEymNAe6W8KyPLkzPLaZXFo=;
-        b=Mf3WNNIyWR8HXLjsc4bn+mwaLihxMEpm/ZnaCNxUkfnHUQY5FpUceo4gXwkQH9KpcU
-         ZcAiw8zu8lo+QFUICxTlnInQbiIO0DLab7qUnLm/PHq1RtmjlwgKekCOCgs3TnpTEZT/
-         gujUjHyH6e0IQlGNkADDM+XL1q0vKdbKzaMbwOUVhHsl/Htv730VAEcja+P9BAOUOzks
-         NgTpgDuwt8+jxmNqrG2xPCY5MuAai4GTWIuW/0uuS0EtFLwbZG/JGu3W4X/CHDlRMHKH
-         99ezT40YsXmSpP+RM7zvzvTrBhpFeDpZggSG2XA558jEgAshvRGXlOY7QpWaaFGlo3p0
-         VKcw==
+        bh=9R6XDazxUg7AcaKqGBRq/F6UnGCBywQQ+UAX6aWn+50=;
+        b=llzAfgeoEeCiDmr88FnRYvwH9mURbGYNhpm7di1SRfHFyQimFfIf4UkocLMt2tnyWR
+         +AdgOlp3K4pCWTOSX/2KRWfGQRenhlsbd4gx0w27XO4hb7USaiJdLGAQDeXdKp3onmFj
+         DKrw2Lqpy3HEsSR8/8rV6Lb6egWctPwVpshXPpv9y6fEZClSFlIvJt5CtnMTlvOzkcjy
+         4YH6b1UI/QKRoI3PS1PEubflUqLi4yDH9oqgXlSP+EQu9vU5YrSP/SSsmLfUudR11eLR
+         KRvvKsa2MSl0QgESiUlm9LZWBscQMYcWD1az2v3xXfWDWXXIdorRjQ/nSNZ4ZEy6w29M
+         eomQ==
 Content-Disposition: inline
-In-Reply-To: <20121127194813.GP24381-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20121127205431.GA2433-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -35,56 +35,11 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Cc: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue 27-11-12 14:48:13, Johannes Weiner wrote:
-[...]
-> > >diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-> > >index 10e667f..aac9b21 100644
-> > >--- a/include/linux/gfp.h
-> > >+++ b/include/linux/gfp.h
-> > >@@ -152,6 +152,9 @@ struct vm_area_struct;
-> > >  /* 4GB DMA on some platforms */
-> > >  #define GFP_DMA32	__GFP_DMA32
-> > >
-> > >+/* memcg oom killer is not allowed */
-> > >+#define GFP_MEMCG_NO_OOM	__GFP_NORETRY
-> 
-> Could we leave this within memcg, please?  An extra flag to
-> mem_cgroup_cache_charge() or the like.  GFP flags are about
-> controlling the page allocator, this seems abusive.  We have an oom
-> flag down in try_charge, maybe just propagate this up the stack?
-
-OK, what about the patch bellow?
-I have dropped Kame's Acked-by because it has been reworked. The patch
-is the same in principle.
-
-> > >diff --git a/mm/filemap.c b/mm/filemap.c
-> > >index 83efee7..ef14351 100644
-> > >--- a/mm/filemap.c
-> > >+++ b/mm/filemap.c
-> > >@@ -447,7 +447,13 @@ int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
-> > >  	VM_BUG_ON(!PageLocked(page));
-> > >  	VM_BUG_ON(PageSwapBacked(page));
-> > >
-> > >-	error = mem_cgroup_cache_charge(page, current->mm,
-> > >+	/*
-> > >+	 * Cannot trigger OOM even if gfp_mask would allow that normally
-> > >+	 * because we might be called from a locked context and that
-> > >+	 * could lead to deadlocks if the killed process is waiting for
-> > >+	 * the same lock.
-> > >+	 */
-> > >+	error = mem_cgroup_cache_charge_no_oom(page, current->mm,
-> > >  					gfp_mask & GFP_RECLAIM_MASK);
-> > >  	if (error)
-> > >  		goto out;
-> 
-> Shmem does not use this function but also charges under the i_mutex in
-> the write path and fallocate at least.
-
-Right you are
+Sorry, forgot to about one shmem charge:
 ---
-From 60cc8a184490d277eb24fca551b114f1e2234ce0 Mon Sep 17 00:00:00 2001
+From 7ae29927d24471c1b1a6ceb021219c592c1ef518 Mon Sep 17 00:00:00 2001
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Date: Mon, 26 Nov 2012 11:47:57 +0100
+Date: Tue, 27 Nov 2012 21:53:13 +0100
 Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
 
 memcg oom killer might deadlock if the process which falls down to
@@ -146,8 +101,8 @@ Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
  include/linux/memcontrol.h |    5 +++--
  mm/filemap.c               |    9 +++++++--
  mm/memcontrol.c            |    9 ++++-----
- mm/shmem.c                 |   14 +++++++++++---
- 4 files changed, 25 insertions(+), 12 deletions(-)
+ mm/shmem.c                 |   15 ++++++++++++---
+ 4 files changed, 26 insertions(+), 12 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
 index 095d2b4..8f48d5e 100644
@@ -237,7 +192,7 @@ index 02ee2f7..26690d6 100644
  		ret = __mem_cgroup_try_charge_swapin(mm, page,
  						     gfp_mask, &memcg);
 diff --git a/mm/shmem.c b/mm/shmem.c
-index 55054a7..cef63b5 100644
+index 55054a7..ba59cfa 100644
 --- a/mm/shmem.c
 +++ b/mm/shmem.c
 @@ -760,7 +760,7 @@ int shmem_unuse(swp_entry_t swap, struct page *page)
@@ -267,18 +222,18 @@ index 55054a7..cef63b5 100644
  		if (!error) {
  			error = shmem_add_to_page_cache(page, mapping, index,
  						gfp, swp_to_radix_entry(swap));
-@@ -1209,7 +1217,7 @@ repeat:
+@@ -1209,7 +1217,8 @@ repeat:
  		SetPageSwapBacked(page);
  		__set_page_locked(page);
  		error = mem_cgroup_cache_charge(page, current->mm,
 -						gfp & GFP_RECLAIM_MASK);
-+						gfp & GFP_RECLAIM_MASK, true);
++						gfp & GFP_RECLAIM_MASK,
++						sgp < SGP_WRITE);
  		if (error)
  			goto decused;
  		error = radix_tree_preload(gfp & GFP_RECLAIM_MASK);
 -- 
 1.7.10.4
-
 
 -- 
 Michal Hocko
