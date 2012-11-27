@@ -1,360 +1,161 @@
-From: Aristeu Rozanski <aris@redhat.com>
-Subject: [PATCH 5/5] device_cgroup: propagate local changes down the hierarchy
-Date: Tue, 27 Nov 2012 14:35:06 -0500
-Message-ID: <20121127193503.114004167@napanee.usersys.redhat.com>
-References: <20121127193501.255267751@napanee.usersys.redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=propagate.patch
-Sender: linux-kernel-owner@vger.kernel.org
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH -mm] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Tue, 27 Nov 2012 14:48:13 -0500
+Message-ID: <20121127194813.GP24381@cmpxchg.org>
+References: <20121122233434.3D5E35E6@pobox.sk>
+ <20121123074023.GA24698@dhcp22.suse.cz>
+ <20121123102137.10D6D653@pobox.sk>
+ <20121123100438.GF24698@dhcp22.suse.cz>
+ <20121125011047.7477BB5E@pobox.sk>
+ <20121125120524.GB10623@dhcp22.suse.cz>
+ <20121125135542.GE10623@dhcp22.suse.cz>
+ <20121126013855.AF118F5E@pobox.sk>
+ <20121126131837.GC17860@dhcp22.suse.cz>
+ <50B403CA.501@jp.fujitsu.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <50B403CA.501-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>, cgroups@vger.kernel.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-This patch makes all changes propagate down in hierarchy respecting when
-possible local configurations.
+On Tue, Nov 27, 2012 at 09:05:30AM +0900, Kamezawa Hiroyuki wrote:
+> (2012/11/26 22:18), Michal Hocko wrote:
+> >[CCing also Johannes - the thread started here:
+> >https://lkml.org/lkml/2012/11/21/497]
+> >
+> >On Mon 26-11-12 01:38:55, azurIt wrote:
+> >>>This is hackish but it should help you in this case. Kamezawa, what do
+> >>>you think about that? Should we generalize this and prepare something
+> >>>like mem_cgroup_cache_charge_locked which would add __GFP_NORETRY
+> >>>automatically and use the function whenever we are in a locked context?
+> >>>To be honest I do not like this very much but nothing more sensible
+> >>>(without touching non-memcg paths) comes to my mind.
+> >>
+> >>
+> >>I installed kernel with this patch, will report back if problem occurs
+> >>again OR in few weeks if everything will be ok. Thank you!
+> >
+> >Now that I am looking at the patch closer it will not work because it
+> >depends on other patch which is not merged yet and even that one would
+> >help on its own because __GFP_NORETRY doesn't break the charge loop.
+> >Sorry I have missed that...
+> >
+> >The patch bellow should help though. (it is based on top of the current
+> >-mm tree but I will send a backport to 3.2 in the reply as well)
+> >---
+> > From 7796f942d62081ad45726efd90b5292b80e7c690 Mon Sep 17 00:00:00 2001
+> >From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> >Date: Mon, 26 Nov 2012 11:47:57 +0100
+> >Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
+> >
+> >memcg oom killer might deadlock if the process which falls down to
+> >mem_cgroup_handle_oom holds a lock which prevents other task to
+> >terminate because it is blocked on the very same lock.
+> >This can happen when a write system call needs to allocate a page but
+> >the allocation hits the memcg hard limit and there is nothing to reclaim
+> >(e.g. there is no swap or swap limit is hit as well and all cache pages
+> >have been reclaimed already) and the process selected by memcg OOM
+> >killer is blocked on i_mutex on the same inode (e.g. truncate it).
+> >
+> >Process A
+> >[<ffffffff811109b8>] do_truncate+0x58/0xa0		# takes i_mutex
+> >[<ffffffff81121c90>] do_last+0x250/0xa30
+> >[<ffffffff81122547>] path_openat+0xd7/0x440
+> >[<ffffffff811229c9>] do_filp_open+0x49/0xa0
+> >[<ffffffff8110f7d6>] do_sys_open+0x106/0x240
+> >[<ffffffff8110f950>] sys_open+0x20/0x30
+> >[<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+> >[<ffffffffffffffff>] 0xffffffffffffffff
+> >
+> >Process B
+> >[<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
+> >[<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
+> >[<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
+> >[<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
+> >[<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
+> >[<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
+> >[<ffffffff81193a18>] ext3_write_begin+0x88/0x270
+> >[<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
+> >[<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
+> >[<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
+> >[<ffffffff8111156a>] do_sync_write+0xea/0x130
+> >[<ffffffff81112183>] vfs_write+0xf3/0x1f0
+> >[<ffffffff81112381>] sys_write+0x51/0x90
+> >[<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+> >[<ffffffffffffffff>] 0xffffffffffffffff
+> >
+> >This is not a hard deadlock though because administrator can still
+> >intervene and increase the limit on the group which helps the writer to
+> >finish the allocation and release the lock.
+> >
+> >This patch heals the problem by forbidding OOM from page cache charges
+> >(namely add_ro_page_cache_locked). mem_cgroup_cache_charge_no_oom helper
+> >function is defined which adds GFP_MEMCG_NO_OOM to the gfp mask which
+> >then tells mem_cgroup_charge_common that OOM is not allowed for the
+> >charge. No OOM from this path, except for fixing the bug, also make some
+> >sense as we really do not want to cause an OOM because of a page cache
+> >usage.
+> >As a possibly visible result add_to_page_cache_lru might fail more often
+> >with ENOMEM but this is to be expected if the limit is set and it is
+> >preferable than OOM killer IMO.
+> >
+> >__GFP_NORETRY is abused for this memcg specific flag because it has been
+> >used to prevent from OOM already (since not-merged-yet "memcg: reclaim
+> >when more than one page needed"). The only difference is that the flag
+> >doesn't prevent from reclaim anymore which kind of makes sense because
+> >the global memory allocator triggers reclaim as well. The retry without
+> >any reclaim on __GFP_NORETRY doesn't make much sense anyway because this
+> >is effectively a busy loop with allowed OOM in this path.
+> >
+> >Reported-by: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+> >Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> 
+> As a short term fix, I think this patch will work enough and seems simple enough.
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Behavior changes will clean up exceptions in all the children except when the
-parent changes the behavior from allow to deny and the child's behavior was
-already deny, in which case the local exceptions will be reused. The inverse
-is not possible: you can't have a parent with behavior deny and a child with
-behavior accept.
+Yes, let's do this for now.
 
-New exceptions allowing additional access to devices won't be propagated, but
-it'll be possible to add an exception to access all of part of the newly
-allowed device(s).
+> >diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+> >index 10e667f..aac9b21 100644
+> >--- a/include/linux/gfp.h
+> >+++ b/include/linux/gfp.h
+> >@@ -152,6 +152,9 @@ struct vm_area_struct;
+> >  /* 4GB DMA on some platforms */
+> >  #define GFP_DMA32	__GFP_DMA32
+> >
+> >+/* memcg oom killer is not allowed */
+> >+#define GFP_MEMCG_NO_OOM	__GFP_NORETRY
 
-New exceptions disallowing access to devices will be propagated down and the
-local group's exceptions will be revalidated for the new situation.
-Example:
-      A
-     / \
-        B
+Could we leave this within memcg, please?  An extra flag to
+mem_cgroup_cache_charge() or the like.  GFP flags are about
+controlling the page allocator, this seems abusive.  We have an oom
+flag down in try_charge, maybe just propagate this up the stack?
 
-    group        behavior          exceptions
-    A            allow             "b 8:* rwm", "c 116:1 rw"
-    B            deny              "c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
+> >diff --git a/mm/filemap.c b/mm/filemap.c
+> >index 83efee7..ef14351 100644
+> >--- a/mm/filemap.c
+> >+++ b/mm/filemap.c
+> >@@ -447,7 +447,13 @@ int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
+> >  	VM_BUG_ON(!PageLocked(page));
+> >  	VM_BUG_ON(PageSwapBacked(page));
+> >
+> >-	error = mem_cgroup_cache_charge(page, current->mm,
+> >+	/*
+> >+	 * Cannot trigger OOM even if gfp_mask would allow that normally
+> >+	 * because we might be called from a locked context and that
+> >+	 * could lead to deadlocks if the killed process is waiting for
+> >+	 * the same lock.
+> >+	 */
+> >+	error = mem_cgroup_cache_charge_no_oom(page, current->mm,
+> >  					gfp_mask & GFP_RECLAIM_MASK);
+> >  	if (error)
+> >  		goto out;
 
-If a new exception is added to group A:
-	# echo "c 116:* r" > A/devices.deny
-it'll propagate down and after revalidating B's local exceptions, the exception
-"c 116:2 rwm" will be removed.
-
-The local preferences will be kept and applied when allowed by its parent.
-
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Serge Hallyn <serge.hallyn@canonical.com>
-Signed-off-by: Aristeu Rozanski <aris@redhat.com>
-
----
- security/device_cgroup.c |  215 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 187 insertions(+), 28 deletions(-)
-
-Index: github/security/device_cgroup.c
-===================================================================
---- github.orig/security/device_cgroup.c	2012-11-26 17:28:12.415367313 -0500
-+++ github/security/device_cgroup.c	2012-11-26 17:28:17.023491874 -0500
-@@ -89,28 +89,38 @@
- 	return 0;
- }
- 
-+static int dev_exception_copy(struct list_head *dest,
-+			      struct dev_exception_item *ex)
-+{
-+	struct dev_exception_item *new;
-+
-+	new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
-+	if (!new)
-+		return -ENOMEM;
-+	list_add_tail_rcu(&new->list, dest);
-+	return 0;
-+}
-+
- /*
-  * called under devcgroup_mutex
-  */
- static int dev_exceptions_copy(struct list_head *dest, struct list_head *orig)
- {
--	struct dev_exception_item *ex, *tmp, *new;
-+	struct dev_exception_item *ex, *tmp;
- 
- 	lockdep_assert_held(&devcgroup_mutex);
- 
- 	list_for_each_entry(ex, orig, list) {
--		new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
--		if (!new)
-+		if (dev_exception_copy(dest, ex))
- 			goto free_and_exit;
--		list_add_tail(&new->list, dest);
- 	}
- 
- 	return 0;
- 
- free_and_exit:
- 	list_for_each_entry_safe(ex, tmp, dest, list) {
--		list_del(&ex->list);
--		kfree(ex);
-+		list_del_rcu(&ex->list);
-+		kfree_rcu(ex, rcu);
- 	}
- 	return -ENOMEM;
- }
-@@ -202,29 +212,30 @@
- 	return rc;
- }
- 
--/**
-- * dev_exception_clean - frees all entries of the exception list
-- * @dev_cgroup: dev_cgroup with the exception list to be cleaned
-- *
-- * called under devcgroup_mutex
-- */
--static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+static void __dev_exception_clean(struct list_head *exceptions)
- {
- 	struct dev_exception_item *ex, *tmp;
- 
- 	lockdep_assert_held(&devcgroup_mutex);
- 
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
--		list_del_rcu(&ex->list);
--		kfree_rcu(ex, rcu);
--	}
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->local.exceptions,
--				 list) {
-+	list_for_each_entry_safe(ex, tmp, exceptions, list) {
- 		list_del_rcu(&ex->list);
- 		kfree_rcu(ex, rcu);
- 	}
- }
- 
-+/**
-+ * dev_exception_clean - frees all entries of the exception list
-+ * @dev_cgroup: dev_cgroup with the exception list to be cleaned
-+ *
-+ * called under devcgroup_mutex
-+ */
-+static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+{
-+	__dev_exception_clean(&dev_cgroup->exceptions);
-+	__dev_exception_clean(&dev_cgroup->local.exceptions);
-+}
-+
- /*
-  * called from kernel/cgroup.c with cgroup_lock() held.
-  */
-@@ -435,6 +446,138 @@
- 	return parent->behavior == DEVCG_DEFAULT_ALLOW;
- }
- 
-+/**
-+ * __revalidate_exceptions - walks through the exception list and revalidates
-+ *			     the exceptions based on parents' behavior and
-+ *			     exceptions. Called with devcgroup_mutex held.
-+ * @devcg: cgroup which exceptions will be checked
-+ * returns: 0 in success, -ENOMEM in case of out of memory
-+ */
-+static int __revalidate_exceptions(struct dev_cgroup *devcg)
-+{
-+	struct dev_exception_item *ex;
-+	struct list_head *this, *tmp;
-+
-+	list_for_each_safe(this, tmp, &devcg->local.exceptions) {
-+		ex = container_of(this, struct dev_exception_item, list);
-+		if (parent_has_perm(devcg, ex)) {
-+			if (dev_exception_copy(&devcg->exceptions, ex))
-+				goto error;
-+		}
-+	}
-+	return 0;
-+
-+error:
-+	__dev_exception_clean(&devcg->exceptions);
-+	return -ENOMEM;
-+}
-+
-+/**
-+ * propagate_behavior - propagates a change in the behavior to the children
-+ * @devcg: device cgroup that changed behavior
-+ *
-+ * returns: 0 in case of success, != 0 in case of error
-+ */
-+static int propagate_behavior(struct dev_cgroup *devcg)
-+{
-+	struct cgroup *root = devcg->css.cgroup, *pos, *saved = NULL,
-+			*prev = NULL;
-+	struct dev_cgroup *parent;
-+	int rc = 0;
-+
-+	while (1) {
-+		rcu_read_lock();
-+		cgroup_for_each_descendant_pre(pos, root) {
-+			if (saved && prev != saved) {
-+				prev = pos;
-+				continue;
-+			}
-+			break;
-+		}
-+		rcu_read_unlock();
-+
-+		if (!pos)
-+			break;
-+
-+		devcg = cgroup_to_devcgroup(pos);
-+		parent = cgroup_to_devcgroup(pos->parent);
-+
-+		/* first copy parent's state */
-+		devcg->behavior = parent->behavior;
-+		__dev_exception_clean(&devcg->exceptions);
-+		rc = dev_exceptions_copy(&devcg->exceptions, &parent->exceptions);
-+		if (rc) {
-+			devcg->behavior = DEVCG_DEFAULT_DENY;
-+			break;
-+		}
-+
-+		if (devcg->local.behavior == DEVCG_DEFAULT_DENY &&
-+		    devcg->behavior == DEVCG_DEFAULT_ALLOW) {
-+			devcg->behavior = DEVCG_DEFAULT_DENY;
-+		}
-+		if (devcg->local.behavior == devcg->behavior)
-+			rc = __revalidate_exceptions(devcg);
-+		if (rc)
-+			break;
-+		saved = pos;
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-+ * propagate_exception - propagates a new exception to the children
-+ * @devcg: device cgroup that added a new exception
-+ *
-+ * returns: 0 in case of success, != 0 in case of error
-+ */
-+static int propagate_exception(struct dev_cgroup *devcg)
-+{
-+	struct cgroup *root = devcg->css.cgroup, *pos, *saved = NULL,
-+			*prev = NULL;
-+	struct dev_cgroup *parent;
-+	int rc = 0;
-+
-+	while(1) {
-+		rcu_read_lock();
-+		cgroup_for_each_descendant_pre(pos, root) {
-+			if (saved && prev != saved) {
-+				prev = pos;
-+				continue;
-+			}
-+			break;
-+		}
-+		rcu_read_unlock();
-+
-+		if (!pos)
-+			break;
-+
-+		devcg = cgroup_to_devcgroup(pos);
-+		parent = cgroup_to_devcgroup(pos->parent);
-+
-+		__dev_exception_clean(&devcg->exceptions);
-+		if (devcg->behavior == parent->behavior) {
-+			rc = dev_exceptions_copy(&devcg->exceptions, &parent->exceptions);
-+			if (rc) {
-+				devcg->behavior = DEVCG_DEFAULT_DENY;
-+				break;
-+			}
-+			rc = __revalidate_exceptions(devcg);
-+			if (rc)
-+				break;
-+		} else {
-+			/* we never give more permissions to the child */
-+			WARN_ONCE(devcg->behavior == DEVCG_DEFAULT_ALLOW,
-+				  "devcg: parent/child behavior is inconsistent");
-+			rc = __revalidate_exceptions(devcg);
-+			if (rc)
-+				break;
-+		}
-+		saved = pos;
-+	}
-+	return rc;
-+}
-+
- /*
-  * Modify the exception list using allow/deny rules.
-  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
-@@ -453,7 +596,7 @@
- {
- 	const char *b;
- 	char temp[12];		/* 11 + 1 characters needed for a u32 */
--	int count, rc;
-+	int count, rc = 0;
- 	struct dev_exception_item ex;
- 	struct cgroup *p = devcgroup->css.cgroup;
- 	struct dev_cgroup *parent = NULL;
-@@ -483,16 +626,18 @@
- 						 &parent->exceptions);
- 			if (rc)
- 				return rc;
-+			rc = propagate_behavior(devcgroup);
- 			break;
- 		case DEVCG_DENY:
- 			dev_exception_clean(devcgroup);
- 			devcgroup->behavior = DEVCG_DEFAULT_DENY;
- 			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
-+			rc = propagate_behavior(devcgroup);
- 			break;
- 		default:
--			return -EINVAL;
-+			rc = -EINVAL;
- 		}
--		return 0;
-+		return rc;
- 	case 'b':
- 		ex.type = DEV_BLOCK;
- 		break;
-@@ -578,9 +723,14 @@
- 		 */
- 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
- 			dev_exception_rm(devcgroup, &ex);
--			return 0;
-+			rc = propagate_exception(devcgroup);
-+			return rc;
- 		}
--		return dev_exception_add(devcgroup, &ex);
-+		rc = dev_exception_add(devcgroup, &ex);
-+		if (!rc)
-+			/* if a local behavior wasn't explicitely choosen, pick it */
-+			devcgroup->local.behavior = devcgroup->behavior;
-+		break;
- 	case DEVCG_DENY:
- 		/*
- 		 * If the default policy is to deny by default, try to remove
-@@ -589,13 +739,22 @@
- 		 */
- 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
- 			dev_exception_rm(devcgroup, &ex);
--			return 0;
-+			rc = propagate_exception(devcgroup);
-+			return rc;
- 		}
--		return dev_exception_add(devcgroup, &ex);
-+		rc = dev_exception_add(devcgroup, &ex);
-+		if (rc)
-+			return rc;
-+		/* we only propagate new restrictions */
-+		rc = propagate_exception(devcgroup);
-+		if (!rc)
-+			/* if a local behavior wasn't explicitely choosen, pick it */
-+			devcgroup->local.behavior = devcgroup->behavior;
-+		break;
- 	default:
--		return -EINVAL;
-+		rc = -EINVAL;
- 	}
--	return 0;
-+	return rc;
- }
- 
- static int devcgroup_access_write(struct cgroup *cgrp, struct cftype *cft,
+Shmem does not use this function but also charges under the i_mutex in
+the write path and fallocate at least.
