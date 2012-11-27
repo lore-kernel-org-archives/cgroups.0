@@ -1,110 +1,71 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: [net-next RFC v2] net_cls: traffic counter based on classification
- control cgroup
-Date: Tue, 27 Nov 2012 14:02:26 +0100
-Message-ID: <50B4B9E2.4030200@monom.org>
-References: <50B49C6C.8030604@samsung.com> <50B49DEA.7010000@parallels.com>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Why is cpuset_cpus_allowed_fallback() necessary?
+Date: Tue, 27 Nov 2012 19:41:17 +0100
+Message-ID: <20121127184117.GA8937@redhat.com>
+References: <20121126223249.GB15930@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50B49DEA.7010000-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121126223249.GB15930-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Alexey,
+Hi Tejun,
 
-On 27.11.2012 12:03, Glauber Costa wrote:
-> On 11/27/2012 02:56 PM, Alexey Perevalov wrote:
->> Hello.
->>
->> It's second version of patch I already sent to netdev.
->>
->> The main goal of this patch it's counting traffic for process placed to
->> net_cls cgroup (ingress and egress).
->> It's based on res_counters and holds counter per network interfaces.
->>
->> Description of patch.
->> It handles packets in net/core/dev.c for egress and in
->> /net/ipv4/tcp.c|udp.c for ingress.
->> These places were chosen because we need to know also network interface.
->>
->> Cgroup fs interface provides following files additional to existing
->> net_cls files:
->> net_cls.ifacename.usage_in_bytes
->> Containing rcv/snd lines.
->> Also this patch adds to net_cls ability to handle a network device
->> registration.
->>
->> It could be included or excluded in compile time.
->> I moved the menu entry for "Control group classifier" from network/QoS to
->> General Option/Control Group.
->>
->> I'm waiting for you comments.
->>
-> 
-> Daniel Wagner is working on something a lot similar.
+On 11/26, Tejun Heo wrote:
+>
+> I'm wondering why cpuset_cpus_allowed_fallback() is necessary.  This
+> is called from, e.g., try_to_wake_up()->select_task_rq() when none of
+> the cpus in ->cpus_allowed is useable.  The cpuset callback invokes
+> do_set_cpus_allowed() w/ the cpuset's cpus_allowed.  This was added by
+> the following commit,
+>
+>   commit 9084bb8246ea935b98320554229e2f371f7f52fa
+>   Author: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>   Date:   Mon Mar 15 10:10:27 2010 +0100
+>
+>
+>   sched: Make select_fallback_rq() cpuset friendly
+>
+>   Introduce cpuset_cpus_allowed_fallback() helper to fix the cpuset problems
+>   with select_fallback_rq(). It can be called from any context and can't use
+>   any cpuset locks including task_lock(). It is called when the task doesn't
+>   have online cpus in ->cpus_allowed but ttwu/etc must be able to find a
+>   suitable cpu.
+>   ....
+>
+> The problem is, nothing's explaining what "the cpuset problems with
+> select_fallback_rq()" are.
 
-Yes, basically what I try to do is explained by this excellent article
+Cough. You are right, the changelog is confusing and I no can not
+understand it too.
 
-https://lwn.net/Articles/523058/
+> Oleg, do you remember?  Why do we need
+> this?
 
-The short version: Per application routing and statistics. 
+No, I forgot. And this code was changed after that, the fat comment in
+cpuset_cpus_allowed_fallback() tried to explain the code below which
+was removed.
 
-I have two PoC implementation doing this. Both implementation have the same key
-idea which is to set SO_MARK per application. The routing and statistics would 
-then be done by a bunch iptables rules.
 
-In the first implementation extends net_cls to set SO_MARK:
 
-void sock_update_classid(struct sock *sk, struct task_struct *task)
- {
-        u32 classid;
-+       u32 mark;
- 
-        classid = task_cls_classid(task);
-        if (classid != sk->sk_classid)
-                sk->sk_classid = classid;
-+
-+       mark = task_cls_mark(task);
-+       if (mark != sk->sk_mark)
-+               sk->sk_mark = mark;
- }
+I am starting to recall what this patch tried to do after I looked into
+git history. This patch was the last (probably) change in series.
 
-The second implementation is adding a new iptables matcher which matches
-on LSM contexts. Then you can do something like this:
+Please look at
+	897f0b3c3ff40b443c84e271bef19bd6ae885195
+	sched: Kill the broken and deadlockable cpuset_lock/cpuset_cpus_allowed_locked code
 
-iptables -t mangle -A OUTPUT -m secmark --secctx unconfined_u:unconfined_r:foo_t:s0-s0:c0.c1023 -j MARK --set-mark 200
+In particular it removes cpuset_cpus_allowed_locked() from
+select_fallback_rq() because this was very wrong. IOW, this patch
+simply removes the code which didn't really work
 
-> Maybe you should be in contact, in case you are not yet.
-> 
-> A few general comments:
-> 1) res_counters are incredibly expensive. If you are more interested in
-> counting than you are in limiting, they may not be your best choice.
-> 
-> 2) When Daniel exposed his use case to me, it gave me the impression
-> that "counting traffic" is something that is totally doable by having a
-> dedicated interface in a separate namespace. Basically, we already count
-> traffic (rx and tx) for all interfaces anyway, so it suggests that it
-> could be an interesting way to see the problem.
+And after some other changes, this comment tried to add the supposed
+behaviour back: we shouldn't simply use cpu_possible_mask, we should
+consult cpuset.
 
-Moving applications into separate net namespaces is for sure a valid solution. 
-Though there is a one drawback in this approach. The namespaces need to be 
-attached to a bridge and then some NATting. That means every application
-would get it's own IP address. This might be okay for your certain use
-cases but I am still trying to work around this. Glauber and I had some
-discussion about this and he suggested to allow the physical networking
-device to be attached to several namespaces (e.g. via macvlan). Every
-namespace would get the same IP address. Unfortunately, this would result in
-the same mess as several physical devices on a network get the same
-IP address assigned. 
-
-> AFAIK, Daniel is still measuring this. But it would be great to know if
-> that could work for your use case as well.
-
-I have not started to measure :(
-
-cheers,
-daniel
+Oleg.
