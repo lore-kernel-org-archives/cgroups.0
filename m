@@ -1,64 +1,93 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 02/13] cpuset: remove fast exit path from
-	remove_tasks_in_empty_cpuset()
-Date: Wed, 28 Nov 2012 13:34:09 -0800
-Message-ID: <1354138460-19286-3-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 04/13] cpuset: introduce CS_ONLINE
+Date: Wed, 28 Nov 2012 13:34:11 -0800
+Message-ID: <1354138460-19286-5-git-send-email-tj@kernel.org>
 References: <1354138460-19286-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=saXZuOUsZFSArKyCMe2sLzAdgS1d8DyhlwV7vh/SegI=;
+        b=RLlDmsXaTl5LwJ4HxaqyTjv33UsBtsN8Z/T5NaoWADi+p64DW9BAquzv/0Zsmo12wC
+         nA9ZX+FQuVcXtSESEmoKjAUmh66aiXoH9fLmISE8IgEoG9tJ4ytjcUTUldCCeuCb3QEc
+         wO/H8+NLucwZ1NL97F8qk8l2blDj0NZdsTwS8st2YEcuDESb4fon5pXX/CBbpNoEZEki
+         kKcbtdyhhJR8VOjdR4PkSECIimfa0Edd7hisLOqooiravDJ+EDm8BN2zcS+ZSeSnG35B
+         gpIab1ybqXeyjiHQJeUAWNCoQBUrHPR6MRi7qsRbNWVoKroUYsclrawn+Sggz7aOilTn
+         KfSg==
+In-Reply-To: <1354138460-19286-1-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=8QivQQSzVYbjba7UOFkh3m3k6UVRUhE/V5apfi/lNZA=;
-	b=ZJCr1wccgc5NJJr+OrZCXeOJkC61spa3XKKt4vS+yUGGhc0YXEQ2e5jNcWnIquvzI2
-	PwlMByooIkjuaEwRuGpQxCXiYWv6ahcjTSO/uO/lWHyBnNbdQfrI0SL46rLDcD9cergl
-	gfqsxa6TTDce7e5H+goZ3vWv5nIFgMuYHUGWXuK9k/MapCkdQn3IPCiSKB8s4itKsJsO
-	pe6AQBl6c5X79m//EGMQtMgXiH3rspHLN49swvy4+9zxF4auinfpz9KJF7/Cy3TW82fS
-	kI9mewh2lmDVkt/jbmum7tRAaP0YzdIqKTe6ll7hlpv9++7b8kBKvyK/STgSSUC9Dqm4
-	dTEA==
-In-Reply-To: <1354138460-19286-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com, paul@paulmenage.org, glommer@parallels.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, peterz@infradead.org, mhocko@suse.cz, bsingharora@gmail.com, hannes@cmpxchg.org, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-The function isn't that hot, the overhead of missing the fast exit is
-low, the test itself depends heavily on cgroup internals, and it's
-gonna be a hindrance when trying to decouple cpuset locking from
-cgroup core.  Remove the fast exit path.
+Add CS_ONLINE which is set from css_online() and cleared from
+css_offline().  This will enable using generic cgroup iterator while
+allowing decoupling cpuset from cgroup internal locking.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cpuset.c | 8 --------
- 1 file changed, 8 deletions(-)
+ kernel/cpuset.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index a423774..54b2b73 100644
+index 70197ba..22b521d 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -1968,14 +1968,6 @@ static void remove_tasks_in_empty_cpuset(struct cpuset *cs)
- 	struct cpuset *parent;
+@@ -138,6 +138,7 @@ static inline bool task_has_mempolicy(struct task_struct *task)
  
- 	/*
--	 * The cgroup's css_sets list is in use if there are tasks
--	 * in the cpuset; the list is empty if there are none;
--	 * the cs->css.refcnt seems always 0.
--	 */
--	if (list_empty(&cs->css.cgroup->css_sets))
--		return;
--
--	/*
- 	 * Find its next-highest non-empty parent, (top cpuset
- 	 * has online cpus, so can't be empty).
- 	 */
+ /* bits in struct cpuset flags field */
+ typedef enum {
++	CS_ONLINE,
+ 	CS_CPU_EXCLUSIVE,
+ 	CS_MEM_EXCLUSIVE,
+ 	CS_MEM_HARDWALL,
+@@ -154,6 +155,11 @@ enum hotplug_event {
+ };
+ 
+ /* convenient tests for these bits */
++static inline bool is_cpuset_online(const struct cpuset *cs)
++{
++	return test_bit(CS_ONLINE, &cs->flags);
++}
++
+ static inline int is_cpu_exclusive(const struct cpuset *cs)
+ {
+ 	return test_bit(CS_CPU_EXCLUSIVE, &cs->flags);
+@@ -190,7 +196,8 @@ static inline int is_spread_slab(const struct cpuset *cs)
+ }
+ 
+ static struct cpuset top_cpuset = {
+-	.flags = ((1 << CS_CPU_EXCLUSIVE) | (1 << CS_MEM_EXCLUSIVE)),
++	.flags = ((1 << CS_ONLINE) | (1 << CS_CPU_EXCLUSIVE) |
++		  (1 << CS_MEM_EXCLUSIVE)),
+ };
+ 
+ /*
+@@ -1822,6 +1829,7 @@ static int cpuset_css_online(struct cgroup *cgrp)
+ 	if (!parent)
+ 		return 0;
+ 
++	set_bit(CS_ONLINE, &cs->flags);
+ 	if (is_spread_page(parent))
+ 		set_bit(CS_SPREAD_PAGE, &cs->flags);
+ 	if (is_spread_slab(parent))
+@@ -1871,6 +1879,7 @@ static void cpuset_css_offline(struct cgroup *cgrp)
+ 		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+ 
+ 	number_of_cpusets--;
++	clear_bit(CS_ONLINE, &cs->flags);
+ 
+ 	cgroup_unlock();
+ }
 -- 
 1.7.11.7
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
