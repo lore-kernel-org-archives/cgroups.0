@@ -1,139 +1,93 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/3] cpuset: remove cpuset->parent
-Date: Wed, 28 Nov 2012 14:27:01 -0800
-Message-ID: <1354141621-11906-4-git-send-email-tj@kernel.org>
-References: <1354141621-11906-1-git-send-email-tj@kernel.org>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [patch] mm, memcg: avoid unnecessary function call when memcg
+ is disabled
+Date: Wed, 28 Nov 2012 15:29:30 -0800 (PST)
+Message-ID: <alpine.LNX.2.00.1211281509560.15410@eggly.anvils>
+References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com> <20121120134932.055bc192.akpm@linux-foundation.org> <20121121083505.GA8761@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=xMLwTrlOjNnfnaO1HW4lkUOfbI21bO3mpWXaTS9padY=;
+        b=pHoK8EgnnFs9dwcOd0shcTmPECar1oYfBATDaHZW6Gmky96LFTjRHHg28GizlICYDC
+         3vIF2UcWmG/jfKpUoDl8yUikSqRcSPGpejjjlouA1FJJ2dMUKXNM8S06tl9ml0MaoAgq
+         SQSs+Z85Woy0MlqImjdXuW98kqE8Cixd6gQJlL3ivj9Vr7i9JNj0zBegZTq7gzb215ao
+         HSfcPVbEuzEgKKW2Fv2IGt5ZE8wzbH2NHPXYwLWYhtgLEdMKJrccT9E4UJY/oQ3NXyuP
+         /BQnpQKXpcM09+KcXqUTHyjrFw4wWqkWpeISGN6YiPVjfS40Xe0/SO4qLXCwC37aqw4O
+         /PzQ==
+In-Reply-To: <20121121083505.GA8761@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=HTbkBXkmpFby4FHSTHggyJV1Hjfhj6aW59cGgCLRbqU=;
-	b=T+tGaP41A/NF/Y4FTJHWVdPSEiB8aeJ+smeBaL3O2Fm6wPSj3hXmGTojI7bthsn0bo
-	tN95gbkkupx1Trj45bEfGzoOzmifTEwQ7m0NOCldSwaMh8typzI2lQhk042QXtaLOQ9o
-	KIk1VJ+sdvp8QT6L5lOpZbQomlUBhpE158ytpqLHeLxqCYa1U3rtBu3rexa4pEOV9kLd
-	fSqqWmoqz2MgLVh75g/yXkK+TwzXtQu8BUISnSR2waUXWqr5jJeYxqkzJnqPhNPRSEjm
-	rkSb0XIN59kOhqZR+FUFD1FVLyXkT9fdazOq0I+/boojRF2vAkdskDZ3Tu5VycCKI2kA
-	k3yA==
-In-Reply-To: <1354141621-11906-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Ying Han <yinghan@google.com>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-cgroup already tracks the hierarchy.  Follow cgroup->parent to find
-the parent and drop cpuset->parent.
+On Wed, 21 Nov 2012, Michal Hocko wrote:
+> On Tue 20-11-12 13:49:32, Andrew Morton wrote:
+> > On Mon, 19 Nov 2012 17:44:34 -0800 (PST)
+> > David Rientjes <rientjes@google.com> wrote:
+> > 
+> > > While profiling numa/core v16 with cgroup_disable=memory on the command 
+> > > line, I noticed mem_cgroup_count_vm_event() still showed up as high as 
+> > > 0.60% in perftop.
+> > > 
+> > > This occurs because the function is called extremely often even when memcg 
+> > > is disabled.
+> > > 
+> > > To fix this, inline the check for mem_cgroup_disabled() so we avoid the 
+> > > unnecessary function call if memcg is disabled.
+> > > 
+> > > ...
+> > >
+> > > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > > --- a/include/linux/memcontrol.h
+> > > +++ b/include/linux/memcontrol.h
+> > > @@ -181,7 +181,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+> > >  						gfp_t gfp_mask,
+> > >  						unsigned long *total_scanned);
+> > >  
+> > > -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+> > > +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+> > > +static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
+> > > +					     enum vm_event_item idx)
+> > > +{
+> > > +	if (mem_cgroup_disabled() || !mm)
+> > > +		return;
+> > > +	__mem_cgroup_count_vm_event(mm, idx);
+> > > +}
+> > 
+> > Does the !mm case occur frequently enough to justify inlining it, or
+> > should that test remain out-of-line?
+> 
+> Now that you've asked about it I started looking around and I cannot see
+> how mm can ever be NULL. The condition is there since the very beginning
+> (456f998e memcg: add the pagefault count into memcg stats) but all the
+> callers are page fault handlers and those shouldn't have mm==NULL.
+> Or is there anything obvious I am missing?
+> 
+> Ying, the whole thread starts https://lkml.org/lkml/2012/11/19/545 but
+> the primary question is why we need !mm test for mem_cgroup_count_vm_event
+> at all.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cpuset.c | 28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+Here's a guess: as Ying's 456f998e patch started out in akpm's tree,
+shmem.c was calling mem_cgroup_count_vm_event(current->mm, PGMAJFAULT).
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 3a01730..d804415 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -87,8 +87,6 @@ struct cpuset {
- 	cpumask_var_t cpus_allowed;	/* CPUs allowed to tasks in cpuset */
- 	nodemask_t mems_allowed;	/* Memory Nodes allowed to tasks */
- 
--	struct cpuset *parent;		/* my parent */
--
- 	struct fmeter fmeter;		/* memory_pressure filter */
- 
- 	/*
-@@ -120,6 +118,15 @@ static inline struct cpuset *task_cs(struct task_struct *task)
- 			    struct cpuset, css);
- }
- 
-+static inline struct cpuset *parent_cs(const struct cpuset *cs)
-+{
-+	struct cgroup *pcgrp = cs->css.cgroup->parent;
-+
-+	if (pcgrp)
-+		return cgroup_cs(pcgrp);
-+	return NULL;
-+}
-+
- #ifdef CONFIG_NUMA
- static inline bool task_has_mempolicy(struct task_struct *task)
- {
-@@ -323,7 +330,7 @@ static void guarantee_online_cpus(const struct cpuset *cs,
- 				  struct cpumask *pmask)
- {
- 	while (cs && !cpumask_intersects(cs->cpus_allowed, cpu_online_mask))
--		cs = cs->parent;
-+		cs = parent_cs(cs);
- 	if (cs)
- 		cpumask_and(pmask, cs->cpus_allowed, cpu_online_mask);
- 	else
-@@ -348,7 +355,7 @@ static void guarantee_online_mems(const struct cpuset *cs, nodemask_t *pmask)
- {
- 	while (cs && !nodes_intersects(cs->mems_allowed,
- 					node_states[N_HIGH_MEMORY]))
--		cs = cs->parent;
-+		cs = parent_cs(cs);
- 	if (cs)
- 		nodes_and(*pmask, cs->mems_allowed,
- 					node_states[N_HIGH_MEMORY]);
-@@ -461,7 +468,7 @@ static int validate_change(const struct cpuset *cur, const struct cpuset *trial)
- 	if (cur == &top_cpuset)
- 		goto out;
- 
--	par = cur->parent;
-+	par = parent_cs(cur);
- 
- 	/* We must be a subset of our parent cpuset */
- 	ret = -EACCES;
-@@ -1860,7 +1867,6 @@ static struct cgroup_subsys_state *cpuset_css_alloc(struct cgroup *cont)
- 	fmeter_init(&cs->fmeter);
- 	INIT_WORK(&cs->hotplug_work, cpuset_propagate_hotplug_workfn);
- 	cs->relax_domain_level = -1;
--	cs->parent = cgroup_cs(cont->parent);
- 
- 	return &cs->css;
- }
-@@ -1868,7 +1874,7 @@ static struct cgroup_subsys_state *cpuset_css_alloc(struct cgroup *cont)
- static int cpuset_css_online(struct cgroup *cgrp)
- {
- 	struct cpuset *cs = cgroup_cs(cgrp);
--	struct cpuset *parent = cs->parent;
-+	struct cpuset *parent = parent_cs(cs);
- 	struct cpuset *tmp_cs;
- 	struct cgroup *pos_cg;
- 
-@@ -2049,10 +2055,10 @@ static void remove_tasks_in_empty_cpuset(struct cpuset *cs)
- 	 * Find its next-highest non-empty parent, (top cpuset
- 	 * has online cpus, so can't be empty).
- 	 */
--	parent = cs->parent;
-+	parent = parent_cs(cs);
- 	while (cpumask_empty(parent->cpus_allowed) ||
- 			nodes_empty(parent->mems_allowed))
--		parent = parent->parent;
-+		parent = parent_cs(parent);
- 
- 	move_member_tasks_to_cpuset(cs, parent);
- }
-@@ -2353,8 +2359,8 @@ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
-  */
- static const struct cpuset *nearest_hardwall_ancestor(const struct cpuset *cs)
- {
--	while (!(is_mem_exclusive(cs) || is_mem_hardwall(cs)) && cs->parent)
--		cs = cs->parent;
-+	while (!(is_mem_exclusive(cs) || is_mem_hardwall(cs)) && parent_cs(cs))
-+		cs = parent_cs(cs);
- 	return cs;
- }
- 
--- 
-1.7.11.7
+Then I insisted that was inconsistent with how we usually account when
+one task touches another's address space, and rearranged it to work on
+vma->vm_mm instead.
+
+Done the original way, if the touching task were a kernel daemon (KSM's
+ksmd comes to my mind), then the current->mm could well have been NULL.
+
+I agree with you that it looks redundant now.
+
+Hugh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
