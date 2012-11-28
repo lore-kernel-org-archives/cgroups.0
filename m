@@ -1,55 +1,114 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: avoid creating degenerate allcg_list
-Date: Wed, 28 Nov 2012 10:29:11 -0800
-Message-ID: <20121128182911.GA24683@htj.dyndns.org>
-References: <1354127192-22153-1-git-send-email-gthelen@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH -v2 -mm] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Wed, 28 Nov 2012 13:44:33 -0500
+Message-ID: <20121128184433.GH2301@cmpxchg.org>
+References: <20121126131837.GC17860@dhcp22.suse.cz>
+ <50B403CA.501@jp.fujitsu.com>
+ <20121127194813.GP24381@cmpxchg.org>
+ <20121127205431.GA2433@dhcp22.suse.cz>
+ <20121127205944.GB2433@dhcp22.suse.cz>
+ <20121128152631.GT24381@cmpxchg.org>
+ <20121128160447.GH12309@dhcp22.suse.cz>
+ <20121128163736.GV24381@cmpxchg.org>
+ <20121128164640.GB22201@dhcp22.suse.cz>
+ <20121128164824.GC22201@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121128164824.GC22201-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=dsPI4jkmXaelvJS56lO0BgkPkjmqBIqxlhVDoBFprIA=;
-	b=tEH7G1AgKanNdSlbxsx+8wmAdqUURoV7nHOjCLzHsDHnbB9RYVx3AxK77taxJyuGqd
-	Dl9NJ/5EPTt7NqeDe26T0YK+4YaxYJRMjbz+CPoD2DEPRRjFDROn4i9rFHKVA5+BzffM
-	ZYpDDHlF+z7oiyBY1eWo6T37uyhD5/P8XtebQUoTjNzmvM5PG5iXIqVPpT2qV/gOpqum
-	L4/Rp0aJYadmEF6uV7MZdRA0nBc82e5WwG8yiuMHLBACQHj51VwwYBwQ7tXMXlGIo4OT
-	Ye6LvXGcF5i1SgTx54IkiCHrq/V8XK68WNW3K4BSEMTo7mw+HWQVl1yKRoyOE7piXdSh
-	4ELw==
-Content-Disposition: inline
-In-Reply-To: <1354127192-22153-1-git-send-email-gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hey, Greg.
+On Wed, Nov 28, 2012 at 05:48:24PM +0100, Michal Hocko wrote:
+> On Wed 28-11-12 17:46:40, Michal Hocko wrote:
+> > On Wed 28-11-12 11:37:36, Johannes Weiner wrote:
+> > > On Wed, Nov 28, 2012 at 05:04:47PM +0100, Michal Hocko wrote:
+> > > > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > > > index 095d2b4..5abe441 100644
+> > > > --- a/include/linux/memcontrol.h
+> > > > +++ b/include/linux/memcontrol.h
+> > > > @@ -57,13 +57,14 @@ extern int mem_cgroup_newpage_charge(struct page *page, struct mm_struct *mm,
+> > > >  				gfp_t gfp_mask);
+> > > >  /* for swap handling */
+> > > >  extern int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
+> > > > -		struct page *page, gfp_t mask, struct mem_cgroup **memcgp);
+> > > > +		struct page *page, gfp_t mask, struct mem_cgroup **memcgp,
+> > > > +		bool oom);
+> > > 
+> > > Ok, now I feel almost bad for asking, but why the public interface,
+> > > too?
+> > 
+> > Would it work out if I tell it was to double check that your review
+> > quality is not decreased after that many revisions? :P
 
-On Wed, Nov 28, 2012 at 10:26:32AM -0800, Greg Thelen wrote:
-> Before this patch init_cgroup_root() created a degenerate list by
-> first inserting a element into allcg_list and then initializing the
-> inserted list element.  The initialization reset the element's
-> prev/next fields forming a degenerate list where allcg_list pointed to
-> element, but element pointed to itself.  This problem was introduced
-> in 2243076ad128 "cgroup: initialize cgrp->allcg_node in
-> init_cgroup_housekeeping()".  CONFIG_DEBUG_LIST reported a list_add
-> corruption in cgroup_mkdir() running next-20121127 (ce2931a).
+Deal.
+
+> >From e21bb704947e9a477ec1df9121575c606dbfcb52 Mon Sep 17 00:00:00 2001
+> From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Date: Wed, 28 Nov 2012 17:46:32 +0100
+> Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
 > 
-> This patch fixes the problem by performing element initialization
-> before insertion.
+> memcg oom killer might deadlock if the process which falls down to
+> mem_cgroup_handle_oom holds a lock which prevents other task to
+> terminate because it is blocked on the very same lock.
+> This can happen when a write system call needs to allocate a page but
+> the allocation hits the memcg hard limit and there is nothing to reclaim
+> (e.g. there is no swap or swap limit is hit as well and all cache pages
+> have been reclaimed already) and the process selected by memcg OOM
+> killer is blocked on i_mutex on the same inode (e.g. truncate it).
+> 
+> Process A
+> [<ffffffff811109b8>] do_truncate+0x58/0xa0		# takes i_mutex
+> [<ffffffff81121c90>] do_last+0x250/0xa30
+> [<ffffffff81122547>] path_openat+0xd7/0x440
+> [<ffffffff811229c9>] do_filp_open+0x49/0xa0
+> [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
+> [<ffffffff8110f950>] sys_open+0x20/0x30
+> [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> Process B
+> [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
+> [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
+> [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
+> [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
+> [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
+> [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
+> [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
+> [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
+> [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
+> [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
+> [<ffffffff8111156a>] do_sync_write+0xea/0x130
+> [<ffffffff81112183>] vfs_write+0xf3/0x1f0
+> [<ffffffff81112381>] sys_write+0x51/0x90
+> [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> This is not a hard deadlock though because administrator can still
+> intervene and increase the limit on the group which helps the writer to
+> finish the allocation and release the lock.
+> 
+> This patch heals the problem by forbidding OOM from page cache charges
+> (namely add_ro_page_cache_locked). mem_cgroup_cache_charge grows oom
+> argument which is pushed down the call chain.
+> 
+> As a possibly visible result add_to_page_cache_lru might fail more often
+> with ENOMEM but this is to be expected if the limit is set and it is
+> preferable than OOM killer IMO.
+> 
+> Changes since v1
+> - do not abuse gfp_flags and rather use oom parameter directly as per
+>   Johannes
+> - handle also shmem write fauls resp. fallocate properly as per Johannes
+> 
+> Reported-by: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-You're beaten by Li Zhong by 9 hrs.  :)
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
- http://thread.gmane.org/gmane.linux.kernel.next/25096
-
--- 
-tejun
+Thanks, Michal!
