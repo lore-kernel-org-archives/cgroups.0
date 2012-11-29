@@ -1,93 +1,55 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [patch] mm, memcg: avoid unnecessary function call when memcg
- is disabled
-Date: Wed, 28 Nov 2012 15:29:30 -0800 (PST)
-Message-ID: <alpine.LNX.2.00.1211281509560.15410@eggly.anvils>
-References: <alpine.DEB.2.00.1211191741060.24618@chino.kir.corp.google.com> <20121120134932.055bc192.akpm@linux-foundation.org> <20121121083505.GA8761@dhcp22.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+ cgroup core
+Date: Thu, 29 Nov 2012 15:14:41 +0400
+Message-ID: <50B743A1.4040405@parallels.com>
+References: <1354138460-19286-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=xMLwTrlOjNnfnaO1HW4lkUOfbI21bO3mpWXaTS9padY=;
-        b=pHoK8EgnnFs9dwcOd0shcTmPECar1oYfBATDaHZW6Gmky96LFTjRHHg28GizlICYDC
-         3vIF2UcWmG/jfKpUoDl8yUikSqRcSPGpejjjlouA1FJJ2dMUKXNM8S06tl9ml0MaoAgq
-         SQSs+Z85Woy0MlqImjdXuW98kqE8Cixd6gQJlL3ivj9Vr7i9JNj0zBegZTq7gzb215ao
-         HSfcPVbEuzEgKKW2Fv2IGt5ZE8wzbH2NHPXYwLWYhtgLEdMKJrccT9E4UJY/oQ3NXyuP
-         /BQnpQKXpcM09+KcXqUTHyjrFw4wWqkWpeISGN6YiPVjfS40Xe0/SO4qLXCwC37aqw4O
-         /PzQ==
-In-Reply-To: <20121121083505.GA8761@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Ying Han <yinghan@google.com>, David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1354138460-19286-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 21 Nov 2012, Michal Hocko wrote:
-> On Tue 20-11-12 13:49:32, Andrew Morton wrote:
-> > On Mon, 19 Nov 2012 17:44:34 -0800 (PST)
-> > David Rientjes <rientjes@google.com> wrote:
-> > 
-> > > While profiling numa/core v16 with cgroup_disable=memory on the command 
-> > > line, I noticed mem_cgroup_count_vm_event() still showed up as high as 
-> > > 0.60% in perftop.
-> > > 
-> > > This occurs because the function is called extremely often even when memcg 
-> > > is disabled.
-> > > 
-> > > To fix this, inline the check for mem_cgroup_disabled() so we avoid the 
-> > > unnecessary function call if memcg is disabled.
-> > > 
-> > > ...
-> > >
-> > > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > > --- a/include/linux/memcontrol.h
-> > > +++ b/include/linux/memcontrol.h
-> > > @@ -181,7 +181,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
-> > >  						gfp_t gfp_mask,
-> > >  						unsigned long *total_scanned);
-> > >  
-> > > -void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
-> > > +void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
-> > > +static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
-> > > +					     enum vm_event_item idx)
-> > > +{
-> > > +	if (mem_cgroup_disabled() || !mm)
-> > > +		return;
-> > > +	__mem_cgroup_count_vm_event(mm, idx);
-> > > +}
-> > 
-> > Does the !mm case occur frequently enough to justify inlining it, or
-> > should that test remain out-of-line?
+On 11/29/2012 01:34 AM, Tejun Heo wrote:
+> This patchset decouples cpuset locking from cgroup_mutex.  After the
+> patchset, cpuset uses cpuset-specific cpuset_mutex instead of
+> cgroup_mutex.  This also removes the lockdep warning triggered during
+> cpu offlining (see 0009).
 > 
-> Now that you've asked about it I started looking around and I cannot see
-> how mm can ever be NULL. The condition is there since the very beginning
-> (456f998e memcg: add the pagefault count into memcg stats) but all the
-> callers are page fault handlers and those shouldn't have mm==NULL.
-> Or is there anything obvious I am missing?
-> 
-> Ying, the whole thread starts https://lkml.org/lkml/2012/11/19/545 but
-> the primary question is why we need !mm test for mem_cgroup_count_vm_event
-> at all.
+> Note that this leaves memcg as the only external user of cgroup_mutex.
+> Michal, Kame, can you guys please convert memcg to use its own locking
+> too?
 
-Here's a guess: as Ying's 456f998e patch started out in akpm's tree,
-shmem.c was calling mem_cgroup_count_vm_event(current->mm, PGMAJFAULT).
+Not totally. There is still one mention to the cgroup_lock():
 
-Then I insisted that was inconsistent with how we usually account when
-one task touches another's address space, and rearranged it to work on
-vma->vm_mm instead.
+static void cpuset_do_move_task(struct task_struct *tsk,
+                                struct cgroup_scanner *scan)
+{
+        struct cgroup *new_cgroup = scan->data;
 
-Done the original way, if the touching task were a kernel daemon (KSM's
-ksmd comes to my mind), then the current->mm could well have been NULL.
+        cgroup_lock();
+        cgroup_attach_task(new_cgroup, tsk);
+        cgroup_unlock();
+}
 
-I agree with you that it looks redundant now.
+And similar problem to this, is the one we have in memcg: We need to
+somehow guarantee that no tasks will join the cgroup for some time -
+this is why we hold the lock in memcg.
 
-Hugh
+Just calling a function that internally calls the cgroup lock won't do
+much, since it won't solve any dependencies - where it is called matters
+little.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+What I'll try to do, is to come with another specialized lock in cgroup
+just for this case. So after taking the cgroup lock, we would also take
+an extra lock if we are adding another entry - be it task or children -
+to the cgroup.
+
+cpuset and memcg could then take that lock as well, explicitly or
+implicitly.
+
+How does it sound?
