@@ -1,112 +1,79 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH -v2 -mm] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Thu, 29 Nov 2012 15:05:49 +0100
-Message-ID: <20121129140549.GC27887@dhcp22.suse.cz>
-References: <50B403CA.501@jp.fujitsu.com>
- <20121127194813.GP24381@cmpxchg.org>
- <20121127205431.GA2433@dhcp22.suse.cz>
- <20121127205944.GB2433@dhcp22.suse.cz>
- <20121128152631.GT24381@cmpxchg.org>
- <20121128160447.GH12309@dhcp22.suse.cz>
- <20121128163736.GV24381@cmpxchg.org>
- <20121128164640.GB22201@dhcp22.suse.cz>
- <20121128164824.GC22201@dhcp22.suse.cz>
- <alpine.LNX.2.00.1211281023320.14341@eggly.anvils>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+ cgroup core
+Date: Thu, 29 Nov 2012 06:26:46 -0800
+Message-ID: <20121129142646.GD24683@htj.dyndns.org>
+References: <1354138460-19286-1-git-send-email-tj@kernel.org>
+ <50B743A1.4040405@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=iJjlWaN3Bjvrmurhd4eeFVHwnu6P5HPkkFMbj27mXlE=;
+        b=XpbQn8Eq+fGx6H4CPoV85FApmhUqGeGVvvIzHGFJH0qw+x+J/anqZqAld74QYMWxYw
+         xR691MEItOaGsYu4vAHzZgkTzyiKaEGqHHHz02+e+iSRaYWx5WX2gFA/mHIpJCmA/dUd
+         OauZv7+YYPVYM0e1ZZzwm7739Oaqa98alWr6VGJse+IiJk9rBEUnUlHD0hAKSwnigaad
+         f64gdxEHys7wcXddWsJt7NZmrwKGS2SfauxRr6mrIVA4D3KHi750eunMyfi+S1XxdEE/
+         vyPSHkBloLRbJsLFzvWqNVk6asA/XdfFfVinv3mHcJNQWlxx4CZgI4+ZafqEJ62b1J9C
+         Wx1Q==
 Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1211281023320.14341@eggly.anvils>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <50B743A1.4040405-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, azurIt <azurit@pobox.sk>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 28-11-12 12:20:44, Hugh Dickins wrote:
-[...]
-> Sorry, Michal, you've laboured hard on this: but I dislike it so much
-> that I'm here overcoming my dread of entering an OOM-killer discussion,
-> and the resultant deluge of unwelcome CCs for eternity afterwards.
+Hello, Glauber.
+
+On Thu, Nov 29, 2012 at 03:14:41PM +0400, Glauber Costa wrote:
+> On 11/29/2012 01:34 AM, Tejun Heo wrote:
+> > This patchset decouples cpuset locking from cgroup_mutex.  After the
+> > patchset, cpuset uses cpuset-specific cpuset_mutex instead of
+> > cgroup_mutex.  This also removes the lockdep warning triggered during
+> > cpu offlining (see 0009).
+> > 
+> > Note that this leaves memcg as the only external user of cgroup_mutex.
+> > Michal, Kame, can you guys please convert memcg to use its own locking
+> > too?
 > 
-> I had been relying on Johannes to repeat his "This issue has been
-> around for a while so frankly I don't think it's urgent enough to
-> rush things", but it looks like I have to be the one to repeat it.
-
-Well, the idea was to use this only as a temporal fix and come up with a
-better solution without any hurry.
-
-> Your analysis of azurIt's traces may well be correct, and this patch
-> may indeed ameliorate the situation, and it's fine as something for
-> azurIt to try and report on and keep in his tree; but I hope that
-> it does not go upstream and to stable.
+> Not totally. There is still one mention to the cgroup_lock():
 > 
-> Why do I dislike it so much?  I suppose because it's both too general
-> and too limited at the same time.
+> static void cpuset_do_move_task(struct task_struct *tsk,
+>                                 struct cgroup_scanner *scan)
+> {
+>         struct cgroup *new_cgroup = scan->data;
 > 
-> Too general in that it changes the behaviour on OOM for a large set
-> of memcg charges, all those that go through add_to_page_cache_locked(),
-> when only a subset of those have the i_mutex issue.
+>         cgroup_lock();
+>         cgroup_attach_task(new_cgroup, tsk);
+>         cgroup_unlock();
+> }
 
-This is a fair point but the real fix which we were discussing with
-Johannes would be even more risky for stable.
+Which is outside all other locks and scheduled to be moved inside
+cgroup_attach_task().
 
-> If you're going to be that general, why not go further?  Leave the
-> mem_cgroup_cache_charge() interface as is, make it not-OOM internally,
-> no need for SGP_WRITE,SGP_FALLOC distinctions in mm/shmem.c.  No other
-> filesystem gets the benefit of those distinctions: isn't it better to
-> keep it simple?  (And I can see a partial truncation case where shmem
-> uses SGP_READ under i_mutex; and the change to shmem_unuse behaviour
-> is a non-issue, since swapoff invites itself to be killed anyway.)
+> And similar problem to this, is the one we have in memcg: We need to
+> somehow guarantee that no tasks will join the cgroup for some time -
+> this is why we hold the lock in memcg.
 > 
-> Too limited in that i_mutex is just the held resource which azurIt's
-> traces have led you to, but it's a general problem that the OOM-killed
-> task might be waiting for a resource that the OOM-killing task holds.
-> 
-> I suspect that if we try hard enough (I admit I have not), we can find
-> an example of such a potential deadlock for almost every memcg charge
-> site.  mmap_sem? not as easy to invent a case with that as I thought,
-> since it needs a down_write, and the typical page allocations happen
-> with down_read, and I can't think of a process which does down_write
-> on another's mm.
-> 
-> But i_mutex is always good, once you remember the case of write to
-> file from userspace page which got paged out, so the fault path has
-> to read it back in, while i_mutex is still held at the outer level.
-> An unusual case?  Well, normally yes, but we're considering
-> out-of-memory conditions, which may converge upon cases like this.
-> 
-> Wouldn't it be nice if I could be constructive?  But I'm sceptical
-> even of Johannes's faith in what the global OOM killer would do:
-> how does __alloc_pages_slowpath() get out of its "goto restart"
-> loop, excepting the trivial case when the killer is the killed?
+> Just calling a function that internally calls the cgroup lock won't do
+> much, since it won't solve any dependencies - where it is called matters
+> little.
 
-I am not sure I am following you here but the Johannes's idea was to
-break out of the charge after a signal has been sent and the charge
-still fails and either retry the fault or fail the allocation. I think
-this should work but I am afraid that this needs some tuning (number of
-retries f.e.) to prevent from too aggressive OOM or too many failurs.
+The dependency is already solved in cpuset.
 
-Do we have any other possibilities to solve this issue? Or do you think
-we should ignore the problem just because nobody complained for such a
-long time?
-Dunno, I think we should fix this with something less risky for now and
-come up with a real fix after it sees sufficient testing.
+> What I'll try to do, is to come with another specialized lock in cgroup
+> just for this case. So after taking the cgroup lock, we would also take
+> an extra lock if we are adding another entry - be it task or children -
+> to the cgroup.
 
-> I wonder why this issue has hit azurIt and no other reporter?
-> No swap plays a part in it, but that's not so unusual.
-> 
-> Yours glOOMily,
-> Hugh
+No, please don't do that.  Just don't invoke cgroup operation inside
+any subsystem lock.
 
-[...]
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
