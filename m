@@ -1,35 +1,67 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Fri, 30 Nov 2012 03:29:18 +0100
-Message-ID: <20121130032918.59B3F780@pobox.sk>
-References: <20121122214249.GA20319@dhcp22.suse.cz>, <20121122233434.3D5E35E6@pobox.sk>, <20121123074023.GA24698@dhcp22.suse.cz>, <20121123102137.10D6D653@pobox.sk>, <20121123100438.GF24698@dhcp22.suse.cz>, <20121125011047.7477BB5E@pobox.sk>, <20121125120524.GB10623@dhcp22.suse.cz>, <20121125135542.GE10623@dhcp22.suse.cz>, <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz> <20121126132149.GD17860@dhcp22.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+	cgroup core
+Date: Fri, 30 Nov 2012 14:00:21 +0400
+Message-ID: <50B883B5.8020705@parallels.com>
+References: <1354138460-19286-1-git-send-email-tj@kernel.org>
+	<50B8263C.7060908@jp.fujitsu.com> <50B875B4.2020507@parallels.com>
+	<20121130092435.GD29317@dhcp22.suse.cz>
+	<50B87F84.7040206@parallels.com>
+	<20121130094959.GE29317@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20121126132149.GD17860@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20121130094959.GE29317-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
->Here we go with the patch for 3.2.34. Could you test with this one,
->please?
+On 11/30/2012 01:49 PM, Michal Hocko wrote:
+> On Fri 30-11-12 13:42:28, Glauber Costa wrote:
+> [...]
+>> Speaking of it: Tejun's tree still lacks the kmem bits. How hard would
+>> it be for you to merge his branch into a temporary branch of your tree?
+> 
+> review-cpuset-locking is based on a post merge window merges so I cannot
+> merge it as is. I could cherry-pick the series after it is settled. I
+> have no idea how much conflicts this would bring, though.
+> 
+Ok.
 
+I believe the task problem only exist for us for kmem. So I could come
+up with a patchset that only deals with child cgroup creation, and
+ignore attach for now. So long as we have a mechanism that will work for
+it, and don't get lost and forget to patch it when the trees are merged.
 
-Michal, unfortunately i had to boot to another kernel because the one wit=
-h this patch keeps killing my MySQL server :( it was, probably, doing it =
-on OOM in any cgroup - looks like OOM was not choosing processes only fro=
-m cgroup which is out of memory. Here is the log from syslog: http://www.=
-watchdog.sk/lkml/oom_mysqld
+Now, what I am actually seeing with cgroup creation, is that the
+children will copy a lot of the values from the parent, like swappiness,
+hierarchy, etc. Once the child copies it, we should no longer be able to
+change those values in the parent: otherwise we'll get funny things like
+parent.use_hierarchy = 1, child.use_hierarchy = 0.
 
-Maybe i should mention that MySQL server has it's own cgroup (called 'mys=
-ql') but with no limits to any resources.
+One option is to take a global lock in memcg_alloc_css(), and keep it
+locked until we did all the cgroup bookkeeping, and then unlock it in
+css_online. But I am guessing Tejun won't like it very much.
 
-azurIt
+What do you think about a children counter? If we are going to do things
+similar to the attach_in_progress of cpuset, we might very well turn it
+into a direct counter so we don't have to iterate at all.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+The code would look like: (simplified example for use_hierarchy)
+
+memcg_lock();
+if (memcg->nr_children != 0)
+    return -EINVAL;
+else
+    memcg->use_hierarchy = val
+memcg_unlock()
