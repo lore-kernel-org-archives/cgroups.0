@@ -1,73 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] cgroup: use cgroup_addrm_files() in cgroup_clear_directory()
-Date: Fri, 30 Nov 2012 11:47:20 -0800
-Message-ID: <20121130194720.GG3873@htj.dyndns.org>
-References: <1354292489-18434-1-git-send-email-gaofeng@cn.fujitsu.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Fri, 30 Nov 2012 21:43:05 +0100
+Message-ID: <20121130214305.6741FF64@pobox.sk>
+References: <20121126132149.GD17860@dhcp22.suse.cz>, <20121130032918.59B3F780@pobox.sk>, <20121130124506.GH29317@dhcp22.suse.cz>, <20121130144427.51A09169@pobox.sk>, <20121130144431.GI29317@dhcp22.suse.cz>, <20121130160811.6BB25BDD@pobox.sk>, <20121130153942.GL29317@dhcp22.suse.cz>, <20121130165937.F9564EBE@pobox.sk>, <20121130161923.GN29317@dhcp22.suse.cz>, <20121130172651.B6917602@pobox.sk> <20121130165347.GO29317@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=6CgfwADfdhTBywF9Gng2ckoG9xmnXOSl/ti212kNwS4=;
-        b=P2exrxr9RrMY6e+P/X/VGTlvuFqAjlo5KpdCZ5thiiFsClRybAn7XscWxXhofzBcSD
-         Ez4Dgs69hlMhpLAk7XIVVSB/C78ARTWccncyehHPil6jtpKQdDE3bn6a1zhvM27+hcIU
-         VVL6T/ImYvplexlGtwOiqxLtsKfOojYQ3FzNpfKsqNZhYSwQLFQ6kCQW2ZXvR2eoZeRu
-         E8KWV/dyRTovM7HPIucLxfbWFBhQtkVLBhqooprwT9wkRjZG76kw2Ycn1hJ7bgz5VyQP
-         RxiLR4ccpmGtGC5kfnG8HJo8OKsxUd/66gJPCI/YzapJVZRPeYMePRh1K3rDJXCCY7f8
-         aNwA==
-Content-Disposition: inline
-In-Reply-To: <1354292489-18434-1-git-send-email-gaofeng@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20121130165347.GO29317@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Gao feng <gaofeng@cn.fujitsu.com>
-Cc: cgroups@vger.kernel.org, lizefan@huawei.com, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-From 879a3d9dbbde823ac77d39131e7a287f31b8296f Mon Sep 17 00:00:00 2001
-From: Gao feng <gaofeng@cn.fujitsu.com>
-Date: Sat, 1 Dec 2012 00:21:28 +0800
+>The only strange thing I noticed is that some groups have 0 limit. Is
+>this intentional?
+>grep memory.limit_in_bytes cgroups | grep -v uid | sed 's@.*/@@' | sort =
+| uniq -c
+>      3 memory.limit_in_bytes:0
 
-cgroup_clear_directory() incorrectly invokes cgroup_rm_file() on each
-cftset of the target subsystems, which only removes the first file of
-each set.  This leaves dangling files after subsystems are removed
-from a cgroup root via remount.
 
-Use cgroup_addrm_files() to remove all files of target subsystems.
+These are users who are not allowed to run anything.
 
-tj: Move cgroup_addrm_files() prototype decl upwards next to other
-    global declarations.  Commit message updated.
 
-Signed-off-by: Gao feng <gaofeng@cn.fujitsu.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
-Applied to cgroup/for-3.8 with minor updates.  Thanks!
+azur
 
- kernel/cgroup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b186a7e..e1293a9 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -246,6 +246,8 @@ static DEFINE_SPINLOCK(hierarchy_id_lock);
- static int need_forkexit_callback __read_mostly;
- 
- static int cgroup_destroy_locked(struct cgroup *cgrp);
-+static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
-+			      struct cftype cfts[], bool is_add);
- 
- #ifdef CONFIG_PROVE_LOCKING
- int cgroup_lock_is_held(void)
-@@ -964,7 +966,7 @@ static void cgroup_clear_directory(struct dentry *dir, bool base_files,
- 		if (!test_bit(ss->subsys_id, &subsys_mask))
- 			continue;
- 		list_for_each_entry(set, &ss->cftsets, node)
--			cgroup_rm_file(cgrp, set->cfts);
-+			cgroup_addrm_files(cgrp, NULL, set->cfts, false);
- 	}
- 	if (base_files) {
- 		while (!list_empty(&cgrp->files))
--- 
-1.7.11.7
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
