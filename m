@@ -1,56 +1,47 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 2/4] memcg: prevent changes to move_charge_at_immigrate
- during task attach
-Date: Fri, 30 Nov 2012 19:29:39 +0400
-Message-ID: <50B8D0E3.2080901@parallels.com>
-References: <1354282286-32278-1-git-send-email-glommer@parallels.com> <1354282286-32278-3-git-send-email-glommer@parallels.com> <20121130151922.GC3873@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Fri, 30 Nov 2012 16:37:15 +0100
+Message-ID: <20121130153715.GK29317@dhcp22.suse.cz>
+References: <20121125120524.GB10623@dhcp22.suse.cz>
+ <20121125135542.GE10623@dhcp22.suse.cz>
+ <20121126013855.AF118F5E@pobox.sk>
+ <20121126131837.GC17860@dhcp22.suse.cz>
+ <20121126132149.GD17860@dhcp22.suse.cz>
+ <20121130032918.59B3F780@pobox.sk>
+ <20121130124506.GH29317@dhcp22.suse.cz>
+ <20121130144427.51A09169@pobox.sk>
+ <20121130144431.GI29317@dhcp22.suse.cz>
+ <20121130150347.GJ29317@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20121130151922.GC3873@htj.dyndns.org>
+Content-Disposition: inline
+In-Reply-To: <20121130150347.GJ29317@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Content-Transfer-Encoding: 7bit
+To: azurIt <azurit@pobox.sk>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
->>  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
->> +	int ret = -EAGAIN;
->>  
->>  	if (val >= (1 << NR_MOVE_TYPE))
->>  		return -EINVAL;
->> @@ -4123,10 +4130,13 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
->>  	 * inconsistent.
->>  	 */
->>  	cgroup_lock();
->> +	if (memcg->attach_in_progress)
->> +		goto out;
->>  	memcg->move_charge_at_immigrate = val;
->> +	ret = 0;
->> +out:
->>  	cgroup_unlock();
->> -
->> -	return 0;
->> +	return ret;
-> 
-> Unsure whether this is a good behavior. 
-to be honest, I am not so sure myself. I kinda leaned towards this after
-some consideration, because the other solution I saw was basically busy
-waiting...
+On Fri 30-11-12 16:03:47, Michal Hocko wrote:
+[...]
+> Anyway, the more interesting thing is gfp_mask is GFP_NOWAIT allocation
+> from the page fault? Huh this shouldn't happen - ever.
 
-> It's a bit nasty to fail for
-> internal temporary reasons like this.  If it ever causes a problem,
-> the occurrences are likely to be far and between making it difficult
-> to debug.  Can't you determine to immigrate or not in ->can_attach(),
-> record whether to do that or not on the css, and finish it in
-> ->attach() according to that.  There's no need to consult the config
-> multiple times.
-> 
-Well, yeah... that is an option too, and indeed better. Good call.
+OK, it starts making sense now. The message came from
+pagefault_out_of_memory which doesn't have gfp nor the required node
+information any longer. This suggests that VM_FAULT_OOM has been
+returned by the fault handler. So this hasn't been triggered by the page
+fault allocator.
+I am wondering whether this could be caused by the patch but the effect
+of that one should be limitted to the write (unlike the later version
+for -mm tree which hooks into the shmem as well).
 
-I will send it again soon
-
-
+Will have to think about it some more.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
