@@ -1,8 +1,8 @@
 From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
  add_to_page_cache_locked
-Date: Fri, 30 Nov 2012 16:37:15 +0100
-Message-ID: <20121130153715.GK29317@dhcp22.suse.cz>
+Date: Fri, 30 Nov 2012 16:39:42 +0100
+Message-ID: <20121130153942.GL29317@dhcp22.suse.cz>
 References: <20121125120524.GB10623@dhcp22.suse.cz>
  <20121125135542.GE10623@dhcp22.suse.cz>
  <20121126013855.AF118F5E@pobox.sk>
@@ -12,11 +12,11 @@ References: <20121125120524.GB10623@dhcp22.suse.cz>
  <20121130124506.GH29317@dhcp22.suse.cz>
  <20121130144427.51A09169@pobox.sk>
  <20121130144431.GI29317@dhcp22.suse.cz>
- <20121130150347.GJ29317@dhcp22.suse.cz>
+ <20121130160811.6BB25BDD@pobox.sk>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20121130150347.GJ29317@dhcp22.suse.cz>
+In-Reply-To: <20121130160811.6BB25BDD@pobox.sk>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,21 +24,33 @@ Content-Transfer-Encoding: 7bit
 To: azurIt <azurit@pobox.sk>
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Fri 30-11-12 16:03:47, Michal Hocko wrote:
-[...]
-> Anyway, the more interesting thing is gfp_mask is GFP_NOWAIT allocation
-> from the page fault? Huh this shouldn't happen - ever.
+On Fri 30-11-12 16:08:11, azurIt wrote:
+> >DMA32 zone is usually fills up first 4G unless your HW remaps the rest
+> >of the memory above 4G or you have a numa machine and the rest of the
+> >memory is at other node. Could you post your memory map printed during
+> >the boot? (e820: BIOS-provided physical RAM map: and following lines)
+> 
+> 
+> Here is the full boot log:
+> www.watchdog.sk/lkml/kern.log
 
-OK, it starts making sense now. The message came from
-pagefault_out_of_memory which doesn't have gfp nor the required node
-information any longer. This suggests that VM_FAULT_OOM has been
-returned by the fault handler. So this hasn't been triggered by the page
-fault allocator.
-I am wondering whether this could be caused by the patch but the effect
-of that one should be limitted to the write (unlike the later version
-for -mm tree which hooks into the shmem as well).
+The log is not complete. Could you paste the comple dmesg output? Or
+even better, do you have logs from the previous run?
 
-Will have to think about it some more.
+> >You have mentioned that you are comounting with cpuset. If this happens
+> >to be a NUMA machine have you made the access to all nodes available?
+> >Also what does /proc/sys/vm/zone_reclaim_mode says?
+> 
+> 
+> Don't really know what NUMA means and which nodes are you talking
+> about, sorry :(
+
+http://en.wikipedia.org/wiki/Non-Uniform_Memory_Access
+ 
+> # cat /proc/sys/vm/zone_reclaim_mode
+> cat: /proc/sys/vm/zone_reclaim_mode: No such file or directory
+
+OK, so the NUMA is not enabled.
 -- 
 Michal Hocko
 SUSE Labs
