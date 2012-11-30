@@ -1,62 +1,49 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Fri, 30 Nov 2012 16:39:42 +0100
-Message-ID: <20121130153942.GL29317@dhcp22.suse.cz>
-References: <20121125120524.GB10623@dhcp22.suse.cz>
- <20121125135542.GE10623@dhcp22.suse.cz>
- <20121126013855.AF118F5E@pobox.sk>
- <20121126131837.GC17860@dhcp22.suse.cz>
- <20121126132149.GD17860@dhcp22.suse.cz>
- <20121130032918.59B3F780@pobox.sk>
- <20121130124506.GH29317@dhcp22.suse.cz>
- <20121130144427.51A09169@pobox.sk>
- <20121130144431.GI29317@dhcp22.suse.cz>
- <20121130160811.6BB25BDD@pobox.sk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/4] cgroup: warn about broken hierarchies only after
+ css_online
+Date: Fri, 30 Nov 2012 07:45:04 -0800
+Message-ID: <20121130154504.GD3873@htj.dyndns.org>
+References: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+ <1354282286-32278-2-git-send-email-glommer@parallels.com>
+ <20121130151158.GB3873@htj.dyndns.org>
+ <50B8CD32.4080807@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=jmArzvexld//GZHZG2fztk0d566FhQpHOEvaIJj03iw=;
+        b=DpsySHgU0uV4beRkjBhFp1sG9TvpVUbVnK2IuwtBHXEGvC28sjkq5xHZsD2xmu+Nns
+         IJbcTqepJPnsw1n+Q5i5fIs62VuSXTNPemwqtywt8JZ4JDpFGvnSoeVqonIaHkqWPcjS
+         G+Q/oODUE+8E71ZM/iwyLZgU0t9ar4lPBVHHXwcUbP3SaV0Ra/M7NG0+atH4vOwOLk5G
+         gYdZxeshCayrHcA3A8zVbDGWYkDrwLC3z/xes57nu77/MpucKDf8BFUez3HapS5h0jYG
+         53knNim594+Kkf2hldLRs9L/OBMV+AKi3VhJW711gqguzDfRLfeDx1dMl/pt9cfkYhWC
+         rAiw==
 Content-Disposition: inline
-In-Reply-To: <20121130160811.6BB25BDD@pobox.sk>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <50B8CD32.4080807-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-On Fri 30-11-12 16:08:11, azurIt wrote:
-> >DMA32 zone is usually fills up first 4G unless your HW remaps the rest
-> >of the memory above 4G or you have a numa machine and the rest of the
-> >memory is at other node. Could you post your memory map printed during
-> >the boot? (e820: BIOS-provided physical RAM map: and following lines)
+Hello, Glauber.
+
+On Fri, Nov 30, 2012 at 07:13:54PM +0400, Glauber Costa wrote:
+> > Applied to cgroup/for-3.8.  Thanks!
+> > 
 > 
-> 
-> Here is the full boot log:
-> www.watchdog.sk/lkml/kern.log
+> We just need to be careful because when we merge it with morton's, more
+> bits will need converting.
 
-The log is not complete. Could you paste the comple dmesg output? Or
-even better, do you have logs from the previous run?
+This one is in cgrou proper and I think it should be safe, right?
+Other ones will be difficult.  Not sure how to handle them ATM.  An
+easy way out would be deferring to the next merge window as it's so
+close anyway.  Michal?
 
-> >You have mentioned that you are comounting with cpuset. If this happens
-> >to be a NUMA machine have you made the access to all nodes available?
-> >Also what does /proc/sys/vm/zone_reclaim_mode says?
-> 
-> 
-> Don't really know what NUMA means and which nodes are you talking
-> about, sorry :(
+Thanks.
 
-http://en.wikipedia.org/wiki/Non-Uniform_Memory_Access
- 
-> # cat /proc/sys/vm/zone_reclaim_mode
-> cat: /proc/sys/vm/zone_reclaim_mode: No such file or directory
-
-OK, so the NUMA is not enabled.
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
