@@ -1,33 +1,57 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Fri, 30 Nov 2012 14:44:27 +0100
-Message-ID: <20121130144427.51A09169@pobox.sk>
-References: <20121123074023.GA24698@dhcp22.suse.cz>, <20121123102137.10D6D653@pobox.sk>, <20121123100438.GF24698@dhcp22.suse.cz>, <20121125011047.7477BB5E@pobox.sk>, <20121125120524.GB10623@dhcp22.suse.cz>, <20121125135542.GE10623@dhcp22.suse.cz>, <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz>, <20121126132149.GD17860@dhcp22.suse.cz>, <20121130032918.59B3F780@pobox.sk> <20121130124506.GH29317@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Fri, 30 Nov 2012 15:44:31 +0100
+Message-ID: <20121130144431.GI29317@dhcp22.suse.cz>
+References: <20121123100438.GF24698@dhcp22.suse.cz>
+ <20121125011047.7477BB5E@pobox.sk>
+ <20121125120524.GB10623@dhcp22.suse.cz>
+ <20121125135542.GE10623@dhcp22.suse.cz>
+ <20121126013855.AF118F5E@pobox.sk>
+ <20121126131837.GC17860@dhcp22.suse.cz>
+ <20121126132149.GD17860@dhcp22.suse.cz>
+ <20121130032918.59B3F780@pobox.sk>
+ <20121130124506.GH29317@dhcp22.suse.cz>
+ <20121130144427.51A09169@pobox.sk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20121130124506.GH29317@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121130144427.51A09169-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
->Anyway your system is under both global and local memory pressure. You
->didn't see apache going down previously because it was probably the one
->which was stuck and could be killed.
->Anyway you need to setup your system more carefully.
+On Fri 30-11-12 14:44:27, azurIt wrote:
+> >Anyway your system is under both global and local memory pressure. You
+> >didn't see apache going down previously because it was probably the one
+> >which was stuck and could be killed.
+> >Anyway you need to setup your system more carefully.
+> 
+> 
+> There is, also, an evidence that system has enough of memory! :) Just
+> take column 'rss' from process list in OOM message and sum it - you
+> will get 2489911. It's probably in KB so it's about 2.4 GB. System has
+> 14 GB of RAM so this also match data on my graph - 2.4 is about 17% of
+> 14.
 
+Hmm, that corresponds to the ZONE_DMA32 size pretty nicely but that zone
+is hardly touched:
+Nov 30 02:53:56 server01 kernel: [  818.241291] DMA32 free:2523636kB min:2672kB low:3340kB high:4008kB active_anon:0kB inactive_anon:0kB active_file:0kB inactive_file:0kB unevictable:0kB isolated(anon):0kB isolated(file):0kB present:2542248kB mlocked:0kB dirty:0kB writeback:0kB mapped:4kB shmem:0kB slab_reclaimable:0kB slab_unreclaimable:0kB kernel_stack:0kB pagetables:0kB unstable:0kB bounce:0kB writeback_tmp:0kB pages_scanned:0 all_unreclaimable? no
 
-There is, also, an evidence that system has enough of memory! :) Just tak=
-e column 'rss' from process list in OOM message and sum it - you will get=
- 2489911. It's probably in KB so it's about 2.4 GB. System has 14 GB of R=
-AM so this also match data on my graph - 2.4 is about 17% of 14.
+DMA32 zone is usually fills up first 4G unless your HW remaps the rest
+of the memory above 4G or you have a numa machine and the rest of the
+memory is at other node. Could you post your memory map printed during
+the boot? (e820: BIOS-provided physical RAM map: and following lines)
 
-azur
+There is also ZONE_NORMAL which is also not used much
+Nov 30 02:53:56 server01 kernel: [  818.242163] Normal free:6924716kB min:12512kB low:15640kB high:18768kB active_anon:1463128kB inactive_anon:2072kB active_file:1803964kB inactive_file:1072628kB unevictable:3924kB isolated(anon):0kB isolated(file):0kB present:11893760kB mlocked:3924kB dirty:1000kB writeback:776kB mapped:35656kB shmem:3828kB slab_reclaimable:202560kB slab_unreclaimable:50696kB kernel_stack:2944kB pagetables:158616kB unstable:0kB bounce:0kB writeback_tmp:0kB pages_scanned:0 all_unreclaimable? no
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+You have mentioned that you are comounting with cpuset. If this happens
+to be a NUMA machine have you made the access to all nodes available?
+Also what does /proc/sys/vm/zone_reclaim_mode says?
+-- 
+Michal Hocko
+SUSE Labs
