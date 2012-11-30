@@ -1,36 +1,171 @@
-From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Fri, 30 Nov 2012 13:53:30 +0100
-Message-ID: <20121130135330.6D012B71@pobox.sk>
-References: <20121123074023.GA24698@dhcp22.suse.cz>, <20121123102137.10D6D653@pobox.sk>, <20121123100438.GF24698@dhcp22.suse.cz>, <20121125011047.7477BB5E@pobox.sk>, <20121125120524.GB10623@dhcp22.suse.cz>, <20121125135542.GE10623@dhcp22.suse.cz>, <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz>, <20121126132149.GD17860@dhcp22.suse.cz>, <20121130032918.59B3F780@pobox.sk> <20121130124506.GH29317@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121130124506.GH29317-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH 2/4] memcg: prevent changes to move_charge_at_immigrate during task attach
+Date: Fri, 30 Nov 2012 17:31:24 +0400
+Message-ID: <1354282286-32278-3-git-send-email-glommer@parallels.com>
+References: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>
 
->Anyway your system is under both global and local memory pressure. You
->didn't see apache going down previously because it was probably the one
->which was stuck and could be killed.
->Anyway you need to setup your system more carefully.
+Currently, we rely on the cgroup_lock() to prevent changes to
+move_charge_at_immigrate during task migration. We can do something
+similar to what cpuset is doing, and flip a flag to tell us if task
+movement is taking place.
 
+In theory, we could busy loop waiting for that value to return to 0 - it
+will eventually. But I am judging that returning EAGAIN is not too much
+of a problem, since file writers already should be checking for error
+codes anyway.
 
-No, it wasn't, i'm 1000% sure (i was on SSH). Here is the memory usage graph from that system on that time:
-http://www.watchdog.sk/lkml/memory.png
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+---
+ mm/memcontrol.c | 64 +++++++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 51 insertions(+), 13 deletions(-)
 
-The blank part is rebooting into new kernel. MySQL server was killed several times, then i rebooted into previous kernel and problem was gone (not a single MySQL kill). You can see two MySQL kills there on 03:54 and 03:04:30.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index feba87d..d80b6b5 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -311,7 +311,13 @@ struct mem_cgroup {
+ 	 * Should we move charges of a task when a task is moved into this
+ 	 * mem_cgroup ? And what type of charges should we move ?
+ 	 */
+-	unsigned long 	move_charge_at_immigrate;
++	unsigned long	move_charge_at_immigrate;
++        /*
++	 * Tasks are being attached to this memcg.  Used mostly to prevent
++	 * changes to move_charge_at_immigrate
++	 */
++        int attach_in_progress;
++
+ 	/*
+ 	 * set > 0 if pages under this cgroup are moving to other cgroup.
+ 	 */
+@@ -4114,6 +4120,7 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
+ 					struct cftype *cft, u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++	int ret = -EAGAIN;
+ 
+ 	if (val >= (1 << NR_MOVE_TYPE))
+ 		return -EINVAL;
+@@ -4123,10 +4130,13 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
+ 	 * inconsistent.
+ 	 */
+ 	cgroup_lock();
++	if (memcg->attach_in_progress)
++		goto out;
+ 	memcg->move_charge_at_immigrate = val;
++	ret = 0;
++out:
+ 	cgroup_unlock();
+-
+-	return 0;
++	return ret;
+ }
+ #else
+ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
+@@ -5443,12 +5453,12 @@ static void mem_cgroup_clear_mc(void)
+ 	mem_cgroup_end_move(from);
+ }
+ 
+-static int mem_cgroup_can_attach(struct cgroup *cgroup,
+-				 struct cgroup_taskset *tset)
++
++static int __mem_cgroup_can_attach(struct mem_cgroup *memcg,
++				   struct cgroup_taskset *tset)
+ {
+ 	struct task_struct *p = cgroup_taskset_first(tset);
+ 	int ret = 0;
+-	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
+ 
+ 	if (memcg->move_charge_at_immigrate) {
+ 		struct mm_struct *mm;
+@@ -5482,8 +5492,8 @@ static int mem_cgroup_can_attach(struct cgroup *cgroup,
+ 	return ret;
+ }
+ 
+-static void mem_cgroup_cancel_attach(struct cgroup *cgroup,
+-				     struct cgroup_taskset *tset)
++static void __mem_cgroup_cancel_attach(struct mem_cgroup *memcg,
++				       struct cgroup_taskset *tset)
+ {
+ 	mem_cgroup_clear_mc();
+ }
+@@ -5630,8 +5640,8 @@ retry:
+ 	up_read(&mm->mmap_sem);
+ }
+ 
+-static void mem_cgroup_move_task(struct cgroup *cont,
+-				 struct cgroup_taskset *tset)
++static void __mem_cgroup_move_task(struct mem_cgroup *memcg,
++				   struct cgroup_taskset *tset)
+ {
+ 	struct task_struct *p = cgroup_taskset_first(tset);
+ 	struct mm_struct *mm = get_task_mm(p);
+@@ -5645,20 +5655,48 @@ static void mem_cgroup_move_task(struct cgroup *cont,
+ 		mem_cgroup_clear_mc();
+ }
+ #else	/* !CONFIG_MMU */
++static int __mem_cgroup_can_attach(struct mem_cgroup *memcg,
++				   struct cgroup_taskset *tset)
++{
++	return 0;
++}
++
++static void __mem_cgroup_cancel_attach(struct mem_cgroup *memcg,
++				       struct cgroup_taskset *tset)
++{
++}
++
++static void __mem_cgroup_move_task(struct mem_cgroup *memcg,
++				   struct cgroup_taskset *tset)
++{
++}
++#endif
+ static int mem_cgroup_can_attach(struct cgroup *cgroup,
+ 				 struct cgroup_taskset *tset)
+ {
+-	return 0;
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
++
++	memcg->attach_in_progress++;
++	return __mem_cgroup_can_attach(memcg, tset);
+ }
++
+ static void mem_cgroup_cancel_attach(struct cgroup *cgroup,
+ 				     struct cgroup_taskset *tset)
+ {
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
++
++	__mem_cgroup_cancel_attach(memcg, tset);
++	memcg->attach_in_progress--;
+ }
+-static void mem_cgroup_move_task(struct cgroup *cont,
++
++static void mem_cgroup_move_task(struct cgroup *cgroup,
+ 				 struct cgroup_taskset *tset)
+ {
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
++
++	__mem_cgroup_move_task(memcg, tset);
++	memcg->attach_in_progress--;
+ }
+-#endif
+ 
+ struct cgroup_subsys mem_cgroup_subsys = {
+ 	.name = "memory",
+-- 
+1.7.11.7
 
-
->
->> Maybe i should mention that MySQL server has it's own cgroup (called
->> 'mysql') but with no limits to any resources.
->
->Where is that group in the hierarchy?
-
-
-
-In root.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
