@@ -1,67 +1,85 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
-	cgroup core
-Date: Fri, 30 Nov 2012 14:00:21 +0400
-Message-ID: <50B883B5.8020705@parallels.com>
+ cgroup core
+Date: Fri, 30 Nov 2012 09:33:53 +0100
+Message-ID: <20121130083353.GC29317@dhcp22.suse.cz>
 References: <1354138460-19286-1-git-send-email-tj@kernel.org>
-	<50B8263C.7060908@jp.fujitsu.com> <50B875B4.2020507@parallels.com>
-	<20121130092435.GD29317@dhcp22.suse.cz>
-	<50B87F84.7040206@parallels.com>
-	<20121130094959.GE29317@dhcp22.suse.cz>
+ <50B8263C.7060908@jp.fujitsu.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <50B8263C.7060908@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20121130094959.GE29317-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, paul@paulmenage.org, glommer@parallels.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, peterz@infradead.org, bsingharora@gmail.com, hannes@cmpxchg.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On 11/30/2012 01:49 PM, Michal Hocko wrote:
-> On Fri 30-11-12 13:42:28, Glauber Costa wrote:
-> [...]
->> Speaking of it: Tejun's tree still lacks the kmem bits. How hard would
->> it be for you to merge his branch into a temporary branch of your tree?
+On Fri 30-11-12 12:21:32, KAMEZAWA Hiroyuki wrote:
+> (2012/11/29 6:34), Tejun Heo wrote:
+> > Hello, guys.
+> > 
+> > Depending on cgroup core locking - cgroup_mutex - is messy and makes
+> > cgroup prone to locking dependency problems.  The current code already
+> > has lock dependency loop - memcg nests get_online_cpus() inside
+> > cgroup_mutex.  cpuset the other way around.
+> > 
+> > Regardless of the locking details, whatever is protecting cgroup has
+> > inherently to be something outer to most other locking constructs.
+> > cgroup calls into a lot of major subsystems which in turn have to
+> > perform subsystem-specific locking.  Trying to nest cgroup
+> > synchronization inside other locks isn't something which can work
+> > well.
+> > 
+> > cgroup now has enough API to allow subsystems to implement their own
+> > locking and cgroup_mutex is scheduled to be made private to cgroup
+> > core.  This patchset makes cpuset implement its own locking instead of
+> > relying on cgroup_mutex.
+> > 
+> > cpuset is rather nasty in this respect.  Some of it seems to have come
+> > from the implementation history - cgroup core grew out of cpuset - but
+> > big part stems from cpuset's need to migrate tasks to an ancestor
+> > cgroup when an hotunplug event makes a cpuset empty (w/o any cpu or
+> > memory).
+> > 
+> > This patchset decouples cpuset locking from cgroup_mutex.  After the
+> > patchset, cpuset uses cpuset-specific cpuset_mutex instead of
+> > cgroup_mutex.  This also removes the lockdep warning triggered during
+> > cpu offlining (see 0009).
+> > 
+> > Note that this leaves memcg as the only external user of cgroup_mutex.
+> > Michal, Kame, can you guys please convert memcg to use its own locking
+> > too?
+> > 
 > 
-> review-cpuset-locking is based on a post merge window merges so I cannot
-> merge it as is. I could cherry-pick the series after it is settled. I
-> have no idea how much conflicts this would bring, though.
+> Hmm. let me see....at quick glance cgroup_lock() is used at
+>   hierarchy policy change
+>   kmem_limit
+>   migration policy change
+>   swapiness change
+>   oom control
 > 
-Ok.
+> Because all aboves takes care of changes in hierarchy,
+> Having a new memcg's mutex in ->create() may be a way.
+> 
+> Ah, hm, Costa is mentioning task-attach. is the task-attach problem in
+> memcg ?
 
-I believe the task problem only exist for us for kmem. So I could come
-up with a patchset that only deals with child cgroup creation, and
-ignore attach for now. So long as we have a mechanism that will work for
-it, and don't get lost and forget to patch it when the trees are merged.
+Yes because we do not want to leak charges if we race with one of the
+above hierarchy operation. Swappiness and oom control are not a big
+deal. Same applies to migration policy change.
+Those could be solved by using the same memcg lock in the attach hook.
+Hierarchy policy change would be a bigger issue because the task is
+already linked to the group when the callback is called. Same applies to
+kmem_limit. Sorry I didn't have time to look into this deeper so I
+cannot offer any solution right now.
+-- 
+Michal Hocko
+SUSE Labs
 
-Now, what I am actually seeing with cgroup creation, is that the
-children will copy a lot of the values from the parent, like swappiness,
-hierarchy, etc. Once the child copies it, we should no longer be able to
-change those values in the parent: otherwise we'll get funny things like
-parent.use_hierarchy = 1, child.use_hierarchy = 0.
-
-One option is to take a global lock in memcg_alloc_css(), and keep it
-locked until we did all the cgroup bookkeeping, and then unlock it in
-css_online. But I am guessing Tejun won't like it very much.
-
-What do you think about a children counter? If we are going to do things
-similar to the attach_in_progress of cpuset, we might very well turn it
-into a direct counter so we don't have to iterate at all.
-
-The code would look like: (simplified example for use_hierarchy)
-
-memcg_lock();
-if (memcg->nr_children != 0)
-    return -EINVAL;
-else
-    memcg->use_hierarchy = val
-memcg_unlock()
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
