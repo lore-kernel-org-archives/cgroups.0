@@ -1,72 +1,33 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 1/4] cgroup: warn about broken hierarchies only after css_online
-Date: Fri, 30 Nov 2012 17:31:23 +0400
-Message-ID: <1354282286-32278-2-git-send-email-glommer@parallels.com>
-References: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Fri, 30 Nov 2012 14:44:27 +0100
+Message-ID: <20121130144427.51A09169@pobox.sk>
+References: <20121123074023.GA24698@dhcp22.suse.cz>, <20121123102137.10D6D653@pobox.sk>, <20121123100438.GF24698@dhcp22.suse.cz>, <20121125011047.7477BB5E@pobox.sk>, <20121125120524.GB10623@dhcp22.suse.cz>, <20121125135542.GE10623@dhcp22.suse.cz>, <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz>, <20121126132149.GD17860@dhcp22.suse.cz>, <20121130032918.59B3F780@pobox.sk> <20121130124506.GH29317@dhcp22.suse.cz>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+In-Reply-To: <20121130124506.GH29317@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-If everything goes right, it shouldn't really matter if we are spitting
-this warning after css_alloc or css_online. If we fail between then,
-there are some ill cases where we would previously see the message and
-now we won't (like if the files fail to be created).
+>Anyway your system is under both global and local memory pressure. You
+>didn't see apache going down previously because it was probably the one
+>which was stuck and could be killed.
+>Anyway you need to setup your system more carefully.
 
-I believe it really shouldn't matter: this message is intended in spirit
-to be shown when creation succeeds, but with insane settings.
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
----
- kernel/cgroup.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+There is, also, an evidence that system has enough of memory! :) Just tak=
+e column 'rss' from process list in OOM message and sum it - you will get=
+ 2489911. It's probably in KB so it's about 2.4 GB. System has 14 GB of R=
+AM so this also match data on my graph - 2.4 is about 17% of 14.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 56ed543..b35a10c 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4151,15 +4151,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 			if (err)
- 				goto err_free_all;
- 		}
--
--		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
--		    parent->parent) {
--			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
--				   current->comm, current->pid, ss->name);
--			if (!strcmp(ss->name, "memory"))
--				pr_warning("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
--			ss->warned_broken_hierarchy = true;
--		}
- 	}
- 
- 	/*
-@@ -4188,6 +4179,15 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 		err = online_css(ss, cgrp);
- 		if (err)
- 			goto err_destroy;
-+
-+		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
-+		    parent->parent) {
-+			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
-+				   current->comm, current->pid, ss->name);
-+			if (!strcmp(ss->name, "memory"))
-+				pr_warning("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
-+			ss->warned_broken_hierarchy = true;
-+		}
- 	}
- 
- 	err = cgroup_populate_dir(cgrp, true, root->subsys_mask);
--- 
-1.7.11.7
+azur
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
