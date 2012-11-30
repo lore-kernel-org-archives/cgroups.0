@@ -1,50 +1,47 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Fri, 30 Nov 2012 17:53:47 +0100
-Message-ID: <20121130165347.GO29317@dhcp22.suse.cz>
-References: <20121126132149.GD17860@dhcp22.suse.cz>
- <20121130032918.59B3F780@pobox.sk>
- <20121130124506.GH29317@dhcp22.suse.cz>
- <20121130144427.51A09169@pobox.sk>
- <20121130144431.GI29317@dhcp22.suse.cz>
- <20121130160811.6BB25BDD@pobox.sk>
- <20121130153942.GL29317@dhcp22.suse.cz>
- <20121130165937.F9564EBE@pobox.sk>
- <20121130161923.GN29317@dhcp22.suse.cz>
- <20121130172651.B6917602@pobox.sk>
-Mime-Version: 1.0
+From: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: use cgroup_addrm_files in cgroup_clear_directory
+Date: Sat, 1 Dec 2012 00:21:28 +0800
+Message-ID: <1354292489-18434-1-git-send-email-gaofeng@cn.fujitsu.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20121130172651.B6917602-Rm0zKEqwvD4@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-On Fri 30-11-12 17:26:51, azurIt wrote:
-> >Could you also post your complete containers configuration, maybe there
-> >is something strange in there (basically grep . -r YOUR_CGROUP_MNT
-> >except for tasks files which are of no use right now).
-> 
-> 
-> Here it is:
-> http://www.watchdog.sk/lkml/cgroups.gz
+cgroup_rm_file only remove the first file. after remount,
+the cgroup subsystem will be unloaded with it's files left.
 
-The only strange thing I noticed is that some groups have 0 limit. Is
-this intentional?
-grep memory.limit_in_bytes cgroups | grep -v uid | sed 's@.*/@@' | sort | uniq -c
-      3 memory.limit_in_bytes:0
-    254 memory.limit_in_bytes:104857600
-    107 memory.limit_in_bytes:157286400
-     68 memory.limit_in_bytes:209715200
-     10 memory.limit_in_bytes:262144000
-     28 memory.limit_in_bytes:314572800
-      1 memory.limit_in_bytes:346030080
-      1 memory.limit_in_bytes:524288000
-      2 memory.limit_in_bytes:9223372036854775807
+use cgroup_addrm_files to remove all files of subsystem.
+
+Signed-off-by: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/cgroup.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index f24f724..e5233b7 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -970,6 +970,8 @@ static int cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ 	return -ENOENT;
+ }
+ 
++static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
++			      struct cftype cfts[], bool is_add);
+ /**
+  * cgroup_clear_directory - selective removal of base and subsystem files
+  * @dir: directory containing the files
+@@ -987,7 +989,7 @@ static void cgroup_clear_directory(struct dentry *dir, bool base_files,
+ 		if (!test_bit(ss->subsys_id, &subsys_mask))
+ 			continue;
+ 		list_for_each_entry(set, &ss->cftsets, node)
+-			cgroup_rm_file(cgrp, set->cfts);
++			cgroup_addrm_files(cgrp, NULL, set->cfts, false);
+ 	}
+ 	if (base_files) {
+ 		while (!list_empty(&cgrp->files))
 -- 
-Michal Hocko
-SUSE Labs
+1.7.7.6
