@@ -1,60 +1,28 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Fri, 30 Nov 2012 17:19:23 +0100
-Message-ID: <20121130161923.GN29317@dhcp22.suse.cz>
-References: <20121126013855.AF118F5E@pobox.sk>
- <20121126131837.GC17860@dhcp22.suse.cz>
- <20121126132149.GD17860@dhcp22.suse.cz>
- <20121130032918.59B3F780@pobox.sk>
- <20121130124506.GH29317@dhcp22.suse.cz>
- <20121130144427.51A09169@pobox.sk>
- <20121130144431.GI29317@dhcp22.suse.cz>
- <20121130160811.6BB25BDD@pobox.sk>
- <20121130153942.GL29317@dhcp22.suse.cz>
- <20121130165937.F9564EBE@pobox.sk>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Fri, 30 Nov 2012 17:26:51 +0100
+Message-ID: <20121130172651.B6917602@pobox.sk>
+References: <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz>, <20121126132149.GD17860@dhcp22.suse.cz>, <20121130032918.59B3F780@pobox.sk>, <20121130124506.GH29317@dhcp22.suse.cz>, <20121130144427.51A09169@pobox.sk>, <20121130144431.GI29317@dhcp22.suse.cz>, <20121130160811.6BB25BDD@pobox.sk>, <20121130153942.GL29317@dhcp22.suse.cz>, <20121130165937.F9564EBE@pobox.sk> <20121130161923.GN29317@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20121130165937.F9564EBE@pobox.sk>
+In-Reply-To: <20121130161923.GN29317@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-On Fri 30-11-12 16:59:37, azurIt wrote:
-> >> Here is the full boot log:
-> >> www.watchdog.sk/lkml/kern.log
-> >
-> >The log is not complete. Could you paste the comple dmesg output? Or
-> >even better, do you have logs from the previous run?
-> 
-> 
-> What is missing there? All kernel messages are logging into
-> /var/log/kern.log (it's the same as dmesg), dmesg itself was already
-> rewrited by other messages. I think it's all what that kernel printed.
+>Could you also post your complete containers configuration, maybe there
+>is something strange in there (basically grep . -r YOUR_CGROUP_MNT
+>except for tasks files which are of no use right now).
 
-Early boot messages are missing - so exactly the BIOS memory map I was
-asking for. As the NUMA has been excluded it is probably not that
-relevant anymore.
-The important question is why you see VM_FAULT_OOM and whether memcg
-charging failure can trigger that. I don not see how this could happen
-right now because __GFP_NORETRY is not used for user pages (except for
-THP which disable memcg OOM already), file backed page faults (aka
-__do_fault) use mem_cgroup_newpage_charge which doesn't disable OOM.
-This is a real head scratcher.
 
-Could you also post your complete containers configuration, maybe there
-is something strange in there (basically grep . -r YOUR_CGROUP_MNT
-except for tasks files which are of no use right now).
--- 
-Michal Hocko
-SUSE Labs
+Here it is:
+http://www.watchdog.sk/lkml/cgroups.gz
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
