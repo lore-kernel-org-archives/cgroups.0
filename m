@@ -1,63 +1,119 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 0/4] replace cgroup_lock with local lock in memcg
-Date: Fri, 30 Nov 2012 17:31:22 +0400
-Message-ID: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH 3/4] memcg: split part of memcg creation to css_online
+Date: Fri, 30 Nov 2012 17:31:25 +0400
+Message-ID: <1354282286-32278-4-git-send-email-glommer@parallels.com>
+References: <1354282286-32278-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1354282286-32278-1-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>
 
-Hi,
+Although there is arguably some value in doing this per se, the main
+goal of this patch is to make room for the locking changes to come.
 
-In memcg, we use the cgroup_lock basically to synchronize against two events:
-attaching tasks and children to a cgroup.
+With all the value assignment from parent happening in a context where
+our iterators can already be used, we can safely lock against value
+change in some key values like use_hierarchy, without resorting to the
+cgroup core at all.
 
-For the problem of attaching tasks, I am using something similar to cpusets:
-when task attaching starts, we will flip a flag "attach_in_progress", that will
-be flipped down when it finishes. This way, all readers can know that a task is
-joining the group and take action accordingly. With this, we can guarantee that
-the behavior of move_charge_at_immigrate continues safe
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+---
+ mm/memcontrol.c | 52 +++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 35 insertions(+), 17 deletions(-)
 
-Protecting against children creation requires a bit more work. For those, the
-calls to cgroup_lock() all live in handlers like mem_cgroup_hierarchy_write(),
-where we change a tunable in the group, that is hierarchy-related. For
-instance, the use_hierarchy flag cannot be changed if the cgroup already have
-children.
-
-Furthermore, those values are propageted from the parent to the child when a
-new child is created. So if we don't lock like this, we can end up with the
-following situation:
-
-A                                   B
- memcg_css_alloc()                       mem_cgroup_hierarchy_write()
- copy use hierarchy from parent          change use hierarchy in parent
- finish creation.
-
-This is mainly because during create, we are still not fully connected to the
-css tree. So all iterators and the such that we could use, will fail to show
-that the group has children.
-
-My observation is that all of creation can proceed in parallel with those
-tasks, except value assignment. So what this patchseries does is to first move
-all value assignment that is dependent on parent values from css_alloc to
-css_online, where the iterators all work, and then we lock only the value
-assignment. This will guarantee that parent and children always have
-consistent values.
-
-Glauber Costa (4):
-  cgroup: warn about broken hierarchies only after css_online
-  memcg: prevent changes to move_charge_at_immigrate during task attach
-  memcg: split part of memcg creation to css_online
-  memcg: replace cgroup_lock with memcg specific memcg_lock
-
- kernel/cgroup.c |  18 +++----
- mm/memcontrol.c | 164 +++++++++++++++++++++++++++++++++++++++++---------------
- 2 files changed, 129 insertions(+), 53 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d80b6b5..b6d352f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5023,12 +5023,40 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+ 			INIT_WORK(&stock->work, drain_local_stock);
+ 		}
+ 		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
+-	} else {
+-		parent = mem_cgroup_from_cont(cont->parent);
+-		memcg->use_hierarchy = parent->use_hierarchy;
+-		memcg->oom_kill_disable = parent->oom_kill_disable;
++
++		res_counter_init(&memcg->res, NULL);
++		res_counter_init(&memcg->memsw, NULL);
+ 	}
+ 
++	memcg->last_scanned_node = MAX_NUMNODES;
++	INIT_LIST_HEAD(&memcg->oom_notify);
++	atomic_set(&memcg->refcnt, 1);
++	memcg->move_charge_at_immigrate = 0;
++	mutex_init(&memcg->thresholds_lock);
++	spin_lock_init(&memcg->move_lock);
++
++	return &memcg->css;
++
++free_out:
++	__mem_cgroup_free(memcg);
++	return ERR_PTR(error);
++}
++
++static int
++mem_cgroup_css_online(struct cgroup *cont)
++{
++	struct mem_cgroup *memcg, *parent;
++	int error = 0;
++
++	if (!cont->parent)
++		return 0;
++
++	memcg = mem_cgroup_from_cont(cont);
++	parent = mem_cgroup_from_cont(cont->parent);
++
++	memcg->use_hierarchy = parent->use_hierarchy;
++	memcg->oom_kill_disable = parent->oom_kill_disable;
++
+ 	if (parent && parent->use_hierarchy) {
+ 		res_counter_init(&memcg->res, &parent->res);
+ 		res_counter_init(&memcg->memsw, &parent->memsw);
+@@ -5050,15 +5078,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+ 		if (parent && parent != root_mem_cgroup)
+ 			mem_cgroup_subsys.broken_hierarchy = true;
+ 	}
+-	memcg->last_scanned_node = MAX_NUMNODES;
+-	INIT_LIST_HEAD(&memcg->oom_notify);
+ 
+-	if (parent)
+-		memcg->swappiness = mem_cgroup_swappiness(parent);
+-	atomic_set(&memcg->refcnt, 1);
+-	memcg->move_charge_at_immigrate = 0;
+-	mutex_init(&memcg->thresholds_lock);
+-	spin_lock_init(&memcg->move_lock);
++	memcg->swappiness = mem_cgroup_swappiness(parent);
+ 
+ 	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
+ 	if (error) {
+@@ -5068,12 +5089,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+ 		 * call __mem_cgroup_free, so return directly
+ 		 */
+ 		mem_cgroup_put(memcg);
+-		return ERR_PTR(error);
+ 	}
+-	return &memcg->css;
+-free_out:
+-	__mem_cgroup_free(memcg);
+-	return ERR_PTR(error);
++	return error;
+ }
+ 
+ static void mem_cgroup_css_offline(struct cgroup *cont)
+@@ -5702,6 +5719,7 @@ struct cgroup_subsys mem_cgroup_subsys = {
+ 	.name = "memory",
+ 	.subsys_id = mem_cgroup_subsys_id,
+ 	.css_alloc = mem_cgroup_css_alloc,
++	.css_online = mem_cgroup_css_online,
+ 	.css_offline = mem_cgroup_css_offline,
+ 	.css_free = mem_cgroup_css_free,
+ 	.can_attach = mem_cgroup_can_attach,
 -- 
 1.7.11.7
 
