@@ -1,45 +1,51 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Fri, 30 Nov 2012 16:08:11 +0100
-Message-ID: <20121130160811.6BB25BDD@pobox.sk>
-References: <20121123100438.GF24698@dhcp22.suse.cz>, <20121125011047.7477BB5E@pobox.sk>, <20121125120524.GB10623@dhcp22.suse.cz>, <20121125135542.GE10623@dhcp22.suse.cz>, <20121126013855.AF118F5E@pobox.sk>, <20121126131837.GC17860@dhcp22.suse.cz>, <20121126132149.GD17860@dhcp22.suse.cz>, <20121130032918.59B3F780@pobox.sk>, <20121130124506.GH29317@dhcp22.suse.cz>, <20121130144427.51A09169@pobox.sk> <20121130144431.GI29317@dhcp22.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+ cgroup core
+Date: Fri, 30 Nov 2012 19:09:49 +0400
+Message-ID: <50B8CC3D.3040901@parallels.com>
+References: <1354138460-19286-1-git-send-email-tj@kernel.org> <50B8263C.7060908@jp.fujitsu.com> <50B875B4.2020507@parallels.com> <20121130092435.GD29317@dhcp22.suse.cz> <50B87F84.7040206@parallels.com> <20121130094959.GE29317@dhcp22.suse.cz> <50B883B5.8020705@parallels.com> <20121130145924.GA3873@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20121130144431.GI29317@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121130145924.GA3873-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
->DMA32 zone is usually fills up first 4G unless your HW remaps the rest
->of the memory above 4G or you have a numa machine and the rest of the
->memory is at other node. Could you post your memory map printed during
->the boot? (e820: BIOS-provided physical RAM map: and following lines)
+On 11/30/2012 06:59 PM, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, Nov 30, 2012 at 02:00:21PM +0400, Glauber Costa wrote:
+>> Now, what I am actually seeing with cgroup creation, is that the
+>> children will copy a lot of the values from the parent, like swappiness,
+>> hierarchy, etc. Once the child copies it, we should no longer be able to
+>> change those values in the parent: otherwise we'll get funny things like
+>> parent.use_hierarchy = 1, child.use_hierarchy = 0.
+> 
+> So, the best way to do this is from ->css_online().  If memcg
+> synchronizes and inherits from ->css_online(), it can guarantee that
+> the new cgroup will be visible in any following iterations.  Just have
+> an online flag which is turned on and off from ->css_on/offline() and
+> ignore any cgroups w/o online set.
+> 
+>> One option is to take a global lock in memcg_alloc_css(), and keep it
+>> locked until we did all the cgroup bookkeeping, and then unlock it in
+>> css_online. But I am guessing Tejun won't like it very much.
+> 
+> No, please *NEVER* *EVER* do that.  You'll be creating a bunch of
+> locking dependencies as cgroup walks through different controllers.
+> 
+> memcg should be able to synchornize fully both css on/offlining and
+> task attachments in memcg proper.  Let's please be boring about
+> locking.
+> 
 
+Of course, there was a purely rhetorical statement, as indicated by
+"Tejun won't like it very much" =p
 
-Here is the full boot log:
-www.watchdog.sk/lkml/kern.log
+Take a look at the final result, I just posted a couple of hours ago.
+Let me know if there is still something extremely funny, and I'll look
+into fixing it.
 
-
->You have mentioned that you are comounting with cpuset. If this happens
->to be a NUMA machine have you made the access to all nodes available?
->Also what does /proc/sys/vm/zone_reclaim_mode says?
-
-
-Don't really know what NUMA means and which nodes are you talking about, =
-sorry :(
-
-# cat /proc/sys/vm/zone_reclaim_mode
-cat: /proc/sys/vm/zone_reclaim_mode: No such file or directory
-
-
-
-azur
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
