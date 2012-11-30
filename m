@@ -1,132 +1,84 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
-	cgroup core
-Date: Fri, 30 Nov 2012 12:21:32 +0900
-Message-ID: <50B8263C.7060908@jp.fujitsu.com>
-References: <1354138460-19286-1-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Fri, 30 Nov 2012 13:45:06 +0100
+Message-ID: <20121130124506.GH29317@dhcp22.suse.cz>
+References: <20121123074023.GA24698@dhcp22.suse.cz>
+ <20121123102137.10D6D653@pobox.sk>
+ <20121123100438.GF24698@dhcp22.suse.cz>
+ <20121125011047.7477BB5E@pobox.sk>
+ <20121125120524.GB10623@dhcp22.suse.cz>
+ <20121125135542.GE10623@dhcp22.suse.cz>
+ <20121126013855.AF118F5E@pobox.sk>
+ <20121126131837.GC17860@dhcp22.suse.cz>
+ <20121126132149.GD17860@dhcp22.suse.cz>
+ <20121130032918.59B3F780@pobox.sk>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121130032918.59B3F780-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1354138460-19286-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-(2012/11/29 6:34), Tejun Heo wrote:
-> Hello, guys.
+On Fri 30-11-12 03:29:18, azurIt wrote:
+> >Here we go with the patch for 3.2.34. Could you test with this one,
+> >please?
 > 
-> Depending on cgroup core locking - cgroup_mutex - is messy and makes
-> cgroup prone to locking dependency problems.  The current code already
-> has lock dependency loop - memcg nests get_online_cpus() inside
-> cgroup_mutex.  cpuset the other way around.
 > 
-> Regardless of the locking details, whatever is protecting cgroup has
-> inherently to be something outer to most other locking constructs.
-> cgroup calls into a lot of major subsystems which in turn have to
-> perform subsystem-specific locking.  Trying to nest cgroup
-> synchronization inside other locks isn't something which can work
-> well.
-> 
-> cgroup now has enough API to allow subsystems to implement their own
-> locking and cgroup_mutex is scheduled to be made private to cgroup
-> core.  This patchset makes cpuset implement its own locking instead of
-> relying on cgroup_mutex.
-> 
-> cpuset is rather nasty in this respect.  Some of it seems to have come
-> from the implementation history - cgroup core grew out of cpuset - but
-> big part stems from cpuset's need to migrate tasks to an ancestor
-> cgroup when an hotunplug event makes a cpuset empty (w/o any cpu or
-> memory).
-> 
-> This patchset decouples cpuset locking from cgroup_mutex.  After the
-> patchset, cpuset uses cpuset-specific cpuset_mutex instead of
-> cgroup_mutex.  This also removes the lockdep warning triggered during
-> cpu offlining (see 0009).
-> 
-> Note that this leaves memcg as the only external user of cgroup_mutex.
-> Michal, Kame, can you guys please convert memcg to use its own locking
-> too?
-> 
+> Michal, unfortunately i had to boot to another kernel because the one
+> with this patch keeps killing my MySQL server :( it was, probably,
+> doing it on OOM in any cgroup - looks like OOM was not choosing
+> processes only from cgroup which is out of memory. Here is the log
+> from syslog: http://www.watchdog.sk/lkml/oom_mysqld
 
-Hmm. let me see....at quick glance cgroup_lock() is used at
-  hierarchy policy change
-  kmem_limit
-  migration policy change
-  swapiness change
-  oom control
+You are seeing also global OOM:
+Nov 30 02:53:56 server01 kernel: [  818.233159] Pid: 9247, comm: apache2 Not tainted 3.2.34-grsec #1
+Nov 30 02:53:56 server01 kernel: [  818.233289] Call Trace:
+Nov 30 02:53:56 server01 kernel: [  818.233470]  [<ffffffff810cc90e>] dump_header+0x7e/0x1e0
+Nov 30 02:53:56 server01 kernel: [  818.233600]  [<ffffffff810cc80f>] ? find_lock_task_mm+0x2f/0x70
+Nov 30 02:53:56 server01 kernel: [  818.233721]  [<ffffffff810ccdd5>] oom_kill_process+0x85/0x2a0
+Nov 30 02:53:56 server01 kernel: [  818.233842]  [<ffffffff810cd485>] out_of_memory+0xe5/0x200
+Nov 30 02:53:56 server01 kernel: [  818.233963]  [<ffffffff8102aa8f>] ? pte_alloc_one+0x3f/0x50
+Nov 30 02:53:56 server01 kernel: [  818.234082]  [<ffffffff810cd65d>] pagefault_out_of_memory+0xbd/0x110
+Nov 30 02:53:56 server01 kernel: [  818.234204]  [<ffffffff81026ec6>] mm_fault_error+0xb6/0x1a0
+Nov 30 02:53:56 server01 kernel: [  818.235886]  [<ffffffff8102739e>] do_page_fault+0x3ee/0x460
+Nov 30 02:53:56 server01 kernel: [  818.236006]  [<ffffffff810f3057>] ? vma_merge+0x1f7/0x2c0
+Nov 30 02:53:56 server01 kernel: [  818.236124]  [<ffffffff810f35d7>] ? do_brk+0x267/0x400
+Nov 30 02:53:56 server01 kernel: [  818.236244]  [<ffffffff812c9a92>] ? gr_learn_resource+0x42/0x1e0
+Nov 30 02:53:56 server01 kernel: [  818.236367]  [<ffffffff815b547f>] page_fault+0x1f/0x30
+[...]
+Nov 30 02:53:56 server01 kernel: [  818.356297] Out of memory: Kill process 2188 (mysqld) score 60 or sacrifice child
+Nov 30 02:53:56 server01 kernel: [  818.356493] Killed process 2188 (mysqld) total-vm:3330016kB, anon-rss:864176kB, file-rss:8072kB
 
-Because all aboves takes care of changes in hierarchy,
-Having a new memcg's mutex in ->create() may be a way.
+Then you also have memcg oom killer:
+Nov 30 02:53:56 server01 kernel: [  818.375717] Task in /1037/uid killed as a result of limit of /1037
+Nov 30 02:53:56 server01 kernel: [  818.375886] memory: usage 102400kB, limit 102400kB, failcnt 736
+Nov 30 02:53:56 server01 kernel: [  818.376008] memory+swap: usage 102400kB, limit 102400kB, failcnt 0
 
-Ah, hm, Costa is mentioning task-attach. is the task-attach problem in memcg ?
+The messages are intermixed and I guess rate limitting jumped in as
+well, because I cannot associate all the oom messages to a specific OOM
+event.
 
-Thanks,
--Kame
+Anyway your system is under both global and local memory pressure. You
+didn't see apache going down previously because it was probably the one
+which was stuck and could be killed.
+Anyway you need to setup your system more carefully.
 
+> Maybe i should mention that MySQL server has it's own cgroup (called
+> 'mysql') but with no limits to any resources.
 
-
-
-
-
-
-
-
-
-
-> This patchset contains the following thirteen patches.
+Where is that group in the hierarchy?
 > 
->   0001-cpuset-remove-unused-cpuset_unlock.patch
->   0002-cpuset-remove-fast-exit-path-from-remove_tasks_in_em.patch
->   0003-cpuset-introduce-css_on-offline.patch
->   0004-cpuset-introduce-CS_ONLINE.patch
->   0005-cpuset-introduce-cpuset_for_each_child.patch
->   0006-cpuset-cleanup-cpuset-_can-_attach.patch
->   0007-cpuset-drop-async_rebuild_sched_domains.patch
->   0008-cpuset-reorganize-CPU-memory-hotplug-handling.patch
->   0009-cpuset-don-t-nest-cgroup_mutex-inside-get_online_cpu.patch
->   0010-cpuset-make-CPU-memory-hotplug-propagation-asynchron.patch
->   0011-cpuset-pin-down-cpus-and-mems-while-a-task-is-being-.patch
->   0012-cpuset-schedule-hotplug-propagation-from-cpuset_atta.patch
->   0013-cpuset-replace-cgroup_mutex-locking-with-cpuset-inte.patch
-> 
-> 0001-0006 are prep patches.
-> 
-> 0007-0009 make cpuset nest get_online_cpus() inside cgroup_mutex, not
-> the other way around.
-> 
-> 0010-0012 plug holes which would be exposed by switching to
-> cpuset-specific locking.
-> 
-> 0013 replaces cgroup_mutex with cpuset_mutex.
-> 
-> This patchset is on top of cgroup/for-3.8 (fddfb02ad0) and also
-> available in the following git branch.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cpuset-locking
-> 
-> diffstat follows.
-> 
->   kernel/cpuset.c |  750 +++++++++++++++++++++++++++++++-------------------------
->   1 file changed, 423 insertions(+), 327 deletions(-)
-> 
-> Thanks.
-> 
+> azurIt
 > --
-> tejun
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
 > the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+
+-- 
+Michal Hocko
+SUSE Labs
