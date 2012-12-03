@@ -1,133 +1,84 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 3/4] memcg: split part of memcg creation to css_online
-Date: Mon, 3 Dec 2012 18:32:05 +0100
-Message-ID: <20121203173205.GI17093@dhcp22.suse.cz>
-References: <1354282286-32278-1-git-send-email-glommer@parallels.com>
- <1354282286-32278-4-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 4/5] device_cgroup: make may_access() stronger
+Date: Mon, 3 Dec 2012 09:44:14 -0800
+Message-ID: <20121203174414.GI19802@htj.dyndns.org>
+References: <20121127193501.255267751@napanee.usersys.redhat.com>
+ <20121127193502.817704289@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=qAsmMK3lC9YTzvWMprDQJpPrVSkFcqWYbR28DxVMVZ8=;
+        b=jP3uHD2JDX3tPfkimTOXshZ7+oL5Kl2Mc3S2m+bkBuHACPw13A9ViqZhoJ1lA/J3du
+         CDjvqPKLf+kHFxOEf2VD3soOaxMUP/9eHwUfYkZeP+c8I7Kh8ibNMED2j2vxwJ2Kq/QG
+         /LMp4q0cu18KgItXRxVqhiDrrtu8SrImGTq4xQyxmNlu6kw7thsg3nNa/+GYehDQ4XLY
+         aqk11H2R+ZAkJGGWbV9ALOqYMFwq98hm+z8iKkyVc9h0C/2p8nu1WdS88z+zAF8SAuRk
+         8am69uBFL80gw6K3Pc189cRcVjTYb59lFFWIpt3ov2mwKS9tEv7551Bs99/MtEL2urlC
+         8kZA==
 Content-Disposition: inline
-In-Reply-To: <1354282286-32278-4-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20121127193502.817704289-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 30-11-12 17:31:25, Glauber Costa wrote:
-> Although there is arguably some value in doing this per se, the main
-> goal of this patch is to make room for the locking changes to come.
-> 
-> With all the value assignment from parent happening in a context where
-> our iterators can already be used, we can safely lock against value
-> change in some key values like use_hierarchy, without resorting to the
-> cgroup core at all.
+Hello,
 
-I am sorry but I really do not get why online_css callback is more
-appropriate. Quite contrary. With this change iterators can see a group
-which is not fully initialized which calls for a problem (even though it
-is not one yet).
-Could you be more specific why we cannot keep the initialization in
-mem_cgroup_css_alloc? We can lock there as well, no?
-
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> ---
->  mm/memcontrol.c | 52 +++++++++++++++++++++++++++++++++++-----------------
->  1 file changed, 35 insertions(+), 17 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index d80b6b5..b6d352f 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5023,12 +5023,40 @@ mem_cgroup_css_alloc(struct cgroup *cont)
->  			INIT_WORK(&stock->work, drain_local_stock);
->  		}
->  		hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
-> -	} else {
-> -		parent = mem_cgroup_from_cont(cont->parent);
-> -		memcg->use_hierarchy = parent->use_hierarchy;
-> -		memcg->oom_kill_disable = parent->oom_kill_disable;
-> +
-> +		res_counter_init(&memcg->res, NULL);
-> +		res_counter_init(&memcg->memsw, NULL);
+On Tue, Nov 27, 2012 at 02:35:05PM -0500, Aristeu Rozanski wrote:
+> @@ -375,22 +376,33 @@
+>  			continue;
+>  		if (refex->access & (~ex->access))
+>  			continue;
+> -		match = true;
+> +		match = 1;
+>  		break;
 >  	}
 >  
-> +	memcg->last_scanned_node = MAX_NUMNODES;
-> +	INIT_LIST_HEAD(&memcg->oom_notify);
-> +	atomic_set(&memcg->refcnt, 1);
-> +	memcg->move_charge_at_immigrate = 0;
-> +	mutex_init(&memcg->thresholds_lock);
-> +	spin_lock_init(&memcg->move_lock);
-> +
-> +	return &memcg->css;
-> +
-> +free_out:
-> +	__mem_cgroup_free(memcg);
-> +	return ERR_PTR(error);
-> +}
-> +
-> +static int
-> +mem_cgroup_css_online(struct cgroup *cont)
-> +{
-> +	struct mem_cgroup *memcg, *parent;
-> +	int error = 0;
-> +
-> +	if (!cont->parent)
-> +		return 0;
-> +
-> +	memcg = mem_cgroup_from_cont(cont);
-> +	parent = mem_cgroup_from_cont(cont->parent);
-> +
-> +	memcg->use_hierarchy = parent->use_hierarchy;
-> +	memcg->oom_kill_disable = parent->oom_kill_disable;
-> +
->  	if (parent && parent->use_hierarchy) {
->  		res_counter_init(&memcg->res, &parent->res);
->  		res_counter_init(&memcg->memsw, &parent->memsw);
-> @@ -5050,15 +5078,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
->  		if (parent && parent != root_mem_cgroup)
->  			mem_cgroup_subsys.broken_hierarchy = true;
->  	}
-> -	memcg->last_scanned_node = MAX_NUMNODES;
-> -	INIT_LIST_HEAD(&memcg->oom_notify);
->  
-> -	if (parent)
-> -		memcg->swappiness = mem_cgroup_swappiness(parent);
-> -	atomic_set(&memcg->refcnt, 1);
-> -	memcg->move_charge_at_immigrate = 0;
-> -	mutex_init(&memcg->thresholds_lock);
-> -	spin_lock_init(&memcg->move_lock);
-> +	memcg->swappiness = mem_cgroup_swappiness(parent);
->  
->  	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
->  	if (error) {
-> @@ -5068,12 +5089,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
->  		 * call __mem_cgroup_free, so return directly
->  		 */
->  		mem_cgroup_put(memcg);
-> -		return ERR_PTR(error);
->  	}
-> -	return &memcg->css;
-> -free_out:
-> -	__mem_cgroup_free(memcg);
-> -	return ERR_PTR(error);
-> +	return error;
->  }
->  
->  static void mem_cgroup_css_offline(struct cgroup *cont)
-> @@ -5702,6 +5719,7 @@ struct cgroup_subsys mem_cgroup_subsys = {
->  	.name = "memory",
->  	.subsys_id = mem_cgroup_subsys_id,
->  	.css_alloc = mem_cgroup_css_alloc,
-> +	.css_online = mem_cgroup_css_online,
->  	.css_offline = mem_cgroup_css_offline,
->  	.css_free = mem_cgroup_css_free,
->  	.can_attach = mem_cgroup_can_attach,
-> -- 
-> 1.7.11.7
-> 
+>  	/*
+> -	 * In two cases we'll consider this new exception valid:
+> -	 * - the dev cgroup has its default policy to allow + exception list:
+> -	 *   the new exception should *not* match any of the exceptions
+> -	 *   (behavior == DEVCG_DEFAULT_ALLOW, !match)
+> -	 * - the dev cgroup has its default policy to deny + exception list:
+> -	 *   the new exception *should* match the exceptions
+> -	 *   (behavior == DEVCG_DEFAULT_DENY, match)
+> +	 * The only three possibilities are:
+> +	 * devcg->behavior == ALLOW, rule behavior == ALLOW
+> +	 * devcg->behavior == ALLOW, rule behavior == DENY
+> +	 * devcg->behavior == DENY, rule behavior == DENY
+> +	 * the remaining
+> +	 * devcg->behavior == DENY, rule behavior == ALLOW
+> +	 * won't be possible by hierarchy
+> +	 *
+> +	 * Since we want to simplify the code, here're the possibilites to
+> +	 * make easier to understand:
+> +	 *
+> +	 * devcg behavior   rule behavior  match  result
+> +	 * allow            allow          1      0
+> +	 * allow            allow          0      1
+> +	 * allow            deny           1      0
+> +	 * allow            deny           0      1
+> +	 * deny             deny           1      1
+> +	 * deny             deny           0      0
+>  	 */
+> -	if ((dev_cgroup->behavior == DEVCG_DEFAULT_DENY) == match)
+> -		return 1;
+> -	return 0;
+> +	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW)
+> +		return !match;
+> +	return match;
+
+I kinda dislike this.  This isn't a performanc critical path where we
+must try our best to shave off a few condition checks.  There's no
+reason to encode the test like this.  Please just spell the conditions
+out in code rather than trying to build a magic series of equality
+tests which somehow ends up spewing out the correct results.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
