@@ -1,66 +1,27 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Mon, 3 Dec 2012 16:16:01 +0100
-Message-ID: <20121203151601.GA17093@dhcp22.suse.cz>
-References: <20121126131837.GC17860@dhcp22.suse.cz>
- <20121126132149.GD17860@dhcp22.suse.cz>
- <20121130032918.59B3F780@pobox.sk>
- <20121130124506.GH29317@dhcp22.suse.cz>
- <20121130144427.51A09169@pobox.sk>
- <20121130144431.GI29317@dhcp22.suse.cz>
- <20121130160811.6BB25BDD@pobox.sk>
- <20121130153942.GL29317@dhcp22.suse.cz>
- <20121130165937.F9564EBE@pobox.sk>
- <20121130161923.GN29317@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+ cgroup core
+Date: Mon, 3 Dec 2012 16:22:05 +0100
+Message-ID: <20121203152205.GB17093@dhcp22.suse.cz>
+References: <1354138460-19286-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20121130161923.GN29317@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1354138460-19286-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 30-11-12 17:19:23, Michal Hocko wrote:
-[...]
-> The important question is why you see VM_FAULT_OOM and whether memcg
-> charging failure can trigger that. I don not see how this could happen
-> right now because __GFP_NORETRY is not used for user pages (except for
-> THP which disable memcg OOM already), file backed page faults (aka
-> __do_fault) use mem_cgroup_newpage_charge which doesn't disable OOM.
-> This is a real head scratcher.
+Hi Tejun,
+I have glanced through the series and spotten nothing obviously wrong. I
+do not feel I could give my r-b because I am not familiar with cpusets
+internals enough and some patches looks quite scary (like #8).
+Anyway the resulting outcome seems nice.
 
-The following should print the traces when we hand over ENOMEM to the
-caller. It should catch all charge paths (migration is not covered but
-that one is not important here). If we don't see any traces from here
-and there is still global OOM striking then there must be something else
-to trigger this.
-Could you test this with the patch which aims at fixing your deadlock,
-please? I realise that this is a production environment but I do not see
-anything relevant in the code.
----
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c8425b1..9e5b56b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2397,6 +2397,7 @@ done:
- 	return 0;
- nomem:
- 	*ptr = NULL;
-+	__WARN();
- 	return -ENOMEM;
- bypass:
- 	*ptr = NULL;
-
+Thanks!
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
