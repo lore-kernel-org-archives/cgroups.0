@@ -1,29 +1,50 @@
 From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 4/5] device_cgroup: make may_access() stronger
-Date: Mon, 3 Dec 2012 14:01:04 -0500
-Message-ID: <20121203190104.GC32112@redhat.com>
+Subject: Re: [PATCH 3/5] device_cgroup: keep track of local group settings
+Date: Mon, 3 Dec 2012 14:06:58 -0500
+Message-ID: <20121203190657.GD32112@redhat.com>
 References: <20121127193501.255267751@napanee.usersys.redhat.com>
- <20121127193502.817704289@napanee.usersys.redhat.com>
- <20121203174414.GI19802@htj.dyndns.org>
+ <20121127193502.482004744@napanee.usersys.redhat.com>
+ <20121129192945.GD26104@mail.hallyn.com>
+ <20121129195942.GW32112@redhat.com>
+ <20121129202608.GA26716@mail.hallyn.com>
+ <20121129223111.GZ32112@redhat.com>
+ <20121203180125.GA30637@mail.hallyn.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20121203174414.GI19802-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20121203180125.GA30637-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Dec 03, 2012 at 09:44:14AM -0800, Tejun Heo wrote:
-> I kinda dislike this.  This isn't a performanc critical path where we
-> must try our best to shave off a few condition checks.  There's no
-> reason to encode the test like this.  Please just spell the conditions
-> out in code rather than trying to build a magic series of equality
-> tests which somehow ends up spewing out the correct results.
+On Mon, Dec 03, 2012 at 06:01:25PM +0000, Serge E. Hallyn wrote:
+> First, generally, I don't think 'allows' added to parent should be 
+> automatically propagated to descendents.
 
-sure, will do. but this is not "magic", that's just logic simplification.
+that's what I think too and what I tried to do
+
+> In devcgroup_update_access: (around line 625)
+> 	there is a period of time where cgroup members have
+> 	default allow without the parent's exceptions.
+
+true, will fix that one and look for more cases
+
+> propagate_behavior (line 505):
+> 	1. doesn't follow the same ordering as devcgroup_update_access(), in
+> 	particular cleaning exceptions before setting behavior.
+
+I see, will update that
+
+> 	2. When changing a parent from deny to allow, I don't think children
+> 	should be updated.
+
+I disagree on this one. since there'll be local preferences, it'll try
+to revalidate them everytime there's a change. so, for example, an
+exception that might not be possible now, will be possible when its
+parent changes in a way that allows that.
 
 -- 
 Aristeu
