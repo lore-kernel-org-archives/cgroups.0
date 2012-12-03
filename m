@@ -1,50 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
- cgroup core
-Date: Mon, 3 Dec 2012 08:53:38 -0800
-Message-ID: <20121203165338.GF19802@htj.dyndns.org>
-References: <1354138460-19286-1-git-send-email-tj@kernel.org>
- <20121203152205.GB17093@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 4/4] memcg: replace cgroup_lock with memcg specific
+ memcg_lock
+Date: Mon, 3 Dec 2012 18:15:32 +0100
+Message-ID: <20121203171532.GG17093@dhcp22.suse.cz>
+References: <1354282286-32278-1-git-send-email-glommer@parallels.com>
+ <1354282286-32278-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Ko3n59VEHSCUHHl5vJB0050vxB0oQfiLCeiWF0a1kgc=;
-        b=Gm+H1kBpNoCMvAmeycM8J7GWjSCctwLiXtkBS64JkqNzts7/qotUfLxIM9OU9bCcYS
-         wyj2rsHO6B0MT+s0RRZDl7MwkftVRHVDaIBC3w5iYWC9XX8OJQ6vo1cYMbIFmPEZwgPJ
-         jVpv+x6CB8rUW91MvRXx7Y28DWHfv8T2z7TRvaCLQe699mWXUTw3hNIRApg6L8zeeQUW
-         2wA17RA5WAJj+ttqjjEPCGXA/TnVqTcxHwr4DsTcaYJRxVHoEEyswpfKUpTuAgU/ahuS
-         zk0c+kksZC4pUNPCHVUYtENhGuKw0N9uHGDe7EUWDucCBACF2nJvubTmuEGOxNLBw5D6
-         HFPQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20121203152205.GB17093@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1354282286-32278-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: lizefan@huawei.com, paul@paulmenage.org, glommer@parallels.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, peterz@infradead.org, bsingharora@gmail.com, hannes@cmpxchg.org, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hello, Michal.
+On Fri 30-11-12 17:31:26, Glauber Costa wrote:
+[...]
+> +/*
+> + * must be called with memcg_lock held, unless the cgroup is guaranteed to be
+> + * already dead (like in mem_cgroup_force_empty, for instance).
+> + */
+> +static inline bool memcg_has_children(struct mem_cgroup *memcg)
+> +{
+> +	return mem_cgroup_count_children(memcg) != 1;
+> +}
 
-On Mon, Dec 03, 2012 at 04:22:05PM +0100, Michal Hocko wrote:
-> I have glanced through the series and spotten nothing obviously wrong. I
-> do not feel I could give my r-b because I am not familiar with cpusets
-> internals enough and some patches looks quite scary (like #8).
-> Anyway the resulting outcome seems nice.
+Why not just keep list_empty(&cgrp->children) which is much simpler much
+more effective and correct here as well because cgroup cannot vanish
+while we are at the call because all callers come from cgroup fs?
 
-Thanks a lot for looking at it and, yeah, it's a bit scary.  Li, Paul,
-can you guys please review the series?
+[...]
+> @@ -3900,7 +3911,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+>  	if (parent)
+>  		parent_memcg = mem_cgroup_from_cont(parent);
+>  
+> -	cgroup_lock();
+> +	mutex_lock(&memcg_lock);
+>  
+>  	if (memcg->use_hierarchy == val)
+>  		goto out;
+> @@ -3915,7 +3926,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+>  	 */
+>  	if ((!parent_memcg || !parent_memcg->use_hierarchy) &&
+>  				(val == 1 || val == 0)) {
+> -		if (list_empty(&cont->children))
+> +		if (!memcg_has_children(memcg))
+>  			memcg->use_hierarchy = val;
+>  		else
+>  			retval = -EBUSY;
 
-Thanks!
+Nothing prevents from a race when a task is on the way to be attached to
+the group. This means that we might miss some charges up the way to the
+parent.
 
+mem_cgroup_hierarchy_write
+  					cgroup_attach_task
+					  ss->can_attach() = mem_cgroup_can_attach
+					    mutex_lock(&memcg_lock)
+					    memcg->attach_in_progress++
+					    mutex_unlock(&memcg_lock)
+					    __mem_cgroup_can_attach
+					      mem_cgroup_precharge_mc (*)
+  mutex_lock(memcg_lock)
+  memcg_has_children(memcg)==false
+					  cgroup_task_migrate
+  memcg->use_hierarchy = val;
+					  ss->attach()
+
+(*) All the charches here are not propagated upwards.
+
+Fixable simply by testing attach_in_progress as well. The same applies
+to all other cases so it would be much better to prepare a common helper
+which does the whole magic.
+
+[...]
+
+Thanks
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
