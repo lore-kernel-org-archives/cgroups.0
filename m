@@ -1,35 +1,50 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: debugging facility to access dangling memcgs.
-Date: Tue, 4 Dec 2012 11:40:42 +0400
-Message-ID: <50BDA8FA.4060404@parallels.com>
-References: <1354541048-12597-1-git-send-email-glommer@parallels.com> <20121203154420.661f8e28.akpm@linux-foundation.org>
+Subject: Re: [PATCH 4/4] memcg: replace cgroup_lock with memcg specific memcg_lock
+Date: Tue, 4 Dec 2012 11:49:14 +0400
+Message-ID: <50BDAAFA.2010708@parallels.com>
+References: <1354282286-32278-1-git-send-email-glommer@parallels.com> <1354282286-32278-5-git-send-email-glommer@parallels.com> <20121203171532.GG17093@dhcp22.suse.cz> <20121203173002.GH17093@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121203154420.661f8e28.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <20121203173002.GH17093-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 12/04/2012 03:44 AM, Andrew Morton wrote:
-> On Mon,  3 Dec 2012 17:24:08 +0400
-> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> 
->> If memcg is tracking anything other than plain user memory (swap, tcp
->> buf mem, or slab memory), it is possible - and normal - that a reference
->> will be held by the group after it is dead. Still, for developers, it
->> would be extremely useful to be able to query about those states during
->> debugging.
+On 12/03/2012 09:30 PM, Michal Hocko wrote:
+> On Mon 03-12-12 18:15:32, Michal Hocko wrote:
+> [...]
+>>> @@ -3915,7 +3926,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+>>>  	 */
+>>>  	if ((!parent_memcg || !parent_memcg->use_hierarchy) &&
+>>>  				(val == 1 || val == 0)) {
+>>> -		if (list_empty(&cont->children))
+>>> +		if (!memcg_has_children(memcg))
+>>>  			memcg->use_hierarchy = val;
+>>>  		else
+>>>  			retval = -EBUSY;
 >>
->> This patch provides a debugging facility in the root memcg, so we can
->> inspect which memcgs still have pending objects, and what is the cause
->> of this state.
+>> Nothing prevents from a race when a task is on the way to be attached to
+>> the group. This means that we might miss some charges up the way to the
+>> parent.
+>>
+>> mem_cgroup_hierarchy_write
+>>   					cgroup_attach_task
+>> 					  ss->can_attach() = mem_cgroup_can_attach
+>> 					    mutex_lock(&memcg_lock)
+>> 					    memcg->attach_in_progress++
+>> 					    mutex_unlock(&memcg_lock)
+>> 					    __mem_cgroup_can_attach
+>> 					      mem_cgroup_precharge_mc (*)
+>>   mutex_lock(memcg_lock)
+>>   memcg_has_children(memcg)==false
 > 
-> As this is a developer-only thing, I suggest that we should avoid
-> burdening mainline with it.  How about we maintain this in -mm (and
-> hence in -next and mhocko's memcg tree) until we no longer see a need
-> for it?
-> 
-I am absolutely fine with that.
+> Dohh, retard alert. I obviously mixed tasks and children cgroups here.
+> Why I thought we also do check for no tasks in the group? Ahh, because
+> we should, at least here otherwise parent could see more uncharges than
+> charges.
+> But that deserves a separate patch. Sorry, for the confusion.
+
+That is okay, here is a beer for you: http://bit.ly/R3rkML
