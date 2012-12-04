@@ -1,27 +1,49 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH 3/4] memcg: split part of memcg creation to css_online
-Date: Tue, 4 Dec 2012 12:32:17 +0400
-Message-ID: <50BDB511.5070107@parallels.com>
-References: <1354282286-32278-1-git-send-email-glommer@parallels.com> <1354282286-32278-4-git-send-email-glommer@parallels.com> <20121203173205.GI17093@dhcp22.suse.cz> <50BDAEC1.8040805@parallels.com> <20121204081756.GA31319@dhcp22.suse.cz>
+From: Jeff Liu <jeff.liu@oracle.com>
+Subject: [RFC PATCH 0/3] Disable swap cgroup allocation at system boot stage
+Date: Tue, 04 Dec 2012 16:35:44 +0800
+Message-ID: <50BDB5E0.7030906@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121204081756.GA31319-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>
 
-On 12/04/2012 12:17 PM, Michal Hocko wrote:
->> But it should be extremely easy to protect against this. It is just a
->> > matter of not returning online css in the iterator: then we'll never see
->> > them until they are online. This also sounds a lot more correct than
->> > returning allocated css.
-> Yes but... Look at your other patch which relies on iterator when counting
-> children to find out if there is any available.
->  
-And what is the problem with it ?
+Hello,
 
-As I said: if the iterator will not return css that are not online, we
-should not have a problem.
+Currently, we allocate pages for swap cgroup when the system is booting up.
+Which means that a particular size of pre-allocated memory(depending on the total
+size of the enabled swap files/partitions) would be wasted if there is no child memcg
+being alive.
+
+This patch set is intended to defer the memory allocation for swap cgroup until the first
+children of memcg was created. Actually, it was totally inspired by Glabuer's previous
+proposed patch set, which can be found at:  
+"memcg: do not call page_cgroup_init at system_boot".
+http://lwn.net/Articles/517562/
+
+These patches works to me with some sanity check up.  There must have some issues I am not
+aware of for now, at least, performing swapon/swapoff when there have child memcg alives
+can run into some potential race conditions that would end up go into bad_page() path...
+but I'd like to post it early to seek any directions if possible, so that I can continue to
+improve it.
+
+Any comments are appreciated, Thanks in advance!
+-Jeff
+
+[PATCH 1/3]memcg: refactor pages allocation/free for swap_cgroup
+[PATCH 2/3]memcg: disable pages allocation for swap cgroup on system booting up
+[PATCH 3/3]memcg: allocate pages for swap cgroup until the first child memcg is alive
+
+ include/linux/page_cgroup.h |   12 ++++
+ mm/memcontrol.c             |    3 +
+ mm/page_cgroup.c            |  160 +++++++++++++++++++++++++++++++++++++------
+ 3 files changed, 153 insertions(+), 22 deletions(-)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
