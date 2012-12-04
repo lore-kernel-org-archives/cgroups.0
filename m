@@ -1,111 +1,126 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [RFC PATCH 1/3] memcg: refactor pages allocation/free for
- swap_cgroup
-Date: Tue, 4 Dec 2012 11:11:37 +0100
-Message-ID: <20121204101137.GA1343@dhcp22.suse.cz>
-References: <50BDB5E0.7030906@oracle.com>
- <50BDB5EB.70909@oracle.com>
+From: Jeff Liu <jeff.liu@oracle.com>
+Subject: Re: [RFC PATCH 1/3] memcg: refactor pages allocation/free for swap_cgroup
+Date: Tue, 04 Dec 2012 18:46:05 +0800
+Message-ID: <50BDD46D.9070404@oracle.com>
+References: <50BDB5E0.7030906@oracle.com> <50BDB5EB.70909@oracle.com> <20121204101137.GA1343@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <50BDB5EB.70909@oracle.com>
+In-Reply-To: <20121204101137.GA1343@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jeff Liu <jeff.liu@oracle.com>
+To: Michal Hocko <mhocko@suse.cz>
 Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>
 
-On Tue 04-12-12 16:35:55, Jeff Liu wrote:
-[...]
->  /*
-> - * allocate buffer for swap_cgroup.
-> + * Allocate pages for swap_cgroup upon a given type.
->   */
-> -static int swap_cgroup_prepare(int type)
-> +static int swap_cgroup_alloc_pages(int type)
+Hi Michal,
 
-I am not sure this name is better. The whole point of the function is
-the prepare swap accounting internals. Yeah we are allocating here as
-well but this is not that important.
-It also feels strange that the function name suggests we allocate pages
-but none of them are returned.
+Thanks for your prompt response.
+On 12/04/2012 06:11 PM, Michal Hocko wrote:
+> On Tue 04-12-12 16:35:55, Jeff Liu wrote:
+> [...]
+>>  /*
+>> - * allocate buffer for swap_cgroup.
+>> + * Allocate pages for swap_cgroup upon a given type.
+>>   */
+>> -static int swap_cgroup_prepare(int type)
+>> +static int swap_cgroup_alloc_pages(int type)
+> 
+> I am not sure this name is better. The whole point of the function is
+> the prepare swap accounting internals. Yeah we are allocating here as
+> well but this is not that important.
+I spent nearly half time of writing these patches to figure out a couple
+of meaningful names for pages allocation/free, but...
 
->  {
-> -	struct page *page;
->  	struct swap_cgroup_ctrl *ctrl;
-> -	unsigned long idx, max;
-> +	unsigned long i, length, max;
->  
->  	ctrl = &swap_cgroup_ctrl[type];
-> -
-> -	for (idx = 0; idx < ctrl->length; idx++) {
-> -		page = alloc_page(GFP_KERNEL | __GFP_ZERO);
-> +	length = ctrl->length;
-> +	for (i = 0; i < length; i++) {
-> +		struct page *page = alloc_page(GFP_KERNEL | __GFP_ZERO);
->  		if (!page)
->  			goto not_enough_page;
-> -		ctrl->map[idx] = page;
-> +		ctrl->map[i] = page;
->  	}
-> +
->  	return 0;
-> +
->  not_enough_page:
-> -	max = idx;
-> -	for (idx = 0; idx < max; idx++)
-> -		__free_page(ctrl->map[idx]);
-> +	max = i;
-> +	for (i = 0; i < max; i++)
-> +		__free_page(ctrl->map[i]);
->  
->  	return -ENOMEM;
->  }
+Maybe I should keeping the old name(swap_cgroup_prepare()) unchanged and
+don't introduce the corresponding swap_cgroup_free_pages(), since this
+helper only called by swap_cgroup_destroy() in my current implementation.
 
-Is there any reason for the local variables rename exercise?
-I really do not like it.
+> It also feels strange that the function name suggests we allocate pages
+> but none of them are returned.
+Yep, generally, only those functions with pages allocated and returned
+should be named as xxxx_alloc_pages_xxx(), it really looks strange so.
 
->  
-> +static void swap_cgroup_free_pages(int type)
-> +{
-> +	struct swap_cgroup_ctrl *ctrl;
-> +	struct page **map;
-> +
-> +	ctrl = &swap_cgroup_ctrl[type];
-> +	map = ctrl->map;
-> +	if (map) {
-> +		unsigned long length = ctrl->length;
-> +		unsigned long i;
-> +
-> +		for (i = 0; i < length; i++) {
-> +			struct page *page = map[i];
-> +			if (page)
-> +				__free_page(page);
-> +		}
-> +	}
-> +}
-> +
+> 
+>>  {
+>> -	struct page *page;
+>>  	struct swap_cgroup_ctrl *ctrl;
+>> -	unsigned long idx, max;
+>> +	unsigned long i, length, max;
+>>  
+>>  	ctrl = &swap_cgroup_ctrl[type];
+>> -
+>> -	for (idx = 0; idx < ctrl->length; idx++) {
+>> -		page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>> +	length = ctrl->length;
+>> +	for (i = 0; i < length; i++) {
+>> +		struct page *page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>>  		if (!page)
+>>  			goto not_enough_page;
+>> -		ctrl->map[idx] = page;
+>> +		ctrl->map[i] = page;
+>>  	}
+>> +
+>>  	return 0;
+>> +
+>>  not_enough_page:
+>> -	max = idx;
+>> -	for (idx = 0; idx < max; idx++)
+>> -		__free_page(ctrl->map[idx]);
+>> +	max = i;
+>> +	for (i = 0; i < max; i++)
+>> +		__free_page(ctrl->map[i]);
+>>  
+>>  	return -ENOMEM;
+>>  }
+> 
+> Is there any reason for the local variables rename exercise?
+> I really do not like it.
+Ah, I can not recall why I renamed it at that time, will change it
+back in the next round of post.
+> 
+>>  
+>> +static void swap_cgroup_free_pages(int type)
+>> +{
+>> +	struct swap_cgroup_ctrl *ctrl;
+>> +	struct page **map;
+>> +
+>> +	ctrl = &swap_cgroup_ctrl[type];
+>> +	map = ctrl->map;
+>> +	if (map) {
+>> +		unsigned long length = ctrl->length;
+>> +		unsigned long i;
+>> +
+>> +		for (i = 0; i < length; i++) {
+>> +			struct page *page = map[i];
+>> +			if (page)
+>> +				__free_page(page);
+>> +		}
+>> +	}
+>> +}
+>> +
+> 
+> This function is not used in this patch so I would suggest moving it
+> into the #2.
+Ok. Maybe it will be merged into swap_cgroup_destroy() as is mentioned
+above.
+> 
+>>  static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
+>>  					struct swap_cgroup_ctrl **ctrlp)
+>>  {
+>> @@ -477,7 +497,7 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
+>>  	ctrl->length = length;
+>>  	ctrl->map = array;
+>>  	spin_lock_init(&ctrl->lock);
+>> -	if (swap_cgroup_prepare(type)) {
+>> +	if (swap_cgroup_alloc_pages(type)) {
+>>  		/* memory shortage */
+>>  		ctrl->map = NULL;
+>>  		ctrl->length = 0;
+> 
+Thanks Again!
 
-This function is not used in this patch so I would suggest moving it
-into the #2.
-
->  static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
->  					struct swap_cgroup_ctrl **ctrlp)
->  {
-> @@ -477,7 +497,7 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
->  	ctrl->length = length;
->  	ctrl->map = array;
->  	spin_lock_init(&ctrl->lock);
-> -	if (swap_cgroup_prepare(type)) {
-> +	if (swap_cgroup_alloc_pages(type)) {
->  		/* memory shortage */
->  		ctrl->map = NULL;
->  		ctrl->length = 0;
-
--- 
-Michal Hocko
-SUSE Labs
+-Jeff
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
