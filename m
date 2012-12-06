@@ -1,44 +1,58 @@
-From: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH] cgroup_rm_file: don't delete the uncreated files
-Date: Thu, 6 Dec 2012 11:09:10 +0800
-Message-ID: <1354763350-3139-1-git-send-email-gaofeng@cn.fujitsu.com>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/5] device_cgroup: keep track of local group settings
+Date: Thu, 6 Dec 2012 04:31:30 +0000
+Message-ID: <20121206043130.GA22792@mail.hallyn.com>
+References: <20121127193501.255267751@napanee.usersys.redhat.com>
+ <20121127193502.482004744@napanee.usersys.redhat.com>
+ <20121129192945.GD26104@mail.hallyn.com>
+ <20121129195942.GW32112@redhat.com>
+ <20121129202608.GA26716@mail.hallyn.com>
+ <20121129223111.GZ32112@redhat.com>
+ <20121203180125.GA30637@mail.hallyn.com>
+ <20121203190657.GD32112@redhat.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121203190657.GD32112-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-in cgroup_add_file,when creating files for cgroup,
-some of creation may be skipped. So we need to avoid
-deleting these uncreated files in cgroup_rm_file,
-otherwise the warning msg will be triggered.
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> On Mon, Dec 03, 2012 at 06:01:25PM +0000, Serge E. Hallyn wrote:
+> > First, generally, I don't think 'allows' added to parent should be 
+> > automatically propagated to descendents.
+> 
+> that's what I think too and what I tried to do
+> 
+> > In devcgroup_update_access: (around line 625)
+> > 	there is a period of time where cgroup members have
+> > 	default allow without the parent's exceptions.
+> 
+> true, will fix that one and look for more cases
+> 
+> > propagate_behavior (line 505):
+> > 	1. doesn't follow the same ordering as devcgroup_update_access(), in
+> > 	particular cleaning exceptions before setting behavior.
+> 
+> I see, will update that
+> 
+> > 	2. When changing a parent from deny to allow, I don't think children
+> > 	should be updated.
+> 
+> I disagree on this one. since there'll be local preferences, it'll try
+> to revalidate them everytime there's a change. so, for example, an
+> exception that might not be possible now, will be possible when its
+> parent changes in a way that allows that.
 
-"cgroup_addrm_files: failed to remove memory_pressure_enabled, err=-2"
+My concern is just practical - if I've started a bunch of containers,
+and another admin decides to make a change to the root devices cgroup,
+I don't want the container's device accesses now changing.
 
-Signed-off-by: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
----
- kernel/cgroup.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Maybe that's better solved by having all of userspace sit in /system
+while containers and vms sit under /lxc and /libvirt...
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5cc3724..6928b3e 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -932,6 +932,12 @@ static int cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
- 	lockdep_assert_held(&cgrp->dentry->d_inode->i_mutex);
- 	lockdep_assert_held(&cgroup_mutex);
- 
-+	/* does @cft->flags tell us this file isn't created on @cgrp? */
-+	if ((cft->flags & CFTYPE_NOT_ON_ROOT) && !cgrp->parent)
-+		return 0;
-+	if ((cft->flags & CFTYPE_ONLY_ON_ROOT) && cgrp->parent)
-+		return 0;
-+
- 	list_for_each_entry(cfe, &cgrp->files, node) {
- 		struct dentry *d = cfe->dentry;
- 
--- 
-1.7.7.6
+-serge
