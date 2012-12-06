@@ -1,45 +1,53 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Thu, 06 Dec 2012 11:12:49 +0100
-Message-ID: <20121206111249.58F013EA@pobox.sk>
-References: <20121130144427.51A09169@pobox.sk>, <20121130144431.GI29317@dhcp22.suse.cz>, <20121130160811.6BB25BDD@pobox.sk>, <20121130153942.GL29317@dhcp22.suse.cz>, <20121130165937.F9564EBE@pobox.sk>, <20121130161923.GN29317@dhcp22.suse.cz>, <20121203151601.GA17093@dhcp22.suse.cz>, <20121205023644.18C3006B@pobox.sk>, <20121205141722.GA9714@dhcp22.suse.cz>, <20121206012924.FE077FD7@pobox.sk> <20121206095423.GB10931@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+	cgroup core
+Date: Thu, 6 Dec 2012 14:09:04 +0100
+Message-ID: <20121206130904.GC10931@dhcp22.suse.cz>
+References: <1354138460-19286-1-git-send-email-tj@kernel.org>
+	<20121203152205.GB17093@dhcp22.suse.cz>
+	<20121203165338.GF19802@htj.dyndns.org>
+	<50C03A3F.7070605@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121206095423.GB10931@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <50C03A3F.7070605-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
->Dohh. The very same stack mem_cgroup_newpage_charge called from the page
->fault. The heavy inlining is not particularly helping here... So there
->must be some other THP charge leaking out.
->[/me is diving into the code again]
->
->* do_huge_pmd_anonymous_page falls back to handle_pte_fault
->* do_huge_pmd_wp_page_fallback falls back to simple pages so it doesn't
->  charge the huge page
->* do_huge_pmd_wp_page splits the huge page and retries with fallback to
->  handle_pte_fault
->* collapse_huge_page is not called in the page fault path
->* do_wp_page, do_anonymous_page and __do_fault  operate on a single page
->  so the memcg charging cannot return ENOMEM
->
->There are no other callers AFAICS so I am getting clueless. Maybe more
->debugging will tell us something (the inlining has been reduced for thp
->paths which can reduce performance in thp page fault heavy workloads but
->this will give us better traces - I hope).
+On Thu 06-12-12 14:25:03, Li Zefan wrote:
+> On 2012/12/4 0:53, Tejun Heo wrote:
+> > Hello, Michal.
+> > 
+> > On Mon, Dec 03, 2012 at 04:22:05PM +0100, Michal Hocko wrote:
+> >> I have glanced through the series and spotten nothing obviously wrong. I
+> >> do not feel I could give my r-b because I am not familiar with cpusets
+> >> internals enough and some patches looks quite scary (like #8).
+> >> Anyway the resulting outcome seems nice.
+> > 
+> > Thanks a lot for looking at it and, yeah, it's a bit scary.  Li, Paul,
+> > can you guys please review the series?
+> > 
+> 
+> We shoudn't haste to target this for 3.8, given that we're in late -rc and
+> Michal felt some patches scary and they hasn't got enough review.
 
-
-Should i apply all patches togather? (fix for this bug, more log messages, backported fix from 3.5 and this new one)
-
-
->Anyway do you see the same problem if transparent huge pages are
->disabled?
->echo never > /sys/kernel/mm/transparent_hugepage/enabled)
-
-
-# cat /sys/kernel/mm/transparent_hugepage/enabled
-cat: /sys/kernel/mm/transparent_hugepage/enabled: No such file or directory
+Well, even the original code is scary enough so if the decision should
+be made just based on my feeling then it would be too sensitive
+probably. Anyway I do agree that the series should see review from
+others who are more familiar with the code before considering for
+merging.
+-- 
+Michal Hocko
+SUSE Labs
