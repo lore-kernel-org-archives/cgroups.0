@@ -1,13 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
-	cgroup core
-Date: Thu, 6 Dec 2012 08:54:26 -0800
-Message-ID: <20121206165426.GM19802@htj.dyndns.org>
-References: <1354138460-19286-1-git-send-email-tj@kernel.org>
-	<20121203152205.GB17093@dhcp22.suse.cz>
-	<20121203165338.GF19802@htj.dyndns.org>
-	<50C03A3F.7070605@huawei.com>
-	<20121206130904.GC10931@dhcp22.suse.cz>
+Subject: Re: [PATCH v2] cgroup_rm_file: don't delete the uncreated files
+Date: Thu, 6 Dec 2012 08:59:39 -0800
+Message-ID: <20121206165939.GN19802@htj.dyndns.org>
+References: <1354775937-2625-1-git-send-email-gaofeng@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -15,15 +10,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=j5ePKzQGe+wy0XUwb8YA3UWT3iqfUBXMMkvzJ5HwNwk=;
-	b=zYpqXLZ3mtxwosbrLhtf/6bHoRaxDDU/MNV30ka8qATSNI8i3CTEnkzovluA7Rqnlt
-	yjAY9v7mD24pXRlfzGudKT+D84OCBAm3tD/Q0bGk1W8BuRHf5en3GKqDJgua8jrTJFNL
-	rs7+4tbrNQFgR/hZRpRWZ2yUDGM74p+wEeUFZNdzng6sliS5kv/hJqhNPeiuDclBgvf9
-	MQzCA61mrKnhh0zttyLNisStLMCk09m2486XC4TQVaHiIaD3c/Jfp05Q4k6DByd4aywL
-	fOzdvxWuyqur5rgAPU+8Bq/u98JJtWylOUhu11JkCrUmCOUJkQQP7WmygEVzg4EBZ+t4
-	bb4Q==
+	bh=ljLmHSWDoyZxdJ6Uqna2zZRwtGncSXzt3vZ4wCg4rj8=;
+	b=JiYS5+JivaskM8PznJ25NbtDRRmKRfdkstQNWdJk1jB2hbPk+P5VF83UQIe1fGLM0o
+	CxankDZmqXM032N2odbC1xpvpeOBNp9jMiz+CNmVmA69VHtUC3WKjfga36GkOQpJ4OVR
+	aib33OI2qgY3HKtElU7y0/TO87ZNkCoZCTV6zUaxa5SMJPuGvFeCxqUQK7yGCRjdg4LC
+	QiB4Hc4I8m89KWwR9t1ieI57P6pcgVnAiGjgmGPgUvmychG006+QhRsrAFd8tFBznKO5
+	A4rzAu/vWctwV8zFaNu4nqXtgVeERE8IZwqZGtt20TgpGgKX5jPR+cuNiaLI4DWM2jt6
+	CtJQ==
 Content-Disposition: inline
-In-Reply-To: <20121206130904.GC10931-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <1354775937-2625-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -34,24 +29,22 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hey, guys.
-
-On Thu, Dec 06, 2012 at 02:09:04PM +0100, Michal Hocko wrote:
-> > We shoudn't haste to target this for 3.8, given that we're in late -rc and
-> > Michal felt some patches scary and they hasn't got enough review.
+On Thu, Dec 06, 2012 at 02:38:57PM +0800, Gao feng wrote:
+> in cgroup_add_file,when creating files for cgroup,
+> some of creation may be skipped. So we need to avoid
+> deleting these uncreated files in cgroup_rm_file,
+> otherwise the warning msg will be triggered.
 > 
-> Well, even the original code is scary enough so if the decision should
-> be made just based on my feeling then it would be too sensitive
-> probably. Anyway I do agree that the series should see review from
-> others who are more familiar with the code before considering for
-> merging.
+> "cgroup_addrm_files: failed to remove memory_pressure_enabled, err=-2"
+> 
+> Signed-off-by: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-It's already too late for 3.8.  All cpuset changes are for 3.9.
+Applied to cgroup/for-3.8 w/ Li's ack and cc to stable added.
 
-Thanks.
+Thanks!
 
 -- 
 tejun
