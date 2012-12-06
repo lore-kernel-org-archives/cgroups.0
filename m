@@ -1,50 +1,60 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup_rm_file: don't delete the uncreated files
-Date: Thu, 6 Dec 2012 08:59:39 -0800
-Message-ID: <20121206165939.GN19802@htj.dyndns.org>
-References: <1354775937-2625-1-git-send-email-gaofeng@cn.fujitsu.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Thu, 6 Dec 2012 18:06:58 +0100
+Message-ID: <20121206170658.GD10931@dhcp22.suse.cz>
+References: <20121130160811.6BB25BDD@pobox.sk>
+ <20121130153942.GL29317@dhcp22.suse.cz>
+ <20121130165937.F9564EBE@pobox.sk>
+ <20121130161923.GN29317@dhcp22.suse.cz>
+ <20121203151601.GA17093@dhcp22.suse.cz>
+ <20121205023644.18C3006B@pobox.sk>
+ <20121205141722.GA9714@dhcp22.suse.cz>
+ <20121206012924.FE077FD7@pobox.sk>
+ <20121206095423.GB10931@dhcp22.suse.cz>
+ <20121206111249.58F013EA@pobox.sk>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20121206111249.58F013EA@pobox.sk>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=ljLmHSWDoyZxdJ6Uqna2zZRwtGncSXzt3vZ4wCg4rj8=;
-	b=JiYS5+JivaskM8PznJ25NbtDRRmKRfdkstQNWdJk1jB2hbPk+P5VF83UQIe1fGLM0o
-	CxankDZmqXM032N2odbC1xpvpeOBNp9jMiz+CNmVmA69VHtUC3WKjfga36GkOQpJ4OVR
-	aib33OI2qgY3HKtElU7y0/TO87ZNkCoZCTV6zUaxa5SMJPuGvFeCxqUQK7yGCRjdg4LC
-	QiB4Hc4I8m89KWwR9t1ieI57P6pcgVnAiGjgmGPgUvmychG006+QhRsrAFd8tFBznKO5
-	A4rzAu/vWctwV8zFaNu4nqXtgVeERE8IZwqZGtt20TgpGgKX5jPR+cuNiaLI4DWM2jt6
-	CtJQ==
-Content-Disposition: inline
-In-Reply-To: <1354775937-2625-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: azurIt <azurit@pobox.sk>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Thu, Dec 06, 2012 at 02:38:57PM +0800, Gao feng wrote:
-> in cgroup_add_file,when creating files for cgroup,
-> some of creation may be skipped. So we need to avoid
-> deleting these uncreated files in cgroup_rm_file,
-> otherwise the warning msg will be triggered.
+On Thu 06-12-12 11:12:49, azurIt wrote:
+> >Dohh. The very same stack mem_cgroup_newpage_charge called from the page
+> >fault. The heavy inlining is not particularly helping here... So there
+> >must be some other THP charge leaking out.
+> >[/me is diving into the code again]
+> >
+> >* do_huge_pmd_anonymous_page falls back to handle_pte_fault
+> >* do_huge_pmd_wp_page_fallback falls back to simple pages so it doesn't
+> >  charge the huge page
+> >* do_huge_pmd_wp_page splits the huge page and retries with fallback to
+> >  handle_pte_fault
+> >* collapse_huge_page is not called in the page fault path
+> >* do_wp_page, do_anonymous_page and __do_fault  operate on a single page
+> >  so the memcg charging cannot return ENOMEM
+> >
+> >There are no other callers AFAICS so I am getting clueless. Maybe more
+> >debugging will tell us something (the inlining has been reduced for thp
+> >paths which can reduce performance in thp page fault heavy workloads but
+> >this will give us better traces - I hope).
 > 
-> "cgroup_addrm_files: failed to remove memory_pressure_enabled, err=-2"
 > 
-> Signed-off-by: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Should i apply all patches togather? (fix for this bug, more log
+> messages, backported fix from 3.5 and this new one)
 
-Applied to cgroup/for-3.8 w/ Li's ack and cc to stable added.
-
-Thanks!
-
+Yes please
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
