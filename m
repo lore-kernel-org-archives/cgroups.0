@@ -1,60 +1,66 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Thu, 6 Dec 2012 18:06:58 +0100
-Message-ID: <20121206170658.GD10931@dhcp22.suse.cz>
-References: <20121130160811.6BB25BDD@pobox.sk>
- <20121130153942.GL29317@dhcp22.suse.cz>
- <20121130165937.F9564EBE@pobox.sk>
- <20121130161923.GN29317@dhcp22.suse.cz>
- <20121203151601.GA17093@dhcp22.suse.cz>
- <20121205023644.18C3006B@pobox.sk>
- <20121205141722.GA9714@dhcp22.suse.cz>
- <20121206012924.FE077FD7@pobox.sk>
- <20121206095423.GB10931@dhcp22.suse.cz>
- <20121206111249.58F013EA@pobox.sk>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20121206111249.58F013EA@pobox.sk>
-Sender: owner-linux-mm@kvack.org
+From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] Documentation: cgroup: update the index file
+Date: Sat,  8 Dec 2012 15:02:36 +0900
+Message-ID: <1354946557-7938-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=BxVvjj+9eWRR7tu0m9T426zWagInVfL4+lVOpwg8Sco=;
+        b=M+bJc9E3Gq7jcrT4uI8UMHGYbZtewxIQtk97Eghz9v8Uy3VuKB4460uHOyy2bJEVjM
+         VWjvH7mJkjr1O5yS5o7+fAdCaFVawoi2nzf3XPGyOjJjWusi+AB+7h2f4iWhxZ4jN9+W
+         s7CQnFAIwqFXtobjKBkneLYWWjh4HftY1r6OXV/DXUgcMTmbmMweR7kaOcRRozMsw44q
+         CazK6tSM/zGxXrPDg4ohnca7nrWi2Xr9OpVhcrybSPBnVYp6jUiV1De7y0NvkQ9M2aba
+         Lq1T2vlrRebsBjxsBi55shdq6Vqj8lRC1V5OJpXQChNHUrz431In6EyR2MWlL09anbRm
+         Xvbw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 
-On Thu 06-12-12 11:12:49, azurIt wrote:
-> >Dohh. The very same stack mem_cgroup_newpage_charge called from the page
-> >fault. The heavy inlining is not particularly helping here... So there
-> >must be some other THP charge leaking out.
-> >[/me is diving into the code again]
-> >
-> >* do_huge_pmd_anonymous_page falls back to handle_pte_fault
-> >* do_huge_pmd_wp_page_fallback falls back to simple pages so it doesn't
-> >  charge the huge page
-> >* do_huge_pmd_wp_page splits the huge page and retries with fallback to
-> >  handle_pte_fault
-> >* collapse_huge_page is not called in the page fault path
-> >* do_wp_page, do_anonymous_page and __do_fault  operate on a single page
-> >  so the memcg charging cannot return ENOMEM
-> >
-> >There are no other callers AFAICS so I am getting clueless. Maybe more
-> >debugging will tell us something (the inlining has been reduced for thp
-> >paths which can reduce performance in thp page fault heavy workloads but
-> >this will give us better traces - I hope).
-> 
-> 
-> Should i apply all patches togather? (fix for this bug, more log
-> messages, backported fix from 3.5 and this new one)
+From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 
-Yes please
+There are new files added to cgroup documentation. Lets
+update the index file listing all the remaining files
+
+Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Amit Sahrawat <a.sahrawat-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+---
+ Documentation/cgroups/00-INDEX |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Documentation/cgroups/00-INDEX b/Documentation/cgroups/00-INDEX
+index 3f58fa3..f78b90a 100644
+--- a/Documentation/cgroups/00-INDEX
++++ b/Documentation/cgroups/00-INDEX
+@@ -1,7 +1,11 @@
+ 00-INDEX
+ 	- this file
++blkio-controller.txt
++	- Description for Block IO Controller, implementation and usage details.
+ cgroups.txt
+ 	- Control Groups definition, implementation details, examples and API.
++cgroup_event_listener.c
++	- A user program for cgroup listener.
+ cpuacct.txt
+ 	- CPU Accounting Controller; account CPU usage for groups of tasks.
+ cpusets.txt
+@@ -10,9 +14,13 @@ devices.txt
+ 	- Device Whitelist Controller; description, interface and security.
+ freezer-subsystem.txt
+ 	- checkpointing; rationale to not use signals, interface.
++hugetlb.txt
++	- HugeTLB Controller implementation and usage details.
+ memcg_test.txt
+ 	- Memory Resource Controller; implementation details.
+ memory.txt
+ 	- Memory Resource Controller; design, accounting, interface, testing.
++net_prio.txt
++	- Network priority cgroups details and usages.
+ resource_counter.txt
+ 	- Resource Counter API.
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.7.9.5
