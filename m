@@ -1,99 +1,76 @@
-From: Zhao Shuai <zhaoshuai-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>
-Subject: performance drop after using blkcg
-Date: Mon, 10 Dec 2012 20:28:54 +0800
-Message-ID: <CAFVn34SxqAJe_4P-WT8MOiG-kmKKD7ge96zoHXQuGqHWPgAt+A@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Mon, 10 Dec 2012 16:52:05 +0100
+Message-ID: <20121210155205.GB6777@dhcp22.suse.cz>
+References: <20121130165937.F9564EBE@pobox.sk>
+ <20121130161923.GN29317@dhcp22.suse.cz>
+ <20121203151601.GA17093@dhcp22.suse.cz>
+ <20121205023644.18C3006B@pobox.sk>
+ <20121205141722.GA9714@dhcp22.suse.cz>
+ <20121206012924.FE077FD7@pobox.sk>
+ <20121206095423.GB10931@dhcp22.suse.cz>
+ <20121210022038.E6570D37@pobox.sk>
+ <20121210094318.GA6777@dhcp22.suse.cz>
+ <20121210111817.F697F53E@pobox.sk>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20121210111817.F697F53E-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:sender:date:x-google-sender-auth:message-id:subject
-	:from:to:cc:content-type;
-	bh=9ekqFsFxG4Vw+MUs/iqNZdLI75fiksLT9YEElynMwJw=;
-	b=VA46Kz/wDi7QYG3JZYg8/rh/FrZSZ3+fXF5ycsZ3URJoJgp161RAb1+1o88xTiMPcM
-	PBfFddd9t2jEHJU85Z874AhjOiZB0nCEdaCjnPrVkNawB3TuxTjG7A4KWLgdP9PCPS7u
-	+DF20A/IVSAjpRCxYe0muXTg1xP+jFkK4RSXEeMjYy/LX35mA7oq7jQ1SF4u3QXJMP0e
-	aY2uHUa+cWqDfaP6RM/Kc0CcWcDh46MG7aH4+KL72CRkBQ5g22B1YhyAn57LCo4ZJIrQ
-	LUMIjKdzgpLI9k185YvIS4I02goRiUK96TjLI6Z1FVx/Z6fG3Xx+vqZNPxwbLKeuSBMo
-	s4MA==
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hi,
+On Mon 10-12-12 11:18:17, azurIt wrote:
+> >Hmm, this is _really_ surprising. The latest patch didn't add any new
+> >logging actually. It just enahanced messages which were already printed
+> >out previously + changed few functions to be not inlined so they show up
+> >in the traces. So the only explanation is that the workload has changed
+> >or the patches got misapplied.
+> 
+> 
+> This time i installed 3.2.35, maybe some changes between .34 and .35
+> did this? Should i try .34?
 
-I plan to use blkcg(proportional BW) in my system. But I encounter
-great performance drop after enabling blkcg.
-The testing tool is fio(version 2.0.7) and both the BW and IOPS fields
-are recorded. Two instances of fio program are carried out simultaneously,
-each opearting on a separate disk file (say /data/testfile1,
-/data/testfile2).
-System environment:
-kernel: 3.7.0-rc5
-CFQ's slice_idle is disabled(slice_idle=0) while group_idle is
-enabled(group_idle=8).
+I would try to limit changes to minimum. So the original kernel you were
+using + the first patch to prevent OOM from the write path + 2 debugging
+patches.
+ 
+> >> Dec 10 02:03:29 server01 kernel: [  220.366486] grsec: From 141.105.120.152: bruteforce prevention initiated for the next 30 minutes or until service restarted, stalling each fork 30 seconds.  Please investigate the crash report for /usr/lib/apache2/mpm-itk/apache2[apache2:3586] uid/euid:1258/1258 gid/egid:100/100, parent /usr/lib/apache2/mpm-itk/apache2[apache2:2142] uid/euid:0/0 gid/egid:0/0
+> >
+> >This explains why you have seen your machine hung. I am not familiar
+> >with grsec but stalling each fork 30s sounds really bad.
+> 
+> 
+> Btw, i never ever saw such a message from grsecurity yet. Will write to grsec mailing list about explanation.
+> 
+> 
+> >Anyway this will not help me much. Do you happen to still have any of
+> >those logged traces from the last run?
+> 
+> 
+> Unfortunately not, it didn't log anything and tons of messages were
+> printed only to console (i was logged via IP-KVM). It looked that
+> printing is infinite, i rebooted it after few minutes.
 
-FIO configuration(e.g. "read") for the first fio program(say FIO1):
+But was it at least related to the debugging from the patch or it was
+rather a totally unrelated thing?
 
-[global]
-description=Emulation of Intel IOmeter File Server Access Pattern
+> >Apart from that. If my current understanding is correct then this is
+> >related to transparent huge pages (and leaking charge to the page fault
+> >handler). Do you see the same problem if you disable THP before you
+> >start your workload? (echo never > /sys/kernel/mm/transparent_hugepage/enabled)
+> 
+> # cat /sys/kernel/mm/transparent_hugepage/enabled
+> cat: /sys/kernel/mm/transparent_hugepage/enabled: No such file or directory
 
-[iometer]
-bssplit=4k/30:8k/40:16k/30
-rw=read
-direct=1
-time_based
-runtime=180s
-ioengine=sync
-filename=/data/testfile1
-numjobs=32
-group_reporting
-
-
-result before using blkcg: (the value of BW is KB/s)
-
-           FIO1 BW/IOPS    FIO2 BW/IOPS
----------------------------------------
-read       26799/2911      25861/2810
-write      138618/15071    138578/15069
-rw         72159/7838(r)   71851/7811(r)
-           72171/7840(w)   71799/7805(w)
-randread   4982/543        5370/585
-randwrite  5192/566        6010/654
-randrw     2369/258(r)     3027/330(r)
-           2369/258(w)     3016/328(w)
-
-result after using blkcg(create two blkio cgroups with
-default blkio.weight(500) and put FIO1 and FIO2 into these
-cgroups respectively)
-
-           FIO1 BW/IOPS    FIO2 BW/IOPS
----------------------------------------
-read       36651/3985      36470/3943
-write      75738/8229      75641/8221
-rw         49169/5342(r)   49168/5346(r)
-           49200/5348(w)   49140/5341(w)
-randread   4876/532        4905/534
-randwrite  5535/603        5497/599
-randrw     2521/274(r)     2527/275(r)
-           2510/273(w)     2532/274(w)
-
-Comparing with those results, we found greate performance drop
-(30%-40%) in some test cases(especially for the "write", "rw" case).
-Is it normal to see write/rw bandwidth decrease by 40% after using
-blkio-cgroup? If not, any way to improve or tune the performace?
-
-Thanks.
+Weee. Then it cannot be related to THP at all. Which makes this even
+bigger mystery.
+We really need to find out who is leaking that charge.
 
 -- 
-Regards,
-Zhao Shuai
+Michal Hocko
+SUSE Labs
