@@ -1,212 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/12] blkcg: implement blkg_prfill_[rw]stat_recursive()
-Date: Fri, 14 Dec 2012 14:41:24 -0800
-Message-ID: <1355524885-22719-12-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 10/12] blkcg: add blkg_policy_data->plid
+Date: Fri, 14 Dec 2012 14:41:23 -0800
+Message-ID: <1355524885-22719-11-git-send-email-tj@kernel.org>
 References: <1355524885-22719-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=eoaHMsB4vckFVPtg8uEB6FFfhwTtyFJBoTcb/angsh8=;
-        b=XVtWUxPc2uWNWfbil0Wop8VjKT1GDy8MQXEaTRkUxIrWk9vq78KCBA6+B8meDzZRKX
-         7Sv0DMWEFvweOPUF5c+6TTcJ72Eu9DkNVpSw7zf1mL2fmL0q7VomrFqkJOXfxfDkWyNY
-         soMhHDjY0XHBAWtfHxNko6eqejL7CaLMHnYPEJgxz3wmkIlxD9oPqjjM/kiqiXkz5fZ+
-         G15+iQ1NNYEU90dSzpKKqqYD8YVJ0LzxZ344Vq6+ZtD3nSmqAWRLgK0gH56cDBPKl1wQ
-         gYG1Uxc1kIEMK8vr+05itY+f2qUfwKjTdhrnpRuE3/NQEJJbEObubwxI/RWsEi8UjxeL
-         9X5Q==
-In-Reply-To: <1355524885-22719-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, axboe@kernel.dk, vgoyal@redhat.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, ctalbott@google.com, rni@google.com, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+	:references; bh=NR4By18WC+NlmFYtnEIi/DVKxgRk880DrBw+vCzdkow=;
+	b=O94xnOmFzm0RoSOquru+OwYq2qFkl7M7UHzU5EQQWZVu2QTTiclRkTYxc+35PeuwTQ
+	APNjzpuj3JUHGoqvIlIDsmNyvQxi4KNHSZ94xI0HrCHfDdhN49xFkVUmMPc+yJSNIPVz
+	h1aqYdnyEfHMG/FQEk+a6RUVEX3AVcyf1YxXHGeiTp5qZlIaE3d4x9vz5wq+3II6d6px
+	Ag0y7eSufrBuse1NbbM341iF66axvdgYQwelDn+gLy2fkI9Hz4VQbkMkFvrwsTYr6944
+	a4s6u3hjhJyi0fblCpn62N5eYSa/ulxMbQucBiDPPniBbQe/6wfkrps/jDtn0u4+6lA9
+	cGCg==
+In-Reply-To: <1355524885-22719-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-blkg_prfill_[rw]stat_recursive() collect the specified [rw]stats from
-the target policy_data and its descendants and print it.  They can be
-used to make stat printing hierarchical.
+Add pd->plid so that the policy a pd belongs to can be identified
+easily.  This will be used to implement hierarchical blkg_[rw]stats.
 
-blkg_for_each_descendant_pre() and blkg_[rw]stat_collect() are added
-to implement the new prfill functions.  While at it, function comment
-is added to __blkg_lookup() which is now also used by the for_each
-macro.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c | 129 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- block/blk-cgroup.h |   4 ++
- 2 files changed, 133 insertions(+)
+ block/blk-cgroup.c | 2 ++
+ block/blk-cgroup.h | 3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index fbf96ce..8e9caf0 100644
+index 16ea5a1..fbf96ce 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -32,6 +32,26 @@ EXPORT_SYMBOL_GPL(blkcg_root);
+@@ -113,6 +113,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
  
- static struct blkcg_policy *blkcg_policy[BLKCG_MAX_POLS];
+ 		blkg->pd[i] = pd;
+ 		pd->blkg = blkg;
++		pd->plid = i;
  
-+static struct blkcg_gq *__blkg_lookup(struct blkcg *blkcg,
-+				      struct request_queue *q, bool update_hint);
-+
-+/**
-+ * blkg_for_each_descendant_pre - pre-order walk of a blkg's descendants
-+ * @d_blkg: loop cursor pointing to the current descendant
-+ * @pos_cgrp: used for iteration
-+ * @p_blkg: target blkg to walk descendants of
-+ *
-+ * Walk @c_blkg through the descendants of @p_blkg.  Must be used with RCU
-+ * read locked.  If called under either blkcg or queue lock, the iteration
-+ * is guaranteed to include all and only online blkgs.  The caller may
-+ * update @pos_cgrp by calling cgroup_rightmost_descendant() to skip
-+ * subtree.
-+ */
-+#define blkg_for_each_descendant_pre(d_blkg, pos_cgrp, p_blkg)		\
-+	cgroup_for_each_descendant_pre((pos_cgrp), (p_blkg)->blkcg->css.cgroup) \
-+		if (((d_blkg) = __blkg_lookup(cgroup_to_blkcg(pos_cgrp), \
-+					      (p_blkg)->q, false)))
-+
- static bool blkcg_policy_enabled(struct request_queue *q,
- 				 const struct blkcg_policy *pol)
- {
-@@ -127,6 +147,17 @@ err_free:
- 	return NULL;
- }
+ 		/* invoke per-policy init */
+ 		if (pol->pd_init_fn)
+@@ -908,6 +909,7 @@ int blkcg_activate_policy(struct request_queue *q,
  
-+/**
-+ * __blkg_lookup - internal version of blkg_lookup()
-+ * @blkcg: blkcg of interest
-+ * @q: request_queue of interest
-+ * @update_hint: whether to update lookup hint with the result or not
-+ *
-+ * This is internal version and shouldn't be used by policy
-+ * implementations.  Looks up blkgs for the @blkcg - @q pair regardless of
-+ * @q's bypass state.  If @update_hint is %true, the caller should be
-+ * holding @q->queue_lock and lookup hint is updated on success.
-+ */
- static struct blkcg_gq *__blkg_lookup(struct blkcg *blkcg,
- 				      struct request_queue *q, bool update_hint)
- {
-@@ -568,6 +599,104 @@ u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
- EXPORT_SYMBOL_GPL(blkg_prfill_rwstat);
+ 		blkg->pd[pol->plid] = pd;
+ 		pd->blkg = blkg;
++		pd->plid = pol->plid;
+ 		pol->pd_init_fn(blkg);
  
- /**
-+ * blkg_stat_collect - collect hierarchical blkg_stat
-+ * @pd: policy private data of interest
-+ * @off: offset to the blkg_stat in @pd
-+ *
-+ * Collect the blkg_stat specified by @off from @pd and all its descendants
-+ * and return the sum.
-+ */
-+static u64 blkg_stat_collect(struct blkg_policy_data *pd, int off)
-+{
-+	struct blkcg_policy *pol = blkcg_policy[pd->plid];
-+	struct blkcg_gq *pos_blkg;
-+	struct cgroup *pos_cgrp;
-+	u64 sum;
-+
-+	sum = blkg_stat_read((void *)pd + off);
-+
-+	rcu_read_lock();
-+	blkg_for_each_descendant_pre(pos_blkg, pos_cgrp, pd_to_blkg(pd)) {
-+		struct blkg_policy_data *pos_pd = blkg_to_pd(pos_blkg, pol);
-+		struct blkg_stat *stat = (void *)pos_pd + off;
-+
-+		sum += blkg_stat_read(stat);
-+	}
-+	rcu_read_unlock();
-+
-+	return sum;
-+}
-+
-+/**
-+ * blkg_rwstat_collect - collect hierarchical blkg_rwstat
-+ * @pd: policy private data of interest
-+ * @off: offset to the blkg_stat in @pd
-+ *
-+ * Collect the blkg_rwstat specified by @off from @pd and all its
-+ * descendants and return the sum.
-+ */
-+static struct blkg_rwstat blkg_rwstat_collect(struct blkg_policy_data *pd,
-+					      int off)
-+{
-+	struct blkcg_policy *pol = blkcg_policy[pd->plid];
-+	struct blkcg_gq *pos_blkg;
-+	struct cgroup *pos_cgrp;
-+	struct blkg_rwstat sum;
-+	int i;
-+
-+	sum = blkg_rwstat_read((void *)pd + off);
-+
-+	rcu_read_lock();
-+	blkg_for_each_descendant_pre(pos_blkg, pos_cgrp, pd_to_blkg(pd)) {
-+		struct blkg_policy_data *pos_pd = blkg_to_pd(pos_blkg, pol);
-+		struct blkg_rwstat *rwstat = (void *)pos_pd + off;
-+		struct blkg_rwstat tmp;
-+
-+		tmp = blkg_rwstat_read(rwstat);
-+
-+		for (i = 0; i < BLKG_RWSTAT_NR; i++)
-+			sum.cnt[i] += tmp.cnt[i];
-+	}
-+	rcu_read_unlock();
-+
-+	return sum;
-+}
-+
-+/**
-+ * blkg_prfill_stat_recursive - recursive prfill callback for blkg_stat
-+ * @sf: seq_file to print to
-+ * @pd: policy private data of interest
-+ * @off: offset to the blkg_stat in @pd
-+ *
-+ * Recursive prfill callback for printing a blkg_stat.  Sums the blkg_stat
-+ * specified by @off of @pd and its descendants and prints it.
-+ */
-+u64 blkg_prfill_stat_recursive(struct seq_file *sf,
-+			       struct blkg_policy_data *pd, int off)
-+{
-+	return __blkg_prfill_u64(sf, pd, blkg_stat_collect(pd, off));
-+}
-+EXPORT_SYMBOL_GPL(blkg_prfill_stat_recursive);
-+
-+/**
-+ * blkg_prfill_rwstat_recursive - recursive prfill callback for blkg_rwstat
-+ * @sf: seq_file to print to
-+ * @pd: policy private data of interest
-+ * @off: offset to the blkg_rwstat in @pd
-+ *
-+ * Recursive prfill callback for printing a blkg_rwstat.  Sums the
-+ * blkg_rwstat specified by @off of @pd and its descendants and prints it.
-+ */
-+u64 blkg_prfill_rwstat_recursive(struct seq_file *sf,
-+				 struct blkg_policy_data *pd, int off)
-+{
-+	struct blkg_rwstat sum = blkg_rwstat_collect(pd, off);
-+
-+	return __blkg_prfill_rwstat(sf, pd, &sum);
-+}
-+EXPORT_SYMBOL_GPL(blkg_prfill_rwstat_recursive);
-+
-+/**
-  * blkg_conf_prep - parse and prepare for per-blkg config update
-  * @blkcg: target block cgroup
-  * @pol: target policy
+ 		spin_unlock(&blkg->blkcg->lock);
 diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 40f5b97..747bcc5 100644
+index 2446225..40f5b97 100644
 --- a/block/blk-cgroup.h
 +++ b/block/blk-cgroup.h
-@@ -156,6 +156,10 @@ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
- u64 blkg_prfill_stat(struct seq_file *sf, struct blkg_policy_data *pd, int off);
- u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
- 		       int off);
-+u64 blkg_prfill_stat_recursive(struct seq_file *sf,
-+			       struct blkg_policy_data *pd, int off);
-+u64 blkg_prfill_rwstat_recursive(struct seq_file *sf,
-+				 struct blkg_policy_data *pd, int off);
+@@ -81,8 +81,9 @@ struct blkg_rwstat {
+  * beginning and pd_size can't be smaller than pd.
+  */
+ struct blkg_policy_data {
+-	/* the blkg this per-policy data belongs to */
++	/* the blkg and policy id this per-policy data belongs to */
+ 	struct blkcg_gq			*blkg;
++	int				plid;
  
- struct blkg_conf_ctx {
- 	struct gendisk			*disk;
+ 	/* used during policy activation */
+ 	struct list_head		alloc_node;
 -- 
 1.7.11.7
