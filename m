@@ -1,11 +1,11 @@
 From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:blkcg-cfq-hierarchy 12/18] block/cfq-iosched.c:1257:10:
- error: implicit declaration of function 'cfqg_flat_parent'
-Date: Sat, 15 Dec 2012 06:24:14 +0800
-Message-ID: <50cba70e.UvsqDn/v356fPO0c%fengguang.wu@intel.com>
+Subject: [cgroup:blkcg-cfq-hierarchy 13/18] block/cfq-iosched.c:1292:17:
+ warning: assignment makes pointer from integer without a cast
+Date: Sat, 15 Dec 2012 06:27:45 +0800
+Message-ID: <50cba7e1./ZSSp4aXRR8RiehC%fengguang.wu@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="=_50cba70e.uhXF5oIwG4oWN4Cjd9OQacr2c0xZf1MvyY+3z8Z2XkE/DGLR"
+ boundary="=_50cba7e1.3D9UIjWsJKeYhjQos61hPfBOAGKhqod1el17EFZNU441gOz5"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -14,43 +14,58 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 This is a multi-part message in MIME format.
 
---=_50cba70e.uhXF5oIwG4oWN4Cjd9OQacr2c0xZf1MvyY+3z8Z2XkE/DGLR
+--=_50cba7e1.3D9UIjWsJKeYhjQos61hPfBOAGKhqod1el17EFZNU441gOz5
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
 tree:   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git blkcg-cfq-hierarchy
 head:   a783531627f81a3b1ddeca34e6b2d9682a4ffe7f
-commit: b59e2f355c2fef510ae9a729736c677640f4240c [12/18] cfq-iosched: implement cfq_group->nr_active and ->level_weight
+commit: 4f308bf3d37f688f5ad460cc8dd519ae2c3479cd [13/18] cfq-iosched: implement hierarchy-ready cfq_group charge scaling
 config: x86_64-randconfig-x792 (attached as .config)
 
-All error/warnings:
+All warnings:
 
 block/cfq-iosched.c: In function 'cfq_group_service_tree_add':
-block/cfq-iosched.c:1257:10: error: implicit declaration of function 'cfqg_flat_parent' [-Werror=implicit-function-declaration]
-block/cfq-iosched.c:1257:30: warning: initialization makes pointer from integer without a cast [enabled by default]
+block/cfq-iosched.c:1292:2: error: implicit declaration of function 'cfqg_flat_parent' [-Werror=implicit-function-declaration]
+block/cfq-iosched.c:1292:17: warning: assignment makes pointer from integer without a cast [enabled by default]
 block/cfq-iosched.c: In function 'cfq_group_service_tree_del':
-block/cfq-iosched.c:1307:30: warning: initialization makes pointer from integer without a cast [enabled by default]
+block/cfq-iosched.c:1343:30: warning: initialization makes pointer from integer without a cast [enabled by default]
 cc1: some warnings being treated as errors
 
-vim +/cfqg_flat_parent +1257 block/cfq-iosched.c
+vim +1292 block/cfq-iosched.c
 
-b59e2f35 Tejun Heo 2012-12-14  1251  	 * already activated node or reach root.
-b59e2f35 Tejun Heo 2012-12-14  1252  	 */
-b59e2f35 Tejun Heo 2012-12-14  1253  	propagate = !pos->nr_active++;
-b59e2f35 Tejun Heo 2012-12-14  1254  	pos->level_weight += pos->leaf_weight;
-b59e2f35 Tejun Heo 2012-12-14  1255  
-b59e2f35 Tejun Heo 2012-12-14  1256  	while (propagate) {
-b59e2f35 Tejun Heo 2012-12-14 @1257  		struct cfq_group *parent = cfqg_flat_parent(pos);
-b59e2f35 Tejun Heo 2012-12-14  1258  
-b59e2f35 Tejun Heo 2012-12-14  1259  		if (!parent)
-b59e2f35 Tejun Heo 2012-12-14  1260  			break;
+4f308bf3 Tejun Heo 2012-12-14  1276  	 * entitled to.  vfraction is calculated by walking the tree
+4f308bf3 Tejun Heo 2012-12-14  1277  	 * towards the root calculating the fraction it has at each level.
+4f308bf3 Tejun Heo 2012-12-14  1278  	 * The compounded ratio is how much vfraction @cfqg owns.
+4f308bf3 Tejun Heo 2012-12-14  1279  	 *
+4f308bf3 Tejun Heo 2012-12-14  1280  	 * Start with activating and calculating vfraction for @cfqg.
+b59e2f35 Tejun Heo 2012-12-14  1281  	 */
+b59e2f35 Tejun Heo 2012-12-14  1282  	propagate = !pos->nr_active++;
+b59e2f35 Tejun Heo 2012-12-14  1283  	pos->level_weight += pos->leaf_weight;
+4f308bf3 Tejun Heo 2012-12-14  1284  	vfr = vfr * pos->leaf_weight / pos->level_weight;
+b59e2f35 Tejun Heo 2012-12-14  1285  
+4f308bf3 Tejun Heo 2012-12-14  1286  	/*
+4f308bf3 Tejun Heo 2012-12-14  1287  	 * Walk up the tree.  Both activation and vfraction calculation are
+4f308bf3 Tejun Heo 2012-12-14  1288  	 * done in the same loop.  Propagation stops once an already
+4f308bf3 Tejun Heo 2012-12-14  1289  	 * activated node is met.  vfraction calculation should always
+4f308bf3 Tejun Heo 2012-12-14  1290  	 * continue to the root.
+4f308bf3 Tejun Heo 2012-12-14  1291  	 */
+4f308bf3 Tejun Heo 2012-12-14 @1292  	while ((parent = cfqg_flat_parent(pos))) {
+4f308bf3 Tejun Heo 2012-12-14  1293  		if (propagate) {
+4f308bf3 Tejun Heo 2012-12-14  1294  			propagate = !parent->nr_active++;
+4f308bf3 Tejun Heo 2012-12-14  1295  			parent->level_weight += pos->weight;
+4f308bf3 Tejun Heo 2012-12-14  1296  		}
+4f308bf3 Tejun Heo 2012-12-14  1297  		vfr = vfr * pos->weight / parent->level_weight;
+b59e2f35 Tejun Heo 2012-12-14  1298  		pos = parent;
+b59e2f35 Tejun Heo 2012-12-14  1299  	}
+4f308bf3 Tejun Heo 2012-12-14  1300  
 
 ---
 0-DAY kernel build testing backend         Open Source Technology Center
 Fengguang Wu, Yuanhan Liu                              Intel Corporation
 
---=_50cba70e.uhXF5oIwG4oWN4Cjd9OQacr2c0xZf1MvyY+3z8Z2XkE/DGLR
+--=_50cba7e1.3D9UIjWsJKeYhjQos61hPfBOAGKhqod1el17EFZNU441gOz5
 Content-Type: text/plain;
  charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -2809,4 +2824,4 @@ CONFIG_AVERAGE=y
 CONFIG_CORDIC=y
 # CONFIG_DDR is not set
 
---=_50cba70e.uhXF5oIwG4oWN4Cjd9OQacr2c0xZf1MvyY+3z8Z2XkE/DGLR--
+--=_50cba7e1.3D9UIjWsJKeYhjQos61hPfBOAGKhqod1el17EFZNU441gOz5--
