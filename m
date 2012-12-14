@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 03/12] blkcg: cosmetic updates to blkg_create()
-Date: Fri, 14 Dec 2012 14:41:16 -0800
-Message-ID: <1355524885-22719-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 04/12] blkcg: make blkcg_gq's hierarchical
+Date: Fri, 14 Dec 2012 14:41:17 -0800
+Message-ID: <1355524885-22719-5-git-send-email-tj@kernel.org>
 References: <1355524885-22719-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=ttK6rpMn46XLosLwclArUKarCMx1eIlOWQGVL2gEttE=;
-	b=kvFRN2NdnIfopmWwSaHYOYKqp0bt6bEJknrlMV28iFKQDDw7rRpeU4v9EywSp2N41M
-	GGkbM8767LpvkttkXRJsQKashUd8RMTzLKDKnPnY6LgznX6eBAAp7rbMC0OJzy/EQPiE
-	YBcY0sHrdwjvepMfSngQ4WTJ9+jDoQcy8t3OgSeXHkiMslAeu5uy8ndIenHAWc+HnDEy
-	bkZf0+cOi6NTdrHzRI991RQcNlSPUPmLBOWnjvsRkmwg1Xtz4TD2H2Z6xTdO5z0Ol2D7
-	F24tokaHDTta2qrS03MMcmeW84vqxlt2UEwP47DK1rXCyTAtZLjc5ZuFCUQHLCT4wF86
-	MdHQ==
+	:references; bh=nDp6rN0cGOUO6w1iykRAOiBX5PvOLbrfP0Q2gILGd8Q=;
+	b=bFI1njBlfOvywFQpG3RrdjSNHSqrvSh/O50n7na1SEvQauBjae5TQP9HsnG5anMf0Q
+	9oGubODtAX25NCAjViybDIz72a+QNfYgLF34hKrPvxHsKeaE9IGKJvfr+EYNfV8BbkRq
+	qXgKa3VzRj/m+v0l1MjkqocQu8FAZXf4kPxhrp6olEIWzLVwOLI40WNWhqnymmJ9mqI+
+	47ExvzT28yAn0UQeZ39Hg2PNorGTtJrXyBQqG10Zl+CislsTDEHJfo6xCmeocnOW0O3X
+	Q+4Scvr2iqy+FPooF8twtQga/FZ6qBBDdFKTtPug2BtUT1ARmGOaKIf09iNwOJFjaFkT
+	F+Ow==
 In-Reply-To: <1355524885-22719-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,57 +30,146 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-* Rename out_* labels to err_*.
+Currently a child blkg (blkcg_gq) can be created even if its parent
+doesn't exist.  ie. Given a blkg, it's not guaranteed that its
+ancestors will exist.  This makes it difficult to implement proper
+hierarchy support for blkcg policies.
 
-* Do ERR_PTR() conversion once in the error return path.
+Always create blkgs recursively and make a child blkg hold a reference
+to its parent.  blkg->parent is added so that finding the parent is
+easy.  blkcg_parent() is also added in the process.
 
-This patch is cosmetic and to prepare for the hierarchy support.
+This change can be visible to userland.  e.g. while issuing IO in a
+nested cgroup didn't affect the ancestors at all, now it will
+initialize all ancestor blkgs and zero stats for the request_queue
+will always appear on them.  While this is userland visible, this
+shouldn't cause any functional difference.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ block/blk-cgroup.c | 42 +++++++++++++++++++++++++++++++++++++-----
+ block/blk-cgroup.h | 18 ++++++++++++++++++
+ 2 files changed, 55 insertions(+), 5 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index ffbd237..fde2286 100644
+index fde2286..c858628 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -187,16 +187,16 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 
- 	/* blkg holds a reference to blkcg */
- 	if (!css_tryget(&blkcg->css)) {
--		blkg = ERR_PTR(-EINVAL);
--		goto out_free;
-+		ret = -EINVAL;
-+		goto err_free_blkg;
- 	}
- 
- 	/* allocate */
- 	if (!new_blkg) {
- 		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
- 		if (unlikely(!new_blkg)) {
--			blkg = ERR_PTR(-ENOMEM);
--			goto out_put;
-+			ret = -ENOMEM;
-+			goto err_put_css;
- 		}
+@@ -201,7 +201,16 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
  	}
  	blkg = new_blkg;
-@@ -213,12 +213,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 
+-	/* insert */
++	/* link parent and insert */
++	if (blkcg_parent(blkcg)) {
++		blkg->parent = __blkg_lookup(blkcg_parent(blkcg), q, false);
++		if (WARN_ON_ONCE(!blkg->parent)) {
++			blkg = ERR_PTR(-EINVAL);
++			goto err_put_css;
++		}
++		blkg_get(blkg->parent);
++	}
++
+ 	spin_lock(&blkcg->lock);
+ 	ret = radix_tree_insert(&blkcg->blkg_tree, q->id, blkg);
+ 	if (likely(!ret)) {
+@@ -213,6 +222,10 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
  	if (!ret)
  		return blkg;
  
--	blkg = ERR_PTR(ret);
--out_put:
-+err_put_css:
- 	css_put(&blkcg->css);
--out_free:
-+err_free_blkg:
- 	blkg_free(new_blkg);
--	return blkg;
++	/* @blkg failed fully initialized, use the usual release path */
++	blkg_put(blkg);
 +	return ERR_PTR(ret);
++
+ err_put_css:
+ 	css_put(&blkcg->css);
+ err_free_blkg:
+@@ -226,8 +239,9 @@ err_free_blkg:
+  * @q: request_queue of interest
+  *
+  * Lookup blkg for the @blkcg - @q pair.  If it doesn't exist, try to
+- * create one.  This function should be called under RCU read lock and
+- * @q->queue_lock.
++ * create one.  blkg creation is performed recursively from blkcg_root such
++ * that all non-root blkg's have access to the parent blkg.  This function
++ * should be called under RCU read lock and @q->queue_lock.
+  *
+  * Returns pointer to the looked up or created blkg on success, ERR_PTR()
+  * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
+@@ -252,7 +266,23 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 	if (blkg)
+ 		return blkg;
+ 
+-	return blkg_create(blkcg, q, NULL);
++	/*
++	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
++	 * non-root blkgs have access to their parents.
++	 */
++	while (true) {
++		struct blkcg *pos = blkcg;
++		struct blkcg *parent = blkcg_parent(blkcg);
++
++		while (parent && !__blkg_lookup(parent, q, false)) {
++			pos = parent;
++			parent = blkcg_parent(parent);
++		}
++
++		blkg = blkg_create(pos, q, NULL);
++		if (pos == blkcg || IS_ERR(blkg))
++			return blkg;
++	}
+ }
+ EXPORT_SYMBOL_GPL(blkg_lookup_create);
+ 
+@@ -321,8 +351,10 @@ static void blkg_rcu_free(struct rcu_head *rcu_head)
+ 
+ void __blkg_release(struct blkcg_gq *blkg)
+ {
+-	/* release the extra blkcg reference this blkg has been holding */
++	/* release the blkcg and parent blkg refs this blkg has been holding */
+ 	css_put(&blkg->blkcg->css);
++	if (blkg->parent)
++		blkg_put(blkg->parent);
+ 
+ 	/*
+ 	 * A group is freed in rcu manner. But having an rcu lock does not
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 2459730..b26ed58 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -94,8 +94,13 @@ struct blkcg_gq {
+ 	struct list_head		q_node;
+ 	struct hlist_node		blkcg_node;
+ 	struct blkcg			*blkcg;
++
++	/* all non-root blkcg_gq's are guaranteed to have access to parent */
++	struct blkcg_gq			*parent;
++
+ 	/* request allocation list for this blkcg-q pair */
+ 	struct request_list		rl;
++
+ 	/* reference count */
+ 	int				refcnt;
+ 
+@@ -181,6 +186,19 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
  }
  
  /**
++ * blkcg_parent - get the parent of a blkcg
++ * @blkcg: blkcg of interest
++ *
++ * Return the parent blkcg of @blkcg.  Can be called anytime.
++ */
++static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
++{
++	struct cgroup *pcg = blkcg->css.cgroup->parent;
++
++	return pcg ? cgroup_to_blkcg(pcg) : NULL;
++}
++
++/**
+  * blkg_to_pdata - get policy private data
+  * @blkg: blkg of interest
+  * @pol: policy of interest
 -- 
 1.7.11.7
