@@ -1,78 +1,84 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 10/12] blkcg: add blkg_policy_data->plid
-Date: Fri, 14 Dec 2012 14:41:23 -0800
-Message-ID: <1355524885-22719-11-git-send-email-tj@kernel.org>
-References: <1355524885-22719-1-git-send-email-tj@kernel.org>
+From: Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: performance drop after using blkcg
+Date: Sun, 16 Dec 2012 12:38:15 +0800
+Message-ID: <CAC8teKVi3Pwp2as6Q8y+35QAtRWGLywLZfWM-g2SoG8GzaPZxw@mail.gmail.com>
+References: <CAFVn34SxqAJe_4P-WT8MOiG-kmKKD7ge96zoHXQuGqHWPgAt+A@mail.gmail.com>
+ <20121211142518.GA5580@redhat.com> <CAFVn34TqCk71PDgdTAhBo9qTmhD3OwO9RxuyNRXwtkJoYqtOZg@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=5qBQy/3dM7JUKLV+sclJsAtaJZqCpGOslEJmtG8fMmc=;
+        b=uMrO4fkkcOoIN8CJnA8/bszrzunq+6vTfsxlMGNCnpTDRvAb73RrR8dqmdPUr1Coxq
+         4Lz7cwPjthlMGb7m4mZpIS7odNViiVsYcanOY9Md1qYIGX9sMHzgB+YHKkF5d+kyR46g
+         h6elWaC+hqwLUHJDfk1nOu18/BylLQBhJnLuLqobnEuXJZN70fgx7Ju3oaaHdTLnG/uh
+         wQXm5xYFf/AGyqAqXbXowu3Z9m0ympnfFhG6hTsvELw9EtR4JH25IGCaCms0xKgh37Ds
+         NhemGljljzKD2ukrZfb3CgJH37RJWb2NbMAshUm1FWBk4dBNmq4SiILi1yXByIGn0ROM
+         gIAA==
+In-Reply-To: <CAFVn34TqCk71PDgdTAhBo9qTmhD3OwO9RxuyNRXwtkJoYqtOZg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=NR4By18WC+NlmFYtnEIi/DVKxgRk880DrBw+vCzdkow=;
-	b=O94xnOmFzm0RoSOquru+OwYq2qFkl7M7UHzU5EQQWZVu2QTTiclRkTYxc+35PeuwTQ
-	APNjzpuj3JUHGoqvIlIDsmNyvQxi4KNHSZ94xI0HrCHfDdhN49xFkVUmMPc+yJSNIPVz
-	h1aqYdnyEfHMG/FQEk+a6RUVEX3AVcyf1YxXHGeiTp5qZlIaE3d4x9vz5wq+3II6d6px
-	Ag0y7eSufrBuse1NbbM341iF66axvdgYQwelDn+gLy2fkI9Hz4VQbkMkFvrwsTYr6944
-	a4s6u3hjhJyi0fblCpn62N5eYSa/ulxMbQucBiDPPniBbQe/6wfkrps/jDtn0u4+6lA9
-	cGCg==
-In-Reply-To: <1355524885-22719-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Zhao Shuai <zhaoshuai-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Add pd->plid so that the policy a pd belongs to can be identified
-easily.  This will be used to implement hierarchical blkg_[rw]stats.
+2012/12/12 Zhao Shuai <zhaoshuai-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>
+>
+> 2012/12/11 Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>:
+> > These results are with slice_idle=0?
+>
+> Yes, slice_idle is disabled.
+>
+> > What's the storage you are using. Looking at the speed of IO I would
+> > guess it is not one of those rotational disks.
+>
+> I have done the same test on 3 different type of boxes,and all of them
+> show a performance drop(30%-40%) after using blkcg. Though they
+> have different type of disk, all the storage they use are traditional
+> rotational
+> devices(e.g."HP EG0146FAWHU", "IBM-ESXS").
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- block/blk-cgroup.c | 2 ++
- block/blk-cgroup.h | 3 ++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Or you may want to try IO-throttle (i.e
+blkio.throttle.read_iops_device and blkio.throttle.write_iops_device)
+instead of blkcg. We use it as a compromised solution between
+performance and bandwidth allocation fairness on some clusters whose
+storage backend is ioDrive from FusionIO, which is also a really fast
+device.
+CFS/blkcg is based on time-sharing against the storage devices
+(allocation based on IOPS mode is just convert IOPS to virtual time,
+it's still time-sharing in fact), so the device only services single
+one group at one slice. Since many modern device requires enough
+degree of parallelism to get its full capability, the device can't run
+at full speed if every single group can't give it enough pressure,
+although they do so if you add them up, that's why you can get good
+score if you run them under the deadline scheduler.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 16ea5a1..fbf96ce 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -113,6 +113,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 
- 		blkg->pd[i] = pd;
- 		pd->blkg = blkg;
-+		pd->plid = i;
- 
- 		/* invoke per-policy init */
- 		if (pol->pd_init_fn)
-@@ -908,6 +909,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 
- 		blkg->pd[pol->plid] = pd;
- 		pd->blkg = blkg;
-+		pd->plid = pol->plid;
- 		pol->pd_init_fn(blkg);
- 
- 		spin_unlock(&blkg->blkcg->lock);
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 2446225..40f5b97 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -81,8 +81,9 @@ struct blkg_rwstat {
-  * beginning and pd_size can't be smaller than pd.
-  */
- struct blkg_policy_data {
--	/* the blkg this per-policy data belongs to */
-+	/* the blkg and policy id this per-policy data belongs to */
- 	struct blkcg_gq			*blkg;
-+	int				plid;
- 
- 	/* used during policy activation */
- 	struct list_head		alloc_node;
--- 
-1.7.11.7
+--
+Regards,
+Zhu Yanhai
+
+>
+> > So if somebody wants to experiment, just tweak the code a bit to allow
+> > preemption when a queue which lost share gets backlogged and you
+> > practially have a prototype of iops based group scheduling.
+>
+> Could you please explain more on this? How to adjust the code? I have test
+> the following code piece, the result is we lost group differentiation.
+>
+> cfq_group_served() {
+>          if (iops_mode(cfqd))
+>                  charge = cfqq->slice_dispatch;
+>          cfqg->vdisktime += cfq_scale_slice(charge, cfqg);
+>  }
+>
+>
+> --
+> Regards,
+> Zhao Shuai
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
