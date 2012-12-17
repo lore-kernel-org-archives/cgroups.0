@@ -1,85 +1,93 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 07/12] cfq-iosched: implement hierarchy-ready cfq_group
- charge scaling
-Date: Mon, 17 Dec 2012 14:12:54 -0800
-Message-ID: <20121217221254.GH1844@htj.dyndns.org>
-References: <1355524885-22719-1-git-send-email-tj@kernel.org>
- <1355524885-22719-8-git-send-email-tj@kernel.org>
- <20121217205317.GI7235@redhat.com>
- <20121217211738.GD1844@htj.dyndns.org>
- <20121217212736.GB13691@redhat.com>
- <20121217213314.GF1844@htj.dyndns.org>
- <20121217214911.GC13691@redhat.com>
+Subject: Re: [RFC PATCH 0/9] Add container support for cgroup
+Date: Mon, 17 Dec 2012 15:48:16 -0800
+Message-ID: <20121217234816.GA10220@mtj.dyndns.org>
+References: <1355726615-15224-1-git-send-email-gaofeng@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=tbtlgazBB9FP2SUoxnKGouyDHZw4mBlqczTR0YsYjQo=;
-        b=eWlZ1SuiQ4X6WfCKKxa+j9Ry4Xuz1+SGqJo9ZeIlwTVo7o0Oh194Oz01YVtIiK+xuE
-         Mo42UyHeisu7k4lTOhh3RpSAoGzZT1ZnkZacznqCBsMFskKKUm8mLQNHLJB1bn0qI8wV
-         X218ya68PLjGELCxRqOUwHGG5GBVGeYx9npQ4Ecw1vuNg4PYPJbqmYFgWuPduGYJRuiT
-         b9zFbQ1A9MUeNeD0D+b0xqWRE0X9FzUk5hu4R/EU8F/twPlhjMJGuOhXKolLmbnir0Eq
-         xSvQS7LmZIXdwQAmKBFqKIGHG4a/zIuUEDtM6gKEVGE9Ks1AaTK6E6UvkzXPbDmfN0Ks
-         Z8TQ==
-Content-Disposition: inline
-In-Reply-To: <20121217214911.GC13691-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=M6Bg2LK7BlrbLPm2S5ItDbT19sO+NqVIJc6egsC281E=;
+	b=Etj6Afnz4xhShimmiysAiWQaMHCJLZW1Uly3KwsurP8lBFPhdIf8F8c+y1eDdWO9AZ
+	blACrOlhcpDCmwcf03YlayVECiEKxDLArD5RhIGmE43wYNlRvE6KNsEUx0D6mfRImUZ5
+	hyzyID/GUcM6SjLs/bCQtOPqzvEe8ZqEBb0VuGTD5td6IMc1A+HyO8uMAvBPgJmvQEpB
+	DtZiOF5TASWu1ze8gi+TSKtANY2445cPTRg0cSs3SwESjjMFtiQSwppNi9085m1I3M8L
+	I/W3bNfUMOKQFE7tWUcWqeHqgyReY4sxkpK+AnTgmMplmcEo1rRjeOM7JBiCBZtwlmUz
+	rE4w==
+Content-Disposition: inline
+In-Reply-To: <1355726615-15224-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hey, Vivek.
+Hello,
 
-On Mon, Dec 17, 2012 at 04:49:11PM -0500, Vivek Goyal wrote:
-> > Eh?  Then how would it compete with the children cfqgs?  You can
-> > consider it as the hidden leaf node competing with the children cfqgs,
-> > right?  So, you take the leaf weight and divide it by the total active
-> > weight of all the children (including the hidden leaf node).  It isn't
-> > different from the rest of the calculation.  It just looks different
-> > because leaf_weight is stored elsewhere and we look down there and
-> > then walke up.  The calculation being done is exactly the same one.
+On Mon, Dec 17, 2012 at 02:43:26PM +0800, Gao feng wrote:
+> Right now,if we mount cgroup in the container,we will get
+> host's cgroup informations and even we can change host's
+> cgroup in container.
 > 
-> Again it is coming from multiplexing cfqg and cfqg->task_group. So
-> effectively we are calculating the vfraction of task_group inside cfqg.
-
-Or calculating the fraction of the hidden leaf node.
-
-> Once you say cfqg->vfraction, I immediately think of total share of
-> group (including task_group and all children cgroups).
-
-Any tasks should be treated as member of the hidden leaf node, so...
-
-> May be cfqg->task_group_vfraction (or cfqg->tg_fraction) is a better name.
-
-I don't know.  Wouldn't just explaining clearly in the comment e
-enough?  I think the name "vfraction" is already weird enough to
-indicate that it's something which you need to read explanation about.
-If that explanation is readily available as comment, I think it should
-be okay.
-
-> Also descrition says.
+> So the resource controller of the container will lose
+> effectiveness.
 > 
-> /* vfraction  the fraction of vdisktime that a cfqg is entitled to */
+> This patchset try to add contianer support for cgroup.
+> the main idea is allocateing cgroup super-block for each
+> cgroup mounted in different pid namespace.
 > 
-> May be we can clarify it that it is share of task_group of cfqg.
-
-Yeah, no objection.  Let's beef up the explanation there.
-
-> I guess i am too familiar with how cpu has done it. I think I am getting
-> confused with properties which belong to cfqg and properties which
-> belong to cfqg->task_group.
+> The top cgroup of container will share css with host.
+> When the cgroup being mounted in contianer,the tasks in
+> this container will be attached to this new mounted
+> hierarchy's top cgroup, And when unmounting cgroup in
+> container,these tasks will be attached back to host's cgroup.
 > 
-> I guess if we prefix fields belong to task_group with somete suitable
-> string, it might become little easier to understand.
+> Since the container can change the shared css through it's
+> cgroup subsystem files. patch 7/8 disable the write permission
+> of container's top cgroup files. In my TODO list, container
+> will have it's own css, this problem will disappear.
+> 
+> This patchset is sent as RFC,any comments are welcome.
+> Maybe this isn't the best solution, if you have better
+> solution,Please let me know.
 
-I usually am not a big fan of adding wordy prefixes.  I think they
-tend to obfuscate/frustrate more than help.  Let's stick a weird (that
-is, non-generic) name to something weird and explain it well in the
-comment.
+So, I'm *highly* unlikely to accept any patches which try to add
+namespace support directly to cgroup in any form unless someone can
+definitively show me this can't be done using FUSE or other userland
+solutions.
+
+cgroupfs is going to be an interface to expose the resource control
+facilities of the kernel and that's the extent the interface will be
+capable of.  It in itself won't support delegation of resource
+policies to names spaces or unprivieged users.
+
+Although I don't have anything concrete yet, the tentative plan is to
+have something in userland which can integrate with the base system so
+that userland has an unified and controlled way to interact with
+cgroup which can be easily integrated with the rest of the base system
+and kernel has at least some level of interface isolation.  Basically,
+something like libudev or libsysfs.
+
+So, if people want to allow NSes control its subtree of cgroups, I
+really want something in the userland which sits between the NSes and
+actual cgroup, and I bet things would actually be much better that
+way.  cgroupfs seems to allow it but you can't really delegate
+management of subtree easily.  Controllers would collapse with
+increasing level of nesting, root cgroups have different knobs or
+different interpretations of the same knobs, and siblings interact
+with each other, and I don't think making cgroupfs interface generic
+enough so that it can be used for all that is desirable or a
+worthwhile effort.
 
 Thanks.
 
