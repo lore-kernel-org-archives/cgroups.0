@@ -1,84 +1,29 @@
-From: Zhu Yanhai <zhu.yanhai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: performance drop after using blkcg
-Date: Sun, 16 Dec 2012 12:38:15 +0800
-Message-ID: <CAC8teKVi3Pwp2as6Q8y+35QAtRWGLywLZfWM-g2SoG8GzaPZxw@mail.gmail.com>
-References: <CAFVn34SxqAJe_4P-WT8MOiG-kmKKD7ge96zoHXQuGqHWPgAt+A@mail.gmail.com>
- <20121211142518.GA5580@redhat.com> <CAFVn34TqCk71PDgdTAhBo9qTmhD3OwO9RxuyNRXwtkJoYqtOZg@mail.gmail.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Mon, 17 Dec 2012 02:34:30 +0100
+Message-ID: <20121217023430.5A390FD7@pobox.sk>
+References: <20121130165937.F9564EBE@pobox.sk>, <20121130161923.GN29317@dhcp22.suse.cz>, <20121203151601.GA17093@dhcp22.suse.cz>, <20121205023644.18C3006B@pobox.sk>, <20121205141722.GA9714@dhcp22.suse.cz>, <20121206012924.FE077FD7@pobox.sk>, <20121206095423.GB10931@dhcp22.suse.cz>, <20121210022038.E6570D37@pobox.sk>, <20121210094318.GA6777@dhcp22.suse.cz>, <20121210111817.F697F53E@pobox.sk> <20121210155205.GB6777@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=5qBQy/3dM7JUKLV+sclJsAtaJZqCpGOslEJmtG8fMmc=;
-        b=uMrO4fkkcOoIN8CJnA8/bszrzunq+6vTfsxlMGNCnpTDRvAb73RrR8dqmdPUr1Coxq
-         4Lz7cwPjthlMGb7m4mZpIS7odNViiVsYcanOY9Md1qYIGX9sMHzgB+YHKkF5d+kyR46g
-         h6elWaC+hqwLUHJDfk1nOu18/BylLQBhJnLuLqobnEuXJZN70fgx7Ju3oaaHdTLnG/uh
-         wQXm5xYFf/AGyqAqXbXowu3Z9m0ympnfFhG6hTsvELw9EtR4JH25IGCaCms0xKgh37Ds
-         NhemGljljzKD2ukrZfb3CgJH37RJWb2NbMAshUm1FWBk4dBNmq4SiILi1yXByIGn0ROM
-         gIAA==
-In-Reply-To: <CAFVn34TqCk71PDgdTAhBo9qTmhD3OwO9RxuyNRXwtkJoYqtOZg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20121210155205.GB6777@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zhao Shuai <zhaoshuai-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-2012/12/12 Zhao Shuai <zhaoshuai-h+KGxgPPiopAfugRpC6u6w@public.gmane.org>
->
-> 2012/12/11 Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>:
-> > These results are with slice_idle=0?
->
-> Yes, slice_idle is disabled.
->
-> > What's the storage you are using. Looking at the speed of IO I would
-> > guess it is not one of those rotational disks.
->
-> I have done the same test on 3 different type of boxes,and all of them
-> show a performance drop(30%-40%) after using blkcg. Though they
-> have different type of disk, all the storage they use are traditional
-> rotational
-> devices(e.g."HP EG0146FAWHU", "IBM-ESXS").
+>I would try to limit changes to minimum. So the original kernel you were
+>using + the first patch to prevent OOM from the write path + 2 debugging
+>patches.
 
-Or you may want to try IO-throttle (i.e
-blkio.throttle.read_iops_device and blkio.throttle.write_iops_device)
-instead of blkcg. We use it as a compromised solution between
-performance and bandwidth allocation fairness on some clusters whose
-storage backend is ioDrive from FusionIO, which is also a really fast
-device.
-CFS/blkcg is based on time-sharing against the storage devices
-(allocation based on IOPS mode is just convert IOPS to virtual time,
-it's still time-sharing in fact), so the device only services single
-one group at one slice. Since many modern device requires enough
-degree of parallelism to get its full capability, the device can't run
-at full speed if every single group can't give it enough pressure,
-although they do so if you add them up, that's why you can get good
-score if you run them under the deadline scheduler.
+
+It didn't take off the whole system this time (but i was prepared to reco=
+rd a video of console ;) ), here it is:
+http://www.watchdog.sk/lkml/oom_mysqld4
 
 --
-Regards,
-Zhu Yanhai
-
->
-> > So if somebody wants to experiment, just tweak the code a bit to allow
-> > preemption when a queue which lost share gets backlogged and you
-> > practially have a prototype of iops based group scheduling.
->
-> Could you please explain more on this? How to adjust the code? I have test
-> the following code piece, the result is we lost group differentiation.
->
-> cfq_group_served() {
->          if (iops_mode(cfqd))
->                  charge = cfqq->slice_dispatch;
->          cfqg->vdisktime += cfq_scale_slice(charge, cfqg);
->  }
->
->
-> --
-> Regards,
-> Zhao Shuai
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
