@@ -1,48 +1,78 @@
-From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [RFC PATCH 0/9] Add container support for cgroup
-Date: Mon, 17 Dec 2012 07:16:08 -0600
-Message-ID: <20121217131608.GA5163@sergelap>
-References: <1355726615-15224-1-git-send-email-gaofeng@cn.fujitsu.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Mon, 17 Dec 2012 17:32:03 +0100
+Message-ID: <20121217163203.GD25432@dhcp22.suse.cz>
+References: <20121203151601.GA17093@dhcp22.suse.cz>
+ <20121205023644.18C3006B@pobox.sk>
+ <20121205141722.GA9714@dhcp22.suse.cz>
+ <20121206012924.FE077FD7@pobox.sk>
+ <20121206095423.GB10931@dhcp22.suse.cz>
+ <20121210022038.E6570D37@pobox.sk>
+ <20121210094318.GA6777@dhcp22.suse.cz>
+ <20121210111817.F697F53E@pobox.sk>
+ <20121210155205.GB6777@dhcp22.suse.cz>
+ <20121217023430.5A390FD7@pobox.sk>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1355726615-15224-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20121217023430.5A390FD7@pobox.sk>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
+To: azurIt <azurit@pobox.sk>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Quoting Gao feng (gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org):
-> Right now,if we mount cgroup in the container,we will get
-> host's cgroup informations and even we can change host's
-> cgroup in container.
-> 
-> So the resource controller of the container will lose
-> effectiveness.
-> 
-> This patchset try to add contianer support for cgroup.
-> the main idea is allocateing cgroup super-block for each
-> cgroup mounted in different pid namespace.
-> 
-> The top cgroup of container will share css with host.
-> When the cgroup being mounted in contianer,the tasks in
-> this container will be attached to this new mounted
-> hierarchy's top cgroup, And when unmounting cgroup in
-> container,these tasks will be attached back to host's cgroup.
-> 
-> Since the container can change the shared css through it's
-> cgroup subsystem files. patch 7/8 disable the write permission
-> of container's top cgroup files. In my TODO list, container
-> will have it's own css, this problem will disappear.
+On Mon 17-12-12 02:34:30, azurIt wrote:
+> >I would try to limit changes to minimum. So the original kernel you were
+> >using + the first patch to prevent OOM from the write path + 2 debugging
+> >patches.
 > 
 > 
-> This patchset is sent as RFC,any comments are welcome.
-> Maybe this isn't the best solution, if you have better
-> solution,Please let me know.
+> It didn't take off the whole system this time (but i was
+> prepared to record a video of console ;) ), here it is:
+> http://www.watchdog.sk/lkml/oom_mysqld4
 
-Sounds very interesting, thanks.  I'm out (and mostly AFK) but
-will take a look on wed or thu.
+[...]
+[ 1248.059429] ------------[ cut here ]------------
+[ 1248.059586] WARNING: at mm/memcontrol.c:2400 T.1146+0x2d9/0x610()
+[ 1248.059723] Hardware name: S5000VSA
+[ 1248.059855] gfp_mask:208 nr_pages:1 oom:0 ret:2
 
--serge
+This is GFP_KERNEL allocation which is expected. It is also a simple
+page which is not that expected because we shouldn't return ENOMEM on
+those unless this was GFP_ATOMIC allocation (which it wasn't) or the
+caller told us to not trigger OOM which is the case only for THP pages
+(see mem_cgroup_charge_common). So the big question is how have we ended
+up with oom=false here...
+
+[Ohh, I am really an idiot. I screwed the first patch]
+-       bool oom = true;
++       bool oom = !(gfp_mask | GFP_MEMCG_NO_OOM);
+
+Which obviously doesn't work. It should read !(gfp_mask &GFP_MEMCG_NO_OOM).
+  No idea how I could have missed that. I am really sorry about that.
+---
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c04676d..1f35a74 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2704,7 +2704,7 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
+ 	struct mem_cgroup *memcg = NULL;
+ 	unsigned int nr_pages = 1;
+ 	struct page_cgroup *pc;
+-	bool oom = !(gfp_mask | GFP_MEMCG_NO_OOM);
++	bool oom = !(gfp_mask & GFP_MEMCG_NO_OOM);
+ 	int ret;
+ 
+ 	if (PageTransHuge(page)) {
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
