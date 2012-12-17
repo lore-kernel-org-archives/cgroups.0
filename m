@@ -1,66 +1,176 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Mon, 17 Dec 2012 20:55:10 +0100
-Message-ID: <20121217195510.GA16375@dhcp22.suse.cz>
-References: <20121205141722.GA9714@dhcp22.suse.cz>
- <20121206012924.FE077FD7@pobox.sk>
- <20121206095423.GB10931@dhcp22.suse.cz>
- <20121210022038.E6570D37@pobox.sk>
- <20121210094318.GA6777@dhcp22.suse.cz>
- <20121210111817.F697F53E@pobox.sk>
- <20121210155205.GB6777@dhcp22.suse.cz>
- <20121217023430.5A390FD7@pobox.sk>
- <20121217163203.GD25432@dhcp22.suse.cz>
- <20121217192301.829A7020@pobox.sk>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 04/12] blkcg: make blkcg_gq's hierarchical
+Date: Mon, 17 Dec 2012 15:04:23 -0500
+Message-ID: <20121217200423.GG7235@redhat.com>
+References: <1355524885-22719-1-git-send-email-tj@kernel.org>
+	<1355524885-22719-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=dM1v33DKUG/40/PGm1k9sSd6COs87ISoDF6r2JBNq3o=;
-        b=dbe9V5owOzox+Rdd0fL4glrPB9i7NqIn1zJl+nxyt7yBXT/fFTJjrcZcJMbvRuLC5/
-         8lAfmE24AnFqD0/Rnw7M0vZjgmwj70xsQr/Uw1/herLZ064nu+RzGyBLRXWdTceFbJBw
-         w/h+NhnOpLND5eJgz0+CNJzbMEAufOyABn+cfOmBNGDmEs/NOaYK5K7dct763Q7uvg7l
-         BEW4vqBpqTo/IrRIviSDEOrpCVuhFb0reO46iR1+YFwsHg8TBoAW5m3vrs4hzigiVBLc
-         QnflWIMcVFwRWTlxK9w/QuAvYJInNUTLFyOkfzrFXXB1ryjHogT8X3iDmSFhNSqOwQw7
-         NvBw==
-Content-Disposition: inline
-In-Reply-To: <20121217192301.829A7020-Rm0zKEqwvD4@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1355524885-22719-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 17-12-12 19:23:01, azurIt wrote:
-> >[Ohh, I am really an idiot. I screwed the first patch]
-> >-       bool oom = true;
-> >+       bool oom = !(gfp_mask | GFP_MEMCG_NO_OOM);
-> >
-> >Which obviously doesn't work. It should read !(gfp_mask &GFP_MEMCG_NO_OOM).
-> >  No idea how I could have missed that. I am really sorry about that.
+On Fri, Dec 14, 2012 at 02:41:17PM -0800, Tejun Heo wrote:
+> Currently a child blkg (blkcg_gq) can be created even if its parent
+> doesn't exist.  ie. Given a blkg, it's not guaranteed that its
+> ancestors will exist.  This makes it difficult to implement proper
+> hierarchy support for blkcg policies.
 > 
+> Always create blkgs recursively and make a child blkg hold a reference
+> to its parent.  blkg->parent is added so that finding the parent is
+> easy.  blkcg_parent() is also added in the process.
 > 
-> :D no problem :) so, now it should really work as expected and
-> completely fix my original problem?
+> This change can be visible to userland.  e.g. while issuing IO in a
+> nested cgroup didn't affect the ancestors at all, now it will
+> initialize all ancestor blkgs and zero stats for the request_queue
+> will always appear on them.  While this is userland visible, this
+> shouldn't cause any functional difference.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-It should mitigate the problem. The real fix shouldn't be that specific
-(as per discussion in other thread). The chance this will get upstream
-is not big and that means that it will not get to the stable tree
-either.
+Looks good to me.
 
-> is it safe to apply it on 3.2.35?
+Acked-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-I didn't check what are the differences but I do not think there is
-anything to conflict with it.
+Vivek
 
-> Thank you very much!
-
-HTH
-
--- 
-Michal Hocko
-SUSE Labs
+> ---
+>  block/blk-cgroup.c | 42 +++++++++++++++++++++++++++++++++++++-----
+>  block/blk-cgroup.h | 18 ++++++++++++++++++
+>  2 files changed, 55 insertions(+), 5 deletions(-)
+> 
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index fde2286..c858628 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -201,7 +201,16 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+>  	}
+>  	blkg = new_blkg;
+>  
+> -	/* insert */
+> +	/* link parent and insert */
+> +	if (blkcg_parent(blkcg)) {
+> +		blkg->parent = __blkg_lookup(blkcg_parent(blkcg), q, false);
+> +		if (WARN_ON_ONCE(!blkg->parent)) {
+> +			blkg = ERR_PTR(-EINVAL);
+> +			goto err_put_css;
+> +		}
+> +		blkg_get(blkg->parent);
+> +	}
+> +
+>  	spin_lock(&blkcg->lock);
+>  	ret = radix_tree_insert(&blkcg->blkg_tree, q->id, blkg);
+>  	if (likely(!ret)) {
+> @@ -213,6 +222,10 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+>  	if (!ret)
+>  		return blkg;
+>  
+> +	/* @blkg failed fully initialized, use the usual release path */
+> +	blkg_put(blkg);
+> +	return ERR_PTR(ret);
+> +
+>  err_put_css:
+>  	css_put(&blkcg->css);
+>  err_free_blkg:
+> @@ -226,8 +239,9 @@ err_free_blkg:
+>   * @q: request_queue of interest
+>   *
+>   * Lookup blkg for the @blkcg - @q pair.  If it doesn't exist, try to
+> - * create one.  This function should be called under RCU read lock and
+> - * @q->queue_lock.
+> + * create one.  blkg creation is performed recursively from blkcg_root such
+> + * that all non-root blkg's have access to the parent blkg.  This function
+> + * should be called under RCU read lock and @q->queue_lock.
+>   *
+>   * Returns pointer to the looked up or created blkg on success, ERR_PTR()
+>   * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
+> @@ -252,7 +266,23 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+>  	if (blkg)
+>  		return blkg;
+>  
+> -	return blkg_create(blkcg, q, NULL);
+> +	/*
+> +	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
+> +	 * non-root blkgs have access to their parents.
+> +	 */
+> +	while (true) {
+> +		struct blkcg *pos = blkcg;
+> +		struct blkcg *parent = blkcg_parent(blkcg);
+> +
+> +		while (parent && !__blkg_lookup(parent, q, false)) {
+> +			pos = parent;
+> +			parent = blkcg_parent(parent);
+> +		}
+> +
+> +		blkg = blkg_create(pos, q, NULL);
+> +		if (pos == blkcg || IS_ERR(blkg))
+> +			return blkg;
+> +	}
+>  }
+>  EXPORT_SYMBOL_GPL(blkg_lookup_create);
+>  
+> @@ -321,8 +351,10 @@ static void blkg_rcu_free(struct rcu_head *rcu_head)
+>  
+>  void __blkg_release(struct blkcg_gq *blkg)
+>  {
+> -	/* release the extra blkcg reference this blkg has been holding */
+> +	/* release the blkcg and parent blkg refs this blkg has been holding */
+>  	css_put(&blkg->blkcg->css);
+> +	if (blkg->parent)
+> +		blkg_put(blkg->parent);
+>  
+>  	/*
+>  	 * A group is freed in rcu manner. But having an rcu lock does not
+> diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+> index 2459730..b26ed58 100644
+> --- a/block/blk-cgroup.h
+> +++ b/block/blk-cgroup.h
+> @@ -94,8 +94,13 @@ struct blkcg_gq {
+>  	struct list_head		q_node;
+>  	struct hlist_node		blkcg_node;
+>  	struct blkcg			*blkcg;
+> +
+> +	/* all non-root blkcg_gq's are guaranteed to have access to parent */
+> +	struct blkcg_gq			*parent;
+> +
+>  	/* request allocation list for this blkcg-q pair */
+>  	struct request_list		rl;
+> +
+>  	/* reference count */
+>  	int				refcnt;
+>  
+> @@ -181,6 +186,19 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
+>  }
+>  
+>  /**
+> + * blkcg_parent - get the parent of a blkcg
+> + * @blkcg: blkcg of interest
+> + *
+> + * Return the parent blkcg of @blkcg.  Can be called anytime.
+> + */
+> +static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
+> +{
+> +	struct cgroup *pcg = blkcg->css.cgroup->parent;
+> +
+> +	return pcg ? cgroup_to_blkcg(pcg) : NULL;
+> +}
+> +
+> +/**
+>   * blkg_to_pdata - get policy private data
+>   * @blkg: blkg of interest
+>   * @pol: policy of interest
+> -- 
+> 1.7.11.7
