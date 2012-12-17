@@ -1,29 +1,99 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Mon, 17 Dec 2012 02:34:30 +0100
-Message-ID: <20121217023430.5A390FD7@pobox.sk>
-References: <20121130165937.F9564EBE@pobox.sk>, <20121130161923.GN29317@dhcp22.suse.cz>, <20121203151601.GA17093@dhcp22.suse.cz>, <20121205023644.18C3006B@pobox.sk>, <20121205141722.GA9714@dhcp22.suse.cz>, <20121206012924.FE077FD7@pobox.sk>, <20121206095423.GB10931@dhcp22.suse.cz>, <20121210022038.E6570D37@pobox.sk>, <20121210094318.GA6777@dhcp22.suse.cz>, <20121210111817.F697F53E@pobox.sk> <20121210155205.GB6777@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20121210155205.GB6777@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+From: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [RFC PATCH 3/9] cgroup: use root->top_root instead of root
+Date: Mon, 17 Dec 2012 14:43:29 +0800
+Message-ID: <1355726615-15224-4-git-send-email-gaofeng@cn.fujitsu.com>
+References: <1355726615-15224-1-git-send-email-gaofeng@cn.fujitsu.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1355726615-15224-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
->I would try to limit changes to minimum. So the original kernel you were
->using + the first patch to prevent OOM from the write path + 2 debugging
->patches.
+After adding container support for cgroup,the subsystems
+can bind to many hierarchies.the root of cgroups will be
+different even these roots have same subsys_mask.
 
+Because these roots' top_root will always be same.use
+top_root instead of root.
 
-It didn't take off the whole system this time (but i was prepared to reco=
-rd a video of console ;) ), here it is:
-http://www.watchdog.sk/lkml/oom_mysqld4
+Also link cgroup's allcg_node to top_root's allcg_list.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Signed-off-by: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/cgroup.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 27ebeaf..2e14c8f 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -315,7 +315,7 @@ static int notify_on_release(const struct cgroup *cgrp)
+  * an active hierarchy
+  */
+ #define for_each_subsys(_root, _ss) \
+-list_for_each_entry(_ss, &_root->subsys_list, sibling)
++list_for_each_entry(_ss, &_root->top_root->subsys_list, sibling)
+ 
+ /* for_each_active_root() allows you to iterate across the active hierarchies */
+ #define for_each_active_root(_root) \
+@@ -519,7 +519,7 @@ static bool compare_css_sets(struct css_set *cg,
+ 		cg1 = cgl1->cgrp;
+ 		cg2 = cgl2->cgrp;
+ 		/* Hierarchies should be linked in the same order. */
+-		BUG_ON(cg1->root != cg2->root);
++		BUG_ON(cg1->root->top_root != cg2->root->top_root);
+ 
+ 		/*
+ 		 * If this hierarchy is the hierarchy of the cgroup
+@@ -528,7 +528,7 @@ static bool compare_css_sets(struct css_set *cg,
+ 		 * hierarchy, then this css_set should point to the
+ 		 * same cgroup as the old css_set.
+ 		 */
+-		if (cg1->root == new_cgrp->root) {
++		if (cg1->root->top_root == new_cgrp->root->top_root) {
+ 			if (cg1 != new_cgrp)
+ 				return false;
+ 		} else {
+@@ -703,7 +703,7 @@ static struct css_set *find_css_set(
+ 	/* Add reference counts and links from the new css_set. */
+ 	list_for_each_entry(link, &oldcg->cg_links, cg_link_list) {
+ 		struct cgroup *c = link->cgrp;
+-		if (c->root == cgrp->root)
++		if (c->root->top_root == cgrp->root->top_root)
+ 			c = cgrp;
+ 		link_css_set(&tmp_cg_links, res, c);
+ 	}
+@@ -745,7 +745,7 @@ static struct cgroup *task_cgroup_from_root(struct task_struct *task,
+ 		struct cg_cgroup_link *link;
+ 		list_for_each_entry(link, &css->cg_links, cg_link_list) {
+ 			struct cgroup *c = link->cgrp;
+-			if (c->root == root) {
++			if (c->root->top_root == root->top_root) {
+ 				res = c;
+ 				break;
+ 			}
+@@ -2840,7 +2840,8 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
+ 
+ 	/* %NULL @cfts indicates abort and don't bother if @ss isn't attached */
+ 	if (cfts && ss->root != &rootnode) {
+-		list_for_each_entry(cgrp, &ss->root->allcg_list, allcg_node) {
++		list_for_each_entry(cgrp, &ss->root->top_root->allcg_list,
++				    allcg_node) {
+ 			dget(cgrp->dentry);
+ 			list_add_tail(&cgrp->cft_q_node, &pending);
+ 		}
+@@ -4207,7 +4208,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	/* allocation complete, commit to creation */
+ 	dentry->d_fsdata = cgrp;
+ 	cgrp->dentry = dentry;
+-	list_add_tail(&cgrp->allcg_node, &root->allcg_list);
++	list_add_tail(&cgrp->allcg_node, &root->top_root->allcg_list);
+ 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
+ 	root->number_of_cgroups++;
+ 
+-- 
+1.7.7.6
