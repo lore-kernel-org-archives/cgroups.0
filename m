@@ -1,78 +1,135 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Mon, 17 Dec 2012 17:32:03 +0100
-Message-ID: <20121217163203.GD25432@dhcp22.suse.cz>
-References: <20121203151601.GA17093@dhcp22.suse.cz>
- <20121205023644.18C3006B@pobox.sk>
- <20121205141722.GA9714@dhcp22.suse.cz>
- <20121206012924.FE077FD7@pobox.sk>
- <20121206095423.GB10931@dhcp22.suse.cz>
- <20121210022038.E6570D37@pobox.sk>
- <20121210094318.GA6777@dhcp22.suse.cz>
- <20121210111817.F697F53E@pobox.sk>
- <20121210155205.GB6777@dhcp22.suse.cz>
- <20121217023430.5A390FD7@pobox.sk>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET] block: implement blkcg hierarchy support in cfq
+Date: Mon, 17 Dec 2012 11:52:28 -0500
+Message-ID: <20121217165228.GB7235@redhat.com>
+References: <1355524885-22719-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20121217023430.5A390FD7@pobox.sk>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1355524885-22719-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Peter Zijlstra <pzijlstr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 
-On Mon 17-12-12 02:34:30, azurIt wrote:
-> >I would try to limit changes to minimum. So the original kernel you were
-> >using + the first patch to prevent OOM from the write path + 2 debugging
-> >patches.
+On Fri, Dec 14, 2012 at 02:41:13PM -0800, Tejun Heo wrote:
+> Hello,
 > 
+> cfq-iosched is currently utterly broken in how it handles cgroup
+> hierarchy.  It ignores the hierarchy structure and just treats every
+> blkcgs equally.  This is simply broken.  This breakage makes blkcg
+> behave very differently from other properly-hierarchical controllers
+> and makes it impossible to give any uniform interpretation to the
+> hierarchy, which in turn makes it impossible to implement unified
+> hierarchy.
 > 
-> It didn't take off the whole system this time (but i was
-> prepared to record a video of console ;) ), here it is:
-> http://www.watchdog.sk/lkml/oom_mysqld4
+> Given the relative simplicity of cfqg scheduling, implementing proper
+> hierarchy support isn't that difficult.  All that's necessary is
+> determining how much fraction each cfqg on the service tree has claim
+> to considering the hierarchy.  The calculation can be done by
+> maintaining the sum of active weights at each level and compounding
+> the ratios from the cfqg in question to root.  The overhead isn't
+> significant.  Tree traversals happen only when cfqgs are added or
+> removed from the service tree and they are from the cfqg being
+> modified to the root.
+> 
+> There are some design choices which are worth mentioning.
+> 
+> * Internal (non-leaf) cfqgs w/ tasks treat the tasks as a single unit
+>   competeting against the children cfqgs.  New config knobs -
+>   blkio.leaf_weight[_device] - are added to configure the weight of
 
-[...]
-[ 1248.059429] ------------[ cut here ]------------
-[ 1248.059586] WARNING: at mm/memcontrol.c:2400 T.1146+0x2d9/0x610()
-[ 1248.059723] Hardware name: S5000VSA
-[ 1248.059855] gfp_mask:208 nr_pages:1 oom:0 ret:2
+[ CC peterz ]
 
-This is GFP_KERNEL allocation which is expected. It is also a simple
-page which is not that expected because we shouldn't return ENOMEM on
-those unless this was GFP_ATOMIC allocation (which it wasn't) or the
-caller told us to not trigger OOM which is the case only for THP pages
-(see mem_cgroup_charge_common). So the big question is how have we ended
-up with oom=false here...
+Hi Tejun,
 
-[Ohh, I am really an idiot. I screwed the first patch]
--       bool oom = true;
-+       bool oom = !(gfp_mask | GFP_MEMCG_NO_OOM);
+I am wondering if blkio.task_group_weight[_device] will more sense. It
+is easier to think in terms of hidden task group of a cfqg instead of
+whether it is a leaf node or not.
 
-Which obviously doesn't work. It should read !(gfp_mask &GFP_MEMCG_NO_OOM).
-  No idea how I could have missed that. I am really sorry about that.
----
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c04676d..1f35a74 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2704,7 +2704,7 @@ static int mem_cgroup_charge_common(struct page *page, struct mm_struct *mm,
- 	struct mem_cgroup *memcg = NULL;
- 	unsigned int nr_pages = 1;
- 	struct page_cgroup *pc;
--	bool oom = !(gfp_mask | GFP_MEMCG_NO_OOM);
-+	bool oom = !(gfp_mask & GFP_MEMCG_NO_OOM);
- 	int ret;
- 
- 	if (PageTransHuge(page)) {
--- 
-Michal Hocko
-SUSE Labs
+>   these tasks.  Another way to look at it is that each cfqg has a
+>   hidden leaf child node attached to it which hosts all tasks and
+>   leaf_weight controls the weight of that hidden node.
+> 
+>   Treating cfqqs and cfqgs as equals doesn't make much sense to me and
+>   is hairy - we need to establish ioprio to weight mapping and the
+>   weights fluctuate as processes fork and exit.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+So weights of task (io_context) or blkcg weights don't fluctuate with
+task fork/exit. It is just the weight on service tree, which fluctuates.
+
+> This becomes hairier
+>   when considering multiple controllers, Such mappings can't be
+>   established consistently across different controllers and the
+>   weights are given out differently - ie. blkcg give weights out to
+>   io_contexts while cpu to tasks, which may share io_contexts.  It's
+>   difficult to make sense of what's going on.
+
+We already have that issue, isn't it. Cpu does task scheduling and
+CFQ does io_context scheduling. (Nobody seems to be complaining though).
+
+> 
+>   The goal is to bring cpu, currently the only other controller which
+>   implements weight based resource allocation, to similar behavior.
+
+I think we first need to have some kind of buy-in from cpu controller
+guys that yes in long term they will change it. Otherwise we don't want
+to be stuck in a situation where cpu and blkio behave entirely
+differently.
+
+In fact we need to revisit this idea that what makes more sense. To
+me treating task and group at same level is not necessarily bad as
+it gives more flexibility. And leave it to user to create another
+subgroup and launch all the tasks there if they want to emulate the
+behavior of a hidden sub-group.
+
+If you look at it systemd already puts services in separate group. They
+always wanted to put user sessions also in a separate group. So
+effectively hierarhcy looks as follows (for cpu controller).
+
+			  root
+		        / | \  \ 
+		      T1 T2 usr system
+
+So T1 and T2 here basically a kernel threds (All users sessions and
+services have been moved out to respective cgroups).
+
+I think I am fine with not limiting kernel threads into a subgroup of
+their own. In fact I think there was a patch where we could not move
+kernel threads out of root cgroup. If that makes sense, then it does
+not make sense to limit kernel threads to a subgroup of their own
+by default (it is equivalent to moving these threads to a cgroup of
+their own).
+
+So though I don't mind the notion of this hidden cgroups but given
+the fact that we have implemented things other way and left it to
+user space to manage it based on their needs, I am not sure what's
+that fundamental reason that we should change that assumption now.
+
+And even if we decide to do it, we need to have other controllers
+on board (especially cpu).
+
+I think we will have similar issues with others components too. In blkio
+throttling support, we will have to put some kind of throttling limits
+on internal group too. I guess one can raise similar concerns for memory
+controller too where there are no internal limits on child task of a
+cgroup but there are limits on child group.
+
+			parent (mem.limit_in_bytes = 200)
+			  /   |   \
+			 T1  T2   child-grp (mem.limit_in_bytes = 100)
+					|
+					T3
+
+Now there are no  guarantees that T3 will get its share of 100 bytes of
+memory allocation as T1 and T2 might have already exhausted the quota
+of 200 bytes of parent.
+
+So should we create an internal group there too to limit the share of
+T1 and T2. I thought if somebody wants it, then it is best to leave it
+to user space then kernel enforcing that. 
+
+Thanks
+Vivek
