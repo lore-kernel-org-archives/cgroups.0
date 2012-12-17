@@ -1,49 +1,48 @@
-From: Vasiliy Tolstov <v.tolstov-+9FY0jupvH6HXe+LvDLADg@public.gmane.org>
-Subject: failed to setups device_weight for bio device (/dev/mdxxx)
-Date: Mon, 17 Dec 2012 16:57:36 +0400
-Message-ID: <CACaajQtJp96QJaPs66zcH+4vuD7UmYzBXRWxyj5A2KWoXObbMg@mail.gmail.com>
+From: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [RFC PATCH 0/9] Add container support for cgroup
+Date: Mon, 17 Dec 2012 07:16:08 -0600
+Message-ID: <20121217131608.GA5163@sergelap>
+References: <1355726615-15224-1-git-send-email-gaofeng@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=selfip.ru; s=google;
-        h=mime-version:sender:x-originating-ip:from:date:x-google-sender-auth
-         :message-id:subject:to:content-type;
-        bh=W7OmvcZNjK7wlicd/yHgBB7olfyA9x4khy/7d3RCvwI=;
-        b=UfmbR7sBQft3yuyJJ/fvS+i9dkSm4ohYdXeQuzZEoWXQmh5Fx+7fPxlgtLK4xERP7j
-         nsGwzPATjWaTc/v4xFDeE4kZzUAhET8Kb/taddpHYGk24cJWDeLIPkRimPcX/f6/Ff/i
-         RrA6h9WvmBUjhQCxQlTcaqHtUJcHF8uohZtBI=
+Content-Disposition: inline
+In-Reply-To: <1355726615-15224-1-git-send-email-gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
 
-Hello. I'm newbie with cgroups (try to use blkio cgroups).
-I need to shape disk activity on xen vps.
-Each xen domU have block device that is software raid 1.
-This raid have two devices that is lvm volume lies on srp (infiniband)
-attached disk.
+Quoting Gao feng (gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org):
+> Right now,if we mount cgroup in the container,we will get
+> host's cgroup informations and even we can change host's
+> cgroup in container.
+> 
+> So the resource controller of the container will lose
+> effectiveness.
+> 
+> This patchset try to add contianer support for cgroup.
+> the main idea is allocateing cgroup super-block for each
+> cgroup mounted in different pid namespace.
+> 
+> The top cgroup of container will share css with host.
+> When the cgroup being mounted in contianer,the tasks in
+> this container will be attached to this new mounted
+> hierarchy's top cgroup, And when unmounting cgroup in
+> container,these tasks will be attached back to host's cgroup.
+> 
+> Since the container can change the shared css through it's
+> cgroup subsystem files. patch 7/8 disable the write permission
+> of container's top cgroup files. In my TODO list, container
+> will have it's own css, this problem will disappear.
+> 
+> 
+> This patchset is sent as RFC,any comments are welcome.
+> Maybe this isn't the best solution, if you have better
+> solution,Please let me know.
 
-How can i limit disk usage in this configuration with cgroups?
+Sounds very interesting, thanks.  I'm out (and mostly AFK) but
+will take a look on wed or thu.
 
-P.S. Some log:
-
-:~ # ls -alo /dev/md116
-brw-rw---- 1 root 9, 116 Dec 17 15:44 /dev/md116
-:~ # /bin/echo 9:116 0 > /cgroups/blkio.weight_device
-/bin/echo: write error: Invalid argument
-
-/dev/md116 consist:
-/dev/dm-30 and /dev/dm-31
-
-:~ # /bin/echo 253:30 14 > /cgroups/blkio.weight_device
-/bin/echo: write error: Invalid argument
-:~ # /bin/echo 253:31 14 > /cgroups/blkio.weight_device
-/bin/echo: write error: Invalid argument
-
-
---
-Vasiliy Tolstov,
-Clodo.ru
-e-mail: v.tolstov-+9FY0jupvH6HXe+LvDLADg@public.gmane.org
-jabber: vase-+9FY0jupvH6HXe+LvDLADg@public.gmane.org
+-serge
