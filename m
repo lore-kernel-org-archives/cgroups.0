@@ -1,56 +1,57 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 07/12] cfq-iosched: implement hierarchy-ready cfq_group
-	charge scaling
-Date: Mon, 17 Dec 2012 15:53:18 -0500
-Message-ID: <20121217205317.GI7235@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 06/12] cfq-iosched: implement cfq_group->nr_active and
+ ->level_weight
+Date: Mon, 17 Dec 2012 13:15:17 -0800
+Message-ID: <20121217211517.GC1844@htj.dyndns.org>
 References: <1355524885-22719-1-git-send-email-tj@kernel.org>
-	<1355524885-22719-8-git-send-email-tj@kernel.org>
+ <1355524885-22719-7-git-send-email-tj@kernel.org>
+ <20121217204609.GH7235@redhat.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=kWoESnuTDhOIb8ZWQfIpg+ikxPonIzM2/aH4ELpB/Lw=;
+        b=FACdrStbrXFVjGqloDprGqboyE1sBuurUmUdds8mguVqb5Aa39lvLoLnA8H0WCDSqE
+         mWwwJBp4cL2dt6xpyolJ/m3475MR0RnzxfW+oJuD845En1PDelP6dZvsypC1Pw7WQTdr
+         ug+vGEvWTL5kLXgMg3vk1pCNDkcYaooiaqSncEr//+65XywRewrhrv3m/iEoK+mjmXO7
+         SnB8DyAp0KpDROebEtqHuyCoY+PIteifbUW7KQyg4kqX2IQtrNMJf06mCCwLnVObfDjn
+         wIAdOSBxpP5JENLfcBzik5uHGyZb892JbACJvdrxBufBU0cUCab5yLG0kIKChKdOfs43
+         Apeg==
+Content-Disposition: inline
+In-Reply-To: <20121217204609.GH7235-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1355524885-22719-8-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Fri, Dec 14, 2012 at 02:41:20PM -0800, Tejun Heo wrote:
-> Currently, cfqg charges are scaled directly according to cfqg->weight.
-> Regardless of the number of active cfqgs or the amount of active
-> weights, a given weight value always scales charge the same way.  This
-> works fine as long as all cfqgs are treated equally regardless of
-> their positions in the hierarchy, which is what cfq currently
-> implements.  It can't work in hierarchical settings because the
-> interpretation of a given weight value depends on where the weight is
-> located in the hierarchy.
+Hello, Vivek.
 
-I did not understand this. Why the current scheme will not work with
-hierarchy?
+On Mon, Dec 17, 2012 at 03:46:09PM -0500, Vivek Goyal wrote:
+> On Fri, Dec 14, 2012 at 02:41:19PM -0800, Tejun Heo wrote:
+> > To prepare for blkcg hierarchy support, add cfqg->nr_active and
+> > ->level_weight.  cfqg->nr_active counts the number of active cfqgs at
+> > the cfqg's level and ->level_weight is sum of weights of those cfqgs.
+> > The level covers itself (cfqg->leaf_weight) and immediate children.
+> 
+> This notion of level is really confusing. If one says "at cfqg's level"
+> I immediately associate with cfqg's siblings and not with cfqg's children.
 
-While we calculate the vdisktime, this is calculated with the help
-of CFQ_DEFAULT_WEIGHT and cfqg->weight. So we scale used time slice
-in proportion to CFQ_DEFAULT_WEIGTH/cfqg->weight. So higher the weight
-lesser the charge and cfqg gets scheduled again faster and lower the
-weight, higher the vdisktime and cfqg gets scheduled less  frequently.
+We can explicitly say at children's level but I think it should be
+enough to explain it clearly in the comment where the field is
+defined.
 
-As every cfqg does the same thing on service tree, they automatically
-get fair share w.r.t their weight.
+> I think confusion happens because we are overloading the definition of
+> cfqg. It is competing with its siblings at the same time it is competing
+> against its child groups (on behalf of its children tasks).
 
-And this mechanism should not be impacted by the hierarchy because we
-have a separate service tree at separate level. This will not work
-only if you come up with one compressed tree and then weights will
-have to be adjusted. If we have a separate service tree in each group
-then it should work just fine.
+While I agree that part is a bit tricky, I can't think of a much
+better way to describe it.  Any better ideas?
 
-Thanks
-Vivek
+Thanks.
+
+-- 
+tejun
