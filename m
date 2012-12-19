@@ -1,36 +1,66 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH 0/2] slightly change shrinker behaviour for very small object sets
-Date: Wed, 19 Dec 2012 12:40:16 +0400
-Message-ID: <1355906418-3603-1-git-send-email-glommer@parallels.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH 2/2] vmscan: take at least one pass with shrinkers
+Date: Wed, 19 Dec 2012 12:40:18 +0400
+Message-ID: <1355906418-3603-3-git-send-email-glommer@parallels.com>
+References: <1355906418-3603-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1355906418-3603-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Shrinnker <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
 
-Hi,
+In very low free kernel memory situations, it may be the case that we
+have less objects to free than our initial batch size. If this is the
+case, it is better to shrink those, and open space for the new workload
+then to keep them and fail the new allocations.
 
-I've recently noticed some glitches in the object shrinker mechanism when a
-very small number of objects is used. Those situations are theoretically
-possible, albeit unlikely. But although it may feel like it is purely
-theoretical, they can become common in environments with many small containers
-(cgroups) in a box.
+More specifically, this happens because we encode this in a loop with
+the condition: "while (total_scan >= batch_size)". So if we are in such
+a case, we'll not even enter the loop.
 
-Those patches came from some experimentation I am doing with targetted-shrinking
-for kmem-limited memory cgroups (Dave Shrinnker is already aware of such work).
-In such scenarios, one can set the available memory to very low limits, and it
-becomes easy to see this.
+This patch modifies turns it into a do () while {} loop, that will
+guarantee that we scan it at least once, while keeping the behaviour
+exactly the same for the cases in which total_scan > batch_size.
 
-Glauber Costa (2):
-  super: fix calculation of shrinkable objects for small numbers
-  vmscan: take at least one pass with shrinkers
-
- fs/super.c  | 2 +-
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+CC: Dave Chinner <david@fromorbit.com>
+CC: "Theodore Ts'o" <tytso@mit.edu>
+CC: Al Viro <viro@zeniv.linux.org.uk>
+---
  mm/vmscan.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 7f30961..fcd1aa0 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -280,7 +280,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 					nr_pages_scanned, lru_pages,
+ 					max_pass, delta, total_scan);
+ 
+-		while (total_scan >= batch_size) {
++		do {
+ 			int nr_before;
+ 
+ 			nr_before = do_shrinker_shrink(shrinker, shrink, 0);
+@@ -294,7 +294,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 			total_scan -= batch_size;
+ 
+ 			cond_resched();
+-		}
++		} while (total_scan >= batch_size);
+ 
+ 		/*
+ 		 * move the unused scan count back into the shrinker in a
 -- 
 1.7.11.7
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
