@@ -1,52 +1,88 @@
-From: Herton Ronaldo Krzesinski <herton.krzesinski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [PATCH 1/7] cgroup: cgroup_subsys->fork() should be called after
-	the task is added to css_set
-Date: Thu, 20 Dec 2012 03:25:33 -0200
-Message-ID: <20121220052533.GA17190@herton-Z68MA-D2H-B3>
-References: <1350426526-14254-1-git-send-email-tj@kernel.org>
-	<1350426526-14254-2-git-send-email-tj@kernel.org>
+From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:blkcg-cfq-hierarchy 18/18]
+ /dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1:
+ /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10576-136: No space
+ left on devicemake[3]: Warning: File `scripts/Makefile.host' has
+ modification time 3.6e+08 s in the future
+Date: Thu, 20 Dec 2012 13:55:47 +0800
+Message-ID: <50d2a863.TEK+QRhleDioyP1G%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1350426526-14254-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Oct 16, 2012 at 03:28:40PM -0700, Tejun Heo wrote:
-[...]
-> 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index f8a030c..4cd1d0f 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -34,7 +34,6 @@ extern int cgroup_lock_is_held(void);
->  extern bool cgroup_lock_live_group(struct cgroup *cgrp);
->  extern void cgroup_unlock(void);
->  extern void cgroup_fork(struct task_struct *p);
-> -extern void cgroup_fork_callbacks(struct task_struct *p);
->  extern void cgroup_post_fork(struct task_struct *p);
->  extern void cgroup_exit(struct task_struct *p, int run_callbacks);
->  extern int cgroupstats_build(struct cgroupstats *stats,
-[...]
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git blkcg-cfq-hierarchy
+head:   945010db297e9dbe05453af789490f21b99ea8a0
+commit: 945010db297e9dbe05453af789490f21b99ea8a0 [18/18] cfq-iosched: add hierarchical cfq_group statistics
+config: make ARCH=mips fuloong2e_defconfig
 
-Minor issue, the patch missed the removal of
+All warnings:
 
-static inline void cgroup_fork_callbacks(struct task_struct *p) {}
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10263-104: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10264-206: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10270-206: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10276-379: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10288-391: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10293-431: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10305-437: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10322-431: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10337-437: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10372-393: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10401-393: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10423-395: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10426-395: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10445-395: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10457-389: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10472-395: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10483-383: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10498-407: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10516-407: No space left on device
+make[2]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10566-46: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10568-94: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10570-46: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10575-38: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10576-136: No space left on devicemake[3]: Warning: File `scripts/Makefile.host' has modification time 3.6e+08 s in the future
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10568-10584-628: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10568-10711-1: No space left on device
+make[3]: warning:  Clock skew detected.  Your build may be incomplete.
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10715-29: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10717-46: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10723-37: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10257-10725-112: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10729-50: No space left on device
+make[3]: Warning: File `scripts/Makefile.host' has modification time 3.6e+08 s in the future
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10731-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10733-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10789-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10793-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10830-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10835-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10863-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10867-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10884-726: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10886-139: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10885-139: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10887-142: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10894-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10898-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10904-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10906-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10925-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10927-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10946-85: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10948-134: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-10967-865: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-12248-275: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-12281-26: No space left on device
+/dev/shm/bash-redirect-mips-fuloong2e_defconfig: line 1: /dev/shm/build-error-mips-fuloong2e_defconfig/10725-12283-46: No space left on device
+make[3]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
 
-for the !CONFIG_CGROUPS case
-
--- 
-[]'s
-Herton
+---
+0-DAY kernel build testing backend         Open Source Technology Center
+Fengguang Wu, Yuanhan Liu                              Intel Corporation
