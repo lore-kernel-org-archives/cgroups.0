@@ -1,44 +1,61 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] vmscan: take at least one pass with shrinkers
-Date: Thu, 20 Dec 2012 18:08:52 +1100
-Message-ID: <20121220070852.GW15182@dastard>
-References: <1355906418-3603-1-git-send-email-glommer@parallels.com>
- <1355906418-3603-3-git-send-email-glommer@parallels.com>
+From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [cgroup:blkcg-cfq-hierarchy 18/18] make[1]: Warning: File
+ `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+Date: Thu, 20 Dec 2012 17:02:56 +0800
+Message-ID: <20121220090256.GB8074@localhost>
+References: <50d28802.hs3dIwEZ0LCdEUT5%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1355906418-3603-3-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <50d28802.hs3dIwEZ0LCdEUT5%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Dec 19, 2012 at 12:40:18PM +0400, Glauber Costa wrote:
-> In very low free kernel memory situations, it may be the case that we
-> have less objects to free than our initial batch size. If this is the
-> case, it is better to shrink those, and open space for the new workload
-> then to keep them and fail the new allocations.
+Oops, so sorry!  Time skewed in my build server.. What's more, this
+warning message should be explicitly filtered out.
+
+On Thu, Dec 20, 2012 at 11:37:38AM +0800, kbuild test robot wrote:
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git blkcg-cfq-hierarchy
+> head:   945010db297e9dbe05453af789490f21b99ea8a0
+> commit: 945010db297e9dbe05453af789490f21b99ea8a0 [18/18] cfq-iosched: add hierarchical cfq_group statistics
+> config: make ARCH=mips allmodconfig
 > 
-> More specifically, this happens because we encode this in a loop with
-> the condition: "while (total_scan >= batch_size)". So if we are in such
-> a case, we'll not even enter the loop.
+> All warnings:
 > 
-> This patch modifies turns it into a do () while {} loop, that will
-> guarantee that we scan it at least once, while keeping the behaviour
-> exactly the same for the cases in which total_scan > batch_size.
-
-Looks good to me, seems to work just fine.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> --
+> make[1]: Warning: File `arch/mips/wrppmc/Platform' has modification time 3.6e+08 s in the future
+> make[2]: Warning: File `scripts/Makefile.host' has modification time 3.6e+08 s in the future
+> make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+> make[2]: Warning: File `scripts/Makefile.host' has modification time 3.6e+08 s in the future
+> warning: (DVB_USB_PCTV452E) selects TTPCI_EEPROM which has unmet direct dependencies (MEDIA_SUPPORT && MEDIA_PCI_SUPPORT && MEDIA_DIGITAL_TV_SUPPORT && I2C)
+> warning: (LOCKDEP && FAULT_INJECTION_STACKTRACE_FILTER && LATENCYTOP && KMEMCHECK) selects FRAME_POINTER which has unmet direct dependencies (DEBUG_KERNEL && (CRIS || M68K || FRV || UML || AVR32 || SUPERH || BLACKFIN || MN10300) || ARCH_WANT_FRAME_POINTERS)
+> make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+> make[1]: warning:  Clock skew detected.  Your build may be incomplete.
+> 
+> ---
+> 0-DAY kernel build testing backend         Open Source Technology Center
+> Fengguang Wu, Yuanhan Liu                              Intel Corporation
