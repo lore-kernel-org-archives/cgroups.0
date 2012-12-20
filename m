@@ -1,60 +1,116 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 1/2] super: fix calculation of shrinkable objects for
- small numbers
-Date: Thu, 20 Dec 2012 14:59:14 +0400
-Message-ID: <50D2EF82.1050808@parallels.com>
-References: <1355906418-3603-1-git-send-email-glommer@parallels.com> <1355906418-3603-2-git-send-email-glommer@parallels.com> <20121220070657.GV15182@dastard>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH V5] memcg, oom: provide more precise dump info while
+ memcg oom happening
+Date: Thu, 20 Dec 2012 14:15:31 +0100
+Message-ID: <20121220131531.GB31912@dhcp22.suse.cz>
+References: <1355925061-3858-1-git-send-email-handai.szj@taobao.com>
+ <20121219141218.c1bb423b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20121220070657.GV15182@dastard>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=Ey9+DJlwAYSm8oLjYB6++T1W79mVsHvNKv4xpqyTZJw=;
+        b=Zg4B4uyqZAqHH5djMbEiQmNgzyd6+E16RRz6jbGs57wZtHURz3jqClbIsTlCzVQdcH
+         QotApLxcpUFwY3drBvEZCPULA+c6spQ1cs96UxivwBXKdlqo9q9c+HF9D1GxTPO46nDl
+         g/wejyMjnkK2+nk30OrXGb+4b0luKET8dk/rAS77DwdLKT6DPn0+QYquSt38sf7BCBr0
+         Li2K2DXFU39sLBIeCVly6MF0xfgF9zb19uSA7plydlg/TyCagUJShnj7a8XTGrDlvI/z
+         rBv3FyXvphjsUMgnqdi8IVhbadtUN6mJP+p3CMWPxF9Yiw8Ut5wigCh9cz7DuvIOvHtZ
+         04uA==
+Content-Disposition: inline
+In-Reply-To: <20121219141218.c1bb423b.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Tejun Heo <tj@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Sha Zhengju <handai.szj@gmail.com>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, rientjes@google.com, linux-mm@kvack.org, Sha Zhengju <handai.szj@taobao.com>
 
-On 12/20/2012 11:06 AM, Dave Chinner wrote:
-> On Wed, Dec 19, 2012 at 12:40:17PM +0400, Glauber Costa wrote:
->> The sysctl knob sysctl_vfs_cache_pressure is used to determine which
->> percentage of the shrinkable objects in our cache we should actively try
->> to shrink.
->>
->> It works great in situations in which we have many objects (at least
->> more than 100), because the aproximation errors will be negligible. But
->> if this is not the case, specially when total_objects < 100, we may end
->> up concluding that we have no objects at all (total / 100 = 0,  if total
->> < 100).
->>
->> This is certainly not the biggest killer in the world, but may matter in
->> very low kernel memory situations.
->>
->> Signed-off-by: Glauber Costa <glommer@parallels.com>
->> CC: Dave Chinner <david@fromorbit.com>
->> CC: "Theodore Ts'o" <tytso@mit.edu>
->> CC: Al Viro <viro@zeniv.linux.org.uk>
->> ---
->>  fs/super.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/super.c b/fs/super.c
->> index 12f1237..660552c 100644
->> --- a/fs/super.c
->> +++ b/fs/super.c
->> @@ -104,7 +104,7 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
->>  				sb->s_nr_inodes_unused + fs_objects;
->>  	}
->>  
->> -	total_objects = (total_objects / 100) * sysctl_vfs_cache_pressure;
->> +	total_objects = mult_frac(total_objects, sysctl_vfs_cache_pressure, 100);
->>  	drop_super(sb);
->>  	return total_objects;
+On Wed 19-12-12 14:12:18, Andrew Morton wrote:
+> On Wed, 19 Dec 2012 21:51:01 +0800
+> Sha Zhengju <handai.szj@gmail.com> wrote:
 > 
-> Hi Glauber,
+> > +		pr_info("Memory cgroup stats");
 > 
-> sysctl_vfs_cache_pressure all over the place with exactly the same
-> calculation. Can you fix all of them in one pass?
+> Well if we're going to do that, we may as well finish the job:
+> 
+> 
+> From: Andrew Morton <akpm@linux-foundation.org>
+> Subject: mm/memcontrol.c: convert printk(KERN_FOO) to pr_foo()
+> 
+> Cc: Sha Zhengju <handai.szj@taobao.com>
+> Cc: Michal Hocko <mhocko@suse.cz>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Cc: David Rientjes <rientjes@google.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+
+Thanks Andrew!
+
+Acked-by: Michal Hocko <mhocko@suse.cz>
+
+> ---
+> 
+>  mm/memcontrol.c |   15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+> 
+> diff -puN mm/memcontrol.c~mm-memcontrolc-convert-printkkern_foo-to-pr_foo mm/memcontrol.c
+> --- a/mm/memcontrol.c~mm-memcontrolc-convert-printkkern_foo-to-pr_foo
+> +++ a/mm/memcontrol.c
+> @@ -1574,7 +1574,7 @@ void mem_cgroup_print_oom_info(struct me
+>  	}
+>  	rcu_read_unlock();
+>  
+> -	printk(KERN_INFO "Task in %s killed", memcg_name);
+> +	pr_info("Task in %s killed", memcg_name);
+>  
+>  	rcu_read_lock();
+>  	ret = cgroup_path(mem_cgrp, memcg_name, PATH_MAX);
+> @@ -1587,19 +1587,18 @@ void mem_cgroup_print_oom_info(struct me
+>  	/*
+>  	 * Continues from above, so we don't need an KERN_ level
+>  	 */
+> -	printk(KERN_CONT " as a result of limit of %s\n", memcg_name);
+> +	pr_cont(" as a result of limit of %s\n", memcg_name);
+>  done:
+>  
+> -	printk(KERN_INFO "memory: usage %llukB, limit %llukB, failcnt %llu\n",
+> +	pr_info("memory: usage %llukB, limit %llukB, failcnt %llu\n",
+>  		res_counter_read_u64(&memcg->res, RES_USAGE) >> 10,
+>  		res_counter_read_u64(&memcg->res, RES_LIMIT) >> 10,
+>  		res_counter_read_u64(&memcg->res, RES_FAILCNT));
+> -	printk(KERN_INFO "memory+swap: usage %llukB, limit %llukB, "
+> -		"failcnt %llu\n",
+> +	pr_info("memory+swap: usage %llukB, limit %llukB, failcnt %llu\n",
+>  		res_counter_read_u64(&memcg->memsw, RES_USAGE) >> 10,
+>  		res_counter_read_u64(&memcg->memsw, RES_LIMIT) >> 10,
+>  		res_counter_read_u64(&memcg->memsw, RES_FAILCNT));
+> -	printk(KERN_INFO "kmem: usage %llukB, limit %llukB, failcnt %llu\n",
+> +	pr_info("kmem: usage %llukB, limit %llukB, failcnt %llu\n",
+>  		res_counter_read_u64(&memcg->kmem, RES_USAGE) >> 10,
+>  		res_counter_read_u64(&memcg->kmem, RES_LIMIT) >> 10,
+>  		res_counter_read_u64(&memcg->kmem, RES_FAILCNT));
+> @@ -4424,8 +4423,8 @@ void mem_cgroup_print_bad_page(struct pa
+>  
+>  	pc = lookup_page_cgroup_used(page);
+>  	if (pc) {
+> -		printk(KERN_ALERT "pc:%p pc->flags:%lx pc->mem_cgroup:%p\n",
+> -		       pc, pc->flags, pc->mem_cgroup);
+> +		pr_alert("pc:%p pc->flags:%lx pc->mem_cgroup:%p\n",
+> +			 pc, pc->flags, pc->mem_cgroup);
+>  	}
+>  }
+>  #endif
+> _
 > 
 
-affirmative, sir!
+-- 
+Michal Hocko
+SUSE Labs
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
