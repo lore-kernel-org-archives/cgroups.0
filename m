@@ -1,41 +1,46 @@
-From: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove redundant check
-Date: Thu, 20 Dec 2012 14:24:34 -0500
-Message-ID: <50D365F2.7070607@oracle.com>
-References: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
-	<1356030701-16284-23-git-send-email-sasha.levin@oracle.com>
-	<20121220191803.GA14527@htj.dyndns.org>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH V5] memcg, oom: provide more precise dump info while memcg
+ oom happening
+Date: Fri, 21 Dec 2012 11:40:52 +0800
+Message-ID: <CAFj3OHXBFg=xZbvFwWwMQNipC0mCn2hS9pFH59HDmzS9YKqz4Q@mail.gmail.com>
+References: <1355925061-3858-1-git-send-email-handai.szj@taobao.com>
+	<alpine.DEB.2.00.1212191439530.32757@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=/6NDLJwqu9IhpD9LyWjuLdWhipOMYKE8aUZfuR/RHnc=;
+        b=Xe+mtYUMu65TBcRYja1L9TkEIaluMr658f2+M+fBFp6NoDvbCHRoEK6MztdfG+kyrR
+         S30ZhGFqRi0J1kVZ4cvwB5for3X7Tv94tI54Hhn9JlpTkGEBIDEJU+1jELyWZWMJyjPa
+         Ej6xGiUgk7Vp7PtbTgxMque9ryL6yAmyrnkJ/Admq11TyNMBDHIF14oW05hxu+LPRx2P
+         mSGgoWDHWm+lLmr38z3FMEmsBu/g4VEsrllY6f49tSRBA0Y1EtMvnq6X7FUdrVN7R/gL
+         ilgoD8CRLgMx4lkYAmZOJo7aRn/kQX9/NouNb4DVuOIOFRl6tY2iRbNjlzsR//aXBIj8
+         dKdw==
+In-Reply-To: <alpine.DEB.2.00.1212191439530.32757@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20121220191803.GA14527-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: cgroups@vger.kernel.org, mhocko@suse.cz, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Sha Zhengju <handai.szj@taobao.com>
 
-On 12/20/2012 02:18 PM, Tejun Heo wrote:
-> On Thu, Dec 20, 2012 at 02:11:31PM -0500, Sasha Levin wrote:
->> We already know that 'event' is non-NULL, remove the redundant check.
->>
->> Signed-off-by: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> 
-> I don't know.  I kinda like that test there.  It's not an error path
-> and tearing down everything which could have been allocated.  If the
-> test not being used is bothering, convert return -ENOMEM to goto fail?
+> I'd ask that you put a limit on the number of memcgs you print statistics
+> for to prevent spamming the kernel log, otherwise it would be trivial to
+> overwrite the entire buffer.  Do we really need the memory statistics forank
+> the memcg 32 levels above us, for example?
 
-Can't say it's bothering. If you'd prefer to leave it as is I'm okay with
-doing that.
+Yeah, now there is no limit on numbers of printed memcg. But do we really
+need to build so complicate memcg hierarchy for 32 levels? There is no
+such usage now at least in our environment. : )
 
 
 Thanks,
-Sasha
+Sha
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
