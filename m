@@ -1,79 +1,60 @@
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v2 2/2] vmscan: take at least one pass with shrinkers
-Date: Fri, 21 Dec 2012 09:10:13 -0200
-Message-ID: <20121221111013.GB8852@andromeda.usersys.redhat.com>
-References: <1356086810-6950-1-git-send-email-glommer@parallels.com>
- <1356086810-6950-3-git-send-email-glommer@parallels.com>
+From: David Strauss <david-WnlvKBBViykE1dmCBd9WyQ@public.gmane.org>
+Subject: Linux 3.3+ and memory cgroup kernel panics
+Date: Fri, 21 Dec 2012 18:44:23 -0800
+Message-ID: <CAKz8sYXcY9kP=QPVAWdP4a-6Nuq-04yDJNuvBojDTfKbvj=x9A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1356086810-6950-3-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=davidstrauss.net; s=google;
+        h=mime-version:from:date:message-id:subject:to:content-type;
+        bh=D/AgIO5BTa+k2IyxqT9P31d+qhJWxBqzPh8J7gcyAdw=;
+        b=az7ANq8FNqr6St9AacEyrNbbLZ0D2rY39Hey0uerrJaC/rym8QNIPgQIr9UCauzqCg
+         VD337qvDsW6aidBH3VsWWYa3VefuUfoQl5Yfyv/oSeAksk9h6ppxbVUOHoF1axOgVUOL
+         aNYjfgEwAi2V/WjYLUOsT71gXhlRVda2McbKk=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Dec 21, 2012 at 02:46:50PM +0400, Glauber Costa wrote:
-> In very low free kernel memory situations, it may be the case that we
-> have less objects to free than our initial batch size. If this is the
-> case, it is better to shrink those, and open space for the new workload
-> then to keep them and fail the new allocations.
-> 
-> More specifically, this happens because we encode this in a loop with
-> the condition: "while (total_scan >= batch_size)". So if we are in such
-> a case, we'll not even enter the loop.
-> 
-> This patch modifies turns it into a do () while {} loop, that will
-> guarantee that we scan it at least once, while keeping the behaviour
-> exactly the same for the cases in which total_scan > batch_size.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> Acked-by: Dave Chinner <david@fromorbit.com>
-> CC: "Theodore Ts'o" <tytso@mit.edu>
-> CC: Al Viro <viro@zeniv.linux.org.uk>
-> ---
->  mm/vmscan.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 7f30961..fcd1aa0 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -280,7 +280,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
->  					nr_pages_scanned, lru_pages,
->  					max_pass, delta, total_scan);
->  
-> -		while (total_scan >= batch_size) {
-> +		do {
->  			int nr_before;
->  
->  			nr_before = do_shrinker_shrink(shrinker, shrink, 0);
-> @@ -294,7 +294,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
->  			total_scan -= batch_size;
->  
->  			cond_resched();
-> -		}
-> +		} while (total_scan >= batch_size);
->  
->  		/*
->  		 * move the unused scan count back into the shrinker in a
-> -- 
-> 1.7.11.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The kernel seemed to replace the cgroups memory "charging" mechanism
+in 3.3 with a more efficient implementation [1], but we think it may
+be broken under Xen virtualization and load. We do not see any issue
+in Linux 3.2 and earlier.
 
-Looks Good,
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
--- 
-Carlos
+We have documented panics for Fedora kernels 3.3.4-5.fc17.x86_64,
+3.3.5-2.fc16.x86_64, and 3.6.10-2.fc16.x86_64 but *not* on Fedora
+kernels 3.1.0-7.fc16.x86_64 or 3.2.6-3.fc16.x86_64.
+
+Many of our services use MemoryLimit= and similar systemd options that
+create a memory cgroup for the service. This correlates with kernel
+panics under the following call path (full listing here [2]):
+
+[20488075.457394]  [<ffffffff811825e7>] ? mem_cgroup_charge_statistics+0x17/0x60
+[20488075.457403]  [<ffffffff81184ade>] __mem_cgroup_uncharge_common+0xfe/0x330
+[20488075.457410]  [<ffffffff8100632d>] ? xen_pte_val+0x1d/0x40
+[20488075.457417]  [<ffffffff81188457>] mem_cgroup_uncharge_page+0x37/0x40
+[20488075.457424]  [<ffffffff8115e6d1>] page_remove_rmap+0xb1/0x140
+
+It culminates in this failure:
+
+[20488075.457183] kernel BUG at arch/x86/mm/fault.c:396!
+[20488075.457189] invalid opcode: 0000 [#1] SMP
+
+There are also reports of similar failures [3] unrelated to systemd
+use and on non-Fedora kernels.
+
+It appears to be an issue with re-attributing the charge for a page to
+a different cgroup. Any ideas why we would be seeing this with Linux
+3.3+? I can generally reproduce the issue (often minutes after
+booting) on any heavily loaded machine in order to collect any
+additional data to help troubleshooting.
+
+[1] https://lwn.net/Articles/443241/
+[2] https://gist.github.com/raw/70afc901a73e427a0a71
+[3] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1073238/comments/6
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+David Strauss
+   | david-WnlvKBBViykE1dmCBd9WyQ@public.gmane.org
+   | +1 512 577 5827 [mobile]
