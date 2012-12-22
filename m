@@ -1,60 +1,48 @@
-From: David Strauss <david-WnlvKBBViykE1dmCBd9WyQ@public.gmane.org>
-Subject: Linux 3.3+ and memory cgroup kernel panics
-Date: Fri, 21 Dec 2012 18:44:23 -0800
-Message-ID: <CAKz8sYXcY9kP=QPVAWdP4a-6Nuq-04yDJNuvBojDTfKbvj=x9A@mail.gmail.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/2] vmscan: take at least one pass with shrinkers
+Date: Sun, 23 Dec 2012 10:53:40 +1100
+Message-ID: <20121222235340.GI15182@dastard>
+References: <1356086810-6950-1-git-send-email-glommer@parallels.com>
+ <1356086810-6950-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=davidstrauss.net; s=google;
-        h=mime-version:from:date:message-id:subject:to:content-type;
-        bh=D/AgIO5BTa+k2IyxqT9P31d+qhJWxBqzPh8J7gcyAdw=;
-        b=az7ANq8FNqr6St9AacEyrNbbLZ0D2rY39Hey0uerrJaC/rym8QNIPgQIr9UCauzqCg
-         VD337qvDsW6aidBH3VsWWYa3VefuUfoQl5Yfyv/oSeAksk9h6ppxbVUOHoF1axOgVUOL
-         aNYjfgEwAi2V/WjYLUOsT71gXhlRVda2McbKk=
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1356086810-6950-3-git-send-email-glommer@parallels.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
 
-The kernel seemed to replace the cgroups memory "charging" mechanism
-in 3.3 with a more efficient implementation [1], but we think it may
-be broken under Xen virtualization and load. We do not see any issue
-in Linux 3.2 and earlier.
+On Fri, Dec 21, 2012 at 02:46:50PM +0400, Glauber Costa wrote:
+> In very low free kernel memory situations, it may be the case that we
+> have less objects to free than our initial batch size. If this is the
+> case, it is better to shrink those, and open space for the new workload
+> then to keep them and fail the new allocations.
+> 
+> More specifically, this happens because we encode this in a loop with
+> the condition: "while (total_scan >= batch_size)". So if we are in such
+> a case, we'll not even enter the loop.
+> 
+> This patch modifies turns it into a do () while {} loop, that will
+> guarantee that we scan it at least once, while keeping the behaviour
+> exactly the same for the cases in which total_scan > batch_size.
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> Acked-by: Dave Chinner <david@fromorbit.com>
 
-We have documented panics for Fedora kernels 3.3.4-5.fc17.x86_64,
-3.3.5-2.fc16.x86_64, and 3.6.10-2.fc16.x86_64 but *not* on Fedora
-kernels 3.1.0-7.fc16.x86_64 or 3.2.6-3.fc16.x86_64.
+I think you'll find I said:
 
-Many of our services use MemoryLimit= and similar systemd options that
-create a memory cgroup for the service. This correlates with kernel
-panics under the following call path (full listing here [2]):
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-[20488075.457394]  [<ffffffff811825e7>] ? mem_cgroup_charge_statistics+0x17/0x60
-[20488075.457403]  [<ffffffff81184ade>] __mem_cgroup_uncharge_common+0xfe/0x330
-[20488075.457410]  [<ffffffff8100632d>] ? xen_pte_val+0x1d/0x40
-[20488075.457417]  [<ffffffff81188457>] mem_cgroup_uncharge_page+0x37/0x40
-[20488075.457424]  [<ffffffff8115e6d1>] page_remove_rmap+0xb1/0x140
+That has a significantly different meaning to Acked-by, so you
+should be careful to correctly transcribe tags back to the
+patches...
 
-It culminates in this failure:
+Cheers,
 
-[20488075.457183] kernel BUG at arch/x86/mm/fault.c:396!
-[20488075.457189] invalid opcode: 0000 [#1] SMP
-
-There are also reports of similar failures [3] unrelated to systemd
-use and on non-Fedora kernels.
-
-It appears to be an issue with re-attributing the charge for a page to
-a different cgroup. Any ideas why we would be seeing this with Linux
-3.3+? I can generally reproduce the issue (often minutes after
-booting) on any heavily loaded machine in order to collect any
-additional data to help troubleshooting.
-
-[1] https://lwn.net/Articles/443241/
-[2] https://gist.github.com/raw/70afc901a73e427a0a71
-[3] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1073238/comments/6
-
---
-David Strauss
-   | david-WnlvKBBViykE1dmCBd9WyQ@public.gmane.org
-   | +1 512 577 5827 [mobile]
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
