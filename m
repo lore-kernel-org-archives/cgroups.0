@@ -1,50 +1,27 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 2/2] vmscan: take at least one pass with shrinkers
-Date: Sun, 23 Dec 2012 03:56:47 +0400
-Message-ID: <50D648BF.7070103@parallels.com>
-References: <1356086810-6950-1-git-send-email-glommer@parallels.com> <1356086810-6950-3-git-send-email-glommer@parallels.com> <20121222235340.GI15182@dastard>
+From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Mon, 24 Dec 2012 14:25:26 +0100
+Message-ID: <20121224142526.020165D3@pobox.sk>
+References: <20121206095423.GB10931@dhcp22.suse.cz>, <20121210022038.E6570D37@pobox.sk>, <20121210094318.GA6777@dhcp22.suse.cz>, <20121210111817.F697F53E@pobox.sk>, <20121210155205.GB6777@dhcp22.suse.cz>, <20121217023430.5A390FD7@pobox.sk>, <20121217163203.GD25432@dhcp22.suse.cz>, <20121217192301.829A7020@pobox.sk>, <20121217195510.GA16375@dhcp22.suse.cz>, <20121218152223.6912832C@pobox.sk> <20121218152004.GA25208@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20121222235340.GI15182@dastard>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121218152004.GA25208-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 12/23/2012 03:53 AM, Dave Chinner wrote:
-> On Fri, Dec 21, 2012 at 02:46:50PM +0400, Glauber Costa wrote:
->> In very low free kernel memory situations, it may be the case that we
->> have less objects to free than our initial batch size. If this is the
->> case, it is better to shrink those, and open space for the new workload
->> then to keep them and fail the new allocations.
->>
->> More specifically, this happens because we encode this in a loop with
->> the condition: "while (total_scan >= batch_size)". So if we are in such
->> a case, we'll not even enter the loop.
->>
->> This patch modifies turns it into a do () while {} loop, that will
->> guarantee that we scan it at least once, while keeping the behaviour
->> exactly the same for the cases in which total_scan > batch_size.
->>
->> Signed-off-by: Glauber Costa <glommer@parallels.com>
->> Acked-by: Dave Chinner <david@fromorbit.com>
-> 
-> I think you'll find I said:
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> That has a significantly different meaning to Acked-by, so you
-> should be careful to correctly transcribe tags back to the
-> patches...
-> 
-
-Ooops
-
-You are right Dave. That was obviously just lack of attention on my
-side, not any attempt to upgrade your tag.
-
-Thanks for spotting
+>OK, good to hear and fingers crossed. I will try to get back to the
+>original problem and a better solution sometimes early next year when
+>all the things settle a bit.
 
 
+Michal, problem, unfortunately, happened again :( twice. When it happened first time (two days ago) i don't want to believe it so i recompiled the kernel and boot it again to be sure i really used your patch. Today it happened again, here is report:
+http://watchdog.sk/lkml/memcg-bug-3.tar.gz
+
+Here is patch which i used (kernel 3.2.35, i didn't use any other from your patches):
+http://watchdog.sk/lkml/5-memcg-fix.patch
+
+azur
