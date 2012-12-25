@@ -1,23 +1,99 @@
-From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Mon, 24 Dec 2012 14:38:50 +0100
-Message-ID: <20121224143850.B611B3C3@pobox.sk>
-References: <20121206095423.GB10931@dhcp22.suse.cz>, <20121210022038.E6570D37@pobox.sk>, <20121210094318.GA6777@dhcp22.suse.cz>, <20121210111817.F697F53E@pobox.sk>, <20121210155205.GB6777@dhcp22.suse.cz>, <20121217023430.5A390FD7@pobox.sk>, <20121217163203.GD25432@dhcp22.suse.cz>, <20121217192301.829A7020@pobox.sk>, <20121217195510.GA16375@dhcp22.suse.cz>, <20121218152223.6912832C@pobox.sk> <20121218152004.GA25208@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20121218152004.GA25208-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH V3 0/8] Per-cgroup page stat accounting
+Date: Wed, 26 Dec 2012 01:18:39 +0800
+Message-ID: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
+        bh=XDCGHh++ahsDAD2dSo1EROXcoNrH+bGhMNsUmDM4Vcs=;
+        b=RQGQJOEsPRcvQgpzQnHIpC7wnG82WZ2XgovhWZdHaH4iUUKp/0kF01aPKGVEaFdrUj
+         9Ut0I4Sx0uzPnNEBIM5fMycDVlwCP0B8k67N456s92y8yjRF92sHUVeAqMGu+p5mgab0
+         pjnNbIHkOkDZT5a2lKdXNVDXJCspmyj4yXWUzO2vuYh96Cbb6Ej6orYVxuPq0WA9sYYJ
+         S6YQS6ppWfhQNWYhoivt+8H3GyGdmpXlOxF+Ah+fh9ULOV4xBWf9pGKwH8qNuEoHn3dG
+         eifCqh7kY5OCtg6ejjXwgomN3PdSMySlSsXe9rlzozSLsbTWkD9DHyFbMq086EBctxWp
+         iS+A==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Cc: mhocko@suse.cz, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
 
->OK, good to hear and fingers crossed. I will try to get back to the
->original problem and a better solution sometimes early next year when
->all the things settle a bit.
+Hi, list
 
+This is V3 patch series that provide the ability for each memory cgroup to
+have independent dirty/writeback page statistics which can provide information
+for per-cgroup direct reclaim or some.
 
-Btw, i noticed one more thing when problem is happening (=when any cgroup is stucked), i fogot to mention it before, sorry :( . It's related to HDDs, something is slowing them down in a strange way. All services are working normally and i really cannot notice any slowness, the only thing which i noticed is affeceted is our backup software ( www.Bacula.org ). When problem occurs at night, so it's happening when backup is running, backup is extremely slow and usually don't finish until i kill processes inside affected cgroup (=until i resolve the problem). Backup software is NOT doing big HDD bandwidth BUT it's doing quite huge number of disk operations (it needs to stat every file and directory). I believe that only speed of disk operations are affected and are very slow.
+In the first three prepare patches, we have done some cleanup and reworked vfs
+set page dirty routines to make "modify page info" and "dirty page accouting" stay
+in one function as much as possible for the sake of memcg bigger lock(test numbers
+are in the specific patch). There is no change comparing to V2.
 
-Merry christmas!
+Patch 4/8 and 5/8 are acctually doing memcg dirty and writeback page accounting.
+We change lock orders of mapping->tree_lock and memcg->move_lock to prevent
+deadlock. Test numbers of previous version show that there is some performance
+decrease after patching the accouting once memcg is enabled. The reason is that
+if no memcg exists but root_mem_cgroup, all allocated pages are belonging to root memcg
+and they will go through root memcg statistics routines which brings overheads.
+So we do some optimization in patch 6/8 and 7/8: patch 6 chooses to give up accounting
+root memcg stat but changes behavior of memcg_stat_show() instead; patch 7 uses jump
+label to disable memcg page stat accounting code when not in use which is inspired by
+a similar optimization from Glauber Costa
+(memcg: make it suck faster; https://lkml.org/lkml/2012/9/25/154).
+
+On a 4g memory and 4-core i5 CPU machine, we pushing 1G data through 600M memcg
+(memory.limit_in_bytes=600M, memory.memsw.limit_in_bytes=1500M) by fio:
+fio (ioengine=sync/write/buffered/bs=4k/size=1g/numjobs=2/group_reporting/thread)
+
+Following is performance comparison between before/after the whole series
+(test it for 10 times and get the average numbers):
+Before:
+write: io=2048.0MB, bw=214527KB/s, iops=53631.2 , runt= 9880.1msec
+lat (usec): min=1 , max=1685.06K, avg=36.182, stdev=3153.97
+
+After:
+write: io=2048.0MB, bw=193069KB/s, iops=48266.6 , runt= 11078.6msec
+lat (usec): min=1 , max=1634.26K, avg=40.598, stdev=3135.81
+
+Note that now the impact is little(~1%).
+
+Any comments are welcomed. : )
+
+Change log:
+v3 <--v2
+	1. change lock order of mapping->tree_lock and memcg->move_lock
+	2. performance optimization in 6/8 and 7/8
+v2 <-- v1:
+        1. add test numbers
+        2. some small fix and comments
+
+Sha Zhengju (8):
+	memcg-remove-MEMCG_NR_FILE_MAPPED.patch
+	Make-TestSetPageDirty-and-dirty-page-accounting-in-o.patch
+	use-vfs-__set_page_dirty-interface-instead-of-doing-.patch
+	memcg-add-per-cgroup-dirty-pages-accounting.patch
+	memcg-add-per-cgroup-writeback-pages-accounting.patch
+	memcg-Don-t-account-root_mem_cgroup-page-statistics.patch
+	memcg-disable-memcg-page-stat-accounting-code-when-n.patch
+	memcg-Document-cgroup-dirty-writeback-memory-statist.patch
+
+ Documentation/cgroups/memory.txt |    2 +
+ fs/buffer.c                      |   37 +++++++----
+ fs/ceph/addr.c                   |   20 +-----
+ include/linux/buffer_head.h      |    2 +
+ include/linux/memcontrol.h       |   39 ++++++++---
+ mm/filemap.c                     |   10 +++
+ mm/memcontrol.c                  |  134 ++++++++++++++++++++++++++++++--------
+ mm/page-writeback.c              |   56 ++++++++++++++--
+ mm/rmap.c                        |    4 +-
+ mm/truncate.c                    |    6 ++
+ 10 files changed, 235 insertions(+), 75 deletions(-)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
