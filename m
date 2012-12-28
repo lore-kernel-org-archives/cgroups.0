@@ -1,8 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 04/24] cfq-iosched: Rename few functions related to selecting
-	workload
-Date: Fri, 28 Dec 2012 12:35:26 -0800
-Message-ID: <1356726946-26037-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/24] cfq-iosched: Get rid of unnecessary local variable
+Date: Fri, 28 Dec 2012 12:35:27 -0800
+Message-ID: <1356726946-26037-6-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,13 +10,13 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
 	:in-reply-to:references;
-	bh=coBNElyaS738eO/A5XwgrcHA6gnOH+zbaRgsNaGsgVc=;
-	b=jjDJ0A4W5IRjN6YVGUBGomdbhiQmnbi87hT4bB6mKQyfe1onyLv9RJwyLfrMyl12bG
-	eqGDDwsyxR92WYbiwar5/BXtxcnzgazOpmT/TJ22sw2//U4aCrsSQvbbY1GBAsOd5ZsB
-	FIu/LJlQy9HCol2PZS92/esXdQaDkjYZADxJOXWqHhrO+McSFAQCKJ71ycjMJym2Bdzr
-	IJYxu20iGAzIuIDXFq5ChmIvuh2ObXRIwrWUDeG7DGeRSP9UUi3hfi1DtKKs0NgJCItW
-	3kI/jADoMqY6JaXO3S8YxXqfqZ3q0B/wcGchjiEzls3oUfo8pt0NsfaO3Vhhq8QNXKQr
-	t/8Q==
+	bh=dSF6DN+qzMd6qeaipnRgGKa41xaayPmHjp01IwEC+aQ=;
+	b=xRLL6RfpB77ggunsAjfAFsZylMJWHCSavlmvHIjiQcdc6jvwUbBYb392OwMwsz0FCD
+	7Sqg+kJjau3FJutnCg5wIKmMqoDTU50nhJopy8sJYaZioKta0jJ3fhIj9o+vmPeZBn9+
+	o9Y6MWvl7DDlHQL8HTiUpBJjzOROzG8K92RwcIyWVXsya6rUPAz0CFZriffDAZFDKnAn
+	ewU3/HPM9pMKQ9NekBdGh/KZwNjhmC0st7FY4EnN8c/Y0tjTflJy85aU9xW8qmDswdv/
+	rAXLxHZ5NloukQLUzzeVz4lmo1wWGHlit3aANKQ5we8kPLjqBCWVBhDeSP8TsqE/mNmw
+	HM3g==
 In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -34,62 +33,47 @@ Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA
 
 From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-choose_service_tree() selects/sets both wl_class and wl_type.  Rename it to
-choose_wl_class_and_type() to make it very clear.
+Use of local varibale "n" seems to be unnecessary. Remove it. This brings
+it inline with function __cfq_group_st_add(), which is also doing the
+similar operation of adding a group to a rb tree.
 
-cfq_choose_wl() only selects and sets wl_type. It is easy to confuse
-it with choose_st(). So rename it to cfq_choose_wl_type() to make
-it clear what does it do.
-
-Just renaming. No functionality change.
+No functionality change here.
 
 Signed-off-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Acked-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/cfq-iosched.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ block/cfq-iosched.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index db4a1a5..e34e142 100644
+index e34e142..5ad4cae 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -2490,7 +2490,7 @@ static void cfq_setup_merge(struct cfq_queue *cfqq, struct cfq_queue *new_cfqq)
+@@ -1658,8 +1658,6 @@ static void cfq_service_tree_add(struct cfq_data *cfqd, struct cfq_queue *cfqq,
+ 	cfqq->service_tree = st;
+ 	p = &st->rb.rb_node;
+ 	while (*p) {
+-		struct rb_node **n;
+-
+ 		parent = *p;
+ 		__cfqq = rb_entry(parent, struct cfq_queue, rb_node);
+ 
+@@ -1667,13 +1665,11 @@ static void cfq_service_tree_add(struct cfq_data *cfqd, struct cfq_queue *cfqq,
+ 		 * sort by key, that represents service time.
+ 		 */
+ 		if (time_before(rb_key, __cfqq->rb_key))
+-			n = &(*p)->rb_left;
++			p = &parent->rb_left;
+ 		else {
+-			n = &(*p)->rb_right;
++			p = &parent->rb_right;
+ 			left = 0;
+ 		}
+-
+-		p = n;
  	}
- }
  
--static enum wl_type_t cfq_choose_wl(struct cfq_data *cfqd,
-+static enum wl_type_t cfq_choose_wl_type(struct cfq_data *cfqd,
- 			struct cfq_group *cfqg, enum wl_class_t wl_class)
- {
- 	struct cfq_queue *queue;
-@@ -2513,7 +2513,8 @@ static enum wl_type_t cfq_choose_wl(struct cfq_data *cfqd,
- 	return cur_best;
- }
- 
--static void choose_service_tree(struct cfq_data *cfqd, struct cfq_group *cfqg)
-+static void
-+choose_wl_class_and_type(struct cfq_data *cfqd, struct cfq_group *cfqg)
- {
- 	unsigned slice;
- 	unsigned count;
-@@ -2551,7 +2552,7 @@ static void choose_service_tree(struct cfq_data *cfqd, struct cfq_group *cfqg)
- 
- new_workload:
- 	/* otherwise select new workload type */
--	cfqd->serving_wl_type = cfq_choose_wl(cfqd, cfqg,
-+	cfqd->serving_wl_type = cfq_choose_wl_type(cfqd, cfqg,
- 					cfqd->serving_wl_class);
- 	st = st_for(cfqg, cfqd->serving_wl_class, cfqd->serving_wl_type);
- 	count = st->count;
-@@ -2621,7 +2622,7 @@ static void cfq_choose_cfqg(struct cfq_data *cfqd)
- 	} else
- 		cfqd->workload_expires = jiffies - 1;
- 
--	choose_service_tree(cfqd, cfqg);
-+	choose_wl_class_and_type(cfqd, cfqg);
- }
- 
- /*
+ 	if (left)
 -- 
 1.8.0.2
