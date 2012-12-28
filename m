@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 24/24] cfq-iosched: add hierarchical cfq_group statistics
-Date: Fri, 28 Dec 2012 12:35:46 -0800
-Message-ID: <1356726946-26037-25-git-send-email-tj@kernel.org>
+Subject: [PATCH 22/24] cfq-iosched: separate out cfqg_stats_reset() from cfq_pd_reset_stats()
+Date: Fri, 28 Dec 2012 12:35:44 -0800
+Message-ID: <1356726946-26037-23-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=Odj5o8lNhLrLHHvQTgc304SLhARRsqVjmlxKYpn0kUM=;
-        b=RwMrNclRtaYa25xJDR7MOjayNb+FK6L50I7y13n8cukjsqhgSZO5+Wb7pOpJ2ACWpt
-         gZQrK0YuvrZaturCpwzh435RQ6BWWAou1wgMgF9QFIcCCkvrF3fDUJwbcdgxcza4eoXF
-         ljOqk2b2O8+KZUHKK9b9WZelzASh4aBBn7Im4wgcwvWILJ6RXuR0lL+j8HwYFvAaAsiF
-         iP0NYTGcl39C+h0GTP1MU5f+WvLeeYZ2UbZ1QDd6uSeA/QIuwcmNgP+J3f1sYNwkKwrC
-         RsfDuUWjxugv6dsn56rBgzYGd11mfsqQKG2OvE2r53mbGQXd9cW14i3kXWh/dlbBJJU6
-         RiUQ==
+        bh=EMYk29uQNPtzIS83iQ17sHhn4NfTmeA8B7v7YwLp/Us=;
+        b=OK5h0JGKOdnwKX3WkPdWRJvp6+zgEp+QpurmesHTvXMO8l4QL8ehCBGe3e/FO9M/JD
+         AsQbqiYohl8LpuuTNNbTCTX2tIWubTSxk7N1+p6jk22TMldToUroQWBTOaRxsDvJPFTJ
+         TEkl/0NJY+Otlz+WPycG3wNEZH3GZQXtmOLvUXv9i5ETPd15c4vL/JNdtIuG2q6DvflS
+         CJJvTAFCrAWQuD51cIxJYhc0/ztqc1q/fwg8fZu4Q6V9Y2Tdyoan3oLpP4/sy3p5CWfO
+         6GBVVz69MNFWMOXVemnYCkP5LKtZ3PxdIAlYXKmaF2HAkaoUJQWEfzM/Raj0IwRoRmq7
+         GSEg==
 In-Reply-To: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,152 +24,47 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, axboe@kernel.dk, vgoyal@redhat.com
 Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, ctalbott@google.com, rni@google.com, Tejun Heo <tj@kernel.org>
 
-Unfortunately, at this point, there's no way to make the existing
-statistics hierarchical without creating nasty surprises for the
-existing users.  Just create recursive counterpart of the existing
+Separate out cfqg_stats_reset() which takes struct cfqg_stats * from
+cfq_pd_reset_stats() and move the latter to where other pd methods are
+defined.  cfqg_stats_reset() will be used to implement hierarchical
 stats.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/cfq-iosched.c | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 105 insertions(+)
+ block/cfq-iosched.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 4d75b79..b66365b 100644
+index d43145cc..f8b34bb 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -1528,6 +1528,32 @@ static void cfq_pd_offline(struct blkcg_gq *blkg)
- 	cfqg_stats_xfer_dead(blkg_to_cfqg(blkg));
+@@ -688,11 +688,9 @@ static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
+ 				io_start_time - start_time);
  }
  
-+/* offset delta from cfqg->stats to cfqg->dead_stats */
-+static const int dead_stats_off_delta = offsetof(struct cfq_group, dead_stats) -
-+					offsetof(struct cfq_group, stats);
-+
-+/* to be used by recursive prfill, sums live and dead stats recursively */
-+static u64 cfqg_stat_pd_recursive_sum(struct blkg_policy_data *pd, int off)
-+{
-+	u64 sum = 0;
-+
-+	sum += blkg_stat_recursive_sum(pd, off);
-+	sum += blkg_stat_recursive_sum(pd, off + dead_stats_off_delta);
-+	return sum;
-+}
-+
-+/* to be used by recursive prfill, sums live and dead rwstats recursively */
-+static struct blkg_rwstat cfqg_rwstat_pd_recursive_sum(struct blkg_policy_data *pd,
-+						       int off)
-+{
-+	struct blkg_rwstat a, b;
-+
-+	a = blkg_rwstat_recursive_sum(pd, off);
-+	b = blkg_rwstat_recursive_sum(pd, off + dead_stats_off_delta);
-+	blkg_rwstat_merge(&a, &b);
-+	return a;
-+}
-+
- static void cfq_pd_reset_stats(struct blkcg_gq *blkg)
+-static void cfq_pd_reset_stats(struct blkcg_gq *blkg)
++/* @stats = 0 */
++static void cfqg_stats_reset(struct cfqg_stats *stats)
  {
- 	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
-@@ -1732,6 +1758,42 @@ static int cfqg_print_rwstat(struct cgroup *cgrp, struct cftype *cft,
- 	return 0;
+-	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
+-	struct cfqg_stats *stats = &cfqg->stats;
+-
+ 	/* queued stats shouldn't be cleared */
+ 	blkg_rwstat_reset(&stats->service_bytes);
+ 	blkg_rwstat_reset(&stats->serviced);
+@@ -1477,6 +1475,13 @@ static void cfq_pd_init(struct blkcg_gq *blkg)
+ 	cfqg->leaf_weight = blkg->blkcg->cfq_leaf_weight;
  }
  
-+static u64 cfqg_prfill_stat_recursive(struct seq_file *sf,
-+				      struct blkg_policy_data *pd, int off)
++static void cfq_pd_reset_stats(struct blkcg_gq *blkg)
 +{
-+	u64 sum = cfqg_stat_pd_recursive_sum(pd, off);
++	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
 +
-+	return __blkg_prfill_u64(sf, pd, sum);
++	cfqg_stats_reset(&cfqg->stats);
 +}
 +
-+static u64 cfqg_prfill_rwstat_recursive(struct seq_file *sf,
-+					struct blkg_policy_data *pd, int off)
-+{
-+	struct blkg_rwstat sum = cfqg_rwstat_pd_recursive_sum(pd, off);
-+
-+	return __blkg_prfill_rwstat(sf, pd, &sum);
-+}
-+
-+static int cfqg_print_stat_recursive(struct cgroup *cgrp, struct cftype *cft,
-+				     struct seq_file *sf)
-+{
-+	struct blkcg *blkcg = cgroup_to_blkcg(cgrp);
-+
-+	blkcg_print_blkgs(sf, blkcg, cfqg_prfill_stat_recursive,
-+			  &blkcg_policy_cfq, cft->private, false);
-+	return 0;
-+}
-+
-+static int cfqg_print_rwstat_recursive(struct cgroup *cgrp, struct cftype *cft,
-+				       struct seq_file *sf)
-+{
-+	struct blkcg *blkcg = cgroup_to_blkcg(cgrp);
-+
-+	blkcg_print_blkgs(sf, blkcg, cfqg_prfill_rwstat_recursive,
-+			  &blkcg_policy_cfq, cft->private, true);
-+	return 0;
-+}
-+
- #ifdef CONFIG_DEBUG_BLK_CGROUP
- static u64 cfqg_prfill_avg_queue_size(struct seq_file *sf,
- 				      struct blkg_policy_data *pd, int off)
-@@ -1803,6 +1865,7 @@ static struct cftype cfq_blkcg_files[] = {
- 		.write_u64 = cfq_set_leaf_weight,
- 	},
- 
-+	/* statistics, covers only the tasks in the cfqg */
- 	{
- 		.name = "time",
- 		.private = offsetof(struct cfq_group, stats.time),
-@@ -1843,6 +1906,48 @@ static struct cftype cfq_blkcg_files[] = {
- 		.private = offsetof(struct cfq_group, stats.queued),
- 		.read_seq_string = cfqg_print_rwstat,
- 	},
-+
-+	/* the same statictics which cover the cfqg and its descendants */
-+	{
-+		.name = "time_recursive",
-+		.private = offsetof(struct cfq_group, stats.time),
-+		.read_seq_string = cfqg_print_stat_recursive,
-+	},
-+	{
-+		.name = "sectors_recursive",
-+		.private = offsetof(struct cfq_group, stats.sectors),
-+		.read_seq_string = cfqg_print_stat_recursive,
-+	},
-+	{
-+		.name = "io_service_bytes_recursive",
-+		.private = offsetof(struct cfq_group, stats.service_bytes),
-+		.read_seq_string = cfqg_print_rwstat_recursive,
-+	},
-+	{
-+		.name = "io_serviced_recursive",
-+		.private = offsetof(struct cfq_group, stats.serviced),
-+		.read_seq_string = cfqg_print_rwstat_recursive,
-+	},
-+	{
-+		.name = "io_service_time_recursive",
-+		.private = offsetof(struct cfq_group, stats.service_time),
-+		.read_seq_string = cfqg_print_rwstat_recursive,
-+	},
-+	{
-+		.name = "io_wait_time_recursive",
-+		.private = offsetof(struct cfq_group, stats.wait_time),
-+		.read_seq_string = cfqg_print_rwstat_recursive,
-+	},
-+	{
-+		.name = "io_merged_recursive",
-+		.private = offsetof(struct cfq_group, stats.merged),
-+		.read_seq_string = cfqg_print_rwstat_recursive,
-+	},
-+	{
-+		.name = "io_queued_recursive",
-+		.private = offsetof(struct cfq_group, stats.queued),
-+		.read_seq_string = cfqg_print_rwstat_recursive,
-+	},
- #ifdef CONFIG_DEBUG_BLK_CGROUP
- 	{
- 		.name = "avg_queue_size",
+ /*
+  * Search for the cfq group current task belongs to. request_queue lock must
+  * be held.
 -- 
 1.8.0.2
