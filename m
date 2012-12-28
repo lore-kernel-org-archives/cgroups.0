@@ -1,59 +1,27 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH V3 2/8] Make TestSetPageDirty and dirty page accounting
- in one func
-Date: Fri, 28 Dec 2012 09:39:25 +0900
-Message-ID: <50DCEA3D.1030501@jp.fujitsu.com>
-References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456156-14535-1-git-send-email-handai.szj@taobao.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH V3 3/8] use vfs __set_page_dirty interface instead of
+ doing it inside filesystem
+Date: Fri, 28 Dec 2012 09:41:44 +0900
+Message-ID: <50DCEAC8.7000600@jp.fujitsu.com>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456261-14579-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1356456156-14535-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1356456261-14579-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sage-BnTBU8nroG7k1uMJSBkQmQ@public.gmane.org, dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-(2012/12/26 2:22), Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
+(2012/12/26 2:24), Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > 
-> Commit a8e7d49a(Fix race in create_empty_buffers() vs __set_page_dirty_buffers())
-> extracts TestSetPageDirty from __set_page_dirty and is far away from
-> account_page_dirtied. But it's better to make the two operations in one single
-> function to keep modular. So in order to avoid the potential race mentioned in
-> commit a8e7d49a, we can hold private_lock until __set_page_dirty completes.
-> There's no deadlock between ->private_lock and ->tree_lock after confirmation.
-> It's a prepare patch for following memcg dirty page accounting patches.
+> Following we will treat SetPageDirty and dirty page accounting as an integrated
+> operation. Filesystems had better use vfs interface directly to avoid those details.
 > 
-> 
-> Here is some test numbers that before/after this patch:
-> Test steps(Mem-4g, ext4):
-> drop_cache; sync
-> fio (ioengine=sync/write/buffered/bs=4k/size=1g/numjobs=2/group_reporting/thread)
-> 
-> We test it for 10 times and get the average numbers:
-> Before:
-> write: io=2048.0MB, bw=254117KB/s, iops=63528.9 , runt=  8279msec
-> lat (usec): min=1 , max=742361 , avg=30.918, stdev=1601.02
-> After:
-> write: io=2048.0MB, bw=254044KB/s, iops=63510.3 , runt=  8274.4msec
-> lat (usec): min=1 , max=856333 , avg=31.043, stdev=1769.32
-> 
-> Note that the impact is little(<1%).
-> 
-> 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> Reviewed-by: Michal Hocko <mhocko@suse.cz>
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Sage Weil <sage-4GqslpFJ+cxBDgjK7y7TUQ@public.gmane.org>
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Hmm,..this change should be double-checked by vfs, I/O guys...
-
-increasing hold time of mapping->private_lock doesn't affect performance ?
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
