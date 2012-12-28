@@ -1,70 +1,87 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 22/24] cfq-iosched: separate out cfqg_stats_reset() from cfq_pd_reset_stats()
-Date: Fri, 28 Dec 2012 12:35:44 -0800
-Message-ID: <1356726946-26037-23-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 18/24] blkcg: s/blkg_rwstat_sum()/blkg_rwstat_total()/
+Date: Fri, 28 Dec 2012 12:35:40 -0800
+Message-ID: <1356726946-26037-19-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=EMYk29uQNPtzIS83iQ17sHhn4NfTmeA8B7v7YwLp/Us=;
-        b=OK5h0JGKOdnwKX3WkPdWRJvp6+zgEp+QpurmesHTvXMO8l4QL8ehCBGe3e/FO9M/JD
-         AsQbqiYohl8LpuuTNNbTCTX2tIWubTSxk7N1+p6jk22TMldToUroQWBTOaRxsDvJPFTJ
-         TEkl/0NJY+Otlz+WPycG3wNEZH3GZQXtmOLvUXv9i5ETPd15c4vL/JNdtIuG2q6DvflS
-         CJJvTAFCrAWQuD51cIxJYhc0/ztqc1q/fwg8fZu4Q6V9Y2Tdyoan3oLpP4/sy3p5CWfO
-         6GBVVz69MNFWMOXVemnYCkP5LKtZ3PxdIAlYXKmaF2HAkaoUJQWEfzM/Raj0IwRoRmq7
-         GSEg==
-In-Reply-To: <1356726946-26037-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, axboe@kernel.dk, vgoyal@redhat.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, ctalbott@google.com, rni@google.com, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+	:in-reply-to:references;
+	bh=jWF1tZ3RvNNk9WDnXm5/q3iEpCHt4HOD23v5WnQcfLI=;
+	b=tX5gkegY0VIcy1Icg8TIw8eL0+K4pb7AsUJQyPIoar0nb3A5rLp4w0yKW/XmSKTMdX
+	rm59vpmLXzxNaVKT9gafz45S+IoN0GhKbhP+r4Ujl3QuTXLzQnbZtBlZ7l5rDe5L2cS7
+	QB67nJoKKiav6yKcBXmN837+DYeyZr7zIfpWlc+wwPVtkJvdla+Ob673PQ3wu7ES0ec0
+	zuLmq3+mEJbcbPVlUSFCgaq2fqEczbTEcn1rrlYOWc2pPt+/avJgP/SzW4VzkVqjorAQ
+	zSFRaEKM7YmW6MW1U4pt2879QmTxgu280lUu1QMq7ibpsMYXEg8aumSkW3kR8icWoQ1d
+	+HQQ==
+In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Separate out cfqg_stats_reset() which takes struct cfqg_stats * from
-cfq_pd_reset_stats() and move the latter to where other pd methods are
-defined.  cfqg_stats_reset() will be used to implement hierarchical
-stats.
+Rename blkg_rwstat_sum() to blkg_rwstat_total().  sum will be used for
+summing up stats from multiple blkgs.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/cfq-iosched.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ block/blk-cgroup.h  | 4 ++--
+ block/cfq-iosched.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 678e89e..586c0ac 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -461,14 +461,14 @@ static inline struct blkg_rwstat blkg_rwstat_read(struct blkg_rwstat *rwstat)
+ }
+ 
+ /**
+- * blkg_rwstat_sum - read the total count of a blkg_rwstat
++ * blkg_rwstat_total - read the total count of a blkg_rwstat
+  * @rwstat: blkg_rwstat to read
+  *
+  * Return the total count of @rwstat regardless of the IO direction.  This
+  * function can be called without synchronization and takes care of u64
+  * atomicity.
+  */
+-static inline uint64_t blkg_rwstat_sum(struct blkg_rwstat *rwstat)
++static inline uint64_t blkg_rwstat_total(struct blkg_rwstat *rwstat)
+ {
+ 	struct blkg_rwstat tmp = blkg_rwstat_read(rwstat);
+ 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index d43145cc..f8b34bb 100644
+index e8f3106..d43145cc 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -688,11 +688,9 @@ static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
- 				io_start_time - start_time);
- }
- 
--static void cfq_pd_reset_stats(struct blkcg_gq *blkg)
-+/* @stats = 0 */
-+static void cfqg_stats_reset(struct cfqg_stats *stats)
+@@ -536,7 +536,7 @@ static void cfqg_stats_set_start_empty_time(struct cfq_group *cfqg)
  {
--	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
--	struct cfqg_stats *stats = &cfqg->stats;
--
- 	/* queued stats shouldn't be cleared */
- 	blkg_rwstat_reset(&stats->service_bytes);
- 	blkg_rwstat_reset(&stats->serviced);
-@@ -1477,6 +1475,13 @@ static void cfq_pd_init(struct blkcg_gq *blkg)
- 	cfqg->leaf_weight = blkg->blkcg->cfq_leaf_weight;
- }
+ 	struct cfqg_stats *stats = &cfqg->stats;
  
-+static void cfq_pd_reset_stats(struct blkcg_gq *blkg)
-+{
-+	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
-+
-+	cfqg_stats_reset(&cfqg->stats);
-+}
-+
- /*
-  * Search for the cfq group current task belongs to. request_queue lock must
-  * be held.
+-	if (blkg_rwstat_sum(&stats->queued))
++	if (blkg_rwstat_total(&stats->queued))
+ 		return;
+ 
+ 	/*
+@@ -580,7 +580,7 @@ static void cfqg_stats_update_avg_queue_size(struct cfq_group *cfqg)
+ 	struct cfqg_stats *stats = &cfqg->stats;
+ 
+ 	blkg_stat_add(&stats->avg_queue_size_sum,
+-		      blkg_rwstat_sum(&stats->queued));
++		      blkg_rwstat_total(&stats->queued));
+ 	blkg_stat_add(&stats->avg_queue_size_samples, 1);
+ 	cfqg_stats_update_group_wait_time(stats);
+ }
 -- 
 1.8.0.2
