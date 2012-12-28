@@ -1,8 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 13/24] cfq-iosched: implement hierarchy-ready cfq_group charge
-	scaling
-Date: Fri, 28 Dec 2012 12:35:35 -0800
-Message-ID: <1356726946-26037-14-git-send-email-tj@kernel.org>
+Subject: [PATCH 17/24] blkcg: implement blkcg_policy->on/offline_pd_fn() and
+	blkcg_gq->online
+Date: Fri, 28 Dec 2012 12:35:39 -0800
+Message-ID: <1356726946-26037-18-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,13 +11,13 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
 	:in-reply-to:references;
-	bh=5a+//Xax1D48OD7z6H9qUtWQHsu12S1HpDGfqUDb3HI=;
-	b=b0MCIAocLgG3KIKSdfIu76bP3I3jtgTHat35J5UxsOtH5cDGmT+lgdI0Zkg8VtKDGf
-	ukH3kTcFn01VPaPDqK3iXcGcKfESVC7h8TeDcXJeE6dwpiUgv8uAUvRm2jI7GfHuGgDW
-	L8R3r4J8q3Cn/XKriwRHCjmMRLf1jzWFrSXnJid3wVfJy3CGDMtb/X48LRbdktNys9mX
-	lrBRwhMCRYEB7opyKEQZ97C8T0+tp3UhdSmBAEAsR514e6WaK0hqJylew6c9cFF207qt
-	JhItlj2y3z4kp8ungIQ/yHfw69roanu6QDIQyzZYoNtyyTLLA7vzT/zDwlWGCUSZZR5M
-	XnVw==
+	bh=q4Jqjq5qUPVNBwZe2/2/wWbIaRP6biKiS7IKw/kydaU=;
+	b=EqVxCZoDeJ3U55bfcoSjDVniFYHbo4NIFjPjSUuWM4R/hXXfjWGtK1jXdQrFKcGL1f
+	bn07f1MRF/UGIM2grvXNuo2V9Z8smW7ehD0qXHM/84tZNGQsDZ3thiDnt+GPTTKeZft8
+	xQcTu5QU0FeXJYfrvLZWTb8ZMk0ptHm16k+puhbEk1HLhCfFMx4Lcxwrofpr5V9dYCoa
+	6q+jbnOeE6HX0usDj4laZRh65Dabks41lE9EKdFWQMSOPzDSuMDji31YfwSCdGx3tnrC
+	SsDQVwDJtZebzXERKih/iTNYgzzvMnNKwTFlTVSk0hvaaGvLKslD7vWgtkZyffzh3Ys3
+	+KUQ==
 In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -32,266 +32,113 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently, cfqg charges are scaled directly according to cfqg->weight.
-Regardless of the number of active cfqgs or the amount of active
-weights, a given weight value always scales charge the same way.  This
-works fine as long as all cfqgs are treated equally regardless of
-their positions in the hierarchy, which is what cfq currently
-implements.  It can't work in hierarchical settings because the
-interpretation of a given weight value depends on where the weight is
-located in the hierarchy.
+Add two blkcg_policy methods, ->online_pd_fn() and ->offline_pd_fn(),
+which are invoked as the policy_data gets activated and deactivated
+while holding both blkcg and q locks.
 
-This patch reimplements cfqg charge scaling so that it can be used to
-support hierarchy properly.  The scheme is fairly simple and
-light-weight.
+Also, add blkcg_gq->online bool, which is set and cleared as the
+blkcg_gq gets activated and deactivated.  This flag also is toggled
+while holding both blkcg and q locks.
 
-* When a cfqg is added to the service tree, v(disktime)weight is
-  calculated.  It walks up the tree to root calculating the fraction
-  it has in the hierarchy.  At each level, the fraction can be
-  calculated as
-
-    cfqg->weight / parent->level_weight
-
-  By compounding these, the global fraction of vdisktime the cfqg has
-  claim to - vfraction - can be determined.
-
-* When the cfqg needs to be charged, the charge is scaled inversely
-  proportionally to the vfraction.
-
-The new scaling scheme uses the same CFQ_SERVICE_SHIFT for fixed point
-representation as before; however, the smallest scaling factor is now
-1 (ie. 1 << CFQ_SERVICE_SHIFT).  This is different from before where 1
-was for CFQ_WEIGHT_DEFAULT and higher weight would result in smaller
-scaling factor.
-
-While this shifts the global scale of vdisktime a bit, it doesn't
-change the relative relationships among cfqgs and the scheduling
-result isn't different.
-
-cfq_group_notify_queue_add uses fixed CFQ_IDLE_DELAY when appending
-new cfqg to the service tree.  The specific value of CFQ_IDLE_DELAY
-didn't have any relevance to vdisktime before and is unlikely to cause
-any visible behavior difference now especially as the scale shift
-isn't that large.
-
-As the new scheme now makes proper distinction between cfqg->weight
-and ->leaf_weight, reverse the weight aliasing for root cfqgs.  For
-root, both weights are now mapped to ->leaf_weight instead of the
-other way around.
-
-Because we're still using cfqg_flat_parent(), this patch shouldn't
-change the scheduling behavior in any noticeable way.
-
-v2: Beefed up comments on vfraction as requested by Vivek.
+These will be used to implement hierarchical stats.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- block/cfq-iosched.c | 107 +++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 77 insertions(+), 30 deletions(-)
+ block/blk-cgroup.c | 21 ++++++++++++++++++++-
+ block/blk-cgroup.h |  7 +++++++
+ 2 files changed, 27 insertions(+), 1 deletion(-)
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 7701c3f..b24acf6 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -237,6 +237,18 @@ struct cfq_group {
- 	unsigned int children_weight;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 3a8de32..4d625d2 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -182,7 +182,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 				    struct blkcg_gq *new_blkg)
+ {
+ 	struct blkcg_gq *blkg;
+-	int ret;
++	int i, ret;
  
- 	/*
-+	 * vfraction is the fraction of vdisktime that the tasks in this
-+	 * cfqg are entitled to.  This is determined by compounding the
-+	 * ratios walking up from this cfqg to the root.
-+	 *
-+	 * It is in fixed point w/ CFQ_SERVICE_SHIFT and the sum of all
-+	 * vfractions on a service tree is approximately 1.  The sum may
-+	 * deviate a bit due to rounding errors and fluctuations caused by
-+	 * cfqgs entering and leaving the service tree.
-+	 */
-+	unsigned int vfraction;
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
+ 	lockdep_assert_held(q->queue_lock);
+@@ -218,7 +218,15 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	if (likely(!ret)) {
+ 		hlist_add_head_rcu(&blkg->blkcg_node, &blkcg->blkg_list);
+ 		list_add(&blkg->q_node, &q->blkg_list);
 +
-+	/*
- 	 * There are two weights - (internal) weight is the weight of this
- 	 * cfqg against the sibling cfqgs.  leaf_weight is the wight of
- 	 * this cfqg against the child cfqgs.  For the root cfqg, both
-@@ -891,13 +903,27 @@ cfq_prio_to_slice(struct cfq_data *cfqd, struct cfq_queue *cfqq)
- 	return cfq_prio_slice(cfqd, cfq_cfqq_sync(cfqq), cfqq->ioprio);
- }
- 
--static inline u64 cfq_scale_slice(unsigned long delta, struct cfq_group *cfqg)
-+/**
-+ * cfqg_scale_charge - scale disk time charge according to cfqg weight
-+ * @charge: disk time being charged
-+ * @vfraction: vfraction of the cfqg, fixed point w/ CFQ_SERVICE_SHIFT
-+ *
-+ * Scale @charge according to @vfraction, which is in range (0, 1].  The
-+ * scaling is inversely proportional.
-+ *
-+ * scaled = charge / vfraction
-+ *
-+ * The result is also in fixed point w/ CFQ_SERVICE_SHIFT.
-+ */
-+static inline u64 cfqg_scale_charge(unsigned long charge,
-+				    unsigned int vfraction)
- {
--	u64 d = delta << CFQ_SERVICE_SHIFT;
-+	u64 c = charge << CFQ_SERVICE_SHIFT;	/* make it fixed point */
- 
--	d = d * CFQ_WEIGHT_DEFAULT;
--	do_div(d, cfqg->weight);
--	return d;
-+	/* charge / vfraction */
-+	c <<= CFQ_SERVICE_SHIFT;
-+	do_div(c, vfraction);
-+	return c;
- }
- 
- static inline u64 max_vdisktime(u64 min_vdisktime, u64 vdisktime)
-@@ -1237,7 +1263,9 @@ cfq_update_group_weight(struct cfq_group *cfqg)
- static void
- cfq_group_service_tree_add(struct cfq_rb_root *st, struct cfq_group *cfqg)
- {
-+	unsigned int vfr = 1 << CFQ_SERVICE_SHIFT;	/* start with 1 */
- 	struct cfq_group *pos = cfqg;
-+	struct cfq_group *parent;
- 	bool propagate;
- 
- 	/* add to the service tree */
-@@ -1248,22 +1276,34 @@ cfq_group_service_tree_add(struct cfq_rb_root *st, struct cfq_group *cfqg)
- 	st->total_weight += cfqg->weight;
- 
- 	/*
--	 * Activate @cfqg and propagate activation upwards until we meet an
--	 * already activated node or reach root.
-+	 * Activate @cfqg and calculate the portion of vfraction @cfqg is
-+	 * entitled to.  vfraction is calculated by walking the tree
-+	 * towards the root calculating the fraction it has at each level.
-+	 * The compounded ratio is how much vfraction @cfqg owns.
-+	 *
-+	 * Start with the proportion tasks in this cfqg has against active
-+	 * children cfqgs - its leaf_weight against children_weight.
- 	 */
- 	propagate = !pos->nr_active++;
- 	pos->children_weight += pos->leaf_weight;
-+	vfr = vfr * pos->leaf_weight / pos->children_weight;
- 
--	while (propagate) {
--		struct cfq_group *parent = cfqg_flat_parent(pos);
--
--		if (!parent)
--			break;
--
--		propagate = !parent->nr_active++;
--		parent->children_weight += pos->weight;
-+	/*
-+	 * Compound ->weight walking up the tree.  Both activation and
-+	 * vfraction calculation are done in the same loop.  Propagation
-+	 * stops once an already activated node is met.  vfraction
-+	 * calculation should always continue to the root.
-+	 */
-+	while ((parent = cfqg_flat_parent(pos))) {
-+		if (propagate) {
-+			propagate = !parent->nr_active++;
-+			parent->children_weight += pos->weight;
++		for (i = 0; i < BLKCG_MAX_POLS; i++) {
++			struct blkcg_policy *pol = blkcg_policy[i];
++
++			if (blkg->pd[i] && pol->pd_online_fn)
++				pol->pd_online_fn(blkg);
 +		}
-+		vfr = vfr * pos->weight / parent->children_weight;
- 		pos = parent;
  	}
++	blkg->online = true;
+ 	spin_unlock(&blkcg->lock);
+ 
+ 	if (!ret)
+@@ -291,6 +299,7 @@ EXPORT_SYMBOL_GPL(blkg_lookup_create);
+ static void blkg_destroy(struct blkcg_gq *blkg)
+ {
+ 	struct blkcg *blkcg = blkg->blkcg;
++	int i;
+ 
+ 	lockdep_assert_held(blkg->q->queue_lock);
+ 	lockdep_assert_held(&blkcg->lock);
+@@ -299,6 +308,14 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	WARN_ON_ONCE(list_empty(&blkg->q_node));
+ 	WARN_ON_ONCE(hlist_unhashed(&blkg->blkcg_node));
+ 
++	for (i = 0; i < BLKCG_MAX_POLS; i++) {
++		struct blkcg_policy *pol = blkcg_policy[i];
 +
-+	cfqg->vfraction = max_t(unsigned, vfr, 1);
- }
++		if (blkg->pd[i] && pol->pd_offline_fn)
++			pol->pd_offline_fn(blkg);
++	}
++	blkg->online = false;
++
+ 	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
+ 	list_del_init(&blkg->q_node);
+ 	hlist_del_init_rcu(&blkg->blkcg_node);
+@@ -956,6 +973,8 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 		/* grab blkcg lock too while removing @pd from @blkg */
+ 		spin_lock(&blkg->blkcg->lock);
  
- static void
-@@ -1309,6 +1349,7 @@ cfq_group_service_tree_del(struct cfq_rb_root *st, struct cfq_group *cfqg)
++		if (pol->pd_offline_fn)
++			pol->pd_offline_fn(blkg);
+ 		if (pol->pd_exit_fn)
+ 			pol->pd_exit_fn(blkg);
  
- 		/* @pos has 0 nr_active at this point */
- 		WARN_ON_ONCE(pos->children_weight);
-+		pos->vfraction = 0;
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 40f5b97..678e89e 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -106,12 +106,17 @@ struct blkcg_gq {
+ 	/* reference count */
+ 	int				refcnt;
  
- 		if (!parent)
- 			break;
-@@ -1381,6 +1422,7 @@ static void cfq_group_served(struct cfq_data *cfqd, struct cfq_group *cfqg,
- 	unsigned int used_sl, charge, unaccounted_sl = 0;
- 	int nr_sync = cfqg->nr_cfqq - cfqg_busy_async_queues(cfqd, cfqg)
- 			- cfqg->service_tree_idle.count;
-+	unsigned int vfr;
++	/* is this blkg online? protected by both blkcg and q locks */
++	bool				online;
++
+ 	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
  
- 	BUG_ON(nr_sync < 0);
- 	used_sl = charge = cfq_cfqq_slice_usage(cfqq, &unaccounted_sl);
-@@ -1390,10 +1432,15 @@ static void cfq_group_served(struct cfq_data *cfqd, struct cfq_group *cfqg,
- 	else if (!cfq_cfqq_sync(cfqq) && !nr_sync)
- 		charge = cfqq->allocated_slice;
+ 	struct rcu_head			rcu_head;
+ };
  
--	/* Can't update vdisktime while group is on service tree */
-+	/*
-+	 * Can't update vdisktime while on service tree and cfqg->vfraction
-+	 * is valid only while on it.  Cache vfr, leave the service tree,
-+	 * update vdisktime and go back on.  The re-addition to the tree
-+	 * will also update the weights as necessary.
-+	 */
-+	vfr = cfqg->vfraction;
- 	cfq_group_service_tree_del(st, cfqg);
--	cfqg->vdisktime += cfq_scale_slice(charge, cfqg);
--	/* If a new weight was requested, update now, off tree */
-+	cfqg->vdisktime += cfqg_scale_charge(charge, vfr);
- 	cfq_group_service_tree_add(st, cfqg);
+ typedef void (blkcg_pol_init_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_online_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_offline_pd_fn)(struct blkcg_gq *blkg);
+ typedef void (blkcg_pol_exit_pd_fn)(struct blkcg_gq *blkg);
+ typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkcg_gq *blkg);
  
- 	/* This group is being expired. Save the context */
-@@ -1669,44 +1716,44 @@ static int cfqg_print_avg_queue_size(struct cgroup *cgrp, struct cftype *cft,
- #endif	/* CONFIG_DEBUG_BLK_CGROUP */
+@@ -124,6 +129,8 @@ struct blkcg_policy {
  
- static struct cftype cfq_blkcg_files[] = {
-+	/* on root, weight is mapped to leaf_weight */
- 	{
- 		.name = "weight_device",
--		.read_seq_string = cfqg_print_weight_device,
--		.write_string = cfqg_set_weight_device,
-+		.flags = CFTYPE_ONLY_ON_ROOT,
-+		.read_seq_string = cfqg_print_leaf_weight_device,
-+		.write_string = cfqg_set_leaf_weight_device,
- 		.max_write_len = 256,
- 	},
- 	{
- 		.name = "weight",
--		.read_seq_string = cfq_print_weight,
--		.write_u64 = cfq_set_weight,
-+		.flags = CFTYPE_ONLY_ON_ROOT,
-+		.read_seq_string = cfq_print_leaf_weight,
-+		.write_u64 = cfq_set_leaf_weight,
- 	},
- 
--	/* on root, leaf_weight is mapped to weight */
-+	/* no such mapping necessary for !roots */
- 	{
--		.name = "leaf_weight_device",
--		.flags = CFTYPE_ONLY_ON_ROOT,
-+		.name = "weight_device",
-+		.flags = CFTYPE_NOT_ON_ROOT,
- 		.read_seq_string = cfqg_print_weight_device,
- 		.write_string = cfqg_set_weight_device,
- 		.max_write_len = 256,
- 	},
- 	{
--		.name = "leaf_weight",
--		.flags = CFTYPE_ONLY_ON_ROOT,
-+		.name = "weight",
-+		.flags = CFTYPE_NOT_ON_ROOT,
- 		.read_seq_string = cfq_print_weight,
- 		.write_u64 = cfq_set_weight,
- 	},
- 
--	/* no such mapping necessary for !roots */
- 	{
- 		.name = "leaf_weight_device",
--		.flags = CFTYPE_NOT_ON_ROOT,
- 		.read_seq_string = cfqg_print_leaf_weight_device,
- 		.write_string = cfqg_set_leaf_weight_device,
- 		.max_write_len = 256,
- 	},
- 	{
- 		.name = "leaf_weight",
--		.flags = CFTYPE_NOT_ON_ROOT,
- 		.read_seq_string = cfq_print_leaf_weight,
- 		.write_u64 = cfq_set_leaf_weight,
- 	},
+ 	/* operations */
+ 	blkcg_pol_init_pd_fn		*pd_init_fn;
++	blkcg_pol_online_pd_fn		*pd_online_fn;
++	blkcg_pol_offline_pd_fn		*pd_offline_fn;
+ 	blkcg_pol_exit_pd_fn		*pd_exit_fn;
+ 	blkcg_pol_reset_pd_stats_fn	*pd_reset_stats_fn;
+ };
 -- 
 1.8.0.2
