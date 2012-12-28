@@ -1,48 +1,29 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH V3 6/8] memcg: Don't account root_mem_cgroup page statistics
-Date: Fri, 28 Dec 2012 10:04:11 +0900
-Message-ID: <50DCF00B.5040100@jp.fujitsu.com>
-References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456447-14740-1-git-send-email-handai.szj@taobao.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH V3 7/8] memcg: disable memcg page stat accounting code
+ when not in use
+Date: Fri, 28 Dec 2012 10:06:57 +0900
+Message-ID: <50DCF0B1.4060000@jp.fujitsu.com>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456477-14780-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1356456447-14740-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1356456477-14780-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, akpm@linux-foundation.org, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
 (2012/12/26 2:27), Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > 
-> If memcg is enabled and no non-root memcg exists, all allocated pages
-> belongs to root_mem_cgroup and go through root memcg statistics routines
-> which brings some overheads. So for the sake of performance, we can give
-> up accounting stats of root memcg for MEM_CGROUP_STAT_FILE_MAPPED/FILE_DIRTY
-> /WRITEBACK and instead we pay special attention while showing root
-> memcg numbers in memcg_stat_show(): as we don't account root memcg stats
-> anymore, the root_mem_cgroup->stat numbers are actually 0. But because of
-> hierachy, figures of root_mem_cgroup may just represent numbers of pages
-> used by its own tasks(not belonging to any other child cgroup). So here we
-> fake these root numbers by using stats of global state and all other memcg.
-> That is for root memcg:
-> 	nr(MEM_CGROUP_STAT_FILE_MAPPED) = global_page_state(NR_FILE_MAPPED) -
->                                sum_of_all_memcg(MEM_CGROUP_STAT_FILE_MAPPED);
-> Dirty/Writeback pages accounting are in the similar way.
+> It's inspired by a similar optimization from Glauber Costa
+> (memcg: make it suck faster; https://lkml.org/lkml/2012/9/25/154).
+> Here we use jump label to patch the memcg page stat accounting code
+> in or out when not used. when the first non-root memcg comes to
+> life the code is patching in otherwise it is out.
 > 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-isn't it better to use mem_cgroup_is_root() call rather than
-direct comparison (memcg == root_mem_cgroup) ?
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Anyway, Ack to this approach. 
-
-Thanks,
--Kame
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
