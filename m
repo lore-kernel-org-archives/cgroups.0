@@ -1,7 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 18/24] blkcg: s/blkg_rwstat_sum()/blkg_rwstat_total()/
-Date: Fri, 28 Dec 2012 12:35:40 -0800
-Message-ID: <1356726946-26037-19-git-send-email-tj@kernel.org>
+Subject: [PATCH 21/24] blkcg: make blkcg_print_blkgs() grab q locks instead of
+	blkcg lock
+Date: Fri, 28 Dec 2012 12:35:43 -0800
+Message-ID: <1356726946-26037-22-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +11,13 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
 	:in-reply-to:references;
-	bh=jWF1tZ3RvNNk9WDnXm5/q3iEpCHt4HOD23v5WnQcfLI=;
-	b=tX5gkegY0VIcy1Icg8TIw8eL0+K4pb7AsUJQyPIoar0nb3A5rLp4w0yKW/XmSKTMdX
-	rm59vpmLXzxNaVKT9gafz45S+IoN0GhKbhP+r4Ujl3QuTXLzQnbZtBlZ7l5rDe5L2cS7
-	QB67nJoKKiav6yKcBXmN837+DYeyZr7zIfpWlc+wwPVtkJvdla+Ob673PQ3wu7ES0ec0
-	zuLmq3+mEJbcbPVlUSFCgaq2fqEczbTEcn1rrlYOWc2pPt+/avJgP/SzW4VzkVqjorAQ
-	zSFRaEKM7YmW6MW1U4pt2879QmTxgu280lUu1QMq7ibpsMYXEg8aumSkW3kR8icWoQ1d
-	+HQQ==
+	bh=56qYiwtmsz4tAzun+IbBGxrWIAX2bJG/0PVnG1WU7es=;
+	b=uk39QFOJpMUp4GL+Ccthf7N6cOxps2mznOdWXe3KJ3FAf0vxysUdZGSMHAGPtBwPsw
+	DpdxvPHV+0K8iR44jl3QQepfh56FMb/6prHyO2tpn2ehllRY2hi5MTr5hCxK0auFIsZ2
+	l7S/VeuzSCDSxDZOLMb6Zs3aNJ8Cde8WHQtIRdk0ksdGSKFkVbGxTyXVlEZRqygEvbRV
+	mi6O04BmRbwKEVhqhphopzf6/dl7qFTJKN8vtOid/+u+zebR5uZioJv14RzHGu0BgquK
+	r+cPye9SyFxhZ/ui8Zi5GXCqRM6YvwehG4EekAjh9PNIzFuQb65J/nwQmNyNmKZms8nn
+	Hl/A==
 In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -31,57 +32,51 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Rename blkg_rwstat_sum() to blkg_rwstat_total().  sum will be used for
-summing up stats from multiple blkgs.
+Instead of holding blkcg->lock while walking ->blkg_list and executing
+prfill(), RCU walk ->blkg_list and hold the blkg's queue lock while
+executing prfill().  This makes prfill() implementations easier as
+stats are mostly protected by queue lock.
+
+This will be used to implement hierarchical stats.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.h  | 4 ++--
- block/cfq-iosched.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ block/blk-cgroup.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 678e89e..586c0ac 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -461,14 +461,14 @@ static inline struct blkg_rwstat blkg_rwstat_read(struct blkg_rwstat *rwstat)
- }
- 
- /**
-- * blkg_rwstat_sum - read the total count of a blkg_rwstat
-+ * blkg_rwstat_total - read the total count of a blkg_rwstat
-  * @rwstat: blkg_rwstat to read
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index a1a4b97..22f75d1 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -504,8 +504,9 @@ static const char *blkg_dev_name(struct blkcg_gq *blkg)
   *
-  * Return the total count of @rwstat regardless of the IO direction.  This
-  * function can be called without synchronization and takes care of u64
-  * atomicity.
-  */
--static inline uint64_t blkg_rwstat_sum(struct blkg_rwstat *rwstat)
-+static inline uint64_t blkg_rwstat_total(struct blkg_rwstat *rwstat)
- {
- 	struct blkg_rwstat tmp = blkg_rwstat_read(rwstat);
+  * This function invokes @prfill on each blkg of @blkcg if pd for the
+  * policy specified by @pol exists.  @prfill is invoked with @sf, the
+- * policy data and @data.  If @show_total is %true, the sum of the return
+- * values from @prfill is printed with "Total" label at the end.
++ * policy data and @data and the matching queue lock held.  If @show_total
++ * is %true, the sum of the return values from @prfill is printed with
++ * "Total" label at the end.
+  *
+  * This is to be used to construct print functions for
+  * cftype->read_seq_string method.
+@@ -520,11 +521,14 @@ void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
+ 	struct hlist_node *n;
+ 	u64 total = 0;
  
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index e8f3106..d43145cc 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -536,7 +536,7 @@ static void cfqg_stats_set_start_empty_time(struct cfq_group *cfqg)
- {
- 	struct cfqg_stats *stats = &cfqg->stats;
+-	spin_lock_irq(&blkcg->lock);
+-	hlist_for_each_entry(blkg, n, &blkcg->blkg_list, blkcg_node)
++	rcu_read_lock();
++	hlist_for_each_entry_rcu(blkg, n, &blkcg->blkg_list, blkcg_node) {
++		spin_lock_irq(blkg->q->queue_lock);
+ 		if (blkcg_policy_enabled(blkg->q, pol))
+ 			total += prfill(sf, blkg->pd[pol->plid], data);
+-	spin_unlock_irq(&blkcg->lock);
++		spin_unlock_irq(blkg->q->queue_lock);
++	}
++	rcu_read_unlock();
  
--	if (blkg_rwstat_sum(&stats->queued))
-+	if (blkg_rwstat_total(&stats->queued))
- 		return;
- 
- 	/*
-@@ -580,7 +580,7 @@ static void cfqg_stats_update_avg_queue_size(struct cfq_group *cfqg)
- 	struct cfqg_stats *stats = &cfqg->stats;
- 
- 	blkg_stat_add(&stats->avg_queue_size_sum,
--		      blkg_rwstat_sum(&stats->queued));
-+		      blkg_rwstat_total(&stats->queued));
- 	blkg_stat_add(&stats->avg_queue_size_samples, 1);
- 	cfqg_stats_update_group_wait_time(stats);
- }
+ 	if (show_total)
+ 		seq_printf(sf, "Total %llu\n", (unsigned long long)total);
 -- 
 1.8.0.2
