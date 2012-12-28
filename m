@@ -1,72 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 16/24] blkcg: add blkg_policy_data->plid
-Date: Fri, 28 Dec 2012 12:35:38 -0800
-Message-ID: <1356726946-26037-17-git-send-email-tj@kernel.org>
-References: <1356726946-26037-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=p51HOcjxORYwtfTlIGi2YqRjVsWvDq1qpx2Fp0Avnwc=;
-        b=h3NFMJZ7cffTZ2enAekG8MIMcekIZ4a2fWZYWlziYxFZjYRw9lmZC/ERQbisSGnBSQ
-         O6MFQ8EfSYXJ0hB5aznWMuKKZq31ICQ3P64l7zf3LAVmfwBYY6mqSVI7xK8tzomkEwSz
-         qI+NT0kIEqZvIdiipD1QiFAweMRAA6yc+BPc07eNsKS9uI0n7zQlojpkbvMLr8CAqwBH
-         marpCGRVq0hQ0TbD0y9+UyT5DCgv5DsAc3XnMHDzqqBpsYx84Tb0zYy7mi4Fa6r+HfYG
-         0LbRTltTwlAG+yjNa4SGOyu+cp6qOo6Mik4gzP4dpno+gZAolitVWd7gBbUzrpnLfvLI
-         FlAA==
-In-Reply-To: <1356726946-26037-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] cgroup: remove unused dummy cgroup_fork_callbacks()
+Date: Fri, 28 Dec 2012 16:22:46 -0500
+Message-ID: <20121228212246.GC3062@mtj.dyndns.org>
+References: <1350426526-14254-1-git-send-email-tj@kernel.org>
+	<1350426526-14254-2-git-send-email-tj@kernel.org>
+	<20121220052533.GA17190@herton-Z68MA-D2H-B3>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, axboe@kernel.dk, vgoyal@redhat.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, ctalbott@google.com, rni@google.com, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=6f+dRW24nr9AtgMtHpUqe/fqsXhWRDPa/SnGt1dMabc=;
+	b=SA10k6v3MwbQ5dWjukVm72zM3CSufNR1woiK/agTUFnsSXRoBD/LmJUBBX+MBScknV
+	k6gYrLvSN+OZPBzHnbSV0uHnBYNn+6lQdAIMFdjx7Pmc88FwBKEK3QZlmc/LTrwbLupv
+	Wtl3NJ5wBK/MM2olZL73+UZ9xhTeBMoobCUTsdzZ5RV/LoRxSmQUTrBXIL7q2CLPM+1s
+	Rek0p0PVPq8l7KiAM2mMUnizZHs1FoINQrOpePTS/+RY9ITKitt4qIvoyc99saTmduuV
+	K9bjF5sddlTAXx9DzuUpVVwxMak5YM2L8iPdA5k1kvH23mZyWgJJW8K8r9UGOs/NRfVM
+	Zn0A==
+Content-Disposition: inline
+In-Reply-To: <20121220052533.GA17190@herton-Z68MA-D2H-B3>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Herton Ronaldo Krzesinski <herton.krzesinski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Add pd->plid so that the policy a pd belongs to can be identified
-easily.  This will be used to implement hierarchical blkg_[rw]stats.
+From a0a4bddd2779a51b6529afa113c5671ebcc21b14 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 28 Dec 2012 13:18:28 -0800
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+5edee61ede ("cgroup: cgroup_subsys->fork() should be called after the
+task is added to css_set") removed cgroup_fork_callbacks() but forgot
+to remove its dummy version for !CONFIG_CGROUPS.  Remove it.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Herton Ronaldo Krzesinski <herton.krzesinski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 ---
- block/blk-cgroup.c | 2 ++
- block/blk-cgroup.h | 3 ++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Applied to cgroup/for-3.9.  Thanks.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 10e1df9..3a8de32 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -113,6 +113,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ include/linux/cgroup.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 7d73905..942e687 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -706,7 +706,6 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id);
+ static inline int cgroup_init_early(void) { return 0; }
+ static inline int cgroup_init(void) { return 0; }
+ static inline void cgroup_fork(struct task_struct *p) {}
+-static inline void cgroup_fork_callbacks(struct task_struct *p) {}
+ static inline void cgroup_post_fork(struct task_struct *p) {}
+ static inline void cgroup_exit(struct task_struct *p, int callbacks) {}
  
- 		blkg->pd[i] = pd;
- 		pd->blkg = blkg;
-+		pd->plid = i;
- 
- 		/* invoke per-policy init */
- 		if (pol->pd_init_fn)
-@@ -908,6 +909,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 
- 		blkg->pd[pol->plid] = pd;
- 		pd->blkg = blkg;
-+		pd->plid = pol->plid;
- 		pol->pd_init_fn(blkg);
- 
- 		spin_unlock(&blkg->blkcg->lock);
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 2446225..40f5b97 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -81,8 +81,9 @@ struct blkg_rwstat {
-  * beginning and pd_size can't be smaller than pd.
-  */
- struct blkg_policy_data {
--	/* the blkg this per-policy data belongs to */
-+	/* the blkg and policy id this per-policy data belongs to */
- 	struct blkcg_gq			*blkg;
-+	int				plid;
- 
- 	/* used during policy activation */
- 	struct list_head		alloc_node;
 -- 
 1.8.0.2
