@@ -1,82 +1,72 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 21/24] blkcg: make blkcg_print_blkgs() grab q locks instead of
-	blkcg lock
-Date: Fri, 28 Dec 2012 12:35:43 -0800
-Message-ID: <1356726946-26037-22-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 16/24] blkcg: add blkg_policy_data->plid
+Date: Fri, 28 Dec 2012 12:35:38 -0800
+Message-ID: <1356726946-26037-17-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+         :in-reply-to:references;
+        bh=p51HOcjxORYwtfTlIGi2YqRjVsWvDq1qpx2Fp0Avnwc=;
+        b=h3NFMJZ7cffTZ2enAekG8MIMcekIZ4a2fWZYWlziYxFZjYRw9lmZC/ERQbisSGnBSQ
+         O6MFQ8EfSYXJ0hB5aznWMuKKZq31ICQ3P64l7zf3LAVmfwBYY6mqSVI7xK8tzomkEwSz
+         qI+NT0kIEqZvIdiipD1QiFAweMRAA6yc+BPc07eNsKS9uI0n7zQlojpkbvMLr8CAqwBH
+         marpCGRVq0hQ0TbD0y9+UyT5DCgv5DsAc3XnMHDzqqBpsYx84Tb0zYy7mi4Fa6r+HfYG
+         0LbRTltTwlAG+yjNa4SGOyu+cp6qOo6Mik4gzP4dpno+gZAolitVWd7gBbUzrpnLfvLI
+         FlAA==
+In-Reply-To: <1356726946-26037-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-	:in-reply-to:references;
-	bh=56qYiwtmsz4tAzun+IbBGxrWIAX2bJG/0PVnG1WU7es=;
-	b=uk39QFOJpMUp4GL+Ccthf7N6cOxps2mznOdWXe3KJ3FAf0vxysUdZGSMHAGPtBwPsw
-	DpdxvPHV+0K8iR44jl3QQepfh56FMb/6prHyO2tpn2ehllRY2hi5MTr5hCxK0auFIsZ2
-	l7S/VeuzSCDSxDZOLMb6Zs3aNJ8Cde8WHQtIRdk0ksdGSKFkVbGxTyXVlEZRqygEvbRV
-	mi6O04BmRbwKEVhqhphopzf6/dl7qFTJKN8vtOid/+u+zebR5uZioJv14RzHGu0BgquK
-	r+cPye9SyFxhZ/ui8Zi5GXCqRM6YvwehG4EekAjh9PNIzFuQb65J/nwQmNyNmKZms8nn
-	Hl/A==
-In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com, axboe@kernel.dk, vgoyal@redhat.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, ctalbott@google.com, rni@google.com, Tejun Heo <tj@kernel.org>
 
-Instead of holding blkcg->lock while walking ->blkg_list and executing
-prfill(), RCU walk ->blkg_list and hold the blkg's queue lock while
-executing prfill().  This makes prfill() implementations easier as
-stats are mostly protected by queue lock.
+Add pd->plid so that the policy a pd belongs to can be identified
+easily.  This will be used to implement hierarchical blkg_[rw]stats.
 
-This will be used to implement hierarchical stats.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ block/blk-cgroup.c | 2 ++
+ block/blk-cgroup.h | 3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index a1a4b97..22f75d1 100644
+index 10e1df9..3a8de32 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -504,8 +504,9 @@ static const char *blkg_dev_name(struct blkcg_gq *blkg)
-  *
-  * This function invokes @prfill on each blkg of @blkcg if pd for the
-  * policy specified by @pol exists.  @prfill is invoked with @sf, the
-- * policy data and @data.  If @show_total is %true, the sum of the return
-- * values from @prfill is printed with "Total" label at the end.
-+ * policy data and @data and the matching queue lock held.  If @show_total
-+ * is %true, the sum of the return values from @prfill is printed with
-+ * "Total" label at the end.
-  *
-  * This is to be used to construct print functions for
-  * cftype->read_seq_string method.
-@@ -520,11 +521,14 @@ void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
- 	struct hlist_node *n;
- 	u64 total = 0;
+@@ -113,6 +113,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
  
--	spin_lock_irq(&blkcg->lock);
--	hlist_for_each_entry(blkg, n, &blkcg->blkg_list, blkcg_node)
-+	rcu_read_lock();
-+	hlist_for_each_entry_rcu(blkg, n, &blkcg->blkg_list, blkcg_node) {
-+		spin_lock_irq(blkg->q->queue_lock);
- 		if (blkcg_policy_enabled(blkg->q, pol))
- 			total += prfill(sf, blkg->pd[pol->plid], data);
--	spin_unlock_irq(&blkcg->lock);
-+		spin_unlock_irq(blkg->q->queue_lock);
-+	}
-+	rcu_read_unlock();
+ 		blkg->pd[i] = pd;
+ 		pd->blkg = blkg;
++		pd->plid = i;
  
- 	if (show_total)
- 		seq_printf(sf, "Total %llu\n", (unsigned long long)total);
+ 		/* invoke per-policy init */
+ 		if (pol->pd_init_fn)
+@@ -908,6 +909,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ 
+ 		blkg->pd[pol->plid] = pd;
+ 		pd->blkg = blkg;
++		pd->plid = pol->plid;
+ 		pol->pd_init_fn(blkg);
+ 
+ 		spin_unlock(&blkg->blkcg->lock);
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 2446225..40f5b97 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -81,8 +81,9 @@ struct blkg_rwstat {
+  * beginning and pd_size can't be smaller than pd.
+  */
+ struct blkg_policy_data {
+-	/* the blkg this per-policy data belongs to */
++	/* the blkg and policy id this per-policy data belongs to */
+ 	struct blkcg_gq			*blkg;
++	int				plid;
+ 
+ 	/* used during policy activation */
+ 	struct list_head		alloc_node;
 -- 
 1.8.0.2
