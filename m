@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 07/24] blkcg: fix minor bug in blkg_alloc()
-Date: Fri, 28 Dec 2012 12:35:29 -0800
-Message-ID: <1356726946-26037-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 09/24] blkcg: cosmetic updates to blkg_create()
+Date: Fri, 28 Dec 2012 12:35:31 -0800
+Message-ID: <1356726946-26037-10-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +10,13 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
 	:in-reply-to:references;
-	bh=d7ze4NdUnVreuMDXWxifBlsv/V2FgF85Uumod6yKf/I=;
-	b=uNK9wwwS6J9Y/CbDgEFh56pjPR4kpIv/PeBN5xhbDhLDE6xP/+TiMniOD9rkFzxCmJ
-	aa7kLeykvSXizXXOvRdekoVnWZD5ESksTPNEYR6sOLDusGrnYYpGzNyag2lTpjrsdu2K
-	hcz23IN8HSlKrzQ3M4OoJASDQiyXZQKMJsJCMHD++ukT+4ovMj4DFjjJDH/M1J2k4XMZ
-	jYPxI1rQNNmRo0TqMjZl2KjiaafVGBIuUgb0ja/2htoZIp/41gBPfcz6nO/eJvF+8ke1
-	cnY1/+C2BLMKV9Hhr3zNtJGczIrTcNf7XB7gA6zLhXsYcBCbzwQSZChgL4bgsyPyZNNW
-	PL3A==
+	bh=XIuiFUHxZfOP+jMPT9JP3jjva00J2bltHvlJ84McPBU=;
+	b=wy9oNdDDBUO1eTm+dahc5j4/zNnzUow4UUFRivHNNqPPTJrEF1H/f/z/hkAk1+p0XF
+	AV2n9QRrKawsb72klF7f4QZBxD0UBVtrELJECF8E3N8DbfXQI9ODYqLVH3blyIflQgL0
+	yjZU0T6MEZkPMFOMRV/tB5JRZyFexdigst9UC8gzUUfQSECQ2uou3ei+EapuHUZAlXn7
+	+xveTqyuW87uxAnx0XnrtR3DnoKZy00Nj/2HUZ2ws08iHn5NpVK0ZTOwsITGQHNHGaqW
+	sGBOxQ0mOroajV1z2DrXiSKPMvcEpqmotHlhxCQKPMRglLFSdkspetOvxhY13/LA+Lxk
+	rm6A==
 In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -31,29 +31,58 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-blkg_alloc() was mistakenly checking blkcg_policy_enabled() twice.
-The latter test should have been on whether pol->pd_init_fn() exists.
-This doesn't cause actual problems because both blkcg policies
-implement pol->pd_init_fn().  Fix it.
+* Rename out_* labels to err_*.
+
+* Do ERR_PTR() conversion once in the error return path.
+
+This patch is cosmetic and to prepare for the hierarchy support.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Acked-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-cgroup.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index b8858fb..7ef747b 100644
+index 2012754..18ae480 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -114,7 +114,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 		pd->blkg = blkg;
+@@ -187,16 +187,16 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
  
- 		/* invoke per-policy init */
--		if (blkcg_policy_enabled(blkg->q, pol))
-+		if (pol->pd_init_fn)
- 			pol->pd_init_fn(blkg);
+ 	/* blkg holds a reference to blkcg */
+ 	if (!css_tryget(&blkcg->css)) {
+-		blkg = ERR_PTR(-EINVAL);
+-		goto out_free;
++		ret = -EINVAL;
++		goto err_free_blkg;
  	}
  
+ 	/* allocate */
+ 	if (!new_blkg) {
+ 		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
+ 		if (unlikely(!new_blkg)) {
+-			blkg = ERR_PTR(-ENOMEM);
+-			goto out_put;
++			ret = -ENOMEM;
++			goto err_put_css;
+ 		}
+ 	}
+ 	blkg = new_blkg;
+@@ -213,12 +213,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	if (!ret)
+ 		return blkg;
+ 
+-	blkg = ERR_PTR(ret);
+-out_put:
++err_put_css:
+ 	css_put(&blkcg->css);
+-out_free:
++err_free_blkg:
+ 	blkg_free(new_blkg);
+-	return blkg;
++	return ERR_PTR(ret);
+ }
+ 
+ /**
 -- 
 1.8.0.2
