@@ -1,7 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 05/24] cfq-iosched: Get rid of unnecessary local variable
-Date: Fri, 28 Dec 2012 12:35:27 -0800
-Message-ID: <1356726946-26037-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/24] cfq-iosched: Print sync-noidle information in blktrace
+	messages
+Date: Fri, 28 Dec 2012 12:35:28 -0800
+Message-ID: <1356726946-26037-7-git-send-email-tj@kernel.org>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +11,13 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
 	:in-reply-to:references;
-	bh=dSF6DN+qzMd6qeaipnRgGKa41xaayPmHjp01IwEC+aQ=;
-	b=xRLL6RfpB77ggunsAjfAFsZylMJWHCSavlmvHIjiQcdc6jvwUbBYb392OwMwsz0FCD
-	7Sqg+kJjau3FJutnCg5wIKmMqoDTU50nhJopy8sJYaZioKta0jJ3fhIj9o+vmPeZBn9+
-	o9Y6MWvl7DDlHQL8HTiUpBJjzOROzG8K92RwcIyWVXsya6rUPAz0CFZriffDAZFDKnAn
-	ewU3/HPM9pMKQ9NekBdGh/KZwNjhmC0st7FY4EnN8c/Y0tjTflJy85aU9xW8qmDswdv/
-	rAXLxHZ5NloukQLUzzeVz4lmo1wWGHlit3aANKQ5we8kPLjqBCWVBhDeSP8TsqE/mNmw
-	HM3g==
+	bh=7fSKF1RtBi++VuRoBXJ7wBWvw+Lv8Zb2UvyAxJc9X14=;
+	b=UU3V84bPM8L59foVcQfTTxC0/CXmODe/M4XKBwOnXo5ixlbgh23MYfk0aPG87iXe5f
+	asA1t3gAKKnjCP30gaHcmreoePLm3+MAF2j7OCn+THO1t6IKsNHyM0fxHUH4DaaOk9kO
+	PImZJawLwW9VB7PVu04gE0z0bNIT6dBTb36yoMA1+EZJMZEXV9fDnvPW11h0jrSAo8y2
+	JKurR+es5LguIfJhMHV9Rdk5ldBSzEJ6yYuwXV2xj+We3OyRIgy5dkhXu5n1FZiaJyfe
+	RhYV30Q5rmMIgnPCw4zCKIW3KH+85EbDkhAdgg1b0Ko5NZQgw3xLxfbWX1rfSbFiHw1I
+	yWFw==
 In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -33,47 +34,53 @@ Cc: ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA
 
 From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Use of local varibale "n" seems to be unnecessary. Remove it. This brings
-it inline with function __cfq_group_st_add(), which is also doing the
-similar operation of adding a group to a rb tree.
+Currently we attach a character "S" or "A" to the cfqq<pid>, to represent
+whether queues is sync or async. Add one more character "N" to represent
+whether it is sync-noidle queue or sync queue. So now three different
+type of queues will look as follows.
 
-No functionality change here.
+cfq1234S   --> sync queus
+cfq1234SN  --> sync noidle queue
+cfq1234A   --> Async queue
+
+Previously S/A classification was being printed only if group scheduling
+was enabled. This patch also makes sure that this classification is
+displayed even if group idling is disabled.
 
 Signed-off-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Acked-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/cfq-iosched.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ block/cfq-iosched.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index e34e142..5ad4cae 100644
+index 5ad4cae..bc076f4 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -1658,8 +1658,6 @@ static void cfq_service_tree_add(struct cfq_data *cfqd, struct cfq_queue *cfqq,
- 	cfqq->service_tree = st;
- 	p = &st->rb.rb_node;
- 	while (*p) {
--		struct rb_node **n;
--
- 		parent = *p;
- 		__cfqq = rb_entry(parent, struct cfq_queue, rb_node);
+@@ -586,8 +586,9 @@ static inline void cfqg_put(struct cfq_group *cfqg)
+ 	char __pbuf[128];						\
+ 									\
+ 	blkg_path(cfqg_to_blkg((cfqq)->cfqg), __pbuf, sizeof(__pbuf));	\
+-	blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt, (cfqq)->pid, \
+-			  cfq_cfqq_sync((cfqq)) ? 'S' : 'A',		\
++	blk_add_trace_msg((cfqd)->queue, "cfq%d%c%c %s " fmt, (cfqq)->pid, \
++			cfq_cfqq_sync((cfqq)) ? 'S' : 'A',		\
++			cfqq_type((cfqq)) == SYNC_NOIDLE_WORKLOAD ? 'N' : ' ',\
+ 			  __pbuf, ##args);				\
+ } while (0)
  
-@@ -1667,13 +1665,11 @@ static void cfq_service_tree_add(struct cfq_data *cfqd, struct cfq_queue *cfqq,
- 		 * sort by key, that represents service time.
- 		 */
- 		if (time_before(rb_key, __cfqq->rb_key))
--			n = &(*p)->rb_left;
-+			p = &parent->rb_left;
- 		else {
--			n = &(*p)->rb_right;
-+			p = &parent->rb_right;
- 			left = 0;
- 		}
--
--		p = n;
- 	}
+@@ -675,7 +676,10 @@ static inline void cfqg_get(struct cfq_group *cfqg) { }
+ static inline void cfqg_put(struct cfq_group *cfqg) { }
  
- 	if (left)
+ #define cfq_log_cfqq(cfqd, cfqq, fmt, args...)	\
+-	blk_add_trace_msg((cfqd)->queue, "cfq%d " fmt, (cfqq)->pid, ##args)
++	blk_add_trace_msg((cfqd)->queue, "cfq%d%c%c " fmt, (cfqq)->pid,	\
++			cfq_cfqq_sync((cfqq)) ? 'S' : 'A',		\
++			cfqq_type((cfqq)) == SYNC_NOIDLE_WORKLOAD ? 'N' : ' ',\
++				##args)
+ #define cfq_log_cfqg(cfqd, cfqg, fmt, args...)		do {} while (0)
+ 
+ static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
 -- 
 1.8.0.2
