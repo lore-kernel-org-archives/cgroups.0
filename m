@@ -1,74 +1,59 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: Linux 3.3+ and memory cgroup kernel panics
-Date: Thu, 27 Dec 2012 15:53:34 +0100
-Message-ID: <20121227145334.GB21267@dhcp22.suse.cz>
-References: <CAKz8sYXcY9kP=QPVAWdP4a-6Nuq-04yDJNuvBojDTfKbvj=x9A@mail.gmail.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH V3 2/8] Make TestSetPageDirty and dirty page accounting
+ in one func
+Date: Fri, 28 Dec 2012 09:39:25 +0900
+Message-ID: <50DCEA3D.1030501@jp.fujitsu.com>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456156-14535-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAKz8sYXcY9kP=QPVAWdP4a-6Nuq-04yDJNuvBojDTfKbvj=x9A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1356456156-14535-1-git-send-email-handai.szj@taobao.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Strauss <david-WnlvKBBViykE1dmCBd9WyQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
 
-[Adding linux-mm to CC]
+(2012/12/26 2:22), Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj@taobao.com>
+> 
+> Commit a8e7d49a(Fix race in create_empty_buffers() vs __set_page_dirty_buffers())
+> extracts TestSetPageDirty from __set_page_dirty and is far away from
+> account_page_dirtied. But it's better to make the two operations in one single
+> function to keep modular. So in order to avoid the potential race mentioned in
+> commit a8e7d49a, we can hold private_lock until __set_page_dirty completes.
+> There's no deadlock between ->private_lock and ->tree_lock after confirmation.
+> It's a prepare patch for following memcg dirty page accounting patches.
+> 
+> 
+> Here is some test numbers that before/after this patch:
+> Test steps(Mem-4g, ext4):
+> drop_cache; sync
+> fio (ioengine=sync/write/buffered/bs=4k/size=1g/numjobs=2/group_reporting/thread)
+> 
+> We test it for 10 times and get the average numbers:
+> Before:
+> write: io=2048.0MB, bw=254117KB/s, iops=63528.9 , runt=  8279msec
+> lat (usec): min=1 , max=742361 , avg=30.918, stdev=1601.02
+> After:
+> write: io=2048.0MB, bw=254044KB/s, iops=63510.3 , runt=  8274.4msec
+> lat (usec): min=1 , max=856333 , avg=31.043, stdev=1769.32
+> 
+> Note that the impact is little(<1%).
+> 
+> 
+> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> Reviewed-by: Michal Hocko <mhocko@suse.cz>
 
-On Fri 21-12-12 18:44:23, David Strauss wrote:
-> The kernel seemed to replace the cgroups memory "charging" mechanism
-> in 3.3 with a more efficient implementation [1], but we think it may
-> be broken under Xen virtualization and load.
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-What are the steps to reproduce this?
+Hmm,..this change should be double-checked by vfs, I/O guys...
 
-> We do not see any issue in Linux 3.2 and earlier.
-> 
-> We have documented panics for Fedora kernels 3.3.4-5.fc17.x86_64,
-> 3.3.5-2.fc16.x86_64, and 3.6.10-2.fc16.x86_64 but *not* on Fedora
-> kernels 3.1.0-7.fc16.x86_64 or 3.2.6-3.fc16.x86_64.
+increasing hold time of mapping->private_lock doesn't affect performance ?
 
-Are you able to reproduce with the vanilla kernel as well? Ideally with
-the current Linus tree?
 
-> Many of our services use MemoryLimit= and similar systemd options that
-> create a memory cgroup for the service. This correlates with kernel
-> panics under the following call path (full listing here [2]):
-> 
-> [20488075.457394]  [<ffffffff811825e7>] ? mem_cgroup_charge_statistics+0x17/0x60
-> [20488075.457403]  [<ffffffff81184ade>] __mem_cgroup_uncharge_common+0xfe/0x330
-> [20488075.457410]  [<ffffffff8100632d>] ? xen_pte_val+0x1d/0x40
-> [20488075.457417]  [<ffffffff81188457>] mem_cgroup_uncharge_page+0x37/0x40
-> [20488075.457424]  [<ffffffff8115e6d1>] page_remove_rmap+0xb1/0x140
-> 
-> It culminates in this failure:
-> 
-> [20488075.457183] kernel BUG at arch/x86/mm/fault.c:396!
-> [20488075.457189] invalid opcode: 0000 [#1] SMP
-> 
-> There are also reports of similar failures [3] unrelated to systemd
-> use and on non-Fedora kernels.
-> 
-> It appears to be an issue with re-attributing the charge for a page to
-> a different cgroup. Any ideas why we would be seeing this with Linux
-> 3.3+? I can generally reproduce the issue (often minutes after
-> booting) on any heavily loaded machine in order to collect any
-> additional data to help troubleshooting.
-> 
-> [1] https://lwn.net/Articles/443241/
-> [2] https://gist.github.com/raw/70afc901a73e427a0a71
-> [3] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1073238/comments/6
-> 
-> --
-> David Strauss
->    | david-WnlvKBBViykE1dmCBd9WyQ@public.gmane.org
->    | +1 512 577 5827 [mobile]
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
