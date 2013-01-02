@@ -1,12 +1,11 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/13] cpuset: cleanup cpuset[_can]_attach()
-Date: Wed, 2 Jan 2013 10:34:39 -0500
-Message-ID: <20130102153439.GA11220@mtj.dyndns.org>
+Subject: Re: [PATCHSET cgroup/for-3.8] cpuset: decouple cpuset locking from
+	cgroup core
+Date: Wed, 2 Jan 2013 10:36:05 -0500
+Message-ID: <20130102153605.GB11220@mtj.dyndns.org>
 References: <1354138460-19286-1-git-send-email-tj@kernel.org>
-	<1354138460-19286-7-git-send-email-tj@kernel.org>
-	<50DACF5B.6050705@huawei.com>
-	<20121226120415.GA18193@mtj.dyndns.org>
-	<87zk0s5h7c.fsf@rustcorp.com.au>
+	<50DAD696.8050400@huawei.com>
+	<20130102085355.GA22160@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -14,15 +13,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:date:from:to:cc:subject:message-id:references
 	:mime-version:content-type:content-disposition:in-reply-to
-	:user-agent; bh=4eSWRUInRJN4Pylup9Ianry1cCZQtvLYJ6VHW1JVk9w=;
-	b=CQ6uROkA3iqX2V8Y3FGeslZjjbj9DAiuPfVAIiguC/WZEhlkusGipcB1JnV/Xiuyaw
-	C3/aS2o8w7d+bdUaJoeNOS68ZKT4jvqFbXTrBZpPpr1UApyCY/kYWwzzrxR0YVnjASEh
-	7wdoKLAXELnnn9AfkbHZIkahvhbLQlHRHJMteEIfZcMc2R2Ai1i//y/oPTbWjDFcCgaA
-	GUxq5SW994Q11J3aTBUHSSjTR89Mw4lXiYBZG0oClZkO+hl7BqzqWDVE6oSRdO+3oQLq
-	jRGjPtgPHM1Pt50jibP8KCxffWzb1U4eHGYehSioyLUth1YYFtL8w9UYV6B+6SniGf6q
-	7n+Q==
+	:user-agent; bh=RHmRBhreyQjlS3sAA4daVbJgbHKgA2DjpRu0xsxaKpg=;
+	b=L/xx8VLGqBxZmYpqKxt/IIfCsLbE7OP3SudrtXBUFjbq5IVoZLbFBWWu355VZk9h0R
+	o3lFuL6PTvbLt2V1bjX1X4AkRoVBjvkZoxhUHdeWvSyqKhh4eIOnu6RAXdfU7ZTl0KI4
+	zoeeW7CQZJuXY4wkQmSZnT0c8aZtDJAnzPwCtiXY8sib/pYiQu1mjEXbQF6wNUnNE1eo
+	9UrNEUbkMDKmlybyTpTtu/LjRLXAlmtgJ1Wjl2jgIxUmpnXQo6YBWA2tu3GctOgDoFS3
+	p2wOGVNNBgcAVIcjWKi2pPtevyg4Dt2b/9ojpahn6QVOM+TibKXnSojkKDNh/7kBKPDd
+	kdRg==
 Content-Disposition: inline
-In-Reply-To: <87zk0s5h7c.fsf-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>
+In-Reply-To: <20130102085355.GA22160-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -33,30 +32,27 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Hello, Rusty.
+Hey, Michal.
 
-On Wed, Jan 02, 2013 at 03:12:15PM +1030, Rusty Russell wrote:
-> > Hmmm?  cpumask_t can't be used for stack but other than that I don't
-> > see how it would be deprecated completely.  Rusty, can you please
-> > chime in?
+On Wed, Jan 02, 2013 at 09:53:55AM +0100, Michal Hocko wrote:
+> Hi Li,
 > 
-> The long-never-quite-complete-plan was for struct cpumask to be
-> undefined when CONFIG_CPUMASK_OFFSTACK=y.  That means noone can declare
-> them, or pass them on the stack, since they'll get a compiler error.
+> On Wed 26-12-12 18:51:02, Li Zefan wrote:
+> > I reverted 38d7bee9d24adf4c95676a3dc902827c72930ebb ("cpuset: use N_MEMORY instead N_HIGH_MEMORY")
+> > and applied this patchset against 3.8-rc1.
 > 
-> Now, there are some cases where it really is a reason to use a static
-> bitmap, and 1/2 a K of wasted space be damned.  There's a
-> deliberately-ugly way of doing that: declare a bitmap and use
-> to_cpumask().  Of course, if we ever really want to remove NR_CPUS and
-> make it completely generic, we have to kill all these too, but noone is
-> serious about that.
+> I didn't find any patch in this email.
+> Anyway I am wondering how the above patch could cause the stuck you
+> mention below? The patch just renames N_HIGH_MEMORY -> N_MEMORY which
+> should map to the very same constant so there are no functional changes
+> AFAIU.
 
-So, I guess this currently is caught in a place which isn't here or
-there.  I'm pretty skeptical whether it makes sense to bother about
-static usages tho.  Can I keep them for static ones?
+Li needed to revert the said patch only to apply the patchset on top
+of 3.8-rc1.  The N_MEMORY patch doesn't have anything to do with the
+problem Li is seeing.
 
 Thanks.
 
