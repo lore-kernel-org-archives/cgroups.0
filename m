@@ -1,93 +1,149 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH V3 4/8] memcg: add per cgroup dirty pages accounting
-Date: Wed, 2 Jan 2013 11:44:21 +0100
-Message-ID: <20130102104421.GC22160@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH V3 5/8] memcg: add per cgroup writeback pages accounting
+Date: Wed, 2 Jan 2013 12:15:14 +0100
+Message-ID: <20130102111514.GD22160@dhcp22.suse.cz>
 References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
- <1356456367-14660-1-git-send-email-handai.szj@taobao.com>
+ <1356456409-14701-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1356456367-14660-1-git-send-email-handai.szj@taobao.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1356456409-14701-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, dchinner@redhat.com, Sha Zhengju <handai.szj@taobao.com>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Wed 26-12-12 01:26:07, Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
+On Wed 26-12-12 01:26:48, Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 > 
-> This patch adds memcg routines to count dirty pages, which allows memory controller
-> to maintain an accurate view of the amount of its dirty memory and can provide some
-> info for users while cgroup's direct reclaim is working.
+> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
+> rule still is:
+>         mem_cgroup_begin_update_page_stat()
+>         modify page WRITEBACK stat
+>         mem_cgroup_update_page_stat()
+>         mem_cgroup_end_update_page_stat()
+> 
+> There're two writeback interface to modify: test_clear/set_page_writeback.
+> 
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-I guess you meant targeted resp. (hard/soft) limit reclaim here,
-right? It is true that this is direct reclaim but it is not clear to me
-why the usefulnes should be limitted to the reclaim for users. I would
-understand this if the users was in fact in-kernel users.
+Looks good to me
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-[...]
-> To prevent AB/BA deadlock mentioned by Greg Thelen in previous version
-> (https://lkml.org/lkml/2012/7/30/227), we adjust the lock order:
-> ->private_lock --> mapping->tree_lock --> memcg->move_lock.
-> So we need to make mapping->tree_lock ahead of TestSetPageDirty in __set_page_dirty()
-> and __set_page_dirty_nobuffers(). But in order to avoiding useless spinlock contention,
-> a prepare PageDirty() checking is added.
+Thanks!
+> ---
+>  include/linux/memcontrol.h |    1 +
+>  mm/memcontrol.c            |    5 +++++
+>  mm/page-writeback.c        |   17 +++++++++++++++++
+>  3 files changed, 23 insertions(+)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 358019e..1d22b81 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -45,6 +45,7 @@ enum mem_cgroup_stat_index {
+>  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
+>  	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
+>  	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
+> +	MEM_CGROUP_STAT_WRITEBACK,  /* # of pages under writeback */
+>  	MEM_CGROUP_STAT_NSTATS,
+>  };
+>  
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 21df36d..13cd14a 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -96,6 +96,7 @@ static const char * const mem_cgroup_stat_names[] = {
+>  	"mapped_file",
+>  	"swap",
+>  	"dirty",
+> +	"writeback",
+>  };
+>  
+>  enum mem_cgroup_events_index {
+> @@ -3676,6 +3677,10 @@ static int mem_cgroup_move_account(struct page *page,
+>  		mem_cgroup_move_account_page_stat(from, to, nr_pages,
+>  			MEM_CGROUP_STAT_FILE_DIRTY);
+>  
+> +	if (PageWriteback(page))
+> +		mem_cgroup_move_account_page_stat(from, to, nr_pages,
+> +			MEM_CGROUP_STAT_WRITEBACK);
+> +
+>  	mem_cgroup_charge_statistics(from, anon, -nr_pages);
+>  
+>  	/* caller should have done css_get */
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index 526ddd7..ae6498a 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -2002,11 +2002,17 @@ EXPORT_SYMBOL(account_page_dirtied);
+>  
+>  /*
+>   * Helper function for set_page_writeback family.
+> + *
+> + * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
+> + * while modifying struct page state and accounting writeback pages.
+> + * See test_set_page_writeback for example.
+> + *
+>   * NOTE: Unlike account_page_dirtied this does not rely on being atomic
+>   * wrt interrupts.
+>   */
+>  void account_page_writeback(struct page *page)
+>  {
+> +	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
+>  	inc_zone_page_state(page, NR_WRITEBACK);
+>  }
+>  EXPORT_SYMBOL(account_page_writeback);
+> @@ -2242,7 +2248,10 @@ int test_clear_page_writeback(struct page *page)
+>  {
+>  	struct address_space *mapping = page_mapping(page);
+>  	int ret;
+> +	bool locked;
+> +	unsigned long memcg_flags;
+>  
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
+>  	if (mapping) {
+>  		struct backing_dev_info *bdi = mapping->backing_dev_info;
+>  		unsigned long flags;
+> @@ -2263,9 +2272,12 @@ int test_clear_page_writeback(struct page *page)
+>  		ret = TestClearPageWriteback(page);
+>  	}
+>  	if (ret) {
+> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
+>  		dec_zone_page_state(page, NR_WRITEBACK);
+>  		inc_zone_page_state(page, NR_WRITTEN);
+>  	}
+> +
+> +	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
+>  	return ret;
+>  }
+>  
+> @@ -2273,7 +2285,10 @@ int test_set_page_writeback(struct page *page)
+>  {
+>  	struct address_space *mapping = page_mapping(page);
+>  	int ret;
+> +	bool locked;
+> +	unsigned long flags;
+>  
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>  	if (mapping) {
+>  		struct backing_dev_info *bdi = mapping->backing_dev_info;
+>  		unsigned long flags;
+> @@ -2300,6 +2315,8 @@ int test_set_page_writeback(struct page *page)
+>  	}
+>  	if (!ret)
+>  		account_page_writeback(page);
+> +
+> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>  	return ret;
+>  
+>  }
+> -- 
+> 1.7.9.5
+> 
 
-But there is another AA deadlock here I believe.
-page_remove_rmap
-  mem_cgroup_begin_update_page_stat		<<< 1
-  set_page_dirty
-    __set_page_dirty_buffers
-      __set_page_dirty
-        mem_cgroup_begin_update_page_stat	<<< 2
-	  move_lock_mem_cgroup
-	    spin_lock_irqsave(&memcg->move_lock, *flags);
-
-mem_cgroup_begin_update_page_stat is not recursive wrt. locking AFAICS
-because we might race with the moving charges:
-	CPU0						CPU1					
-page_remove_rmap
-						mem_cgroup_can_attach
-  mem_cgroup_begin_update_page_stat (1)
-    rcu_read_lock
-						  mem_cgroup_start_move
-						    atomic_inc(&memcg_moving)
-						    atomic_inc(&memcg->moving_account)
-						    synchronize_rcu
-    __mem_cgroup_begin_update_page_stat
-      mem_cgroup_stolen	<<< TRUE
-      move_lock_mem_cgroup
-  [...]
-        mem_cgroup_begin_update_page_stat (2)
-	  __mem_cgroup_begin_update_page_stat
-	    mem_cgroup_stolen	  <<< still TRUE
-	    move_lock_mem_cgroup  <<< DEADLOCK
-  [...]
-  mem_cgroup_end_update_page_stat
-    rcu_unlock
-    						  # wake up from synchronize_rcu
-						[...]
-						mem_cgroup_move_task
-						  mem_cgroup_move_charge
-						    walk_page_range
-						      mem_cgroup_move_account
-						        move_lock_mem_cgroup
-
-
-Maybe I have missed some other locking which would prevent this from
-happening but the locking relations are really complicated in this area
-so if mem_cgroup_{begin,end}_update_page_stat might be called
-recursively then we need a fat comment which justifies that.
-
-[...]
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
