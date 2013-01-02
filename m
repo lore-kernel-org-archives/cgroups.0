@@ -1,63 +1,29 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 23/24] cfq-iosched: collect stats from dead cfqgs
-Date: Wed, 2 Jan 2013 11:52:42 -0500
-Message-ID: <20130102165242.GD11220@mtj.dyndns.org>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET] block: implement blkcg hierarchy support in cfq,
+ take#2
+Date: Wed, 2 Jan 2013 13:20:38 -0500
+Message-ID: <20130102182037.GC4306@redhat.com>
 References: <1356726946-26037-1-git-send-email-tj@kernel.org>
- <1356726946-26037-24-git-send-email-tj@kernel.org>
- <20130102162415.GA4306@redhat.com>
- <20130102163010.GC11220@mtj.dyndns.org>
- <20130102164415.GB4306@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=m3BKIMnAWM2kDbrpTmGMI9vznRl3g7P/pKsoE04N150=;
-        b=zzBZQhAFtHQmDRFUxSf1yx4lPMMa6a1RwelJXhXEmG8g2Wn8ZEISj4dMw7b9pF/CLr
-         1eyyB8HOvkclKKCF3ANLhyF6Q2xKFdGqOAguKI+497ahgvPzsOJSRqwa8WEHh1sAyEnZ
-         A85ENqnW3noQtkwURX2uU1qs4x9IpC7yJYfu4eV+OiJEIXCsr/6wVBhdzSDxYnV39E9H
-         PJVVuY10PCZWGZxrSnuFWD3tImYtgZVxGcLELF80W9pC0M6goEjFWIavF7sT9/MqeZDh
-         MGLJAKu7J3r4nYmuquNl8QLhfDiZhgcU5J2TZ/06yKGI/0638N2mK8IELa1kTo7DFGOy
-         vA4A==
 Content-Disposition: inline
-In-Reply-To: <20130102164415.GB4306-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1356726946-26037-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-Hey, Vivek.
+On Fri, Dec 28, 2012 at 12:35:22PM -0800, Tejun Heo wrote:
 
-On Wed, Jan 02, 2013 at 11:44:15AM -0500, Vivek Goyal wrote:
-> > > In fact if we have a realiable way of resetting status then online/offline
-> > > infrastructure might not be required? I think per cpu stats will be a
-> > > problem though and that's why we probably require logic to online/offline
-> > > the group?
-> > 
-> > Hmmm?  What do you mean?
+[..]
 > 
-> I mean if we had a reliable way of resetting stats after transferring
-> then we would not need to keep a track of whether group is online/offline.
-> We could add everything and adding zero will not change anything. In fact
-> it will also take care of residual IO (IO which happened after transfer
-> of stats).
+> * Updated to reflect Vivek's reviews - renames & documentation.
 
-Ah... yeah, if we can do atomic transfer, we might be able to do away
-with on/offlining.  Couldn't think of a way to do that without
-incurring overhead to hot paths.
+Hi Tejun,
 
-> Or I missed the real reason of why do we have group online/offline
-> infrastructure.
+You forgot to update blkio-controller.txt.
 
-But given that on/offline state is something common to cgroup, I don't
-think adding the states to blkcg is a bad idea.  We need it for
-reliable iterations anyways.
-
-Thanks.
-
--- 
-tejun
+Thanks
+Vivek
