@@ -1,61 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 01/13] cpuset: remove unused cpuset_unlock()
-Date: Thu,  3 Jan 2013 13:35:55 -0800
-Message-ID: <1357248967-24959-2-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 02/13] cpuset: remove fast exit path from
+	remove_tasks_in_empty_cpuset()
+Date: Thu,  3 Jan 2013 13:35:56 -0800
+Message-ID: <1357248967-24959-3-git-send-email-tj@kernel.org>
 References: <1357248967-24959-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=t3aSXKS4rPGeeTCw8JKtmOh8754xJT8Me2v6xxbDXS4=;
-        b=XQT5foP1LenXrcVEX5jdlVB7Et8SVeDQDkbox8/dwTdN9meNHiCaIMX5742uaGgZNu
-         ORWM+EMG8TAqpR7nuLl8BVVTJ/1tQCsvrhDb3EehgeV5hmgqhszyifmfo++H1VSe5NUs
-         zAE5lYHCTB5z6Al9A0DR0wJ5hm/gEvECNS4I/pn0Tl5ZeEB5r78DR4Wrx6Tjp2UHRJqx
-         z+CEpmBSpZ4g9KkO49htWyqO5oFieYJbofKz908b6ZQr26LL3tZwsFXQk7HGDcIjPaW+
-         BbPp6mJAGTddle/I6gme1P01e4UEfvwroDyr6uM5IdMGClxGC7WlIJ4G1zH3gTF6hNOm
-         2ZkA==
-In-Reply-To: <1357248967-24959-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, paul@paulmenage.org, glommer@parallels.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, peterz@infradead.org, mhocko@suse.cz, bsingharora@gmail.com, hannes@cmpxchg.org, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+	:in-reply-to:references;
+	bh=4TxXbIZkyK65jMBemQl2d2ZZLgXA3Kb3/M9dSS4gCOQ=;
+	b=HuhNw9IQCiKuGF7zehvRT41Z9sZwUjTnHMgzonQoeyaipiV8umWdAcI8yj5/1TYFNL
+	21ipEKLPvuAsfnQc5x8GzJzHW8+MRBr6QudzZMgCqm0wfjM6or+/tOXvwMy8bnw5i1yw
+	11LUrmBDmEm6OYLnpi1v1EvNauGsiPLYVjLlOVlM2+oETpUX5uVztLWQZGcDSSePSEn4
+	u934dZ74IKOrFv2A0MWuEsIO/D7OKYcQPPkaZKiKOxIkIt3YuEBnE60BLVK6V/+O8C78
+	TCCZrjlPhk/osFTed8sQ10KdB5Cw4fD6lWuKlqcuOv9oXecVDFnZdMuiWv3kDXIbk2Iz
+	cRGg==
+In-Reply-To: <1357248967-24959-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+The function isn't that hot, the overhead of missing the fast exit is
+low, the test itself depends heavily on cgroup internals, and it's
+gonna be a hindrance when trying to decouple cpuset locking from
+cgroup core.  Remove the fast exit path.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cpuset.c | 11 -----------
- 1 file changed, 11 deletions(-)
+ kernel/cpuset.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 7bb63ee..854b8bf 100644
+index 854b8bf..5372b6f 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -2412,17 +2412,6 @@ int __cpuset_node_allowed_hardwall(int node, gfp_t gfp_mask)
- }
+@@ -1968,14 +1968,6 @@ static void remove_tasks_in_empty_cpuset(struct cpuset *cs)
+ 	struct cpuset *parent;
  
- /**
-- * cpuset_unlock - release lock on cpuset changes
-- *
-- * Undo the lock taken in a previous cpuset_lock() call.
-- */
+ 	/*
+-	 * The cgroup's css_sets list is in use if there are tasks
+-	 * in the cpuset; the list is empty if there are none;
+-	 * the cs->css.refcnt seems always 0.
+-	 */
+-	if (list_empty(&cs->css.cgroup->css_sets))
+-		return;
 -
--void cpuset_unlock(void)
--{
--	mutex_unlock(&callback_mutex);
--}
--
--/**
-  * cpuset_mem_spread_node() - On which node to begin search for a file page
-  * cpuset_slab_spread_node() - On which node to begin search for a slab page
-  *
+-	/*
+ 	 * Find its next-highest non-empty parent, (top cpuset
+ 	 * has online cpus, so can't be empty).
+ 	 */
 -- 
 1.8.0.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
