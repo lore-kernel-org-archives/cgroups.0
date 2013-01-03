@@ -1,62 +1,117 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/13] cpuset: cleanup cpuset[_can]_attach()
-Date: Wed, 2 Jan 2013 21:29:11 -0500
-Message-ID: <20130103022911.GH11220@mtj.dyndns.org>
-References: <1354138460-19286-1-git-send-email-tj@kernel.org>
-	<1354138460-19286-7-git-send-email-tj@kernel.org>
-	<50DACF5B.6050705@huawei.com>
-	<20121226120415.GA18193@mtj.dyndns.org>
-	<87zk0s5h7c.fsf@rustcorp.com.au>
-	<20130102153439.GA11220@mtj.dyndns.org>
-	<871ue35bzk.fsf@rustcorp.com.au>
-Mime-Version: 1.0
+Subject: [PATCHSET] cpuset: decouple cpuset locking from cgroup core, take#2
+Date: Thu,  3 Jan 2013 13:35:54 -0800
+Message-ID: <1357248967-24959-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=s0ju9T27MJ7PhSTtMWh5+9PkVBlIjfOFCzhp8TdVrhM=;
+        b=FC39X7qp2fKGDlRHeRGpFH84I4j/Xt7wTcouhwRUxvVk4xj6UeILLjcLsgyK7DO8VW
+         uO7oi2avcsxwRb4ewbJM7H/5MI5DsJt5yCg+nM3gRVvFrRuv1Z9a64+da/y4Iy7r13eS
+         SWNbCDKBekuJfIKnEkvmVWAAm0sYfrTXx+18If5wK3LV/bBXIH21bzNJkU9RUJ8rGwJO
+         NvWkbobX0rWVEHj0UzxBrmnq+NVrLLMdQHGk/9Ll1JRTC+uTo0U3u0X388w96bxLu7UH
+         Mah2f9PadxHFgQ+/i+gEHSCvzWQmodIyJCL02geZZQVW0mt2l04tP/OGIuFrNOEiToKS
+         MnFA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:date:from:to:cc:subject:message-id:references
-	:mime-version:content-type:content-disposition:in-reply-to
-	:user-agent; bh=Cybk5ovaMrV2W3ijvD+kxJEm+MfxfBElxE7l85nJx9M=;
-	b=rICXFFY2l+souPFv2K7OTPNE5MpvydJvwgRA0VQlCJojZwyuWSNw+9eK7pJ3WrsHYs
-	NxPWr7qNigUOnlIzrpZbAEFTmbbfsHnUjK0sBFus5tAIAjlyiesmUPO6zuvKxhv36fFC
-	puulHGhj9ojAivFJabzUSx+ZF2KUqqbgVsUGbwErT1NJ6oshtqrRhDZ3G3ozZEArOLP2
-	naN0DPKBlAhEAk15GW1O5juw1o2D4IqaELl7+/FQG2osjPvYG+YsWegxC47AxIa1XYzH
-	iYIZtaV0Xb5Aau10UQm2aN421nEEASbagbKvIz0SF7SJk1/oFA8uhi0OYPdy52DGO6Uz
-	wHSQ==
-Content-Disposition: inline
-In-Reply-To: <871ue35bzk.fsf-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>
-Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Rusty.
+Hello, guys.
 
-On Thu, Jan 03, 2013 at 11:17:11AM +1030, Rusty Russell wrote:
-> > So, I guess this currently is caught in a place which isn't here or
-> > there.  I'm pretty skeptical whether it makes sense to bother about
-> > static usages tho.  Can I keep them for static ones?
-> 
-> I didn't realize that cpuset_attach was a fastpath.  If it is, put a
+This is the second attempt at decoupling cpuset locking from cgroup
+core.  Changes from the last take[L] are
 
-It isn't a hot path.  It's just a bit nasty to have to allocate them
-separately.
+* cpuset-drop-async_rebuild_sched_domains.patch moved from 0007 to
+  0009.  This reordering makes cpu hotplug handling async first and
+  removes the temporary cyclic locking dependency.
 
-> static there and I'll fix turn it into a bitmap when I need to.
-> Otherwise, please don't change the code in the first place.
+* 0006-cpuset-cleanup-cpuset-_can-_attach.patch no longer converts
+  cpumask_var_t to cpumask_t as per Rusty Russell.
 
-So, the plan to drop cpumask_t is still on?  If so, I'll leave
-cpumask_var_t.
+* 0008-cpuset-don-t-nest-cgroup_mutex-inside-get_online_cpu.patch now
+  synchronously rebuilds sched domains from cpu hotplug callback.
+  This fixes various issues caused by confused scheduler puttings
+  tasks into a dead cpu including the RCU stall problem reported by Li
+  Zefan.
+
+Original patchset description follows.
+
+Depending on cgroup core locking - cgroup_mutex - is messy and makes
+cgroup prone to locking dependency problems.  The current code already
+has lock dependency loop - memcg nests get_online_cpus() inside
+cgroup_mutex.  cpuset the other way around.
+
+Regardless of the locking details, whatever is protecting cgroup has
+inherently to be something outer to most other locking constructs.
+cgroup calls into a lot of major subsystems which in turn have to
+perform subsystem-specific locking.  Trying to nest cgroup
+synchronization inside other locks isn't something which can work
+well.
+
+cgroup now has enough API to allow subsystems to implement their own
+locking and cgroup_mutex is scheduled to be made private to cgroup
+core.  This patchset makes cpuset implement its own locking instead of
+relying on cgroup_mutex.
+
+cpuset is rather nasty in this respect.  Some of it seems to have come
+from the implementation history - cgroup core grew out of cpuset - but
+big part stems from cpuset's need to migrate tasks to an ancestor
+cgroup when an hotunplug event makes a cpuset empty (w/o any cpu or
+memory).
+
+This patchset decouples cpuset locking from cgroup_mutex.  After the
+patchset, cpuset uses cpuset-specific cpuset_mutex instead of
+cgroup_mutex.  This also removes the lockdep warning triggered during
+cpu offlining (see 0009).
+
+Note that this leaves memcg as the only external user of cgroup_mutex.
+Michal, Kame, can you guys please convert memcg to use its own locking
+too?
+
+This patchset contains the following thirteen patches.
+
+ 0001-cpuset-remove-unused-cpuset_unlock.patch
+ 0002-cpuset-remove-fast-exit-path-from-remove_tasks_in_em.patch
+ 0003-cpuset-introduce-css_on-offline.patch
+ 0004-cpuset-introduce-CS_ONLINE.patch
+ 0005-cpuset-introduce-cpuset_for_each_child.patch
+ 0006-cpuset-cleanup-cpuset-_can-_attach.patch
+ 0007-cpuset-reorganize-CPU-memory-hotplug-handling.patch
+ 0008-cpuset-don-t-nest-cgroup_mutex-inside-get_online_cpu.patch
+ 0009-cpuset-drop-async_rebuild_sched_domains.patch
+ 0010-cpuset-make-CPU-memory-hotplug-propagation-asynchron.patch
+ 0011-cpuset-pin-down-cpus-and-mems-while-a-task-is-being-.patch
+ 0012-cpuset-schedule-hotplug-propagation-from-cpuset_atta.patch
+ 0013-cpuset-replace-cgroup_mutex-locking-with-cpuset-inte.patch
+
+0001-0006 are prep patches.
+
+0007-0009 make cpuset nest get_online_cpus() inside cgroup_mutex, not
+the other way around.
+
+0010-0012 plug holes which would be exposed by switching to
+cpuset-specific locking.
+
+0013 replaces cgroup_mutex with cpuset_mutex.
+
+This patchset is on top of v3.8-rc2 (d1c3ed669a) and also available in
+the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cpuset-locking
+
+diffstat follows.
+
+ kernel/cpuset.c |  760 ++++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 438 insertions(+), 322 deletions(-)
 
 Thanks.
 
--- 
+--
 tejun
+
+[L] http://thread.gmane.org/gmane.linux.kernel.cgroups/5251
