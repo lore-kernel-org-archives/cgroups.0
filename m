@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/13] cpuset: drop async_rebuild_sched_domains()
-Date: Thu,  3 Jan 2013 13:36:03 -0800
-Message-ID: <1357248967-24959-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 11/13] cpuset: pin down cpus and mems while a task is being attached
+Date: Thu,  3 Jan 2013 13:36:05 -0800
+Message-ID: <1357248967-24959-12-git-send-email-tj@kernel.org>
 References: <1357248967-24959-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=24TbyJdSsricgLdkra4cg7Le1eT7viaQF+otbKJfo7M=;
-        b=vUVQ6D+1N3+RgwHqak+amkG7y4dO71rmaUg6jHcYkG6borUVlVDf/+He+qebdvafA/
-         j28HgYtD8tThoyvf/2aydr4vh5tMxoduMm/wGrgyfgvmgqgByF+N/vlqKoPrx7Fb6JAc
-         tqeGnT6w6d6os9SCyX5rEpp45D3LQeCd6gZb+E/YYyihSW1kletC7odgWjFfHLH5i9GB
-         pZlVQwWT872z+QYIjmDPluE4tdFcNGbcqpQ7w2kO7xAB6pYvSnIbohziehkCMK2IOAbu
-         XPBa8KpPuB0Qot8wnHj/ufnYJuGfcfq2ejBlWSv+q1/eBBFe72kbK8dbVGSr7qZpW6Zr
-         nr7g==
+        bh=UfHoIoj5W9FiGfoJg6NBfZ+WPYndKVWcKGUQE2LYEEo=;
+        b=SNSTesKDPpmTX4sPsUaN7t/3q9vO+ZhJxSlmlJOrEgcgD5yVwWi1wSukBMYxDAKEe+
+         O38RTsLAPEgdhX65gmSuMMO19jJ23LTE3KRDjYjquTcWteToEX5d5qexpttfL1WuMb/m
+         7bgbYNyx363lhaeILA7xfd0y2DeNLDpT9D3IcCiu8B6TpXi8sCyLgXm893fcfKEwwSZC
+         6BzxXi/LMLy14Z/bS+ILcfruCp1JAL/46mH/huiSs6q41QgKj1/B7wEHV7m2pPahwOOb
+         D2Ruf6CkkY22FP3V5SdZ8EiFhHwI4hYujcyTn3Y9jW8dsONrIR5wV5MR0Ww/pZaVV2xB
+         SYpQ==
 In-Reply-To: <1357248967-24959-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,178 +24,98 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, paul@paulmenage.org, glommer@parallels.com
 Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, peterz@infradead.org, mhocko@suse.cz, bsingharora@gmail.com, hannes@cmpxchg.org, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-In general, we want to make cgroup_mutex one of the outermost locks
-and be able to use get_online_cpus() and friends from cgroup methods.
-With cpuset hotplug made async, get_online_cpus() can now be nested
-inside cgroup_mutex.
+cpuset is scheduled to be decoupled from cgroup_lock which will make
+configuration updates race with task migration.  Any config update
+will be allowed to happen between ->can_attach() and ->attach().  If
+such config update removes either all cpus or mems, by the time
+->attach() is called, the condition verified by ->can_attach(), that
+the cpuset is capable of hosting the tasks, is no longer true.
 
-Currently, cpuset avoids nesting get_online_cpus() inside cgroup_mutex
-by bouncing sched_domain rebuilding to a work item.  As such nesting
-is allowed now, remove the workqueue bouncing code and always rebuild
-sched_domains synchronously.  This also nests sched_domains_mutex
-inside cgroup_mutex, which is intended and should be okay.
+This patch adds cpuset->attach_in_progress which is incremented from
+->can_attach() and decremented when the attach operation finishes
+either successfully or not.  validate_change() treats cpusets w/
+non-zero ->attach_in_progress like cpusets w/ tasks and refuses to
+remove all cpus or mems from it.
+
+This currently doesn't make any functional difference as everything is
+protected by cgroup_mutex but enables decoupling the locking.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cpuset.c | 76 ++++++++++++---------------------------------------------
- 1 file changed, 16 insertions(+), 60 deletions(-)
+ kernel/cpuset.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 658eb1a..74e412f 100644
+index 2d0b9bc..27e8614 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -61,14 +61,6 @@
- #include <linux/cgroup.h>
+@@ -91,6 +91,12 @@ struct cpuset {
  
- /*
-- * Workqueue for cpuset related tasks.
-- *
-- * Using kevent workqueue may cause deadlock when memory_migrate
-- * is set. So we create a separate workqueue thread for cpuset.
-- */
--static struct workqueue_struct *cpuset_wq;
--
--/*
-  * Tracks how many cpusets are currently defined in system.
-  * When there is only one cpuset (the root cpuset) we can
-  * short circuit some hooks.
-@@ -753,25 +745,25 @@ done:
- /*
-  * Rebuild scheduler domains.
-  *
-- * Call with neither cgroup_mutex held nor within get_online_cpus().
-- * Takes both cgroup_mutex and get_online_cpus().
-+ * If the flag 'sched_load_balance' of any cpuset with non-empty
-+ * 'cpus' changes, or if the 'cpus' allowed changes in any cpuset
-+ * which has that flag enabled, or if any cpuset with a non-empty
-+ * 'cpus' is removed, then call this routine to rebuild the
-+ * scheduler's dynamic sched domains.
-  *
-- * Cannot be directly called from cpuset code handling changes
-- * to the cpuset pseudo-filesystem, because it cannot be called
-- * from code that already holds cgroup_mutex.
-+ * Call with cgroup_mutex held.  Takes get_online_cpus().
-  */
--static void do_rebuild_sched_domains(struct work_struct *unused)
-+static void rebuild_sched_domains_locked(void)
- {
- 	struct sched_domain_attr *attr;
- 	cpumask_var_t *doms;
- 	int ndoms;
+ 	struct fmeter fmeter;		/* memory_pressure filter */
  
-+	WARN_ON_ONCE(!cgroup_lock_is_held());
- 	get_online_cpus();
++	/*
++	 * Tasks are being attached to this cpuset.  Used to prevent
++	 * zeroing cpus/mems_allowed between ->can_attach() and ->attach().
++	 */
++	int attach_in_progress;
++
+ 	/* partition number for rebuild_sched_domains() */
+ 	int pn;
  
- 	/* Generate domain masks and attrs */
--	cgroup_lock();
- 	ndoms = generate_sched_domains(&doms, &attr);
--	cgroup_unlock();
- 
- 	/* Have scheduler rebuild the domains */
- 	partition_sched_domains(ndoms, doms, attr);
-@@ -779,7 +771,7 @@ static void do_rebuild_sched_domains(struct work_struct *unused)
- 	put_online_cpus();
- }
- #else /* !CONFIG_SMP */
--static void do_rebuild_sched_domains(struct work_struct *unused)
-+static void rebuild_sched_domains_locked(void)
- {
- }
- 
-@@ -791,44 +783,11 @@ static int generate_sched_domains(cpumask_var_t **domains,
- }
- #endif /* CONFIG_SMP */
- 
--static DECLARE_WORK(rebuild_sched_domains_work, do_rebuild_sched_domains);
--
--/*
-- * Rebuild scheduler domains, asynchronously via workqueue.
-- *
-- * If the flag 'sched_load_balance' of any cpuset with non-empty
-- * 'cpus' changes, or if the 'cpus' allowed changes in any cpuset
-- * which has that flag enabled, or if any cpuset with a non-empty
-- * 'cpus' is removed, then call this routine to rebuild the
-- * scheduler's dynamic sched domains.
-- *
-- * The rebuild_sched_domains() and partition_sched_domains()
-- * routines must nest cgroup_lock() inside get_online_cpus(),
-- * but such cpuset changes as these must nest that locking the
-- * other way, holding cgroup_lock() for much of the code.
-- *
-- * So in order to avoid an ABBA deadlock, the cpuset code handling
-- * these user changes delegates the actual sched domain rebuilding
-- * to a separate workqueue thread, which ends up processing the
-- * above do_rebuild_sched_domains() function.
-- */
--static void async_rebuild_sched_domains(void)
--{
--	queue_work(cpuset_wq, &rebuild_sched_domains_work);
--}
--
--/*
-- * Accomplishes the same scheduler domain rebuild as the above
-- * async_rebuild_sched_domains(), however it directly calls the
-- * rebuild routine synchronously rather than calling it via an
-- * asynchronous work thread.
-- *
-- * This can only be called from code that is not holding
-- * cgroup_mutex (not nested in a cgroup_lock() call.)
-- */
- void rebuild_sched_domains(void)
- {
--	do_rebuild_sched_domains(NULL);
-+	cgroup_lock();
-+	rebuild_sched_domains_locked();
-+	cgroup_unlock();
- }
- 
- /**
-@@ -948,7 +907,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	heap_free(&heap);
- 
- 	if (is_load_balanced)
--		async_rebuild_sched_domains();
-+		rebuild_sched_domains_locked();
- 	return 0;
- }
- 
-@@ -1196,7 +1155,7 @@ static int update_relax_domain_level(struct cpuset *cs, s64 val)
- 		cs->relax_domain_level = val;
- 		if (!cpumask_empty(cs->cpus_allowed) &&
- 		    is_sched_load_balance(cs))
--			async_rebuild_sched_domains();
-+			rebuild_sched_domains_locked();
+@@ -468,9 +474,12 @@ static int validate_change(const struct cpuset *cur, const struct cpuset *trial)
+ 			goto out;
  	}
  
+-	/* Cpusets with tasks can't have empty cpus_allowed or mems_allowed */
++	/*
++	 * Cpusets with tasks - existing or newly being attached - can't
++	 * have empty cpus_allowed or mems_allowed.
++	 */
+ 	ret = -ENOSPC;
+-	if (cgroup_task_count(cur->css.cgroup) &&
++	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress) &&
+ 	    (cpumask_empty(trial->cpus_allowed) ||
+ 	     nodes_empty(trial->mems_allowed)))
+ 		goto out;
+@@ -1386,9 +1395,21 @@ static int cpuset_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+ 			return ret;
+ 	}
+ 
++	/*
++	 * Mark attach is in progress.  This makes validate_change() fail
++	 * changes which zero cpus/mems_allowed.
++	 */
++	cs->attach_in_progress++;
++
  	return 0;
-@@ -1288,7 +1247,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	mutex_unlock(&callback_mutex);
- 
- 	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
--		async_rebuild_sched_domains();
-+		rebuild_sched_domains_locked();
- 
- 	if (spread_flag_changed)
- 		update_tasks_flags(cs, &heap);
-@@ -1925,7 +1884,7 @@ static void cpuset_css_offline(struct cgroup *cgrp)
- /*
-  * If the cpuset being removed has its flag 'sched_load_balance'
-  * enabled, then simulate turning sched_load_balance off, which
-- * will call async_rebuild_sched_domains().
-+ * will call rebuild_sched_domains_locked().
-  */
- 
- static void cpuset_css_free(struct cgroup *cont)
-@@ -2237,9 +2196,6 @@ void __init cpuset_init_smp(void)
- 	top_cpuset.mems_allowed = node_states[N_MEMORY];
- 
- 	hotplug_memory_notifier(cpuset_track_online_nodes, 10);
--
--	cpuset_wq = create_singlethread_workqueue("cpuset");
--	BUG_ON(!cpuset_wq);
  }
  
- /**
++static void cpuset_cancel_attach(struct cgroup *cgrp,
++				 struct cgroup_taskset *tset)
++{
++	cgroup_cs(cgrp)->attach_in_progress--;
++}
++
+ /*
+  * Protected by cgroup_mutex.  cpus_attach is used only by cpuset_attach()
+  * but we can't allocate it dynamically there.  Define it global and
+@@ -1441,6 +1462,8 @@ static void cpuset_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+ 					  &cpuset_attach_nodemask_to);
+ 		mmput(mm);
+ 	}
++
++	cs->attach_in_progress--;
+ }
+ 
+ /* The various types of files and directories in a cpuset file system */
+@@ -1908,6 +1931,7 @@ struct cgroup_subsys cpuset_subsys = {
+ 	.css_offline = cpuset_css_offline,
+ 	.css_free = cpuset_css_free,
+ 	.can_attach = cpuset_can_attach,
++	.cancel_attach = cpuset_cancel_attach,
+ 	.attach = cpuset_attach,
+ 	.subsys_id = cpuset_subsys_id,
+ 	.base_cftypes = files,
 -- 
 1.8.0.2
 
