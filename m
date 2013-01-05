@@ -1,62 +1,88 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: [PATCH 2/2] cgroups: fix cgroup_event_listener error handling
-Date: Fri,  4 Jan 2013 13:05:18 -0800
-Message-ID: <1357333518-28899-2-git-send-email-gthelen@google.com>
-References: <1357333518-28899-1-git-send-email-gthelen@google.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH V3 2/8] Make TestSetPageDirty and dirty page accounting in
+ one func
+Date: Sat, 5 Jan 2013 10:34:50 +0800
+Message-ID: <CAFj3OHWJhaghOQ_xT7+rWOGiY0b2KLm68QHz4+yiOqtNf=Sz7A@mail.gmail.com>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
+	<1356456156-14535-1-git-send-email-handai.szj@taobao.com>
+	<50DCEA3D.1030501@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=x-received:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-         :references:mime-version:content-type:content-transfer-encoding;
-        bh=qPFyE/qeZ/DBCZVJO6CT3n4NPlxON4SONpsZOu//jcE=;
-        b=J8hD1b8FtdlbWLw+fOURq1NNVV8TmH4ItE0oEYqnlnCPMDi8otmRW89aJ/o5Y0+Uzm
-         nAi19V3b06wfx/1qnAMj69EP4VfIqccVHS4OtFSpGsf5ePwuZf81Dok28tf8EPbZx7A7
-         cYSToGA7KLbEGa3IfQH+J6iLMQaq4rzd0b3R8hm/tTl9mNiHJTFfooWyj61+KU8m2ewB
-         CeayyfMXRQ9yaZiq4NaFU+uUxFZpTuWfmd/3EEm+y9r8dUvFxWm2fT3gnEUySao9gPUE
-         fosd9QZb/ttgnZgf5t0QHxfpCiGiOwbGsClb7pkdsiQ6jufrOEQqoh1NpKnZ+LypMu91
-         5jMQ==
-In-Reply-To: <1357333518-28899-1-git-send-email-gthelen@google.com>
-Sender: linux-doc-owner@vger.kernel.org
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=RreR4PGNBoKepmuI/Z6PkMmXm2N1RtA1xXiqULu3Cyk=;
+        b=PzPGR0KCQ61eJxVomzgOWF+1dokMlpTxDsuOmCnTr89Hb+Ki1CrcjXzAZwuAqm5Wcy
+         5yKmWbivAna5kcX28q084YoL6j+TT/INgF8DrJmsEhlJz1C0dMNKUyT7pdKeD2TNsfEZ
+         FMxIjfxVZDWSrjOLFLL/Zrn9NwmOlINc/NsJoF2R6RbVSTttUtqxytcW9Gow94hAdF6M
+         T9hDYGjejYTeJnx4hP/3LcxzDyel04I40opQDg5Gd6q/ST4OvSRfNguwBAkWT0ECdM2v
+         TNgspTycIm8psUHxEJY2cvZQtFTZXVBHrOF7kKgBuIYUROG0iyqhG4wN6CkyoY73iLvn
+         9jTg==
+In-Reply-To: <50DCEA3D.1030501@jp.fujitsu.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Thelen <gthelen@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com, mhocko@suse.cz, akpm@linux-foundation.org, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
 
-If the <absolute-path-to-control-file> command line parameter cannot
-be opened, then cgroup_event_listener prints an error message and
-tries to return an error.  However, due to an uninitialized variable
-the return value was undefined.
+Hi Kame,
 
-With this patch such failures always return non-zero error.
+Sorry for the late response, I'm just back from vocation. : )
 
-Compiler warning found this:
-  $ gcc -Wall -O2 cgroup_event_listener.c
-  cgroup_event_listener.c: In function =E2=80=98main=E2=80=99:
-  cgroup_event_listener.c:109:2: warning: =E2=80=98ret=E2=80=99 may be =
-used uninitialized in this function [-Wuninitialized]
+On Fri, Dec 28, 2012 at 8:39 AM, Kamezawa Hiroyuki
+<kamezawa.hiroyu@jp.fujitsu.com> wrote:
+> (2012/12/26 2:22), Sha Zhengju wrote:
+>> From: Sha Zhengju <handai.szj@taobao.com>
+>>
+>> Commit a8e7d49a(Fix race in create_empty_buffers() vs __set_page_dirty_buffers())
+>> extracts TestSetPageDirty from __set_page_dirty and is far away from
+>> account_page_dirtied. But it's better to make the two operations in one single
+>> function to keep modular. So in order to avoid the potential race mentioned in
+>> commit a8e7d49a, we can hold private_lock until __set_page_dirty completes.
+>> There's no deadlock between ->private_lock and ->tree_lock after confirmation.
+>> It's a prepare patch for following memcg dirty page accounting patches.
+>>
+>>
+>> Here is some test numbers that before/after this patch:
+>> Test steps(Mem-4g, ext4):
+>> drop_cache; sync
+>> fio (ioengine=sync/write/buffered/bs=4k/size=1g/numjobs=2/group_reporting/thread)
+>>
+>> We test it for 10 times and get the average numbers:
+>> Before:
+>> write: io=2048.0MB, bw=254117KB/s, iops=63528.9 , runt=  8279msec
+>> lat (usec): min=1 , max=742361 , avg=30.918, stdev=1601.02
+>> After:
+>> write: io=2048.0MB, bw=254044KB/s, iops=63510.3 , runt=  8274.4msec
+>> lat (usec): min=1 , max=856333 , avg=31.043, stdev=1769.32
+>>
+>> Note that the impact is little(<1%).
+>>
+>>
+>> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+>> Reviewed-by: Michal Hocko <mhocko@suse.cz>
+>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>
+> Hmm,..this change should be double-checked by vfs, I/O guys...
+>
 
-Signed-off-by: Greg Thelen <gthelen@google.com>
----
- tools/cgroup/cgroup_event_listener.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Now it seems they haven't paid attention here... I'll push it soon for
+more review.
 
-diff --git a/tools/cgroup/cgroup_event_listener.c b/tools/cgroup/cgroup=
-_event_listener.c
-index 3e082f9..a70f00c 100644
---- a/tools/cgroup/cgroup_event_listener.c
-+++ b/tools/cgroup/cgroup_event_listener.c
-@@ -35,7 +35,7 @@ int main(int argc, char **argv)
- 	if (cfd =3D=3D -1) {
- 		fprintf(stderr, "Cannot open %s: %s\n", argv[1],
- 				strerror(errno));
--		goto out;
-+		return 1;
- 	}
-=20
- 	ret =3D snprintf(event_control_path, PATH_MAX, "%s/cgroup.event_contr=
-ol",
---=20
-1.7.7.3
+> increasing hold time of mapping->private_lock doesn't affect performance ?
+>
+>
 
+Yes, pointed by Fengguang in the previous round, mapping->private_lock and
+mapping->tree_lock are often contented locks that in a dd testcase
+they have the top
+ #1 and #2 contention.
+So the numbers above are trying to find the impaction of lock
+contention by multiple
+threads(numjobs=2) writing to the same file in parallel and it seems
+the impact is
+little (<1%).
+I'm not sure if the test case is enough, any advice is welcomed! : )
