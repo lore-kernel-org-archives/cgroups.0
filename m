@@ -1,162 +1,225 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH V3 5/8] memcg: add per cgroup writeback pages accounting
-Date: Sun, 06 Jan 2013 12:07:04 -0800
-Message-ID: <xr93vcbakrdj.fsf@gthelen.mtv.corp.google.com>
+From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V3 4/8] memcg: add per cgroup dirty pages accounting
+Date: Sun, 06 Jan 2013 12:07:32 -0800
+Message-ID: <xr93obh2krcr.fsf@gthelen.mtv.corp.google.com>
 References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
-	<1356456409-14701-1-git-send-email-handai.szj@taobao.com>
+	<1356456367-14660-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=x-received:from:to:cc:subject:references:date:message-id:user-agent
          :mime-version:content-type;
-        bh=g0ccY7C/HTvVa1uZPiyMtF+3biWbHszS+vYEo83wvvA=;
-        b=ZAW+XDPTvjuevjn4EIAo1DpspYfLF8nJUEgW8DFdhXaEj8UAW+St6L4lrSVe9dFQjp
-         5Dmk+74CGPNeJ0cGaaMLRh12Yv4XpXL6Z4/dhdhglHu8rAzNhyX+eiKg5VpRIgwG5aNb
-         53zsqP/KgefhET2tekS1cSq4N1VaPNI2RaGrz6JHfymhtQpYtVFynKib8f2EodbRmIpB
-         C9wr2bcXObM4ksK/40EhvHEV5JcKfpIRrKwlX7MkytYzNsRlpfOz3b5Q0yVLS8YgElCg
-         g93SQ4Bct91bYkSwWM/w6dkiRK0Mdn2/WZeTlcbAdjSiEauTKjRKi04GYqUeoFG8XbqZ
-         4ouw==
-Sender: owner-linux-mm@kvack.org
+        bh=J5f0axxnfFmSV6ASQc8HED7QXJQbUZuzaFSpiAv7Py8=;
+        b=NYBHpZrBmlUJezM+UETVmyjEqfxOdHuItobjkP93sCf0F7OjN1aeqm5FqEx4x5adC3
+         ZI5yvUBIO1R1fl/C6J0hpZjiM31UV15Sr/j+iLku4ruxmoI+7vJgbTQgzRsoMXFyJFfa
+         cfHvSfJktm+fbbkwNa0ZD0OALmSqBBWA4p6z1SbbApVWBaNnd8qShE44Am6emdNGff5y
+         gOvvykLqthx6qCccfVQkCHMh9ycZnQ24d3fdFQXTu/ya7eh9ZXPNmZJTpG9sGtvs/0BP
+         N7aHo894SBZkKN78ouADX/VwEwt3E8z+2AFR/ANhgfzx7Y6t8Xl8PWEovk8YeuN7pNB1
+         onzw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
 On Tue, Dec 25 2012, Sha Zhengju wrote:
 
-> From: Sha Zhengju <handai.szj@taobao.com>
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 >
-> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
-> rule still is:
->         mem_cgroup_begin_update_page_stat()
->         modify page WRITEBACK stat
->         mem_cgroup_update_page_stat()
->         mem_cgroup_end_update_page_stat()
+> This patch adds memcg routines to count dirty pages, which allows memory controller
+> to maintain an accurate view of the amount of its dirty memory and can provide some
+> info for users while cgroup's direct reclaim is working.
 >
-> There're two writeback interface to modify: test_clear/set_page_writeback.
+> After Kame's commit 89c06bd5(memcg: use new logic for page stat accounting), we can
+> use 'struct page' flag to test page state instead of per page_cgroup flag. But memcg
+> has a feature to move a page from a cgroup to another one and may have race between
+> "move" and "page stat accounting". So in order to avoid the race we have designed a
+> bigger lock:
 >
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+>          mem_cgroup_begin_update_page_stat()
+>          modify page information        -->(a)
+>          mem_cgroup_update_page_stat()  -->(b)
+>          mem_cgroup_end_update_page_stat()
+> It requires (a) and (b)(dirty pages accounting) can stay close enough.
+> In the previous two prepare patches, we have reworked the vfs set page dirty routines
+> and now the interfaces are more explicit:
+>         incrementing (2):
+>                 __set_page_dirty
+>                 __set_page_dirty_nobuffers
+>         decrementing (2):
+>                 clear_page_dirty_for_io
+>                 cancel_dirty_page
+>
+> To prevent AB/BA deadlock mentioned by Greg Thelen in previous version
+> (https://lkml.org/lkml/2012/7/30/227), we adjust the lock order:
+> ->private_lock --> mapping->tree_lock --> memcg->move_lock.
+> So we need to make mapping->tree_lock ahead of TestSetPageDirty in __set_page_dirty()
+> and __set_page_dirty_nobuffers(). But in order to avoiding useless spinlock contention,
+> a prepare PageDirty() checking is added.
+>
+>
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-LdfC7J4mv27QFUHtdCDX3A@public.gmane.org>
+> Acked-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > ---
+>  fs/buffer.c                |   14 +++++++++++++-
 >  include/linux/memcontrol.h |    1 +
->  mm/memcontrol.c            |    5 +++++
->  mm/page-writeback.c        |   17 +++++++++++++++++
->  3 files changed, 23 insertions(+)
->
+>  mm/filemap.c               |   10 ++++++++++
+>  mm/memcontrol.c            |   29 ++++++++++++++++++++++-------
+>  mm/page-writeback.c        |   39 ++++++++++++++++++++++++++++++++-------
+>  mm/truncate.c              |    6 ++++++
+>  6 files changed, 84 insertions(+), 15 deletions(-)
+
+__nilfs_clear_page_dirty() clears PageDirty, does it need modification
+for this patch series?
+
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index 762168a..53402d2 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -612,19 +612,31 @@ EXPORT_SYMBOL(mark_buffer_dirty_inode);
+>  int __set_page_dirty(struct page *page,
+>  		struct address_space *mapping, int warn)
+>  {
+> +	bool locked;
+> +	unsigned long flags;
+> +
+>  	if (unlikely(!mapping))
+>  		return !TestSetPageDirty(page);
+>  
+> -	if (TestSetPageDirty(page))
+> +	if (PageDirty(page))
+>  		return 0;
+>  
+>  	spin_lock_irq(&mapping->tree_lock);
+> +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+> +
+> +	if (TestSetPageDirty(page)) {
+> +		mem_cgroup_end_update_page_stat(page, &locked, &flags);
+> +		spin_unlock_irq(&mapping->tree_lock);
+> +		return 0;
+> +	}
+> +
+>  	if (page->mapping) {	/* Race with truncate? */
+>  		WARN_ON_ONCE(warn && !PageUptodate(page));
+>  		account_page_dirtied(page, mapping);
+>  		radix_tree_tag_set(&mapping->page_tree,
+>  				page_index(page), PAGECACHE_TAG_DIRTY);
+>  	}
+> +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>  	spin_unlock_irq(&mapping->tree_lock);
+>  	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+>  
 > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 358019e..1d22b81 100644
+> index 5421b8a..2685d8a 100644
 > --- a/include/linux/memcontrol.h
 > +++ b/include/linux/memcontrol.h
-> @@ -45,6 +45,7 @@ enum mem_cgroup_stat_index {
+> @@ -44,6 +44,7 @@ enum mem_cgroup_stat_index {
+>  	MEM_CGROUP_STAT_RSS,	   /* # of pages charged as anon rss */
 >  	MEM_CGROUP_STAT_FILE_MAPPED,  /* # of pages charged as file rss */
 >  	MEM_CGROUP_STAT_SWAP, /* # of pages, swapped out */
->  	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
-> +	MEM_CGROUP_STAT_WRITEBACK,  /* # of pages under writeback */
+> +	MEM_CGROUP_STAT_FILE_DIRTY,  /* # of dirty pages in page cache */
 >  	MEM_CGROUP_STAT_NSTATS,
 >  };
 >  
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 21df36d..13cd14a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -96,6 +96,7 @@ static const char * const mem_cgroup_stat_names[] = {
->  	"mapped_file",
->  	"swap",
->  	"dirty",
-> +	"writeback",
->  };
->  
->  enum mem_cgroup_events_index {
-> @@ -3676,6 +3677,10 @@ static int mem_cgroup_move_account(struct page *page,
->  		mem_cgroup_move_account_page_stat(from, to, nr_pages,
->  			MEM_CGROUP_STAT_FILE_DIRTY);
->  
-> +	if (PageWriteback(page))
-> +		mem_cgroup_move_account_page_stat(from, to, nr_pages,
-> +			MEM_CGROUP_STAT_WRITEBACK);
-> +
->  	mem_cgroup_charge_statistics(from, anon, -nr_pages);
->  
->  	/* caller should have done css_get */
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 526ddd7..ae6498a 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -2002,11 +2002,17 @@ EXPORT_SYMBOL(account_page_dirtied);
->  
->  /*
->   * Helper function for set_page_writeback family.
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 83efee7..b589be5 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -62,6 +62,11 @@
+>   *      ->swap_lock		(exclusive_swap_page, others)
+>   *        ->mapping->tree_lock
+>   *
+> + *    ->private_lock		(__set_page_dirty_buffers)
+> + *      ->mapping->tree_lock
+> + *        ->memcg->move_lock	(mem_cgroup_begin_update_page_stat->
+> + *							move_lock_mem_cgroup)
 > + *
-> + * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
-> + * while modifying struct page state and accounting writeback pages.
-> + * See test_set_page_writeback for example.
-> + *
->   * NOTE: Unlike account_page_dirtied this does not rely on being atomic
->   * wrt interrupts.
->   */
->  void account_page_writeback(struct page *page)
+>   *  ->i_mutex
+>   *    ->i_mmap_mutex		(truncate->unmap_mapping_range)
+>   *
+> @@ -112,6 +117,8 @@
+>  void __delete_from_page_cache(struct page *page)
 >  {
-> +	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
->  	inc_zone_page_state(page, NR_WRITEBACK);
->  }
->  EXPORT_SYMBOL(account_page_writeback);
-> @@ -2242,7 +2248,10 @@ int test_clear_page_writeback(struct page *page)
->  {
->  	struct address_space *mapping = page_mapping(page);
->  	int ret;
-> +	bool locked;
-> +	unsigned long memcg_flags;
->  
-> +	mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
-
-Does this violate lock ordering?  Here we are grabbing
-mem_cgroup_begin_update_page_stat and below we grab tree_lock.  I
-thought the prescribed order was tree_lock first, then
-mem_cgroup_begin_update_page_stat.
-
->  	if (mapping) {
->  		struct backing_dev_info *bdi = mapping->backing_dev_info;
->  		unsigned long flags;
-> @@ -2263,9 +2272,12 @@ int test_clear_page_writeback(struct page *page)
->  		ret = TestClearPageWriteback(page);
->  	}
->  	if (ret) {
-> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
->  		dec_zone_page_state(page, NR_WRITEBACK);
->  		inc_zone_page_state(page, NR_WRITTEN);
->  	}
-> +
-> +	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
->  	return ret;
->  }
->  
-> @@ -2273,7 +2285,10 @@ int test_set_page_writeback(struct page *page)
->  {
->  	struct address_space *mapping = page_mapping(page);
->  	int ret;
+>  	struct address_space *mapping = page->mapping;
 > +	bool locked;
 > +	unsigned long flags;
 >  
+>  	/*
+>  	 * if we're uptodate, flush out into the cleancache, otherwise
+> @@ -139,10 +146,13 @@ void __delete_from_page_cache(struct page *page)
+>  	 * Fix it up by doing a final dirty accounting check after
+>  	 * having removed the page entirely.
+>  	 */
 > +	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
-
-Same "Does this violate lock ordering?" question as above.
-
->  	if (mapping) {
->  		struct backing_dev_info *bdi = mapping->backing_dev_info;
->  		unsigned long flags;
-> @@ -2300,6 +2315,8 @@ int test_set_page_writeback(struct page *page)
+>  	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
+> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
+>  		dec_zone_page_state(page, NR_FILE_DIRTY);
+>  		dec_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
 >  	}
->  	if (!ret)
->  		account_page_writeback(page);
-> +
 > +	mem_cgroup_end_update_page_stat(page, &locked, &flags);
->  	return ret;
->  
 >  }
+>  
+>  /**
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d450c04..c884640 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -95,6 +95,7 @@ static const char * const mem_cgroup_stat_names[] = {
+>  	"rss",
+>  	"mapped_file",
+>  	"swap",
+> +	"dirty",
+>  };
+>  
+>  enum mem_cgroup_events_index {
+> @@ -3609,6 +3610,19 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+>  }
+>  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+>  
+> +static inline
+> +void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
+> +					struct mem_cgroup *to,
+> +					unsigned int nr_pages,
+> +					enum mem_cgroup_stat_index idx)
+> +{
+> +	/* Update stat data for mem_cgroup */
+> +	preempt_disable();
+> +	__this_cpu_add(from->stat->count[idx], -nr_pages);
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+What you do think about adding a WARN_ON_ONCE() here to check for
+underflow?  A check might help catch:
+a) unresolved races between move accounting vs setting/clearing
+   dirtying.
+b) future modifications that mess with PageDirty/Writeback flags without
+   considering memcg.
+
+> +	__this_cpu_add(to->stat->count[idx], nr_pages);
+> +	preempt_enable();
+> +}
+> +
+>  /**
+>   * mem_cgroup_move_account - move account of the page
+>   * @page: the page
+> @@ -3654,13 +3668,14 @@ static int mem_cgroup_move_account(struct page *page,
+>  
+>  	move_lock_mem_cgroup(from, &flags);
+>  
+> -	if (!anon && page_mapped(page)) {
+> -		/* Update mapped_file data for mem_cgroup */
+> -		preempt_disable();
+> -		__this_cpu_dec(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
+> -		__this_cpu_inc(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
+> -		preempt_enable();
+> -	}
+> +	if (!anon && page_mapped(page))
+> +		mem_cgroup_move_account_page_stat(from, to, nr_pages,
+> +			MEM_CGROUP_STAT_FILE_MAPPED);
+> +
+> +	if (PageDirty(page))
+
+Is (!anon && PageDirty(page)) better?  If dirty anon pages are moved
+between memcg M1 and M2 I think that we'd mistakenly underflow M1 if it
+was not previously accounting for the dirty anon page.
