@@ -1,185 +1,78 @@
 From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Subject: Re: [PATCH V3 4/8] memcg: add per cgroup dirty pages accounting
-Date: Mon, 07 Jan 2013 16:25:20 +0900
-Message-ID: <50EA7860.6030300@jp.fujitsu.com>
-References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456367-14660-1-git-send-email-handai.szj@taobao.com> <20130102104421.GC22160@dhcp22.suse.cz> <CAFj3OHXKyMO3gwghiBAmbowvqko-JqLtKroX2kzin1rk=q9tZg@mail.gmail.com>
+Date: Mon, 07 Jan 2013 16:49:27 +0900
+Message-ID: <50EA7E07.4070902@jp.fujitsu.com>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456367-14660-1-git-send-email-handai.szj@taobao.com> <20130102104421.GC22160@dhcp22.suse.cz> <CAFj3OHXKyMO3gwghiBAmbowvqko-JqLtKroX2kzin1rk=q9tZg@mail.gmail.com> <alpine.LNX.2.00.1301061135400.29149@eggly.anvils>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAFj3OHXKyMO3gwghiBAmbowvqko-JqLtKroX2kzin1rk=q9tZg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <alpine.LNX.2.00.1301061135400.29149-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-(2013/01/05 13:48), Sha Zhengju wrote:
-> On Wed, Jan 2, 2013 at 6:44 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
->> On Wed 26-12-12 01:26:07, Sha Zhengju wrote:
->>> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+(2013/01/07 5:02), Hugh Dickins wrote:
+> On Sat, 5 Jan 2013, Sha Zhengju wrote:
+>> On Wed, Jan 2, 2013 at 6:44 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
 >>>
->>> This patch adds memcg routines to count dirty pages, which allows memory controller
->>> to maintain an accurate view of the amount of its dirty memory and can provide some
->>> info for users while cgroup's direct reclaim is working.
+>>> Maybe I have missed some other locking which would prevent this from
+>>> happening but the locking relations are really complicated in this area
+>>> so if mem_cgroup_{begin,end}_update_page_stat might be called
+>>> recursively then we need a fat comment which justifies that.
+>>>
 >>
->> I guess you meant targeted resp. (hard/soft) limit reclaim here,
->> right? It is true that this is direct reclaim but it is not clear to me
+>> Ohhh...good catching!  I didn't notice there is a recursive call of
+>> mem_cgroup_{begin,end}_update_page_stat in page_remove_rmap().
+>> The mem_cgroup_{begin,end}_update_page_stat() design has depressed
+>> me a lot recently as the lock granularity is a little bigger than I thought.
+>> Not only the resource but also some code logic is in the range of locking
+>> which may be deadlock prone. The problem still exists if we are trying to
+>> add stat account of other memcg page later, may I make bold to suggest
+>> that we dig into the lock again...
 >
-> Yes, I meant memcg hard/soft reclaim here which is triggered directly
-> by allocation and is distinct from background kswapd reclaim (global).
+> Forgive me, I must confess I'm no more than skimming this thread,
+> and don't like dumping unsigned-off patches on people; but thought
+> that on balance it might be more helpful than not if I offer you a
+> patch I worked on around 3.6-rc2 (but have updated to 3.8-rc2 below).
 >
->> why the usefulnes should be limitted to the reclaim for users. I would
->> understand this if the users was in fact in-kernel users.
->>
+> I too was getting depressed by the constraints imposed by
+> mem_cgroup_{begin,end}_update_page_stat (good job though Kamezawa-san
+> did to minimize them), and wanted to replace by something freer, more
+> RCU-like.  In the end it seemed more effort than it was worth to go
+> as far as I wanted, but I do think that this is some improvement over
+> what we currently have, and should deal with your recursion issue.
 >
-> One of the reasons I'm trying to accounting the dirty pages is to get a
-> more board overall view of memory usages because memcg hard/soft
-> reclaim may have effect on response time of user application.
-> Yeah, the beneficiary can be application administrator or kernel users.  :P
+In what case does this improve performance ?
+
+> But if this does appear useful to memcg people, then we really ought
+> to get it checked over by locking/barrier experts before going further.
+> I think myself that I've over-barriered it, and could use a little
+> lighter; but they (Paul McKenney, Peter Zijlstra, Oleg Nesterov come
+> to mind) will see more clearly, and may just hate the whole thing,
+> as yet another peculiar lockdep-avoiding hand-crafted locking scheme.
+> I've not wanted to waste their time on reviewing it, if it's not even
+> going to be useful to memcg people.
 >
->> [...]
->>> To prevent AB/BA deadlock mentioned by Greg Thelen in previous version
->>> (https://lkml.org/lkml/2012/7/30/227), we adjust the lock order:
->>> ->private_lock --> mapping->tree_lock --> memcg->move_lock.
->>> So we need to make mapping->tree_lock ahead of TestSetPageDirty in __set_page_dirty()
->>> and __set_page_dirty_nobuffers(). But in order to avoiding useless spinlock contention,
->>> a prepare PageDirty() checking is added.
->>
->> But there is another AA deadlock here I believe.
->> page_remove_rmap
->>    mem_cgroup_begin_update_page_stat             <<< 1
->>    set_page_dirty
->>      __set_page_dirty_buffers
->>        __set_page_dirty
->>          mem_cgroup_begin_update_page_stat       <<< 2
->>            move_lock_mem_cgroup
->>              spin_lock_irqsave(&memcg->move_lock, *flags);
->>
->> mem_cgroup_begin_update_page_stat is not recursive wrt. locking AFAICS
->> because we might race with the moving charges:
->>          CPU0                                            CPU1
->> page_remove_rmap
->>                                                  mem_cgroup_can_attach
->>    mem_cgroup_begin_update_page_stat (1)
->>      rcu_read_lock
->>                                                    mem_cgroup_start_move
->>                                                      atomic_inc(&memcg_moving)
->>                                                      atomic_inc(&memcg->moving_account)
->>                                                      synchronize_rcu
->>      __mem_cgroup_begin_update_page_stat
->>        mem_cgroup_stolen <<< TRUE
->>        move_lock_mem_cgroup
->>    [...]
->>          mem_cgroup_begin_update_page_stat (2)
->>            __mem_cgroup_begin_update_page_stat
->>              mem_cgroup_stolen     <<< still TRUE
->>              move_lock_mem_cgroup  <<< DEADLOCK
->>    [...]
->>    mem_cgroup_end_update_page_stat
->>      rcu_unlock
->>                                                    # wake up from synchronize_rcu
->>                                                  [...]
->>                                                  mem_cgroup_move_task
->>                                                    mem_cgroup_move_charge
->>                                                      walk_page_range
->>                                                        mem_cgroup_move_account
->>                                                          move_lock_mem_cgroup
->>
->>
->> Maybe I have missed some other locking which would prevent this from
->> happening but the locking relations are really complicated in this area
->> so if mem_cgroup_{begin,end}_update_page_stat might be called
->> recursively then we need a fat comment which justifies that.
->>
+> It may be easier to understand if you just apply the patch and look
+> at the result in mm/memcontrol.c, where I tried to gather the pieces
+> together in one place and describe them ("These functions mediate...").
 >
-> Ohhh...good catching!  I didn't notice there is a recursive call of
-> mem_cgroup_{begin,end}_update_page_stat in page_remove_rmap().
-> The mem_cgroup_{begin,end}_update_page_stat() design has depressed
-> me a lot recently as the lock granularity is a little bigger than I thought.
-> Not only the resource but also some code logic is in the range of locking
-> which may be deadlock prone. The problem still exists if we are trying to
-> add stat account of other memcg page later, may I make bold to suggest
-> that we dig into the lock again...
->
-> But with regard to the current lock implementation, I doubt if we can we can
-> account MEM_CGROUP_STAT_FILE_{MAPPED, DIRTY} in one breath and just
-> try to get move_lock once in the beginning. IMHO we can make
-> mem_cgroup_{begin,end}_update_page_stat() to recursive aware and what I'm
-> thinking now is changing memcg->move_lock to rw-spinlock from the
-> original spinlock:
-> mem_cgroup_{begin,end}_update_page_stat() try to get the read lock which make it
-> reenterable and memcg moving task side try to get the write spinlock.
-> Then the race may be following:
->
->          CPU0                                            CPU1
-> page_remove_rmap
->                                                  mem_cgroup_can_attach
->    mem_cgroup_begin_update_page_stat (1)
->      rcu_read_lock
->                                                    mem_cgroup_start_move
->                                                      atomic_inc(&memcg_moving)
->
-> atomic_inc(&memcg->moving_account)
->                                                      synchronize_rcu
->      __mem_cgroup_begin_update_page_stat
->        mem_cgroup_stolen   <<< TRUE
->        move_lock_mem_cgroup   <<<< read-spinlock success
->    [...]
->       mem_cgroup_begin_update_page_stat (2)
->            __mem_cgroup_begin_update_page_stat
->              mem_cgroup_stolen     <<< still TRUE
->              move_lock_mem_cgroup  <<<< read-spinlock success
->
->    [...]
->    mem_cgroup_end_update_page_stat     <<< locked = true, unlock
->      rcu_unlock
->                                                    # wake up from synchronize_rcu
->                                                  [...]
->                                                  mem_cgroup_move_task
->                                                    mem_cgroup_move_charge
->                                                      walk_page_range
->                                                        mem_cgroup_move_account
->
-> move_lock_mem_cgroup    <<< write-spinlock
->
->
-> AFAICS, the deadlock seems to be avoided by both the rcu and rwlock.
-> Is there anything I lost?
+> Hugh
 >
 
-rwlock will work with the nest but it seems ugly do updates under read-lock.
+Hi, this patch seems interesting but...doesn't this make move_account() very
+slow if the number of cpus increases because of scanning all cpus per a page ?
+And this looks like reader-can-block-writer percpu rwlock..it's too heavy to
+writers if there are many readers.
 
-How about this straightforward ?
-==
-/*
-  * Once a thread takes memcg_move_lock() on a memcg, it can take the lock on
-  * the memcg again for nesting calls
-  */
-static void move_lock_mem_cgroup(memcg, flags);
-{
-	current->memcg_move_lock_nested += 1;
-	if (current->memcg_move_lock_nested > 1) {
-		VM_BUG_ON(current->move_locked_memcg != memcg);
-		return;
-	}
-	spin_lock_irqsave(&memcg_move_lock, &flags);
-	current->move_lockdev_memcg = memcg;
-}
-
-static void move_unlock_mem_cgroup(memcg, flags)
-{
-	current->memcg_move_lock_nested -= 1;
-	if (!current->memcg_move_lock_nested) {
-		current->move_locked_memcg = NULL;
-		spin_unlock_irqrestore(&memcg_move_lock,flags);
-	}
-}
-
-==
-But, hmm, this kind of (ugly) hack may cause trouble as Hugh said.
 
 Thanks,
 -Kame
+
+
+  
 
 
 
