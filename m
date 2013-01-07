@@ -1,47 +1,56 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET] block: implement blkcg hierarchy support in cfq,
- take#2
-Date: Mon, 7 Jan 2013 08:34:37 -0800
-Message-ID: <20130107163437.GF3926@htj.dyndns.org>
-References: <1356726946-26037-1-git-send-email-tj@kernel.org>
- <20130102182037.GC4306@redhat.com>
+Subject: Re: [PATCH 10/13] cpuset: make CPU / memory hotplug propagation
+	asynchronous
+Date: Mon, 7 Jan 2013 08:42:06 -0800
+Message-ID: <20130107164206.GG3926@htj.dyndns.org>
+References: <1357248967-24959-1-git-send-email-tj@kernel.org>
+	<1357248967-24959-11-git-send-email-tj@kernel.org>
+	<50E935D5.4040402@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=pig4YssUUKNXwXq2qpEjgS7W000vkbf70JUTvLcIufA=;
-        b=qAXG2zh8ZzCfRiIHB70R3psctOHy7/YKIFf3cVoUrMfLWI4GrJzXnfao6pMa0zQKe5
-         tUqKsjilQeHWySuKc8Rv16Ms56T01/N2H/Ccqhkv52bFIP0rSH8EBBPj/De346gif+0R
-         /ECsfd1vtyHP1h6qsG1vrEVyrYuVcIvcoEkmVPHnCkFj7fl5aYY7PE4uK4qBkQCRdaHk
-         X260H0mfgsoZtxt2ueQZCAMP0etYVw1iPRDJihT5n/0qB4xg+GLq2bfgENkRe4XSskCO
-         +P2A1wy/Oxf0/TC07Qnc1qoYrzTDuPDfeOy5YoU7Y0r+h7iCxGEd4XDbwU5XnGw56i6J
-         eM8g==
-Content-Disposition: inline
-In-Reply-To: <20130102182037.GC4306-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ctalbott-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rni-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=61oyj/4zkapxURIGg4lhkJTwZ9tKu5PVuzplEtra3SQ=;
+	b=lj29oT84Vsi8D/vyAAr+ut81AdJXm8St3i3VxErAMSE0gmOGjqzzHgpiQBHSjAqmLh
+	1KwSr0/miUATDYeq5UfOs2lNnDvqGmb/xT3hfOQmtf//Jb/o+gulGGOOOGXUUErJIq06
+	XLuj74YAFv5PxTdbagXvILNbjxVcGC1VZ1FY0R8IF0Z/77VuVCxnciTdndmXhREz7oMh
+	MFxjbTWsFlVzL3UmHiog+ysXdQZSWeDn/DGJFG1Xd0FlQSyWdRbsgJW8/zdy9lQ/QTRI
+	bYy9QPYzGrOzDU3AxKIed1U3uiP8+w80+R3//Ow8T0Dk2l0/FlvRxyJyLdIUiz+4Occ7
+	gOxQ==
+Content-Disposition: inline
+In-Reply-To: <50E935D5.4040402-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Wed, Jan 02, 2013 at 01:20:38PM -0500, Vivek Goyal wrote:
-> On Fri, Dec 28, 2012 at 12:35:22PM -0800, Tejun Heo wrote:
+On Sun, Jan 06, 2013 at 04:29:09PM +0800, Li Zefan wrote:
+> > +static void schedule_cpuset_propagate_hotplug(struct cpuset *cs)
+> > +{
+> > +	/*
+> > +	 * Pin @cs.  The refcnt will be released when the work item
+> > +	 * finishes executing.
+> > +	 */
+> > +	if (!css_tryget(&cs->css))
+> > +		return;
+> > +
+> > +	/*
+> > +	 * Queue @cs->empty_cpuset_work.  If already pending, lose the css
 > 
-> [..]
-> > 
-> > * Updated to reflect Vivek's reviews - renames & documentation.
-> 
-> Hi Tejun,
-> 
-> You forgot to update blkio-controller.txt.
+> cs->hotplug_work
 
-Just updated.  Does everything else look okay to you?
-
-Thanks.
+Thanks.  Patch updated.
 
 -- 
 tejun
