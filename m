@@ -1,44 +1,67 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] cgroups: move cgroup_event_listener.c to tools/cgroup
-Date: Mon, 7 Jan 2013 09:42:13 -0800
-Message-ID: <20130107174213.GL3926@htj.dyndns.org>
+Subject: Re: [PATCH 2/2] cgroups: fix cgroup_event_listener error handling
+Date: Mon, 7 Jan 2013 09:44:27 -0800
+Message-ID: <20130107174427.GM3926@htj.dyndns.org>
 References: <1357333518-28899-1-git-send-email-gthelen@google.com>
+ <1357333518-28899-2-git-send-email-gthelen@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=GaNxRW33SzTbdtw4N/RPt0IDIgqZeoWPHo0BwvOS0m4=;
-        b=iho5y0jPuHTDkaHBq1M1puCu2N2+UvdQcb9IguYCNyWOycSDfpZvn541SZCCMkSQ5G
-         oE7V/nO/9x6H5gjd0VLsNO1+LigrRBVPqU5ZbunEE5FDvQ94X3fI48IxCZkRMB/ixI3p
-         o4cphh2JAQFUqTKbSoAs/bXYqVPBm3Mrb4QDB8yqs9IFgj66a1tQWcjKXF8v+tiLsjGx
-         aZb1/HaM4j8ax87NfSWClOS+zbdjo75zfxYx6HZc/t6zzGUVhdRbBh46DuvvQUGf0Bll
-         7hUvc7ZYS7WSt2eFJwKBQ9uuk7rJu7Vz9shwyLBBz4SwFdWANYPODiCDM8H5xsXHlLhZ
-         jEFg==
+         :mime-version:content-type:content-disposition
+         :content-transfer-encoding:in-reply-to:user-agent;
+        bh=CmDues33HwTfJpyVMDTT4Htle+shYkMrgE1lMQi+f0w=;
+        b=KsqExcKTqrh6lkA4Xb3L28eETYwD8712OhDlPV736bcpG8H/BKu5oDVOo83rjy3In5
+         NPYmad3Na6/3w7Bz4tUGRMLbR/zxiKayS4KQu7FwpYSzcdlgsFtr5ediPBGXYZTHGUw9
+         ffP2IJYbyqB8skV2uaImHkCkjci+IB4Ui8zfzebqAXJl/8S9pA2NwGxBYeYisBuOScqW
+         lcyJ48aQ3l3P/bImwqm8pWLjou8NarRCJZ+cYcOP0HqDjjlhafQfBVAyBSzaNWS9/Dsz
+         o5a2QFH2dDMK3xP51lsn+ksL6i6KymhuoGOg4VMi2MwLy1ehnEOpMcCFBmGOaPgroSnI
+         LLvA==
 Content-Disposition: inline
-In-Reply-To: <1357333518-28899-1-git-send-email-gthelen@google.com>
+In-Reply-To: <1357333518-28899-2-git-send-email-gthelen@google.com>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
 To: Greg Thelen <gthelen@google.com>
 Cc: Li Zefan <lizefan@huawei.com>, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jan 04, 2013 at 01:05:17PM -0800, Greg Thelen wrote:
-> Move the cgroup_event_listener.c tool from Documentation into the new
-> tools/cgroup directory.
-> 
-> This change involves wiring cgroup_event_listener.c into the tools/
-> make system so that is can be built with:
->   $ make tools/cgroup
-> 
+On Fri, Jan 04, 2013 at 01:05:18PM -0800, Greg Thelen wrote:
+> If the <absolute-path-to-control-file> command line parameter cannot
+> be opened, then cgroup_event_listener prints an error message and
+> tries to return an error.  However, due to an uninitialized variable
+> the return value was undefined.
+>=20
+> With this patch such failures always return non-zero error.
+>=20
+> Compiler warning found this:
+>   $ gcc -Wall -O2 cgroup_event_listener.c
+>   cgroup_event_listener.c: In function =E2=80=98main=E2=80=99:
+>   cgroup_event_listener.c:109:2: warning: =E2=80=98ret=E2=80=99 may b=
+e used uninitialized in this function [-Wuninitialized]
+>=20
 > Signed-off-by: Greg Thelen <gthelen@google.com>
+> ---
+>  tools/cgroup/cgroup_event_listener.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/tools/cgroup/cgroup_event_listener.c b/tools/cgroup/cgro=
+up_event_listener.c
+> index 3e082f9..a70f00c 100644
+> --- a/tools/cgroup/cgroup_event_listener.c
+> +++ b/tools/cgroup/cgroup_event_listener.c
+> @@ -35,7 +35,7 @@ int main(int argc, char **argv)
+>  	if (cfd =3D=3D -1) {
+>  		fprintf(stderr, "Cannot open %s: %s\n", argv[1],
+>  				strerror(errno));
+> -		goto out;
+> +		return 1;
 
-Applied to cgroup/for-3.9.
+Hmm... so, event_control open failure path is broken the same way.
+Can you please fix it together?  Please just remove the cleanup path.
 
 Thanks.
 
--- 
+--=20
 tejun
