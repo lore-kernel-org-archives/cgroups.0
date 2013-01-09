@@ -1,82 +1,78 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: use new hashtable implementation
-Date: Wed, 9 Jan 2013 09:55:12 +0800
-Message-ID: <50ECCE00.6040902@huawei.com>
-References: <50EBD011.7040801@huawei.com> <20130108181729.GB3926@htj.dyndns.org>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH V3 4/8] memcg: add per cgroup dirty pages accounting
+Date: Tue, 8 Jan 2013 21:15:47 -0800 (PST)
+Message-ID: <alpine.LNX.2.00.1301082030100.5319@eggly.anvils>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com> <1356456367-14660-1-git-send-email-handai.szj@taobao.com> <20130102104421.GC22160@dhcp22.suse.cz> <CAFj3OHXKyMO3gwghiBAmbowvqko-JqLtKroX2kzin1rk=q9tZg@mail.gmail.com>
+ <alpine.LNX.2.00.1301061135400.29149@eggly.anvils> <50EA7E07.4070902@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130108181729.GB3926-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=x-received:date:from:x-x-sender:to:cc:subject:in-reply-to
+         :message-id:references:user-agent:mime-version:content-type;
+        bh=jdoZwQbxQ+/lXioxvQfIDQsGflPvt2MIcpx8fkqGL8U=;
+        b=H8vQ9t+TXgsmVr4Qjs3LIp8g7jk15DLPESWn4JYTjFZNPGPQcYQHJUtz0uRvEEWsBx
+         nwqqi/18LKWBDKmT1lNLUDuEbYZahL6oaD4nh5uAg9J7BXKUG+0evLtnxJHr2Xsqv0Yq
+         3Nm5sOAGzJqROKibPm43/qteMpFOD98whj9K/WXB1KxJkejBbXjzOW9VUisPqH1uT8li
+         3PiujEN3PIqynDItEf1d6LlV97tfVBWCf3enqA9EPZBjxmdFu32HAJeXrpudacbSykZ0
+         22L1Nf+5fhf8fuMs4JvtBkMrgZFWNz7qoCQQaBxikvCxyhkjN0blNSuL9iDmYCK1xZsW
+         7xTQ==
+In-Reply-To: <50EA7E07.4070902@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Sha Zhengju <handai.szj@gmail.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, dchinner@redhat.com, Sha Zhengju <handai.szj@taobao.com>
 
-On 2013/1/9 2:17, Tejun Heo wrote:
-> Hello, Li.
-> 
-> On Tue, Jan 08, 2013 at 03:51:45PM +0800, Li Zefan wrote:
->> -static struct hlist_head *css_set_hash(struct cgroup_subsys_state *css[])
->> +static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
->>  {
->>  	int i;
->> -	int index;
->> -	unsigned long tmp = 0UL;
->> +	unsigned long key = 0UL;
->>  
->>  	for (i = 0; i < CGROUP_SUBSYS_COUNT; i++)
->> -		tmp += (unsigned long)css[i];
->> -	tmp = (tmp >> 16) ^ tmp;
->> +		key += (unsigned long)css[i];
->> +	key = (key >> 16) ^ key;
-> 
-> @key is gonna go through hash function anyway.  Do we still need the
-> above (key >> 16) ^ key?  It's not gonna help anything.
-> 
+On Mon, 7 Jan 2013, Kamezawa Hiroyuki wrote:
+> (2013/01/07 5:02), Hugh Dickins wrote:
+> > 
+> > Forgive me, I must confess I'm no more than skimming this thread,
+> > and don't like dumping unsigned-off patches on people; but thought
+> > that on balance it might be more helpful than not if I offer you a
+> > patch I worked on around 3.6-rc2 (but have updated to 3.8-rc2 below).
+> > 
+> > I too was getting depressed by the constraints imposed by
+> > mem_cgroup_{begin,end}_update_page_stat (good job though Kamezawa-san
+> > did to minimize them), and wanted to replace by something freer, more
+> > RCU-like.  In the end it seemed more effort than it was worth to go
+> > as far as I wanted, but I do think that this is some improvement over
+> > what we currently have, and should deal with your recursion issue.
+> > 
+> In what case does this improve performance ?
 
-Nothing's changed after this patch, so the key will still be passed to
-hash_long().
+Perhaps none.  I was aiming to not degrade performance at the stats
+update end, and make it more flexible, so new stats can be updated which
+would be problematic today (for lock ordering and recursion reasons).
 
-I tested this hash function long ago, and the original version was
-without (key >> 16) ^ key, and it produced worse hash collision.
+I've not done any performance measurement on it, and don't have enough
+cpus for an interesting report; but if someone thinks it might solve a
+problem for them, and has plenty of cpus to test with, please go ahead,
+we'd be glad to hear the results.
 
->> -	index = hash_long(tmp, CSS_SET_HASH_BITS);
->> -
->> -	return &css_set_table[index];
->> +	return key;
->>  }
->>  
->>  /* We don't maintain the lists running through each css_set to its
->> @@ -4503,23 +4498,17 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
->>  	 * this is all done under the css_set_lock.
->>  	 */
->>  	write_lock(&css_set_lock);
->> -	for (i = 0; i < CSS_SET_TABLE_SIZE; i++) {
->> -		struct css_set *cg;
->> -		struct hlist_node *node, *tmp;
->> -		struct hlist_head *bucket = &css_set_table[i], *new_bucket;
->> -
->> -		hlist_for_each_entry_safe(cg, node, tmp, bucket, hlist) {
->> -			/* skip entries that we already rehashed */
->> -			if (cg->subsys[ss->subsys_id])
->> -				continue;
->> -			/* remove existing entry */
->> -			hlist_del(&cg->hlist);
->> -			/* set new value */
->> -			cg->subsys[ss->subsys_id] = css;
->> -			/* recompute hash and restore entry */
->> -			new_bucket = css_set_hash(cg->subsys);
->> -			hlist_add_head(&cg->hlist, new_bucket);
->> -		}
->> +	hash_for_each_safe(css_set_table, i, node, tmp, cg, hlist) {
->> +		/* skip entries that we already rehashed */
->> +		if (cg->subsys[ss->subsys_id])
->> +			continue;
->> +		/* remove existing entry */
->> +		hlist_del(&cg->hlist);
-> 
-> 		hash_del()?
-> 
+> Hi, this patch seems interesting but...doesn't this make move_account() very
+> slow if the number of cpus increases because of scanning all cpus per a page
+> ?
+> And this looks like reader-can-block-writer percpu rwlock..it's too heavy to
+> writers if there are many readers.
 
-will fix.
+I was happy to make the relatively rare move_account end considerably
+heavier.  I'll be disappointed if it turns out to be prohibitively
+heavy at that end - if we're going to make move_account impossible,
+there are much easier ways to achieve that! - but it is a possibility.
+
+Something you might have missed when considering many readers (stats
+updaters): the move_account end does not wait for a moment when there
+are no readers, that would indeed be a losing strategy; it just waits
+for each cpu that's updating page stats to leave that section, so every
+cpu is sure to notice and hold off if it then tries to update the page
+which is to be moved.  (I may not be explaining that very well!)
+
+Hugh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
