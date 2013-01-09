@@ -1,151 +1,416 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v5 09/11] record per-cgroup number of context switches
-Date: Wed,  9 Jan 2013 15:45:36 +0400
-Message-ID: <1357731938-8417-10-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v5 03/11] cgroup, sched: let cpu serve the same files as cpuacct
+Date: Wed,  9 Jan 2013 15:45:30 +0400
+Message-ID: <1357731938-8417-4-git-send-email-glommer@parallels.com>
 References: <1357731938-8417-1-git-send-email-glommer@parallels.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1357731938-8417-1-git-send-email-glommer@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1357731938-8417-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Glauber Costa <glommer@parallels.com>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
 
-Context switches are, to this moment, a property of the runqueue. When
-running containers, we would like to be able to present a separate
-figure for each container (or cgroup, in this context).
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-The chosen way to accomplish this is to increment a per cfs_rq or
-rt_rq, depending on the task, for each of the sched entities involved,
-up to the parent. It is trivial to note that for the parent cgroup, we
-always add 1 by doing this. Also, we are not introducing any hierarchy
-walks in here. An already existent walk is reused.
-There are, however, two main issues:
+cpuacct being on a separate hierarchy is one of the main cgroup
+related complaints from scheduler side and the consensus seems to be
 
- 1. the traditional context switch code only increment nr_switches when
- a different task is being inserted in the rq. Eventually, albeit not
- likely, we will pick the same task as before. Since for cfq and rt we
- only now which task will be next after the walk, we need to do the walk
- again, decrementing 1. Since this is by far not likely, it seems a fair
- price to pay.
+* Allowing cpuacct to be a separate controller was a mistake.  In
+  general multiple controllers on the same type of resource should be
+  avoided, especially accounting-only ones.
 
- 2. Those figures do not include switches from and to the idle or stop
- task. Those need to be recorded separately, which will happen in a
- follow up patch.
+* Statistics provided by cpuacct are useful and should instead be
+  served by cpu.
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Peter Zijlstra <a.p.zijlstra@chello.nl>
-CC: Paul Turner <pjt@google.com>
+This patch makes cpu maintain and serve all cpuacct.* files and make
+cgroup core ignore cpuacct if it's co-mounted with cpu.  This is a
+step in deprecating cpuacct.  The next patch will allow disabling or
+dropping cpuacct without affecting userland too much.
+
+Note that this creates some discrepancies in /proc/cgroups and
+/proc/PID/cgroup.  The co-mounted cpuacct won't be reflected correctly
+there.  cpuacct will eventually be removed completely probably except
+for the statistics filenames and I'd like to keep the amount of
+compatbility hackery to minimum as much as possible.
+
+The cpu statistics implementation isn't optimized in any way.  It's
+mostly verbatim copy from cpuacct.  The goal is allowing quick
+disabling and removal of CONFIG_CGROUP_CPUACCT and creating a base on
+top of which cpu can implement proper optimization.
+
+[ glommer: don't call *_charge in stop_task.c ]
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Cc: Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
+Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/sched/fair.c  | 18 ++++++++++++++++++
- kernel/sched/rt.c    | 15 +++++++++++++--
- kernel/sched/sched.h |  3 +++
- 3 files changed, 34 insertions(+), 2 deletions(-)
+ kernel/cgroup.c        |  13 ++++
+ kernel/sched/core.c    | 173 +++++++++++++++++++++++++++++++++++++++++++++++++
+ kernel/sched/cputime.c |  18 ++++-
+ kernel/sched/fair.c    |   1 +
+ kernel/sched/rt.c      |   1 +
+ kernel/sched/sched.h   |   7 ++
+ 6 files changed, 212 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index d59a106..0dd9c50 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -3609,6 +3609,8 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
- 		prev->sched_class->put_prev_task(rq, prev);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2f98398..0750669d 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1248,6 +1248,19 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	/* Consistency checks */
  
- 	do {
-+		if (likely(prev))
-+			cfs_rq->nr_switches++;
- 		se = pick_next_entity(cfs_rq);
- 		set_next_entity(cfs_rq, se);
- 		cfs_rq = group_cfs_rq(se);
-@@ -3618,6 +3620,22 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
- 	if (hrtick_enabled(rq))
- 		hrtick_start_fair(rq, p);
- 
-+	/*
-+	 * This condition is extremely unlikely, and most of the time will just
-+	 * consist of this unlikely branch, which is extremely cheap. But we
-+	 * still need to have it, because when we first loop through cfs_rq's,
-+	 * we can't possibly know which task we will pick. The call to
-+	 * set_next_entity above is not meant to mess up the tree in this case,
-+	 * so this should give us the same chain, in the same order.
+ 	/*
++	 * cpuacct is deprecated and cpu will serve the same stat files.
++	 * If co-mount with cpu is requested, ignore cpuacct.  Note that
++	 * this creates some discrepancies in /proc/cgroups and
++	 * /proc/PID/cgroup.
++	 *
++	 * https://lkml.org/lkml/2012/9/13/542
 +	 */
-+	if (unlikely(p == prev)) {
-+		se = &p->se;
-+		for_each_sched_entity(se) {
-+			cfs_rq = cfs_rq_of(se);
-+			cfs_rq->nr_switches--;
-+		}
-+	}
-+
- 	return p;
- }
- 
-diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 80c58fe..19ceed9 100644
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -1364,13 +1364,16 @@ static struct sched_rt_entity *pick_next_rt_entity(struct rq *rq,
- 	return next;
- }
- 
--static struct task_struct *_pick_next_task_rt(struct rq *rq)
-+static struct task_struct *
-+_pick_next_task_rt(struct rq *rq, struct task_struct *prev)
- {
- 	struct sched_rt_entity *rt_se;
- 	struct task_struct *p;
- 	struct rt_rq *rt_rq  = &rq->rt;
- 
- 	do {
-+		if (likely(prev))
-+			rt_rq->rt_nr_switches++;
- 		rt_se = pick_next_rt_entity(rq, rt_rq);
- 		BUG_ON(!rt_se);
- 		rt_rq = group_rt_rq(rt_se);
-@@ -1379,6 +1382,14 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
- 	p = rt_task_of(rt_se);
- 	p->se.exec_start = rq->clock_task;
- 
-+	/* See fair.c for an explanation on this */
-+	if (unlikely(p == prev)) {
-+		for_each_sched_rt_entity(rt_se) {
-+			rt_rq = rt_rq_of_se(rt_se);
-+			rt_rq->rt_nr_switches--;
-+		}
-+	}
-+
- 	return p;
- }
- 
-@@ -1397,7 +1408,7 @@ pick_next_task_rt(struct rq *rq, struct task_struct *prev)
- 	if (prev)
- 		prev->sched_class->put_prev_task(rq, prev);
- 
--	p = _pick_next_task_rt(rq);
-+	p = _pick_next_task_rt(rq, prev);
- 
- 	/* The running task is never eligible for pushing */
- 	if (p)
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 640aa14..a426abc 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -229,6 +229,7 @@ struct cfs_rq {
- 	unsigned int nr_spread_over;
++#if IS_ENABLED(CONFIG_CGROUP_SCHED) && IS_ENABLED(CONFIG_CGROUP_CPUACCT)
++	if ((opts->subsys_bits & (1 << cpu_cgroup_subsys_id)) &&
++	    (opts->subsys_bits & (1 << cpuacct_subsys_id)))
++		opts->subsys_bits &= ~(1 << cpuacct_subsys_id);
++#endif
++	/*
+ 	 * Option noprefix was introduced just for backward compatibility
+ 	 * with the old cpuset, so we allow noprefix only if mounting just
+ 	 * the cpuset subsystem.
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 257002c..6516694 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6811,6 +6811,7 @@ int in_sched_functions(unsigned long addr)
+ #ifdef CONFIG_CGROUP_SCHED
+ struct task_group root_task_group;
+ LIST_HEAD(task_groups);
++static DEFINE_PER_CPU(u64, root_tg_cpuusage);
  #endif
  
-+	u64 nr_switches;
- #ifdef CONFIG_SMP
- /*
-  * Load-tracking only depends on SMP, FAIR_GROUP_SCHED dependency below may be
-@@ -298,6 +299,8 @@ static inline int rt_bandwidth_enabled(void)
- struct rt_rq {
- 	struct rt_prio_array active;
- 	unsigned int rt_nr_running;
-+	u64 rt_nr_switches;
+ DECLARE_PER_CPU(cpumask_var_t, load_balance_tmpmask);
+@@ -6869,6 +6870,8 @@ void __init sched_init(void)
+ #endif /* CONFIG_RT_GROUP_SCHED */
+ 
+ #ifdef CONFIG_CGROUP_SCHED
++	root_task_group.cpustat = &kernel_cpustat;
++	root_task_group.cpuusage = &root_tg_cpuusage;
+ 	list_add(&root_task_group.list, &task_groups);
+ 	INIT_LIST_HEAD(&root_task_group.children);
+ 	INIT_LIST_HEAD(&root_task_group.siblings);
+@@ -7152,6 +7155,8 @@ static void free_sched_group(struct task_group *tg)
+ 	free_fair_sched_group(tg);
+ 	free_rt_sched_group(tg);
+ 	autogroup_free(tg);
++	free_percpu(tg->cpuusage);
++	free_percpu(tg->cpustat);
+ 	kfree(tg);
+ }
+ 
+@@ -7165,6 +7170,11 @@ struct task_group *sched_create_group(struct task_group *parent)
+ 	if (!tg)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	tg->cpuusage = alloc_percpu(u64);
++	tg->cpustat = alloc_percpu(struct kernel_cpustat);
++	if (!tg->cpuusage || !tg->cpustat)
++		goto err;
 +
- #if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED
- 	struct {
- 		int curr; /* highest queued rt task prio */
+ 	if (!alloc_fair_sched_group(tg, parent))
+ 		goto err;
+ 
+@@ -7256,6 +7266,24 @@ void sched_move_task(struct task_struct *tsk)
+ 
+ 	task_rq_unlock(rq, tsk, &flags);
+ }
++
++void task_group_charge(struct task_struct *tsk, u64 cputime)
++{
++	struct task_group *tg;
++	int cpu = task_cpu(tsk);
++
++	rcu_read_lock();
++
++	tg = container_of(task_subsys_state(tsk, cpu_cgroup_subsys_id),
++			  struct task_group, css);
++
++	for (; tg; tg = tg->parent) {
++		u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++		*cpuusage += cputime;
++	}
++
++	rcu_read_unlock();
++}
+ #endif /* CONFIG_CGROUP_SCHED */
+ 
+ #if defined(CONFIG_RT_GROUP_SCHED) || defined(CONFIG_CFS_BANDWIDTH)
+@@ -7612,6 +7640,134 @@ cpu_cgroup_exit(struct cgroup *cgrp, struct cgroup *old_cgrp,
+ 	sched_move_task(task);
+ }
+ 
++static u64 task_group_cpuusage_read(struct task_group *tg, int cpu)
++{
++	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++	u64 data;
++
++#ifndef CONFIG_64BIT
++	/*
++	 * Take rq->lock to make 64-bit read safe on 32-bit platforms.
++	 */
++	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
++	data = *cpuusage;
++	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
++#else
++	data = *cpuusage;
++#endif
++
++	return data;
++}
++
++static void task_group_cpuusage_write(struct task_group *tg, int cpu, u64 val)
++{
++	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++
++#ifndef CONFIG_64BIT
++	/*
++	 * Take rq->lock to make 64-bit write safe on 32-bit platforms.
++	 */
++	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
++	*cpuusage = val;
++	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
++#else
++	*cpuusage = val;
++#endif
++}
++
++/* return total cpu usage (in nanoseconds) of a group */
++static u64 cpucg_cpuusage_read(struct cgroup *cgrp, struct cftype *cft)
++{
++	struct task_group *tg;
++	u64 totalcpuusage = 0;
++	int i;
++
++	tg = container_of(cgroup_subsys_state(cgrp, cpu_cgroup_subsys_id),
++			  struct task_group, css);
++
++	for_each_present_cpu(i)
++		totalcpuusage += task_group_cpuusage_read(tg, i);
++
++	return totalcpuusage;
++}
++
++static int cpucg_cpuusage_write(struct cgroup *cgrp, struct cftype *cftype,
++				u64 reset)
++{
++	struct task_group *tg;
++	int err = 0;
++	int i;
++
++	tg = container_of(cgroup_subsys_state(cgrp, cpu_cgroup_subsys_id),
++			  struct task_group, css);
++
++	if (reset) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	for_each_present_cpu(i)
++		task_group_cpuusage_write(tg, i, 0);
++
++out:
++	return err;
++}
++
++static int cpucg_percpu_seq_read(struct cgroup *cgrp, struct cftype *cft,
++				 struct seq_file *m)
++{
++	struct task_group *tg;
++	u64 percpu;
++	int i;
++
++	tg = container_of(cgroup_subsys_state(cgrp, cpu_cgroup_subsys_id),
++			  struct task_group, css);
++
++	for_each_present_cpu(i) {
++		percpu = task_group_cpuusage_read(tg, i);
++		seq_printf(m, "%llu ", (unsigned long long) percpu);
++	}
++	seq_printf(m, "\n");
++	return 0;
++}
++
++static const char *cpucg_stat_desc[] = {
++	[CPUACCT_STAT_USER] = "user",
++	[CPUACCT_STAT_SYSTEM] = "system",
++};
++
++static int cpucg_stats_show(struct cgroup *cgrp, struct cftype *cft,
++			    struct cgroup_map_cb *cb)
++{
++	struct task_group *tg;
++	int cpu;
++	s64 val = 0;
++
++	tg = container_of(cgroup_subsys_state(cgrp, cpu_cgroup_subsys_id),
++			  struct task_group, css);
++
++	for_each_online_cpu(cpu) {
++		struct kernel_cpustat *kcpustat = per_cpu_ptr(tg->cpustat, cpu);
++		val += kcpustat->cpustat[CPUTIME_USER];
++		val += kcpustat->cpustat[CPUTIME_NICE];
++	}
++	val = cputime64_to_clock_t(val);
++	cb->fill(cb, cpucg_stat_desc[CPUACCT_STAT_USER], val);
++
++	val = 0;
++	for_each_online_cpu(cpu) {
++		struct kernel_cpustat *kcpustat = per_cpu_ptr(tg->cpustat, cpu);
++		val += kcpustat->cpustat[CPUTIME_SYSTEM];
++		val += kcpustat->cpustat[CPUTIME_IRQ];
++		val += kcpustat->cpustat[CPUTIME_SOFTIRQ];
++	}
++
++	val = cputime64_to_clock_t(val);
++	cb->fill(cb, cpucg_stat_desc[CPUACCT_STAT_SYSTEM], val);
++
++	return 0;
++}
++
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ static int cpu_shares_write_u64(struct cgroup *cgrp, struct cftype *cftype,
+ 				u64 shareval)
+@@ -7918,6 +8074,23 @@ static struct cftype cpu_files[] = {
+ 		.write_u64 = cpu_rt_period_write_uint,
+ 	},
+ #endif
++	/* cpuacct.* which used to be served by a separate cpuacct controller */
++	{
++		.name = "cpuacct.usage",
++		.flags = CFTYPE_NO_PREFIX,
++		.read_u64 = cpucg_cpuusage_read,
++		.write_u64 = cpucg_cpuusage_write,
++	},
++	{
++		.name = "cpuacct.usage_percpu",
++		.flags = CFTYPE_NO_PREFIX,
++		.read_seq_string = cpucg_percpu_seq_read,
++	},
++	{
++		.name = "cpuacct.stat",
++		.flags = CFTYPE_NO_PREFIX,
++		.read_map = cpucg_stats_show,
++	},
+ 	{ }	/* terminate */
+ };
+ 
+diff --git a/kernel/sched/cputime.c b/kernel/sched/cputime.c
+index 293b202..a4fe53e 100644
+--- a/kernel/sched/cputime.c
++++ b/kernel/sched/cputime.c
+@@ -114,8 +114,10 @@ static int irqtime_account_si_update(void)
+ static inline void task_group_account_field(struct task_struct *p, int index,
+ 					    u64 tmp)
+ {
++#ifdef CONFIG_CGROUP_SCHED
++	struct task_group *tg;
++#endif
+ #ifdef CONFIG_CGROUP_CPUACCT
+-	struct kernel_cpustat *kcpustat;
+ 	struct cpuacct *ca;
+ #endif
+ 	/*
+@@ -125,7 +127,19 @@ static inline void task_group_account_field(struct task_struct *p, int index,
+ 	 *
+ 	 */
+ 	__get_cpu_var(kernel_cpustat).cpustat[index] += tmp;
++#ifdef CONFIG_CGROUP_SCHED
++	rcu_read_lock();
++	tg = container_of(task_subsys_state(p, cpu_cgroup_subsys_id),
++			  struct task_group, css);
+ 
++	while (tg && (tg != &root_task_group)) {
++		struct kernel_cpustat *kcpustat = this_cpu_ptr(tg->cpustat);
++
++		kcpustat->cpustat[index] += tmp;
++		tg = tg->parent;
++	}
++	rcu_read_unlock();
++#endif
+ #ifdef CONFIG_CGROUP_CPUACCT
+ 	if (unlikely(!cpuacct_subsys.active))
+ 		return;
+@@ -133,6 +147,8 @@ static inline void task_group_account_field(struct task_struct *p, int index,
+ 	rcu_read_lock();
+ 	ca = task_ca(p);
+ 	while (ca && (ca != &root_cpuacct)) {
++		struct kernel_cpustat *kcpustat = this_cpu_ptr(ca->cpustat);
++
+ 		kcpustat = this_cpu_ptr(ca->cpustat);
+ 		kcpustat->cpustat[index] += tmp;
+ 		ca = parent_ca(ca);
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 5eea870..c15bc92 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -707,6 +707,7 @@ static void update_curr(struct cfs_rq *cfs_rq)
+ 		struct task_struct *curtask = task_of(curr);
+ 
+ 		trace_sched_stat_runtime(curtask, delta_exec, curr->vruntime);
++		task_group_charge(curtask, delta_exec);
+ 		cpuacct_charge(curtask, delta_exec);
+ 		account_group_exec_runtime(curtask, delta_exec);
+ 	}
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 418feb0..f7e05d87 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -935,6 +935,7 @@ static void update_curr_rt(struct rq *rq)
+ 	account_group_exec_runtime(curr, delta_exec);
+ 
+ 	curr->se.exec_start = rq->clock_task;
++	task_group_charge(curr, delta_exec);
+ 	cpuacct_charge(curr, delta_exec);
+ 
+ 	sched_rt_avg_update(rq, delta_exec);
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index fc88644..84a339d 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -104,6 +104,10 @@ struct cfs_bandwidth {
+ struct task_group {
+ 	struct cgroup_subsys_state css;
+ 
++	/* statistics */
++	u64 __percpu *cpuusage;
++	struct kernel_cpustat __percpu *cpustat;
++
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	/* schedulable entities of this group on each cpu */
+ 	struct sched_entity **se;
+@@ -590,6 +594,8 @@ static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
+ #endif
+ }
+ 
++extern void task_group_charge(struct task_struct *tsk, u64 cputime);
++
+ #else /* CONFIG_CGROUP_SCHED */
+ 
+ static inline void set_task_rq(struct task_struct *p, unsigned int cpu) { }
+@@ -597,6 +603,7 @@ static inline struct task_group *task_group(struct task_struct *p)
+ {
+ 	return NULL;
+ }
++static inline void task_group_charge(struct task_struct *tsk, u64 cputime) { }
+ 
+ #endif /* CONFIG_CGROUP_SCHED */
+ 
 -- 
 1.7.11.7
