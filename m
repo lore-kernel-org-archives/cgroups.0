@@ -1,68 +1,51 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3.4 2/2] cgroup: Fix use after free of cgrp (cgrp->css_sets) (v2)
-Date: Wed,  9 Jan 2013 16:03:42 +0100
-Message-ID: <1357743822-21707-3-git-send-email-hdegoede@redhat.com>
-References: <1357743822-21707-1-git-send-email-hdegoede@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3.4 0/2] 2 bug fixes for the 3.4 cgroup code
+Date: Wed, 9 Jan 2013 07:39:50 -0800
+Message-ID: <20130109153950.GI3926@htj.dyndns.org>
+References: <1357733486-1742-1-git-send-email-hdegoede@redhat.com>
+ <20130109143850.GG3926@htj.dyndns.org>
+ <50ED8347.7000806@redhat.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1357743822-21707-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=QUI4HsCNxlGU6y2hj5Hgy6W166D/8NTGmNvJ9AjSDik=;
+        b=dxrUVBeUUIA+Zupi4t9cNscPBnFHlFU6SHTiTROtZGBoOdBY5YuvUSv+MzjtAL84WC
+         wtPeJ/J7Hl8TVehpKpRaBPFntGr+/pFmy2ctIEroHzimEEcB5mTdWW8Z2oepyBz5bpjS
+         BNrL4lxGvw4ufpN4uzDHfOtn4D7AxLkXaAFj7i7edMJTHewpoR3sMDVmN/opU2kYAP1L
+         GwJk3qG/3Etg6zye/Rv/xI6V+Dwam88XFZGCFh3xRtuWUdJvynAbeWACljukU1SpnsM2
+         uShW2gUjb3O4VjMBNK4gp6AZDGIfZe3eCQttMK1tfUB42HvOveHMXj0GP667mPHmA/Ur
+         mwcQ==
+Content-Disposition: inline
+In-Reply-To: <50ED8347.7000806-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Running a 3.4 kernel + Fedora-18 (systemd) userland on my Allwinner A10
-(arm cortex a8), I'm seeing repeated, reproducable list_del list corruption
-errors when build with CONFIG_DEBUG_LIST, and the backtrace always shows
-free_css_set_work as the function making the problematic list_del call.
+Hello,
 
-I've tracked this doen to a use after free of the cgrp struct, specifically
-of the cgrp->css_sets list_head, which gets cleared by free_css_set_work.
+On Wed, Jan 09, 2013 at 03:48:39PM +0100, Hans de Goede wrote:
+> I know that that is the generic rule, but I was hoping Greg KH would be
+> willing to make an exception. At least I can try :)
+> 
+> I've solved the panic btw, I'll send a v2 of the set right after this
+> mail, including an explanation what was wrong with v1.
+> 
+> I was hoping that I could get a review from you on v2 including an
+> Acked-by (assuming the review does not find any issues) before I very kindly
+> ask Greg KH to make an exception for this.
 
-Since free_css_set_work runs form a workqueue, it is possible for it to not be
-done with clearing the list when the cgrp gets free-ed. To avoid this the code
-adding the links increases cgrp->count, and the freeing code running from the
-workqueue decreases cgrp->count *after* doing list_del, and then if the count
-goes to 0 calls cgroup_wakeup_rmdir_waiter().
+Unfortunately, I'm fairly sure Greg won't take these.  It's simply not
+how -stable process works, at least until now.  I'll try to review
+them later.
 
-However cgroup_rmdir() is missing a check for cgrp->count != 0, causing it
-to still continue with the rmdir (which leads to the free-ing of the cgrp),
-before free_css_set_work is done. Sometimes the free-ed memory is re-used
-before free_css_set_work gets around to unlinking link->cgrp_link_list,
-triggering the list_del list corruption messages.
+Thanks.
 
-This patch fixes this by properly checking for cgrp->count != 0 and waiting
-for the cgroup_rmdir_waitq in that case.
-
-Changes in v2:
--The cgrp->count check must be done before the cgroup_clear_css_refs()
- call/check, since on success cgroup_clear_css_refs has decremented all
- the css refs, and that *must* be done only once
-
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 59e711a..9b0e1b4 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4022,7 +4022,12 @@ again:
- 		return -EBUSY;
- 	}
- 	prepare_to_wait(&cgroup_rmdir_waitq, &wait, TASK_INTERRUPTIBLE);
--	if (!cgroup_clear_css_refs(cgrp)) {
-+	/*
-+	 * Note the cgrp->count check *must* be done before the
-+	 * cgroup_clear_css_refs() call, because on success that call has
-+	 * decremented all the css refs, and that *must* be done only once!
-+	 */
-+	if (atomic_read(&cgrp->count) != 0 || !cgroup_clear_css_refs(cgrp)) {
- 		mutex_unlock(&cgroup_mutex);
- 		/*
- 		 * Because someone may call cgroup_wakeup_rmdir_waiter() before
 -- 
-1.8.0.2
+tejun
