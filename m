@@ -1,42 +1,33 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3.4 0/2] 2 bug fixes for the 3.4 cgroup code
-Date: Wed, 09 Jan 2013 15:48:39 +0100
-Message-ID: <50ED8347.7000806@redhat.com>
-References: <1357733486-1742-1-git-send-email-hdegoede@redhat.com> <20130109143850.GG3926@htj.dyndns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH V3 4/8] memcg: add per cgroup dirty pages accounting
+Date: Wed, 9 Jan 2013 15:47:58 +0100
+Message-ID: <20130109144758.GC5095@dhcp22.suse.cz>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
+ <1356456367-14660-1-git-send-email-handai.szj@taobao.com>
+ <20130102104421.GC22160@dhcp22.suse.cz>
+ <CAFj3OHXKyMO3gwghiBAmbowvqko-JqLtKroX2kzin1rk=q9tZg@mail.gmail.com>
+ <alpine.LNX.2.00.1301061135400.29149@eggly.anvils>
+ <CAFj3OHVUx0bZyEGQU_CApVbgz7SrX3BQ+0U5fRV=En800wv+cQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130109143850.GG3926-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAFj3OHVUx0bZyEGQU_CApVbgz7SrX3BQ+0U5fRV=En800wv+cQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Hi,
+On Wed 09-01-13 22:35:12, Sha Zhengju wrote:
+[...]
+> To my knowledge, each task is forked in root memcg, and there's a
+> moving while attaching it to a cgroup. So move_account is also a
+> frequent behavior to some extent.
 
-On 01/09/2013 03:38 PM, Tejun Heo wrote:
-> Hello, Hans.
->
-> On Wed, Jan 09, 2013 at 01:11:24PM +0100, Hans de Goede wrote:
->> Allthough I know everyone dislikes looking back at old code once it has
->> been rewritten in a better fashion, I hope you are still willing to make
->> some time to review these 2 simple patches, as a first step in getting
->> them into 3.4.xx.
->
-> Well, the problem is that -stable doesn't take any patch which isn't
-> already upstream,
-
-I know that that is the generic rule, but I was hoping Greg KH would be
-willing to make an exception. At least I can try :)
-
-I've solved the panic btw, I'll send a v2 of the set right after this
-mail, including an explanation what was wrong with v1.
-
-I was hoping that I could get a review from you on v2 including an
-Acked-by (assuming the review does not find any issues) before I very kindly
-ask Greg KH to make an exception for this.
-
-Thanks & Regards,
-
-Hans
+Not really. Every fork/exec is copies the current group (see
+cgroup_fork) so there is no moving on that path.
+[...]
+-- 
+Michal Hocko
+SUSE Labs
