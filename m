@@ -1,54 +1,58 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3.4 1/2] cgroup: Take css_set_lock when calling cgroup_css_sets_empty()
-Date: Wed, 09 Jan 2013 13:37:38 +0100
-Message-ID: <50ED6492.5070400@redhat.com>
-References: <1357733486-1742-1-git-send-email-hdegoede@redhat.com> <1357733486-1742-2-git-send-email-hdegoede@redhat.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH V3 6/8] memcg: Don't account root_mem_cgroup page
+ statistics
+Date: Wed, 9 Jan 2013 13:57:58 +0100
+Message-ID: <20130109125758.GA5095@dhcp22.suse.cz>
+References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
+ <1356456447-14740-1-git-send-email-handai.szj@taobao.com>
+ <20130102122712.GE22160@dhcp22.suse.cz>
+ <CAFj3OHWBtu9-7SdVJnMnUytjL9i3i2xEfoB=y_zA_5HXir9o0g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1357733486-1742-2-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <CAFj3OHWBtu9-7SdVJnMnUytjL9i3i2xEfoB=y_zA_5HXir9o0g@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, fengguang.wu@intel.com, glommer@parallels.com, Sha Zhengju <handai.szj@taobao.com>
 
-Hi,
+On Sat 05-01-13 18:52:12, Sha Zhengju wrote:
+> On Wed, Jan 2, 2013 at 8:27 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> > On Wed 26-12-12 01:27:27, Sha Zhengju wrote:
+[...]
+> >> @@ -5396,18 +5406,70 @@ static inline void mem_cgroup_lru_names_not_uptodate(void)
+> >>       BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+> >>  }
+> >>
+> >> +long long root_memcg_local_stat(unsigned int i, long long val,
+> >> +                                     long long nstat[])
+> >
+> > Function should be static
+> > also
+> > nstat parameter is ugly because this can be done by the caller
+> > and also expecting that the caller already calculated val is not
+> > nice (and undocumented). This approach is really hackish and error
+> > prone. Why should we define a specific function rather than hooking into
+> > mem_cgroup_read_stat and doing all the stuff there? I think that would
+> > be much more maintainable.
+> >
+> 
+> IMHO, hooking into mem_cgroup_read_stat may be also improper because
+> of the for_each_mem_cgroup traversal. I prefer to make mem_cgroup_read_stat
+> as the base func unit. But I'll repeal the function base on your opinion in next
+> version.  Thanks for the advice!
 
-Self-nack, looks like I posted this series too soon. With a config which actually
-has CGROUP controllers enabled this causes a panic, so looks like I need to do some
-more work on this.
+Maybe my "do all the stuff there" was confusing. I didn't mean to
+iterate through the hierarchy there. I just wanted to have
+mem_cgroup_root is a special case and it uses global counters there.
+-- 
+Michal Hocko
+SUSE Labs
 
-Feedback on this issue is still appreciated.
-
-Regards,
-
-Hans
-
-
-On 01/09/2013 01:11 PM, Hans de Goede wrote:
-> As indicated in the comment above cgroup_css_sets_empty the
-> css_set_lock must be hold when calling it.
->
-> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->   kernel/cgroup.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index c908354..59e711a 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -3980,7 +3980,10 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
->   	/* the vfs holds both inode->i_mutex already */
->   again:
->   	mutex_lock(&cgroup_mutex);
-> -	if (!cgroup_css_sets_empty(cgrp)) {
-> +	read_lock(&css_set_lock);
-> +	ret = cgroup_css_sets_empty(cgrp);
-> +	read_unlock(&css_set_lock);
-> +	if (!ret) {
->   		mutex_unlock(&cgroup_mutex);
->   		return -EBUSY;
->   	}
->
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
