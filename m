@@ -1,60 +1,52 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v5 11/11] sched: introduce cgroup file stat_percpu
-Date: Thu, 10 Jan 2013 01:27:07 +0400
-Message-ID: <50EDE0AB.1030509@parallels.com>
-References: <1357731938-8417-1-git-send-email-glommer@parallels.com> <1357731938-8417-12-git-send-email-glommer@parallels.com> <20130109124220.ad9f1a54.akpm@linux-foundation.org> <50EDDCAA.6070004@parallels.com> <20130109131705.4156ba5c.akpm@linux-foundation.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] Add mempressure cgroup
+Date: Wed, 9 Jan 2013 14:04:06 -0800
+Message-ID: <20130109220406.GE20454@htj.dyndns.org>
+References: <20130104082751.GA22227@lizard.gateway.2wire.net>
+ <1357288152-23625-1-git-send-email-anton.vorontsov@linaro.org>
+ <20130109203731.GA20454@htj.dyndns.org>
+ <50EDDF1E.6010705@parallels.com>
+ <20130109213604.GA9475@lizard.fhda.edu>
+ <20130109215514.GD20454@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130109131705.4156ba5c.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=tAbsA1Ee9yqUF5KhySRuEigTWXZyQdXF7O3MkNcL91g=;
+        b=UiUEnJNpEGekoUii6JsXKpEpCGg4bdztKuXlnmoQsTZ0N2xzBZRmqurSoj98Z954Ti
+         Fbb68bZesKo9N3WvYsvDa+IDdtGSyjMbysw0L2qEkCh4Dy43UwW/PItc00eSjOFcZiGL
+         3x4G5+NtDmLehT/ld2q1Gwdd+FV7XAID0eX+nviGWdCJ9BM0sOx5wGlQ48ls1JNFUEZu
+         qIgQSx99tA53JRMuN0SnrgRdubYVy9ty5OYh/Ox0ceHzpXsSVofllLjMHTlnbaT0kZaY
+         BxOZTPR0B9eohvutUgEj6qTFI1tnYSCfVQ5VmJB1SqutglL7IsFD0lvXwvLUelkt1mGI
+         6ohA==
+Content-Disposition: inline
+In-Reply-To: <20130109215514.GD20454@htj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>
+Content-Transfer-Encoding: 7bit
+To: Anton Vorontsov <anton.vorontsov@linaro.org>
+Cc: Glauber Costa <glommer@parallels.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Luiz Capitulino <lcapitulino@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Minchan Kim <minchan@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-On 01/10/2013 01:17 AM, Andrew Morton wrote:
-> On Thu, 10 Jan 2013 01:10:02 +0400
-> Glauber Costa <glommer@parallels.com> wrote:
-> 
->> The main advantage I see in this approach, is that there is way less
->> data to be written using a header. Although your way works, it means we
->> will write the strings "nice", "system", etc. #cpu times. Quite a waste.
-> 
-> Yes, overhead can be a significant issue with this type of interface. 
-> But we already incurred a massive overhead by using a human-readable
-> ascii interface.  If performance is an issue, perhaps the whole thing
-> should be grafted onto taskstats instead.  Or create a new
-> taskstats-like thing.
+On Wed, Jan 09, 2013 at 01:55:14PM -0800, Tejun Heo wrote:
+> Please talk with memcg people and fold it into memcg.  It can (and
+> should) be done in a way to not incur overhead when only root memcg is
+> in use and how this is done defines userland-visible interface, so
+> let's please not repeat past mistakes.
 
-I think this would be a little alienish in the already alien world of
-cgroups.
+CC'ing KAMEZAWA, Johannes, Li and cgroup mailing list.  Please keep
+them cc'd for further discussion.
 
-However, I was not so much talking about plain performance overhead as
-measurable in miliseconds-to-parse, but rather just alluding to the fact
-that we would be writing the same set of strings multiple times when a
-header would do just fine.
+Thanks.
 
-This is the same method used for instance by slabinfo.
+-- 
+tejun
 
-> 
-> btw, a more typical interface would be
-> 
-> cat /.../cpu0
-> nice:nn
-> system:nn
-> irq:nn
-> 
-
-Well, yes. But welcome to cgroups: directories have a meaning, so the
-only way to organize stuff is with plain files in the current hierarchy
-is by filling it with files. As many files as we have cpus.
-
-At this point you are certain to miss all the other files present in the
-directory.
-
-
-> - the traditional one-per-line name:value tuples.  But I'd assumed that
-> having a file per CPU would be aawkward.
-> 
-Indeed.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
