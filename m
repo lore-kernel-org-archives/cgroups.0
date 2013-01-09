@@ -1,51 +1,86 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3.4 0/2] 2 bug fixes for the 3.4 cgroup code
-Date: Wed, 9 Jan 2013 07:39:50 -0800
-Message-ID: <20130109153950.GI3926@htj.dyndns.org>
-References: <1357733486-1742-1-git-send-email-hdegoede@redhat.com>
- <20130109143850.GG3926@htj.dyndns.org>
- <50ED8347.7000806@redhat.com>
+Subject: [GIT PULL] cfq blkcg hierarchy support
+Date: Wed, 9 Jan 2013 08:10:34 -0800
+Message-ID: <20130109161034.GK3926@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=QUI4HsCNxlGU6y2hj5Hgy6W166D/8NTGmNvJ9AjSDik=;
-        b=dxrUVBeUUIA+Zupi4t9cNscPBnFHlFU6SHTiTROtZGBoOdBY5YuvUSv+MzjtAL84WC
-         wtPeJ/J7Hl8TVehpKpRaBPFntGr+/pFmy2ctIEroHzimEEcB5mTdWW8Z2oepyBz5bpjS
-         BNrL4lxGvw4ufpN4uzDHfOtn4D7AxLkXaAFj7i7edMJTHewpoR3sMDVmN/opU2kYAP1L
-         GwJk3qG/3Etg6zye/Rv/xI6V+Dwam88XFZGCFh3xRtuWUdJvynAbeWACljukU1SpnsM2
-         uShW2gUjb3O4VjMBNK4gp6AZDGIfZe3eCQttMK1tfUB42HvOveHMXj0GP667mPHmA/Ur
-         mwcQ==
-Content-Disposition: inline
-In-Reply-To: <50ED8347.7000806-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:mime-version
+	:content-type:content-disposition:user-agent;
+	bh=Csg2xdRIlLhAczYZTG54DYi4Twdt3ObokCd9Uw12dOo=;
+	b=HR0n6SausY1YHzaJV7AXypMLuNJ9/5020MRoqei363qt/PK9YNQiU0zQcFu9wFeg6G
+	ciKQ3oFH1AGBrK+rsKoW5YgvqJGvVkHHLDa7F31ZycHDFpQX1khFPtZ+uChEExAiuR/1
+	ylyzhpq0kKhnc9aqZiDjTMa25fk30sxSy9p9r6hOnEvwqU2NQf/N4qoIJNP7rgP73NF1
+	8yw7GySF5pZdT/ETcVUHMKBV2Xb31cGxj0eLuYVniWoP9ZNa5GLBe2qpn0DyodDiB/cS
+	eHgdCu6f7zK4MH0UqUlI2cCJpBG5ZTAYknTSuY3zSUYwP4ARYjiRu8LkBRVA7qRDeIbX
+	YUQw==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello,
+Hello, Jens.
 
-On Wed, Jan 09, 2013 at 03:48:39PM +0100, Hans de Goede wrote:
-> I know that that is the generic rule, but I was hoping Greg KH would be
-> willing to make an exception. At least I can try :)
-> 
-> I've solved the panic btw, I'll send a v2 of the set right after this
-> mail, including an explanation what was wrong with v1.
-> 
-> I was hoping that I could get a review from you on v2 including an
-> Acked-by (assuming the review does not find any issues) before I very kindly
-> ask Greg KH to make an exception for this.
+Please consider pulling from the following branch to receive cfq blkcg
+hierarchy support.  The branch is based on top of v3.8-rc2.
 
-Unfortunately, I'm fairly sure Greg won't take these.  It's simply not
-how -stable process works, at least until now.  I'll try to review
-them later.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git blkcg-cfq-hierarchy
+
+The patchset was reviewd in the following thread.
+
+  http://thread.gmane.org/gmane.linux.kernel.cgroups/5571
 
 Thanks.
+
+----------------------------------------------------------------
+Tejun Heo (19):
+      blkcg: fix minor bug in blkg_alloc()
+      blkcg: reorganize blkg_lookup_create() and friends
+      blkcg: cosmetic updates to blkg_create()
+      blkcg: make blkcg_gq's hierarchical
+      cfq-iosched: add leaf_weight
+      cfq-iosched: implement cfq_group->nr_active and ->children_weight
+      cfq-iosched: implement hierarchy-ready cfq_group charge scaling
+      cfq-iosched: convert cfq_group_slice() to use cfqg->vfraction
+      cfq-iosched: enable full blkcg hierarchy support
+      blkcg: add blkg_policy_data->plid
+      blkcg: implement blkcg_policy->on/offline_pd_fn() and blkcg_gq->online
+      blkcg: s/blkg_rwstat_sum()/blkg_rwstat_total()/
+      blkcg: export __blkg_prfill_rwstat()
+      blkcg: implement blkg_[rw]stat_recursive_sum() and blkg_[rw]stat_merge()
+      block: RCU free request_queue
+      blkcg: make blkcg_print_blkgs() grab q locks instead of blkcg lock
+      cfq-iosched: separate out cfqg_stats_reset() from cfq_pd_reset_stats()
+      cfq-iosched: collect stats from dead cfqgs
+      cfq-iosched: add hierarchical cfq_group statistics
+
+Vivek Goyal (6):
+      cfq-iosched: Properly name all references to IO class
+      cfq-iosched: More renaming to better represent wl_class and wl_type
+      cfq-iosched: Rename "service_tree" to "st" at some places
+      cfq-iosched: Rename few functions related to selecting workload
+      cfq-iosched: Get rid of unnecessary local variable
+      cfq-iosched: Print sync-noidle information in blktrace messages
+
+ Documentation/block/cfq-iosched.txt        |  58 +++
+ Documentation/cgroups/blkio-controller.txt |  35 +-
+ block/blk-cgroup.c                         | 277 +++++++++++--
+ block/blk-cgroup.h                         |  68 +++-
+ block/blk-sysfs.c                          |   9 +-
+ block/cfq-iosched.c                        | 627 +++++++++++++++++++++++------
+ include/linux/blkdev.h                     |   2 +
+ 7 files changed, 902 insertions(+), 174 deletions(-)
 
 -- 
 tejun
