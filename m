@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v5 05/11] sched: adjust exec_clock to use it as cpu usage metric
-Date: Wed,  9 Jan 2013 15:45:32 +0400
-Message-ID: <1357731938-8417-6-git-send-email-glommer@parallels.com>
+Subject: [PATCH v5 10/11] sched: change nr_context_switches calculation.
+Date: Wed,  9 Jan 2013 15:45:37 +0400
+Message-ID: <1357731938-8417-11-git-send-email-glommer@parallels.com>
 References: <1357731938-8417-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1357731938-8417-1-git-send-email-glommer@parallels.com>
@@ -11,61 +11,92 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Glauber Costa <glommer@parallels.com>, Dave Jones <davej@redhat.com>, Ben Hutchings <ben@decadent.org.uk>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay.sievers@vrfy.org>
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Glauber Costa <glommer@parallels.com>
 
-exec_clock already provides per-group cpu usage metrics, and can be
-reused by cpuacct in case cpu and cpuacct are comounted.
+This patch changes the calculation of nr_context_switches. The variable
+"nr_switches" is now used to account for the number of transition to the
+idle task, or stop task. It is removed from the schedule() path.
 
-However, it is only provided by tasks in fair class. Doing the same for
-rt is easy, and can be done in an already existing hierarchy loop. This
-is an improvement over the independent hierarchy walk executed by
-cpuacct.
+The total calculation can be made using the fact that the transitions to
+fair and rt classes are recorded in the root_task_group. One can easily
+derive the total figure by adding those quantities together.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
-CC: Dave Jones <davej@redhat.com>
-CC: Ben Hutchings <ben@decadent.org.uk>
 CC: Peter Zijlstra <a.p.zijlstra@chello.nl>
 CC: Paul Turner <pjt@google.com>
-CC: Lennart Poettering <lennart@poettering.net>
-CC: Kay Sievers <kay.sievers@vrfy.org>
-CC: Tejun Heo <tj@kernel.org>
 ---
- kernel/sched/rt.c    | 1 +
- kernel/sched/sched.h | 3 +++
- 2 files changed, 4 insertions(+)
+ kernel/sched/core.c      | 17 +++++++++++++++--
+ kernel/sched/idle_task.c |  3 +++
+ kernel/sched/stop_task.c |  2 ++
+ 3 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index f7e05d87..7f6f6c6 100644
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -945,6 +945,7 @@ static void update_curr_rt(struct rq *rq)
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index c36df03..6bb56f0 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2001,13 +2001,27 @@ unsigned long nr_uninterruptible(void)
+ 	return sum;
+ }
  
- 	for_each_sched_rt_entity(rt_se) {
- 		rt_rq = rt_rq_of_se(rt_se);
-+		schedstat_add(rt_rq, exec_clock, delta_exec);
++#ifdef CONFIG_FAIR_GROUP_SCHED
++#define cfs_nr_switches(tg, cpu) (tg)->cfs_rq[cpu]->nr_switches
++#else
++#define cfs_nr_switches(tg, cpu) cpu_rq(cpu)->cfs.nr_switches
++#endif
++#ifdef CONFIG_RT_GROUP_SCHED
++#define rt_nr_switches(tg, cpu) (tg)->rt_rq[cpu]->rt_nr_switches
++#else
++#define rt_nr_switches(tg, cpu) cpu_rq(cpu)->rt.rt_nr_switches
++#endif
++
+ unsigned long long nr_context_switches(void)
+ {
+ 	int i;
+ 	unsigned long long sum = 0;
  
- 		if (sched_rt_runtime(rt_rq) != RUNTIME_INF) {
- 			raw_spin_lock(&rt_rq->rt_runtime_lock);
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 84a339d..01ca8a4 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -210,6 +210,7 @@ struct cfs_rq {
- 	unsigned int nr_running, h_nr_running;
+-	for_each_possible_cpu(i)
++	for_each_possible_cpu(i) {
++		sum += cfs_nr_switches(&root_task_group, i);
++		sum += rt_nr_switches(&root_task_group, i);
+ 		sum += cpu_rq(i)->nr_switches;
++	}
  
- 	u64 exec_clock;
-+	u64 prev_exec_clock;
- 	u64 min_vruntime;
- #ifndef CONFIG_64BIT
- 	u64 min_vruntime_copy;
-@@ -312,6 +313,8 @@ struct rt_rq {
- 	struct plist_head pushable_tasks;
- #endif
- 	int rt_throttled;
-+	u64 exec_clock;
-+	u64 prev_exec_clock;
- 	u64 rt_time;
- 	u64 rt_runtime;
- 	/* Nests inside the rq lock: */
+ 	return sum;
+ }
+@@ -2929,7 +2943,6 @@ need_resched:
+ 	rq->skip_clock_update = 0;
+ 
+ 	if (likely(prev != next)) {
+-		rq->nr_switches++;
+ 		rq->curr = next;
+ 		++*switch_count;
+ 
+diff --git a/kernel/sched/idle_task.c b/kernel/sched/idle_task.c
+index 07e6027..652d98c 100644
+--- a/kernel/sched/idle_task.c
++++ b/kernel/sched/idle_task.c
+@@ -28,6 +28,9 @@ pick_next_task_idle(struct rq *rq, struct task_struct *prev)
+ 	if (prev)
+ 		prev->sched_class->put_prev_task(rq, prev);
+ 
++	if (prev != rq->idle)
++		rq->nr_switches++;
++
+ 	schedstat_inc(rq, sched_goidle);
+ 	return rq->idle;
+ }
+diff --git a/kernel/sched/stop_task.c b/kernel/sched/stop_task.c
+index 5f10918..d1e9b82 100644
+--- a/kernel/sched/stop_task.c
++++ b/kernel/sched/stop_task.c
+@@ -32,6 +32,8 @@ pick_next_task_stop(struct rq *rq, struct task_struct *prev)
+ 		stop->se.exec_start = rq->clock_task;
+ 		if (prev)
+ 			prev->sched_class->put_prev_task(rq, prev);
++		if (prev != rq->stop)
++			rq->nr_switches++;
+ 		return stop;
+ 	}
+ 
 -- 
 1.7.11.7
