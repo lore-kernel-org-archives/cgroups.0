@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v5 06/11] cpuacct: don't actually do anything.
-Date: Wed,  9 Jan 2013 15:45:33 +0400
-Message-ID: <1357731938-8417-7-git-send-email-glommer@parallels.com>
+Subject: [PATCH v5 04/11] cgroup, sched: deprecate cpuacct
+Date: Wed,  9 Jan 2013 15:45:31 +0400
+Message-ID: <1357731938-8417-5-git-send-email-glommer@parallels.com>
 References: <1357731938-8417-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1357731938-8417-1-git-send-email-glommer@parallels.com>
@@ -11,17 +11,34 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Glauber Costa <glommer@parallels.com>, Peter Zijlstra <peterz@infradead.org>, Michal Hocko <mhocko@suse.cz>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <mzxreary@0pointer.de>, Dave Jones <davej@redhat.com>, Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Peter Zijlstra <peterz@infradead.org>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, Kay Sievers <kay.sievers@vrfy.org>, Lennart Poettering <mzxreary@0pointer.de>, Dave Jones <davej@redhat.com>, Ben Hutchings <ben@decadent.org.uk>
 
-All the information we have that is needed for cpuusage (and
-cpuusage_percpu) is present in schedstats. It is already recorded
-in a sane hierarchical way.
+From: Tejun Heo <tj@kernel.org>
 
-If we have CONFIG_SCHEDSTATS, we don't really need to do any extra
-work. All former functions become empty inlines.
+Now that cpu serves the same files as cpuacct and using cpuacct
+separately from cpu is deprecated, we can deprecate cpuacct.  To avoid
+disturbing userland which has been co-mounting cpu and cpuacct,
+implement some hackery in cgroup core so that cpuacct co-mounting
+still works even if cpuacct is disabled.
 
-Signed-off-by: Glauber Costa <glommer@parallels.com>
+The goal of this patch is to accelerate disabling and removal of
+cpuacct by decoupling kernel-side deprecation from userland changes.
+Userland is recommended to do the following.
+
+* If /proc/cgroups lists cpuacct, always co-mount it with cpu under
+  e.g. /sys/fs/cgroup/cpu.
+
+* Optionally create symlinks for compatibility -
+  e.g. /sys/fs/cgroup/cpuacct and /sys/fs/cgroup/cpu,cpucct both
+  pointing to /sys/fs/cgroup/cpu - whether cpuacct exists or not.
+
+This compatibility hack will eventually go away.
+
+[ glommer@parallels.com: subsys_bits => subsys_mask ]
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Glauber Costa <glommer@parallels.com>
 Cc: Michal Hocko <mhocko@suse.cz>
 Cc: Kay Sievers <kay.sievers@vrfy.org>
 Cc: Lennart Poettering <mzxreary@0pointer.de>
@@ -29,182 +46,146 @@ Cc: Dave Jones <davej@redhat.com>
 Cc: Ben Hutchings <ben@decadent.org.uk>
 Cc: Paul Turner <pjt@google.com>
 ---
- kernel/sched/core.c  | 102 ++++++++++++++++++++++++++++++++++++++++++---------
- kernel/sched/sched.h |  10 +++--
- 2 files changed, 90 insertions(+), 22 deletions(-)
+ init/Kconfig        | 11 ++++++++++-
+ kernel/cgroup.c     | 47 ++++++++++++++++++++++++++++++++++++++++++-----
+ kernel/sched/core.c |  2 ++
+ 3 files changed, 54 insertions(+), 6 deletions(-)
 
+diff --git a/init/Kconfig b/init/Kconfig
+index 7d30240..4e411ac 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -815,11 +815,20 @@ config PROC_PID_CPUSET
+ 	default y
+ 
+ config CGROUP_CPUACCT
+-	bool "Simple CPU accounting cgroup subsystem"
++	bool "DEPRECATED: Simple CPU accounting cgroup subsystem"
++	default n
+ 	help
+ 	  Provides a simple Resource Controller for monitoring the
+ 	  total CPU consumed by the tasks in a cgroup.
+ 
++	  This cgroup subsystem is deprecated.  The CPU cgroup
++	  subsystem serves the same accounting files and "cpuacct"
++	  mount option is ignored if specified with "cpu".  As long as
++	  userland co-mounts cpu and cpuacct, disabling this
++	  controller should be mostly unnoticeable - one notable
++	  difference is that /proc/PID/cgroup won't list cpuacct
++	  anymore.
++
+ config RESOURCE_COUNTERS
+ 	bool "Resource counters"
+ 	help
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 0750669d..4ddb335 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1136,6 +1136,7 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	unsigned long mask = (unsigned long)-1;
+ 	int i;
+ 	bool module_pin_failed = false;
++	bool cpuacct_requested = false;
+ 
+ 	BUG_ON(!mutex_is_locked(&cgroup_mutex));
+ 
+@@ -1225,8 +1226,13 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 
+ 			break;
+ 		}
+-		if (i == CGROUP_SUBSYS_COUNT)
++		/* handle deprecated cpuacct specially, see below */
++		if (!strcmp(token, "cpuacct")) {
++			cpuacct_requested = true;
++			one_ss = true;
++		} else if (i == CGROUP_SUBSYS_COUNT) {
+ 			return -ENOENT;
++		}
+ 	}
+ 
+ 	/*
+@@ -1253,12 +1259,29 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	 * this creates some discrepancies in /proc/cgroups and
+ 	 * /proc/PID/cgroup.
+ 	 *
++	 * Accept and ignore "cpuacct" option if comounted with "cpu" even
++	 * when cpuacct itself is disabled to allow quick disabling and
++	 * removal of cpuacct.  This will be removed eventually.
++	 *
+ 	 * https://lkml.org/lkml/2012/9/13/542
+ 	 */
++	if (cpuacct_requested) {
++		bool comounted = false;
++
++#if IS_ENABLED(CONFIG_CGROUP_SCHED)
++		comounted = opts->subsys_mask & (1 << cpu_cgroup_subsys_id);
++#endif
++		if (!comounted) {
++			pr_warning("cgroup: mounting cpuacct separately from cpu is deprecated\n");
++#if !IS_ENABLED(CONFIG_CGROUP_CPUACCT)
++			return -EINVAL;
++#endif
++		}
++	}
+ #if IS_ENABLED(CONFIG_CGROUP_SCHED) && IS_ENABLED(CONFIG_CGROUP_CPUACCT)
+-	if ((opts->subsys_bits & (1 << cpu_cgroup_subsys_id)) &&
+-	    (opts->subsys_bits & (1 << cpuacct_subsys_id)))
+-		opts->subsys_bits &= ~(1 << cpuacct_subsys_id);
++	if ((opts->subsys_mask & (1 << cpu_cgroup_subsys_id)) &&
++	    (opts->subsys_mask & (1 << cpuacct_subsys_id)))
++		opts->subsys_mask &= ~(1 << cpuacct_subsys_id);
+ #endif
+ 	/*
+ 	 * Option noprefix was introduced just for backward compatibility
+@@ -4806,6 +4829,7 @@ const struct file_operations proc_cgroup_operations = {
+ /* Display information about each subsystem and each hierarchy */
+ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ {
++	struct cgroup_subsys *ss;
+ 	int i;
+ 
+ 	seq_puts(m, "#subsys_name\thierarchy\tnum_cgroups\tenabled\n");
+@@ -4816,7 +4840,7 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	 */
+ 	mutex_lock(&cgroup_mutex);
+ 	for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
+-		struct cgroup_subsys *ss = subsys[i];
++		ss = subsys[i];
+ 		if (ss == NULL)
+ 			continue;
+ 		seq_printf(m, "%s\t%d\t%d\t%d\n",
+@@ -4824,6 +4848,19 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 			   ss->root->number_of_cgroups, !ss->disabled);
+ 	}
+ 	mutex_unlock(&cgroup_mutex);
++
++	/*
++	 * Fake /proc/cgroups entry for cpuacct to trick userland into
++	 * cpu,cpuacct comounts.  This is to allow quick disabling and
++	 * removal of cpuacct and will be removed eventually.
++	 */
++#if IS_ENABLED(CONFIG_CGROUP_SCHED) && !IS_ENABLED(CONFIG_CGROUP_CPUACCT)
++	ss = subsys[cpu_cgroup_subsys_id];
++	if (ss) {
++		seq_printf(m, "cpuacct\t%d\t%d\t%d\n", ss->root->hierarchy_id,
++			   ss->root->number_of_cgroups, !ss->disabled);
++	}
++#endif
+ 	return 0;
+ }
+ 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index a62b771..f8a9acf 100644
+index 6516694..a62b771 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -7267,6 +7267,7 @@ void sched_move_task(struct task_struct *tsk)
- 	task_rq_unlock(rq, tsk, &flags);
- }
+@@ -8110,6 +8110,8 @@ struct cgroup_subsys cpu_cgroup_subsys = {
  
-+#ifndef CONFIG_SCHEDSTATS
- void task_group_charge(struct task_struct *tsk, u64 cputime)
- {
- 	struct task_group *tg;
-@@ -7284,6 +7285,7 @@ void task_group_charge(struct task_struct *tsk, u64 cputime)
+ #ifdef CONFIG_CGROUP_CPUACCT
  
- 	rcu_read_unlock();
- }
-+#endif
- #endif /* CONFIG_CGROUP_SCHED */
- 
- #if defined(CONFIG_RT_GROUP_SCHED) || defined(CONFIG_CFS_BANDWIDTH)
-@@ -7640,22 +7642,92 @@ cpu_cgroup_exit(struct cgroup *cgrp, struct cgroup *old_cgrp,
- 	sched_move_task(task);
- }
- 
--static u64 task_group_cpuusage_read(struct task_group *tg, int cpu)
-+/*
-+ * Take rq->lock to make 64-bit write safe on 32-bit platforms.
-+ */
-+static inline void lock_rq_dword(int cpu)
- {
--	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
--	u64 data;
--
- #ifndef CONFIG_64BIT
--	/*
--	 * Take rq->lock to make 64-bit read safe on 32-bit platforms.
--	 */
- 	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
--	data = *cpuusage;
-+#endif
-+}
++#warning CONFIG_CGROUP_CPUACCT is deprecated, read the Kconfig help message
 +
-+static inline void unlock_rq_dword(int cpu)
-+{
-+#ifndef CONFIG_64BIT
- 	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-+#endif
-+}
-+
-+#ifdef CONFIG_SCHEDSTATS
-+#ifdef CONFIG_FAIR_GROUP_SCHED
-+static inline u64 cfs_exec_clock(struct task_group *tg, int cpu)
-+{
-+	return tg->cfs_rq[cpu]->exec_clock - tg->cfs_rq[cpu]->prev_exec_clock;
-+}
-+
-+static inline void cfs_exec_clock_reset(struct task_group *tg, int cpu)
-+{
-+	tg->cfs_rq[cpu]->prev_exec_clock = tg->cfs_rq[cpu]->exec_clock;
-+}
- #else
--	data = *cpuusage;
-+static inline u64 cfs_exec_clock(struct task_group *tg, int cpu)
-+{
-+}
-+
-+static inline void cfs_exec_clock_reset(struct task_group *tg, int cpu)
-+{
-+}
-+#endif
-+#ifdef CONFIG_RT_GROUP_SCHED
-+static inline u64 rt_exec_clock(struct task_group *tg, int cpu)
-+{
-+	return tg->rt_rq[cpu]->exec_clock - tg->rt_rq[cpu]->prev_exec_clock;
-+}
-+
-+static inline void rt_exec_clock_reset(struct task_group *tg, int cpu)
-+{
-+	tg->rt_rq[cpu]->prev_exec_clock = tg->rt_rq[cpu]->exec_clock;
-+}
-+#else
-+static inline u64 rt_exec_clock(struct task_group *tg, int cpu)
-+{
-+	return 0;
-+}
-+
-+static inline void rt_exec_clock_reset(struct task_group *tg, int cpu)
-+{
-+}
- #endif
- 
-+static u64 task_group_cpuusage_read(struct task_group *tg, int cpu)
-+{
-+	u64 ret = 0;
-+
-+	lock_rq_dword(cpu);
-+	ret = cfs_exec_clock(tg, cpu) + rt_exec_clock(tg, cpu);
-+	unlock_rq_dword(cpu);
-+
-+	return ret;
-+}
-+
-+static void task_group_cpuusage_write(struct task_group *tg, int cpu, u64 val)
-+{
-+	lock_rq_dword(cpu);
-+	cfs_exec_clock_reset(tg, cpu);
-+	rt_exec_clock_reset(tg, cpu);
-+	unlock_rq_dword(cpu);
-+}
-+#else
-+static u64 task_group_cpuusage_read(struct task_group *tg, int cpu)
-+{
-+	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
-+	u64 data;
-+
-+	lock_rq_dword(cpu);
-+	data = *cpuusage;
-+	unlock_rq_dword(cpu);
-+
- 	return data;
- }
- 
-@@ -7663,17 +7735,11 @@ static void task_group_cpuusage_write(struct task_group *tg, int cpu, u64 val)
- {
- 	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
- 
--#ifndef CONFIG_64BIT
--	/*
--	 * Take rq->lock to make 64-bit write safe on 32-bit platforms.
--	 */
--	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-+	lock_rq_dword(cpu);
- 	*cpuusage = val;
--	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
--#else
--	*cpuusage = val;
--#endif
-+	unlock_rq_dword(cpu);
- }
-+#endif
- 
- /* return total cpu usage (in nanoseconds) of a group */
- static u64 cpucg_cpuusage_read(struct cgroup *cgrp, struct cftype *cft)
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 01ca8a4..640aa14 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -597,8 +597,6 @@ static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
- #endif
- }
- 
--extern void task_group_charge(struct task_struct *tsk, u64 cputime);
--
- #else /* CONFIG_CGROUP_SCHED */
- 
- static inline void set_task_rq(struct task_struct *p, unsigned int cpu) { }
-@@ -606,10 +604,14 @@ static inline struct task_group *task_group(struct task_struct *p)
- {
- 	return NULL;
- }
--static inline void task_group_charge(struct task_struct *tsk, u64 cputime) { }
--
- #endif /* CONFIG_CGROUP_SCHED */
- 
-+#if defined(CONFIG_CGROUP_SCHED) && !defined(CONFIG_SCHEDSTATS)
-+extern void task_group_charge(struct task_struct *tsk, u64 cputime);
-+#else
-+static inline void task_group_charge(struct task_struct *tsk, u64 cputime) {}
-+#endif
-+
- static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
- {
- 	set_task_rq(p, cpu);
+ /*
+  * CPU accounting code for task groups.
+  *
 -- 
 1.7.11.7
