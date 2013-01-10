@@ -1,52 +1,84 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3.4 1/2] cgroup: Take css_set_lock when calling cgroup_css_sets_empty()
-Date: Thu, 10 Jan 2013 09:49:38 +0100
-Message-ID: <50EE80A2.7070102@redhat.com>
-References: <1357743822-21707-1-git-send-email-hdegoede@redhat.com> <1357743822-21707-2-git-send-email-hdegoede@redhat.com> <50EE2ABD.5070404@huawei.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50EE2ABD.5070404-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH] memcg: modify swap accounting function to support THP
+Date: Thu, 10 Jan 2013 19:43:58 +0800
+Message-ID: <1357818238-11455-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
+        bh=RhvdnwGitVzGkYGWiyIa73keqYA+Lylq5oDXxz5aHf4=;
+        b=M8ygtUNy6Vkd9WBMCfaiv5a1wTOxrWviY76P9LxoZTrjsgtjv40dLRtU0H4M/6V6o6
+         O35cLfrOi92EiD8MhHqEvDvtxa52ZODaiyApVLufQ8Qr0P7hbbKs+Nf/LZp7tkIUUK6L
+         yVql+kv6uGUULmlcDDJ5qXyICiGk93/D70leHxil8vwq3CmSkoCNdOUYj5BJI8c4RNAB
+         eH9pT7G/a3oVT5Tb/BTZ/7IIO4MM6QUnZHE13ABLgkspWbWKZH+D7LaHHnLuQUHTurNz
+         lFcqWY1XGy/bo9VwDQ7tpfqVEQGEQ7Qc50C3M+8NfafTr/tfeomLl351YBeoPQanjHYY
+         eyQw==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Cc: mhocko@suse.cz, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com, Sha Zhengju <handai.szj@taobao.com>
 
-Hi,
+From: Sha Zhengju <handai.szj@taobao.com>
 
-On 01/10/2013 03:43 AM, Li Zefan wrote:
-> On 2013/1/9 23:03, Hans de Goede wrote:
->> As indicated in the comment above cgroup_css_sets_empty the
->> css_set_lock must be hold when calling it.
->>
->> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> ---
->>   kernel/cgroup.c | 5 ++++-
->>   1 file changed, 4 insertions(+), 1 deletion(-)
->>
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index c908354..59e711a 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -3980,7 +3980,10 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
->>   	/* the vfs holds both inode->i_mutex already */
->>   again:
->>   	mutex_lock(&cgroup_mutex);
->> -	if (!cgroup_css_sets_empty(cgrp)) {
->> +	read_lock(&css_set_lock);
->> +	ret = cgroup_css_sets_empty(cgrp);
-> 
-> This function doesn't exist in 3.4.xx kernel! It was introduced by an
-> out-of-tree patch, and that patch introduced these two bugs (maybe more).
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+---
+ mm/memcontrol.c |   13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-Ah, I didn't expect the sunxi support patches in linux-sunxi to touch the
-cgroup code, but since they also bring in a ton of android stuff they do,
-and you're right, this android specific patch is the culprit:
-https://github.com/linux-sunxi/linux-sunxi/commit/dbc38c633f4b7abe97c53036df55fbb2040188bc
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3817460..674cf21 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -914,10 +914,9 @@ static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
+ }
+ 
+ static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
+-					 bool charge)
++					 int nr_pages)
+ {
+-	int val = (charge) ? 1 : -1;
+-	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], val);
++	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], nr_pages);
+ }
+ 
+ static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
+@@ -4107,7 +4106,7 @@ __mem_cgroup_uncharge_common(struct page *page, enum charge_type ctype,
+ 	 */
+ 	memcg_check_events(memcg, page);
+ 	if (do_swap_account && ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT) {
+-		mem_cgroup_swap_statistics(memcg, true);
++		mem_cgroup_swap_statistics(memcg, nr_pages);
+ 		mem_cgroup_get(memcg);
+ 	}
+ 	/*
+@@ -4238,7 +4237,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t ent)
+ 		 */
+ 		if (!mem_cgroup_is_root(memcg))
+ 			res_counter_uncharge(&memcg->memsw, PAGE_SIZE);
+-		mem_cgroup_swap_statistics(memcg, false);
++		mem_cgroup_swap_statistics(memcg, -1);
+ 		mem_cgroup_put(memcg);
+ 	}
+ 	rcu_read_unlock();
+@@ -4267,8 +4266,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ 	new_id = css_id(&to->css);
+ 
+ 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
+-		mem_cgroup_swap_statistics(from, false);
+-		mem_cgroup_swap_statistics(to, true);
++		mem_cgroup_swap_statistics(from, -1);
++		mem_cgroup_swap_statistics(to, 1);
+ 		/*
+ 		 * This function is only called from task migration context now.
+ 		 * It postpones res_counter and refcount handling till the end
+-- 
+1.7.9.5
 
-Sorry about the noise.
-
-Regards,
-
-Hans
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
