@@ -1,40 +1,71 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH] cpuset: update MAINTAINERS
-Date: Fri, 11 Jan 2013 17:29:17 +0800
-Message-ID: <50EFDB6D.9070309@huawei.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v2 0/7] replace cgroup_lock with local memcg lock
+Date: Fri, 11 Jan 2013 13:45:20 +0400
+Message-ID: <1357897527-15479-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Paul Menage <paul@paulmenage.org>
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>
 
-As Paul doesn't maintain cpusets anymore, I'll take over the
-maintainership.
+Hi,
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
----
- MAINTAINERS | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+In memcg, we use the cgroup_lock basically to synchronize against
+attaching new children to a cgroup. We do this because we rely on cgroup core to
+provide us with this information.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fa309ab..d58bc12 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2128,10 +2128,10 @@ S:	Maintained
- F:	tools/power/cpupower
- 
- CPUSETS
--M:	Paul Menage <paul@paulmenage.org>
-+M:	Li Zefan <lizefan@huawei.com>
- W:	http://www.bullopensource.org/cpuset/
- W:	http://oss.sgi.com/projects/cpusets/
--S:	Supported
-+S:	Maintained
- F:	Documentation/cgroups/cpusets.txt
- F:	include/linux/cpuset.h
- F:	kernel/cpuset.c
+We need to guarantee that upon child creation, our tunables are consistent.
+For those, the calls to cgroup_lock() all live in handlers like
+mem_cgroup_hierarchy_write(), where we change a tunable in the group that is
+hierarchy-related. For instance, the use_hierarchy flag cannot be changed if
+the cgroup already have children.
+
+Furthermore, those values are propageted from the parent to the child when a
+new child is created. So if we don't lock like this, we can end up with the
+following situation:
+
+A                                   B
+ memcg_css_alloc()                       mem_cgroup_hierarchy_write()
+ copy use hierarchy from parent          change use hierarchy in parent
+ finish creation.
+
+This is mainly because during create, we are still not fully connected to the
+css tree. So all iterators and the such that we could use, will fail to show
+that the group has children.
+
+My observation is that all of creation can proceed in parallel with those
+tasks, except value assignment. So what this patchseries does is to first move
+all value assignment that is dependent on parent values from css_alloc to
+css_online, where the iterators all work, and then we lock only the value
+assignment. This will guarantee that parent and children always have consistent
+values. Together with an online test, that can be derived from the observation
+that the refcount of an online memcg can be made to be always positive, we
+should be able to synchronize our side without the cgroup lock.
+
+*v2:
+ - sanitize kmemcg assignment in the light of the current locking change.
+ - don't grab locks on immigrate charges by caching the value during can_attach
+
+Glauber Costa (7):
+  memcg: prevent changes to move_charge_at_immigrate during task attach
+  memcg: split part of memcg creation to css_online
+  memcg: provide online test for memcg
+  memcg: fast hierarchy-aware child test.
+  May god have mercy on my soul.
+  memcg: replace cgroup_lock with memcg specific memcg_lock
+  memcg: increment static branch right after limit set.
+
+ mm/memcontrol.c | 194 ++++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 117 insertions(+), 77 deletions(-)
+
 -- 
-1.8.0.2
+1.7.11.7
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
