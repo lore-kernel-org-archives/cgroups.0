@@ -1,47 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: remove synchronize_rcu() from
- rebind_subsystems()
-Date: Mon, 14 Jan 2013 10:55:46 -0800
-Message-ID: <20130114185546.GH27942@mtj.dyndns.org>
-References: <50F3CE8E.5000402@huawei.com>
- <50F3CEC2.1020909@huawei.com>
- <20130114185512.GG27942@mtj.dyndns.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v2 0/2] slightly change shrinker behaviour for very small
+ object sets
+Date: Mon, 14 Jan 2013 11:58:36 -0800
+Message-ID: <50F4636C.6030908@parallels.com>
+References: <1356086810-6950-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=XUmWqbxit58mLvzzpaZ233drZ/1aORdcZZGtd2z+8vI=;
-        b=iKtKCL8SN85y0cexz80s38XoxkTtoYtObjAAR0NgCd2dWH7xLx5Q6JuHoRb1QKBL/r
-         +TN0odV5WbJQpMwBIbrIMUA1YADPfFZTHHKVYQAjpgKr/dslBXRdmwmP0VyO1rR1rQA0
-         xzuIQxOqzHe+RNlbT2gu4zhqM4yDswc+KuUlVa0wNrNb4YTBKr/lg68aTiiMvGHyHGMi
-         WKgixyU6H3LcJU86YZyG3d/tephmJQd8nOzc7lPMKuBSWOVJWsRNAQJ36b6dyO6nPKp+
-         c1Q+mgbllXToolILZ1/g6Q5xgufW3PHELEEKTOdQy4ia94qiqPcgMbHVqtryvuumNHgn
-         PJWw==
-Content-Disposition: inline
-In-Reply-To: <20130114185512.GG27942-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1356086810-6950-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Colin Cross <ccross-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, kamezawa.hiroyu@jp.fujitsu.com
 
-On Mon, Jan 14, 2013 at 10:55:12AM -0800, Tejun Heo wrote:
-> On Mon, Jan 14, 2013 at 05:24:18PM +0800, Li Zefan wrote:
-> > Nothing's protected by RCU in rebind_subsystems(), and I can't think
-> > of a reason why it is needed.
-> > 
-> > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On 12/21/2012 02:46 AM, Glauber Costa wrote:
+> Hi,
 > 
-> Applied to cgroup/for-3.9.  We probably should synchornize_rcu() from
-                                                ^
-						remove
+> * v2: fix sysctl_vfs_cache_pressure for all users.
+> 
+> I've recently noticed some glitches in the object shrinker mechanism when a
+> very small number of objects is used. Those situations are theoretically
+> possible, albeit unlikely. But although it may feel like it is purely
+> theoretical, they can become common in environments with many small containers
+> (cgroups) in a box.
+> 
+> Those patches came from some experimentation I am doing with targetted-shrinking
+> for kmem-limited memory cgroups (Dave Shrinnker is already aware of such work).
+> In such scenarios, one can set the available memory to very low limits, and it
+> becomes easy to see this.
+> 
+> 
+Hi,
 
-> cgroup_diput() too.  Probably by punting css_free() and cgrp freeing
-> to a work item from call_rcu() callback.
+Who should pick this one up?
 
--- 
-tejun
+Are there any comments aside from Dave's Reviewed-by tag that I wrongly
+transcribed?
+
+Thanks!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
