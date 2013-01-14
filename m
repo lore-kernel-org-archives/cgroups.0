@@ -1,49 +1,53 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: synchronize_rcu in cgroup_attach_task and cgroup_attach_proc
-Date: Mon, 14 Jan 2013 12:07:17 +0800
-Message-ID: <50F38475.6030703@huawei.com>
-References: <CAMbhsRQo3mjSMWTtUzqaHbeZqVYafzUjoweWa9Oz3QNRM46PVQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v3] cgroup: net_cls: traffic counter based on classification
+ control cgroup
+Date: Mon, 14 Jan 2013 14:37:09 +0800
+Message-ID: <50F3A795.7050102@huawei.com>
+References: <50F04502.9090902@samsung.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAMbhsRQo3mjSMWTtUzqaHbeZqVYafzUjoweWa9Oz3QNRM46PVQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <50F04502.9090902-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Colin Cross <ccross-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>, Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 
-On 2013/1/12 7:48, Colin Cross wrote:
-> Quick background:  Android uses cgroups heavily to manage thread
-> priorities, putting threads in a background group with reduced
-> cpu.shares when they are not visible to the user, and in a foreground
-> group when they are.  Some RPCs from foreground threads to background
-> threads will temporarily move the background thread into the
-> foreground group for the duration of the RPC.  This results in many
-> calls to cgroup_attach_task.
+On 2013/1/12 0:59, Alexey Perevalov wrote:
+> Hello
 > 
-> The call to synchronize_rcu() in cgroup_attach_task and
-> cgroup_attach_proc can take up to 100ms, and averages 50ms on Nexus 10
-> (ARM Exynos5250 SoC) when the cpus are all idle, and similar times
-> have been measured on multiple other ARM SMP SoCs.
+> I'm sorry for previous email with attachments.
 > 
-> I worked with Paul around v3.0 to try to remove the synchronize_rcu
-> calls (see https://android.googlesource.com/kernel/common/+/befae2f2c9137d6af5c8b38670f00441019032bb),
-> but nobody seemed to have a clear understanding of the full extent of
-> what the synchronize_rcu was protecting.  Since then the relevant
-> code, especially cgroup_rmdir, has been heavily rewritten, so
-> hopefully someone understands it better now.
+> I would like to represent next version of patch I sent before
+> cgroup: "net_cls: traffic counter based on classification control cgroup"
 > 
-> The only rcu-protected variable updated in cgroup_attach_task is
-> tsk->cgroups.  Freeing the old tsk->cgroups is already rcu-protected
-> by kfree_rcu in __put_css_set.  The only thing that happens before
-> cgroup_attach_task returns out to userspace is threadgroup_unlock and
-> cgroup_unlock.  Is anything relying on cgroup_mutex to be held for an
-> RCU grace period?  If not, it seems like the synchronize_rcu isn't
-> protecting anything and is just wasting time.
+> The main idea is the same as was. It keeping counter in control groups, but now uses atomic instead resource_counters.
 > 
+> I have a performance measurement for this patch. It was done by lmbench on physical machine.
+> Results are not so representative for 20 tests and some numbers are real weird.
+> 
+> Daniel Wagner wrote what he is doing something similar, but using namespaces.
+> 
+> Proposed by me approach is used in upcoming Tizen release, but little bit different version.
+> 
+> 
+> Signed-off-by: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> ---
+>  include/net/cls_cgroup.h         |  200 ++++++++++++++++++++++++++++++++++----
+>  include/net/cls_counter_holder.h |   26 +++++
+>  init/Kconfig                     |   25 +++++
+>  kernel/cgroup.c                  |    2 +
+>  kernel/res_counter.c             |    4 +
+>  net/core/dev.c                   |    6 ++
+>  net/ipv4/tcp.c                   |   29 +++++-
+>  net/ipv4/udp.c                   |    6 ++
+>  net/sched/Kconfig                |   11 ---
+>  net/sched/Makefile               |    1 +
+>  net/sched/cls_cgroup.c           |  193 +++++++++++++++++++++++++++++++++++-
+>  net/sched/cls_counter_holder.c   |  144 +++++++++++++++++++++++++++
+>  12 files changed, 612 insertions(+), 35 deletions(-)
+>  create mode 100644 include/net/cls_counter_holder.h
+>  create mode 100644 net/sched/cls_counter_holder.c
 
-Let's remove these two synchronize_rcu()s without hesitation. If some
-subtleties are broken, we'll fix them, and thus make the code saner.
-
-Patch will be sent out soon.
+You should cc netdev mailing list.
