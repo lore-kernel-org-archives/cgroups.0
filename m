@@ -1,66 +1,61 @@
-From: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH v3] cgroup: net_cls: traffic counter based on
- classification control cgroup
-Date: Tue, 15 Jan 2013 07:05:09 -0800
-Message-ID: <1358262309.8744.5760.camel@edumazet-glaptop>
-References: <20130115133351.GA8633@aperevalov>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: don't show pid list on tasks/procs in ascending
+ order
+Date: Tue, 15 Jan 2013 07:43:32 -0800
+Message-ID: <20130115154332.GA2598@htj.dyndns.org>
+References: <50F4E902.20202@oracle.com>
+ <20130115062507.GA21358@sergelap>
+ <50F4F76D.2050409@oracle.com>
+ <20130115063412.GA25338@sergelap>
+ <50F4FD99.7070406@oracle.com>
+ <20130115140811.GA4082@sergelap>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=x-received:subject:from:to:cc:in-reply-to:references:content-type
-         :date:message-id:mime-version:x-mailer:content-transfer-encoding;
-        bh=he8riJxpk2ct4P91d5YsfqRLnSdhKfgiwHSRBZXdHDk=;
-        b=if/by8CYJmDnJuVQ8o+6xAgPCAiCD79WeS7o5Bd1kUQJaGZxmTtYTAhQI1NSPEy5Xg
-         bvN3n9I/exAoTqz4fnrcUzsY+2e/ax+wqK2BI2IcBYAyEKK13sOZHK/qJtu9w+0TX+Lw
-         VS1eBkyX7W2EuM+QD3Q0Xo+xAtv7mMNFRu6elQRqb7CrpnvP9kTYsTrB3y1KvwPDRMEy
-         +2+Iz/oAeh5cvrhfxHcje2IAxetg+COMEuqe3aRSar8lPgN31X29XQUVQ53gwHBZVheb
-         Q2ohMggTsQaeSUkGwLe8I4lJBBSC4E2w2CFXuu8cWxqktUHQsCoVkq9nugeCj315qy/n
-         t6Xw==
-In-Reply-To: <20130115133351.GA8633@aperevalov>
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=z0tAVWcMqVOMyPprYDxj7qRQHL5cj6L/4/FrNTKLp7I=;
+        b=V9T1P0fDyiovEMN4J5YvnIwLDU7CG59J0k797f4caTYqvNGRqvc+mZA6WaE/SQxw1k
+         2i4WP/cD7Z30N2q0W2o+8g1ssoi0wlvD8zCm1do/So/UwDCkqUUSHQHop2Y5C2nHVFpV
+         tFXai3QXjZPi466Fch2no+6aUNh+O8vaGGjg8SPVkV36gbVTijiZiy7+C/eAblyFc+DD
+         WJQ4xmtWPfKGez4LU3oojEKQs0R0TYvYQLOiYXG9zcd5xTob1o0KuWaRp2+ST/3TYEvs
+         1qbiE4b0EKnas3ISDI7Yii4gMnSJkMgimwleFOjNADHdDxyM4UX5lMXxHwvQVXhMwMnq
+         1aRw==
+Content-Disposition: inline
+In-Reply-To: <20130115140811.GA4082@sergelap>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Tue, 2013-01-15 at 17:33 +0400, Alexey Perevalov wrote:
-> Hello
+Hello, guys.
+
+On Tue, Jan 15, 2013 at 08:08:11AM -0600, Serge Hallyn wrote:
+> > I did this for two reasons, one is for the documents, another is per
+> > Cgroup TODO list from Tejun -- https://lkml.org/lkml/2012/9/13/542
+> > 
+> > . Misc issues
+> > 
+> >   * Sort & unique when listing tasks.  Even the documentation says it
+> >     doesn't happen but we have a good hunk of code doing it in
+> >     cgroup.c.  I'm gonna rip it out at some point.  Again, if you
+> >     don't like it, scream.
 > 
-> I would like to represent next version of patch I sent before
-> cgroup: "net_cls: traffic counter based on classification control cgroup"
-> 
-> The main idea is the same as was. It keeping counter in control groups, but now uses atomic instead of resource_counters.
-> 
-> Signed-off-by: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> ---
->  include/net/cls_cgroup.h         |  200 ++++++++++++++++++++++++++++++++++----
->  include/net/cls_counter_holder.h |   26 +++++
->  init/Kconfig                     |   25 +++++
->  kernel/cgroup.c                  |    2 +
->  kernel/res_counter.c             |    4 +
->  net/core/dev.c                   |    6 ++
->  net/ipv4/tcp.c                   |   27 ++++-
->  net/ipv4/udp.c                   |    6 ++
->  net/sched/Kconfig                |   11 ---
->  net/sched/Makefile               |    1 +
->  net/sched/cls_cgroup.c           |  194 +++++++++++++++++++++++++++++++++++-
->  net/sched/cls_counter_holder.c   |  144 +++++++++++++++++++++++++++
->  12 files changed, 611 insertions(+), 35 deletions(-)
->  create mode 100644 include/net/cls_counter_holder.h
->  create mode 100644 net/sched/cls_counter_holder.c
+> Yeah, I figured, and since he also wants to move to a place where
+> cgroups are always manipulated using a library, not by hand, it
+> would make sense to get rid of the overhead there.  I just don't
+> really like either one of those :)  And in the list of things to
+> clean up in cgroups, this seems like one that can wait.
 
-Sorry, there are too many issues with this patch and I have not
-a lot of time to review it.
+I want it gone but last time I pinged there were some people depending
+on it, so I don't think I can.  I think we'll have to put it on ice
+for now at least.  :(
 
-0) No changelog or documentation
+Thanks.
 
-1) There is no way you need to add kludges in tcp and udp for this
-accounting. Retransmitted packets should not be ignored for example.
-
-2) Ugly #ifdef in c files. Don't do that please.
-
-3) No check of kmalloc() returns (can be NULL)
-
-
+-- 
+tejun
