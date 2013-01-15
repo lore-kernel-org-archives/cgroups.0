@@ -1,28 +1,102 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [RFC PATCH v3] cgroup: net_cls: traffic counter based on
- classification control cgroup
-Date: Mon, 14 Jan 2013 18:12:36 -0500 (EST)
-Message-ID: <20130114.181236.2276983347407293999.davem@davemloft.net>
-References: <50F3B63B.6050104@samsung.com>
+From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: don't show pid list on tasks/procs in ascending order
+Date: Tue, 15 Jan 2013 13:28:34 +0800
+Message-ID: <50F4E902.20202@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50F3B63B.6050104-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org, kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+
+Hello,
+
+Currently, the pid list shown on cgroup->procs & tasks is in ascending order.  However, this list is not
+guaranteed to be sorted according to the following records mentioned at Documentation/cgroups/cgroups.txt.
+
+ - tasks: list of tasks (by PID) attached to that cgroup.  This list
+   is not guaranteed to be sorted. 
+ - cgroup.procs: list of thread group IDs in the cgroup.  This list is
+   not guaranteed to be sorted or free of duplicate TGIDs, and userspace
+   should sort/uniquify the list if this property is required.
+
+This patch remove the sorting function to make the default behavior of pid list be consistent with
+the document.
+
+Without patch:
+# echo 2942 >> /cgroup/test/tasks 
+# echo 2803 >> /cgroup/test/tasks 
+# echo 2911 >> /cgroup/test/tasks
+# echo 2761 >> /cgroup/test/tasks 
+# cat /cgroup/test/tasks 
+2761
+2803
+2911
+2942
+# cat /cgroup/test/cgroup.procs
+2761
+2803
+2911
+2942
+
+Patch applied:
+# echo 3042 >> /cgroup/testfixed/tasks
+# echo 2916 >> /cgroup/testfixed/tasks
+# echo 2781 >> /cgroup/testfixed/tasks
+# echo 2527 >> /cgroup/testfixed/tasks
+# cat /cgroup/testfixed/tasks 
+2916
+3042
+2527
+2781
+# cat /cgroup/testfixed/cgroup.procs 
+2916
+3042
+2527
+2781
 
 
-Your email client has corrupted this patch.  Amongst other things, it
-turned tab characters into spaces.
+Signed-off-by: Jie Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-You need to correct this and submit your patch cleanly before people
-are likely to review it.
+---
+ kernel/cgroup.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-I would advise that you email the patch to yourself, and only once
-you are able to send yourself a patch that does not get corrupted
-should you try to resubmit it here.
-
-Thank you.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index f24f724..2b5b477 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -47,7 +47,6 @@
+ #include <linux/magic.h>
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+-#include <linux/sort.h>
+ #include <linux/kmod.h>
+ #include <linux/module.h>
+ #include <linux/delayacct.h>
+@@ -3374,11 +3373,6 @@ after:
+ 	return dest;
+ }
+ 
+-static int cmppid(const void *a, const void *b)
+-{
+-	return *(pid_t *)a - *(pid_t *)b;
+-}
+-
+ /*
+  * find the appropriate pidlist for our purpose (given procs vs tasks)
+  * returns with the lock on that pidlist already held, and takes care
+@@ -3463,8 +3457,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 	}
+ 	cgroup_iter_end(cgrp, &it);
+ 	length = n;
+-	/* now sort & (if procs) strip out duplicates */
+-	sort(array, length, sizeof(pid_t), cmppid, NULL);
++	/* if procs, strip out duplicates */
+ 	if (type == CGROUP_FILE_PROCS)
+ 		length = pidlist_uniq(&array, length);
+ 	l = cgroup_pidlist_find(cgrp, type);
+-- 
+1.7.9.5
