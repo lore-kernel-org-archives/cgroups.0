@@ -1,63 +1,33 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/2] cpuset: drop spurious retval assignment in
- proc_cpuset_show()
-Date: Tue, 15 Jan 2013 08:41:19 -0800
-Message-ID: <20130115164119.GD2668@htj.dyndns.org>
-References: <50F4F2F1.8070107@huawei.com>
- <50F4F314.4040103@huawei.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v5 03/11] cgroup, sched: let cpu serve the same files
+ as cpuacct
+Date: Tue, 15 Jan 2013 09:52:01 -0800
+Message-ID: <50F59741.7010002@parallels.com>
+References: <1357731938-8417-1-git-send-email-glommer@parallels.com> <1357731938-8417-4-git-send-email-glommer@parallels.com> <CAFj3OHW5J8ypLZdW16AfiYR5y2S54mQxm5qka4m_3qsoGdD11A@mail.gmail.com> <50F41C50.6090000@parallels.com> <CAFj3OHWB8GF9UYcLdObptrY+BfB=EEwbBtsf17M1=6qfZt+k6g@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=lh+A3KhfAkwd9yFCKpNZArY9gqdjWoWEI7kb2ESuWdY=;
-        b=GloyQ01Ub2d4QGvwdJDgnkA2FYxTXgRf2w97Aq8oVqfZnxMqECg+6Q6BPMNfdtlseg
-         a1cskZjCJ5Xw6k33B4I1488tk09eCztTfYiaLdzfCDipVcFRrasstP7HQhPUuJTiZeln
-         TOHX0avShWr72ak1vnH/fZKMG++LTNLKCOcvv0cw+JkKmZKDmJ9SxOJHVIB+plYmLLxn
-         Fl5Ea0WHKxikz//3TFtUcpCqrVAf2BfwoACplstAiIhouEtN2sXDZPsTrB3PxBtgzcLa
-         EyF4hFPJtIPlJ6Is4ltGyjeDJz3c7npG0J22klayBp+D3t5fkGu9KyaK6LIHAMqUIyU1
-         M/Nw==
-Content-Disposition: inline
-In-Reply-To: <50F4F314.4040103-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAFj3OHWB8GF9UYcLdObptrY+BfB=EEwbBtsf17M1=6qfZt+k6g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
 
-From d127027baf98dce3ca31bec18c2c0e048ceda7c4 Mon Sep 17 00:00:00 2001
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Date: Tue, 15 Jan 2013 14:11:32 +0800
-
-proc_cpuset_show() has a spurious -EINVAL assignment which does
-nothing.  Remove it.
-
-This patch doesn't make any functional difference.
-
-tj: Rewrote patch description.
-
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Ditto.  Thanks!
-
- kernel/cpuset.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 1a675e4..16be7c9 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -2677,7 +2677,6 @@ static int proc_cpuset_show(struct seq_file *m, void *unused_v)
- 	if (!tsk)
- 		goto out_free;
- 
--	retval = -EINVAL;
- 	rcu_read_lock();
- 	css = task_subsys_state(tsk, cpuset_subsys_id);
- 	retval = cgroup_path(css->cgroup, buf, PAGE_SIZE);
--- 
-1.8.0.2
+On 01/15/2013 02:19 AM, Sha Zhengju wrote:
+> On Mon, Jan 14, 2013 at 10:55 PM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+>> On 01/14/2013 12:34 AM, Sha Zhengju wrote:
+>>>> +               struct kernel_cpustat *kcpustat = this_cpu_ptr(ca->cpustat);
+>>>>> +
+>>>>>                 kcpustat = this_cpu_ptr(ca->cpustat);
+>>> Is this reassignment unnecessary?
+>>>
+>>>
+>> No.
+>>
+> 
+> No?  No!
+> 
+I misread your question as "is this reassignment necessary".
+For which the answer is no: there is no reason to do it, it is just a
+bad chunk.
