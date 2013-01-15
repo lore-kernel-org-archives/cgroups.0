@@ -1,54 +1,106 @@
-From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: don't show pid list on tasks/procs in ascending
- order
-Date: Tue, 15 Jan 2013 14:56:25 +0800
-Message-ID: <50F4FD99.7070406@oracle.com>
-References: <50F4E902.20202@oracle.com> <20130115062507.GA21358@sergelap> <50F4F76D.2050409@oracle.com> <20130115063412.GA25338@sergelap>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v5 03/11] cgroup, sched: let cpu serve the same files as cpuacct
+Date: Tue, 15 Jan 2013 18:19:58 +0800
+Message-ID: <CAFj3OHWB8GF9UYcLdObptrY+BfB=EEwbBtsf17M1=6qfZt+k6g@mail.gmail.com>
+References: <1357731938-8417-1-git-send-email-glommer@parallels.com>
+	<1357731938-8417-4-git-send-email-glommer@parallels.com>
+	<CAFj3OHW5J8ypLZdW16AfiYR5y2S54mQxm5qka4m_3qsoGdD11A@mail.gmail.com>
+	<50F41C50.6090000@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130115063412.GA25338@sergelap>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=hapTikbHaCDuRForIUg/quQvKA8NKE0rL3pihEv3iOs=;
+        b=XPZYYHo7DPaJWzvRcmgmbNLtLj+BQReKyJlDEFvSvkTvZqtc3BwRg6UUAis4oFgCMw
+         F8b0QwoRirB19nsmWXaKPHuM6Lk4OXmLA/npXwbHUvEByz26i6M66BhtvEtQWYjd2Onl
+         lwoQOQP4e+vQSwVrc+7KFFxQUX/bcttLPvdkCs94KgNAp8LnCuuXgdR/Blkd72C61gas
+         UqNznkG1SLfg7Og7tXDboY4zEeXXjf6KXQRq/261TkPHb2mMsF1KHQX045o+hpKSvFiZ
+         QoePYySpwM0Yc9ncQRoMofNwI/e6LVpCV5Dfv2feDq4Yty7D2JWEIL8j0EvECw55YGNC
+         y4mA==
+In-Reply-To: <50F41C50.6090000-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
 
-On 01/15/2013 02:34 PM, Serge Hallyn wrote:
-> Quoting Jeff Liu (jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org):
->> On 01/15/2013 02:25 PM, Serge Hallyn wrote:
->>> Quoting Jeff Liu (jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org):
->>>> Hello,
->>>>
->>>> Currently, the pid list shown on cgroup->procs & tasks is in ascending order.  However, this list is not
->>>> guaranteed to be sorted according to the following records mentioned at Documentation/cgroups/cgroups.txt.
->>>>
->>>>  - tasks: list of tasks (by PID) attached to that cgroup.  This list
->>>>    is not guaranteed to be sorted. 
->>>>  - cgroup.procs: list of thread group IDs in the cgroup.  This list is
->>>>    not guaranteed to be sorted or free of duplicate TGIDs, and userspace
->>>>    should sort/uniquify the list if this property is required.
->>>>
->>>> This patch remove the sorting function to make the default behavior of pid list be consistent with
->>>> the document.
-> 
-> ...
-> 
-> I've gotta say, as someone who tends to play with those files by hand, I
-> don't mind not having to type | sort | uniq every time.
+On Mon, Jan 14, 2013 at 10:55 PM, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> On 01/14/2013 12:34 AM, Sha Zhengju wrote:
+>>> +               struct kernel_cpustat *kcpustat = this_cpu_ptr(ca->cpustat);
+>>> > +
+>>> >                 kcpustat = this_cpu_ptr(ca->cpustat);
+>> Is this reassignment unnecessary?
+>>
+>>
+> No.
+>
 
-I did this for two reasons, one is for the documents, another is per
-Cgroup TODO list from Tejun -- https://lkml.org/lkml/2012/9/13/542
+No?  No!
 
-. Misc issues
+In task_group_account_field(), the following two hunks have the
+similar behavior but different codes, there must be a trial in one of
+them.
 
-  * Sort & unique when listing tasks.  Even the documentation says it
-    doesn't happen but we have a good hunk of code doing it in
-    cgroup.c.  I'm gonna rip it out at some point.  Again, if you
-    don't like it, scream.
+Hunk #1:
++#ifdef CONFIG_CGROUP_SCHED
++       rcu_read_lock();
++       tg = container_of(task_subsys_state(p, cpu_cgroup_subsys_id),
++                         struct task_group, css);
 
-So that we can clean out around 70-lines source code as well as shrink
-the cgroup.o a bit.
++       while (tg && (tg != &root_task_group)) {
++               struct kernel_cpustat *kcpustat =
+this_cpu_ptr(tg->cpustat);   **HERE**
++
++               kcpustat->cpustat[index] += tmp;
++               tg = tg->parent;
++       }
++       rcu_read_unlock();
++#endif
 
+Hunk #2:
+#ifdef CONFIG_CGROUP_CPUACCT
+        if (unlikely(!cpuacct_subsys.active))
+                return;
+
+        rcu_read_lock();
+        ca = task_ca(p);
+        while (ca && (ca != &root_cpuacct)) {
++               struct kernel_cpustat *kcpustat =
+this_cpu_ptr(ca->cpustat); **HERE**
++
+                kcpustat = this_cpu_ptr(ca->cpustat);   **HERE, which
+is unnecessary**
+                kcpustat->cpustat[index] += tmp;
+                ca = parent_ca(ca);
+        }
+        rcu_read_unlock();
+#endif
+
+
+Also you can prove it by the following testcase.
+#include <stdio.h>
+
+int main(void)
+{
+        int i = 0;
+        int array[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        int *index = &array[0];
+
+        while (i < 10) {
+                int *ptr = index;
+
+                printf("ptr=%d  %p, index = %d\n", *ptr, ptr, *index);
+                index ++;
+                i++;
+                sleep(1);
+        }
+
+        return 0;
+}
+
+-- 
 Thanks,
--Jeff
+Sha
