@@ -1,102 +1,52 @@
-From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: don't show pid list on tasks/procs in ascending order
-Date: Tue, 15 Jan 2013 13:28:34 +0800
-Message-ID: <50F4E902.20202@oracle.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 1/2] cpuset: fix RCU lockdep splat
+Date: Tue, 15 Jan 2013 14:10:57 +0800
+Message-ID: <50F4F2F1.8070107@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Sasha Levin <sasha.levin@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Hello,
+Reading /proc/<pid>/cpuset triggered RCU warning, and this bug was
+introduced by Commit 5d21cc2db040d01f8c19b8602f6987813e1176b4
+("cpuset: replace cgroup_mutex locking with cpuset internal locking")
 
-Currently, the pid list shown on cgroup->procs & tasks is in ascending order.  However, this list is not
-guaranteed to be sorted according to the following records mentioned at Documentation/cgroups/cgroups.txt.
+Here we can retreive tsk->cgroups and call cgroup_path() inside RCU
+read section.
 
- - tasks: list of tasks (by PID) attached to that cgroup.  This list
-   is not guaranteed to be sorted. 
- - cgroup.procs: list of thread group IDs in the cgroup.  This list is
-   not guaranteed to be sorted or free of duplicate TGIDs, and userspace
-   should sort/uniquify the list if this property is required.
-
-This patch remove the sorting function to make the default behavior of pid list be consistent with
-the document.
-
-Without patch:
-# echo 2942 >> /cgroup/test/tasks 
-# echo 2803 >> /cgroup/test/tasks 
-# echo 2911 >> /cgroup/test/tasks
-# echo 2761 >> /cgroup/test/tasks 
-# cat /cgroup/test/tasks 
-2761
-2803
-2911
-2942
-# cat /cgroup/test/cgroup.procs
-2761
-2803
-2911
-2942
-
-Patch applied:
-# echo 3042 >> /cgroup/testfixed/tasks
-# echo 2916 >> /cgroup/testfixed/tasks
-# echo 2781 >> /cgroup/testfixed/tasks
-# echo 2527 >> /cgroup/testfixed/tasks
-# cat /cgroup/testfixed/tasks 
-2916
-3042
-2527
-2781
-# cat /cgroup/testfixed/cgroup.procs 
-2916
-3042
-2527
-2781
-
-
-Signed-off-by: Jie Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-
+Reported-by: Sasha Levin <sasha.levin@oracle.com>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- kernel/cgroup.c |    9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ kernel/cpuset.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index f24f724..2b5b477 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -47,7 +47,6 @@
- #include <linux/magic.h>
- #include <linux/spinlock.h>
- #include <linux/string.h>
--#include <linux/sort.h>
- #include <linux/kmod.h>
- #include <linux/module.h>
- #include <linux/delayacct.h>
-@@ -3374,11 +3373,6 @@ after:
- 	return dest;
- }
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 6aa5bbb..1a675e4 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -2678,15 +2678,15 @@ static int proc_cpuset_show(struct seq_file *m, void *unused_v)
+ 		goto out_free;
  
--static int cmppid(const void *a, const void *b)
--{
--	return *(pid_t *)a - *(pid_t *)b;
--}
--
- /*
-  * find the appropriate pidlist for our purpose (given procs vs tasks)
-  * returns with the lock on that pidlist already held, and takes care
-@@ -3463,8 +3457,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 	}
- 	cgroup_iter_end(cgrp, &it);
- 	length = n;
--	/* now sort & (if procs) strip out duplicates */
--	sort(array, length, sizeof(pid_t), cmppid, NULL);
-+	/* if procs, strip out duplicates */
- 	if (type == CGROUP_FILE_PROCS)
- 		length = pidlist_uniq(&array, length);
- 	l = cgroup_pidlist_find(cgrp, type);
+ 	retval = -EINVAL;
+-	mutex_lock(&cpuset_mutex);
++	rcu_read_lock();
+ 	css = task_subsys_state(tsk, cpuset_subsys_id);
+ 	retval = cgroup_path(css->cgroup, buf, PAGE_SIZE);
++	rcu_read_unlock();
+ 	if (retval < 0)
+-		goto out_unlock;
++		goto out_put_task;
+ 	seq_puts(m, buf);
+ 	seq_putc(m, '\n');
+-out_unlock:
+-	mutex_unlock(&cpuset_mutex);
++out_put_task:
+ 	put_task_struct(tsk);
+ out_free:
+ 	kfree(buf);
 -- 
-1.7.9.5
+1.8.0.2
