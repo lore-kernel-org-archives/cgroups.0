@@ -1,44 +1,69 @@
-From: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: don't show pid list on tasks/procs in ascending
- order
-Date: Wed, 16 Jan 2013 09:50:35 +0800
-Message-ID: <50F6076B.8080704@oracle.com>
-References: <50F4E902.20202@oracle.com> <20130115062507.GA21358@sergelap> <50F4F76D.2050409@oracle.com> <20130115063412.GA25338@sergelap> <50F4FD99.7070406@oracle.com> <20130115140811.GA4082@sergelap> <20130115154332.GA2598@htj.dyndns.org>
+From: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [RFC PATCH v3] cgroup: net_cls: traffic counter based on
+ classification control cgroup
+Date: Wed, 16 Jan 2013 19:48:30 +0400
+Message-ID: <50F6CBCE.8030803@samsung.com>
+References: <20130115133351.GA8633@aperevalov>
+ <1358262309.8744.5760.camel@edumazet-glaptop>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130115154332.GA2598-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-reply-to: <1358262309.8744.5760.camel@edumazet-glaptop>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Serge and Tejun,
-On 01/15/2013 11:43 PM, Tejun Heo wrote:
-> Hello, guys.
-> 
-> On Tue, Jan 15, 2013 at 08:08:11AM -0600, Serge Hallyn wrote:
->>> I did this for two reasons, one is for the documents, another is per
->>> Cgroup TODO list from Tejun -- https://lkml.org/lkml/2012/9/13/542
->>>
->>> . Misc issues
->>>
->>>   * Sort & unique when listing tasks.  Even the documentation says it
->>>     doesn't happen but we have a good hunk of code doing it in
->>>     cgroup.c.  I'm gonna rip it out at some point.  Again, if you
->>>     don't like it, scream.
+Hello Eric
+
+On 01/15/2013 07:05 PM, Eric Dumazet wrote:
+> On Tue, 2013-01-15 at 17:33 +0400, Alexey Perevalov wrote:
+>> Hello
 >>
->> Yeah, I figured, and since he also wants to move to a place where
->> cgroups are always manipulated using a library, not by hand, it
->> would make sense to get rid of the overhead there.  I just don't
->> really like either one of those :)  And in the list of things to
->> clean up in cgroups, this seems like one that can wait.
-> 
-> I want it gone but last time I pinged there were some people depending
-> on it, so I don't think I can.  I think we'll have to put it on ice
-> for now at least.  :(
-Thanks both of you for the response :)  So I'll put it aside for now.
+>> I would like to represent next version of patch I sent before
+>> cgroup: "net_cls: traffic counter based on classification control cgroup"
+>>
+>> The main idea is the same as was. It keeping counter in control groups, but now uses atomic instead of resource_counters.
+>>
+>> Signed-off-by: Alexey Perevalov<a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>> ---
+>>   include/net/cls_cgroup.h         |  200 ++++++++++++++++++++++++++++++++++----
+>>   include/net/cls_counter_holder.h |   26 +++++
+>>   init/Kconfig                     |   25 +++++
+>>   kernel/cgroup.c                  |    2 +
+>>   kernel/res_counter.c             |    4 +
+>>   net/core/dev.c                   |    6 ++
+>>   net/ipv4/tcp.c                   |   27 ++++-
+>>   net/ipv4/udp.c                   |    6 ++
+>>   net/sched/Kconfig                |   11 ---
+>>   net/sched/Makefile               |    1 +
+>>   net/sched/cls_cgroup.c           |  194 +++++++++++++++++++++++++++++++++++-
+>>   net/sched/cls_counter_holder.c   |  144 +++++++++++++++++++++++++++
+>>   12 files changed, 611 insertions(+), 35 deletions(-)
+>>   create mode 100644 include/net/cls_counter_holder.h
+>>   create mode 100644 net/sched/cls_counter_holder.c
+> Sorry, there are too many issues with this patch and I have not
+> a lot of time to review it.
+>
+> 0) No changelog or documentation
+Do you expect documentation in Documentation/cgroups/.
+For example I'll create new file net_cls.txt
+> 1) There is no way you need to add kludges in tcp and udp for this
+> accounting. Retransmitted packets should not be ignored for example.
+Retransmitted incoming packets will be ignored - right.
+But counting on the 3rd layer of network stack (in netfilter) is 
+expensive, we should twice resolve destination process.
 
-Regards,
--Jeff
+> 2) Ugly #ifdef in c files. Don't do that please.
+>
+> 3) No check of kmalloc() returns (can be NULL)
+>
+This issues I'll fix.
+
+>
+
+
+-- 
+Best regards,
+Alexey Perevalov
