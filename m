@@ -1,57 +1,44 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/6] cgroup: initialize cgrp->dentry before css_alloc()
-Date: Thu, 17 Jan 2013 16:03:12 +0800
-Message-ID: <50F7B040.2020906@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 4/6] cgroup: remove duplicate RCU free on struct cgroup
+Date: Thu, 17 Jan 2013 16:04:09 +0800
+Message-ID: <50F7B079.50201@huawei.com>
+References: <50F7B040.2020906@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50F7B040.2020906@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-With this change, it's guaranteed that cgroup_path() won't see NULL
-cgrp->dentry, and thus we can remove the NULL check in it.
+When destroying cgroup, though in cgroup_diput() we've called
+synchronize_rcu(), we then still have to free cgroup via call_rcu().
 
-(Well, it's not true, because dummptop.dentry is always NULL)
+The story is, long ago to fix a race between reading /proc/sched_debug
+and freeing cgroup, the code was changed to utilize call_rcu().
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Now we've splitted part of cpu cgroup css_alloc/free to css_online/offline,
+which makes the race vanish, and this grants us to remove call_rcu().
+
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- kernel/cgroup.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a893985..23a0ce1 100644
+index 23a0ce1..d7fefeb 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1764,7 +1764,7 @@ int cgroup_path(const struct cgroup *cgrp, char *buf, int buflen)
- 	rcu_lockdep_assert(rcu_read_lock_held() || cgroup_lock_is_held(),
- 			   "cgroup_path() called without proper locking");
+@@ -892,7 +892,7 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+ 		simple_xattrs_free(&cgrp->xattrs);
  
--	if (!dentry || cgrp == dummytop) {
-+	if (cgrp == dummytop) {
- 		/*
- 		 * Inactive subsystems have no dentry for their root
- 		 * cgroup
-@@ -4150,6 +4150,9 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 
- 	init_cgroup_housekeeping(cgrp);
- 
-+	dentry->d_fsdata = cgrp;
-+	cgrp->dentry = dentry;
-+
- 	cgrp->parent = parent;
- 	cgrp->root = parent->root;
- 	cgrp->top_cgroup = parent->top_cgroup;
-@@ -4187,8 +4190,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	lockdep_assert_held(&dentry->d_inode->i_mutex);
- 
- 	/* allocation complete, commit to creation */
--	dentry->d_fsdata = cgrp;
--	cgrp->dentry = dentry;
- 	list_add_tail(&cgrp->allcg_node, &root->allcg_list);
- 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
- 	root->number_of_cgroups++;
+ 		ida_simple_remove(&cgrp->root->cgroup_ida, cgrp->id);
+-		kfree_rcu(cgrp, rcu_head);
++		kfree(cgrp);
+ 	} else {
+ 		struct cfent *cfe = __d_cfe(dentry);
+ 		struct cgroup *cgrp = dentry->d_parent->d_fsdata;
 -- 
 1.8.0.2
