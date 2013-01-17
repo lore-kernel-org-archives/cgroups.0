@@ -1,69 +1,57 @@
-From: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [RFC PATCH v3] cgroup: net_cls: traffic counter based on
- classification control cgroup
-Date: Wed, 16 Jan 2013 19:48:30 +0400
-Message-ID: <50F6CBCE.8030803@samsung.com>
-References: <20130115133351.GA8633@aperevalov>
- <1358262309.8744.5760.camel@edumazet-glaptop>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/6] cgroup: initialize cgrp->dentry before css_alloc()
+Date: Thu, 17 Jan 2013 16:03:12 +0800
+Message-ID: <50F7B040.2020906@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <1358262309.8744.5760.camel@edumazet-glaptop>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello Eric
+With this change, it's guaranteed that cgroup_path() won't see NULL
+cgrp->dentry, and thus we can remove the NULL check in it.
 
-On 01/15/2013 07:05 PM, Eric Dumazet wrote:
-> On Tue, 2013-01-15 at 17:33 +0400, Alexey Perevalov wrote:
->> Hello
->>
->> I would like to represent next version of patch I sent before
->> cgroup: "net_cls: traffic counter based on classification control cgroup"
->>
->> The main idea is the same as was. It keeping counter in control groups, but now uses atomic instead of resource_counters.
->>
->> Signed-off-by: Alexey Perevalov<a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->> ---
->>   include/net/cls_cgroup.h         |  200 ++++++++++++++++++++++++++++++++++----
->>   include/net/cls_counter_holder.h |   26 +++++
->>   init/Kconfig                     |   25 +++++
->>   kernel/cgroup.c                  |    2 +
->>   kernel/res_counter.c             |    4 +
->>   net/core/dev.c                   |    6 ++
->>   net/ipv4/tcp.c                   |   27 ++++-
->>   net/ipv4/udp.c                   |    6 ++
->>   net/sched/Kconfig                |   11 ---
->>   net/sched/Makefile               |    1 +
->>   net/sched/cls_cgroup.c           |  194 +++++++++++++++++++++++++++++++++++-
->>   net/sched/cls_counter_holder.c   |  144 +++++++++++++++++++++++++++
->>   12 files changed, 611 insertions(+), 35 deletions(-)
->>   create mode 100644 include/net/cls_counter_holder.h
->>   create mode 100644 net/sched/cls_counter_holder.c
-> Sorry, there are too many issues with this patch and I have not
-> a lot of time to review it.
->
-> 0) No changelog or documentation
-Do you expect documentation in Documentation/cgroups/.
-For example I'll create new file net_cls.txt
-> 1) There is no way you need to add kludges in tcp and udp for this
-> accounting. Retransmitted packets should not be ignored for example.
-Retransmitted incoming packets will be ignored - right.
-But counting on the 3rd layer of network stack (in netfilter) is 
-expensive, we should twice resolve destination process.
+(Well, it's not true, because dummptop.dentry is always NULL)
 
-> 2) Ugly #ifdef in c files. Don't do that please.
->
-> 3) No check of kmalloc() returns (can be NULL)
->
-This issues I'll fix.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
->
-
-
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a893985..23a0ce1 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1764,7 +1764,7 @@ int cgroup_path(const struct cgroup *cgrp, char *buf, int buflen)
+ 	rcu_lockdep_assert(rcu_read_lock_held() || cgroup_lock_is_held(),
+ 			   "cgroup_path() called without proper locking");
+ 
+-	if (!dentry || cgrp == dummytop) {
++	if (cgrp == dummytop) {
+ 		/*
+ 		 * Inactive subsystems have no dentry for their root
+ 		 * cgroup
+@@ -4150,6 +4150,9 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 
+ 	init_cgroup_housekeeping(cgrp);
+ 
++	dentry->d_fsdata = cgrp;
++	cgrp->dentry = dentry;
++
+ 	cgrp->parent = parent;
+ 	cgrp->root = parent->root;
+ 	cgrp->top_cgroup = parent->top_cgroup;
+@@ -4187,8 +4190,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	lockdep_assert_held(&dentry->d_inode->i_mutex);
+ 
+ 	/* allocation complete, commit to creation */
+-	dentry->d_fsdata = cgrp;
+-	cgrp->dentry = dentry;
+ 	list_add_tail(&cgrp->allcg_node, &root->allcg_list);
+ 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
+ 	root->number_of_cgroups++;
 -- 
-Best regards,
-Alexey Perevalov
+1.8.0.2
