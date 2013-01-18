@@ -1,123 +1,186 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 1/7] memcg: prevent changes to
- move_charge_at_immigrate during task attach
-Date: Fri, 18 Jan 2013 15:16:37 +0100
-Message-ID: <20130118141637.GE10701@dhcp22.suse.cz>
-References: <1357897527-15479-1-git-send-email-glommer@parallels.com>
- <1357897527-15479-2-git-send-email-glommer@parallels.com>
+From: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH v4] cgroup: net_cls: traffic counter based on
+ classification control cgroup
+Date: Fri, 18 Jan 2013 06:27:20 -0800
+Message-ID: <1358519240.11051.107.camel@edumazet-glaptop>
+References: <20130118135944.GA15062@aperevalov>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1357897527-15479-2-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:subject:from:to:cc:in-reply-to:references:content-type
+         :date:message-id:mime-version:x-mailer:content-transfer-encoding;
+        bh=dR/Yzky4ynnXhNfBg4RT2MhvDScX5tRlSKJHX1LK0hs=;
+        b=TV1CyZ9K8DS0kL8QggR2Hoe/V7Ia8uCp7L32nbBgXS95r2C+8l8BQkuuoCuIoGnyAJ
+         JS2SlmUhzyHpB6U5uoK/qHobrSs3hWjwoAaZ/9pD+NtPIn/jOQUTdkz0O5BZlQjQHLgs
+         VlI7ns/MWpOU7ZuULcHdpa3uaF4bY0I8leIGBJb3ECA5j/Nyd2TXYMDoxhiSqmwm/0h/
+         5/6goVXYu9b5T6hnfbqkYQNyZdmyuOERRAVi0LeRG+BNEXPgXOCJYZc/4BGdMu/1aR6K
+         FzV19e3zmKZwjPK+V6H0uw64xuGpoc01PWOf/5VqPz/YTxvfLIALj5UxdBxtvBiNGVm4
+         t2Dg==
+In-Reply-To: <20130118135944.GA15062@aperevalov>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 11-01-13 13:45:21, Glauber Costa wrote:
-> Currently, we rely on the cgroup_lock() to prevent changes to
-> move_charge_at_immigrate during task migration. However, this is only
-> needed because the current strategy keeps checking this value throughout
-> the whole process. Since all we need is serialization, one needs only to
-> guarantee that whatever decision we made in the beginning of a specific
-> migration is respected throughout the process.
+On Fri, 2013-01-18 at 17:59 +0400, Alexey Perevalov wrote:
+> Traffic counter based on classification control group
 > 
-> We can achieve this by just saving it in mc. By doing this, no kind of
-> locking is needed.
+> 	The main goal of this patch it's counting traffic for process placed to
+> 	net_cls cgroup (ingress and egress).
+> 	It's based on atomic and holds counter per network interfaces.
 > 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-
-I would probably prefer to use a different name so that we know that
-move_charge_at_immigrate is a property of the cgroup while the other
-immigrate_flags (or whatever) is a temporal state when greping the code.
-But nothing serious.
-
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
+> 	It handles packets in net/core/dev.c for egress and in
+> 	/net/ipv4/tcp.c|udp.c for ingress.
+> 
+> 	Cgroup fs interface provides following files additional to existing
+> 		net_cls files:
+> 			net_cls.ifacename.usage_in_bytes
+> 			Containing rcv/snd lines.
+> 
+> Signed-off-by: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 > ---
->  mm/memcontrol.c | 26 +++++++++++++++++---------
->  1 file changed, 17 insertions(+), 9 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 09255ec..18f4e76 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -412,6 +412,7 @@ static struct move_charge_struct {
->  	spinlock_t	  lock; /* for from, to */
->  	struct mem_cgroup *from;
->  	struct mem_cgroup *to;
-> +	unsigned long move_charge_at_immigrate;
->  	unsigned long precharge;
->  	unsigned long moved_charge;
->  	unsigned long moved_swap;
-> @@ -425,13 +426,13 @@ static struct move_charge_struct {
->  static bool move_anon(void)
->  {
->  	return test_bit(MOVE_CHARGE_TYPE_ANON,
-> -					&mc.to->move_charge_at_immigrate);
-> +					&mc.move_charge_at_immigrate);
->  }
->  
->  static bool move_file(void)
->  {
->  	return test_bit(MOVE_CHARGE_TYPE_FILE,
-> -					&mc.to->move_charge_at_immigrate);
-> +					&mc.move_charge_at_immigrate);
->  }
->  
->  /*
-> @@ -5146,15 +5147,14 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
->  
->  	if (val >= (1 << NR_MOVE_TYPE))
->  		return -EINVAL;
-> +
->  	/*
-> -	 * We check this value several times in both in can_attach() and
-> -	 * attach(), so we need cgroup lock to prevent this value from being
-> -	 * inconsistent.
-> +	 * No kind of locking is needed in here, because ->can_attach() will
-> +	 * check this value once in the beginning of the process, and then carry
-> +	 * on with stale data. This means that changes to this value will only
-> +	 * affect task migrations starting after the change.
->  	 */
-> -	cgroup_lock();
->  	memcg->move_charge_at_immigrate = val;
-> -	cgroup_unlock();
-> -
->  	return 0;
->  }
->  #else
-> @@ -6530,8 +6530,15 @@ static int mem_cgroup_can_attach(struct cgroup *cgroup,
->  	struct task_struct *p = cgroup_taskset_first(tset);
->  	int ret = 0;
->  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
-> +	unsigned long move_charge_at_immigrate;
->  
-> -	if (memcg->move_charge_at_immigrate) {
-> +	/*
-> +	 * We are now commited to this value whatever it is. Changes in this
-> +	 * tunable will only affect upcoming migrations, not the current one.
-> +	 * So we need to save it, and keep it going.
-> +	 */
-> +	move_charge_at_immigrate  = memcg->move_charge_at_immigrate;
-> +	if (move_charge_at_immigrate) {
->  		struct mm_struct *mm;
->  		struct mem_cgroup *from = mem_cgroup_from_task(p);
->  
-> @@ -6551,6 +6558,7 @@ static int mem_cgroup_can_attach(struct cgroup *cgroup,
->  			spin_lock(&mc.lock);
->  			mc.from = from;
->  			mc.to = memcg;
-> +			mc.move_charge_at_immigrate = move_charge_at_immigrate;
->  			spin_unlock(&mc.lock);
->  			/* We set mc.moving_task later */
->  
-> -- 
-> 1.7.11.7
-> 
 
--- 
-Michal Hocko
-SUSE Labs
+...
+
+> index d1e8116..ffc9ec2 100644
+> --- a/net/core/dev.c
+> +++ b/net/core/dev.c
+> @@ -135,6 +135,7 @@
+>  #include <linux/net_tstamp.h>
+>  #include <linux/static_key.h>
+>  #include <net/flow_keys.h>
+> +#include <net/cls_cgroup.h>
+>  
+>  #include "net-sysfs.h"
+>  
+> @@ -2922,6 +2923,11 @@ int dev_queue_xmit(struct sk_buff *skb)
+>  	 */
+>  	rcu_read_lock_bh();
+>  
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +	if (dev)
+
+How dev could be NULL here ?
+
+> +		count_cls_snd(skb_cls_classid(skb), skb->len, dev->name);
+> +#endif
+
+Why do you add these ugly ifdefs in the C files ?
+
+As already said, you should not add new ifdef in C files, but properly
+define empty functions in the header files
+
+#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+ ...
+#else
+ static inline void count_cls_snd( args ) { }
+#endif
+
+
+
+
+> +
+>  	skb_update_prio(skb);
+>  
+>  	txq = netdev_pick_tx(dev, skb);
+> diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
+> index 1ca2536..dc4dc3a 100644
+> --- a/net/ipv4/tcp.c
+> +++ b/net/ipv4/tcp.c
+> @@ -276,6 +276,7 @@
+>  #include <net/ip.h>
+>  #include <net/netdma.h>
+>  #include <net/sock.h>
+> +#include <net/cls_cgroup.h>
+>  
+>  #include <asm/uaccess.h>
+>  #include <asm/ioctls.h>
+> @@ -1464,6 +1465,9 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
+>  	u32 seq = tp->copied_seq;
+>  	u32 offset;
+>  	int copied = 0;
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +	int ifindex = 0;
+> +#endif
+>  
+>  	if (sk->sk_state == TCP_LISTEN)
+>  		return -ENOTCONN;
+> @@ -1510,6 +1514,9 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
+>  			++seq;
+>  			break;
+>  		}
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +		ifindex = get_ifindex_from_skb(skb);
+> +#endif
+>  		sk_eat_skb(sk, skb, false);
+>  		if (!desc->count)
+>  			break;
+> @@ -1520,8 +1527,12 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
+>  	tcp_rcv_space_adjust(sk);
+>  
+>  	/* Clean up data we have read: This will do ACK frames. */
+> -	if (copied > 0)
+> +	if (copied > 0) {
+>  		tcp_cleanup_rbuf(sk, copied);
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +		count_cls_rcv(current, copied, ifindex);
+> +#endif
+> +	}
+>  	return copied;
+>  }
+>  EXPORT_SYMBOL(tcp_read_sock);
+> @@ -1549,6 +1560,9 @@ int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
+>  	bool copied_early = false;
+>  	struct sk_buff *skb;
+>  	u32 urg_hole = 0;
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +	int ifindex = 0;
+> +#endif
+>  
+>  	lock_sock(sk);
+>  
+> @@ -1873,6 +1887,9 @@ skip_copy:
+>  		if (tcp_hdr(skb)->fin)
+>  			goto found_fin_ok;
+>  		if (!(flags & MSG_PEEK)) {
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +			ifindex = get_ifindex_from_skb(skb);
+> +#endif
+>  			sk_eat_skb(sk, skb, copied_early);
+>  			copied_early = false;
+>  		}
+> @@ -1882,6 +1899,9 @@ skip_copy:
+>  		/* Process the FIN. */
+>  		++*seq;
+>  		if (!(flags & MSG_PEEK)) {
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +			ifindex = get_ifindex_from_skb(skb);
+> +#endif
+>  			sk_eat_skb(sk, skb, copied_early);
+>  			copied_early = false;
+>  		}
+> @@ -1924,6 +1944,11 @@ skip_copy:
+>  	/* Clean up data we have read: This will do ACK frames. */
+>  	tcp_cleanup_rbuf(sk, copied);
+>  
+> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
+> +	if (copied > 0)
+> +		count_cls_rcv(current, copied, ifindex);
+> +#endif
+> +
+>  	release_sock(sk);
+>  	return copied;
+>  
+
+
+There is no need to add so much ugly code in tcp at least
+
+For input packets, as soon as we identify a matching socket in IP/TCP
+early demux, we are done. It permits to properly account packets, even
+the retransmits and ACKS, and even packets dropped by netfilter or
+sk_filter.
+
+
