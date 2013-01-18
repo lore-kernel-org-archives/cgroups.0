@@ -1,13 +1,13 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 4/7] memcg: fast hierarchy-aware child test.
-Date: Fri, 18 Jan 2013 17:06:10 +0100
-Message-ID: <20130118160610.GI10701@dhcp22.suse.cz>
+Subject: Re: [PATCH v2 5/7] May god have mercy on my soul.
+Date: Fri, 18 Jan 2013 17:07:46 +0100
+Message-ID: <20130118160746.GJ10701@dhcp22.suse.cz>
 References: <1357897527-15479-1-git-send-email-glommer@parallels.com>
- <1357897527-15479-5-git-send-email-glommer@parallels.com>
+ <1357897527-15479-6-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1357897527-15479-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <1357897527-15479-6-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -15,59 +15,89 @@ Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Fri 11-01-13 13:45:24, Glauber Costa wrote:
-[...]
+Please merge this into the following patch.
+
+On Fri 11-01-13 13:45:25, Glauber Costa wrote:
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 16 +++++++---------
+>  1 file changed, 7 insertions(+), 9 deletions(-)
+> 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2ac2808..aa4e258 100644
+> index aa4e258..c024614 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -4723,6 +4723,30 @@ static void mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
+> @@ -2909,7 +2909,7 @@ int memcg_cache_id(struct mem_cgroup *memcg)
+>   * operation, because that is its main call site.
+>   *
+>   * But when we create a new cache, we can call this as well if its parent
+> - * is kmem-limited. That will have to hold set_limit_mutex as well.
+> + * is kmem-limited. That will have to hold cgroup_lock as well.
+>   */
+>  int memcg_update_cache_sizes(struct mem_cgroup *memcg)
+>  {
+> @@ -2924,7 +2924,7 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
+>  	 * the beginning of this conditional), is no longer 0. This
+>  	 * guarantees only one process will set the following boolean
+>  	 * to true. We don't need test_and_set because we're protected
+> -	 * by the set_limit_mutex anyway.
+> +	 * by the cgroup_lock anyway.
+>  	 */
+>  	memcg_kmem_set_activated(memcg);
+>  
+> @@ -3265,9 +3265,9 @@ void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
+>  	 *
+>  	 * Still, we don't want anyone else freeing memcg_caches under our
+>  	 * noses, which can happen if a new memcg comes to life. As usual,
+> -	 * we'll take the set_limit_mutex to protect ourselves against this.
+> +	 * we'll take the cgroup_lock to protect ourselves against this.
+>  	 */
+> -	mutex_lock(&set_limit_mutex);
+> +	cgroup_lock();
+>  	for (i = 0; i < memcg_limited_groups_array_size; i++) {
+>  		c = s->memcg_params->memcg_caches[i];
+>  		if (!c)
+> @@ -3290,7 +3290,7 @@ void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
+>  		cancel_work_sync(&c->memcg_params->destroy);
+>  		kmem_cache_destroy(c);
+>  	}
+> -	mutex_unlock(&set_limit_mutex);
+> +	cgroup_unlock();
 >  }
 >  
->  /*
-> + * must be called with memcg_mutex held, unless the cgroup is guaranteed to be
+>  struct create_work {
+> @@ -4946,7 +4946,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+>  	 * can also get rid of the use_hierarchy check.
+>  	 */
+>  	cgroup_lock();
+> -	mutex_lock(&set_limit_mutex);
+>  	if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
+>  		if (cgroup_task_count(cont) || memcg_has_children(memcg)) {
+>  			ret = -EBUSY;
+> @@ -4971,7 +4970,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+>  	} else
+>  		ret = res_counter_set_limit(&memcg->kmem, val);
+>  out:
+> -	mutex_unlock(&set_limit_mutex);
+>  	cgroup_unlock();
+>  
+>  	/*
+> @@ -5029,9 +5027,9 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
+>  	mem_cgroup_get(memcg);
+>  	static_key_slow_inc(&memcg_kmem_enabled_key);
+>  
+> -	mutex_lock(&set_limit_mutex);
+> +	cgroup_lock();
+>  	ret = memcg_update_cache_sizes(memcg);
+> -	mutex_unlock(&set_limit_mutex);
+> +	cgroup_unlock();
+>  #endif
+>  out:
+>  	return ret;
+> -- 
+> 1.7.11.7
+> 
 
-This one doesn't exist yet.
-
-> + * already dead (like in mem_cgroup_force_empty, for instance).  This is
-> + * different than mem_cgroup_count_children, in the sense that we don't really
-> + * care how many children we have, we only need to know if we have any. It is
-> + * also count any memcg without hierarchy as infertile for that matter.
-> + */
-> +static inline bool memcg_has_children(struct mem_cgroup *memcg)
-> +{
-> +	struct mem_cgroup *iter;
-> +
-> +	if (!memcg->use_hierarchy)
-> +		return false;
-> +
-> +	/* bounce at first found */
-> +	for_each_mem_cgroup_tree(iter, memcg) {
-
-This will not work. Consider you will see a !online memcg. What happens?
-mem_cgroup_iter will css_get group that it returns and css_put it when
-it visits another one or finishes the loop. So your poor iter will be
-released before it gets born. Not good.
-
-> +		if ((iter == memcg) || !mem_cgroup_online(iter))
-> +			continue;
-> +		return true;
-
-mem_cgroup_iter_break here if you _really_ insist on
-for_each_mem_cgroup_tree.
-
-I still think that the hammer is too big for what we need here.
-
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +/*
->   * Reclaims as many pages from the given memcg as possible and moves
->   * the rest to the parent.
->   *
-[...]
 -- 
 Michal Hocko
 SUSE Labs
