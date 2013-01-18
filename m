@@ -1,99 +1,107 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 7/7] memcg: increment static branch right after limit
- set.
-Date: Fri, 18 Jan 2013 17:23:13 +0100
-Message-ID: <20130118162313.GL10701@dhcp22.suse.cz>
-References: <1357897527-15479-1-git-send-email-glommer@parallels.com>
- <1357897527-15479-8-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 2/7] memcg: split part of memcg creation to css_online
+Date: Fri, 18 Jan 2013 11:28:00 -0800
+Message-ID: <50F9A240.5040808@parallels.com>
+References: <1357897527-15479-1-git-send-email-glommer@parallels.com> <1357897527-15479-3-git-send-email-glommer@parallels.com> <20130118152526.GF10701@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1357897527-15479-8-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20130118152526.GF10701-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Fri 11-01-13 13:45:27, Glauber Costa wrote:
-> We were deferring the kmemcg static branch increment to a later time,
-> due to a nasty dependency between the cpu_hotplug lock, taken by the
-> jump label update, and the cgroup_lock.
+On 01/18/2013 07:25 AM, Michal Hocko wrote:
+> On Fri 11-01-13 13:45:22, Glauber Costa wrote:
+>> Although there is arguably some value in doing this per se, the main
 > 
-> Now we no longer take the cgroup lock, and we can save ourselves the
-> trouble.
-
-What a relief.
-
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko@suse>
-
-> ---
->  mm/memcontrol.c | 31 +++++++------------------------
->  1 file changed, 7 insertions(+), 24 deletions(-)
+> This begs for asking what are the other reasons but I would just leave
+> it alone and focus on the code reshuffling.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 5f3adbc..f87d6d2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4926,8 +4926,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
->  {
->  	int ret = -EINVAL;
->  #ifdef CONFIG_MEMCG_KMEM
-> -	bool must_inc_static_branch = false;
-> -
->  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
->  	/*
->  	 * For simplicity, we won't allow this to be disabled.  It also can't
-> @@ -4958,7 +4956,13 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
->  			res_counter_set_limit(&memcg->kmem, RESOURCE_MAX);
->  			goto out;
->  		}
-> -		must_inc_static_branch = true;
-> +		static_key_slow_inc(&memcg_kmem_enabled_key);
-> +		/*
-> +		 * setting the active bit after the inc will guarantee no one
-> +		 * starts accounting before all call sites are patched
-> +		 */
-> +		memcg_kmem_set_active(memcg);
-> +
->  		/*
->  		 * kmem charges can outlive the cgroup. In the case of slab
->  		 * pages, for instance, a page contain objects from various
-> @@ -4970,27 +4974,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
->  		ret = res_counter_set_limit(&memcg->kmem, val);
->  out:
->  	mutex_unlock(&memcg_mutex);
-> -
-> -	/*
-> -	 * We are by now familiar with the fact that we can't inc the static
-> -	 * branch inside cgroup_lock. See disarm functions for details. A
-> -	 * worker here is overkill, but also wrong: After the limit is set, we
-> -	 * must start accounting right away. Since this operation can't fail,
-> -	 * we can safely defer it to here - no rollback will be needed.
-> -	 *
-> -	 * The boolean used to control this is also safe, because
-> -	 * KMEM_ACCOUNTED_ACTIVATED guarantees that only one process will be
-> -	 * able to set it to true;
-> -	 */
-> -	if (must_inc_static_branch) {
-> -		static_key_slow_inc(&memcg_kmem_enabled_key);
-> -		/*
-> -		 * setting the active bit after the inc will guarantee no one
-> -		 * starts accounting before all call sites are patched
-> -		 */
-> -		memcg_kmem_set_active(memcg);
-> -	}
-> -
->  #endif
->  	return ret;
->  }
-> -- 
-> 1.7.11.7
-> 
+Yes, Sir.
 
--- 
-Michal Hocko
-SUSE Labs
+>> goal of this patch is to make room for the locking changes to come.
+>>
+>> With all the value assignment from parent happening in a context where
+>> our iterators can already be used, we can safely lock against value
+>> change in some key values like use_hierarchy, without resorting to the
+>> cgroup core at all.
+> 
+> Sorry but I do not understand the above. Please be more specific here.
+> Why the context matters if it matters at all.
+> 
+> Maybe something like the below?
+> "
+> mem_cgroup_css_alloc is currently responsible for the complete
+> initialization of a newly created memcg. Cgroup core offers another
+> stage of initialization - css_online - which is called after the newly
+> created group is already linked to the cgroup hierarchy.
+> All attributes inheritted from the parent group can be safely moved
+> into mem_cgroup_css_online because nobody can see the newly created
+> group yet. This has also an advantage that the parent can already see
+> the child group (via iterators) by the time we inherit values from it
+> so he can do appropriate steps (e.g. don't allow changing use_hierarchy
+> etc...).
+> 
+> This patch is a preparatory work for later locking rework to get rid of
+> big cgroup lock from memory controller code.
+> "
+> 
+Well, I will look into merging some of it, but AFAIK, you are explaining
+why is it safe (a good thing to do), while I was focusing on telling our
+future readers why is it needed.
+
+I'll try to rewrite for clarity
+
+> 
+> 	/*
+> 	 * Initialization of attributes which are linked with parent
+> 	 * based on use_hierarchy.
+> 	 */
+>>  	if (parent && parent->use_hierarchy) {
+> 
+> parent cannot be NULL.
+> 
+indeed.
+
+>>  		res_counter_init(&memcg->res, &parent->res);
+>>  		res_counter_init(&memcg->memsw, &parent->memsw);
+>> @@ -6120,15 +6149,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+>>  		if (parent && parent != root_mem_cgroup)
+>>  			mem_cgroup_subsys.broken_hierarchy = true;
+>>  	}
+>> -	memcg->last_scanned_node = MAX_NUMNODES;
+>> -	INIT_LIST_HEAD(&memcg->oom_notify);
+>>  
+>> -	if (parent)
+>> -		memcg->swappiness = mem_cgroup_swappiness(parent);
+>> -	atomic_set(&memcg->refcnt, 1);
+>> -	memcg->move_charge_at_immigrate = 0;
+>> -	mutex_init(&memcg->thresholds_lock);
+>> -	spin_lock_init(&memcg->move_lock);
+>> +	memcg->swappiness = mem_cgroup_swappiness(parent);
+> 
+> Please move this up to oom_kill_disable and use_hierarchy
+> initialization.
+> 
+Yes, Sir!
+
+> 	/*
+> 	 * kmem initialization depends on memcg->res initialization
+> 	 * because it relies on parent_mem_cgroup
+> 	 */
+>>  	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
+>>  	if (error) {
+>> @@ -6138,12 +6160,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+>>  		 * call __mem_cgroup_free, so return directly
+>>  		 */
+>>  		mem_cgroup_put(memcg);
+> 
+> Hmm, this doesn't release parent for use_hierarchy. The bug is there
+> from before this patch. So it should go into a separate patch.
+> 
+Good catch.
+
+
