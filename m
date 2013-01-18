@@ -1,49 +1,73 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v2 3/7] memcg: provide online test for memcg
-Date: Fri, 18 Jan 2013 16:56:21 +0100
-Message-ID: <20130118155621.GH10701@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 4/7] memcg: fast hierarchy-aware child test.
+Date: Fri, 18 Jan 2013 17:06:10 +0100
+Message-ID: <20130118160610.GI10701@dhcp22.suse.cz>
 References: <1357897527-15479-1-git-send-email-glommer@parallels.com>
- <1357897527-15479-4-git-send-email-glommer@parallels.com>
- <20130118153715.GG10701@dhcp22.suse.cz>
+ <1357897527-15479-5-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130118153715.GG10701@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1357897527-15479-5-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Fri 18-01-13 16:37:15, Michal Hocko wrote:
-> On Fri 11-01-13 13:45:23, Glauber Costa wrote:
-> > Since we are now splitting the memcg creation in two parts, following
-> > the cgroup standard, it would be helpful to be able to determine if a
-> > created memcg is already online.
-> > 
-> > We can do this by initially forcing the refcnt to 0, and waiting until
-> > the last minute to flip it to 1.
-> 
-> Is this useful, though? What does it tell you? mem_cgroup_online can say
-> false even though half of the attributes have been already copied for
-> example. I think it should be vice versa. It should mark the point when
-> we _start_ copying values. mem_cgroup_online is not the best name then
-> of course. It depends what it is going to be used for...
+On Fri 11-01-13 13:45:24, Glauber Costa wrote:
+[...]
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2ac2808..aa4e258 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4723,6 +4723,30 @@ static void mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
+>  }
+>  
+>  /*
+> + * must be called with memcg_mutex held, unless the cgroup is guaranteed to be
 
-And the later patch in the series shows that it is really not helpful on
-its own. You need to rely on other lock to be helpful. This calls for
-troubles and I do not think the win you get is really worth it. All it
-gives you is basically that you can change an inheritable attribute
-while your child is between css_alloc and css_online and so your
-attribute change doesn't fail if the child creation fails between those
-two. Is this the case you want to handle? Does it really even matter?
+This one doesn't exist yet.
+
+> + * already dead (like in mem_cgroup_force_empty, for instance).  This is
+> + * different than mem_cgroup_count_children, in the sense that we don't really
+> + * care how many children we have, we only need to know if we have any. It is
+> + * also count any memcg without hierarchy as infertile for that matter.
+> + */
+> +static inline bool memcg_has_children(struct mem_cgroup *memcg)
+> +{
+> +	struct mem_cgroup *iter;
+> +
+> +	if (!memcg->use_hierarchy)
+> +		return false;
+> +
+> +	/* bounce at first found */
+> +	for_each_mem_cgroup_tree(iter, memcg) {
+
+This will not work. Consider you will see a !online memcg. What happens?
+mem_cgroup_iter will css_get group that it returns and css_put it when
+it visits another one or finishes the loop. So your poor iter will be
+released before it gets born. Not good.
+
+> +		if ((iter == memcg) || !mem_cgroup_online(iter))
+> +			continue;
+> +		return true;
+
+mem_cgroup_iter_break here if you _really_ insist on
+for_each_mem_cgroup_tree.
+
+I still think that the hammer is too big for what we need here.
+
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +/*
+>   * Reclaims as many pages from the given memcg as possible and moves
+>   * the rest to the parent.
+>   *
+[...]
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
