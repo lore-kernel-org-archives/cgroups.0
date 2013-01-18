@@ -1,186 +1,188 @@
-From: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH v4] cgroup: net_cls: traffic counter based on
- classification control cgroup
-Date: Fri, 18 Jan 2013 06:27:20 -0800
-Message-ID: <1358519240.11051.107.camel@edumazet-glaptop>
-References: <20130118135944.GA15062@aperevalov>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 2/7] memcg: split part of memcg creation to css_online
+Date: Fri, 18 Jan 2013 16:25:26 +0100
+Message-ID: <20130118152526.GF10701@dhcp22.suse.cz>
+References: <1357897527-15479-1-git-send-email-glommer@parallels.com>
+ <1357897527-15479-3-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:subject:from:to:cc:in-reply-to:references:content-type
-         :date:message-id:mime-version:x-mailer:content-transfer-encoding;
-        bh=dR/Yzky4ynnXhNfBg4RT2MhvDScX5tRlSKJHX1LK0hs=;
-        b=TV1CyZ9K8DS0kL8QggR2Hoe/V7Ia8uCp7L32nbBgXS95r2C+8l8BQkuuoCuIoGnyAJ
-         JS2SlmUhzyHpB6U5uoK/qHobrSs3hWjwoAaZ/9pD+NtPIn/jOQUTdkz0O5BZlQjQHLgs
-         VlI7ns/MWpOU7ZuULcHdpa3uaF4bY0I8leIGBJb3ECA5j/Nyd2TXYMDoxhiSqmwm/0h/
-         5/6goVXYu9b5T6hnfbqkYQNyZdmyuOERRAVi0LeRG+BNEXPgXOCJYZc/4BGdMu/1aR6K
-         FzV19e3zmKZwjPK+V6H0uw64xuGpoc01PWOf/5VqPz/YTxvfLIALj5UxdBxtvBiNGVm4
-         t2Dg==
-In-Reply-To: <20130118135944.GA15062@aperevalov>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1357897527-15479-3-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>
 
-On Fri, 2013-01-18 at 17:59 +0400, Alexey Perevalov wrote:
-> Traffic counter based on classification control group
+On Fri 11-01-13 13:45:22, Glauber Costa wrote:
+> Although there is arguably some value in doing this per se, the main
+
+This begs for asking what are the other reasons but I would just leave
+it alone and focus on the code reshuffling.
+
+> goal of this patch is to make room for the locking changes to come.
 > 
-> 	The main goal of this patch it's counting traffic for process placed to
-> 	net_cls cgroup (ingress and egress).
-> 	It's based on atomic and holds counter per network interfaces.
-> 
-> 	It handles packets in net/core/dev.c for egress and in
-> 	/net/ipv4/tcp.c|udp.c for ingress.
-> 
-> 	Cgroup fs interface provides following files additional to existing
-> 		net_cls files:
-> 			net_cls.ifacename.usage_in_bytes
-> 			Containing rcv/snd lines.
-> 
-> Signed-off-by: Alexey Perevalov <a.perevalov-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> With all the value assignment from parent happening in a context where
+> our iterators can already be used, we can safely lock against value
+> change in some key values like use_hierarchy, without resorting to the
+> cgroup core at all.
+
+Sorry but I do not understand the above. Please be more specific here.
+Why the context matters if it matters at all.
+
+Maybe something like the below?
+"
+mem_cgroup_css_alloc is currently responsible for the complete
+initialization of a newly created memcg. Cgroup core offers another
+stage of initialization - css_online - which is called after the newly
+created group is already linked to the cgroup hierarchy.
+All attributes inheritted from the parent group can be safely moved
+into mem_cgroup_css_online because nobody can see the newly created
+group yet. This has also an advantage that the parent can already see
+the child group (via iterators) by the time we inherit values from it
+so he can do appropriate steps (e.g. don't allow changing use_hierarchy
+etc...).
+
+This patch is a preparatory work for later locking rework to get rid of
+big cgroup lock from memory controller code.
+"
+
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
 > ---
+>  mm/memcontrol.c | 53 ++++++++++++++++++++++++++++++++++++-----------------
+>  1 file changed, 36 insertions(+), 17 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 18f4e76..2229945 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6090,12 +6090,41 @@ mem_cgroup_css_alloc(struct cgroup *cont)
 
-...
+parent becomes unused (except for parent = NULL; in the root_cgroup
+branch).
 
-> index d1e8116..ffc9ec2 100644
-> --- a/net/core/dev.c
-> +++ b/net/core/dev.c
-> @@ -135,6 +135,7 @@
->  #include <linux/net_tstamp.h>
->  #include <linux/static_key.h>
->  #include <net/flow_keys.h>
-> +#include <net/cls_cgroup.h>
->  
->  #include "net-sysfs.h"
->  
-> @@ -2922,6 +2923,11 @@ int dev_queue_xmit(struct sk_buff *skb)
->  	 */
->  	rcu_read_lock_bh();
->  
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +	if (dev)
-
-How dev could be NULL here ?
-
-> +		count_cls_snd(skb_cls_classid(skb), skb->len, dev->name);
-> +#endif
-
-Why do you add these ugly ifdefs in the C files ?
-
-As already said, you should not add new ifdef in C files, but properly
-define empty functions in the header files
-
-#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
- ...
-#else
- static inline void count_cls_snd( args ) { }
-#endif
-
-
-
-
-> +
->  	skb_update_prio(skb);
->  
->  	txq = netdev_pick_tx(dev, skb);
-> diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-> index 1ca2536..dc4dc3a 100644
-> --- a/net/ipv4/tcp.c
-> +++ b/net/ipv4/tcp.c
-> @@ -276,6 +276,7 @@
->  #include <net/ip.h>
->  #include <net/netdma.h>
->  #include <net/sock.h>
-> +#include <net/cls_cgroup.h>
->  
->  #include <asm/uaccess.h>
->  #include <asm/ioctls.h>
-> @@ -1464,6 +1465,9 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
->  	u32 seq = tp->copied_seq;
->  	u32 offset;
->  	int copied = 0;
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +	int ifindex = 0;
-> +#endif
->  
->  	if (sk->sk_state == TCP_LISTEN)
->  		return -ENOTCONN;
-> @@ -1510,6 +1514,9 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
->  			++seq;
->  			break;
+>  						&per_cpu(memcg_stock, cpu);
+>  			INIT_WORK(&stock->work, drain_local_stock);
 >  		}
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +		ifindex = get_ifindex_from_skb(skb);
-> +#endif
->  		sk_eat_skb(sk, skb, false);
->  		if (!desc->count)
->  			break;
-> @@ -1520,8 +1527,12 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
->  	tcp_rcv_space_adjust(sk);
+> -	} else {
+> -		parent = mem_cgroup_from_cont(cont->parent);
+> -		memcg->use_hierarchy = parent->use_hierarchy;
+> -		memcg->oom_kill_disable = parent->oom_kill_disable;
+> +
+> +		res_counter_init(&memcg->res, NULL);
+> +		res_counter_init(&memcg->memsw, NULL);
+> +		res_counter_init(&memcg->kmem, NULL);
+>  	}
 >  
->  	/* Clean up data we have read: This will do ACK frames. */
-> -	if (copied > 0)
-> +	if (copied > 0) {
->  		tcp_cleanup_rbuf(sk, copied);
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +		count_cls_rcv(current, copied, ifindex);
-> +#endif
-> +	}
->  	return copied;
+	/*
+	 * All memcg attributes which are not inherited throughout
+	 * the hierarchy are initialized here
+	 */
+> +	memcg->last_scanned_node = MAX_NUMNODES;
+> +	INIT_LIST_HEAD(&memcg->oom_notify);
+> +	atomic_set(&memcg->refcnt, 1);
+> +	memcg->move_charge_at_immigrate = 0;
+> +	mutex_init(&memcg->thresholds_lock);
+> +	spin_lock_init(&memcg->move_lock);
+> +
+> +	return &memcg->css;
+> +
+> +free_out:
+> +	__mem_cgroup_free(memcg);
+> +	return ERR_PTR(error);
+> +}
+> +
+
+> +static int
+> +mem_cgroup_css_online(struct cgroup *cont)
+> +{
+> +	struct mem_cgroup *memcg, *parent;
+> +	int error = 0;
+> +
+> +	if (!cont->parent)
+> +		return 0;
+> +
+> +	memcg = mem_cgroup_from_cont(cont);
+> +	parent = mem_cgroup_from_cont(cont->parent);
+> +
+	/*
+	 * Initialization of attributes which are inherited from parent.
+	 */
+> +	memcg->use_hierarchy = parent->use_hierarchy;
+> +	memcg->oom_kill_disable = parent->oom_kill_disable;
+> +
+
+	/*
+	 * Initialization of attributes which are linked with parent
+	 * based on use_hierarchy.
+	 */
+>  	if (parent && parent->use_hierarchy) {
+
+parent cannot be NULL.
+
+>  		res_counter_init(&memcg->res, &parent->res);
+>  		res_counter_init(&memcg->memsw, &parent->memsw);
+> @@ -6120,15 +6149,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+>  		if (parent && parent != root_mem_cgroup)
+>  			mem_cgroup_subsys.broken_hierarchy = true;
+>  	}
+> -	memcg->last_scanned_node = MAX_NUMNODES;
+> -	INIT_LIST_HEAD(&memcg->oom_notify);
+>  
+> -	if (parent)
+> -		memcg->swappiness = mem_cgroup_swappiness(parent);
+> -	atomic_set(&memcg->refcnt, 1);
+> -	memcg->move_charge_at_immigrate = 0;
+> -	mutex_init(&memcg->thresholds_lock);
+> -	spin_lock_init(&memcg->move_lock);
+> +	memcg->swappiness = mem_cgroup_swappiness(parent);
+
+Please move this up to oom_kill_disable and use_hierarchy
+initialization.
+
+	/*
+	 * kmem initialization depends on memcg->res initialization
+	 * because it relies on parent_mem_cgroup
+	 */
+>  	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
+>  	if (error) {
+> @@ -6138,12 +6160,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+>  		 * call __mem_cgroup_free, so return directly
+>  		 */
+>  		mem_cgroup_put(memcg);
+
+Hmm, this doesn't release parent for use_hierarchy. The bug is there
+from before this patch. So it should go into a separate patch.
+
+> -		return ERR_PTR(error);
+>  	}
+> -	return &memcg->css;
+> -free_out:
+> -	__mem_cgroup_free(memcg);
+> -	return ERR_PTR(error);
+> +	return error;
 >  }
->  EXPORT_SYMBOL(tcp_read_sock);
-> @@ -1549,6 +1560,9 @@ int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
->  	bool copied_early = false;
->  	struct sk_buff *skb;
->  	u32 urg_hole = 0;
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +	int ifindex = 0;
-> +#endif
 >  
->  	lock_sock(sk);
->  
-> @@ -1873,6 +1887,9 @@ skip_copy:
->  		if (tcp_hdr(skb)->fin)
->  			goto found_fin_ok;
->  		if (!(flags & MSG_PEEK)) {
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +			ifindex = get_ifindex_from_skb(skb);
-> +#endif
->  			sk_eat_skb(sk, skb, copied_early);
->  			copied_early = false;
->  		}
-> @@ -1882,6 +1899,9 @@ skip_copy:
->  		/* Process the FIN. */
->  		++*seq;
->  		if (!(flags & MSG_PEEK)) {
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +			ifindex = get_ifindex_from_skb(skb);
-> +#endif
->  			sk_eat_skb(sk, skb, copied_early);
->  			copied_early = false;
->  		}
-> @@ -1924,6 +1944,11 @@ skip_copy:
->  	/* Clean up data we have read: This will do ACK frames. */
->  	tcp_cleanup_rbuf(sk, copied);
->  
-> +#if IS_ENABLED(CONFIG_NET_CLS_COUNTER)
-> +	if (copied > 0)
-> +		count_cls_rcv(current, copied, ifindex);
-> +#endif
-> +
->  	release_sock(sk);
->  	return copied;
->  
+>  static void mem_cgroup_css_offline(struct cgroup *cont)
+> @@ -6753,6 +6771,7 @@ struct cgroup_subsys mem_cgroup_subsys = {
+>  	.name = "memory",
+>  	.subsys_id = mem_cgroup_subsys_id,
+>  	.css_alloc = mem_cgroup_css_alloc,
+> +	.css_online = mem_cgroup_css_online,
+>  	.css_offline = mem_cgroup_css_offline,
+>  	.css_free = mem_cgroup_css_free,
+>  	.can_attach = mem_cgroup_can_attach,
+> -- 
+> 1.7.11.7
+> 
 
+-- 
+Michal Hocko
+SUSE Labs
 
-There is no need to add so much ugly code in tcp at least
-
-For input packets, as soon as we identify a matching socket in IP/TCP
-early demux, we are done. It permits to properly account packets, even
-the retransmits and ACKS, and even packets dropped by netfilter or
-sk_filter.
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
