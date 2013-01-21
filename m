@@ -1,51 +1,92 @@
-From: Daniel Wagner <wagi@monom.org>
-Subject: Re: [PATCH] net: net_cls: fd passed in SCM_RIGHTS datagram not set
- correctly
-Date: Mon, 21 Jan 2013 11:16:50 +0100
-Message-ID: <50FD1592.2000907@monom.org>
-References: <1358761102-7765-1-git-send-email-wagi@monom.org> <50FD1058.2000306@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH] cgroup: fix bogus kernel warnings when cgroup_create() failed
+Date: Mon, 21 Jan 2013 18:18:33 +0800
+Message-ID: <50FD15F9.1090701@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <50FD1058.2000306@huawei.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan@huawei.com>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S. Miller" <davem@davemloft.net>, "Eric W. Biederman" <ebiederm@xmission.com>, Al Viro <viro@zeniv.linux.org.uk>, John Fastabend <john.r.fastabend@intel.com>, Neil Horman <nhorman@tuxdriver.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On 21.01.2013 10:54, Li Zefan wrote:
-> On 2013/1/21 17:38, Daniel Wagner wrote:
->> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
->>
->> Commit 6a328d8c6f03501657ad580f6f98bf9a42583ff7 changed the update
->> logic for the socket but it does not update the SCM_RIGHTS update
->> as well. This patch is based on the net_prio fix commit
->>
->> 48a87cc26c13b68f6cce4e9d769fcb17a6b3e4b8
->>
->>      net: netprio: fd passed in SCM_RIGHTS datagram not set correctly
->>
->>      A socket fd passed in a SCM_RIGHTS datagram was not getting
->>      updated with the new tasks cgrp prioidx. This leaves IO on
->>      the socket tagged with the old tasks priority.
->>
->>      To fix this add a check in the scm recvmsg path to update the
->>      sock cgrp prioidx with the new tasks value.
->>
->> Let's apply the same fix for net_cls.
->>
->> Reported-by: Li Zefan <lizefan@huawei.com>
-> 
-> Acutally I didn't report this. 
+If cgroup_create() failed and cgroup_destroy_locked() is called to
+do cleanup, we'll see a bunch of warnings:
 
-You made me look into this, so you reported it at least in my eyes :)
+cgroup_addrm_files: failed to remove 2MB.limit_in_bytes, err=-2
+cgroup_addrm_files: failed to remove 2MB.usage_in_bytes, err=-2
+cgroup_addrm_files: failed to remove 2MB.max_usage_in_bytes, err=-2
+cgroup_addrm_files: failed to remove 2MB.failcnt, err=-2
+cgroup_addrm_files: failed to remove prioidx, err=-2
+cgroup_addrm_files: failed to remove ifpriomap, err=-2
+...
 
-> I was about to send exactly the same
-> patch and then I noticed the shared socket issue. ;)
+We failed to remove those files, because cgroup_create() has failed
+before creating those cgroup files.
 
-I don't mind if you want your patch to be applied. I just felt
-responsible for the changes I did.
+To fix this, we simply don't warn if cgroup_rm_file() can't find the
+cft entry.
 
-thanks,
-daniel
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+---
+ kernel/cgroup.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 77ab520..1db2438 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -928,13 +928,17 @@ static void remove_dir(struct dentry *d)
+ 	dput(parent);
+ }
+ 
+-static int cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
++static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ {
+ 	struct cfent *cfe;
+ 
+ 	lockdep_assert_held(&cgrp->dentry->d_inode->i_mutex);
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
++	/*
++	 * If we're doing cleanup due to failure of cgroup_create(),
++	 * the corresponding @cfe may not exist.
++	 */
+ 	list_for_each_entry(cfe, &cgrp->files, node) {
+ 		struct dentry *d = cfe->dentry;
+ 
+@@ -947,9 +951,8 @@ static int cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ 		list_del_init(&cfe->node);
+ 		dput(d);
+ 
+-		return 0;
++		break;
+ 	}
+-	return -ENOENT;
+ }
+ 
+ /**
+@@ -2765,14 +2768,14 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
+ 		if ((cft->flags & CFTYPE_ONLY_ON_ROOT) && cgrp->parent)
+ 			continue;
+ 
+-		if (is_add)
++		if (is_add) {
+ 			err = cgroup_add_file(cgrp, subsys, cft);
+-		else
+-			err = cgroup_rm_file(cgrp, cft);
+-		if (err) {
+-			pr_warning("cgroup_addrm_files: failed to %s %s, err=%d\n",
+-				   is_add ? "add" : "remove", cft->name, err);
++			if (err)
++				pr_warn("cgroup_addrm_files: failed to add %s, err=%d\n",
++					cft->name, err);
+ 			ret = err;
++		} else {
++			cgroup_rm_file(cgrp, cft);
+ 		}
+ 	}
+ 	return ret;
+-- 
+1.8.0.2
