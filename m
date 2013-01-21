@@ -1,51 +1,64 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
-Date: Mon, 21 Jan 2013 17:01:54 +0800
-Message-ID: <50FD0402.6060400@huawei.com>
-References: <50FCDB5C.4050608@huawei.com> <50FD0144.1000401@monom.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 4/7] memcg: fast hierarchy-aware child test.
+Date: Mon, 21 Jan 2013 10:15:07 +0100
+Message-ID: <20130121091507.GC7798@dhcp22.suse.cz>
+References: <1357897527-15479-1-git-send-email-glommer@parallels.com>
+ <1357897527-15479-5-git-send-email-glommer@parallels.com>
+ <20130118160610.GI10701@dhcp22.suse.cz>
+ <50FCF539.6070000@parallels.com>
+ <20130121083418.GA7798@dhcp22.suse.cz>
+ <50FCFF34.9070308@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50FD0144.1000401-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <50FCFF34.9070308-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 2013/1/21 16:50, Daniel Wagner wrote:
-> Hi Li,
-> 
-> On 21.01.2013 07:08, Li Zefan wrote:
->> I'm not a network developer, so correct me if I'm wrong.
->>
->> Since commit 7955490f732c2b8
->> ("net: netprio_cgroup: rework update socket logic"), sock->sk->sk_cgrp_prioidx
->> is set when the socket is created, and won't be updated unless the task is
->> moved to another cgroup.
->>
->> Now the problem is, a socket can be _shared_ by multiple processes (fork, SCM_RIGHT).
->> If we place those processes in different cgroups, and each cgroup has
->> different configs, but all of the processes will send data via this socket
->> with the same network priority.
-> 
-> Wouldn't that be addressed by 48a87cc26c13b68f6cce4e9d769fcb17a6b3e4b8
-> 
->    net: netprio: fd passed in SCM_RIGHTS datagram not set correctly
-> 
->     A socket fd passed in a SCM_RIGHTS datagram was not getting
->     updated with the new tasks cgrp prioidx. This leaves IO on
->     the socket tagged with the old tasks priority.
-> 
->     To fix this add a check in the scm recvmsg path to update the
->     sock cgrp prioidx with the new tasks value.
-> 
-> As I read this this should work for net_prio.
-> 
+On Mon 21-01-13 12:41:24, Glauber Costa wrote:
+> On 01/21/2013 12:34 PM, Michal Hocko wrote:
+[...]
+> > If you really insist on not using
+> > children directly then do something like:
+> > 	struct cgroup *pos;
+> > 
+> > 	if (!memcg->use_hierarchy)
+> > 		cgroup_for_each_child(pos, memcg->css.cgroup)
+> > 			return true;
+> > 
+> > 	return false;
+> > 
+> I don't oppose that.
 
-But after process A passed the socket fd to B, both A and B can use the
-same socket to send data, right? Then if A and B were placed in different
-cgroups with differnt configs, A's config won't take effect anymore.
+OK, I guess I could live with that ;)
 
-Am I missing something?
+> > This still has an issue that a change (e.g. vm_swappiness) that requires
+> > this check will fail even though the child creation fails after it is
+> > made visible (e.g. during css_online).
+> > 
+> Is it a problem ?
 
+I thought you were considering this a problem. Quoting from patch 3/7
+"
+> This calls for troubles and I do not think the win you get is really
+> worth it. All it gives you is basically that you can change an
+> inheritable attribute while your child is between css_alloc and
+> css_online and so your attribute change doesn't fail if the child
+> creation fails between those two. Is this the case you want to
+> handle? Does it really even matter?
+
+I think it matters a lot. Aside from the before vs after discussion to
+which I've already conceded, without this protection we can't guarantee
+that we won't end up with an inconsistent value of the tunables between
+parent and child.
+"
+
+Just to make it clear. I do not see this failure as a big problem. We
+can fix it by adding an Online check later if somebody complains.
+-- 
+Michal Hocko
+SUSE Labs
