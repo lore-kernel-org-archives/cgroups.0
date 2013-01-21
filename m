@@ -1,46 +1,55 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 2/7] memcg: split part of memcg creation to css_online
-Date: Mon, 21 Jan 2013 12:42:30 +0400
-Message-ID: <50FCFF76.6090202@parallels.com>
-References: <1357897527-15479-1-git-send-email-glommer@parallels.com> <1357897527-15479-3-git-send-email-glommer@parallels.com> <20130118152526.GF10701@dhcp22.suse.cz> <50FCEF40.8040709@parallels.com> <20130121083828.GB7798@dhcp22.suse.cz>
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
+Date: Mon, 21 Jan 2013 09:50:12 +0100
+Message-ID: <50FD0144.1000401@monom.org>
+References: <50FCDB5C.4050608@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130121083828.GB7798@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50FCDB5C.4050608-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 01/21/2013 12:38 PM, Michal Hocko wrote:
-> On Mon 21-01-13 11:33:20, Glauber Costa wrote:
->> On 01/18/2013 07:25 PM, Michal Hocko wrote:
->>>> -	spin_lock_init(&memcg->move_lock);
->>>>> +	memcg->swappiness = mem_cgroup_swappiness(parent);
->>> Please move this up to oom_kill_disable and use_hierarchy
->>> initialization.
->>
->> One thing: wouldn't moving it to inside use_hierarchy be a change of
->> behavior here?
-> 
-> I do not see how it would change the behavior. But maybe I wasn't clear
-> enough. I just wanted to make all three:
-> 	memcg->use_hierarchy = parent->use_hierarchy;
-> 	memcg->oom_kill_disable = parent->oom_kill_disable;
-> 	memcg->swappiness = mem_cgroup_swappiness(parent);
-> 
-> in the same visual block so that we can split the function into three
-> parts. Inherited values which don't depend on use_hierarchy, those that
-> depend on use_hierarchy and the rest that depends on the previous
-> decisions (kmem e.g.).
-> Makes sense?
-> 
-Yes. I misunderstood you, believing you wanted the swappiness assignment
-to go inside the use_hierarchy block.
+Hi Li,
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On 21.01.2013 07:08, Li Zefan wrote:
+> I'm not a network developer, so correct me if I'm wrong.
+> 
+> Since commit 7955490f732c2b8
+> ("net: netprio_cgroup: rework update socket logic"), sock->sk->sk_cgrp_prioidx
+> is set when the socket is created, and won't be updated unless the task is
+> moved to another cgroup.
+> 
+> Now the problem is, a socket can be _shared_ by multiple processes (fork, SCM_RIGHT).
+> If we place those processes in different cgroups, and each cgroup has
+> different configs, but all of the processes will send data via this socket
+> with the same network priority.
+
+Wouldn't that be addressed by 48a87cc26c13b68f6cce4e9d769fcb17a6b3e4b8
+
+   net: netprio: fd passed in SCM_RIGHTS datagram not set correctly
+
+    A socket fd passed in a SCM_RIGHTS datagram was not getting
+    updated with the new tasks cgrp prioidx. This leaves IO on
+    the socket tagged with the old tasks priority.
+
+    To fix this add a check in the scm recvmsg path to update the
+    sock cgrp prioidx with the new tasks value.
+
+As I read this this should work for net_prio.
+
+> Similar with cls cgroup.
+
+but not for cls_cgroup because I forgot to apply that fix as well. Just
+a sec, about to
+send a patch for this.
+
+Thanks for looking into this!
+
+cheers,
+daniel
+
+
