@@ -1,97 +1,65 @@
-From: John Fastabend <john.fastabend@gmail.com>
-Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
-Date: Mon, 21 Jan 2013 09:18:38 -0800
-Message-ID: <50FD786E.4050108@gmail.com>
-References: <50FCDB5C.4050608@huawei.com> <50FD0144.1000401@monom.org> <50FD0402.6060400@huawei.com> <50FD09FD.4010804@monom.org> <50FD1113.6010402@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v3 4/6] memcg: replace cgroup_lock with memcg specific
+ memcg_lock
+Date: Mon, 21 Jan 2013 18:37:31 +0100
+Message-ID: <20130121173729.GA24410@dhcp22.suse.cz>
+References: <1358766813-15095-1-git-send-email-glommer@parallels.com>
+ <1358766813-15095-5-git-send-email-glommer@parallels.com>
+ <20130121144919.GO7798@dhcp22.suse.cz>
+ <50FD5AC0.9020406@parallels.com>
+ <20130121152032.GP7798@dhcp22.suse.cz>
+ <50FD6003.8060703@parallels.com>
+ <20130121160731.GQ7798@dhcp22.suse.cz>
+ <50FD68E1.2070303@parallels.com>
+ <20130121163349.GR7798@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=x-received:message-id:date:from:user-agent:mime-version:to:cc
-         :subject:references:in-reply-to:content-type
-         :content-transfer-encoding;
-        bh=BlGXtjs9WdZ7qCV5QLSYX+85bGG6L0RMQannhnr7Kys=;
-        b=o+7Z9tEMFFD7Ft/XMQKgTGqy1Pkvj+g3Fu3W5X/hQYyGUHUE9JIZZfbmuXUULwgaHW
-         TaSu/iHZYha3fHOLy9/zoCTcJ03Ya8PeuhNWSFDyV7u60cnbcuAmryCl+XGKYs9NUa19
-         +Lf+D1EsWFntba5Mwfm6a6wzXxVKONfkQZKMTiPkRQFstFX5riTUgGMkpBaYJyW7+0dA
-         nA+Z5JZrDirlJRRb/BrjQR8P3/Z05sr4xdWllkW21O1jT7Xav3pOM2z1dXuBLNepRqeL
-         Z1iCpmS5BtSnKRIZorl2B0oJosV+KFRUrrl0PpLg+mV3wOyHGi/+7dS9Jal0xNDMzwNa
-         zN3Q==
-In-Reply-To: <50FD1113.6010402@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=/Ek85fBce3kd6/OfPcKUaJ6Mbc4RfzvhxcP3Y434Eh4=;
+        b=nCC/xkkwhIiOxdOuEHlUDzHNJEM29Pz4xejkos+vQCZNOp8n9SJHG5LuaNV2M9mkr/
+         PVPmWlkLPPNmIF6k2TT0VRMNxytIBNiGZ1Y0NmRA/puNAw1D9eybNF2rTD0GH/6IXA+Y
+         +pXTGwUAkS4/5kxoH2wrW/EIYzLxNkdww8MrYbrbSmMYBkVninx7mCny/2a84MmUgMAu
+         LX+DqazJKY9N9mHVGK84lO4GRBtmNbNJyx4D6SOiSSPZYgZp+afQNgxEQNDgocK8IUr4
+         N0zJiGP0ysTtyE1Dl4OcFeeHS1Q69ZdX/6x+TxXqf0nnmN+euLI+F7HTjb/UFef32I/w
+         fVoA==
+Content-Disposition: inline
+In-Reply-To: <20130121163349.GR7798-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan@huawei.com>
-Cc: Daniel Wagner <wagi@monom.org>, John Fastabend <john.r.fastabend@intel.com>, Neil Horman <nhorman@tuxdriver.com>, Daniel Wagner <daniel.wagner@bmw-carit.de>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 
-On 01/21/2013 01:57 AM, Li Zefan wrote:
-> On 2013/1/21 17:27, Daniel Wagner wrote:
->> On 21.01.2013 10:01, Li Zefan wrote:
->>> On 2013/1/21 16:50, Daniel Wagner wrote:
->>>> Hi Li,
->>>>
->>>> On 21.01.2013 07:08, Li Zefan wrote:
->>>>> I'm not a network developer, so correct me if I'm wrong.
->>>>>
->>>>> Since commit 7955490f732c2b8
->>>>> ("net: netprio_cgroup: rework update socket logic"), sock->sk->sk_cgrp_prioidx
->>>>> is set when the socket is created, and won't be updated unless the task is
->>>>> moved to another cgroup.
->>>>>
->>>>> Now the problem is, a socket can be _shared_ by multiple processes (fork, SCM_RIGHT).
->>>>> If we place those processes in different cgroups, and each cgroup has
->>>>> different configs, but all of the processes will send data via this socket
->>>>> with the same network priority.
->>>>
->>>> Wouldn't that be addressed by 48a87cc26c13b68f6cce4e9d769fcb17a6b3e4b8
->>>>
->>>>      net: netprio: fd passed in SCM_RIGHTS datagram not set correctly
->>>>
->>>>       A socket fd passed in a SCM_RIGHTS datagram was not getting
->>>>       updated with the new tasks cgrp prioidx. This leaves IO on
->>>>       the socket tagged with the old tasks priority.
->>>>
->>>>       To fix this add a check in the scm recvmsg path to update the
->>>>       sock cgrp prioidx with the new tasks value.
->>>>
->>>> As I read this this should work for net_prio.
->>>>
->>>
->>> But after process A passed the socket fd to B, both A and B can use the
->>> same socket to send data, right? Then if A and B were placed in different
->>> cgroups with differnt configs, A's config won't take effect anymore.
->>>
->>> Am I missing something?
->>
->> I don't know. I guess at one point the socket resources are shared and then
->> one configuration is taking preference. As you can see I am far away of
->> being
->> an expert in this field. Hopefully someone who understands this bits
->> can chip in.
->>
->> BTW, isn't this a similar to what should happen with the block io cgroup?
->> What is the behavior with a fd writing to a file in the scenario you
->> describe above?
->>
+On Mon 21-01-13 17:33:49, Michal Hocko wrote:
+> On Mon 21-01-13 20:12:17, Glauber Costa wrote:
+> > On 01/21/2013 08:07 PM, Michal Hocko wrote:
+> > >> > And the reason why kmemcg holds the set_limit mutex
+> > >> > is just to protect from itself, then there is no *need* to hold any
+> > >> > extra lock (and we'll never be able to stop holding the creation lock,
+> > >> > whatever it is). So my main point here is not memcg_mutex vs
+> > >> > set_limit_mutex, but rather, memcg_mutex is needed anyway, and once it
+> > >> > is taken, the set_limit_mutex *can* be held, but doesn't need to.
+> > > So you can update kmem specific usage of set_limit_mutex.
+> > Meaning ?
 > 
-> It forbids task moving in this case:
+> I thought you've said it is not needed and the code says that:
+> - memcg_propagate_kmem is called with memcg_mutex held in css_alloc
+> - memcg_update_kmem_limit takes both of them
+> - kmem_cache_destroy_memcg_children _doesn't_ take both
 > 
-> /*
->   * We cannot support shared io contexts, as we have no mean to support
->   * two tasks with the same ioc in two different groups without major rework
->   * of the main cic data structures.  For now we allow a task to change
->   * its cgroup only if it's the only owner of its ioc.
->   */
-> static int blkcg_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+> So one obvious way to go would be changing
+> kmem_cache_destroy_memcg_children to memcg_mutex and removing
+> set_limit_mutex from other two paths.
 > 
+> This would leave set_limit_mutex lock for its original intention.
 
-OK, I guess we should do something similar in the netprio, netcls
-cgroups and
-yes document it as you noted in your last comment.
-
-Thanks,
-John
+And then we could use a more suitable name: memcg_create_lock
 
 -- 
-John Fastabend         Intel Corporation
+Michal Hocko
+SUSE Labs
