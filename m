@@ -1,65 +1,58 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v5 00/11] per-cgroup cpu-stat
-Date: Mon, 21 Jan 2013 16:14:27 +0400
-Message-ID: <50FD3123.6090003@parallels.com>
-References: <1357731938-8417-1-git-send-email-glommer@parallels.com> <CAMbhsRQ7B4Uu1Wukfay+m4K7CVXtVbsTTEd6JHrwC2s+NcEFNA@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v3 6/6] memcg: avoid dangling reference count in creation
+ failure.
+Date: Mon, 21 Jan 2013 13:30:57 +0100
+Message-ID: <20130121123057.GH7798@dhcp22.suse.cz>
+References: <1358766813-15095-1-git-send-email-glommer@parallels.com>
+ <1358766813-15095-7-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMbhsRQ7B4Uu1Wukfay+m4K7CVXtVbsTTEd6JHrwC2s+NcEFNA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1358766813-15095-7-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Colin Cross <ccross@google.com>
-Cc: cgroups@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, Tejun Heo <tj@kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 
-On 01/16/2013 04:33 AM, Colin Cross wrote:
-> On Wed, Jan 9, 2013 at 3:45 AM, Glauber Costa <glommer@parallels.com> wrote:
->> [ update: I thought I posted this already before leaving for holidays. However,
->>   now that I am checking for replies, I can't find nor replies nor the original
->>   mail in my boxes or archives. I am posting again for safety sake, but sorry
->>   you are getting this twice by any chance ]
->>
->> Hi all,
->>
->> This is an attempt to provide userspace with enough information to reconstruct
->> per-container version of files like "/proc/stat". In particular, we are
->> interested in knowing the per-cgroup slices of user time, system time, wait
->> time, number of processes, and a variety of statistics.
->>
->> This task is made more complicated by the fact that multiple controllers are
->> involved in collecting those statistics: cpu and cpuacct. So the first thing I
->> am doing here, is ressurecting Tejun's patches that aim at deprecating cpuacct.
->>
->> This is one of the major differences from earlier attempts: all data is provided
->> by the cpu controller, resulting in greater simplicity.
+On Mon 21-01-13 15:13:33, Glauber Costa wrote:
+> When use_hierarchy is enabled, we acquire an extra reference count
+> in our parent during cgroup creation. We don't release it, though,
+> if any failure exist in the creation process.
 > 
-> Android userspace is currently using both cpu and cpuacct, and not
-> co-mounting them.  They are used for fundamentally different uses such
-> that creating a single hierarchy for both of them while maintaining
-> the existing behavior is not possible.
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Reported-by: Michal Hocko <mhocko@suse>
+
+If you put this one to the head of the series we can backport it to
+stable which is preferred, although nobody have seen this as a problem.
+
+> ---
+>  mm/memcontrol.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> We use the cpu cgroup primarily as a priority container.  A simple
-> view is that each thread is assigned to a foreground cgroup when it is
-> user-visible, and a background cgroup when it is not.  The foreground
-> cgroup is assigned a significantly higher cpu.shares value such that
-> when each group is fully loaded the background group will get 5% and
-> the foreground group will get 95%.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 5a247de..3949123 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6167,6 +6167,8 @@ mem_cgroup_css_online(struct cgroup *cont)
+>  		 * call __mem_cgroup_free, so return directly
+>  		 */
+>  		mem_cgroup_put(memcg);
+> +		if (parent->use_hierarchy)
+> +			mem_cgroup_put(parent);
+>  	}
+>  	return error;
+>  }
+> -- 
+> 1.8.1
 > 
-> We use the cpuacct cgroup to measure cpu usage per uid, primarily to
-> estimate one cause of battery usage.  Each uid gets a cgroup, and when
-> spawning a task for a new uid we put it in the appropriate cgroup.
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
 
-As we are all in a way sons of Linus the Great, the fact that you have
-this usecase should be by itself a reason for us not to deprecate it.
-
-I still view this, however, as a not common use case. And from the
-scheduler PoV, we still have all the duplicate hierarchy walks. So
-assuming we would carry on all the changes in this patchset, except the
-deprecation, would it be okay for you?
-
-This way we could take steps to make sure the scheduler codepaths for
-cpuacct are not taking during normal comounted operation, and you could
-still have your setup unchanged.
-
-Tejun, any words here?
+-- 
+Michal Hocko
+SUSE Labs
