@@ -1,65 +1,42 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v3 4/6] memcg: replace cgroup_lock with memcg specific
- memcg_lock
-Date: Mon, 21 Jan 2013 18:37:31 +0100
-Message-ID: <20130121173729.GA24410@dhcp22.suse.cz>
-References: <1358766813-15095-1-git-send-email-glommer@parallels.com>
- <1358766813-15095-5-git-send-email-glommer@parallels.com>
- <20130121144919.GO7798@dhcp22.suse.cz>
- <50FD5AC0.9020406@parallels.com>
- <20130121152032.GP7798@dhcp22.suse.cz>
- <50FD6003.8060703@parallels.com>
- <20130121160731.GQ7798@dhcp22.suse.cz>
- <50FD68E1.2070303@parallels.com>
- <20130121163349.GR7798@dhcp22.suse.cz>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH] net: net_cls: fd passed in SCM_RIGHTS datagram not set
+ correctly
+Date: Mon, 21 Jan 2013 14:17:52 -0500 (EST)
+Message-ID: <20130121.141752.1744701325219813159.davem@davemloft.net>
+References: <1358761102-7765-1-git-send-email-wagi@monom.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=/Ek85fBce3kd6/OfPcKUaJ6Mbc4RfzvhxcP3Y434Eh4=;
-        b=nCC/xkkwhIiOxdOuEHlUDzHNJEM29Pz4xejkos+vQCZNOp8n9SJHG5LuaNV2M9mkr/
-         PVPmWlkLPPNmIF6k2TT0VRMNxytIBNiGZ1Y0NmRA/puNAw1D9eybNF2rTD0GH/6IXA+Y
-         +pXTGwUAkS4/5kxoH2wrW/EIYzLxNkdww8MrYbrbSmMYBkVninx7mCny/2a84MmUgMAu
-         LX+DqazJKY9N9mHVGK84lO4GRBtmNbNJyx4D6SOiSSPZYgZp+afQNgxEQNDgocK8IUr4
-         N0zJiGP0ysTtyE1Dl4OcFeeHS1Q69ZdX/6x+TxXqf0nnmN+euLI+F7HTjb/UFef32I/w
-         fVoA==
-Content-Disposition: inline
-In-Reply-To: <20130121163349.GR7798-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <1358761102-7765-1-git-send-email-wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Content-Type: Text/Plain; charset="us-ascii"
+To: wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org
 
-On Mon 21-01-13 17:33:49, Michal Hocko wrote:
-> On Mon 21-01-13 20:12:17, Glauber Costa wrote:
-> > On 01/21/2013 08:07 PM, Michal Hocko wrote:
-> > >> > And the reason why kmemcg holds the set_limit mutex
-> > >> > is just to protect from itself, then there is no *need* to hold any
-> > >> > extra lock (and we'll never be able to stop holding the creation lock,
-> > >> > whatever it is). So my main point here is not memcg_mutex vs
-> > >> > set_limit_mutex, but rather, memcg_mutex is needed anyway, and once it
-> > >> > is taken, the set_limit_mutex *can* be held, but doesn't need to.
-> > > So you can update kmem specific usage of set_limit_mutex.
-> > Meaning ?
-> 
-> I thought you've said it is not needed and the code says that:
-> - memcg_propagate_kmem is called with memcg_mutex held in css_alloc
-> - memcg_update_kmem_limit takes both of them
-> - kmem_cache_destroy_memcg_children _doesn't_ take both
-> 
-> So one obvious way to go would be changing
-> kmem_cache_destroy_memcg_children to memcg_mutex and removing
-> set_limit_mutex from other two paths.
-> 
-> This would leave set_limit_mutex lock for its original intention.
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Date: Mon, 21 Jan 2013 10:38:22 +0100
 
-And then we could use a more suitable name: memcg_create_lock
+> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> 
+> Commit 6a328d8c6f03501657ad580f6f98bf9a42583ff7 changed the update
+> logic for the socket but it does not update the SCM_RIGHTS update
+> as well. This patch is based on the net_prio fix commit
+> 
+> 48a87cc26c13b68f6cce4e9d769fcb17a6b3e4b8
+> 
+>     net: netprio: fd passed in SCM_RIGHTS datagram not set correctly
+> 
+>     A socket fd passed in a SCM_RIGHTS datagram was not getting
+>     updated with the new tasks cgrp prioidx. This leaves IO on
+>     the socket tagged with the old tasks priority.
+> 
+>     To fix this add a check in the scm recvmsg path to update the
+>     sock cgrp prioidx with the new tasks value.
+> 
+> Let's apply the same fix for net_cls.
+> 
+> Reported-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
--- 
-Michal Hocko
-SUSE Labs
+You need to resubmit this, and proprly add a "Signed-off-by: " tag
+for yourself.
