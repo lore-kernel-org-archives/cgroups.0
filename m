@@ -1,73 +1,87 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 0/6] replace cgroup_lock with memcg specific locking
-Date: Tue, 22 Jan 2013 17:47:35 +0400
-Message-ID: <1358862461-18046-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 5/6] memcg: increment static branch right after limit set.
+Date: Tue, 22 Jan 2013 17:47:40 +0400
+Message-ID: <1358862461-18046-6-git-send-email-glommer@parallels.com>
+References: <1358862461-18046-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1358862461-18046-1-git-send-email-glommer@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Glauber Costa <glommer@parallels.com>
 
-Hi,
+We were deferring the kmemcg static branch increment to a later time,
+due to a nasty dependency between the cpu_hotplug lock, taken by the
+jump label update, and the cgroup_lock.
 
-In memcg, we use the cgroup_lock basically to synchronize against
-attaching new children to a cgroup. We do this because we rely on cgroup core to
-provide us with this information.
+Now we no longer take the cgroup lock, and we can save ourselves the
+trouble.
 
-We need to guarantee that upon child creation, our tunables are consistent.
-For those, the calls to cgroup_lock() all live in handlers like
-mem_cgroup_hierarchy_write(), where we change a tunable in the group that is
-hierarchy-related. For instance, the use_hierarchy flag cannot be changed if
-the cgroup already have children.
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+---
+ mm/memcontrol.c | 31 +++++++------------------------
+ 1 file changed, 7 insertions(+), 24 deletions(-)
 
-Furthermore, those values are propageted from the parent to the child when a
-new child is created. So if we don't lock like this, we can end up with the
-following situation:
-
-A                                   B
- memcg_css_alloc()                       mem_cgroup_hierarchy_write()
- copy use hierarchy from parent          change use hierarchy in parent
- finish creation.
-
-This is mainly because during create, we are still not fully connected to the
-css tree. So all iterators and the such that we could use, will fail to show
-that the group has children.
-
-My observation is that all of creation can proceed in parallel with those
-tasks, except value assignment. So what this patchseries does is to first move
-all value assignment that is dependent on parent values from css_alloc to
-css_online, where the iterators all work, and then we lock only the value
-assignment. This will guarantee that parent and children always have consistent
-values. Together with an online test, that can be derived from the observation
-that the refcount of an online memcg can be made to be always positive, we
-should be able to synchronize our side without the cgroup lock.
-
-*v4:
- - revert back to using the set_limit_mutex for kmemcg limit setting.
-
-*v3:
- - simplified test for presence of children, and no longer using refcnt for
-   online testing
- - some cleanups as suggested by Michal
-
-*v2:
- - sanitize kmemcg assignment in the light of the current locking change.
- - don't grab locks on immigrate charges by caching the value during can_attach
-
-Glauber Costa (6):
-  memcg: prevent changes to move_charge_at_immigrate during task attach
-  memcg: split part of memcg creation to css_online
-  memcg: fast hierarchy-aware child test.
-  memcg: replace cgroup_lock with memcg specific memcg_lock
-  memcg: increment static branch right after limit set.
-  memcg: avoid dangling reference count in creation failure.
-
- mm/memcontrol.c | 193 +++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 114 insertions(+), 79 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f5decb7..357324c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4926,8 +4926,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ {
+ 	int ret = -EINVAL;
+ #ifdef CONFIG_MEMCG_KMEM
+-	bool must_inc_static_branch = false;
+-
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 	/*
+ 	 * For simplicity, we won't allow this to be disabled.  It also can't
+@@ -4956,7 +4954,13 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ 			res_counter_set_limit(&memcg->kmem, RESOURCE_MAX);
+ 			goto out;
+ 		}
+-		must_inc_static_branch = true;
++		static_key_slow_inc(&memcg_kmem_enabled_key);
++		/*
++		 * setting the active bit after the inc will guarantee no one
++		 * starts accounting before all call sites are patched
++		 */
++		memcg_kmem_set_active(memcg);
++
+ 		/*
+ 		 * kmem charges can outlive the cgroup. In the case of slab
+ 		 * pages, for instance, a page contain objects from various
+@@ -4969,27 +4973,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ out:
+ 	mutex_unlock(&set_limit_mutex);
+ 	mutex_unlock(&memcg_create_mutex);
+-
+-	/*
+-	 * We are by now familiar with the fact that we can't inc the static
+-	 * branch inside cgroup_lock. See disarm functions for details. A
+-	 * worker here is overkill, but also wrong: After the limit is set, we
+-	 * must start accounting right away. Since this operation can't fail,
+-	 * we can safely defer it to here - no rollback will be needed.
+-	 *
+-	 * The boolean used to control this is also safe, because
+-	 * KMEM_ACCOUNTED_ACTIVATED guarantees that only one process will be
+-	 * able to set it to true;
+-	 */
+-	if (must_inc_static_branch) {
+-		static_key_slow_inc(&memcg_kmem_enabled_key);
+-		/*
+-		 * setting the active bit after the inc will guarantee no one
+-		 * starts accounting before all call sites are patched
+-		 */
+-		memcg_kmem_set_active(memcg);
+-	}
+-
+ #endif
+ 	return ret;
+ }
 -- 
 1.8.1
 
