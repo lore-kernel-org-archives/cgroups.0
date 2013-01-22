@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v4 1/6] memcg: prevent changes to move_charge_at_immigrate during task attach
-Date: Tue, 22 Jan 2013 17:47:36 +0400
-Message-ID: <1358862461-18046-2-git-send-email-glommer@parallels.com>
+Subject: [PATCH v4 6/6] memcg: avoid dangling reference count in creation failure.
+Date: Tue, 22 Jan 2013 17:47:41 +0400
+Message-ID: <1358862461-18046-7-git-send-email-glommer@parallels.com>
 References: <1358862461-18046-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1358862461-18046-1-git-send-email-glommer@parallels.com>
@@ -13,110 +13,29 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Glauber Costa <glommer@parallels.com>
 
-Currently, we rely on the cgroup_lock() to prevent changes to
-move_charge_at_immigrate during task migration. However, this is only
-needed because the current strategy keeps checking this value throughout
-the whole process. Since all we need is serialization, one needs only to
-guarantee that whatever decision we made in the beginning of a specific
-migration is respected throughout the process.
-
-We can achieve this by just saving it in mc. By doing this, no kind of
-locking is needed.
-
-[ v2: change flag name to avoid confusion ]
+When use_hierarchy is enabled, we acquire an extra reference count
+in our parent during cgroup creation. We don't release it, though,
+if any failure exist in the creation process.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
+Reported-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 09255ec..91d90a0 100644
+index 357324c..72a008e 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -398,8 +398,8 @@ static bool memcg_kmem_test_and_clear_dead(struct mem_cgroup *memcg)
- 
- /* Stuffs for move charges at task migration. */
- /*
-- * Types of charges to be moved. "move_charge_at_immitgrate" is treated as a
-- * left-shifted bitmap of these types.
-+ * Types of charges to be moved. "move_charge_at_immitgrate" and
-+ * "immigrate_flags" are treated as a left-shifted bitmap of these types.
-  */
- enum move_type {
- 	MOVE_CHARGE_TYPE_ANON,	/* private anonymous page and swap of it */
-@@ -412,6 +412,7 @@ static struct move_charge_struct {
- 	spinlock_t	  lock; /* for from, to */
- 	struct mem_cgroup *from;
- 	struct mem_cgroup *to;
-+	unsigned long immigrate_flags;
- 	unsigned long precharge;
- 	unsigned long moved_charge;
- 	unsigned long moved_swap;
-@@ -424,14 +425,12 @@ static struct move_charge_struct {
- 
- static bool move_anon(void)
- {
--	return test_bit(MOVE_CHARGE_TYPE_ANON,
--					&mc.to->move_charge_at_immigrate);
-+	return test_bit(MOVE_CHARGE_TYPE_ANON, &mc.immigrate_flags);
+@@ -6166,6 +6166,8 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 		 * call __mem_cgroup_free, so return directly
+ 		 */
+ 		mem_cgroup_put(memcg);
++		if (parent->use_hierarchy)
++			mem_cgroup_put(parent);
+ 	}
+ 	return error;
  }
- 
- static bool move_file(void)
- {
--	return test_bit(MOVE_CHARGE_TYPE_FILE,
--					&mc.to->move_charge_at_immigrate);
-+	return test_bit(MOVE_CHARGE_TYPE_FILE, &mc.immigrate_flags);
- }
- 
- /*
-@@ -5146,15 +5145,14 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
- 
- 	if (val >= (1 << NR_MOVE_TYPE))
- 		return -EINVAL;
-+
- 	/*
--	 * We check this value several times in both in can_attach() and
--	 * attach(), so we need cgroup lock to prevent this value from being
--	 * inconsistent.
-+	 * No kind of locking is needed in here, because ->can_attach() will
-+	 * check this value once in the beginning of the process, and then carry
-+	 * on with stale data. This means that changes to this value will only
-+	 * affect task migrations starting after the change.
- 	 */
--	cgroup_lock();
- 	memcg->move_charge_at_immigrate = val;
--	cgroup_unlock();
--
- 	return 0;
- }
- #else
-@@ -6530,8 +6528,15 @@ static int mem_cgroup_can_attach(struct cgroup *cgroup,
- 	struct task_struct *p = cgroup_taskset_first(tset);
- 	int ret = 0;
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgroup);
-+	unsigned long move_charge_at_immigrate;
- 
--	if (memcg->move_charge_at_immigrate) {
-+	/*
-+	 * We are now commited to this value whatever it is. Changes in this
-+	 * tunable will only affect upcoming migrations, not the current one.
-+	 * So we need to save it, and keep it going.
-+	 */
-+	move_charge_at_immigrate  = memcg->move_charge_at_immigrate;
-+	if (move_charge_at_immigrate) {
- 		struct mm_struct *mm;
- 		struct mem_cgroup *from = mem_cgroup_from_task(p);
- 
-@@ -6551,6 +6556,7 @@ static int mem_cgroup_can_attach(struct cgroup *cgroup,
- 			spin_lock(&mc.lock);
- 			mc.from = from;
- 			mc.to = memcg;
-+			mc.immigrate_flags = move_charge_at_immigrate;
- 			spin_unlock(&mc.lock);
- 			/* We set mc.moving_task later */
- 
 -- 
 1.8.1
 
