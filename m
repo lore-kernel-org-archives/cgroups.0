@@ -1,152 +1,165 @@
-From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
-Date: Tue, 22 Jan 2013 11:09:38 +0100
-Message-ID: <20130122100938.GA26820@candlejack.bmw-carit.intra>
-References: <50FCDB5C.4050608@huawei.com>
- <50FD0144.1000401@monom.org>
- <50FD0402.6060400@huawei.com>
- <50FD09FD.4010804@monom.org>
- <50FD1113.6010402@huawei.com>
- <50FD786E.4050108@gmail.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <50FD786E.4050108-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v4 4/6] memcg: replace cgroup_lock with memcg specific memcg_lock
+Date: Tue, 22 Jan 2013 17:47:39 +0400
+Message-ID: <1358862461-18046-5-git-send-email-glommer@parallels.com>
+References: <1358862461-18046-1-git-send-email-glommer@parallels.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1358862461-18046-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Glauber Costa <glommer@parallels.com>
 
-On Mon, Jan 21, 2013 at 09:18:38AM -0800, John Fastabend wrote:
-> On 01/21/2013 01:57 AM, Li Zefan wrote:
-> > On 2013/1/21 17:27, Daniel Wagner wrote:
-> >> On 21.01.2013 10:01, Li Zefan wrote:
-> >>> On 2013/1/21 16:50, Daniel Wagner wrote:
-> >>>> Hi Li,
-> >>>>
-> >>>> On 21.01.2013 07:08, Li Zefan wrote:
-> >>>>> I'm not a network developer, so correct me if I'm wrong.
-> >>>>>
-> >>>>> Since commit 7955490f732c2b8
-> >>>>> ("net: netprio_cgroup: rework update socket logic"), sock->sk->sk_cgrp_prioidx
-> >>>>> is set when the socket is created, and won't be updated unless the task is
-> >>>>> moved to another cgroup.
-> >>>>>
-> >>>>> Now the problem is, a socket can be _shared_ by multiple processes (fork, SCM_RIGHT).
-> >>>>> If we place those processes in different cgroups, and each cgroup has
-> >>>>> different configs, but all of the processes will send data via this socket
-> >>>>> with the same network priority.
-> >>>>
-> >>>> Wouldn't that be addressed by 48a87cc26c13b68f6cce4e9d769fcb17a6b3e4b8
-> >>>>
-> >>>>      net: netprio: fd passed in SCM_RIGHTS datagram not set correctly
-> >>>>
-> >>>>       A socket fd passed in a SCM_RIGHTS datagram was not getting
-> >>>>       updated with the new tasks cgrp prioidx. This leaves IO on
-> >>>>       the socket tagged with the old tasks priority.
-> >>>>
-> >>>>       To fix this add a check in the scm recvmsg path to update the
-> >>>>       sock cgrp prioidx with the new tasks value.
-> >>>>
-> >>>> As I read this this should work for net_prio.
-> >>>>
-> >>>
-> >>> But after process A passed the socket fd to B, both A and B can use the
-> >>> same socket to send data, right? Then if A and B were placed in different
-> >>> cgroups with differnt configs, A's config won't take effect anymore.
-> >>>
-> >>> Am I missing something?
-> >>
-> >> I don't know. I guess at one point the socket resources are shared and then
-> >> one configuration is taking preference. As you can see I am far away of
-> >> being
-> >> an expert in this field. Hopefully someone who understands this bits
-> >> can chip in.
-> >>
-> >> BTW, isn't this a similar to what should happen with the block io cgroup?
-> >> What is the behavior with a fd writing to a file in the scenario you
-> >> describe above?
-> >>
-> > 
-> > It forbids task moving in this case:
-> > 
-> > /*
-> >   * We cannot support shared io contexts, as we have no mean to support
-> >   * two tasks with the same ioc in two different groups without major rework
-> >   * of the main cic data structures.  For now we allow a task to change
-> >   * its cgroup only if it's the only owner of its ioc.
-> >   */
-> > static int blkcg_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-> > 
-> 
-> OK, I guess we should do something similar in the netprio, netcls
-> cgroups and
-> yes document it as you noted in your last comment.
+After the preparation work done in earlier patches, the cgroup_lock can
+be trivially replaced with a memcg-specific lock. This is an automatic
+translation in every site the values involved were queried.
 
-Here is my attempt to add such a check. I really don't know if this is the
-correct way to do so. To test this I have written a test program, which
-seems to test the right thing. Please have a look and let me know if
-it is correct: http://www.monom.org/misc/scm_rights.c
+The sites were values are written, however, used to be naturally called
+under cgroup_lock. This is the case for instance of the css_online
+callback. For those, we now need to explicitly add the memcg lock.
 
-And here a dirty first version of the patch:
+With this, all the calls to cgroup_lock outside cgroup core are gone.
 
-
-From 49a78d907eaf31c16673025e7e3b4844e419e416 Mon Sep 17 00:00:00 2001
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Date: Tue, 22 Jan 2013 11:08:22 +0100
-Subject: [PATCH] net: net_prio: Block attach if a socket is shared
-
+Signed-off-by: Glauber Costa <glommer@parallels.com>
 ---
- net/core/netprio_cgroup.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ mm/memcontrol.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 847c02b..de4e6c5 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -274,9 +274,39 @@ static struct cftype ss_files[] = {
- 	{ }	/* terminate */
- };
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6d3ad21..f5decb7 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -470,6 +470,13 @@ enum res_type {
+ #define MEM_CGROUP_RECLAIM_SHRINK_BIT	0x1
+ #define MEM_CGROUP_RECLAIM_SHRINK	(1 << MEM_CGROUP_RECLAIM_SHRINK_BIT)
  
-+static int check_cnt(const void *v, struct file *file, unsigned n)
-+{
-+	unsigned *flag = (unsigned *)v;
-+	int err;
++/*
++ * The memcg_create_mutex will be held whenever a new cgroup is created.
++ * As a consequence, any change that needs to protect against new child cgroups
++ * appearing has to hold it as well.
++ */
++static DEFINE_MUTEX(memcg_create_mutex);
 +
-+	struct socket *sock = sock_from_file(file, &err);
-+	if (sock && file_count(file) > 1)
-+		*flag = 1;
-+
-+	return 0;
-+}
-+
-+static int cgrp_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-+{
-+	struct task_struct *p;
-+	unsigned flag = 0;
-+
-+	cgroup_taskset_for_each(p, cgrp, tset) {
-+		task_lock(p);
-+		iterate_fd(p->files, 0, check_cnt, &flag);
-+		task_unlock(p);
-+	}
-+
-+	if (flag != 0)
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
- struct cgroup_subsys net_prio_subsys = {
- 	.name		= "net_prio",
- 	.create		= cgrp_create,
-+	.can_attach	= cgrp_can_attach,
- 	.destroy	= cgrp_destroy,
- 	.attach		= net_prio_attach,
- 	.subsys_id	= net_prio_subsys_id,
+ static void mem_cgroup_get(struct mem_cgroup *memcg);
+ static void mem_cgroup_put(struct mem_cgroup *memcg);
+ 
+@@ -4730,8 +4737,8 @@ static inline bool __memcg_has_children(struct mem_cgroup *memcg)
+ }
+ 
+ /*
+- * must be called with cgroup_lock held, unless the cgroup is guaranteed to be
+- * already dead (like in mem_cgroup_force_empty, for instance).  This is
++ * must be called with memcg_create_mutex held, unless the cgroup is guaranteed
++ * to be already dead (like in mem_cgroup_force_empty, for instance).  This is
+  * different than mem_cgroup_count_children, in the sense that we don't really
+  * care how many children we have, we only need to know if we have any. It is
+  * also count any memcg without hierarchy as infertile for that matter.
+@@ -4811,7 +4818,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+ 	if (parent)
+ 		parent_memcg = mem_cgroup_from_cont(parent);
+ 
+-	cgroup_lock();
++	mutex_lock(&memcg_create_mutex);
+ 
+ 	if (memcg->use_hierarchy == val)
+ 		goto out;
+@@ -4834,7 +4841,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+ 		retval = -EINVAL;
+ 
+ out:
+-	cgroup_unlock();
++	mutex_unlock(&memcg_create_mutex);
+ 
+ 	return retval;
+ }
+@@ -4933,14 +4940,8 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ 	 *
+ 	 * After it first became limited, changes in the value of the limit are
+ 	 * of course permitted.
+-	 *
+-	 * Taking the cgroup_lock is really offensive, but it is so far the only
+-	 * way to guarantee that no children will appear. There are plenty of
+-	 * other offenders, and they should all go away. Fine grained locking
+-	 * is probably the way to go here. When we are fully hierarchical, we
+-	 * can also get rid of the use_hierarchy check.
+ 	 */
+-	cgroup_lock();
++	mutex_lock(&memcg_create_mutex);
+ 	mutex_lock(&set_limit_mutex);
+ 	if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
+ 		if (cgroup_task_count(cont) || memcg_has_children(memcg)) {
+@@ -4967,7 +4968,7 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ 		ret = res_counter_set_limit(&memcg->kmem, val);
+ out:
+ 	mutex_unlock(&set_limit_mutex);
+-	cgroup_unlock();
++	mutex_unlock(&memcg_create_mutex);
+ 
+ 	/*
+ 	 * We are by now familiar with the fact that we can't inc the static
+@@ -5356,17 +5357,17 @@ static int mem_cgroup_swappiness_write(struct cgroup *cgrp, struct cftype *cft,
+ 
+ 	parent = mem_cgroup_from_cont(cgrp->parent);
+ 
+-	cgroup_lock();
++	mutex_lock(&memcg_create_mutex);
+ 
+ 	/* If under hierarchy, only empty-root can set this value */
+ 	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
+-		cgroup_unlock();
++		mutex_unlock(&memcg_create_mutex);
+ 		return -EINVAL;
+ 	}
+ 
+ 	memcg->swappiness = val;
+ 
+-	cgroup_unlock();
++	mutex_unlock(&memcg_create_mutex);
+ 
+ 	return 0;
+ }
+@@ -5692,7 +5693,7 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+ 
+ 	parent = mem_cgroup_from_cont(cgrp->parent);
+ 
+-	cgroup_lock();
++	mutex_lock(&memcg_create_mutex);
+ 	/* oom-kill-disable is a flag for subhierarchy. */
+ 	if ((parent->use_hierarchy) ||
+ 	    (memcg->use_hierarchy && !list_empty(&cgrp->children))) {
+@@ -5702,7 +5703,7 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+ 	memcg->oom_kill_disable = val;
+ 	if (!val)
+ 		memcg_oom_recover(memcg);
+-	cgroup_unlock();
++	mutex_unlock(&memcg_create_mutex);
+ 	return 0;
+ }
+ 
+@@ -6140,6 +6141,7 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 	if (!cont->parent)
+ 		return 0;
+ 
++	mutex_lock(&memcg_create_mutex);
+ 	memcg = mem_cgroup_from_cont(cont);
+ 	parent = mem_cgroup_from_cont(cont->parent);
+ 
+@@ -6173,6 +6175,7 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 	}
+ 
+ 	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
++	mutex_unlock(&memcg_create_mutex);
+ 	if (error) {
+ 		/*
+ 		 * We call put now because our (and parent's) refcnts
 -- 
-1.8.0.rc0
+1.8.1
 
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
