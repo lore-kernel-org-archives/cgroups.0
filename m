@@ -1,82 +1,73 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v5 00/11] per-cgroup cpu-stat
-Date: Wed, 23 Jan 2013 12:12:15 +0400
-Message-ID: <50FF9B5F.9050402@parallels.com>
-References: <1357731938-8417-1-git-send-email-glommer@parallels.com> <CAMbhsRQ7B4Uu1Wukfay+m4K7CVXtVbsTTEd6JHrwC2s+NcEFNA@mail.gmail.com> <50FD3123.6090003@parallels.com> <20130123010226.GF5359@htj.dyndns.org> <CAMbhsRSDbKUz7OT3Y0bGfYqgp3yMgwk8oHx0rpsX+XDFWTMqkw@mail.gmail.com>
+From: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
+Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
+Date: Wed, 23 Jan 2013 10:24:31 +0100
+Message-ID: <50FFAC4F.6010602@monom.org>
+References: <50FCDB5C.4050608@huawei.com> <50FD0144.1000401@monom.org> <50FD0402.6060400@huawei.com> <50FD09FD.4010804@monom.org> <50FD1113.6010402@huawei.com> <50FD786E.4050108@gmail.com> <20130122100938.GA26820@candlejack.bmw-carit.intra> <50FF287C.70906@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAMbhsRSDbKUz7OT3Y0bGfYqgp3yMgwk8oHx0rpsX+XDFWTMqkw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <50FF287C.70906-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Colin Cross <ccross-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 01/23/2013 05:53 AM, Colin Cross wrote:
-> On Tue, Jan 22, 2013 at 5:02 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->> Hello,
+On 23.01.2013 01:02, John Fastabend wrote:
+> [...]
+>
+>>>
+>>> OK, I guess we should do something similar in the netprio, netcls
+>>> cgroups and
+>>> yes document it as you noted in your last comment.
 >>
->> On Mon, Jan 21, 2013 at 04:14:27PM +0400, Glauber Costa wrote:
->>>> Android userspace is currently using both cpu and cpuacct, and not
->>>> co-mounting them.  They are used for fundamentally different uses such
->>>> that creating a single hierarchy for both of them while maintaining
->>>> the existing behavior is not possible.
->>>>
->>>> We use the cpu cgroup primarily as a priority container.  A simple
->>>> view is that each thread is assigned to a foreground cgroup when it is
->>>> user-visible, and a background cgroup when it is not.  The foreground
->>>> cgroup is assigned a significantly higher cpu.shares value such that
->>>> when each group is fully loaded the background group will get 5% and
->>>> the foreground group will get 95%.
->>>>
->>>> We use the cpuacct cgroup to measure cpu usage per uid, primarily to
->>>> estimate one cause of battery usage.  Each uid gets a cgroup, and when
->>>> spawning a task for a new uid we put it in the appropriate cgroup.
->>>
->>> As we are all in a way sons of Linus the Great, the fact that you have
->>> this usecase should be by itself a reason for us not to deprecate it.
->>>
->>> I still view this, however, as a not common use case. And from the
->>> scheduler PoV, we still have all the duplicate hierarchy walks. So
->>> assuming we would carry on all the changes in this patchset, except the
->>> deprecation, would it be okay for you?
->>>
->>> This way we could take steps to make sure the scheduler codepaths for
->>> cpuacct are not taking during normal comounted operation, and you could
->>> still have your setup unchanged.
->>>
->>> Tejun, any words here?
+>> Here is my attempt to add such a check. I really don't know if this is
+>> the
+>> correct way to do so. To test this I have written a test program, which
+>> seems to test the right thing. Please have a look and let me know if
+>> it is correct: http://www.monom.org/misc/scm_rights.c
 >>
->> I think the only thing we can do is keeping cpuacct around.  We can
->> still optimize comounted cpu and cpuacct as the usual case.  That
->> said, I'd really like to avoid growing new use cases for separate
->> hierarchies for cpu and cpuacct (well, any controller actually).
->> Having multiple hierarchies is fundamentally broken in that we can't
->> say whether a given resource belongs to certain cgroup independently
->> from the current task, and we're definitnely moving towards unified
->> hierarchy.
-> 
-> I understand why it makes sense from a code perspective to combine cpu
-> and cpuacct, but by combining them you are enforcing a strange
-> requirement that to measure the cpu usage of a group of processes you
-> force them to be treated as a single scheduling entity by their parent
-> group, effectively splitting their time as if they were a single task.
->  That doesn't make any sense to me.
-> 
-That is a bit backwards.
+>> And here a dirty first version of the patch:
+>>
+>>
+>>  From 49a78d907eaf31c16673025e7e3b4844e419e416 Mon Sep 17 00:00:00 2001
+>> From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+>> Date: Tue, 22 Jan 2013 11:08:22 +0100
+>> Subject: [PATCH] net: net_prio: Block attach if a socket is shared
+>>
+>> ---
+>>   net/core/netprio_cgroup.c | 30 ++++++++++++++++++++++++++++++
+>>   1 file changed, 30 insertions(+)
+>>
+>> diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
+>> index 847c02b..de4e6c5 100644
+>> --- a/net/core/netprio_cgroup.c
+>> +++ b/net/core/netprio_cgroup.c
+>> @@ -274,9 +274,39 @@ static struct cftype ss_files[] = {
+>>       { }    /* terminate */
+>>   };
+>>
+>> +static int check_cnt(const void *v, struct file *file, unsigned n)
+>> +{
+>> +    unsigned *flag = (unsigned *)v;
+>> +    int err;
+>> +
+>> +    struct socket *sock = sock_from_file(file, &err);
+>> +    if (sock && file_count(file) > 1)
+>> +        *flag = 1;
+>> +
+>
+> I think this check will catch a lot of cases that are not necessarily
+> sharing a socket across tasks though. For example iscsid passes a file
+> descriptor to the kernel which does a sockfd_lookup() incrementing
+> f_count. Similarly look at dup/clone/etc.
 
-The question is not if it makes sense to enforce that tasks that are
-having their cputime measured needs to be grouped for scheduling
-purposes, but rather, if it makes sense to collect timing information
-collectively for something that is not a scheduling entity.
+Yep, I expected that this patch was too simple.
 
-The fact that you can do it today, is an artifact of the way cgroups
-were implemented in the first place. If controllers were bound to a
-single hierarchy from the very beginning, I really doubt you would have
-any luck convincing people that allowing separate hierarchy grouping
-would be necessary for this.
+> In many of these cases I believe it should be OK to move the task
+> around when the sockets are not shared between multiple tasks.
 
-Again, all that said, now that I survived 2012, I would like to be alive
-next year as well. And if we break your use case, Linus will kill us. So
-we don't plan to do it.
+Do you know of a different way to identify the shared sockets?
+
+thanks,
+daniel
