@@ -1,79 +1,53 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] device_cgroup: lock assert fails in dev_exception_clean()
-Date: Wed, 23 Jan 2013 09:29:39 -0500
-Message-ID: <20130123142939.GC17632@redhat.com>
-References: <1358460018-14717-1-git-send-email-jerry.snitselaar@oracle.com>
- <1358460018-14717-2-git-send-email-jerry.snitselaar@oracle.com>
- <20130117220642.GE16568@mtj.dyndns.org>
- <20130117231341.GA14588@cantor.us.oracle.com>
- <20130123043140.GA5913@cantor.us.oracle.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/6] cgroup: initialize cgrp->dentry before css_alloc()
+Date: Wed, 23 Jan 2013 08:35:36 -0800
+Message-ID: <20130123163536.GA2373@mtj.dyndns.org>
+References: <50F7B040.2020906@huawei.com>
+ <20130123002754.GB5359@htj.dyndns.org>
+ <50FF4C4D.4020405@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=9scwAVPSz/toxMLiAgcjBJXF1v5mVWtG63a1NHfGJ0c=;
+        b=BCGmXgZbqbBPHe7uExF0yle4SdrFbWkWtpuaBAbLWGfHGFp2xNbsjmkBR09A+tvY0V
+         KO5/3emBJVgbud3oTFTH6kPrNydKlkgOPD4vfCWXRGfMz63W2kY8Ffbla83YHo7EMxJp
+         Kd7OvJWst61UAZX69ttKiCgGxDi0qOGQ/ZOsWs9A/62pMX1pwecqvkg7Cr/CEFH15aar
+         8YkhM9yHSRsdAIX1QD2U6UCSJB6tcyM/8SLjSlzLg6XdCV19nq4nlTOKSX6bLgmxERgd
+         j6ztybAQziKzmNlNa5BLQPRuEZSM9ggsBfbFhEJW/99i4MBAt4vnQimZacVw3R/7fMuf
+         1/xA==
 Content-Disposition: inline
-In-Reply-To: <20130123043140.GA5913-w8wXvOoPVbZpWwPY5x2yo1aTQe2KTcn/@public.gmane.org>
+In-Reply-To: <50FF4C4D.4020405-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jerry Snitselaar <jerry.snitselaar-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi Jerry,
-On Tue, Jan 22, 2013 at 09:31:41PM -0700, Jerry Snitselaar wrote:
-> The original patch I sent to James and lkml got pulled in to linus. Is
-> the correct thing to do here put the list cleanup code back in
-> devcgroup_css_free and drop the call to dev_exception_clean along with
-> change my patch made like this?
+Hello, Li.
 
-I think this is what was suggested (not tested):
+On Wed, Jan 23, 2013 at 10:34:53AM +0800, Li Zefan wrote:
+> Scheduler changes made in patch #2 are preparation for #3 and #4.
+> 
+> - for #3:
+> 
+> After ss->css_alloc(), there's a small window that tg->css.cgroup is NULL.
+> With the change, tg won't be seen before ss->css_online(), so the scheduler
+> won't see NULL tg->css.cgroup.
+> 
+> - for #4:
+> 
+> If tg is unregistered and removed from global list in css_free(), and if
+> we kfree cgroup right after ss->css_free(), the scheduler can access
+> invalid tg->css.cgroup, because tg is also protected by RCU.
 
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index d794abc..1c69e38 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -159,6 +159,16 @@ static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
- 	}
- }
- 
-+static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+{
-+	struct dev_exception_item *ex, *tmp;
-+
-+	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
-+		list_del_rcu(&ex->list);
-+		kfree_rcu(ex, rcu);
-+	}
-+}
-+
- /**
-  * dev_exception_clean - frees all entries of the exception list
-  * @dev_cgroup: dev_cgroup with the exception list to be cleaned
-@@ -167,14 +177,9 @@ static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
-  */
- static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
- {
--	struct dev_exception_item *ex, *tmp;
--
- 	lockdep_assert_held(&devcgroup_mutex);
- 
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
--		list_del_rcu(&ex->list);
--		kfree_rcu(ex, rcu);
--	}
-+	__dev_exception_clean(dev_cgroup);
- }
- 
- /*
-@@ -215,9 +220,7 @@ static void devcgroup_css_free(struct cgroup *cgroup)
- 	struct dev_cgroup *dev_cgroup;
- 
- 	dev_cgroup = cgroup_to_devcgroup(cgroup);
--	mutex_lock(&devcgroup_mutex);
--	dev_exception_clean(dev_cgroup);
--	mutex_unlock(&devcgroup_mutex);
-+	__dev_exception_clean(dev_cgroup);
- 	kfree(dev_cgroup);
- }
- 
+Can you please incorporate the above into the patch descriptions?
+
+Thanks!
+
 -- 
-Aristeu
+tejun
