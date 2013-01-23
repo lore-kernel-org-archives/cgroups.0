@@ -1,70 +1,79 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v5 11/11] sched: introduce cgroup file stat_percpu
-Date: Wed, 23 Jan 2013 18:26:48 +0400
-Message-ID: <50FFF328.9070200@parallels.com>
-References: <1357731938-8417-1-git-send-email-glommer@parallels.com> <1357731938-8417-12-git-send-email-glommer@parallels.com> <20130109124220.ad9f1a54.akpm@linux-foundation.org> <50EDDCAA.6070004@parallels.com> <20130109131705.4156ba5c.akpm@linux-foundation.org> <50EDE0AB.1030509@parallels.com>
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] device_cgroup: lock assert fails in dev_exception_clean()
+Date: Wed, 23 Jan 2013 09:29:39 -0500
+Message-ID: <20130123142939.GC17632@redhat.com>
+References: <1358460018-14717-1-git-send-email-jerry.snitselaar@oracle.com>
+ <1358460018-14717-2-git-send-email-jerry.snitselaar@oracle.com>
+ <20130117220642.GE16568@mtj.dyndns.org>
+ <20130117231341.GA14588@cantor.us.oracle.com>
+ <20130123043140.GA5913@cantor.us.oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50EDE0AB.1030509-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130123043140.GA5913-w8wXvOoPVbZpWwPY5x2yo1aTQe2KTcn/@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Jerry Snitselaar <jerry.snitselaar-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 01/10/2013 01:27 AM, Glauber Costa wrote:
-> On 01/10/2013 01:17 AM, Andrew Morton wrote:
->> On Thu, 10 Jan 2013 01:10:02 +0400
->> Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
->>
->>> The main advantage I see in this approach, is that there is way less
->>> data to be written using a header. Although your way works, it means we
->>> will write the strings "nice", "system", etc. #cpu times. Quite a waste.
->>
->> Yes, overhead can be a significant issue with this type of interface. 
->> But we already incurred a massive overhead by using a human-readable
->> ascii interface.  If performance is an issue, perhaps the whole thing
->> should be grafted onto taskstats instead.  Or create a new
->> taskstats-like thing.
-> 
-> I think this would be a little alienish in the already alien world of
-> cgroups.
-> 
-> However, I was not so much talking about plain performance overhead as
-> measurable in miliseconds-to-parse, but rather just alluding to the fact
-> that we would be writing the same set of strings multiple times when a
-> header would do just fine.
-> 
-> This is the same method used for instance by slabinfo.
-> 
->>
->> btw, a more typical interface would be
->>
->> cat /.../cpu0
->> nice:nn
->> system:nn
->> irq:nn
->>
-> 
-> Well, yes. But welcome to cgroups: directories have a meaning, so the
-> only way to organize stuff is with plain files in the current hierarchy
-> is by filling it with files. As many files as we have cpus.
-> 
-> At this point you are certain to miss all the other files present in the
-> directory.
-> 
-> 
->> - the traditional one-per-line name:value tuples.  But I'd assumed that
->> having a file per CPU would be aawkward.
->>
-> Indeed.
-> 
+Hi Jerry,
+On Tue, Jan 22, 2013 at 09:31:41PM -0700, Jerry Snitselaar wrote:
+> The original patch I sent to James and lkml got pulled in to linus. Is
+> the correct thing to do here put the list cleanup code back in
+> devcgroup_css_free and drop the call to dev_exception_clean along with
+> change my patch made like this?
 
-Andrew,
+I think this is what was suggested (not tested):
 
-Given my arguments above, which interface would you prefer for me to
-settle down? I still don't see any problems with the header, specially
-given the fact that it exists precisely to allow fields to come and go
-if needed.
-
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index d794abc..1c69e38 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -159,6 +159,16 @@ static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
+ 	}
+ }
+ 
++static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
++{
++	struct dev_exception_item *ex, *tmp;
++
++	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
++		list_del_rcu(&ex->list);
++		kfree_rcu(ex, rcu);
++	}
++}
++
+ /**
+  * dev_exception_clean - frees all entries of the exception list
+  * @dev_cgroup: dev_cgroup with the exception list to be cleaned
+@@ -167,14 +177,9 @@ static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
+  */
+ static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
+ {
+-	struct dev_exception_item *ex, *tmp;
+-
+ 	lockdep_assert_held(&devcgroup_mutex);
+ 
+-	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
+-		list_del_rcu(&ex->list);
+-		kfree_rcu(ex, rcu);
+-	}
++	__dev_exception_clean(dev_cgroup);
+ }
+ 
+ /*
+@@ -215,9 +220,7 @@ static void devcgroup_css_free(struct cgroup *cgroup)
+ 	struct dev_cgroup *dev_cgroup;
+ 
+ 	dev_cgroup = cgroup_to_devcgroup(cgroup);
+-	mutex_lock(&devcgroup_mutex);
+-	dev_exception_clean(dev_cgroup);
+-	mutex_unlock(&devcgroup_mutex);
++	__dev_exception_clean(dev_cgroup);
+ 	kfree(dev_cgroup);
+ }
+ 
+-- 
+Aristeu
