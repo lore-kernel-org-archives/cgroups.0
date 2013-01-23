@@ -1,39 +1,53 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH 1/6] cgroup: initialize cgrp->dentry before css_alloc()
-Date: Tue, 22 Jan 2013 16:35:26 -0800
-Message-ID: <20130122163526.6c4ea765.akpm@linux-foundation.org>
-References: <50F7B040.2020906@huawei.com>
-	<20130123002754.GB5359@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix bogus kernel warnings when cgroup_create()
+ failed
+Date: Tue, 22 Jan 2013 16:29:50 -0800
+Message-ID: <20130123002950.GC5359@htj.dyndns.org>
+References: <50FD15F9.1090701@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130123002754.GB5359-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=sfkw/Mhjno49yXQKNEUohWxqwqpoBKb91ulQhetQ9Rg=;
+        b=RHXnmEJBYIskrKoQuzKdfdqQSmTsXaGTBqMGTOK5A2JbsbhgFvGhz0k7zKc6Hw/9Ht
+         lOBwJq/t1C8dCpFTSliXSPfP3G+SkLpAdSlWGA1qeYjJCxZpHzOOvJOSN2Pzq3XF+kXi
+         bf3wy66uc79uAnttOmxIQo/M9v9hD6fn8jYvGO4cduZWa/0DFlr2BleEMLS6v0NHT5/J
+         2V+xbN0/MSA4ZorRnsooyebcQfQagYnTm8iq6goVjuuljTWg8WdNYCTdy7HrojBfnhZQ
+         se/y6psVh0ABg6BI9VgOkFFz3vkNq9XQacE4GTWhxc6jodEbk9aubQloj/lXiMOWdGTW
+         nhwQ==
+Content-Disposition: inline
+In-Reply-To: <50FD15F9.1090701-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, 22 Jan 2013 16:27:54 -0800
-Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+On Mon, Jan 21, 2013 at 06:18:33PM +0800, Li Zefan wrote:
+> If cgroup_create() failed and cgroup_destroy_locked() is called to
+> do cleanup, we'll see a bunch of warnings:
+> 
+> cgroup_addrm_files: failed to remove 2MB.limit_in_bytes, err=-2
+> cgroup_addrm_files: failed to remove 2MB.usage_in_bytes, err=-2
+> cgroup_addrm_files: failed to remove 2MB.max_usage_in_bytes, err=-2
+> cgroup_addrm_files: failed to remove 2MB.failcnt, err=-2
+> cgroup_addrm_files: failed to remove prioidx, err=-2
+> cgroup_addrm_files: failed to remove ifpriomap, err=-2
+> ...
+> 
+> We failed to remove those files, because cgroup_create() has failed
+> before creating those cgroup files.
+> 
+> To fix this, we simply don't warn if cgroup_rm_file() can't find the
+> cft entry.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-> (cc'ing Andrew as scheduler folks are difficult to get response from
->  these days and I can't think of anyone else to bother :)
-> 
-> Hello, Li.
-> 
-> The cgroup part looks good to me but it would be great if the
-> descriptions are more detailed, especially, about why the change is
-> beneficial or what it's aiming at.  I take it that the shed changes
-> are necessary to facilitate the later cgroup changes?  Can you please
-> elaborate how?
-> 
-> The scheduler part of changes are mostly mechanical, so it would be
-> great if we can get ack from scheduler people and route these together.
-> 
+Applied to cgroup/for-3.9.  Thanks!
 
-The sched parts do look pretty innocuous and could be viewed as "cgroup
-stuff which happens to reside in kernel/sched/".
-
-If you like the code, I think the best you can do is to merge it up,
-make sure the sched guys are fully cc'ed then send it in to Linus.
+-- 
+tejun
