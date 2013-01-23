@@ -1,81 +1,46 @@
-From: John Fastabend <john.fastabend@gmail.com>
-Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
-Date: Tue, 22 Jan 2013 16:02:04 -0800
-Message-ID: <50FF287C.70906@gmail.com>
-References: <50FCDB5C.4050608@huawei.com> <50FD0144.1000401@monom.org> <50FD0402.6060400@huawei.com> <50FD09FD.4010804@monom.org> <50FD1113.6010402@huawei.com> <50FD786E.4050108@gmail.com> <20130122100938.GA26820@candlejack.bmw-carit.intra>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/6] cgroup: initialize cgrp->dentry before css_alloc()
+Date: Tue, 22 Jan 2013 16:27:54 -0800
+Message-ID: <20130123002754.GB5359@htj.dyndns.org>
+References: <50F7B040.2020906@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=x-received:message-id:date:from:user-agent:mime-version:to:cc
-         :subject:references:in-reply-to:content-type
-         :content-transfer-encoding;
-        bh=RnisD//vxB1vUpu0zGgevIej6RDyyxnWzlpM2eYsgHc=;
-        b=gUVeJNnoQ5PEr32fEKucIwHK+9mHWMfttJorDBnxpSwBLMYVhkYExnkrv71wMwybJs
-         Nq5Kjq/uB3Yfj70zC4/o8v9ZZBMmP4UAfwpARsvIyk9yIjns4GQ2pL2efeOftEHaSwlb
-         NopvQorkvjk/ahKrmKhofJhF/XjMRi3/TIPI9A5WYIW4cGg+Pfzn5BgRNRqIATUyfpdS
-         /abtFuDOtt72Jg4qxPW8Tj0y2WjXemkJRyCORWOr74NWaWIF6Zjs+DQegSaHLomKmRLQ
-         Niodkd41xzFOSlMMC4Hz7Pxh0CyWLN8mp+T2ydzvvZp+gCbE8krFsvczoJI1XS/+DcRy
-         wIJQ==
-In-Reply-To: <20130122100938.GA26820@candlejack.bmw-carit.intra>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=/IDDTOUBNyyRhkV7bKFP3NDYXJchTEJ7gD7/Cj/NR34=;
+        b=D4893yKdeePToB+NItSx89yNrsngqup00zItkedp+mW949kNKyzTDFCBraW0PdHYoW
+         2PzKfaToIxI+PAlr/MaofR59j+Et0UHPpbX4QfADAGPJbbVn0Fd6fwsDbTFToPg/uS39
+         h0kLkB6ylv8Mlc0QHl7ZGkHKu21HgQp72mtaD/Ggfu/NcwqDAUoYIHleUSpAE7vfoPpJ
+         ru+VvgG1MvtIRXP1cmREsn2utwXuwgejPWzg7YFq2OiCcDTG4PGV7s29XVqXxV4jm7Xw
+         yLh/I1aMV77emW8As4rWXIi9uGwlHgZmAmKPfTnYa9V5f9IXENxPokogpCpcPC0LQpix
+         /pWw==
+Content-Disposition: inline
+In-Reply-To: <50F7B040.2020906-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Daniel Wagner <wagi@monom.org>
-Cc: Li Zefan <lizefan@huawei.com>, John Fastabend <john.r.fastabend@intel.com>, Neil Horman <nhorman@tuxdriver.com>, Daniel Wagner <daniel.wagner@bmw-carit.de>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-[...]
+(cc'ing Andrew as scheduler folks are difficult to get response from
+ these days and I can't think of anyone else to bother :)
 
->>
->> OK, I guess we should do something similar in the netprio, netcls
->> cgroups and
->> yes document it as you noted in your last comment.
->
-> Here is my attempt to add such a check. I really don't know if this is the
-> correct way to do so. To test this I have written a test program, which
-> seems to test the right thing. Please have a look and let me know if
-> it is correct: http://www.monom.org/misc/scm_rights.c
->
-> And here a dirty first version of the patch:
->
->
->  From 49a78d907eaf31c16673025e7e3b4844e419e416 Mon Sep 17 00:00:00 2001
-> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> Date: Tue, 22 Jan 2013 11:08:22 +0100
-> Subject: [PATCH] net: net_prio: Block attach if a socket is shared
->
-> ---
->   net/core/netprio_cgroup.c | 30 ++++++++++++++++++++++++++++++
->   1 file changed, 30 insertions(+)
->
-> diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-> index 847c02b..de4e6c5 100644
-> --- a/net/core/netprio_cgroup.c
-> +++ b/net/core/netprio_cgroup.c
-> @@ -274,9 +274,39 @@ static struct cftype ss_files[] = {
->   	{ }	/* terminate */
->   };
->
-> +static int check_cnt(const void *v, struct file *file, unsigned n)
-> +{
-> +	unsigned *flag = (unsigned *)v;
-> +	int err;
-> +
-> +	struct socket *sock = sock_from_file(file, &err);
-> +	if (sock && file_count(file) > 1)
-> +		*flag = 1;
-> +
+Hello, Li.
 
-I think this check will catch a lot of cases that are not necessarily
-sharing a socket across tasks though. For example iscsid passes a file
-descriptor to the kernel which does a sockfd_lookup() incrementing
-f_count. Similarly look at dup/clone/etc.
+The cgroup part looks good to me but it would be great if the
+descriptions are more detailed, especially, about why the change is
+beneficial or what it's aiming at.  I take it that the shed changes
+are necessary to facilitate the later cgroup changes?  Can you please
+elaborate how?
 
-In many of these cases I believe it should be OK to move the task
-around when the sockets are not shared between multiple tasks.
+The scheduler part of changes are mostly mechanical, so it would be
+great if we can get ack from scheduler people and route these together.
 
-.John
+Thanks.
 
 -- 
-John Fastabend         Intel Corporation
+tejun
