@@ -1,66 +1,100 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/6] cgroup: initialize cgrp->dentry before css_alloc()
-Date: Wed, 23 Jan 2013 10:34:53 +0800
-Message-ID: <50FF4C4D.4020405@huawei.com>
-References: <50F7B040.2020906@huawei.com> <20130123002754.GB5359@htj.dyndns.org>
+From: Jerry Snitselaar <jerry.snitselaar-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] device_cgroup: lock assert fails in dev_exception_clean()
+Date: Tue, 22 Jan 2013 21:31:41 -0700
+Message-ID: <20130123043140.GA5913@cantor.us.oracle.com>
+References: <1358460018-14717-1-git-send-email-jerry.snitselaar@oracle.com>
+ <1358460018-14717-2-git-send-email-jerry.snitselaar@oracle.com>
+ <20130117220642.GE16568@mtj.dyndns.org>
+ <20130117231341.GA14588@cantor.us.oracle.com>
+Reply-To: Jerry Snitselaar <jerry.snitselaar-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130123002754.GB5359-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130117231341.GA14588-w8wXvOoPVbZpWwPY5x2yo1aTQe2KTcn/@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On 2013/1/23 8:27, Tejun Heo wrote:
-> (cc'ing Andrew as scheduler folks are difficult to get response from
->  these days and I can't think of anyone else to bother :)
+On Thu Jan 17 13, Jerry Snitselaar wrote:
+> On Thu Jan 17 13, Tejun Heo wrote:
+> > Hello, Jerry.
+> > 
+> > Can you please also cc cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org and Aristeu Rozanski
+> > <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>?
+> > 
+> > On Thu, Jan 17, 2013 at 03:00:18PM -0700, Jerry Snitselaar wrote:
+> > > devcgroup_css_free() calls dev_exception_clean() without the
+> > > devcgroup_mutex being held.
+> > > 
+> > > Shutting down a kvm virt was giving me the following trace:
+> > 
+> > Hmm...
+> > 
+> > > Signed-off-by: Jerry Snitselaar <jerry.snitselaar-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> > > ---
+> > >  security/device_cgroup.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+> > > index 19ecc8d..d794abc 100644
+> > > --- a/security/device_cgroup.c
+> > > +++ b/security/device_cgroup.c
+> > > @@ -215,7 +215,9 @@ static void devcgroup_css_free(struct cgroup *cgroup)
+> > >  	struct dev_cgroup *dev_cgroup;
+> > >  
+> > >  	dev_cgroup = cgroup_to_devcgroup(cgroup);
+> > > +	mutex_lock(&devcgroup_mutex);
+> > 
+> > You can't grab mutex from rcu callback.  It seems like the lockdep
+> > assertion isn't necessary in this case as the free callback should be
+> > the last remaining user of the dev_cgroup.  Maybe factor out
+> > __devcgroup_css_free() which doesn't have lockdep assertion?
+> > 
 > 
-> Hello, Li.
+> Ok. I was wondering if it was really needed since it was freeing
+> dev_cgroup right after that. I probably would have never noticed the
+> trace if hadn't been checking to see if a fix for ttm stopped it from
+> spamming me with them for trying to sleep in an invalid context.
 > 
-> The cgroup part looks good to me but it would be great if the
-> descriptions are more detailed, especially, about why the change is
-> beneficial or what it's aiming at.  I take it that the shed changes
-> are necessary to facilitate the later cgroup changes?  Can you please
-> elaborate how?
+> Jerry
 > 
+> > >  	dev_exception_clean(dev_cgroup);
+> > > +	mutex_unlock(&devcgroup_mutex);
+> > >  	kfree(dev_cgroup);
+> > 
+> > Thanks.
+> > 
+> > -- 
+> > tejun
 
-Scheduler changes made in patch #2 are preparation for #3 and #4.
+Hi Tejun and Aritsteu,
 
-- for #3:
+The original patch I sent to James and lkml got pulled in to linus. Is
+the correct thing to do here put the list cleanup code back in
+devcgroup_css_free and drop the call to dev_exception_clean along with
+change my patch made like this?
 
-After ss->css_alloc(), there's a small window that tg->css.cgroup is NULL.
-With the change, tg won't be seen before ss->css_online(), so the scheduler
-won't see NULL tg->css.cgroup.
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index d794abc..68237e9 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -213,11 +213,13 @@ static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
+ static void devcgroup_css_free(struct cgroup *cgroup)
+ {
+        struct dev_cgroup *dev_cgroup;
++       struct dev_exception_item *ex, *tmp;
+ 
+        dev_cgroup = cgroup_to_devcgroup(cgroup);
+-       mutex_lock(&devcgroup_mutex);
+-       dev_exception_clean(dev_cgroup);
+-       mutex_unlock(&devcgroup_mutex);
++       list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
++               list_del_rcu(&ex->list);
++               kfree_rcu(ex, rcu);
++       }
+        kfree(dev_cgroup);
+ }
 
-- for #4:
-
-If tg is unregistered and removed from global list in css_free(), and if
-we kfree cgroup right after ss->css_free(), the scheduler can access
-invalid tg->css.cgroup, because tg is also protected by RCU.
-
-Without patch #2:
-
-cgroup_rmdir()
-  no ss->css_offline()
-diput()
-  syncronize_rcu()
-  ss->css_free()    <-- remove tg from global list,
-			and free tg via call_rcu()
-  kfree_rcu(cgroup) <-- wait rcu read section
-
-With the change:
-
-cgroup_rmdir()
-  ss->css_offline() <-- remove tg from global list
-diput()
-  synchronize_rcu() <-- wait rcu read section
-  ss->css_free();   <-- free tg
-  kfree(cgroup);
-
-> The scheduler part of changes are mostly mechanical, so it would be
-> great if we can get ack from scheduler people and route these together.
-> 
-> Thanks.
-> 
