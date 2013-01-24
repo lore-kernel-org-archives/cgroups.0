@@ -1,9 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 6/6] cgroup: remove bogus comments in cgroup_diput()
-Date: Thu, 24 Jan 2013 13:49:17 -0800
-Message-ID: <20130124214917.GU2373@mtj.dyndns.org>
-References: <5100D4FE.9080205@huawei.com>
- <5100D562.6050407@huawei.com>
+Subject: Re: [PATCH v2 1/4] device_cgroup: prepare exception list handling
+ functions for two lists
+Date: Thu, 24 Jan 2013 14:01:25 -0800
+Message-ID: <20130124220125.GV2373@mtj.dyndns.org>
+References: <20130124194957.198022148@napanee.usersys.redhat.com>
+ <20130124194957.375712635@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -11,57 +12,32 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
          :mime-version:content-type:content-disposition:in-reply-to
          :user-agent;
-        bh=KhWy2Jl/Yqcs7IdTmSZYhB3Y7/NxLX+KeBDH6b92lyY=;
-        b=XSfHMP/9lrNP1oQu3Iz5RDgdLHmku66WholqmpZLk964Id8otuUh3flRfVlCmhDn7S
-         OmUAJ0JoATZwGYfgqaZHl4pejpMvpuq4NyNsE6KKQQO5romI7x3uIEyYjQsJb8t8ZAV/
-         GSNAiIclFc6TXIqBMA7zCvviOMnBqhSxQuqSn25MecBQtDxntht7RZLLcgHLgQ6CdLO8
-         KXF0FAw0xi6Iso4fsIacv5soreGSRyL1cENpiASaNmdUUQEIYU+1oBW+Z2tvqGq6XlGB
-         TmW2JGCZavCbckAKinzEwEEtLbGF+d6GpF2Gt86BD0nDg8h1XSeEfimnJkIfqJrgp9Tg
-         VTSw==
+        bh=8bMESgLY4c6mMYpnE2vrL9iClV1h+gWF854NtB6hdXo=;
+        b=iGDf3TLwC1UDRmH8/VAsjCwDjaVjSvOP2zlHrBKF4RdtUCCkJGBS4Ofeeja5XjZ489
+         3Wvv/nNmp4MdyLo/zqZUJAoQaXwteYwzKuLnL7xdPZtROUEkrmteL2ZzbJgJD559/C2q
+         w4oeJMpPVWGfKhAnmtVEQDYqc8BwgHhAHo5yGoU0TmuR/mL1K0DSgvuMUzI4JCp4umvB
+         Dm0ZLXEti5yeR+iTrWZmxiwNLWvja1a0TCNCKgcrCjmE2qGtljQ0bWBsnvvxyiISUQuw
+         CExa0PBnzGzo62ggs+ls10cUhnQideUDDfb9ZKiu5XY7ReZlI8LQ6zsvc6pDmre2nFSW
+         DclA==
 Content-Disposition: inline
-In-Reply-To: <5100D562.6050407-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20130124194957.375712635-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-Hello, Li.
-
-On Thu, Jan 24, 2013 at 02:32:02PM +0800, Li Zefan wrote:
-> Since commit 48ddbe194623ae089cc0576e60363f2d2e85662a
-> ("cgroup: make css->refcnt clearing on cgroup removal optional"),
-> each css holds a ref on cgroup's dentry, so cgroup_diput() won't be
-> called until all css' refs go down to 0, which invalids the comments.
+On Thu, Jan 24, 2013 at 02:49:58PM -0500, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
+> In the following patches, device_cgroup structure will have two sets of
+> behavior and exceptions list (actual one, another with the local settings)
+> so rework the functions to use exception list, not a device_cgroup.
 > 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  kernel/cgroup.c | 6 ------
->  1 file changed, 6 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index f18b0d9..368cff1 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -899,12 +899,6 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
->  		struct cgroup *cgrp = dentry->d_fsdata;
->  
->  		BUG_ON(!(cgroup_is_removed(cgrp)));
-> -		/* It's possible for external users to be holding css
-> -		 * reference counts on a cgroup; css_put() needs to
-> -		 * be able to access the cgroup after decrementing
-> -		 * the reference count in order to know if it needs to
-> -		 * queue the cgroup to be handled by the release
-> -		 * agent */
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-The latter half is still true tho.  I applied the patch anyway as the
-comment isn't all that useful without covering everything intended to
-be covered with RCU.  Can you please write up another patch
-documenting what's covered by RCU (stuff that we intend to keep
-guaranteeing to be safe to access only w/ RCU)?
-
-Thanks.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 -- 
 tejun
