@@ -1,90 +1,77 @@
-From: Colin Cross <ccross-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v5 00/11] per-cgroup cpu-stat
-Date: Wed, 23 Jan 2013 15:53:30 -0800
-Message-ID: <CAMbhsRSAPL3P-EhD4HBChsgr66xYuEg4o2JtbFX=tz9w7RCeGQ@mail.gmail.com>
-References: <1357731938-8417-1-git-send-email-glommer@parallels.com>
-	<CAMbhsRQ7B4Uu1Wukfay+m4K7CVXtVbsTTEd6JHrwC2s+NcEFNA@mail.gmail.com>
-	<50FD3123.6090003@parallels.com>
-	<20130123010226.GF5359@htj.dyndns.org>
-	<CAMbhsRSDbKUz7OT3Y0bGfYqgp3yMgwk8oHx0rpsX+XDFWTMqkw@mail.gmail.com>
-	<20130123165657.GC2373@mtj.dyndns.org>
-	<CAMbhsRRj9svWubn01wb+f=jSwVWC5u7DqJ5c8P23vAp0E2L8Rg@mail.gmail.com>
-	<20130123230608.GJ2373@mtj.dyndns.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] memcg: reduce the size of struct memcg 244-fold.
+Date: Wed, 23 Jan 2013 16:18:10 -0800
+Message-ID: <20130123161810.73e4ca58.akpm@linux-foundation.org>
+References: <1358962426-8738-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:x-received:in-reply-to:references:date:message-id
-         :subject:from:to:cc:content-type;
-        bh=3O+wmWLqPCvfu/Rox/ZYsZP5Cm/z1YuPgCnhdQCyXjQ=;
-        b=SXB7AiizCreXCrwYOAB3kRqIiPUTJ6iv2eEVyMeVIqH+n75rOPLKIO4Ly8H/QO06Ml
-         cPVJ2y4j5aQCQkH8pzt/W/XlrM134btgdQTzqhEMYupBodnAA/pSlNracfz+j1Mf0XAM
-         6nuVUwxKyGTQF+9vTemTTbNcXez/Ht/Tg+aAytByYapIAOUVw6FAlJOtlmwG05fmFmRV
-         HURFCAl07c8Mz5vXqwYudNpD3Xfb/1GcO4WWe20MDJFNQFKgynKXIoeFEnLhgA9tL9jP
-         3Phoh9FUiECXkvZhmCmj0xOjWKL/+UcrxcChh+7zCBQ75QvGFroeKoXCuUNM7OGfkTI9
-         yObg==
-In-Reply-To: <20130123230608.GJ2373-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <1358962426-8738-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Jan 23, 2013 at 3:06 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello, Collin.
->
-> On Wed, Jan 23, 2013 at 02:41:46PM -0800, Colin Cross wrote:
->> I think some of it is just historic, we previously did not group
->> application threads in the scheduler, so it would cause a change in
->> behavior if we started grouping them.  I will investigate switching to
->> a co-mounted hierarchy so hopefully you can deprecate cpuacct in the
->> future.
->
-> Yeah, it's gonna be many years, if ever, before we can actually
-> deprecate cpuacct and multiple hierarchies but it would be really nice
-> to move at least popular uses away from them sooner than later.
->
-> Also, maybe I'm misunderstanding what you were saying but isn't it the
-> case that only single application is "foreground" in at least vanilla
-> android?  Maybe multi-window support is scheduled for future releases
-> but it wouldn't count as behavior change in that case, right?
+On Wed, 23 Jan 2013 21:33:46 +0400
+Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 
-Not exactly.  Only one "app" is ever foreground, but there are
-numerous other app-like things in their own process containers that
-the user is aware of, and therefore gets foreground resources.  For
-example, a service that is playing music in the background may get
-treated like a foreground app.  Also, a foreground app may spawn
-threads and request that they run in the background, so a single
-container for an app is not sufficient.
+> In order to maintain all the memcg bookkeeping, we need per-node
+> descriptors, which will in turn contain a per-zone descriptor.
+> 
+> Because we want to statically allocate those, this array ends up being
+> very big. Part of the reason is that we allocate something large enough
+> to hold MAX_NUMNODES, the compile time constant that holds the maximum
+> number of nodes we would ever consider.
+> 
+> However, we can do better in some cases if the firmware help us. This is
+> true for modern x86 machines; coincidentally one of the architectures in
+> which MAX_NUMNODES tends to be very big.
+> 
+> By using the firmware-provided maximum number of nodes instead of
+> MAX_NUMNODES, we can reduce the memory footprint of struct memcg
+> considerably. In the extreme case in which we have only one node, this
+> reduces the size of the structure from ~ 64k to ~2k. This is
+> particularly important because it means that we will no longer resort to
+> the vmalloc area for the struct memcg on defconfigs. We also have enough
+> room for an extra node and still be outside vmalloc.
+> 
+> One also has to keep in mind that with the industry's ability to fit
+> more processors in a die as fast as the FED prints money, a nodes = 2
+> configuration is already respectably big.
 
-> At any rate, IMHO, it's simply the better and correct to not depend on
-> the number of threads in use as a measure of CPU resource
-> distribution.
->
->> We can't factor the number of threads into the policy decision,
->> because it depends on how many threads are runnable at any time in any
->> particular application, and we have no way to track that.  It would
->> have to be a cgroup scheduler feature.
->
-> My understanding of android is very limited but the number of threads
-> in dalvik apps are controlled by the base system rather than
-> application itself, no?  If so, factoring that into scheduling params
-> shouldn't be difficult.  For native processes, if the number of
-> threads just *have* to be factored in some way, we can resort to
-> sampling.  That said, as native apps can easily thread-bomb out of
-> fairness, there are way more reasons to avoid basing the resource
-> policy decision on the number of threads in use.
+Seems sensible.
 
-A pure-dalvik app will spawn threads through a controlled interface
-that could count threads (but still could not count threads that are
-runnable vs. sleeping), but any app can use JNI to link to a native
-library and use pthreads directly if it wants to.  I agree per-app
-containers may have some fairness advantages between multiple apps, I
-just have to figure out what it will mean for apps vs. system
-services, etc
+> +static inline int memcg_size(void)
+> +{
+> +	return sizeof(struct mem_cgroup) +
+> +		nr_node_ids * sizeof(struct mem_cgroup_per_node);
+> +}
+> +
+>  /* internal only representation about the status of kmem accounting. */
+>  enum {
+>  	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
+> @@ -5894,9 +5904,9 @@ static void free_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
+>  static struct mem_cgroup *mem_cgroup_alloc(void)
+>  {
+>  	struct mem_cgroup *memcg;
+> -	int size = sizeof(struct mem_cgroup);
+> +	int size = memcg_size();
+>  
+> -	/* Can be very big if MAX_NUMNODES is very big */
+> +	/* Can be very big if nr_node_ids is very big */
+>  	if (size < PAGE_SIZE)
+>  		memcg = kzalloc(size, GFP_KERNEL);
+>  	else
+> @@ -5933,7 +5943,7 @@ out_free:
+>  static void __mem_cgroup_free(struct mem_cgroup *memcg)
+>  {
+>  	int node;
+> -	int size = sizeof(struct mem_cgroup);
+> +	int size = memcg_size();
+>  
+>  	mem_cgroup_remove_from_trees(memcg);
+>  	free_css_id(&mem_cgroup_subsys, &memcg->css);
 
-> Thanks.
->
-> --
-> tejun
+Really everything here should be using size_t - a minor
+cosmetic/readability thing.
