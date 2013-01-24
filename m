@@ -1,186 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 4/4] device_cgroup: propagate local changes down the
- hierarchy
-Date: Thu, 24 Jan 2013 14:29:30 -0800
-Message-ID: <20130124222930.GY2373@mtj.dyndns.org>
-References: <20130124194957.198022148@napanee.usersys.redhat.com>
- <20130124194957.842303201@napanee.usersys.redhat.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v2] memcg: reduce the size of struct memcg 244-fold.
+Date: Thu, 24 Jan 2013 15:51:05 -0800
+Message-ID: <20130124155105.85dae9d9.akpm@linux-foundation.org>
+References: <1359009996-5350-1-git-send-email-glommer@parallels.com>
+	<xr93r4lbrpdk.fsf@gthelen.mtv.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=m/Wb4czH5HhkucImU1hMKLBgdUUYGHZjVT97M0hQnFw=;
-        b=ZCdkQIS6U4CYopnmuQfdI6QPIKoVK0ThH+EXAgAyxC2yRBOs7l9aoXRuK/feQ4nA8T
-         +jbP9PPopUx/j0474srl2JUEbt7i9fx7eGFLRO3bayKvCNEwKuWYT1T9Nq+hxXa3L37t
-         SlGCiZbgkJ9C54jtMrGL3jSowAEVHpcOgeCdDNR67XiVGqwL8TxMg3CMyEPMJGa3J/s9
-         VPCvRBn8ki7HHUedWn6gEwqvnaR587iJklHhexusIDv1vhfzzMhqYaY/Q9pnMpN1xjxN
-         hzfLt1qxKwnWeffqlkiR4tzFxrEMGDqZaye4Lz3NYgYpGE0RAeEHZjqthWsEjYnV9JiB
-         FuHg==
-Content-Disposition: inline
-In-Reply-To: <20130124194957.842303201-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <xr93r4lbrpdk.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello, Aristeu.
+On Wed, 23 Jan 2013 23:50:31 -0800
+Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-On Thu, Jan 24, 2013 at 02:50:01PM -0500, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
-> This patch makes all changes propagate down in hierarchy respecting when
-> possible local configurations.
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -172,7 +172,7 @@ struct mem_cgroup_per_node {
+> >  };
+> >  
+> >  struct mem_cgroup_lru_info {
+> > -	struct mem_cgroup_per_node *nodeinfo[MAX_NUMNODES];
+> > +	struct mem_cgroup_per_node *nodeinfo[0];
 > 
-> Behavior changes will clean up exceptions in all the children except when the
-> parent changes the behavior from allow to deny and the child's behavior was
-> already deny, in which case the local exceptions will be reused. The inverse
-> is not possible: you can't have a parent with behavior deny and a child with
-> behavior accept.
-> 
-> New exceptions allowing additional access to devices won't be propagated, but
-> it'll be possible to add an exception to access all of part of the newly
-                                                      ^
-                                                      or
-> allowed device(s).
-> 
-> New exceptions disallowing access to devices will be propagated down and the
-> local group's exceptions will be revalidated for the new situation.
-> Example:
->       A
->      / \
->         B
-> 
->     group        behavior          exceptions
->     A            allow             "b 8:* rwm", "c 116:1 rw"
->     B            deny              "c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
-> 
-> If a new exception is added to group A:
-> 	# echo "c 116:* r" > A/devices.deny
-> it'll propagate down and after revalidating B's local exceptions, the exception
-> "c 116:2 rwm" will be removed.
-> 
-> In case parent behavior or exceptions change and local settings are not
-> allowed anymore, they'll be deleted.
+> It seems like a VM_BUG_ON() in mem_cgroup_zoneinfo() asserting that the
+> nid index is less than nr_node_ids would be good at catching illegal
+> indexes.  I don't see any illegal indexes in your patch, but I fear that
+> someday a MAX_NUMNODES based for() loop might sneak in.
 
-Can you please put the above in Documentation/cgroups/devices.txt?  It
-would also be nice to explain it briefly in the source file and point
-to the documentation file for details.
+Can't hurt ;)
 
-> +static int dev_exception_copy(struct list_head *dest,
-> +			      struct dev_exception_item *ex)
-> +{
-> +	struct dev_exception_item *new;
-> +
-> +	new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
-> +	if (!new)
-> +		return -ENOMEM;
-> +	list_add_tail_rcu(&new->list, dest);
-> +	return 0;
-> +}
+> Tangential question: why use inline here?  I figure that modern
+> compilers are good at making inlining decisions.
 
-Hmmm... why are these being RCUfy'd?  Can you please explain / comment
-the access rules?  Which parts are protected by RCU often becomes
-muddy over time.
+And that'll save some disk space.
 
-And I hope changes (including on/offlining) other than implementing
-the actual propagation came as separate patches.
+This?
 
-> +/**
-> + * devcg_for_each_child - traverse online children of a device cgroup
-> + * @child_cs: loop cursor pointing to the current child
-> + * @pos_cgrp: used for iteration
-> + * @parent_cs: target device cgroup to walk children of
-> + *
-> + * Walk @child_cs through the online children of @parent_cs.  Must be used
-> + * with RCU read locked.
-> + */
+--- a/mm/memcontrol.c~memcg-reduce-the-size-of-struct-memcg-244-fold-fix
++++ a/mm/memcontrol.c
+@@ -381,7 +381,7 @@ enum {
+ 		((1 << KMEM_ACCOUNTED_ACTIVE) | (1 << KMEM_ACCOUNTED_ACTIVATED))
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
++static void memcg_kmem_set_active(struct mem_cgroup *memcg)
+ {
+ 	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ }
+@@ -645,6 +645,7 @@ static void drain_all_stock_async(struct
+ static struct mem_cgroup_per_zone *
+ mem_cgroup_zoneinfo(struct mem_cgroup *memcg, int nid, int zid)
+ {
++	VM_BUG_ON((unsigned)nid >= nr_node_ids);
+ 	return &memcg->info.nodeinfo[nid]->zoneinfo[zid];
+ }
+ 
+_
 
-For the online test to be reliable, it should be called under
-devcgroup_mutex, no?
-
-> +#define devcg_for_each_child(pos_cgrp, root)				\
-> +	cgroup_for_each_child((pos_cgrp), (root))			\
-> +		if (is_devcg_online(cgroup_to_devcgroup((pos_cgrp))))
-> +
-
-Comment on what devcgroup_online() is doing would be awesome here.
-
-> +static int devcgroup_online(struct cgroup *cgroup)
-> +{
-> +	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup = NULL;
-> +	int ret = 0;
-> +
-> +	dev_cgroup = cgroup_to_devcgroup(cgroup);
-> +	if (cgroup->parent)
-> +		parent_dev_cgroup = cgroup_to_devcgroup(cgroup->parent);
-> +
-> +	if (parent_dev_cgroup == NULL)
-> +		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
-
-Shouldn't this happen under devcgroup_mutex?  How else is this gonna
-be synchronized?
-
-> +	else {
-> +		mutex_lock(&devcgroup_mutex);
-> +		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
-> +					  &parent_dev_cgroup->exceptions);
-> +		if (!ret)
-> +			dev_cgroup->behavior = parent_dev_cgroup->behavior;
-> +		mutex_unlock(&devcgroup_mutex);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static void devcgroup_offline(struct cgroup *cgroup)
-> +{
-> +	struct dev_cgroup *dev_cgroup = cgroup_to_devcgroup(cgroup);
-> +	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
-
-Ditto.
-
-> +static int propagate_behavior(struct dev_cgroup *devcg)
-> +{
-> +	struct cgroup *root = devcg->css.cgroup, *pos, *saved = NULL,
-> +			*prev = NULL, *ptr;
-> +	struct dev_cgroup *parent;
-> +	int rc = 0;
-> +
-> +	while (1) {
-> +		rcu_read_lock();
-> +		pos = NULL;
-> +		devcg_for_each_child(ptr, root) {
-> +			if (saved && prev != saved) {
-> +				prev = pos;
-> +				continue;
-> +			}
-> +			pos = ptr;
-> +			break;
-> +		}
-
-Is this descendant walk?  Why not use
-cgroup_for_each_descendant_pre/post()?  Is it because RCU can't be
-released while walking?  If so, the whole thing is happening under the
-mutex, so you can,
-
-	rcu_read_lock();
-	cgroup_for_each_descendant_post(pos,...)
-		if (online)
-			list_add_tail(pos->propagate_list, &to_be_processed);
-	rcu_read_unlock();
-
-	list_for_each_entry_safe(pos, ...) {
-		propagate(pos);
-		list_del_init(pos);
-	}
-
-Also, if you implemented your own descendant walk, it would have been
-nice if you explained why it was necessary and how it worked.
-
-Thanks.
-
--- 
-tejun
+Glauber, could you please cc me on patches more often?  It's a bit of a
+pita having to go back to the mailing list to see if there has been
+more dicussion and I may end up missing late review comments and acks.
