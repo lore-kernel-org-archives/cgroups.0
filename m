@@ -1,47 +1,53 @@
-From: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 2/6] sched: split out css_online/css_offline from tg
- creation/destruction
-Date: Fri, 25 Jan 2013 08:47:49 +0100
-Message-ID: <20130125074749.GA20868@gmail.com>
-References: <5100D4FE.9080205@huawei.com>
- <5100D518.8000103@huawei.com>
- <20130124100134.GC26351@gmail.com>
- <20130124194205.GS2373@mtj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] cpuset: fix cpuset_print_task_mems_allowed() vs rename()
+ race
+Date: Fri, 25 Jan 2013 16:08:01 +0800
+Message-ID: <51023D61.9000901@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=i1ZygScGiSFg8RAzDUvfyiH6YJtJqif4GwJpXDhyPAE=;
-        b=FQuPr4JZhKw89ewK1mu2RsLFfWus5j2hhMXNKWroCSLJmQaIns9gYGfivtMLVfi/pY
-         AvCm5OZL6Hd6p1qvsAHGPVbVXyodqeerJsaY9m9AibzlT4qiYb679eedN+Rz4n6AsLJF
-         h579THHtkCkFSisQ6IvkvTLlr/g0XxbV1vI75OwHmhtP69WAFMzRT6ZeFxEmZTsx9nEG
-         2UuB3nkgJ2e2dshBBGoUvK/cMRlTkhDet4gSAlKDjd+BbfCr2NvKjZcxmh2LapZUqmm2
-         3Grmsh12zpcEYBrotg+XMt+VqjlcWSq/5nHEPtHWbS1ab50lDyJMT2DSuewW0Ze93BHA
-         8B5A==
-Content-Disposition: inline
-In-Reply-To: <20130124194205.GS2373-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+rename() will change dentry->d_name. The result of this race can
+be worse than seeing partially rewritten name, but we might access
+a stale pointer because rename() will re-allocate memory to hold
+a longer name.
 
-* Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+It's safe in the protection of dentry->d_lock.
 
-> On Thu, Jan 24, 2013 at 11:01:34AM +0100, Ingo Molnar wrote:
-> > Acked-by: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> Ingo, if you don't objecdt, I'll take these through cgroup/for-3.9
-> branch with other cgroup changes.  Pleaes holler if you object.
+v2: check NULL dentry before acquiring dentry lock.
 
-That's fine with me, it should not interact with anything 
-pending in (or planned for) the scheduler tree for this cycle.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cpuset.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Thanks,
-
-	Ingo
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 16be7c9..4f9dfe4 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -2606,8 +2606,16 @@ void cpuset_print_task_mems_allowed(struct task_struct *tsk)
+ 
+ 	dentry = task_cs(tsk)->css.cgroup->dentry;
+ 	spin_lock(&cpuset_buffer_lock);
+-	snprintf(cpuset_name, CPUSET_NAME_LEN,
+-		 dentry ? (const char *)dentry->d_name.name : "/");
++
++	if (!dentry) {
++		strcpy(cpuset_name, "/");
++	} else {
++		spin_lock(&dentry->d_lock);
++		strlcpy(cpuset_name, (const char *)dentry->d_name.name,
++			CPUSET_NAME_LEN);
++		spin_unlock(&dentry->d_lock);
++	}
++
+ 	nodelist_scnprintf(cpuset_nodelist, CPUSET_NODELIST_LEN,
+ 			   tsk->mems_allowed);
+ 	printk(KERN_INFO "%s cpuset=%s mems_allowed=%s\n",
+-- 
+1.8.0.2
