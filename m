@@ -1,46 +1,75 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [BUG] Bug in netprio_cgroup and netcls_cgroup ?
-Date: Fri, 25 Jan 2013 16:39:43 +0800
-Message-ID: <510244CF.8050709@huawei.com>
-References: <50FCDB5C.4050608@huawei.com> <50FD0144.1000401@monom.org> <50FD0402.6060400@huawei.com> <50FD09FD.4010804@monom.org> <50FD1113.6010402@huawei.com> <50FD786E.4050108@gmail.com> <20130122100938.GA26820@candlejack.bmw-carit.intra>
+From: Lord Glauber Costa of Sealand <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v4 0/6] replace cgroup_lock with memcg specific locking
+Date: Fri, 25 Jan 2013 14:05:04 +0400
+Message-ID: <510258D0.6060407@parallels.com>
+References: <1358862461-18046-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130122100938.GA26820@candlejack.bmw-carit.intra>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1358862461-18046-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Wagner <wagi@monom.org>
-Cc: John Fastabend <john.fastabend@gmail.com>, John Fastabend <john.r.fastabend@intel.com>, Neil Horman <nhorman@tuxdriver.com>, Daniel Wagner <daniel.wagner@bmw-carit.de>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 
->>>> BTW, isn't this a similar to what should happen with the block io cgroup?
->>>> What is the behavior with a fd writing to a file in the scenario you
->>>> describe above?
->>>>
->>>
->>> It forbids task moving in this case:
->>>
->>> /*
->>>   * We cannot support shared io contexts, as we have no mean to support
->>>   * two tasks with the same ioc in two different groups without major rework
->>>   * of the main cic data structures.  For now we allow a task to change
->>>   * its cgroup only if it's the only owner of its ioc.
->>>   */
->>> static int blkcg_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
->>>
->>
->> OK, I guess we should do something similar in the netprio, netcls
->> cgroups and
->> yes document it as you noted in your last comment.
+On 01/22/2013 05:47 PM, Glauber Costa wrote:
+> Hi,
 > 
-> Here is my attempt to add such a check. I really don't know if this is the
-> correct way to do so. To test this I have written a test program, which
-> seems to test the right thing. Please have a look and let me know if
-> it is correct: http://www.monom.org/misc/scm_rights.c
+> In memcg, we use the cgroup_lock basically to synchronize against
+> attaching new children to a cgroup. We do this because we rely on cgroup core to
+> provide us with this information.
 > 
-> And here a dirty first version of the patch:
+> We need to guarantee that upon child creation, our tunables are consistent.
+> For those, the calls to cgroup_lock() all live in handlers like
+> mem_cgroup_hierarchy_write(), where we change a tunable in the group that is
+> hierarchy-related. For instance, the use_hierarchy flag cannot be changed if
+> the cgroup already have children.
+> 
+> Furthermore, those values are propageted from the parent to the child when a
+> new child is created. So if we don't lock like this, we can end up with the
+> following situation:
+> 
+> A                                   B
+>  memcg_css_alloc()                       mem_cgroup_hierarchy_write()
+>  copy use hierarchy from parent          change use hierarchy in parent
+>  finish creation.
+> 
+> This is mainly because during create, we are still not fully connected to the
+> css tree. So all iterators and the such that we could use, will fail to show
+> that the group has children.
+> 
+> My observation is that all of creation can proceed in parallel with those
+> tasks, except value assignment. So what this patchseries does is to first move
+> all value assignment that is dependent on parent values from css_alloc to
+> css_online, where the iterators all work, and then we lock only the value
+> assignment. This will guarantee that parent and children always have consistent
+> values. Together with an online test, that can be derived from the observation
+> that the refcount of an online memcg can be made to be always positive, we
+> should be able to synchronize our side without the cgroup lock.
+> 
+> *v4:
+>  - revert back to using the set_limit_mutex for kmemcg limit setting.
+> 
+> *v3:
+>  - simplified test for presence of children, and no longer using refcnt for
+>    online testing
+>  - some cleanups as suggested by Michal
+> 
+> *v2:
+>  - sanitize kmemcg assignment in the light of the current locking change.
+>  - don't grab locks on immigrate charges by caching the value during can_attach
+> 
+> Glauber Costa (6):
+>   memcg: prevent changes to move_charge_at_immigrate during task attach
+>   memcg: split part of memcg creation to css_online
+>   memcg: fast hierarchy-aware child test.
+>   memcg: replace cgroup_lock with memcg specific memcg_lock
+>   memcg: increment static branch right after limit set.
+>   memcg: avoid dangling reference count in creation failure.
 > 
 
-Adding new can_attach() is discouraged. It's considered bad, because if cgroup
-is mounted with multi subsystems binded, and if one of them can forbid task
-moving for some reason, this will add burden on users to use cgroup properly.
+Tejun,
+
+This applies ontop of your cpuset patches. Would you pick this (would be
+my choice), or would you rather have it routed through somewhere mmish ?
