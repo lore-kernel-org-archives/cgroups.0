@@ -1,161 +1,46 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Fri, 25 Jan 2013 17:31:30 +0100
-Message-ID: <20130125163130.GF4721@dhcp22.suse.cz>
-References: <20121217163203.GD25432@dhcp22.suse.cz>
- <20121217192301.829A7020@pobox.sk>
- <20121217195510.GA16375@dhcp22.suse.cz>
- <20121218152223.6912832C@pobox.sk>
- <20121218152004.GA25208@dhcp22.suse.cz>
- <20121224142526.020165D3@pobox.sk>
- <20121228162209.GA1455@dhcp22.suse.cz>
- <20121230020947.AA002F34@pobox.sk>
- <20121230110815.GA12940@dhcp22.suse.cz>
- <20130125160723.FAE73567@pobox.sk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix cgroup_path() vs rename() race
+Date: Fri, 25 Jan 2013 08:42:42 -0800
+Message-ID: <20130125164242.GA3081@htj.dyndns.org>
+References: <51022FC7.5020607@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=vTq62LKNbpdszNsrvCI0SnY152s2vTOztiOxBsn8Sn0=;
+        b=Biv2EszprsGMYEbkZkcn1nIssLOJ+frJlfuo1yC6fgHzGZgtJqrnTEiq9KJ3pE15Mw
+         2nWxbT8s6xAeJheNd0FOD2nQS2ZirGmakUi8nWLKYRUCNGyxtgbg4IBouAeyOUiZfcUn
+         PZREQwBR+ARirRb8JDi+o5zeEVFTw92S5mqULPIm47j9DLUwF5CfGuZywnlZb6/7/c0r
+         LNXh5J0Qkl+NWvFoRII3GMJ3HIPtnKMMCdoOVp14baMF0gvkmXuX5F/4gnEA3uqY2CZ5
+         xUKGFhOILZY4+FByCt8Tm1psuoOKbISRZWlwE+OJTv5tMmjEbZKoygUiB7XvonDqHnqk
+         auNA==
 Content-Disposition: inline
-In-Reply-To: <20130125160723.FAE73567@pobox.sk>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <51022FC7.5020607-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: azurIt <azurit@pobox.sk>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri 25-01-13 16:07:23, azurIt wrote:
-> Any news? Thnx!
+On Fri, Jan 25, 2013 at 03:09:59PM +0800, Li Zefan wrote:
+> rename() will change dentry->d_name. The result of this race can
+> be worse than seeing partially rewritten name, but we might access
+> a stale pointer because rename() will re-allocate memory to hold
+> a longer name.
+> 
+> Use dentry_path_raw(), and this vfs API will take care of lockings.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Sorry, but I didn't get to this one yet.
+Urgh... why do we even support rename?  :(
 
->=20
-> azur
->=20
->=20
->=20
-> ______________________________________________________________
-> > Od: "Michal Hocko" <mhocko@suse.cz>
-> > Komu: azurIt <azurit@pobox.sk>
-> > D=E1tum: 30.12.2012 12:08
-> > Predmet: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from add_to=
-_page_cache_locked
-> >
-> > CC: linux-kernel@vger.kernel.org, linux-mm@kvack.org, "cgroups mailin=
-glist" <cgroups@vger.kernel.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu@jp=
-.fujitsu.com>, "Johannes Weiner" <hannes@cmpxchg.org>
-> >On Sun 30-12-12 02:09:47, azurIt wrote:
-> >> >which suggests that the patch is incomplete and that I am blind :/
-> >> >mem_cgroup_cache_charge calls __mem_cgroup_try_charge for the page =
-cache
-> >> >and that one doesn't check GFP_MEMCG_NO_OOM. So you need the follow=
-ing
-> >> >follow-up patch on top of the one you already have (which should ca=
-tch
-> >> >all the remaining cases).
-> >> >Sorry about that...
-> >>=20
-> >>=20
-> >> This was, again, killing my MySQL server (search for "(mysqld)"):
-> >> http://www.watchdog.sk/lkml/oom_mysqld5
-> >
-> >grep "Kill process" oom_mysqld5=20
-> >Dec 30 01:53:34 server01 kernel: [  367.061801] Memory cgroup out of m=
-emory: Kill process 5512 (apache2) score 716 or sacrifice child
-> >Dec 30 01:53:35 server01 kernel: [  367.338024] Memory cgroup out of m=
-emory: Kill process 5517 (apache2) score 718 or sacrifice child
-> >Dec 30 01:53:35 server01 kernel: [  367.747888] Memory cgroup out of m=
-emory: Kill process 5513 (apache2) score 721 or sacrifice child
-> >Dec 30 01:53:36 server01 kernel: [  368.159860] Memory cgroup out of m=
-emory: Kill process 5516 (apache2) score 726 or sacrifice child
-> >Dec 30 01:53:36 server01 kernel: [  368.665606] Memory cgroup out of m=
-emory: Kill process 5520 (apache2) score 733 or sacrifice child
-> >Dec 30 01:53:36 server01 kernel: [  368.765652] Out of memory: Kill pr=
-ocess 1778 (mysqld) score 39 or sacrifice child
-> >Dec 30 01:53:36 server01 kernel: [  369.101753] Memory cgroup out of m=
-emory: Kill process 5519 (apache2) score 754 or sacrifice child
-> >Dec 30 01:53:37 server01 kernel: [  369.464262] Memory cgroup out of m=
-emory: Kill process 5583 (apache2) score 762 or sacrifice child
-> >Dec 30 01:53:37 server01 kernel: [  369.465017] Out of memory: Kill pr=
-ocess 5506 (apache2) score 18 or sacrifice child
-> >Dec 30 01:53:37 server01 kernel: [  369.574932] Memory cgroup out of m=
-emory: Kill process 5523 (apache2) score 759 or sacrifice child
-> >
-> >So your mysqld has been killed by the global OOM not memcg. But why wh=
-en
-> >you seem to be perfectly fine regarding memory? I guess the following
-> >backtrace is relevant:
-> >Dec 30 01:53:36 server01 kernel: [  368.569720] DMA: 0*4kB 1*8kB 0*16k=
-B 1*32kB 2*64kB 1*128kB 1*256kB 0*512kB 1*1024kB 1*2048kB 3*4096kB =3D 15=
-912kB
-> >Dec 30 01:53:36 server01 kernel: [  368.570447] DMA32: 9*4kB 10*8kB 8*=
-16kB 6*32kB 5*64kB 6*128kB 4*256kB 2*512kB 3*1024kB 3*2048kB 613*4096kB =3D=
- 2523636kB
-> >Dec 30 01:53:36 server01 kernel: [  368.571175] Normal: 5*4kB 2060*8kB=
- 4122*16kB 2550*32kB 2667*64kB 722*128kB 197*256kB 68*512kB 15*1024kB 4*2=
-048kB 1855*4096kB =3D 8134036kB
-> >Dec 30 01:53:36 server01 kernel: [  368.571906] 308964 total pagecache=
- pages
-> >Dec 30 01:53:36 server01 kernel: [  368.572023] 0 pages in swap cache
-> >Dec 30 01:53:36 server01 kernel: [  368.572140] Swap cache stats: add =
-0, delete 0, find 0/0
-> >Dec 30 01:53:36 server01 kernel: [  368.572260] Free swap  =3D 0kB
-> >Dec 30 01:53:36 server01 kernel: [  368.572375] Total swap =3D 0kB
-> >Dec 30 01:53:36 server01 kernel: [  368.597836] apache2 invoked oom-ki=
-ller: gfp_mask=3D0x0, order=3D0, oom_adj=3D0, oom_score_adj=3D0
-> >Dec 30 01:53:36 server01 kernel: [  368.598034] apache2 cpuset=3Duid m=
-ems_allowed=3D0
-> >Dec 30 01:53:36 server01 kernel: [  368.598152] Pid: 5385, comm: apach=
-e2 Not tainted 3.2.35-grsec #1
-> >Dec 30 01:53:36 server01 kernel: [  368.598273] Call Trace:
-> >Dec 30 01:53:36 server01 kernel: [  368.598396]  [<ffffffff810cc89e>] =
-dump_header+0x7e/0x1e0
-> >Dec 30 01:53:36 server01 kernel: [  368.598516]  [<ffffffff810cc79f>] =
-? find_lock_task_mm+0x2f/0x70
-> >Dec 30 01:53:36 server01 kernel: [  368.598638]  [<ffffffff810ccd65>] =
-oom_kill_process+0x85/0x2a0
-> >Dec 30 01:53:36 server01 kernel: [  368.598759]  [<ffffffff810cd415>] =
-out_of_memory+0xe5/0x200
-> >Dec 30 01:53:36 server01 kernel: [  368.598880]  [<ffffffff810cd5ed>] =
-pagefault_out_of_memory+0xbd/0x110
-> >Dec 30 01:53:36 server01 kernel: [  368.599006]  [<ffffffff81026e96>] =
-mm_fault_error+0xb6/0x1a0
-> >Dec 30 01:53:36 server01 kernel: [  368.599127]  [<ffffffff8102736e>] =
-do_page_fault+0x3ee/0x460
-> >Dec 30 01:53:36 server01 kernel: [  368.599250]  [<ffffffff81131ccf>] =
-? mntput+0x1f/0x30
-> >Dec 30 01:53:36 server01 kernel: [  368.599371]  [<ffffffff811134e6>] =
-? fput+0x156/0x200
-> >Dec 30 01:53:36 server01 kernel: [  368.599496]  [<ffffffff815b567f>] =
-page_fault+0x1f/0x30
-> >
-> >This would suggest that an unexpected ENOMEM leaked during page fault
-> >path. I do not see which one could that be because you said THP
-> >(CONFIG_TRANSPARENT_HUGEPAGE) are disabled (and the other patch I have
-> >mentioned in the thread should fix that issue - btw. the patch is
-> >already scheduled for stable tree).
-> > __do_fault, do_anonymous_page and do_wp_page call
-> >mem_cgroup_newpage_charge with GFP_KERNEL which means that
-> >we do memcg OOM and never return ENOMEM. do_swap_page calls
-> >mem_cgroup_try_charge_swapin with GFP_KERNEL as well.
-> >
-> >I might have missed something but I will not get to look closer before
-> >2nd January.
-> >--=20
-> >Michal Hocko
-> >SUSE Labs
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applying to cgroup/for-3.8-fixes w/ stable cc'd.
 
---=20
-Michal Hocko
-SUSE Labs
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
