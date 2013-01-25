@@ -1,47 +1,91 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] cpuset: fix cpuset_print_task_mems_allowed() vs
- rename() race
-Date: Fri, 25 Jan 2013 08:51:54 -0800
-Message-ID: <20130125165154.GB3081@htj.dyndns.org>
-References: <51023D61.9000901@huawei.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH v2] memcg: reduce the size of struct memcg 244-fold.
+Date: Fri, 25 Jan 2013 09:14:09 -0800
+Message-ID: <xr931ud9rxr2.fsf@gthelen.mtv.corp.google.com>
+References: <1359009996-5350-1-git-send-email-glommer@parallels.com>
+	<xr93r4lbrpdk.fsf@gthelen.mtv.corp.google.com>
+	<20130124155105.85dae9d9.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=3q0I+EGdSbmFVWkBfDnLshK9NQ16WNyprgJDw+7i5gE=;
-        b=fcoP8a077r3TIH/sr2OxKyVQvVgp2ZKnUFQ5ku0bWXAiGAOTRSjoAG4nQsGugn+wF+
-         +SvgX0K4cXdZTIKfuhidO+FGlZX1OnV+rt2HS40mb47c04RHESJf5zLLz1pTzgZdHh0F
-         6qsIXQgV3OIw4AFxnOy1Kj8yhxAUYPvDYUeyhpcU2d1/dt1+3f1lxtGNM6LAmf/VGyWW
-         YjHf4/Os6EY88Gl7INLqGFH+xz7NufyI9Kzr8REd7nGMUAxeqwyfCpSnikTma7Fnr2AW
-         Qqwq2jcYOLrQnGfqM0J5UUQB4CTvFsBRF9HGtE2EZPdpcjbKvqSF/dmEjlGu2paM/HON
-         R+7w==
-Content-Disposition: inline
-In-Reply-To: <51023D61.9000901-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=x-received:from:to:cc:subject:references:date:in-reply-to
+         :message-id:user-agent:mime-version:content-type;
+        bh=u01sOKMeE/pw7DpPfKNz/KDdhPZycMXHfnHXnZl3xUQ=;
+        b=LeWpeoIgekn8MT7GZuzCwK0/OeZy24fIQCq+SNIrYIF06/NEIRI9tXNz1dJBHwED+V
+         NBcMOAqIoSXuTtdsL6vLJRUKlZMVLcVC3hCvxht+ENRxTIJNYrL93W0tp+/6VPkwPvNq
+         8UMExAGBkAvwE1QUjAo1QScgu8yTPeB4eYcX4el2Nqxbe3ateFAvoQab+b64n798R7lp
+         +hl2aGNF2+wz5DOlyh8q1uiy6UUYlV214H/AnkdWH06jXZn1e9JBgCxbtqm4AcMUGmU5
+         s492h2Q7whXlsEQY9LiC+yP0EFmMpYB8UHGg113M+Y/I5yrx0D0AwzrsQfm2GlLy0TLg
+         IwYQ==
+In-Reply-To: <20130124155105.85dae9d9.akpm@linux-foundation.org> (Andrew
+	Morton's message of "Thu, 24 Jan 2013 15:51:05 -0800")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Glauber Costa <glommer@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
 
-On Fri, Jan 25, 2013 at 04:08:01PM +0800, Li Zefan wrote:
-> rename() will change dentry->d_name. The result of this race can
-> be worse than seeing partially rewritten name, but we might access
-> a stale pointer because rename() will re-allocate memory to hold
-> a longer name.
-> 
-> It's safe in the protection of dentry->d_lock.
-> 
-> v2: check NULL dentry before acquiring dentry lock.
-> 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Thu, Jan 24 2013, Andrew Morton wrote:
 
-Applied to cgroup/for-3.8-fixes w/ stable cc'd.
+> On Wed, 23 Jan 2013 23:50:31 -0800
+> Greg Thelen <gthelen@google.com> wrote:
+>
+>> > --- a/mm/memcontrol.c
+>> > +++ b/mm/memcontrol.c
+>> > @@ -172,7 +172,7 @@ struct mem_cgroup_per_node {
+>> >  };
+>> >  
+>> >  struct mem_cgroup_lru_info {
+>> > -	struct mem_cgroup_per_node *nodeinfo[MAX_NUMNODES];
+>> > +	struct mem_cgroup_per_node *nodeinfo[0];
+>> 
+>> It seems like a VM_BUG_ON() in mem_cgroup_zoneinfo() asserting that the
+>> nid index is less than nr_node_ids would be good at catching illegal
+>> indexes.  I don't see any illegal indexes in your patch, but I fear that
+>> someday a MAX_NUMNODES based for() loop might sneak in.
+>
+> Can't hurt ;)
+>
+>> Tangential question: why use inline here?  I figure that modern
+>> compilers are good at making inlining decisions.
+>
+> And that'll save some disk space.
+>
+> This?
 
-Thanks.
+Yup, that looks good to me.
 
--- 
-tejun
+Acked-by: Greg Thelen <gthelen@google.com>
+
+> --- a/mm/memcontrol.c~memcg-reduce-the-size-of-struct-memcg-244-fold-fix
+> +++ a/mm/memcontrol.c
+> @@ -381,7 +381,7 @@ enum {
+>  		((1 << KMEM_ACCOUNTED_ACTIVE) | (1 << KMEM_ACCOUNTED_ACTIVATED))
+>  
+>  #ifdef CONFIG_MEMCG_KMEM
+> -static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+> +static void memcg_kmem_set_active(struct mem_cgroup *memcg)
+>  {
+>  	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+>  }
+> @@ -645,6 +645,7 @@ static void drain_all_stock_async(struct
+>  static struct mem_cgroup_per_zone *
+>  mem_cgroup_zoneinfo(struct mem_cgroup *memcg, int nid, int zid)
+>  {
+> +	VM_BUG_ON((unsigned)nid >= nr_node_ids);
+>  	return &memcg->info.nodeinfo[nid]->zoneinfo[zid];
+>  }
+>  
+> _
+>
+> Glauber, could you please cc me on patches more often?  It's a bit of a
+> pita having to go back to the mailing list to see if there has been
+> more dicussion and I may end up missing late review comments and acks.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
