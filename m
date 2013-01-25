@@ -1,43 +1,47 @@
-From: Lord Glauber Costa of Sealand <glommer@parallels.com>
-Subject: Re: [PATCH v2] memcg: reduce the size of struct memcg 244-fold.
-Date: Fri, 25 Jan 2013 11:37:51 +0400
-Message-ID: <5102364F.3020700@parallels.com>
-References: <1359009996-5350-1-git-send-email-glommer@parallels.com> <xr93r4lbrpdk.fsf@gthelen.mtv.corp.google.com> <20130124155105.85dae9d9.akpm@linux-foundation.org>
+From: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 2/6] sched: split out css_online/css_offline from tg
+ creation/destruction
+Date: Fri, 25 Jan 2013 08:47:49 +0100
+Message-ID: <20130125074749.GA20868@gmail.com>
+References: <5100D4FE.9080205@huawei.com>
+ <5100D518.8000103@huawei.com>
+ <20130124100134.GC26351@gmail.com>
+ <20130124194205.GS2373@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130124155105.85dae9d9.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=i1ZygScGiSFg8RAzDUvfyiH6YJtJqif4GwJpXDhyPAE=;
+        b=FQuPr4JZhKw89ewK1mu2RsLFfWus5j2hhMXNKWroCSLJmQaIns9gYGfivtMLVfi/pY
+         AvCm5OZL6Hd6p1qvsAHGPVbVXyodqeerJsaY9m9AibzlT4qiYb679eedN+Rz4n6AsLJF
+         h579THHtkCkFSisQ6IvkvTLlr/g0XxbV1vI75OwHmhtP69WAFMzRT6ZeFxEmZTsx9nEG
+         2UuB3nkgJ2e2dshBBGoUvK/cMRlTkhDet4gSAlKDjd+BbfCr2NvKjZcxmh2LapZUqmm2
+         3Grmsh12zpcEYBrotg+XMt+VqjlcWSq/5nHEPtHWbS1ab50lDyJMT2DSuewW0Ze93BHA
+         8B5A==
+Content-Disposition: inline
+In-Reply-To: <20130124194205.GS2373-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
 
->  #ifdef CONFIG_MEMCG_KMEM
-> -static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
-> +static void memcg_kmem_set_active(struct mem_cgroup *memcg)
->  {
->  	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
->  }
-> @@ -645,6 +645,7 @@ static void drain_all_stock_async(struct
->  static struct mem_cgroup_per_zone *
->  mem_cgroup_zoneinfo(struct mem_cgroup *memcg, int nid, int zid)
->  {
-> +	VM_BUG_ON((unsigned)nid >= nr_node_ids);
->  	return &memcg->info.nodeinfo[nid]->zoneinfo[zid];
->  }
->  
-> _
+* Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+
+> On Thu, Jan 24, 2013 at 11:01:34AM +0100, Ingo Molnar wrote:
+> > Acked-by: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > 
-> Glauber, could you please cc me on patches more often?  It's a bit of a
-> pita having to go back to the mailing list to see if there has been
-> more dicussion and I may end up missing late review comments and acks.
-> 
-Sure, absolutely.
+> Ingo, if you don't objecdt, I'll take these through cgroup/for-3.9
+> branch with other cgroup changes.  Pleaes holler if you object.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+That's fine with me, it should not interact with anything 
+pending in (or planned for) the scheduler tree for this cycle.
+
+Thanks,
+
+	Ingo
