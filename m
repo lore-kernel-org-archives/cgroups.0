@@ -1,47 +1,132 @@
-From: Lord Glauber Costa of Sealand <glommer@parallels.com>
-Subject: Re: [PATCH v4 0/6] replace cgroup_lock with memcg specific locking
-Date: Fri, 25 Jan 2013 14:27:55 +0400
-Message-ID: <51025E2B.4080105@parallels.com>
-References: <1358862461-18046-1-git-send-email-glommer@parallels.com> <510258D0.6060407@parallels.com> <20130125101854.GC8876@dhcp22.suse.cz>
+From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Fri, 25 Jan 2013 16:07:23 +0100
+Message-ID: <20130125160723.FAE73567@pobox.sk>
+References: <20121210155205.GB6777@dhcp22.suse.cz>, <20121217023430.5A390FD7@pobox.sk>, <20121217163203.GD25432@dhcp22.suse.cz>, <20121217192301.829A7020@pobox.sk>, <20121217195510.GA16375@dhcp22.suse.cz>, <20121218152223.6912832C@pobox.sk>, <20121218152004.GA25208@dhcp22.suse.cz>, <20121224142526.020165D3@pobox.sk>, <20121228162209.GA1455@dhcp22.suse.cz>, <20121230020947.AA002F34@pobox.sk> <20121230110815.GA12940@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130125101854.GC8876@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20121230110815.GA12940-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 01/25/2013 02:18 PM, Michal Hocko wrote:
-> On Fri 25-01-13 14:05:04, Glauber Costa wrote:
-> [...]
->>> Glauber Costa (6):
->>>   memcg: prevent changes to move_charge_at_immigrate during task attach
->>>   memcg: split part of memcg creation to css_online
->>>   memcg: fast hierarchy-aware child test.
->>>   memcg: replace cgroup_lock with memcg specific memcg_lock
->>>   memcg: increment static branch right after limit set.
->>>   memcg: avoid dangling reference count in creation failure.
->>>
->>
->> Tejun,
->>
->> This applies ontop of your cpuset patches. Would you pick this (would be
->> my choice), or would you rather have it routed through somewhere mmish ?
-> 
-> I would vote to -mm. Or is there any specific reason to have it in
-> cgroup tree? It doesn't touch any cgroup core parts, does it?
-> 
-Copying Andrew (retroactively sorry you weren't directly CCd on this one
-as well).
+Any news? Thnx!
 
-I depend on css_online and the cgroup generic iterator. If they are
-already present @ -mm, then fine.
-(looking now, they seem to be...)
+azur
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
+______________________________________________________________
+> Od: "Michal Hocko" <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Komu: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+> D=C3=A1tum: 30.12.2012 12:08
+> Predmet: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from add_to=
+_page_cache_locked
+>
+> CC: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "cgroups mailin=
+glist" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu@=
+jp.fujitsu.com>, "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>On Sun 30-12-12 02:09:47, azurIt wrote:
+>> >which suggests that the patch is incomplete and that I am blind :/
+>> >mem_cgroup_cache_charge calls __mem_cgroup_try_charge for the page =
+cache
+>> >and that one doesn't check GFP_MEMCG_NO_OOM. So you need the follow=
+ing
+>> >follow-up patch on top of the one you already have (which should ca=
+tch
+>> >all the remaining cases).
+>> >Sorry about that...
+>>=20
+>>=20
+>> This was, again, killing my MySQL server (search for "(mysqld)"):
+>> http://www.watchdog.sk/lkml/oom_mysqld5
+>
+>grep "Kill process" oom_mysqld5=20
+>Dec 30 01:53:34 server01 kernel: [  367.061801] Memory cgroup out of m=
+emory: Kill process 5512 (apache2) score 716 or sacrifice child
+>Dec 30 01:53:35 server01 kernel: [  367.338024] Memory cgroup out of m=
+emory: Kill process 5517 (apache2) score 718 or sacrifice child
+>Dec 30 01:53:35 server01 kernel: [  367.747888] Memory cgroup out of m=
+emory: Kill process 5513 (apache2) score 721 or sacrifice child
+>Dec 30 01:53:36 server01 kernel: [  368.159860] Memory cgroup out of m=
+emory: Kill process 5516 (apache2) score 726 or sacrifice child
+>Dec 30 01:53:36 server01 kernel: [  368.665606] Memory cgroup out of m=
+emory: Kill process 5520 (apache2) score 733 or sacrifice child
+>Dec 30 01:53:36 server01 kernel: [  368.765652] Out of memory: Kill pr=
+ocess 1778 (mysqld) score 39 or sacrifice child
+>Dec 30 01:53:36 server01 kernel: [  369.101753] Memory cgroup out of m=
+emory: Kill process 5519 (apache2) score 754 or sacrifice child
+>Dec 30 01:53:37 server01 kernel: [  369.464262] Memory cgroup out of m=
+emory: Kill process 5583 (apache2) score 762 or sacrifice child
+>Dec 30 01:53:37 server01 kernel: [  369.465017] Out of memory: Kill pr=
+ocess 5506 (apache2) score 18 or sacrifice child
+>Dec 30 01:53:37 server01 kernel: [  369.574932] Memory cgroup out of m=
+emory: Kill process 5523 (apache2) score 759 or sacrifice child
+>
+>So your mysqld has been killed by the global OOM not memcg. But why wh=
+en
+>you seem to be perfectly fine regarding memory? I guess the following
+>backtrace is relevant:
+>Dec 30 01:53:36 server01 kernel: [  368.569720] DMA: 0*4kB 1*8kB 0*16k=
+B 1*32kB 2*64kB 1*128kB 1*256kB 0*512kB 1*1024kB 1*2048kB 3*4096kB =3D =
+15912kB
+>Dec 30 01:53:36 server01 kernel: [  368.570447] DMA32: 9*4kB 10*8kB 8*=
+16kB 6*32kB 5*64kB 6*128kB 4*256kB 2*512kB 3*1024kB 3*2048kB 613*4096kB=
+ =3D 2523636kB
+>Dec 30 01:53:36 server01 kernel: [  368.571175] Normal: 5*4kB 2060*8kB=
+ 4122*16kB 2550*32kB 2667*64kB 722*128kB 197*256kB 68*512kB 15*1024kB 4=
+*2048kB 1855*4096kB =3D 8134036kB
+>Dec 30 01:53:36 server01 kernel: [  368.571906] 308964 total pagecache=
+ pages
+>Dec 30 01:53:36 server01 kernel: [  368.572023] 0 pages in swap cache
+>Dec 30 01:53:36 server01 kernel: [  368.572140] Swap cache stats: add =
+0, delete 0, find 0/0
+>Dec 30 01:53:36 server01 kernel: [  368.572260] Free swap  =3D 0kB
+>Dec 30 01:53:36 server01 kernel: [  368.572375] Total swap =3D 0kB
+>Dec 30 01:53:36 server01 kernel: [  368.597836] apache2 invoked oom-ki=
+ller: gfp_mask=3D0x0, order=3D0, oom_adj=3D0, oom_score_adj=3D0
+>Dec 30 01:53:36 server01 kernel: [  368.598034] apache2 cpuset=3Duid m=
+ems_allowed=3D0
+>Dec 30 01:53:36 server01 kernel: [  368.598152] Pid: 5385, comm: apach=
+e2 Not tainted 3.2.35-grsec #1
+>Dec 30 01:53:36 server01 kernel: [  368.598273] Call Trace:
+>Dec 30 01:53:36 server01 kernel: [  368.598396]  [<ffffffff810cc89e>] =
+dump_header+0x7e/0x1e0
+>Dec 30 01:53:36 server01 kernel: [  368.598516]  [<ffffffff810cc79f>] =
+? find_lock_task_mm+0x2f/0x70
+>Dec 30 01:53:36 server01 kernel: [  368.598638]  [<ffffffff810ccd65>] =
+oom_kill_process+0x85/0x2a0
+>Dec 30 01:53:36 server01 kernel: [  368.598759]  [<ffffffff810cd415>] =
+out_of_memory+0xe5/0x200
+>Dec 30 01:53:36 server01 kernel: [  368.598880]  [<ffffffff810cd5ed>] =
+pagefault_out_of_memory+0xbd/0x110
+>Dec 30 01:53:36 server01 kernel: [  368.599006]  [<ffffffff81026e96>] =
+mm_fault_error+0xb6/0x1a0
+>Dec 30 01:53:36 server01 kernel: [  368.599127]  [<ffffffff8102736e>] =
+do_page_fault+0x3ee/0x460
+>Dec 30 01:53:36 server01 kernel: [  368.599250]  [<ffffffff81131ccf>] =
+? mntput+0x1f/0x30
+>Dec 30 01:53:36 server01 kernel: [  368.599371]  [<ffffffff811134e6>] =
+? fput+0x156/0x200
+>Dec 30 01:53:36 server01 kernel: [  368.599496]  [<ffffffff815b567f>] =
+page_fault+0x1f/0x30
+>
+>This would suggest that an unexpected ENOMEM leaked during page fault
+>path. I do not see which one could that be because you said THP
+>(CONFIG_TRANSPARENT_HUGEPAGE) are disabled (and the other patch I have
+>mentioned in the thread should fix that issue - btw. the patch is
+>already scheduled for stable tree).
+> __do_fault, do_anonymous_page and do_wp_page call
+>mem_cgroup_newpage_charge with GFP_KERNEL which means that
+>we do memcg OOM and never return ENOMEM. do_swap_page calls
+>mem_cgroup_try_charge_swapin with GFP_KERNEL as well.
+>
+>I might have missed something but I will not get to look closer before
+>2nd January.
+>--=20
+>Michal Hocko
+>SUSE Labs
+>
