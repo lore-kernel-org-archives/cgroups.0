@@ -1,47 +1,43 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCH] cpuset: fix cpuset_print_task_mems_allowed() vs rename()
- race
-Date: Fri, 25 Jan 2013 15:29:24 +0800
-Message-ID: <51023454.6050501@huawei.com>
-References: <51022FBC.2020705@huawei.com> <20130125072633.GD4503@ZenIV.linux.org.uk>
+From: Lord Glauber Costa of Sealand <glommer@parallels.com>
+Subject: Re: [PATCH v2] memcg: reduce the size of struct memcg 244-fold.
+Date: Fri, 25 Jan 2013 11:37:51 +0400
+Message-ID: <5102364F.3020700@parallels.com>
+References: <1359009996-5350-1-git-send-email-glommer@parallels.com> <xr93r4lbrpdk.fsf@gthelen.mtv.corp.google.com> <20130124155105.85dae9d9.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130125072633.GD4503@ZenIV.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130124155105.85dae9d9.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, David Rientjes <rientjes@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
 
-On 2013/1/25 15:26, Al Viro wrpte:
-> On Fri, Jan 25, 2013 at 03:09:48PM +0800, Li Zefan wrote:
->> rename() will change dentry->d_name. The result of this race can
->> be worse than seeing partially rewritten name, but we might access
->> a stale pointer because rename() will re-allocate memory to hold
->> a longer name.
->>
->> It's safe in the protection of dentry->d_lock.
->>
->> Signed-off-by: Li Zefan <lizefan@huawei.com>
->> ---
->>  kernel/cpuset.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
->> index 16be7c9..b2476c2 100644
->> --- a/kernel/cpuset.c
->> +++ b/kernel/cpuset.c
->> @@ -2606,8 +2606,12 @@ void cpuset_print_task_mems_allowed(struct task_struct *tsk)
->>  
->>  	dentry = task_cs(tsk)->css.cgroup->dentry;
->>  	spin_lock(&cpuset_buffer_lock);
->> +
->> +	spin_lock(&dentry->d_lock);
->>  	snprintf(cpuset_name, CPUSET_NAME_LEN,
->>  		 dentry ? (const char *)dentry->d_name.name : "/");
+
+>  #ifdef CONFIG_MEMCG_KMEM
+> -static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+> +static void memcg_kmem_set_active(struct mem_cgroup *memcg)
+>  {
+>  	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+>  }
+> @@ -645,6 +645,7 @@ static void drain_all_stock_async(struct
+>  static struct mem_cgroup_per_zone *
+>  mem_cgroup_zoneinfo(struct mem_cgroup *memcg, int nid, int zid)
+>  {
+> +	VM_BUG_ON((unsigned)nid >= nr_node_ids);
+>  	return &memcg->info.nodeinfo[nid]->zoneinfo[zid];
+>  }
+>  
+> _
 > 
-> Ahem...  Can dentry actually be NULL here?  If not, this conditional
-> is bogus; otherwise, spin_lock(&dentry->d_lock) is going to blow up...
+> Glauber, could you please cc me on patches more often?  It's a bit of a
+> pita having to go back to the mailing list to see if there has been
+> more dicussion and I may end up missing late review comments and acks.
+> 
+Sure, absolutely.
 
-oops, my fault...It's NULL if cpuset is not mounted.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
