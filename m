@@ -1,7 +1,7 @@
 From: Jeff Liu <jeff.liu@oracle.com>
-Subject: [PATCH v2 1/6] memcg: refactor swap_cgroup_swapon()
-Date: Mon, 28 Jan 2013 18:54:30 +0800
-Message-ID: <510658E6.9030108@oracle.com>
+Subject: [PATCH v2 0/6] memcg: disable swap cgroup allocation at swapon
+Date: Mon, 28 Jan 2013 18:54:27 +0800
+Message-ID: <510658E3.1020306@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
@@ -11,87 +11,40 @@ Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org
 Cc: Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org
 
-Refector swap_cgroup_swapon() to setup the number of pages only, and
-move the rest to swap_cgroup_prepare(), so that the later can be used
-for allocating buffers when creating the first non-root memcg.
+Hello,
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-CC: Glauber Costa <glommer@parallels.com>
-CC: Michal Hocko <mhocko@suse.cz>
-CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-CC: Johannes Weiner <hannes@cmpxchg.org>
-CC: Mel Gorman <mgorman@suse.de>
-CC: Andrew Morton <akpm@linux-foundation.org>
-CC: Sha Zhengju <handai.szj@taobao.com>
+Here is the v2 patch set for disabling swap_cgroup structures allocation
+per swapon.
 
----
- mm/page_cgroup.c |   17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+In the initial version, one big issue is that I have missed the swap tracking
+for the root memcg, thanks Michal pointing it out. :)
 
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index 6d757e3..c945254 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -360,6 +360,9 @@ static int swap_cgroup_prepare(int type)
- 	unsigned long idx, max;
- 
- 	ctrl = &swap_cgroup_ctrl[type];
-+	ctrl->map = vzalloc(ctrl->length * sizeof(void *));
-+	if (!ctrl->map)
-+		goto nomem;
- 
- 	for (idx = 0; idx < ctrl->length; idx++) {
- 		page = alloc_page(GFP_KERNEL | __GFP_ZERO);
-@@ -368,11 +371,13 @@ static int swap_cgroup_prepare(int type)
- 		ctrl->map[idx] = page;
- 	}
- 	return 0;
-+
- not_enough_page:
- 	max = idx;
- 	for (idx = 0; idx < max; idx++)
- 		__free_page(ctrl->map[idx]);
--
-+	ctrl->map = NULL;
-+nomem:
- 	return -ENOMEM;
- }
- 
-@@ -460,8 +465,6 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
- 
- int swap_cgroup_swapon(int type, unsigned long max_pages)
- {
--	void *array;
--	unsigned long array_size;
- 	unsigned long length;
- 	struct swap_cgroup_ctrl *ctrl;
- 
-@@ -469,23 +472,15 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
- 		return 0;
- 
- 	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
--	array_size = length * sizeof(void *);
--
--	array = vzalloc(array_size);
--	if (!array)
--		goto nomem;
- 
- 	ctrl = &swap_cgroup_ctrl[type];
- 	mutex_lock(&swap_cgroup_mutex);
- 	ctrl->length = length;
--	ctrl->map = array;
- 	spin_lock_init(&ctrl->lock);
- 	if (swap_cgroup_prepare(type)) {
- 		/* memory shortage */
--		ctrl->map = NULL;
- 		ctrl->length = 0;
- 		mutex_unlock(&swap_cgroup_mutex);
--		vfree(array);
- 		goto nomem;
- 	}
- 	mutex_unlock(&swap_cgroup_mutex);
--- 
-1.7.9.5
+In order to solve it, the easiest approach I can think out is to bypass the root
+memcg swap accounting during the business and figure it out with some global stats,
+which means that we always return 0 per root memcg swap charge/uncharge stage, and
+this is inspired by another proposal from Zhengju:
+"memcg: Don't account root memcg page statistics -- https://lkml.org/lkml/2013/1/2/71"
+
+Besides that, another major fix is deallocate swap accounting structures on the last
+non-root memcg remove after all references to it are gone rather than doing it on
+mem_cgroup_destroy().
+
+Any comment are welcome!
+
+v1->v2:
+- Refactor swap_cgroup_swapon()/swap_cgroup_prepare(), to make the later can be
+  used for allocating buffers per the first non-root memcg creation.
+- Bypass root memcg swap statistics, using the global stats to figure it out instead.
+- Export nr_swap_files which would be used when creating/freeing swap_cgroup
+- Deallocate swap accounting structures on the last non-root memcg removal
+
+Old patch set:
+v1:
+http://marc.info/?l=linux-mm&m=135461016823964&w=2
+
+
+Thanks,
+-Jeff
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
