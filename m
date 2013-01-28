@@ -1,7 +1,7 @@
 From: Jeff Liu <jeff.liu@oracle.com>
-Subject: [PATCH v2 0/6] memcg: disable swap cgroup allocation at swapon
-Date: Mon, 28 Jan 2013 18:54:27 +0800
-Message-ID: <510658E3.1020306@oracle.com>
+Subject: [PATCH v2 4/6] memcg: export nr_swap_files
+Date: Mon, 28 Jan 2013 18:54:46 +0800
+Message-ID: <510658F6.4010504@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
@@ -11,40 +11,50 @@ Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org
 Cc: Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org
 
-Hello,
+Export nr_swap_files which would be used for initializing and destorying
+swap cgroup structures in the coming patch.
 
-Here is the v2 patch set for disabling swap_cgroup structures allocation
-per swapon.
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+CC: Glauber Costa <glommer@parallels.com>
+CC: Michal Hocko <mhocko@suse.cz>
+CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+CC: Johannes Weiner <hannes@cmpxchg.org>
+CC: Mel Gorman <mgorman@suse.de>
+CC: Andrew Morton <akpm@linux-foundation.org>
+CC: Sha Zhengju <handai.szj@taobao.com>
 
-In the initial version, one big issue is that I have missed the swap tracking
-for the root memcg, thanks Michal pointing it out. :)
+---
+ include/linux/swap.h |    1 +
+ mm/swapfile.c        |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-In order to solve it, the easiest approach I can think out is to bypass the root
-memcg swap accounting during the business and figure it out with some global stats,
-which means that we always return 0 per root memcg swap charge/uncharge stage, and
-this is inspired by another proposal from Zhengju:
-"memcg: Don't account root memcg page statistics -- https://lkml.org/lkml/2013/1/2/71"
-
-Besides that, another major fix is deallocate swap accounting structures on the last
-non-root memcg remove after all references to it are gone rather than doing it on
-mem_cgroup_destroy().
-
-Any comment are welcome!
-
-v1->v2:
-- Refactor swap_cgroup_swapon()/swap_cgroup_prepare(), to make the later can be
-  used for allocating buffers per the first non-root memcg creation.
-- Bypass root memcg swap statistics, using the global stats to figure it out instead.
-- Export nr_swap_files which would be used when creating/freeing swap_cgroup
-- Deallocate swap accounting structures on the last non-root memcg removal
-
-Old patch set:
-v1:
-http://marc.info/?l=linux-mm&m=135461016823964&w=2
-
-
-Thanks,
--Jeff
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 68df9c1..6de44c9 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -348,6 +348,7 @@ extern struct page *swapin_readahead(swp_entry_t, gfp_t,
+ /* linux/mm/swapfile.c */
+ extern long nr_swap_pages;
+ extern long total_swap_pages;
++extern unsigned int nr_swapfiles;
+ extern void si_swapinfo(struct sysinfo *);
+ extern swp_entry_t get_swap_page(void);
+ extern swp_entry_t get_swap_page_of_type(int);
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index e97a0e5..89cebcf 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -46,7 +46,7 @@ static void free_swap_count_continuations(struct swap_info_struct *);
+ static sector_t map_swap_entry(swp_entry_t, struct block_device**);
+ 
+ DEFINE_SPINLOCK(swap_lock);
+-static unsigned int nr_swapfiles;
++unsigned int nr_swapfiles;
+ long nr_swap_pages;
+ long total_swap_pages;
+ static int least_priority;
+-- 
+1.7.9.5
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
