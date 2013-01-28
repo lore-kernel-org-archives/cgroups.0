@@ -1,7 +1,7 @@
 From: Jeff Liu <jeff.liu@oracle.com>
-Subject: [PATCH v2 3/6] memcg: introduce memsw_accounting_users
-Date: Mon, 28 Jan 2013 18:54:40 +0800
-Message-ID: <510658F0.9050802@oracle.com>
+Subject: [PATCH v2 5/6] memcg: introduce swap_cgroup_init()/swap_cgroup_free()
+Date: Mon, 28 Jan 2013 18:54:47 +0800
+Message-ID: <510658F7.6050806@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
@@ -11,10 +11,8 @@ Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org
 Cc: Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org
 
-As we don't account the swap stat number for the root_mem_cgroup anymore,
-here we can just return an invalid CSS ID if there is no non-root memcg
-is alive.  Also, introduce memsw_accounting_users to track the number of
-active non-root memcgs.
+Introduce swap_cgroup_init()/swap_cgroup_free() to allocate buffers when creating the first
+non-root memcg and deallocate buffers on the last non-root memcg is gone.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 CC: Glauber Costa <glommer@parallels.com>
@@ -26,71 +24,192 @@ CC: Andrew Morton <akpm@linux-foundation.org>
 CC: Sha Zhengju <handai.szj@taobao.com>
 
 ---
- mm/page_cgroup.c |   16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ include/linux/page_cgroup.h |   12 +++++
+ mm/page_cgroup.c            |  108 +++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 110 insertions(+), 10 deletions(-)
 
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index c945254..189fbf5 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -336,6 +336,8 @@ struct swap_cgroup {
- };
- #define SC_PER_PAGE	(PAGE_SIZE/sizeof(struct swap_cgroup))
+diff --git a/include/linux/page_cgroup.h b/include/linux/page_cgroup.h
+index 777a524..1255cc9 100644
+--- a/include/linux/page_cgroup.h
++++ b/include/linux/page_cgroup.h
+@@ -113,6 +113,8 @@ extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
+ extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
+ extern int swap_cgroup_swapon(int type, unsigned long max_pages);
+ extern void swap_cgroup_swapoff(int type);
++extern int swap_cgroup_init(void);
++extern void swap_cgroup_free(void);
+ #else
  
-+static atomic_t memsw_accounting_users = ATOMIC_INIT(0);
-+
- /*
-  * SwapCgroup implements "lookup" and "exchange" operations.
-  * In typical usage, this swap_cgroup is accessed via memcg's charge/uncharge
-@@ -389,6 +391,9 @@ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
- 	struct page *mappage;
- 	struct swap_cgroup *sc;
- 
-+	if (!atomic_read(&memsw_accounting_users))
-+		return NULL;
-+
- 	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
- 	if (ctrlp)
- 		*ctrlp = ctrl;
-@@ -416,6 +421,8 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- 	unsigned short retval;
- 
- 	sc = lookup_swap_cgroup(ent, &ctrl);
-+	if (!sc)
-+		return 0;
- 
- 	spin_lock_irqsave(&ctrl->lock, flags);
- 	retval = sc->id;
-@@ -443,6 +450,8 @@ unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
- 	unsigned long flags;
- 
- 	sc = lookup_swap_cgroup(ent, &ctrl);
-+	if (!sc)
-+		return 0;
- 
- 	spin_lock_irqsave(&ctrl->lock, flags);
- 	old = sc->id;
-@@ -460,7 +469,9 @@ unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
-  */
- unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
- {
--	return lookup_swap_cgroup(ent, NULL)->id;
-+	struct swap_cgroup *sc = lookup_swap_cgroup(ent, NULL);
-+
-+	return sc ? sc->id : 0;
+ static inline
+@@ -138,6 +140,16 @@ static inline void swap_cgroup_swapoff(int type)
+ 	return;
  }
  
++static inline int swap_cgroup_init(void)
++{
++	return 0;
++}
++
++static inline void swap_cgroup_free(void)
++{
++	return;
++}
++
+ #endif /* CONFIG_MEMCG_SWAP */
+ 
+ #endif /* !__GENERATING_BOUNDS_H */
+diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+index 189fbf5..0ebd127 100644
+--- a/mm/page_cgroup.c
++++ b/mm/page_cgroup.c
+@@ -362,14 +362,28 @@ static int swap_cgroup_prepare(int type)
+ 	unsigned long idx, max;
+ 
+ 	ctrl = &swap_cgroup_ctrl[type];
++	if (!ctrl->length) {
++		/*
++		 * Bypass the buffer allocation if the corresponding swap
++		 * partition/file was turned off.
++		 */
++		pr_debug("couldn't allocate swap_cgroup on a disabled swap "
++			 "partition or file, index: %d\n", type);
++		return 0;
++	}
++
+ 	ctrl->map = vzalloc(ctrl->length * sizeof(void *));
+-	if (!ctrl->map)
++	if (!ctrl->map) {
++		ctrl->length = 0;
+ 		goto nomem;
++	}
+ 
+ 	for (idx = 0; idx < ctrl->length; idx++) {
+ 		page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+-		if (!page)
++		if (!page) {
++			ctrl->length = 0;
+ 			goto not_enough_page;
++		}
+ 		ctrl->map[idx] = page;
+ 	}
+ 	return 0;
+@@ -383,6 +397,32 @@ nomem:
+ 	return -ENOMEM;
+ }
+ 
++/*
++ * free buffer for swap_cgroup.
++ */
++static void swap_cgroup_teardown(int type)
++{
++	struct page **map;
++	unsigned long length;
++	struct swap_cgroup_ctrl *ctrl;
++
++	ctrl = &swap_cgroup_ctrl[type];
++	map = ctrl->map;
++	length = ctrl->length;
++	ctrl->map = NULL;
++	ctrl->length = 0;
++
++	if (map) {
++		unsigned long i;
++		for (i = 0; i < length; i++) {
++			struct page *page = map[i];
++			if (page)
++				__free_page(page);
++		}
++		vfree(map);
++	}
++}
++
+ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
+ 					struct swap_cgroup_ctrl **ctrlp)
+ {
+@@ -474,6 +514,56 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
+ 	return sc ? sc->id : 0;
+ }
+ 
++/*
++ * Allocate swap cgroup accounting structures when the first non-root
++ * memcg is created.
++ */
++int swap_cgroup_init(void)
++{
++	unsigned int type;
++
++	if (!do_swap_account)
++		return 0;
++
++	if (atomic_add_return(1, &memsw_accounting_users) != 1)
++		return 0;
++
++	mutex_lock(&swap_cgroup_mutex);
++	for (type = 0; type < nr_swapfiles; type++) {
++		if (swap_cgroup_prepare(type) < 0) {
++			mutex_unlock(&swap_cgroup_mutex);
++			goto nomem;
++		}
++	}
++	mutex_unlock(&swap_cgroup_mutex);
++	return 0;
++
++nomem:
++	pr_info("couldn't allocate enough memory for swap_cgroup "
++		"while creating non-root memcg.\n");
++	return -ENOMEM;
++}
++
++/*
++ * Deallocate swap cgroup accounting structures on the last non-root
++ * memcg removal.
++ */
++void swap_cgroup_free(void)
++{
++	unsigned int type;
++
++	if (!do_swap_account)
++		return;
++
++	if (atomic_sub_return(1, &memsw_accounting_users))
++		return;
++
++	mutex_lock(&swap_cgroup_mutex);
++	for (type = 0; type < nr_swapfiles; type++)
++		swap_cgroup_teardown(type);
++	mutex_unlock(&swap_cgroup_mutex);
++}
++
  int swap_cgroup_swapon(int type, unsigned long max_pages)
-@@ -471,6 +482,9 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
+ {
+ 	unsigned long length;
+@@ -482,20 +572,18 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
  	if (!do_swap_account)
  		return 0;
  
-+	if (!atomic_read(&memsw_accounting_users))
-+		return 0;
-+
+-	if (!atomic_read(&memsw_accounting_users))
+-		return 0;
+-
  	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
  
  	ctrl = &swap_cgroup_ctrl[type];
+ 	mutex_lock(&swap_cgroup_mutex);
+ 	ctrl->length = length;
+ 	spin_lock_init(&ctrl->lock);
+-	if (swap_cgroup_prepare(type)) {
+-		/* memory shortage */
+-		ctrl->length = 0;
+-		mutex_unlock(&swap_cgroup_mutex);
+-		goto nomem;
++	if (atomic_read(&memsw_accounting_users)) {
++		if (swap_cgroup_prepare(type)) {
++			/* memory shortage */
++			mutex_unlock(&swap_cgroup_mutex);
++			goto nomem;
++		}
+ 	}
+ 	mutex_unlock(&swap_cgroup_mutex);
+ 
 -- 
 1.7.9.5
 
