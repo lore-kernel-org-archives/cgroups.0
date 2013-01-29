@@ -1,75 +1,44 @@
-From: Jeff Liu <jeff.liu@oracle.com>
-Subject: Re: [PATCH v2 0/6] memcg: disable swap cgroup allocation at swapon
-Date: Wed, 30 Jan 2013 00:50:22 +0800
-Message-ID: <5107FDCE.90705@oracle.com>
-References: <510658E3.1020306@oracle.com> <20130129151531.GI29574@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130129151531.GI29574@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH v3 0/9] devcg: introduce proper hierarchy support
+Date: Tue, 29 Jan 2013 14:07:59 -0500
+Message-ID: <20130129190759.117458287@napanee.usersys.redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On 01/29/2013 11:15 PM, Michal Hocko wrote:
-> On Mon 28-01-13 18:54:27, Jeff Liu wrote:
->> Hello,
->>
->> Here is the v2 patch set for disabling swap_cgroup structures allocation
->> per swapon.
->>
->> In the initial version, one big issue is that I have missed the swap tracking
->> for the root memcg, thanks Michal pointing it out. :)
->>
->> In order to solve it, the easiest approach I can think out is to bypass the root
->> memcg swap accounting during the business and figure it out with some global stats,
->> which means that we always return 0 per root memcg swap charge/uncharge stage, and
->> this is inspired by another proposal from Zhengju:
->> "memcg: Don't account root memcg page statistics -- https://lkml.org/lkml/2013/1/2/71"
->>
->> Besides that, another major fix is deallocate swap accounting structures on the last
->> non-root memcg remove after all references to it are gone rather than doing it on
->> mem_cgroup_destroy().
->>
->> Any comment are welcome!
-> 
-> Could you also post your testing methodology and results, please? It
-> would be also really great if you could sum up memory savings.
-Sure, I'll post those info in the next try, and will revisit [PATCH v2
-2/6] and answer the comments from you and Glauber since my head is not
-very clear now. :)
-> 
-> Anyway thanks this second version looks really promising.
-Thanks for your kind review, have a nice day!
+This patchset implements device cgroup hierarchy. Behaviors and exceptions
+will be propagated down in the tree and local preferences will be re-evaluated
+everytime a change in its parent occours, reapplying them if it's still
+possible.
 
--Jeff
-> 
->> v1->v2:
->> - Refactor swap_cgroup_swapon()/swap_cgroup_prepare(), to make the later can be
->>   used for allocating buffers per the first non-root memcg creation.
->> - Bypass root memcg swap statistics, using the global stats to figure it out instead.
->> - Export nr_swap_files which would be used when creating/freeing swap_cgroup
->> - Deallocate swap accounting structures on the last non-root memcg removal
->>
->> Old patch set:
->> v1:
->> http://marc.info/?l=linux-mm&m=135461016823964&w=2
->>
->>
->> Thanks,
->> -Jeff
->>
->> --
->> To unsubscribe, send a message with 'unsubscribe linux-mm' in
->> the body to majordomo@kvack.org.  For more info on Linux MM,
->> see: http://www.linux-mm.org/ .
->> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
-> 
+git://github.com/aristeu/linux-2.6.git
+branch: devcg_hierarchy_review
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+v3:
+- update documentation
+- move css_online/css_offline changes to a new patch
+- use cgroup_for_each_descendant_pre() instead of own descendant walk
+- move exception_copy rework to a separared patch
+- move exception_clean rework to a separated patch
+- new patch to just move dev_exception_rm() before dev_exception_add()
+  as requested by Tejun.
+- updated patch description for may_access() changes
+- new patch to expand the may_access() logic before changing it
+- fixed argument description order in may_access()
+
+v2:
+- rebase on top "device_cgroup: don't grab mutex in rcu callback"
+- in case parent changes behavior or exceptions and the local exceptions won't
+  apply anymore, remove them instead of keeping them around.
+
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>                                                                                               
+Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>                                                                               
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>                                                                           
+
+-- 
+Aristeu
