@@ -1,75 +1,75 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: simplify lock of memcg page stat accounting
-Date: Tue, 29 Jan 2013 11:40:03 +0100
-Message-ID: <20130129103940.GA29574@dhcp22.suse.cz>
-References: <1359198756-3752-1-git-send-email-handai.szj@taobao.com>
- <51071AA1.7000207@jp.fujitsu.com>
+From: Jeff Liu <jeff.liu@oracle.com>
+Subject: Re: [PATCH v2 3/6] memcg: introduce memsw_accounting_users
+Date: Tue, 29 Jan 2013 18:52:37 +0800
+Message-ID: <5107A9F5.5090600@oracle.com>
+References: <510658F0.9050802@oracle.com> <51079A79.9090802@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <51071AA1.7000207-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <51079A79.9090802@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Lord Glauber Costa of Sealand <glommer@parallels.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org
 
-On Tue 29-01-13 09:41:05, KAMEZAWA Hiroyuki wrote:
-> (2013/01/26 20:12), Sha Zhengju wrote:
-[...]
-> > So in order to make the lock simpler and clearer and also avoid the 'nesting'
-> > problem, a choice may be:
-> > (CPU-A does "page stat accounting" and CPU-B does "move")
-> > 
-> >         CPU-A                        CPU-B
-> > 
-> > move_lock_mem_cgroup()
-> > memcg = pc->mem_cgroup
-> > TestSetPageDirty(page)
-> > move_unlock_mem_cgroup()
-> >                               move_lock_mem_cgroup()
-> >                               if (PageDirty) {
-> >                                    old_memcg->nr_dirty --;
-> >                                    new_memcg->nr_dirty ++;
-> >                               }
-> >                               pc->mem_cgroup = new_memcg
-> >                               move_unlock_mem_cgroup()
-> > 
-> > memcg->nr_dirty ++
-> > 
+On 01/29/2013 05:46 PM, Lord Glauber Costa of Sealand wrote:
+> Hi,
 > 
-> Hmm. no race with file truncate ?
-
-Shouldn't pte lock protect us in page_{add_file,remove}_rmap?
-
-[...]
-> > diff --git a/mm/rmap.c b/mm/rmap.c
-> > index 59b0dca..0d74c48 100644
-> > --- a/mm/rmap.c
-> > +++ b/mm/rmap.c
-> > @@ -1112,13 +1112,25 @@ void page_add_file_rmap(struct page *page)
-> >   {
-> >   	bool locked;
-> >   	unsigned long flags;
-> > +	bool ret;
-> > +	struct mem_cgroup *memcg = NULL;
-> > +	struct cgroup_subsys_state *css = NULL;
-> >   
-> >   	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
-> > -	if (atomic_inc_and_test(&page->_mapcount)) {
-> > +	memcg = try_get_mem_cgroup_from_page(page);
+> On 01/28/2013 02:54 PM, Jeff Liu wrote:
+>> As we don't account the swap stat number for the root_mem_cgroup anymore,
+>> here we can just return an invalid CSS ID if there is no non-root memcg
+>> is alive.  Also, introduce memsw_accounting_users to track the number of
+>> active non-root memcgs.
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> CC: Glauber Costa <glommer@parallels.com>
+>> CC: Michal Hocko <mhocko@suse.cz>
+>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>> CC: Johannes Weiner <hannes@cmpxchg.org>
+>> CC: Mel Gorman <mgorman@suse.de>
+>> CC: Andrew Morton <akpm@linux-foundation.org>
+>> CC: Sha Zhengju <handai.szj@taobao.com>
+>>
+>> ---
+>>  mm/page_cgroup.c |   16 +++++++++++++++-
+>>  1 file changed, 15 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+>> index c945254..189fbf5 100644
+>> --- a/mm/page_cgroup.c
+>> +++ b/mm/page_cgroup.c
+>> @@ -336,6 +336,8 @@ struct swap_cgroup {
+>>  };
+>>  #define SC_PER_PAGE	(PAGE_SIZE/sizeof(struct swap_cgroup))
+>>  
+>> +static atomic_t memsw_accounting_users = ATOMIC_INIT(0);
+>> +
 > 
-> Toooooo heavy ! I can say NACK to this patch only because of this try_get().
-
-Agreed.
-
-> To hold memcg alive, rcu_read_lock() will work (as current code does).
+> I am not seeing this being incremented or decremented. I can only guess
+> that it comes in later patches. However, they are clearly used as a
+> global reference counter.
 > 
-> BTW, does this patch fixes the nested-lock problem ?
+> This is precisely one of the use cases static branches solve very
+> neatly. Did you consider using them?
+Yep, I'll try to replace it with the static branches if there are no
+objections from the others. :)
 
-Because set_page_drity is called outside of mem_cgroup_{begin,end}_update_page_stat.
-That confused me too.
--- 
-Michal Hocko
-SUSE Labs
+Thanks,
+-Jeff
+> 
+> True, they will help a lot more when we are touching hot paths, and swap
+> is hardly a hot path.
+> 
+> However, since one of the main complaints about memcg has been that we
+> inflict "death by a thousand cuts", maybe it wouldn't hurt everything
+> else being the same.
+> 
+> Michal and others, do you have any feelings here?
+> 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
