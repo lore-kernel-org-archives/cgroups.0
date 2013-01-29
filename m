@@ -1,62 +1,116 @@
-From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Subject: [PATCH v3 7/9] devcg: split single exception copy from dev_exceptions_copy()
-Date: Tue, 29 Jan 2013 14:08:06 -0500
-Message-ID: <20130129190800.291395350@napanee.usersys.redhat.com>
+From: aris@redhat.com
+Subject: [PATCH v3 6/9] devcg: use css_online and css_offline
+Date: Tue, 29 Jan 2013 14:08:05 -0500
+Message-ID: <20130129190800.123213034@napanee.usersys.redhat.com>
 References: <20130129190759.117458287@napanee.usersys.redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline; filename=exceptions_copy.patch
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=online.patch
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>
 
-This patch is in preparation for hierarchy support
+Allocate resources and change behavior only when online.
+This patch is in preparation for hierarchy support.
 
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 
 ---
- security/device_cgroup.c |   18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ security/device_cgroup.c |   59 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 42 insertions(+), 17 deletions(-)
 
---- github.orig/security/device_cgroup.c	2013-01-29 11:49:16.076677425 -0500
-+++ github/security/device_cgroup.c	2013-01-29 11:49:16.374681863 -0500
-@@ -89,20 +89,30 @@ static int devcgroup_can_attach(struct c
- 	return 0;
+--- github.orig/security/device_cgroup.c	2013-01-29 11:49:15.795673240 -0500
++++ github/security/device_cgroup.c	2013-01-29 11:49:16.076677425 -0500
+@@ -230,14 +230,51 @@ static void dev_exception_clean(struct d
+ 	__dev_exception_clean(dev_cgroup);
  }
  
-+static int dev_exception_copy(struct list_head *dest,
-+			      struct dev_exception_item *ex)
++/**
++ * devcgroup_online - initializes devcgroup's behavior and exceptions based on
++ * 		      parent's
++ * @cgroup: cgroup getting online
++ * returns 0 in case of success, error code otherwise
++ */
++static int devcgroup_online(struct cgroup *cgroup)
 +{
-+	struct dev_exception_item *new;
++	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup = NULL;
++	int ret = 0;
 +
-+	new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
-+	if (!new)
-+		return -ENOMEM;
-+	list_add_tail(&new->list, dest);
-+	return 0;
++	mutex_lock(&devcgroup_mutex);
++	dev_cgroup = cgroup_to_devcgroup(cgroup);
++	if (cgroup->parent)
++		parent_dev_cgroup = cgroup_to_devcgroup(cgroup->parent);
++
++	if (parent_dev_cgroup == NULL)
++		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
++	else {
++		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
++					  &parent_dev_cgroup->exceptions);
++		if (!ret)
++			dev_cgroup->behavior = parent_dev_cgroup->behavior;
++	}
++	mutex_unlock(&devcgroup_mutex);
++
++	return ret;
++}
++
++static void devcgroup_offline(struct cgroup *cgroup)
++{
++	struct dev_cgroup *dev_cgroup = cgroup_to_devcgroup(cgroup);
++
++	mutex_lock(&devcgroup_mutex);
++	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
++	mutex_unlock(&devcgroup_mutex);
 +}
 +
  /*
-  * called under devcgroup_mutex
+  * called from kernel/cgroup.c with cgroup_lock() held.
   */
- static int dev_exceptions_copy(struct list_head *dest, struct list_head *orig)
+ static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
  {
--	struct dev_exception_item *ex, *tmp, *new;
-+	struct dev_exception_item *ex, *tmp;
+-	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup;
++	struct dev_cgroup *dev_cgroup;
+ 	struct cgroup *parent_cgroup;
+-	int ret;
  
- 	lockdep_assert_held(&devcgroup_mutex);
+ 	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
+ 	if (!dev_cgroup)
+@@ -245,23 +282,9 @@ static struct cgroup_subsys_state *devcg
+ 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+ 	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
+ 	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
++	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+ 	parent_cgroup = cgroup->parent;
  
- 	list_for_each_entry(ex, orig, list) {
--		new = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
--		if (!new)
-+		if (dev_exception_copy(dest, ex))
- 			goto free_and_exit;
--		list_add_tail(&new->list, dest);
- 	}
+-	if (parent_cgroup == NULL)
+-		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+-	else {
+-		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+-		mutex_lock(&devcgroup_mutex);
+-		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
+-					  &parent_dev_cgroup->exceptions);
+-		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+-		mutex_unlock(&devcgroup_mutex);
+-		if (ret) {
+-			kfree(dev_cgroup);
+-			return ERR_PTR(ret);
+-		}
+-	}
+-
+ 	return &dev_cgroup->css;
+ }
  
- 	return 0;
+@@ -635,6 +658,8 @@ struct cgroup_subsys devices_subsys = {
+ 	.can_attach = devcgroup_can_attach,
+ 	.css_alloc = devcgroup_css_alloc,
+ 	.css_free = devcgroup_css_free,
++	.css_online = devcgroup_online,
++	.css_offline = devcgroup_offline,
+ 	.subsys_id = devices_subsys_id,
+ 	.base_cftypes = dev_cgroup_files,
+ 
