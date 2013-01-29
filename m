@@ -1,10 +1,10 @@
 From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Subject: [PATCH v3 8/9] devcg: refactor dev_exception_clean()
-Date: Tue, 29 Jan 2013 14:08:07 -0500
-Message-ID: <20130129190800.443784569@napanee.usersys.redhat.com>
+Subject: [PATCH v3 9/9] devcg: propagate local changes down the hierarchy
+Date: Tue, 29 Jan 2013 14:08:08 -0500
+Message-ID: <20130129190800.590181489@napanee.usersys.redhat.com>
 References: <20130129190759.117458287@napanee.usersys.redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline; filename=exception_clean.patch
+Content-Disposition: inline; filename=propagate.patch
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -13,98 +13,357 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-This patch is in preparation for hierarchy support.
+This patch makes all changes propagate down in hierarchy respecting when
+possible local configurations.
+
+Behavior changes will clean up exceptions in all the children except when the
+parent changes the behavior from allow to deny and the child's behavior was
+already deny, in which case the local exceptions will be reused. The inverse
+is not possible: you can't have a parent with behavior deny and a child with
+behavior accept.
+
+New exceptions allowing additional access to devices won't be propagated, but
+it'll be possible to add an exception to access all of part of the newly
+allowed device(s).
+
+New exceptions disallowing access to devices will be propagated down and the
+local group's exceptions will be revalidated for the new situation.
+Example:
+      A
+     / \
+        B
+
+    group        behavior          exceptions
+    A            allow             "b 8:* rwm", "c 116:1 rw"
+    B            deny              "c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
+
+If a new exception is added to group A:
+	# echo "c 116:* r" > A/devices.deny
+it'll propagate down and after revalidating B's local exceptions, the exception
+"c 116:2 rwm" will be removed.
+
+In case parent behavior or exceptions change and local settings are not
+allowed anymore, they'll be deleted.
+
+v3:
+- update documentation
+- move css_online/css_offline changes to a new patch
+- use cgroup_for_each_descendant_pre() instead of own descendant walk
+- move exception_copy rework to a separared patch
+- move exception_clean rework to a separated patch
+
+v2:
+- instead of keeping the local settings that won't apply anymore, remove them
+
 
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 ---
- security/device_cgroup.c |   34 ++++++++++++++++------------------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+ Documentation/cgroups/devices.txt |   66 ++++++++++++++
+ security/device_cgroup.c          |  170 ++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 230 insertions(+), 6 deletions(-)
 
---- github.orig/security/device_cgroup.c	2013-01-29 11:49:16.374681863 -0500
-+++ github/security/device_cgroup.c	2013-01-29 11:49:16.653686016 -0500
-@@ -212,32 +212,33 @@ static int dev_exception_add(struct dev_
- 	return rc;
+--- github.orig/security/device_cgroup.c	2013-01-29 11:49:16.653686016 -0500
++++ github/security/device_cgroup.c	2013-01-29 13:58:07.537099962 -0500
+@@ -60,6 +60,9 @@ struct dev_cgroup {
+ 		struct list_head exceptions;
+ 		enum devcg_behavior behavior;
+ 	} local;
++
++	/* temporary list for pending propagation operations */
++	struct list_head propagate_pending;
+ };
+ 
+ static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+@@ -241,6 +244,11 @@ static void dev_exception_clean_all(stru
+ 	__dev_exception_clean_all(dev_cgroup);
  }
  
--static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+static void dev_exception_clean(struct list_head *exceptions)
- {
- 	struct dev_exception_item *ex, *tmp;
- 
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
--		list_del_rcu(&ex->list);
--		kfree_rcu(ex, rcu);
--	}
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->local.exceptions,
--				 list) {
-+	list_for_each_entry_safe(ex, tmp, exceptions, list) {
- 		list_del_rcu(&ex->list);
- 		kfree_rcu(ex, rcu);
- 	}
- }
- 
-+static void __dev_exception_clean_all(struct dev_cgroup *dev_cgroup)
++static inline bool is_devcg_online(const struct dev_cgroup *devcg)
 +{
-+	dev_exception_clean(&dev_cgroup->exceptions);
-+	dev_exception_clean(&dev_cgroup->local.exceptions);
++	return (devcg->behavior != DEVCG_DEFAULT_NONE);
 +}
 +
  /**
-- * dev_exception_clean - frees all entries of the exception list
-+ * dev_exception_clean_all - frees all entries of the exception list
-  * @dev_cgroup: dev_cgroup with the exception list to be cleaned
-  *
-  * called under devcgroup_mutex
-  */
--static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+static void dev_exception_clean_all(struct dev_cgroup *dev_cgroup)
- {
- 	lockdep_assert_held(&devcgroup_mutex);
- 
--	__dev_exception_clean(dev_cgroup);
-+	__dev_exception_clean_all(dev_cgroup);
+  * devcgroup_online - initializes devcgroup's behavior and exceptions based on
+  * 		      parent's
+@@ -292,6 +300,7 @@ static struct cgroup_subsys_state *devcg
+ 		return ERR_PTR(-ENOMEM);
+ 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+ 	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
++	INIT_LIST_HEAD(&dev_cgroup->propagate_pending);
+ 	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
+ 	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+ 	parent_cgroup = cgroup->parent;
+@@ -471,6 +480,139 @@ static inline int may_allow_all(struct d
+ 	return parent->behavior == DEVCG_DEFAULT_ALLOW;
  }
  
- /**
-@@ -303,7 +304,7 @@ static void devcgroup_css_free(struct cg
- 	struct dev_cgroup *dev_cgroup;
- 
- 	dev_cgroup = cgroup_to_devcgroup(cgroup);
--	__dev_exception_clean(dev_cgroup);
-+	__dev_exception_clean_all(dev_cgroup);
- 	kfree(dev_cgroup);
- }
- 
-@@ -508,25 +509,22 @@ 	memset(&ex, 0, sizeof(ex));
- 		case DEVCG_ALLOW:
- 			if (!may_allow_all(parent))
- 				return -EPERM;
--			dev_exception_clean(devcgroup);
-+			dev_exception_clean_all(devcgroup);
- 			if (parent)
- 				rc = dev_exceptions_copy(&devcgroup->exceptions,
++/**
++ * revalidate_exceptions - walks through the exception list and revalidates
++ *			     the exceptions based on parents' behavior and
++ *			     exceptions. Called with devcgroup_mutex held.
++ * @devcg: cgroup which exceptions will be checked
++ *
++ * returns: 0 in success, -ENOMEM in case of out of memory
++ *
++ * This is one of the two key functions for hierarchy implementation.
++ * This function is responsible for re-evaluating all the cgroup's locally
++ * set exceptions due to a parent's behavior or exception change.
++ * Refer to Documentation/cgroups/devices.txt for more details.
++ */
++static int revalidate_exceptions(struct dev_cgroup *devcg)
++{
++	struct dev_exception_item *ex;
++	struct list_head *this, *tmp;
++
++	list_for_each_safe(this, tmp, &devcg->local.exceptions) {
++		ex = container_of(this, struct dev_exception_item, list);
++		if (parent_has_perm(devcg, ex)) {
++			if (dev_exception_copy(&devcg->exceptions, ex))
++				goto error;
++		} else
++			__dev_exception_rm(&devcg->local.exceptions, ex);
++	}
++	return 0;
++
++error:
++	dev_exception_clean(&devcg->exceptions);
++	return -ENOMEM;
++}
++
++/**
++ * propagate_behavior - propagates a change in the behavior down in hierarchy
++ * @devcg_root: device cgroup that changed behavior
++ *
++ * returns: 0 in case of success, != 0 in case of error
++ *
++ * This is one of the two key functions for hierarchy implementation.
++ * All cgroup's children recursively will have the behavior changed and
++ * exceptions copied from the parent then its local behavior and exceptions
++ * re-evaluated and applied if they're still allowed.  Refer to
++ * Documentation/cgroups/devices.txt for more details.
++ */
++static int propagate_behavior(struct dev_cgroup *devcg_root)
++{
++	struct cgroup *root = devcg_root->css.cgroup, *pos;
++	struct dev_cgroup *parent, *devcg, *tmp;
++	int rc = 0;
++	LIST_HEAD(pending);
++
++	rcu_read_lock();
++	cgroup_for_each_descendant_pre(pos, root) {
++		devcg = cgroup_to_devcgroup(pos);
++		if (is_devcg_online(devcg))
++			list_add_tail(&devcg->propagate_pending, &pending);
++	}
++	rcu_read_unlock();
++
++	list_for_each_entry_safe(devcg, tmp, &pending, propagate_pending) {
++		parent = cgroup_to_devcgroup(devcg->css.cgroup->parent);
++
++		/* first copy parent's state */
++		devcg->behavior = parent->behavior;
++		dev_exception_clean(&devcg->exceptions);
++		rc = dev_exceptions_copy(&devcg->exceptions, &parent->exceptions);
++		if (rc) {
++			devcg->behavior = DEVCG_DEFAULT_DENY;
++			break;
++		}
++
++		if (devcg->local.behavior == DEVCG_DEFAULT_DENY &&
++		    devcg->behavior == DEVCG_DEFAULT_ALLOW) {
++			devcg->behavior = DEVCG_DEFAULT_DENY;
++		}
++		if (devcg->local.behavior == devcg->behavior)
++			rc = revalidate_exceptions(devcg);
++		if (rc)
++			break;
++		list_del_init(&devcg->propagate_pending);
++	}
++
++	return rc;
++}
++
++/**
++ * propagate_exception - propagates a new exception to the children
++ * @devcg_root: device cgroup that added a new exception
++ *
++ * returns: 0 in case of success, != 0 in case of error
++ */
++static int propagate_exception(struct dev_cgroup *devcg_root)
++{
++	struct cgroup *root = devcg_root->css.cgroup, *pos;
++	struct dev_cgroup *devcg, *parent, *tmp;
++	int rc = 0;
++	LIST_HEAD(pending);
++
++	rcu_read_lock();
++	cgroup_for_each_descendant_pre(pos, root) {
++		devcg = cgroup_to_devcgroup(pos);
++		if (is_devcg_online(devcg))
++			list_add_tail(&devcg->propagate_pending, &pending);
++	}
++	rcu_read_unlock();
++
++	list_for_each_entry_safe(devcg, tmp, &pending, propagate_pending) {
++		parent = cgroup_to_devcgroup(devcg->css.cgroup->parent);
++
++		dev_exception_clean(&devcg->exceptions);
++		if (devcg->behavior == parent->behavior) {
++			rc = dev_exceptions_copy(&devcg->exceptions, &parent->exceptions);
++			if (rc) {
++				devcg->behavior = DEVCG_DEFAULT_DENY;
++				break;
++			}
++			rc = revalidate_exceptions(devcg);
++			if (rc)
++				break;
++		} else {
++			/* we never give more permissions to the child */
++			WARN_ONCE(devcg->behavior == DEVCG_DEFAULT_ALLOW,
++				  "devcg: parent/child behavior is inconsistent");
++			rc = revalidate_exceptions(devcg);
++			if (rc)
++				break;
++		}
++		list_del_init(&devcg->propagate_pending);
++	}
++	return rc;
++}
++
+ /*
+  * Modify the exception list using allow/deny rules.
+  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
+@@ -515,11 +657,13 @@ 	memset(&ex, 0, sizeof(ex));
  							 &parent->exceptions);
  			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
  			devcgroup->local.behavior = DEVCG_DEFAULT_ALLOW;
--
--			if (rc)
--				return rc;
++			rc = propagate_behavior(devcgroup);
  			break;
  		case DEVCG_DENY:
--			dev_exception_clean(devcgroup);
-+			dev_exception_clean_all(devcgroup);
+ 			dev_exception_clean_all(devcgroup);
  			devcgroup->behavior = DEVCG_DEFAULT_DENY;
  			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
++			rc = propagate_behavior(devcgroup);
  			break;
  		default:
--			return -EINVAL;
-+			rc = -EINVAL;
+ 			rc = -EINVAL;
+@@ -610,9 +754,14 @@ 		case '\0':
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+ 			dev_exception_rm(devcgroup, &ex);
+-			return 0;
++			rc = propagate_exception(devcgroup);
++			return rc;
  		}
--		return 0;
-+		return rc;
- 	case 'b':
- 		ex.type = DEV_BLOCK;
- 		break;
+-		return dev_exception_add(devcgroup, &ex);
++		rc = dev_exception_add(devcgroup, &ex);
++		if (!rc)
++			/* if a local behavior wasn't explicitely choosen, pick it */
++			devcgroup->local.behavior = devcgroup->behavior;
++		break;
+ 	case DEVCG_DENY:
+ 		/*
+ 		 * If the default policy is to deny by default, try to remove
+@@ -621,13 +770,22 @@ 			return 0;
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+ 			dev_exception_rm(devcgroup, &ex);
+-			return 0;
++			rc = propagate_exception(devcgroup);
++			return rc;
+ 		}
+-		return dev_exception_add(devcgroup, &ex);
++		rc = dev_exception_add(devcgroup, &ex);
++		if (rc)
++			return rc;
++		/* we only propagate new restrictions */
++		rc = propagate_exception(devcgroup);
++		if (!rc)
++			/* if a local behavior wasn't explicitely choosen, pick it */
++			devcgroup->local.behavior = devcgroup->behavior;
++		break;
+ 	default:
+-		return -EINVAL;
++		rc = -EINVAL;
+ 	}
+-	return 0;
++	return rc;
+ }
+ 
+ static int devcgroup_access_write(struct cgroup *cgrp, struct cftype *cft,
+--- github.orig/Documentation/cgroups/devices.txt	2013-01-29 11:44:51.258734330 -0500
++++ github/Documentation/cgroups/devices.txt	2013-01-29 11:49:16.935690216 -0500
+@@ -50,3 +50,69 @@ task to a new cgroup.  (Again we'll prob
+ 
+ A cgroup may not be granted more permissions than the cgroup's
+ parent has.
++
++4. Hierarchy
++
++device cgroups maintain hierarchy by making sure never a cgroup has more
++access permissions than its parent.  Every time an entry is written to
++a cgroup's devices.deny file, all its children will have that entry removed
++from the the whitelist and all the locally set whitelist entries re-evaluated.
++In case one of the locally set whitelist entries would provide more access
++than the cgroup's parent, it'll be removed from the whitelist.
++
++Example:
++      A
++     / \
++        B
++
++    group        behavior	exceptions
++    A            allow		"b 8:* rwm", "c 116:1 rw"
++    B            deny		"c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
++
++If a device is denied in group A:
++	# echo "c 116:* r" > A/devices.deny
++it'll propagate down and after revalidating B's entries, the whitelist entry
++"c 116:2 rwm" will be removed:
++
++    group        whitelist entries                        denied devices
++    A            all                                      "b 8:* rwm", "c 116:* rw"
++    B            "c 1:3 rwm", "b 3:* rwm"                 all the rest
++
++In case parent behavior or exceptions change and local settings are not
++allowed anymore, they'll be deleted.
++
++Notice that new whitelist entries will not be propagated:
++      A
++     / \
++        B
++
++    group        whitelist entries                        denied devices
++    A            "c 1:3 rwm", "c 1:5 r"                   all the rest
++    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
++
++when adding "c *:3 rwm":
++	# echo "c *:3 rwm" >A/devices.allow
++
++the result:
++    group        whitelist entries                        denied devices
++    A            "c *:3 rwm", "c 1:5 r"                   all the rest
++    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
++
++but not it'll be possible to add new entries to B:
++	# echo "c 2:3 rwm" >B/devices.allow
++	# echo "c 50:3 r" >B/devices.allow
++or even
++	# echo "c *:3 rwm" >B/devices.allow
++
++4.1 Hierarchy (internal implementation)
++
++device cgroups is implemented internally using a behavior (ALLOW, DENY) and a
++list of exceptions.  The internal state is controlled using the same user
++interface to preserve compatibility.  A change in behavior (writing "a" to
++devices.deny or devices.allow) will be propagated down the hierarchy as well
++new exceptions that will reduce the access to devices (an exception when
++behavior is ALLOW).  Each cgroup will have its local behavior and exception
++list to keep track what was set by the user for that cgroup in specific.  For
++every propagated change, the effective rules will be built starting with
++parent's rules and the locally set behavior and exceptions in case they still
++apply, otherwise those will be lost.
