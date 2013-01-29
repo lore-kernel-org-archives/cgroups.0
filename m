@@ -1,43 +1,75 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 5/6] memcg: introduce
- swap_cgroup_init()/swap_cgroup_free()
-Date: Tue, 29 Jan 2013 17:09:12 +0100
-Message-ID: <20130129160912.GK29574@dhcp22.suse.cz>
-References: <510658E3.1020306@oracle.com>
- <510658F7.6050806@oracle.com>
- <20130129145639.GG29574@dhcp22.suse.cz>
- <5107F00E.7070302@oracle.com>
+From: Jeff Liu <jeff.liu@oracle.com>
+Subject: Re: [PATCH v2 0/6] memcg: disable swap cgroup allocation at swapon
+Date: Wed, 30 Jan 2013 00:50:22 +0800
+Message-ID: <5107FDCE.90705@oracle.com>
+References: <510658E3.1020306@oracle.com> <20130129151531.GI29574@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <5107F00E.7070302-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130129151531.GI29574@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org
 
-On Tue 29-01-13 23:51:42, Jeff Liu wrote:
-> On 01/29/2013 10:56 PM, Michal Hocko wrote:
-> > On Mon 28-01-13 18:54:47, Jeff Liu wrote:
-> >> Introduce swap_cgroup_init()/swap_cgroup_free() to allocate buffers when creating the first
-> >> non-root memcg and deallocate buffers on the last non-root memcg is gone.
-> > 
-> > I think this deserves more words ;) At least it would be good to
-> > describe contexts from which init and free might be called. What are the
-> > locking rules.
-> > Also swap_cgroup_destroy sounds more in pair with swap_cgroup_init.
-> Will improve the comments log as well as fix the naming.  Btw, I named
-> it as swap_cgroup_free() because we have mem_cgroup_free() corresponding
-> to mem_cgroup_init(). :)
+On 01/29/2013 11:15 PM, Michal Hocko wrote:
+> On Mon 28-01-13 18:54:27, Jeff Liu wrote:
+>> Hello,
+>>
+>> Here is the v2 patch set for disabling swap_cgroup structures allocation
+>> per swapon.
+>>
+>> In the initial version, one big issue is that I have missed the swap tracking
+>> for the root memcg, thanks Michal pointing it out. :)
+>>
+>> In order to solve it, the easiest approach I can think out is to bypass the root
+>> memcg swap accounting during the business and figure it out with some global stats,
+>> which means that we always return 0 per root memcg swap charge/uncharge stage, and
+>> this is inspired by another proposal from Zhengju:
+>> "memcg: Don't account root memcg page statistics -- https://lkml.org/lkml/2013/1/2/71"
+>>
+>> Besides that, another major fix is deallocate swap accounting structures on the last
+>> non-root memcg remove after all references to it are gone rather than doing it on
+>> mem_cgroup_destroy().
+>>
+>> Any comment are welcome!
+> 
+> Could you also post your testing methodology and results, please? It
+> would be also really great if you could sum up memory savings.
+Sure, I'll post those info in the next try, and will revisit [PATCH v2
+2/6] and answer the comments from you and Glauber since my head is not
+very clear now. :)
+> 
+> Anyway thanks this second version looks really promising.
+Thanks for your kind review, have a nice day!
 
-I do see mem_cgroup_alloc and __mem_cgroup_free. Anyway this is not that
-important. Consistent naming is not any rule. It is nice to have though.
-So take these renaming suggestions as hints rather than you definitely
-_have_ to do that.
+-Jeff
+> 
+>> v1->v2:
+>> - Refactor swap_cgroup_swapon()/swap_cgroup_prepare(), to make the later can be
+>>   used for allocating buffers per the first non-root memcg creation.
+>> - Bypass root memcg swap statistics, using the global stats to figure it out instead.
+>> - Export nr_swap_files which would be used when creating/freeing swap_cgroup
+>> - Deallocate swap accounting structures on the last non-root memcg removal
+>>
+>> Old patch set:
+>> v1:
+>> http://marc.info/?l=linux-mm&m=135461016823964&w=2
+>>
+>>
+>> Thanks,
+>> -Jeff
+>>
+>> --
+>> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+>> the body to majordomo@kvack.org.  For more info on Linux MM,
+>> see: http://www.linux-mm.org/ .
+>> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
 
-[...]
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
