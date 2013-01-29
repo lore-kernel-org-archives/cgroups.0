@@ -1,10 +1,10 @@
 From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Subject: [PATCH v3 3/9] device_cgroup: keep track of local group settings
-Date: Tue, 29 Jan 2013 14:08:02 -0500
-Message-ID: <20130129190759.713469698@napanee.usersys.redhat.com>
+Subject: [PATCH v3 5/9] devcg: prepare may_access() for hierarchy support
+Date: Tue, 29 Jan 2013 14:08:04 -0500
+Message-ID: <20130129190759.993951510@napanee.usersys.redhat.com>
 References: <20130129190759.117458287@napanee.usersys.redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline; filename=hierarchy.patch
+Content-Disposition: inline; filename=strengthen-may_access.patch
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -13,185 +13,105 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-In preparation for better hierarchy support, it's needed to retain the local
-settings in order to try to reapply them after a propagated change if they're
-still valid.
+Currently may_access() is only able to verify if an exception is valid for the
+current cgroup, which has the same behavior. With hierarchy, it'll be also used
+to verify if a cgroup local exception is valid towards its cgroup parent, which
+might have different behavior.
 
-v2: split this patch in two, one to just move dev_exception_rm() before
-    dev_exception_add() while keeping functional changes in this patch as
-    requested by Tejun.
+v2:
+- updated patch description
+- rebased on top of a new patch to expand the may_access() logic to make it
+  more clear
+- fixed argument description order in may_access()
 
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
- 
----
- security/device_cgroup.c |   83 +++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 67 insertions(+), 16 deletions(-)
 
---- github.orig/security/device_cgroup.c	2013-01-29 11:49:14.987661210 -0500
-+++ github/security/device_cgroup.c	2013-01-29 11:49:15.244665037 -0500
-@@ -39,13 +39,27 @@ struct dev_exception_item {
- 	struct rcu_head rcu;
- };
- 
-+enum devcg_behavior {
-+	DEVCG_DEFAULT_NONE,
-+	DEVCG_DEFAULT_ALLOW,
-+	DEVCG_DEFAULT_DENY,
-+};
-+
- struct dev_cgroup {
- 	struct cgroup_subsys_state css;
-+
-+	/* result of merging the parent's rules with local ones */
- 	struct list_head exceptions;
--	enum {
--		DEVCG_DEFAULT_ALLOW,
--		DEVCG_DEFAULT_DENY,
--	} behavior;
-+	enum devcg_behavior behavior;
-+
-+	/*
-+	 * local set rules, saved so when a parent propagates new rules, the
-+	 * local preferences can be preserved
-+	 */
-+	struct {
-+		struct list_head exceptions;
-+		enum devcg_behavior behavior;
-+	} local;
- };
- 
- static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
-@@ -104,8 +118,8 @@ free_and_exit:
- /*
-  * called under devcgroup_mutex
+---
+ security/device_cgroup.c |   44 +++++++++++++++++++++++++++-----------------
+ 1 file changed, 27 insertions(+), 17 deletions(-)
+
+--- github.orig/security/device_cgroup.c	2013-01-29 11:49:15.514669057 -0500
++++ github/security/device_cgroup.c	2013-01-29 11:49:15.795673240 -0500
+@@ -354,9 +354,11 @@ 	return 0;
+  *		verify if a certain access is allowed.
+  * @dev_cgroup: dev cgroup to be tested against
+  * @refex: new exception
++ * @behavior: behavior of the exception
   */
--static void dev_exception_rm(struct list_head *exceptions,
--			     struct dev_exception_item *ex)
-+static void __dev_exception_rm(struct list_head *exceptions,
-+			       struct dev_exception_item *ex)
+-static int may_access(struct dev_cgroup *dev_cgroup,
+-		      struct dev_exception_item *refex)
++static bool may_access(struct dev_cgroup *dev_cgroup,
++		       struct dev_exception_item *refex,
++		       enum devcg_behavior behavior)
  {
- 	struct dev_exception_item *walk, *tmp;
- 
-@@ -127,11 +141,18 @@ static void dev_exception_rm(struct list
+ 	struct dev_exception_item *ex;
+ 	bool match = false;
+@@ -380,19 +382,27 @@ 		if (ex->minor != ~0 && ex->minor != re
+ 		break;
  	}
- }
  
-+static void dev_exception_rm(struct dev_cgroup *devcgroup,
-+			     struct dev_exception_item *ex)
-+{
-+	__dev_exception_rm(&devcgroup->local.exceptions, ex);
-+	__dev_exception_rm(&devcgroup->exceptions, ex);
-+}
-+
- /*
-  * called under devcgroup_mutex
-  */
--static int dev_exception_add(struct list_head *exceptions,
--			     struct dev_exception_item *ex)
-+static int __dev_exception_add(struct list_head *exceptions,
-+			       struct dev_exception_item *ex)
- {
- 	struct dev_exception_item *excopy, *walk;
- 
-@@ -159,6 +180,28 @@ static int dev_exception_add(struct list
+-	/*
+-	 * In two cases we'll consider this new exception valid:
+-	 * - the dev cgroup has its default policy to deny + exception list:
+-	 *   the new exception *should* match the exceptions
+-	 * - the dev cgroup has its default policy to allow + exception list:
+-	 *   the new exception should *not* match any of the exceptions
+-	 */
+-	if (dev_cgroup->behavior == DEVCG_DEFAULT_DENY) {
+-		if (match)
+-			return 1;
++	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
++		if (behavior == DEVCG_DEFAULT_ALLOW) {
++			/* the exception will deny access to certain devices */
++			return true;
++		} else {
++			/* the exception will allow access to certain devices */
++			if (match)
++				/*
++				 * a new exception allowing access shouldn't
++				 * match an parent's exception
++				 */
++				return false;
++			return true;
++		}
+ 	} else {
+-		if (!match)
+-			return 1;
++		/* only behavior == DEVCG_DEFAULT_DENY allowed here */
++		if (match)
++			/* parent has an exception that matches the proposed */
++			return true;
++		else
++			return false;
+ 	}
  	return 0;
  }
- 
-+static int dev_exception_add(struct dev_cgroup *devcgroup,
-+			     struct dev_exception_item *ex)
-+{
-+	int rc;
-+
-+	lockdep_assert_held(&devcgroup_mutex);
-+
-+	/*
-+	 * we add to the local list so we can preserve local preferences if
-+	 * the parent propagates down new rules
-+	 */
-+	rc = __dev_exception_add(&devcgroup->local.exceptions, ex);
-+	if (rc)
-+		return rc;
-+
-+	rc = __dev_exception_add(&devcgroup->exceptions, ex);
-+	if (rc)
-+		__dev_exception_rm(&devcgroup->local.exceptions, ex);
-+
-+	return rc;
-+}
-+
- static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
- {
- 	struct dev_exception_item *ex, *tmp;
-@@ -167,6 +210,11 @@ static void __dev_exception_clean(struct
- 		list_del_rcu(&ex->list);
- 		kfree_rcu(ex, rcu);
- 	}
-+	list_for_each_entry_safe(ex, tmp, &dev_cgroup->local.exceptions,
-+				 list) {
-+		list_del_rcu(&ex->list);
-+		kfree_rcu(ex, rcu);
-+	}
+@@ -411,7 +421,7 @@ static int parent_has_perm(struct dev_cg
+ 	if (!pcg)
+ 		return 1;
+ 	parent = cgroup_to_devcgroup(pcg);
+-	return may_access(parent, ex);
++	return may_access(parent, ex, childcg->behavior);
  }
  
  /**
-@@ -195,6 +243,8 @@ static struct cgroup_subsys_state *devcg
- 	if (!dev_cgroup)
- 		return ERR_PTR(-ENOMEM);
- 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
-+	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
-+	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
- 	parent_cgroup = cgroup->parent;
+@@ -445,7 +455,7 @@ static int devcgroup_update_access(struc
+ {
+ 	const char *b;
+ 	char temp[12];		/* 11 + 1 characters needed for a u32 */
+-	int count, rc;
++	int count, rc = 0;
+ 	struct dev_exception_item ex;
+ 	struct cgroup *p = devcgroup->css.cgroup;
+ 	struct dev_cgroup *parent = NULL;
+@@ -663,7 +673,7 @@ 	memset(&ex, 0, sizeof(ex));
  
- 	if (parent_cgroup == NULL)
-@@ -413,18 +463,19 @@ 	memset(&ex, 0, sizeof(ex));
- 			if (!may_allow_all(parent))
- 				return -EPERM;
- 			dev_exception_clean(devcgroup);
-+			if (parent)
-+				rc = dev_exceptions_copy(&devcgroup->exceptions,
-+							 &parent->exceptions);
- 			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
--			if (!parent)
--				break;
-+			devcgroup->local.behavior = DEVCG_DEFAULT_ALLOW;
+ 	rcu_read_lock();
+ 	dev_cgroup = task_devcgroup(current);
+-	rc = may_access(dev_cgroup, &ex);
++	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
+ 	rcu_read_unlock();
  
--			rc = dev_exceptions_copy(&devcgroup->exceptions,
--						 &parent->exceptions);
- 			if (rc)
- 				return rc;
- 			break;
- 		case DEVCG_DENY:
- 			dev_exception_clean(devcgroup);
- 			devcgroup->behavior = DEVCG_DEFAULT_DENY;
-+			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
- 			break;
- 		default:
- 			return -EINVAL;
-@@ -514,10 +565,10 @@ 		case '\0':
- 		 * don't want to break compatibility
- 		 */
- 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
--			dev_exception_rm(&devcgroup->exceptions, &ex);
-+			dev_exception_rm(devcgroup, &ex);
- 			return 0;
- 		}
--		return dev_exception_add(&devcgroup->exceptions, &ex);
-+		return dev_exception_add(devcgroup, &ex);
- 	case DEVCG_DENY:
- 		/*
- 		 * If the default policy is to deny by default, try to remove
-@@ -525,10 +576,10 @@ 			return 0;
- 		 * don't want to break compatibility
- 		 */
- 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
--			dev_exception_rm(&devcgroup->exceptions, &ex);
-+			dev_exception_rm(devcgroup, &ex);
- 			return 0;
- 		}
--		return dev_exception_add(&devcgroup->exceptions, &ex);
-+		return dev_exception_add(devcgroup, &ex);
- 	default:
- 		return -EINVAL;
- 	}
+ 	if (!rc)
