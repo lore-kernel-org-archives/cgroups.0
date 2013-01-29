@@ -1,10 +1,10 @@
 From: aris@redhat.com
-Subject: [PATCH v3 6/9] devcg: use css_online and css_offline
-Date: Tue, 29 Jan 2013 14:08:05 -0500
-Message-ID: <20130129190800.123213034@napanee.usersys.redhat.com>
+Subject: [PATCH v3 1/9] device_cgroup: prepare exception list handling functions for two lists
+Date: Tue, 29 Jan 2013 14:08:00 -0500
+Message-ID: <20130129190759.321644928@napanee.usersys.redhat.com>
 References: <20130129190759.117458287@napanee.usersys.redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=online.patch
+Content-Disposition: inline; filename=dev_exception_helpers.patch
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -13,104 +13,86 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>
 
-Allocate resources and change behavior only when online.
-This patch is in preparation for hierarchy support.
+In the following patches, device_cgroup structure will have two sets of
+behavior and exceptions list (actual one, another with the local settings)
+so rework the functions to use exception list, not a device_cgroup.
 
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Serge Hallyn <serge.hallyn@canonical.com>
 Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 
 ---
- security/device_cgroup.c |   59 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 42 insertions(+), 17 deletions(-)
+ security/device_cgroup.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
---- github.orig/security/device_cgroup.c	2013-01-29 11:49:15.795673240 -0500
-+++ github/security/device_cgroup.c	2013-01-29 11:49:16.076677425 -0500
-@@ -230,14 +230,51 @@ static void dev_exception_clean(struct d
- 	__dev_exception_clean(dev_cgroup);
- }
- 
-+/**
-+ * devcgroup_online - initializes devcgroup's behavior and exceptions based on
-+ * 		      parent's
-+ * @cgroup: cgroup getting online
-+ * returns 0 in case of success, error code otherwise
-+ */
-+static int devcgroup_online(struct cgroup *cgroup)
-+{
-+	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup = NULL;
-+	int ret = 0;
-+
-+	mutex_lock(&devcgroup_mutex);
-+	dev_cgroup = cgroup_to_devcgroup(cgroup);
-+	if (cgroup->parent)
-+		parent_dev_cgroup = cgroup_to_devcgroup(cgroup->parent);
-+
-+	if (parent_dev_cgroup == NULL)
-+		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
-+	else {
-+		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
-+					  &parent_dev_cgroup->exceptions);
-+		if (!ret)
-+			dev_cgroup->behavior = parent_dev_cgroup->behavior;
-+	}
-+	mutex_unlock(&devcgroup_mutex);
-+
-+	return ret;
-+}
-+
-+static void devcgroup_offline(struct cgroup *cgroup)
-+{
-+	struct dev_cgroup *dev_cgroup = cgroup_to_devcgroup(cgroup);
-+
-+	mutex_lock(&devcgroup_mutex);
-+	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
-+	mutex_unlock(&devcgroup_mutex);
-+}
-+
+--- github.orig/security/device_cgroup.c	2013-01-29 11:48:50.603298122 -0500
++++ github/security/device_cgroup.c	2013-01-29 11:49:14.739657516 -0500
+@@ -104,7 +104,7 @@ free_and_exit:
  /*
-  * called from kernel/cgroup.c with cgroup_lock() held.
+  * called under devcgroup_mutex
   */
- static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
+-static int dev_exception_add(struct dev_cgroup *dev_cgroup,
++static int dev_exception_add(struct list_head *exceptions,
+ 			     struct dev_exception_item *ex)
  {
--	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup;
-+	struct dev_cgroup *dev_cgroup;
- 	struct cgroup *parent_cgroup;
--	int ret;
+ 	struct dev_exception_item *excopy, *walk;
+@@ -115,7 +115,7 @@ static int dev_exception_add(struct dev_
+ 	if (!excopy)
+ 		return -ENOMEM;
  
- 	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
- 	if (!dev_cgroup)
-@@ -245,23 +282,9 @@ static struct cgroup_subsys_state *devcg
- 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
- 	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
- 	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
-+	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
- 	parent_cgroup = cgroup->parent;
+-	list_for_each_entry(walk, &dev_cgroup->exceptions, list) {
++	list_for_each_entry(walk, exceptions, list) {
+ 		if (walk->type != ex->type)
+ 			continue;
+ 		if (walk->major != ex->major)
+@@ -129,21 +129,21 @@ static int dev_exception_add(struct dev_
+ 	}
  
--	if (parent_cgroup == NULL)
--		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
--	else {
--		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
--		mutex_lock(&devcgroup_mutex);
--		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
--					  &parent_dev_cgroup->exceptions);
--		dev_cgroup->behavior = parent_dev_cgroup->behavior;
--		mutex_unlock(&devcgroup_mutex);
--		if (ret) {
--			kfree(dev_cgroup);
--			return ERR_PTR(ret);
--		}
--	}
--
- 	return &dev_cgroup->css;
+ 	if (excopy != NULL)
+-		list_add_tail_rcu(&excopy->list, &dev_cgroup->exceptions);
++		list_add_tail_rcu(&excopy->list, exceptions);
+ 	return 0;
  }
  
-@@ -635,6 +658,8 @@ struct cgroup_subsys devices_subsys = {
- 	.can_attach = devcgroup_can_attach,
- 	.css_alloc = devcgroup_css_alloc,
- 	.css_free = devcgroup_css_free,
-+	.css_online = devcgroup_online,
-+	.css_offline = devcgroup_offline,
- 	.subsys_id = devices_subsys_id,
- 	.base_cftypes = dev_cgroup_files,
+ /*
+  * called under devcgroup_mutex
+  */
+-static void dev_exception_rm(struct dev_cgroup *dev_cgroup,
++static void dev_exception_rm(struct list_head *exceptions,
+ 			     struct dev_exception_item *ex)
+ {
+ 	struct dev_exception_item *walk, *tmp;
  
+ 	lockdep_assert_held(&devcgroup_mutex);
+ 
+-	list_for_each_entry_safe(walk, tmp, &dev_cgroup->exceptions, list) {
++	list_for_each_entry_safe(walk, tmp, exceptions, list) {
+ 		if (walk->type != ex->type)
+ 			continue;
+ 		if (walk->major != ex->major)
+@@ -514,10 +514,10 @@ 		case '\0':
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+-			dev_exception_rm(devcgroup, &ex);
++			dev_exception_rm(&devcgroup->exceptions, &ex);
+ 			return 0;
+ 		}
+-		return dev_exception_add(devcgroup, &ex);
++		return dev_exception_add(&devcgroup->exceptions, &ex);
+ 	case DEVCG_DENY:
+ 		/*
+ 		 * If the default policy is to deny by default, try to remove
+@@ -525,10 +525,10 @@ 			return 0;
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+-			dev_exception_rm(devcgroup, &ex);
++			dev_exception_rm(&devcgroup->exceptions, &ex);
+ 			return 0;
+ 		}
+-		return dev_exception_add(devcgroup, &ex);
++		return dev_exception_add(&devcgroup->exceptions, &ex);
+ 	default:
+ 		return -EINVAL;
+ 	}
