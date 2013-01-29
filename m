@@ -1,10 +1,9 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 7/9] devcg: split single exception copy from
- dev_exceptions_copy()
-Date: Tue, 29 Jan 2013 11:54:22 -0800
-Message-ID: <20130129195422.GH6824@mtj.dyndns.org>
+Subject: Re: [PATCH v3 8/9] devcg: refactor dev_exception_clean()
+Date: Tue, 29 Jan 2013 11:55:06 -0800
+Message-ID: <20130129195506.GI6824@mtj.dyndns.org>
 References: <20130129190759.117458287@napanee.usersys.redhat.com>
- <20130129190800.291395350@napanee.usersys.redhat.com>
+ <20130129190800.443784569@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -12,15 +11,15 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
          :mime-version:content-type:content-disposition:in-reply-to
          :user-agent;
-        bh=WWWNQwgXTuYdbUWQmHjUoz8ZmhISr5NQfXjj+DGn/j0=;
-        b=LqOOvCsdV9iy27CXoajPOMCuBBlzzlkLRStQh2TUBosRwnwYeRX21WQK9Njv+aKT6Y
-         awpv9NDUNMmTDUiHTZpUwJHUwEgyiziyu7wqnOnxk+3ILrizp2kEExaieNbZ6cwNXnbC
-         61P/lU022FMpiBwb2Y0fN5VUTz523VVkyRV8IDe6CFH2tUfXwgbQUTIaXYYIaWklvN5l
-         Lht1HiXut5AMdrKhv0AuFBxGtCGqcnN3EMO3OrLlEf5nIsy+HuF0DRLYvH99H4nripVf
-         HeA6LORMOmjoDx5ckgP/wXesihzUreIwX1INQNC2uqW6hbWegA7tkQlvN87bQDZ3jU1Y
-         KryA==
+        bh=EyaZ8KvltGlKHSD5/oojpFXxbbpnGzv5RMHTUT2FvBM=;
+        b=l1gRTAbrKVle3+nclU+rvh233L67CVqrrY+cA2VZBTyN2kilhGyQIIG71i7x04hq6h
+         FJXoCadvJQ/vXBU3O4CkF/5gRr/6faC8XjdULZ111TXmg09SlRqXaUtGUHP+GqlJWwXe
+         OCi6vK7yz2fHuaSmKm5+AaAX/zMUQ2BtDl58yyt3e/HKKomZwBCKFgaCDVzvbf97E5xW
+         L4dv9wmMJ/qx93T/EvONaQ8zduKnOghUVMtCl37tmr9PTVCBCzUEKBY1+tnaUa9lbCnW
+         kW0ihkcicGQxUmPX0zKIuA4nddSkTdQpG+fJh5/fOarXZJxrIat0Zkfx01wG6K+Mkhh0
+         kL+A==
 Content-Disposition: inline
-In-Reply-To: <20130129190800.291395350-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20130129190800.443784569-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,11 +27,10 @@ Content-Transfer-Encoding: 7bit
 To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Tue, Jan 29, 2013 at 02:08:06PM -0500, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
-> This patch is in preparation for hierarchy support
+On Tue, Jan 29, 2013 at 02:08:07PM -0500, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
+> This patch is in preparation for hierarchy support.
 
-It would be nice to note this is purely organizational and doesn't
-make any functional changes.
+Ditto.
 
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
