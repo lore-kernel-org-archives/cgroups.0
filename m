@@ -1,77 +1,78 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v2 3/6] memcg: introduce memsw_accounting_users
-Date: Tue, 29 Jan 2013 15:26:30 +0100
-Message-ID: <20130129142630.GE29574@dhcp22.suse.cz>
-References: <510658F0.9050802@oracle.com>
- <51079A79.9090802@parallels.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 4/6] memcg: export nr_swap_files
+Date: Tue, 29 Jan 2013 15:31:39 +0100
+Message-ID: <20130129143139.GF29574@dhcp22.suse.cz>
+References: <510658E3.1020306@oracle.com>
+ <510658F6.4010504@oracle.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <51079A79.9090802@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <510658F6.4010504-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Lord Glauber Costa of Sealand <glommer@parallels.com>
-Cc: Jeff Liu <jeff.liu@oracle.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 29-01-13 13:46:33, Glauber Costa wrote:
-> Hi,
+On Mon 28-01-13 18:54:46, Jeff Liu wrote:
+> Export nr_swap_files which would be used for initializing and destorying
+> swap cgroup structures in the coming patch.
 > 
-> On 01/28/2013 02:54 PM, Jeff Liu wrote:
-> > As we don't account the swap stat number for the root_mem_cgroup anymore,
-> > here we can just return an invalid CSS ID if there is no non-root memcg
-> > is alive.  Also, introduce memsw_accounting_users to track the number of
-> > active non-root memcgs.
-> > 
-> > Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> > CC: Glauber Costa <glommer@parallels.com>
-> > CC: Michal Hocko <mhocko@suse.cz>
-> > CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> > CC: Johannes Weiner <hannes@cmpxchg.org>
-> > CC: Mel Gorman <mgorman@suse.de>
-> > CC: Andrew Morton <akpm@linux-foundation.org>
-> > CC: Sha Zhengju <handai.szj@taobao.com>
-> > 
-> > ---
-> >  mm/page_cgroup.c |   16 +++++++++++++++-
-> >  1 file changed, 15 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-> > index c945254..189fbf5 100644
-> > --- a/mm/page_cgroup.c
-> > +++ b/mm/page_cgroup.c
-> > @@ -336,6 +336,8 @@ struct swap_cgroup {
-> >  };
-> >  #define SC_PER_PAGE	(PAGE_SIZE/sizeof(struct swap_cgroup))
-> >  
-> > +static atomic_t memsw_accounting_users = ATOMIC_INIT(0);
-> > +
+> Signed-off-by: Jie Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> CC: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+> CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> CC: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+
+You are missing definition for !CONFIG_SWAP
+
+After this is fixed you can add my
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
 > 
-> I am not seeing this being incremented or decremented. I can only guess
-> that it comes in later patches. However, they are clearly used as a
-> global reference counter.
+> ---
+>  include/linux/swap.h |    1 +
+>  mm/swapfile.c        |    2 +-
+>  2 files changed, 2 insertions(+), 1 deletion(-)
 > 
-> This is precisely one of the use cases static branches solve very
-> neatly. Did you consider using them?
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 68df9c1..6de44c9 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -348,6 +348,7 @@ extern struct page *swapin_readahead(swp_entry_t, gfp_t,
+>  /* linux/mm/swapfile.c */
+>  extern long nr_swap_pages;
+>  extern long total_swap_pages;
+> +extern unsigned int nr_swapfiles;
+>  extern void si_swapinfo(struct sysinfo *);
+>  extern swp_entry_t get_swap_page(void);
+>  extern swp_entry_t get_swap_page_of_type(int);
+> diff --git a/mm/swapfile.c b/mm/swapfile.c
+> index e97a0e5..89cebcf 100644
+> --- a/mm/swapfile.c
+> +++ b/mm/swapfile.c
+> @@ -46,7 +46,7 @@ static void free_swap_count_continuations(struct swap_info_struct *);
+>  static sector_t map_swap_entry(swp_entry_t, struct block_device**);
+>  
+>  DEFINE_SPINLOCK(swap_lock);
+> -static unsigned int nr_swapfiles;
+> +unsigned int nr_swapfiles;
+>  long nr_swap_pages;
+>  long total_swap_pages;
+>  static int least_priority;
+> -- 
+> 1.7.9.5
 > 
-> True, they will help a lot more when we are touching hot paths, and swap
-> is hardly a hot path.
-> 
-> However, since one of the main complaints about memcg has been that we
-> inflict "death by a thousand cuts", maybe it wouldn't hurt everything
-> else being the same.
-> 
-> Michal and others, do you have any feelings here?
- 
-I would leave a static branch change to a separate patch. Make it work
-first and only then care about how it looks.
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
