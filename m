@@ -1,30 +1,74 @@
-From: Lord Glauber Costa of Sealand <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 6/6] memcg: init/free swap cgroup strucutres upon create/free
- child memcg
-Date: Tue, 29 Jan 2013 13:59:24 +0400
-Message-ID: <51079D7C.8030400@parallels.com>
-References: <510658FC.50009@oracle.com>
+From: Jeff Liu <jeff.liu@oracle.com>
+Subject: Re: [PATCH v2 5/6] memcg: introduce swap_cgroup_init()/swap_cgroup_free()
+Date: Tue, 29 Jan 2013 18:21:51 +0800
+Message-ID: <5107A2BF.3@oracle.com>
+References: <510658F7.6050806@oracle.com> <51079D10.1050201@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <510658FC.50009-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <51079D10.1050201@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Lord Glauber Costa of Sealand <glommer@parallels.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org
 
-On 01/28/2013 02:54 PM, Jeff Liu wrote:
->  static void free_rcu(struct rcu_head *rcu_head)
-> @@ -6116,6 +6117,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
->  			INIT_WORK(&stock->work, drain_local_stock);
->  		}
->  	} else {
-> +		if (swap_cgroup_init())
-> +			goto free_out;
->  		parent = mem_cgroup_from_cont(cont->parent);
->  		memcg->use_hierarchy = parent->use_hierarchy;
->  		memcg->oom_kill_disable = parent->oom_kill_disable;
-Be aware that this will conflict with latest -mm where those were moved
-to css_online().
+On 01/29/2013 05:57 PM, Lord Glauber Costa of Sealand wrote:
+> On 01/28/2013 02:54 PM, Jeff Liu wrote:
+>> Introduce swap_cgroup_init()/swap_cgroup_free() to allocate buffers when creating the first
+>> non-root memcg and deallocate buffers on the last non-root memcg is gone.
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> CC: Glauber Costa <glommer@parallels.com>
+>> CC: Michal Hocko <mhocko@suse.cz>
+>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>> CC: Johannes Weiner <hannes@cmpxchg.org>
+>> CC: Mel Gorman <mgorman@suse.de>
+>> CC: Andrew Morton <akpm@linux-foundation.org>
+>> CC: Sha Zhengju <handai.szj@taobao.com>
+>>
+> 
+> Looks sane.
+> 
+> Reviewed-by: Glauber Costa <glommer@parallels.com>
+> 
+> Only:
+> 
+>>  #endif /* !__GENERATING_BOUNDS_H */
+>> diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+>> index 189fbf5..0ebd127 100644
+>> --- a/mm/page_cgroup.c
+>> +++ b/mm/page_cgroup.c
+>> @@ -362,14 +362,28 @@ static int swap_cgroup_prepare(int type)
+>>  	unsigned long idx, max;
+>>  
+>>  	ctrl = &swap_cgroup_ctrl[type];
+>> +	if (!ctrl->length) {
+>> +		/*
+>> +		 * Bypass the buffer allocation if the corresponding swap
+>> +		 * partition/file was turned off.
+>> +		 */
+>> +		pr_debug("couldn't allocate swap_cgroup on a disabled swap "
+>> +			 "partition or file, index: %d\n", type);
+>> +		return 0;
+>> +	}
+>> +
+>>  	ctrl->map = vzalloc(ctrl->length * sizeof(void *));
+>> -	if (!ctrl->map)
+>> +	if (!ctrl->map) {
+>> +		ctrl->length = 0;
+> 
+> Considering moving this assignment somewhere in the exit path in the
+> labels region.
+Nice point.  Both "ctrl->length = 0" statements in this function should be
+moved down to the exit path of "nomem:" label.
 
+Thanks,
+-Jeff
+ 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
