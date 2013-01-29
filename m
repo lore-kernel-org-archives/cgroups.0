@@ -1,97 +1,118 @@
-From: Lord Glauber Costa of Sealand <glommer@parallels.com>
-Subject: [PATCH] cfq: fix lock imbalance with failed allocations
-Date: Mon, 28 Jan 2013 19:58:47 +0400
-Message-ID: <1359388727-28147-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH v2] memcg: reduce the size of struct memcg 244-fold.
+Date: Tue, 29 Jan 2013 09:08:38 +0900
+Message-ID: <51071306.1020107@jp.fujitsu.com>
+References: <1359009996-5350-1-git-send-email-glommer@parallels.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>, Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1359009996-5350-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Glauber Costa <glommer@parallels.com>
+(2013/01/24 15:46), Glauber Costa wrote:
+> In order to maintain all the memcg bookkeeping, we need per-node
+> descriptors, which will in turn contain a per-zone descriptor.
+> 
+> Because we want to statically allocate those, this array ends up being
+> very big. Part of the reason is that we allocate something large enough
+> to hold MAX_NUMNODES, the compile time constant that holds the maximum
+> number of nodes we would ever consider.
+> 
+> However, we can do better in some cases if the firmware help us. This is
+> true for modern x86 machines; coincidentally one of the architectures in
+> which MAX_NUMNODES tends to be very big.
+> 
+> By using the firmware-provided maximum number of nodes instead of
+> MAX_NUMNODES, we can reduce the memory footprint of struct memcg
+> considerably. In the extreme case in which we have only one node, this
+> reduces the size of the structure from ~ 64k to ~2k. This is
+> particularly important because it means that we will no longer resort to
+> the vmalloc area for the struct memcg on defconfigs. We also have enough
+> room for an extra node and still be outside vmalloc.
+> 
+> One also has to keep in mind that with the industry's ability to fit
+> more processors in a die as fast as the FED prints money, a nodes = 2
+> configuration is already respectably big.
+> 
+> [ v2: use size_t for size calculations ]
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+> Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   mm/memcontrol.c | 40 +++++++++++++++++++++++++---------------
+>   1 file changed, 25 insertions(+), 15 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 09255ec..09d8b02 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -172,7 +172,7 @@ struct mem_cgroup_per_node {
+>   };
+>   
+>   struct mem_cgroup_lru_info {
+> -	struct mem_cgroup_per_node *nodeinfo[MAX_NUMNODES];
+> +	struct mem_cgroup_per_node *nodeinfo[0];
+>   };
+>   
+>   /*
+> @@ -276,17 +276,6 @@ struct mem_cgroup {
+>   	 */
+>   	struct res_counter kmem;
+>   	/*
+> -	 * Per cgroup active and inactive list, similar to the
+> -	 * per zone LRU lists.
+> -	 */
+> -	struct mem_cgroup_lru_info info;
+> -	int last_scanned_node;
+> -#if MAX_NUMNODES > 1
+> -	nodemask_t	scan_nodes;
+> -	atomic_t	numainfo_events;
+> -	atomic_t	numainfo_updating;
+> -#endif
+> -	/*
+>   	 * Should the accounting and control be hierarchical, per subtree?
+>   	 */
+>   	bool use_hierarchy;
+> @@ -349,8 +338,29 @@ struct mem_cgroup {
+>           /* Index in the kmem_cache->memcg_params->memcg_caches array */
+>   	int kmemcg_id;
+>   #endif
+> +
+> +	int last_scanned_node;
+> +#if MAX_NUMNODES > 1
+> +	nodemask_t	scan_nodes;
+> +	atomic_t	numainfo_events;
+> +	atomic_t	numainfo_updating;
+> +#endif
+> +	/*
+> +	 * Per cgroup active and inactive list, similar to the
+> +	 * per zone LRU lists.
+> +	 *
+> +	 * WARNING: This has to be the last element of the struct. Don't
+> +	 * add new fields after this point.
+> +	 */
+> +	struct mem_cgroup_lru_info info;
+>   };
+>   
+> +static inline size_t memcg_size(void)
+> +{
+> +	return sizeof(struct mem_cgroup) +
+> +		nr_node_ids * sizeof(struct mem_cgroup_per_node);
+> +}
+> 
+ok, nr_node_ids is made from possible_node_map.
 
-While stress-running very-small container scenarios with the Kernel
-Memory Controller, I've run into a lockdep-detected lock imbalance in
-cfq-iosched.c.
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-I'll apologize beforehand for not posting a backlog: I didn't anticipate
-it would be so hard to reproduce, so I didn't save my serial output and
-went directly on debugging. Turns out that it did not happen again in
-more than 20 runs, making it a quite rare pattern.
 
-But here is my analysis:
 
-When we are in very low-memory situations, we will arrive at
-cfq_find_alloc_queue and may not find a queue, having to resort to the
-oom queue, in an rcu-locked condition:
-
-  if (!cfqq || cfqq == &cfqd->oom_cfqq)
-      [ ... ]
-
-Next, we will release the rcu lock, and try to allocate a queue,
-retrying if we succeed:
-
-  rcu_read_unlock();
-  spin_unlock_irq(cfqd->queue->queue_lock);
-  new_cfqq = kmem_cache_alloc_node(cfq_pool,
-                  gfp_mask | __GFP_ZERO,
-                  cfqd->queue->node);
-   spin_lock_irq(cfqd->queue->queue_lock);
-   if (new_cfqq)
-       goto retry;
-
-We are unlocked at this point, but it should be fine, since we will
-reacquire the rcu_read_lock when we retry.
-
-Except of course, that we may not retry: the allocation may very well
-fail and we'll keep on going through the flow:
-
-The next branch is:
-
-    if (cfqq) {
-	[ ... ]
-    } else
-        cfqq = &cfqd->oom_cfqq;
-
-And right before exiting, we'll issue rcu_read_unlock().
-
-Being already unlocked, this is the likely source of our imbalance.
-Since cfqq is either already NULL or made NULL in the first statement of
-the outter branch, the only viable alternative here seems to be to
-return the oom queue right away in case of allocation failure.
-
-Please review the following patch and apply if you agree with my
-analysis.
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>
----
- block/cfq-iosched.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index fb52df9..d52437a 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -3205,6 +3205,8 @@ retry:
- 			spin_lock_irq(cfqd->queue->queue_lock);
- 			if (new_cfqq)
- 				goto retry;
-+			else
-+				return &cfqd->oom_cfqq;
- 		} else {
- 			cfqq = kmem_cache_alloc_node(cfq_pool,
- 					gfp_mask | __GFP_ZERO,
--- 
-1.8.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
