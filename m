@@ -1,32 +1,68 @@
-From: Lord Glauber Costa of Sealand <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2 4/6] memcg: export nr_swap_files
-Date: Tue, 29 Jan 2013 13:47:31 +0400
-Message-ID: <51079AB3.5010406@parallels.com>
-References: <510658F6.4010504@oracle.com>
+From: Lord Glauber Costa of Sealand <glommer@parallels.com>
+Subject: Re: [PATCH v2 5/6] memcg: introduce swap_cgroup_init()/swap_cgroup_free()
+Date: Tue, 29 Jan 2013 13:57:36 +0400
+Message-ID: <51079D10.1050201@parallels.com>
+References: <510658F7.6050806@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <510658F6.4010504-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <510658F7.6050806@oracle.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org
 
 On 01/28/2013 02:54 PM, Jeff Liu wrote:
-> Export nr_swap_files which would be used for initializing and destorying
-> swap cgroup structures in the coming patch.
+> Introduce swap_cgroup_init()/swap_cgroup_free() to allocate buffers when creating the first
+> non-root memcg and deallocate buffers on the last non-root memcg is gone.
 > 
-> Signed-off-by: Jie Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> CC: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-> CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> CC: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> CC: Glauber Costa <glommer@parallels.com>
+> CC: Michal Hocko <mhocko@suse.cz>
+> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Johannes Weiner <hannes@cmpxchg.org>
+> CC: Mel Gorman <mgorman@suse.de>
+> CC: Andrew Morton <akpm@linux-foundation.org>
+> CC: Sha Zhengju <handai.szj@taobao.com>
 > 
-Well, nothing fancy here.
 
-Acked-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Looks sane.
 
+Reviewed-by: Glauber Costa <glommer@parallels.com>
+
+Only:
+
+>  #endif /* !__GENERATING_BOUNDS_H */
+> diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+> index 189fbf5..0ebd127 100644
+> --- a/mm/page_cgroup.c
+> +++ b/mm/page_cgroup.c
+> @@ -362,14 +362,28 @@ static int swap_cgroup_prepare(int type)
+>  	unsigned long idx, max;
+>  
+>  	ctrl = &swap_cgroup_ctrl[type];
+> +	if (!ctrl->length) {
+> +		/*
+> +		 * Bypass the buffer allocation if the corresponding swap
+> +		 * partition/file was turned off.
+> +		 */
+> +		pr_debug("couldn't allocate swap_cgroup on a disabled swap "
+> +			 "partition or file, index: %d\n", type);
+> +		return 0;
+> +	}
+> +
+>  	ctrl->map = vzalloc(ctrl->length * sizeof(void *));
+> -	if (!ctrl->map)
+> +	if (!ctrl->map) {
+> +		ctrl->length = 0;
+
+Considering moving this assignment somewhere in the exit path in the
+labels region.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
