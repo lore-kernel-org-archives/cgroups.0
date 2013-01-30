@@ -1,10 +1,10 @@
 From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Subject: [PATCH v4 8/9] devcg: refactor dev_exception_clean()
-Date: Wed, 30 Jan 2013 12:11:09 -0500
-Message-ID: <20130130171102.253395279@napanee.usersys.redhat.com>
+Subject: [PATCH v4 3/9] device_cgroup: keep track of local group settings
+Date: Wed, 30 Jan 2013 12:11:04 -0500
+Message-ID: <20130130171101.538945424@napanee.usersys.redhat.com>
 References: <20130130171101.060853036@napanee.usersys.redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline; filename=exception_clean.patch
+Content-Disposition: inline; filename=hierarchy.patch
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -13,101 +13,186 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-This patch is in preparation for hierarchy support.
+In preparation for better hierarchy support, it's needed to retain the local
+settings in order to try to reapply them after a propagated change if they're
+still valid.
 
-This patch doesn't introduce any functional changes.
+v2: split this patch in two, one to just move dev_exception_rm() before
+    dev_exception_add() while keeping functional changes in this patch as
+    requested by Tejun.
 
 Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
+ 
 ---
- security/device_cgroup.c |   34 ++++++++++++++++------------------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+ security/device_cgroup.c |   83 +++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 67 insertions(+), 16 deletions(-)
 
---- github.orig/security/device_cgroup.c	2013-01-29 11:49:16.374681863 -0500
-+++ github/security/device_cgroup.c	2013-01-29 11:49:16.653686016 -0500
-@@ -212,32 +212,33 @@ static int dev_exception_add(struct dev_
- 	return rc;
- }
+--- github.orig/security/device_cgroup.c	2013-01-29 11:49:14.987661210 -0500
++++ github/security/device_cgroup.c	2013-01-29 11:49:15.244665037 -0500
+@@ -39,13 +39,27 @@ struct dev_exception_item {
+ 	struct rcu_head rcu;
+ };
  
--static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+static void dev_exception_clean(struct list_head *exceptions)
++enum devcg_behavior {
++	DEVCG_DEFAULT_NONE,
++	DEVCG_DEFAULT_ALLOW,
++	DEVCG_DEFAULT_DENY,
++};
++
+ struct dev_cgroup {
+ 	struct cgroup_subsys_state css;
++
++	/* result of merging the parent's rules with local ones */
+ 	struct list_head exceptions;
+-	enum {
+-		DEVCG_DEFAULT_ALLOW,
+-		DEVCG_DEFAULT_DENY,
+-	} behavior;
++	enum devcg_behavior behavior;
++
++	/*
++	 * local set rules, saved so when a parent propagates new rules, the
++	 * local preferences can be preserved
++	 */
++	struct {
++		struct list_head exceptions;
++		enum devcg_behavior behavior;
++	} local;
+ };
+ 
+ static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+@@ -104,8 +118,8 @@ free_and_exit:
+ /*
+  * called under devcgroup_mutex
+  */
+-static void dev_exception_rm(struct list_head *exceptions,
+-			     struct dev_exception_item *ex)
++static void __dev_exception_rm(struct list_head *exceptions,
++			       struct dev_exception_item *ex)
  {
- 	struct dev_exception_item *ex, *tmp;
+ 	struct dev_exception_item *walk, *tmp;
  
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->exceptions, list) {
--		list_del_rcu(&ex->list);
--		kfree_rcu(ex, rcu);
--	}
--	list_for_each_entry_safe(ex, tmp, &dev_cgroup->local.exceptions,
--				 list) {
-+	list_for_each_entry_safe(ex, tmp, exceptions, list) {
- 		list_del_rcu(&ex->list);
- 		kfree_rcu(ex, rcu);
+@@ -127,11 +141,18 @@ static void dev_exception_rm(struct list
  	}
  }
  
-+static void __dev_exception_clean_all(struct dev_cgroup *dev_cgroup)
++static void dev_exception_rm(struct dev_cgroup *devcgroup,
++			     struct dev_exception_item *ex)
 +{
-+	dev_exception_clean(&dev_cgroup->exceptions);
-+	dev_exception_clean(&dev_cgroup->local.exceptions);
++	__dev_exception_rm(&devcgroup->local.exceptions, ex);
++	__dev_exception_rm(&devcgroup->exceptions, ex);
 +}
 +
- /**
-- * dev_exception_clean - frees all entries of the exception list
-+ * dev_exception_clean_all - frees all entries of the exception list
-  * @dev_cgroup: dev_cgroup with the exception list to be cleaned
-  *
+ /*
   * called under devcgroup_mutex
   */
--static void dev_exception_clean(struct dev_cgroup *dev_cgroup)
-+static void dev_exception_clean_all(struct dev_cgroup *dev_cgroup)
+-static int dev_exception_add(struct list_head *exceptions,
+-			     struct dev_exception_item *ex)
++static int __dev_exception_add(struct list_head *exceptions,
++			       struct dev_exception_item *ex)
  {
- 	lockdep_assert_held(&devcgroup_mutex);
+ 	struct dev_exception_item *excopy, *walk;
  
--	__dev_exception_clean(dev_cgroup);
-+	__dev_exception_clean_all(dev_cgroup);
+@@ -159,6 +180,28 @@ static int dev_exception_add(struct list
+ 	return 0;
+ }
+ 
++static int dev_exception_add(struct dev_cgroup *devcgroup,
++			     struct dev_exception_item *ex)
++{
++	int rc;
++
++	lockdep_assert_held(&devcgroup_mutex);
++
++	/*
++	 * we add to the local list so we can preserve local preferences if
++	 * the parent propagates down new rules
++	 */
++	rc = __dev_exception_add(&devcgroup->local.exceptions, ex);
++	if (rc)
++		return rc;
++
++	rc = __dev_exception_add(&devcgroup->exceptions, ex);
++	if (rc)
++		__dev_exception_rm(&devcgroup->local.exceptions, ex);
++
++	return rc;
++}
++
+ static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
+ {
+ 	struct dev_exception_item *ex, *tmp;
+@@ -167,6 +210,11 @@ static void __dev_exception_clean(struct
+ 		list_del_rcu(&ex->list);
+ 		kfree_rcu(ex, rcu);
+ 	}
++	list_for_each_entry_safe(ex, tmp, &dev_cgroup->local.exceptions,
++				 list) {
++		list_del_rcu(&ex->list);
++		kfree_rcu(ex, rcu);
++	}
  }
  
  /**
-@@ -303,7 +304,7 @@ static void devcgroup_css_free(struct cg
- 	struct dev_cgroup *dev_cgroup;
+@@ -195,6 +243,8 @@ static struct cgroup_subsys_state *devcg
+ 	if (!dev_cgroup)
+ 		return ERR_PTR(-ENOMEM);
+ 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
++	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
++	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
+ 	parent_cgroup = cgroup->parent;
  
- 	dev_cgroup = cgroup_to_devcgroup(cgroup);
--	__dev_exception_clean(dev_cgroup);
-+	__dev_exception_clean_all(dev_cgroup);
- 	kfree(dev_cgroup);
- }
- 
-@@ -508,25 +509,22 @@ 	memset(&ex, 0, sizeof(ex));
- 		case DEVCG_ALLOW:
+ 	if (parent_cgroup == NULL)
+@@ -413,18 +463,19 @@ 	memset(&ex, 0, sizeof(ex));
  			if (!may_allow_all(parent))
  				return -EPERM;
--			dev_exception_clean(devcgroup);
-+			dev_exception_clean_all(devcgroup);
- 			if (parent)
- 				rc = dev_exceptions_copy(&devcgroup->exceptions,
- 							 &parent->exceptions);
+ 			dev_exception_clean(devcgroup);
++			if (parent)
++				rc = dev_exceptions_copy(&devcgroup->exceptions,
++							 &parent->exceptions);
  			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
- 			devcgroup->local.behavior = DEVCG_DEFAULT_ALLOW;
--
--			if (rc)
--				return rc;
+-			if (!parent)
+-				break;
++			devcgroup->local.behavior = DEVCG_DEFAULT_ALLOW;
+ 
+-			rc = dev_exceptions_copy(&devcgroup->exceptions,
+-						 &parent->exceptions);
+ 			if (rc)
+ 				return rc;
  			break;
  		case DEVCG_DENY:
--			dev_exception_clean(devcgroup);
-+			dev_exception_clean_all(devcgroup);
+ 			dev_exception_clean(devcgroup);
  			devcgroup->behavior = DEVCG_DEFAULT_DENY;
- 			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
++			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
  			break;
  		default:
--			return -EINVAL;
-+			rc = -EINVAL;
+ 			return -EINVAL;
+@@ -514,10 +565,10 @@ 		case '\0':
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+-			dev_exception_rm(&devcgroup->exceptions, &ex);
++			dev_exception_rm(devcgroup, &ex);
+ 			return 0;
  		}
--		return 0;
-+		return rc;
- 	case 'b':
- 		ex.type = DEV_BLOCK;
- 		break;
+-		return dev_exception_add(&devcgroup->exceptions, &ex);
++		return dev_exception_add(devcgroup, &ex);
+ 	case DEVCG_DENY:
+ 		/*
+ 		 * If the default policy is to deny by default, try to remove
+@@ -525,10 +576,10 @@ 			return 0;
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+-			dev_exception_rm(&devcgroup->exceptions, &ex);
++			dev_exception_rm(devcgroup, &ex);
+ 			return 0;
+ 		}
+-		return dev_exception_add(&devcgroup->exceptions, &ex);
++		return dev_exception_add(devcgroup, &ex);
+ 	default:
+ 		return -EINVAL;
+ 	}
