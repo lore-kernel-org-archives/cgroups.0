@@ -1,10 +1,10 @@
 From: aris@redhat.com
-Subject: [PATCH v4 2/9] devcg: reorder device exception functions
-Date: Wed, 30 Jan 2013 12:11:03 -0500
-Message-ID: <20130130171101.406627645@napanee.usersys.redhat.com>
+Subject: [PATCH v4 6/9] devcg: use css_online and css_offline
+Date: Wed, 30 Jan 2013 12:11:07 -0500
+Message-ID: <20130130171101.947461296@napanee.usersys.redhat.com>
 References: <20130130171101.060853036@napanee.usersys.redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=reorder_exception_functions.patch
+Content-Disposition: inline; filename=online.patch
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -13,10 +13,14 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>
 
-In preparation for the next patch, reorder dev_exception_add() and
-dev_exception_rm().
+Allocate resources and change behavior only when online. This is needed in
+order to determine if a node is suitable for hierarchy propagation or if it's
+being removed.
 
-This patch doesn't introduce any functional changes.
+Locking:
+Both functions take devcgroup_mutex to make changes to device_cgroup structure.
+Hierarchy propagation will also take devcgroup_mutex before walking the
+tree while walking the tree itself is protected by rcu lock.
 
 Acked-by: Tejun Heo <tj@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>
@@ -24,90 +28,96 @@ Cc: Serge Hallyn <serge.hallyn@canonical.com>
 Signed-off-by: Aristeu Rozanski <aris@redhat.com>
 
 ---
- security/device_cgroup.c |   44 ++++++++++++++++++++++----------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+ security/device_cgroup.c |   59 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 42 insertions(+), 17 deletions(-)
 
---- github.orig/security/device_cgroup.c	2013-01-29 11:49:14.739657516 -0500
-+++ github/security/device_cgroup.c	2013-01-29 11:49:14.987661210 -0500
-@@ -104,18 +104,14 @@ free_and_exit:
- /*
-  * called under devcgroup_mutex
-  */
--static int dev_exception_add(struct list_head *exceptions,
-+static void dev_exception_rm(struct list_head *exceptions,
- 			     struct dev_exception_item *ex)
- {
--	struct dev_exception_item *excopy, *walk;
-+	struct dev_exception_item *walk, *tmp;
- 
- 	lockdep_assert_held(&devcgroup_mutex);
- 
--	excopy = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
--	if (!excopy)
--		return -ENOMEM;
--
--	list_for_each_entry(walk, exceptions, list) {
-+	list_for_each_entry_safe(walk, tmp, exceptions, list) {
- 		if (walk->type != ex->type)
- 			continue;
- 		if (walk->major != ex->major)
-@@ -123,27 +119,29 @@ static int dev_exception_add(struct list
- 		if (walk->minor != ex->minor)
- 			continue;
- 
--		walk->access |= ex->access;
--		kfree(excopy);
--		excopy = NULL;
-+		walk->access &= ~ex->access;
-+		if (!walk->access) {
-+			list_del_rcu(&walk->list);
-+			kfree_rcu(walk, rcu);
-+		}
- 	}
--
--	if (excopy != NULL)
--		list_add_tail_rcu(&excopy->list, exceptions);
--	return 0;
+--- github.orig/security/device_cgroup.c	2013-01-30 09:00:09.435351867 -0500
++++ github/security/device_cgroup.c	2013-01-30 09:09:12.572464122 -0500
+@@ -230,14 +230,51 @@ static void dev_exception_clean(struct d
+ 	__dev_exception_clean(dev_cgroup);
  }
  
- /*
-  * called under devcgroup_mutex
-  */
--static void dev_exception_rm(struct list_head *exceptions,
-+static int dev_exception_add(struct list_head *exceptions,
- 			     struct dev_exception_item *ex)
- {
--	struct dev_exception_item *walk, *tmp;
-+	struct dev_exception_item *excopy, *walk;
- 
- 	lockdep_assert_held(&devcgroup_mutex);
- 
--	list_for_each_entry_safe(walk, tmp, exceptions, list) {
-+	excopy = kmemdup(ex, sizeof(*ex), GFP_KERNEL);
-+	if (!excopy)
-+		return -ENOMEM;
++/**
++ * devcgroup_online - initializes devcgroup's behavior and exceptions based on
++ * 		      parent's
++ * @cgroup: cgroup getting online
++ * returns 0 in case of success, error code otherwise
++ */
++static int devcgroup_online(struct cgroup *cgroup)
++{
++	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup = NULL;
++	int ret = 0;
 +
-+	list_for_each_entry(walk, exceptions, list) {
- 		if (walk->type != ex->type)
- 			continue;
- 		if (walk->major != ex->major)
-@@ -151,12 +149,14 @@ static void dev_exception_rm(struct list
- 		if (walk->minor != ex->minor)
- 			continue;
++	mutex_lock(&devcgroup_mutex);
++	dev_cgroup = cgroup_to_devcgroup(cgroup);
++	if (cgroup->parent)
++		parent_dev_cgroup = cgroup_to_devcgroup(cgroup->parent);
++
++	if (parent_dev_cgroup == NULL)
++		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
++	else {
++		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
++					  &parent_dev_cgroup->exceptions);
++		if (!ret)
++			dev_cgroup->behavior = parent_dev_cgroup->behavior;
++	}
++	mutex_unlock(&devcgroup_mutex);
++
++	return ret;
++}
++
++static void devcgroup_offline(struct cgroup *cgroup)
++{
++	struct dev_cgroup *dev_cgroup = cgroup_to_devcgroup(cgroup);
++
++	mutex_lock(&devcgroup_mutex);
++	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
++	mutex_unlock(&devcgroup_mutex);
++}
++
+ /*
+  * called from kernel/cgroup.c with cgroup_lock() held.
+  */
+ static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
+ {
+-	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup;
++	struct dev_cgroup *dev_cgroup;
+ 	struct cgroup *parent_cgroup;
+-	int ret;
  
--		walk->access &= ~ex->access;
--		if (!walk->access) {
--			list_del_rcu(&walk->list);
--			kfree_rcu(walk, rcu);
+ 	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
+ 	if (!dev_cgroup)
+@@ -245,23 +282,9 @@ static struct cgroup_subsys_state *devcg
+ 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+ 	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
+ 	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
++	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+ 	parent_cgroup = cgroup->parent;
+ 
+-	if (parent_cgroup == NULL)
+-		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+-	else {
+-		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+-		mutex_lock(&devcgroup_mutex);
+-		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
+-					  &parent_dev_cgroup->exceptions);
+-		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+-		mutex_unlock(&devcgroup_mutex);
+-		if (ret) {
+-			kfree(dev_cgroup);
+-			return ERR_PTR(ret);
 -		}
-+		walk->access |= ex->access;
-+		kfree(excopy);
-+		excopy = NULL;
- 	}
-+
-+	if (excopy != NULL)
-+		list_add_tail_rcu(&excopy->list, exceptions);
-+	return 0;
+-	}
+-
+ 	return &dev_cgroup->css;
  }
  
- static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
+@@ -635,6 +658,8 @@ struct cgroup_subsys devices_subsys = {
+ 	.can_attach = devcgroup_can_attach,
+ 	.css_alloc = devcgroup_css_alloc,
+ 	.css_free = devcgroup_css_free,
++	.css_online = devcgroup_online,
++	.css_offline = devcgroup_offline,
+ 	.subsys_id = devices_subsys_id,
+ 	.base_cftypes = dev_cgroup_files,
+ 
