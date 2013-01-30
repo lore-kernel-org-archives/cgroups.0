@@ -1,14 +1,13 @@
 From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 5/9] devcg: prepare may_access() for hierarchy
- support
-Date: Wed, 30 Jan 2013 20:30:06 +0000
-Message-ID: <20130130203006.GC8507@mail.hallyn.com>
+Subject: Re: [PATCH v4 6/9] devcg: use css_online and css_offline
+Date: Wed, 30 Jan 2013 20:40:07 +0000
+Message-ID: <20130130204007.GD8507@mail.hallyn.com>
 References: <20130130171101.060853036@napanee.usersys.redhat.com>
- <20130130171101.812377398@napanee.usersys.redhat.com>
+ <20130130171101.947461296@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130130171101.812377398-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20130130171101.947461296-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,16 +16,14 @@ To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
 Quoting aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> Currently may_access() is only able to verify if an exception is valid for the
-> current cgroup, which has the same behavior. With hierarchy, it'll be also used
-> to verify if a cgroup local exception is valid towards its cgroup parent, which
-> might have different behavior.
+> Allocate resources and change behavior only when online. This is needed in
+> order to determine if a node is suitable for hierarchy propagation or if it's
+> being removed.
 > 
-> v2:
-> - updated patch description
-> - rebased on top of a new patch to expand the may_access() logic to make it
->   more clear
-> - fixed argument description order in may_access()
+> Locking:
+> Both functions take devcgroup_mutex to make changes to device_cgroup structure.
+> Hierarchy propagation will also take devcgroup_mutex before walking the
+> tree while walking the tree itself is protected by rcu lock.
 > 
 > Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
@@ -37,93 +34,99 @@ Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 > Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
 > ---
->  security/device_cgroup.c |   38 ++++++++++++++++++++++++--------------
->  1 file changed, 24 insertions(+), 14 deletions(-)
+>  security/device_cgroup.c |   59 +++++++++++++++++++++++++++++++++--------------
+>  1 file changed, 42 insertions(+), 17 deletions(-)
 > 
-> --- github.orig/security/device_cgroup.c	2013-01-30 08:58:02.000000000 -0500
-> +++ github/security/device_cgroup.c	2013-01-30 09:00:09.435351867 -0500
-> @@ -354,9 +354,11 @@ 	return 0;
->   *		verify if a certain access is allowed.
->   * @dev_cgroup: dev cgroup to be tested against
->   * @refex: new exception
-> + * @behavior: behavior of the exception
+> --- github.orig/security/device_cgroup.c	2013-01-30 09:00:09.435351867 -0500
+> +++ github/security/device_cgroup.c	2013-01-30 09:09:12.572464122 -0500
+> @@ -230,14 +230,51 @@ static void dev_exception_clean(struct d
+>  	__dev_exception_clean(dev_cgroup);
+>  }
+>  
+> +/**
+> + * devcgroup_online - initializes devcgroup's behavior and exceptions based on
+> + * 		      parent's
+> + * @cgroup: cgroup getting online
+> + * returns 0 in case of success, error code otherwise
+> + */
+> +static int devcgroup_online(struct cgroup *cgroup)
+> +{
+> +	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup = NULL;
+> +	int ret = 0;
+> +
+> +	mutex_lock(&devcgroup_mutex);
+> +	dev_cgroup = cgroup_to_devcgroup(cgroup);
+> +	if (cgroup->parent)
+> +		parent_dev_cgroup = cgroup_to_devcgroup(cgroup->parent);
+> +
+> +	if (parent_dev_cgroup == NULL)
+> +		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+> +	else {
+> +		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
+> +					  &parent_dev_cgroup->exceptions);
+> +		if (!ret)
+> +			dev_cgroup->behavior = parent_dev_cgroup->behavior;
+> +	}
+> +	mutex_unlock(&devcgroup_mutex);
+> +
+> +	return ret;
+> +}
+> +
+> +static void devcgroup_offline(struct cgroup *cgroup)
+> +{
+> +	struct dev_cgroup *dev_cgroup = cgroup_to_devcgroup(cgroup);
+> +
+> +	mutex_lock(&devcgroup_mutex);
+> +	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+> +	mutex_unlock(&devcgroup_mutex);
+> +}
+> +
+>  /*
+>   * called from kernel/cgroup.c with cgroup_lock() held.
 >   */
->  static bool may_access(struct dev_cgroup *dev_cgroup,
-> -		       struct dev_exception_item *refex)
-> +		       struct dev_exception_item *refex,
-> +		       enum devcg_behavior behavior)
+>  static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
 >  {
->  	struct dev_exception_item *ex;
->  	bool match = false;
-> @@ -380,19 +382,27 @@ 		if (ex->minor != ~0 && ex->minor != re
->  		break;
->  	}
+> -	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup;
+> +	struct dev_cgroup *dev_cgroup;
+>  	struct cgroup *parent_cgroup;
+> -	int ret;
 >  
-> -	/*
-> -	 * In two cases we'll consider this new exception valid:
-> -	 * - the dev cgroup has its default policy to deny + exception list:
-> -	 *   the new exception *should* match the exceptions
-> -	 * - the dev cgroup has its default policy to allow + exception list:
-> -	 *   the new exception should *not* match any of the exceptions
-> -	 */
-> -	if (dev_cgroup->behavior == DEVCG_DEFAULT_DENY) {
-> -		if (match)
-> +	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
-> +		if (behavior == DEVCG_DEFAULT_ALLOW) {
-> +			/* the exception will deny access to certain devices */
->  			return true;
-> +		} else {
-> +			/* the exception will allow access to certain devices */
-> +			if (match)
-> +				/*
-> +				 * a new exception allowing access shouldn't
-> +				 * match an parent's exception
-> +				 */
-> +				return false;
-> +			return true;
-> +		}
->  	} else {
-> -		if (!match)
-> +		/* only behavior == DEVCG_DEFAULT_DENY allowed here */
-> +		if (match)
-> +			/* parent has an exception that matches the proposed */
->  			return true;
-> +		else
-> +			return false;
->  	}
->  	return false;
->  }
-> @@ -411,7 +421,7 @@ static int parent_has_perm(struct dev_cg
->  	if (!pcg)
->  		return 1;
->  	parent = cgroup_to_devcgroup(pcg);
-> -	return may_access(parent, ex);
-> +	return may_access(parent, ex, childcg->behavior);
+>  	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
+>  	if (!dev_cgroup)
+> @@ -245,23 +282,9 @@ static struct cgroup_subsys_state *devcg
+>  	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+>  	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
+>  	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
+> +	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+>  	parent_cgroup = cgroup->parent;
+>  
+> -	if (parent_cgroup == NULL)
+> -		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+> -	else {
+> -		parent_dev_cgroup = cgroup_to_devcgroup(parent_cgroup);
+> -		mutex_lock(&devcgroup_mutex);
+> -		ret = dev_exceptions_copy(&dev_cgroup->exceptions,
+> -					  &parent_dev_cgroup->exceptions);
+> -		dev_cgroup->behavior = parent_dev_cgroup->behavior;
+> -		mutex_unlock(&devcgroup_mutex);
+> -		if (ret) {
+> -			kfree(dev_cgroup);
+> -			return ERR_PTR(ret);
+> -		}
+> -	}
+> -
+>  	return &dev_cgroup->css;
 >  }
 >  
->  /**
-> @@ -445,7 +455,7 @@ static int devcgroup_update_access(struc
->  {
->  	const char *b;
->  	char temp[12];		/* 11 + 1 characters needed for a u32 */
-> -	int count, rc;
-> +	int count, rc = 0;
-
-This here points out that (unrelated to yor set) devcgroup_update_access()
-really needs a cleanup.
-
->  	struct dev_exception_item ex;
->  	struct cgroup *p = devcgroup->css.cgroup;
->  	struct dev_cgroup *parent = NULL;
-> @@ -663,7 +673,7 @@ 	memset(&ex, 0, sizeof(ex));
+> @@ -635,6 +658,8 @@ struct cgroup_subsys devices_subsys = {
+>  	.can_attach = devcgroup_can_attach,
+>  	.css_alloc = devcgroup_css_alloc,
+>  	.css_free = devcgroup_css_free,
+> +	.css_online = devcgroup_online,
+> +	.css_offline = devcgroup_offline,
+>  	.subsys_id = devices_subsys_id,
+>  	.base_cftypes = dev_cgroup_files,
 >  
->  	rcu_read_lock();
->  	dev_cgroup = task_devcgroup(current);
-> -	rc = may_access(dev_cgroup, &ex);
-> +	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
->  	rcu_read_unlock();
->  
->  	if (!rc)
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
