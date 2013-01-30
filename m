@@ -1,13 +1,14 @@
 From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 4/9] devcg: expand may_access() logic
-Date: Wed, 30 Jan 2013 20:09:20 +0000
-Message-ID: <20130130200920.GB8507@mail.hallyn.com>
+Subject: Re: [PATCH v4 5/9] devcg: prepare may_access() for hierarchy
+ support
+Date: Wed, 30 Jan 2013 20:30:06 +0000
+Message-ID: <20130130203006.GC8507@mail.hallyn.com>
 References: <20130130171101.060853036@napanee.usersys.redhat.com>
- <20130130171101.690972553@napanee.usersys.redhat.com>
+ <20130130171101.812377398@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130130171101.690972553-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20130130171101.812377398-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,9 +17,16 @@ To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
 Quoting aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> In order to make the next patch more clear, expand may_access() logic.
+> Currently may_access() is only able to verify if an exception is valid for the
+> current cgroup, which has the same behavior. With hierarchy, it'll be also used
+> to verify if a cgroup local exception is valid towards its cgroup parent, which
+> might have different behavior.
 > 
-> v2: may_access() returns bool now
+> v2:
+> - updated patch description
+> - rebased on top of a new patch to expand the may_access() logic to make it
+>   more clear
+> - fixed argument description order in may_access()
 > 
 > Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
@@ -29,49 +37,93 @@ Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 > Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
 > ---
->  security/device_cgroup.c |   21 ++++++++++++---------
->  1 file changed, 12 insertions(+), 9 deletions(-)
+>  security/device_cgroup.c |   38 ++++++++++++++++++++++++--------------
+>  1 file changed, 24 insertions(+), 14 deletions(-)
 > 
-> --- github.orig/security/device_cgroup.c	2013-01-30 08:56:29.532063723 -0500
-> +++ github/security/device_cgroup.c	2013-01-30 08:58:02.934460404 -0500
-> @@ -355,8 +355,8 @@ 	return 0;
+> --- github.orig/security/device_cgroup.c	2013-01-30 08:58:02.000000000 -0500
+> +++ github/security/device_cgroup.c	2013-01-30 09:00:09.435351867 -0500
+> @@ -354,9 +354,11 @@ 	return 0;
+>   *		verify if a certain access is allowed.
 >   * @dev_cgroup: dev cgroup to be tested against
 >   * @refex: new exception
+> + * @behavior: behavior of the exception
 >   */
-> -static int may_access(struct dev_cgroup *dev_cgroup,
-> -		      struct dev_exception_item *refex)
-> +static bool may_access(struct dev_cgroup *dev_cgroup,
-> +		       struct dev_exception_item *refex)
+>  static bool may_access(struct dev_cgroup *dev_cgroup,
+> -		       struct dev_exception_item *refex)
+> +		       struct dev_exception_item *refex,
+> +		       enum devcg_behavior behavior)
 >  {
 >  	struct dev_exception_item *ex;
 >  	bool match = false;
-> @@ -382,16 +382,19 @@ 		if (ex->minor != ~0 && ex->minor != re
+> @@ -380,19 +382,27 @@ 		if (ex->minor != ~0 && ex->minor != re
+>  		break;
+>  	}
 >  
->  	/*
->  	 * In two cases we'll consider this new exception valid:
+> -	/*
+> -	 * In two cases we'll consider this new exception valid:
+> -	 * - the dev cgroup has its default policy to deny + exception list:
+> -	 *   the new exception *should* match the exceptions
 > -	 * - the dev cgroup has its default policy to allow + exception list:
 > -	 *   the new exception should *not* match any of the exceptions
-> -	 *   (behavior == DEVCG_DEFAULT_ALLOW, !match)
->  	 * - the dev cgroup has its default policy to deny + exception list:
->  	 *   the new exception *should* match the exceptions
-> -	 *   (behavior == DEVCG_DEFAULT_DENY, match)
-> +	 * - the dev cgroup has its default policy to allow + exception list:
-> +	 *   the new exception should *not* match any of the exceptions
->  	 */
-> -	if ((dev_cgroup->behavior == DEVCG_DEFAULT_DENY) == match)
-> -		return 1;
-> -	return 0;
-> +	if (dev_cgroup->behavior == DEVCG_DEFAULT_DENY) {
+> -	 */
+> -	if (dev_cgroup->behavior == DEVCG_DEFAULT_DENY) {
+> -		if (match)
+> +	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+> +		if (behavior == DEVCG_DEFAULT_ALLOW) {
+> +			/* the exception will deny access to certain devices */
+>  			return true;
+> +		} else {
+> +			/* the exception will allow access to certain devices */
+> +			if (match)
+> +				/*
+> +				 * a new exception allowing access shouldn't
+> +				 * match an parent's exception
+> +				 */
+> +				return false;
+> +			return true;
+> +		}
+>  	} else {
+> -		if (!match)
+> +		/* only behavior == DEVCG_DEFAULT_DENY allowed here */
 > +		if (match)
-> +			return true;
-> +	} else {
-> +		if (!match)
-> +			return true;
-> +	}
-> +	return false;
+> +			/* parent has an exception that matches the proposed */
+>  			return true;
+> +		else
+> +			return false;
+>  	}
+>  	return false;
+>  }
+> @@ -411,7 +421,7 @@ static int parent_has_perm(struct dev_cg
+>  	if (!pcg)
+>  		return 1;
+>  	parent = cgroup_to_devcgroup(pcg);
+> -	return may_access(parent, ex);
+> +	return may_access(parent, ex, childcg->behavior);
 >  }
 >  
->  /*
+>  /**
+> @@ -445,7 +455,7 @@ static int devcgroup_update_access(struc
+>  {
+>  	const char *b;
+>  	char temp[12];		/* 11 + 1 characters needed for a u32 */
+> -	int count, rc;
+> +	int count, rc = 0;
+
+This here points out that (unrelated to yor set) devcgroup_update_access()
+really needs a cleanup.
+
+>  	struct dev_exception_item ex;
+>  	struct cgroup *p = devcgroup->css.cgroup;
+>  	struct dev_cgroup *parent = NULL;
+> @@ -663,7 +673,7 @@ 	memset(&ex, 0, sizeof(ex));
+>  
+>  	rcu_read_lock();
+>  	dev_cgroup = task_devcgroup(current);
+> -	rc = may_access(dev_cgroup, &ex);
+> +	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
+>  	rcu_read_unlock();
+>  
+>  	if (!rc)
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
