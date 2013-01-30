@@ -1,14 +1,13 @@
 From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 3/9] device_cgroup: keep track of local group
- settings
-Date: Wed, 30 Jan 2013 20:01:01 +0000
-Message-ID: <20130130200101.GA8507@mail.hallyn.com>
+Subject: Re: [PATCH v4 4/9] devcg: expand may_access() logic
+Date: Wed, 30 Jan 2013 20:09:20 +0000
+Message-ID: <20130130200920.GB8507@mail.hallyn.com>
 References: <20130130171101.060853036@napanee.usersys.redhat.com>
- <20130130171101.538945424@napanee.usersys.redhat.com>
+ <20130130171101.690972553@napanee.usersys.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130130171101.538945424-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+In-Reply-To: <20130130171101.690972553-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,13 +16,9 @@ To: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
 Quoting aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> In preparation for better hierarchy support, it's needed to retain the local
-> settings in order to try to reapply them after a propagated change if they're
-> still valid.
+> In order to make the next patch more clear, expand may_access() logic.
 > 
-> v2: split this patch in two, one to just move dev_exception_rm() before
->     dev_exception_add() while keeping functional changes in this patch as
->     requested by Tejun.
+> v2: may_access() returns bool now
 > 
 > Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
@@ -32,177 +27,51 @@ Quoting aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org (aris-H+wXaHxf7aLQT0dZR+Alf
 Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
 > Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->  
-> ---
->  security/device_cgroup.c |   83 +++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 67 insertions(+), 16 deletions(-)
 > 
-> --- github.orig/security/device_cgroup.c	2013-01-29 11:49:14.987661210 -0500
-> +++ github/security/device_cgroup.c	2013-01-29 11:49:15.244665037 -0500
-> @@ -39,13 +39,27 @@ struct dev_exception_item {
->  	struct rcu_head rcu;
->  };
->  
-> +enum devcg_behavior {
-> +	DEVCG_DEFAULT_NONE,
-> +	DEVCG_DEFAULT_ALLOW,
-> +	DEVCG_DEFAULT_DENY,
-> +};
-> +
->  struct dev_cgroup {
->  	struct cgroup_subsys_state css;
-> +
-> +	/* result of merging the parent's rules with local ones */
->  	struct list_head exceptions;
-> -	enum {
-> -		DEVCG_DEFAULT_ALLOW,
-> -		DEVCG_DEFAULT_DENY,
-> -	} behavior;
-> +	enum devcg_behavior behavior;
-> +
-> +	/*
-> +	 * local set rules, saved so when a parent propagates new rules, the
-> +	 * local preferences can be preserved
-> +	 */
-> +	struct {
-> +		struct list_head exceptions;
-> +		enum devcg_behavior behavior;
-> +	} local;
->  };
->  
->  static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
-> @@ -104,8 +118,8 @@ free_and_exit:
->  /*
->   * called under devcgroup_mutex
+> ---
+>  security/device_cgroup.c |   21 ++++++++++++---------
+>  1 file changed, 12 insertions(+), 9 deletions(-)
+> 
+> --- github.orig/security/device_cgroup.c	2013-01-30 08:56:29.532063723 -0500
+> +++ github/security/device_cgroup.c	2013-01-30 08:58:02.934460404 -0500
+> @@ -355,8 +355,8 @@ 	return 0;
+>   * @dev_cgroup: dev cgroup to be tested against
+>   * @refex: new exception
 >   */
-> -static void dev_exception_rm(struct list_head *exceptions,
-> -			     struct dev_exception_item *ex)
-> +static void __dev_exception_rm(struct list_head *exceptions,
-> +			       struct dev_exception_item *ex)
+> -static int may_access(struct dev_cgroup *dev_cgroup,
+> -		      struct dev_exception_item *refex)
+> +static bool may_access(struct dev_cgroup *dev_cgroup,
+> +		       struct dev_exception_item *refex)
 >  {
->  	struct dev_exception_item *walk, *tmp;
+>  	struct dev_exception_item *ex;
+>  	bool match = false;
+> @@ -382,16 +382,19 @@ 		if (ex->minor != ~0 && ex->minor != re
 >  
-> @@ -127,11 +141,18 @@ static void dev_exception_rm(struct list
->  	}
->  }
->  
-> +static void dev_exception_rm(struct dev_cgroup *devcgroup,
-> +			     struct dev_exception_item *ex)
-> +{
-> +	__dev_exception_rm(&devcgroup->local.exceptions, ex);
-> +	__dev_exception_rm(&devcgroup->exceptions, ex);
-> +}
-> +
->  /*
->   * called under devcgroup_mutex
->   */
-> -static int dev_exception_add(struct list_head *exceptions,
-> -			     struct dev_exception_item *ex)
-> +static int __dev_exception_add(struct list_head *exceptions,
-> +			       struct dev_exception_item *ex)
->  {
->  	struct dev_exception_item *excopy, *walk;
->  
-> @@ -159,6 +180,28 @@ static int dev_exception_add(struct list
->  	return 0;
->  }
->  
-> +static int dev_exception_add(struct dev_cgroup *devcgroup,
-> +			     struct dev_exception_item *ex)
-> +{
-> +	int rc;
-> +
-> +	lockdep_assert_held(&devcgroup_mutex);
-> +
-> +	/*
-> +	 * we add to the local list so we can preserve local preferences if
-> +	 * the parent propagates down new rules
-> +	 */
-> +	rc = __dev_exception_add(&devcgroup->local.exceptions, ex);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = __dev_exception_add(&devcgroup->exceptions, ex);
-> +	if (rc)
-> +		__dev_exception_rm(&devcgroup->local.exceptions, ex);
-> +
-> +	return rc;
-> +}
-> +
->  static void __dev_exception_clean(struct dev_cgroup *dev_cgroup)
->  {
->  	struct dev_exception_item *ex, *tmp;
-> @@ -167,6 +210,11 @@ static void __dev_exception_clean(struct
->  		list_del_rcu(&ex->list);
->  		kfree_rcu(ex, rcu);
->  	}
-> +	list_for_each_entry_safe(ex, tmp, &dev_cgroup->local.exceptions,
-> +				 list) {
-> +		list_del_rcu(&ex->list);
-> +		kfree_rcu(ex, rcu);
+>  	/*
+>  	 * In two cases we'll consider this new exception valid:
+> -	 * - the dev cgroup has its default policy to allow + exception list:
+> -	 *   the new exception should *not* match any of the exceptions
+> -	 *   (behavior == DEVCG_DEFAULT_ALLOW, !match)
+>  	 * - the dev cgroup has its default policy to deny + exception list:
+>  	 *   the new exception *should* match the exceptions
+> -	 *   (behavior == DEVCG_DEFAULT_DENY, match)
+> +	 * - the dev cgroup has its default policy to allow + exception list:
+> +	 *   the new exception should *not* match any of the exceptions
+>  	 */
+> -	if ((dev_cgroup->behavior == DEVCG_DEFAULT_DENY) == match)
+> -		return 1;
+> -	return 0;
+> +	if (dev_cgroup->behavior == DEVCG_DEFAULT_DENY) {
+> +		if (match)
+> +			return true;
+> +	} else {
+> +		if (!match)
+> +			return true;
 > +	}
+> +	return false;
 >  }
 >  
->  /**
-> @@ -195,6 +243,8 @@ static struct cgroup_subsys_state *devcg
->  	if (!dev_cgroup)
->  		return ERR_PTR(-ENOMEM);
->  	INIT_LIST_HEAD(&dev_cgroup->exceptions);
-> +	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
-> +	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
->  	parent_cgroup = cgroup->parent;
->  
->  	if (parent_cgroup == NULL)
-> @@ -413,18 +463,19 @@ 	memset(&ex, 0, sizeof(ex));
->  			if (!may_allow_all(parent))
->  				return -EPERM;
->  			dev_exception_clean(devcgroup);
-> +			if (parent)
-> +				rc = dev_exceptions_copy(&devcgroup->exceptions,
-> +							 &parent->exceptions);
->  			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
-> -			if (!parent)
-> -				break;
-> +			devcgroup->local.behavior = DEVCG_DEFAULT_ALLOW;
->  
-> -			rc = dev_exceptions_copy(&devcgroup->exceptions,
-> -						 &parent->exceptions);
->  			if (rc)
->  				return rc;
->  			break;
->  		case DEVCG_DENY:
->  			dev_exception_clean(devcgroup);
->  			devcgroup->behavior = DEVCG_DEFAULT_DENY;
-> +			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
->  			break;
->  		default:
->  			return -EINVAL;
-> @@ -514,10 +565,10 @@ 		case '\0':
->  		 * don't want to break compatibility
->  		 */
->  		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
-> -			dev_exception_rm(&devcgroup->exceptions, &ex);
-> +			dev_exception_rm(devcgroup, &ex);
->  			return 0;
->  		}
-> -		return dev_exception_add(&devcgroup->exceptions, &ex);
-> +		return dev_exception_add(devcgroup, &ex);
->  	case DEVCG_DENY:
->  		/*
->  		 * If the default policy is to deny by default, try to remove
-> @@ -525,10 +576,10 @@ 			return 0;
->  		 * don't want to break compatibility
->  		 */
->  		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
-> -			dev_exception_rm(&devcgroup->exceptions, &ex);
-> +			dev_exception_rm(devcgroup, &ex);
->  			return 0;
->  		}
-> -		return dev_exception_add(&devcgroup->exceptions, &ex);
-> +		return dev_exception_add(devcgroup, &ex);
->  	default:
->  		return -EINVAL;
->  	}
+>  /*
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
