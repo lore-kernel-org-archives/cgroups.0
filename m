@@ -1,72 +1,96 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/4] eventfd: introduce eventfd_signal_hangup()
-Date: Sat, 2 Feb 2013 14:50:44 +0800
-Message-ID: <510CB744.7000300@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 2/4] cgroup: fix cgroup_rmdir() vs close(eventfd) race
+Date: Sat, 2 Feb 2013 14:51:15 +0800
+Message-ID: <510CB763.3020700@huawei.com>
 References: <510CB733.2080904@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <510CB733.2080904-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <510CB733.2080904@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Davide Libenzi <davidel@xmailserver.org>, Aaron Durbin <adurbin@google.com>, Greg Thelen <gthelen@google.com>
 
-When an eventfd is closed, a wakeup with POLLHUP will be issued,
-but cgroup wants to issue wakeup explicitly, so when a cgroup is
-removed userspace can be notified.
+commit 205a872bd6f9a9a09ef035ef1e90185a8245cc58 ("cgroup: fix lockdep
+warning for event_control") sovled a deadlock by introducing a new
+bug.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+We can't access @event without event_list_lock, otherwise we'll race
+with cgroup_event_wake() called when closing the eventfd, and then
+both threads will try to free the same @event.
+
+CPU0                                  CPU1
+---------------------------           -----------------------------
+cgroup_rmdir()                        close(eventfd)
+  list_for_each_entry()                 cgroup_event_wake()
+                                          list_del(event)
+    list_del(event)
+    cgroup_event_remove(event)
+                                          cgroup_event_remove(event)
+
+To fix this, use the new eventfd_signal_hangup() to notify userspace
+cgroup is removed.
+
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- fs/eventfd.c            | 11 +++++++++++
- include/linux/eventfd.h |  5 +++++
- 2 files changed, 16 insertions(+)
+ kernel/cgroup.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/fs/eventfd.c b/fs/eventfd.c
-index 35470d9..acf15e3 100644
---- a/fs/eventfd.c
-+++ b/fs/eventfd.c
-@@ -67,6 +67,17 @@ __u64 eventfd_signal(struct eventfd_ctx *ctx, __u64 n)
- }
- EXPORT_SYMBOL_GPL(eventfd_signal);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 3d21adf..a3d361b 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4302,9 +4302,9 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	struct dentry *d = cgrp->dentry;
+ 	struct cgroup *parent = cgrp->parent;
+ 	DEFINE_WAIT(wait);
+-	struct cgroup_event *event, *tmp;
++	struct eventfd_ctx *ctx;
++	struct cgroup_event *event;
+ 	struct cgroup_subsys *ss;
+-	LIST_HEAD(tmp_list);
  
-+/**
-+ * eventfd_signal_hangup - Notify that this eventfd is hung up.
-+ * @ctx: [in] Pointer to the eventfd context.
-+ *
-+ * Issue a POLLHUP wakeup.
-+ */
-+void eventfd_signal_hangup(struct eventfd_ctx *ctx)
-+{
-+	wake_up_poll(&ctx->wqh, POLLHUP);
-+}
+ 	lockdep_assert_held(&d->d_inode->i_mutex);
+ 	lockdep_assert_held(&cgroup_mutex);
+@@ -4359,20 +4359,27 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	/*
+ 	 * Unregister events and notify userspace.
+ 	 * Notify userspace about cgroup removing only after rmdir of cgroup
+-	 * directory to avoid race between userspace and kernelspace. Use
+-	 * a temporary list to avoid a deadlock with cgroup_event_wake(). Since
++	 * directory to avoid race between userspace and kernelspace. Since
+ 	 * cgroup_event_wake() is called with the wait queue head locked,
+-	 * remove_wait_queue() cannot be called while holding event_list_lock.
++	 * eventfd_signal() cannot be called while holding event_list_lock.
+ 	 */
+ 	spin_lock(&cgrp->event_list_lock);
+-	list_splice_init(&cgrp->event_list, &tmp_list);
+-	spin_unlock(&cgrp->event_list_lock);
+-	list_for_each_entry_safe(event, tmp, &tmp_list, list) {
+-		list_del_init(&event->list);
+-		remove_wait_queue(event->wqh, &event->wait);
+-		eventfd_signal(event->eventfd, 1);
+-		schedule_work(&event->remove);
++	while (true) {
++		if (list_empty(&cgrp->event_list))
++			break;
 +
- static void eventfd_free_ctx(struct eventfd_ctx *ctx)
- {
- 	kfree(ctx);
-diff --git a/include/linux/eventfd.h b/include/linux/eventfd.h
-index 3c3ef19..68af706 100644
---- a/include/linux/eventfd.h
-+++ b/include/linux/eventfd.h
-@@ -35,6 +35,7 @@ struct file *eventfd_fget(int fd);
- struct eventfd_ctx *eventfd_ctx_fdget(int fd);
- struct eventfd_ctx *eventfd_ctx_fileget(struct file *file);
- __u64 eventfd_signal(struct eventfd_ctx *ctx, __u64 n);
-+void eventfd_signal_hangup(struct eventfd_ctx *ctx);
- ssize_t eventfd_ctx_read(struct eventfd_ctx *ctx, int no_wait, __u64 *cnt);
- int eventfd_ctx_remove_wait_queue(struct eventfd_ctx *ctx, wait_queue_t *wait,
- 				  __u64 *cnt);
-@@ -60,6 +61,10 @@ static inline int eventfd_signal(struct eventfd_ctx *ctx, int n)
- 	return -ENOSYS;
- }
- 
-+static inline void eventfd_signal_hangup(struct eventfd_ctx *ctx)
-+{
-+}
++		event = list_first_entry(&cgrp->event_list,
++					 struct cgroup_event, list);
++		ctx = eventfd_ctx_get(event->eventfd);
++		spin_unlock(&cgrp->event_list_lock);
 +
- static inline void eventfd_ctx_put(struct eventfd_ctx *ctx)
- {
++		eventfd_signal(ctx, 1);
++		eventfd_signal_hangup(ctx);
++		eventfd_ctx_put(ctx);
++
++		spin_lock(&cgrp->event_list_lock);
+ 	}
++	spin_unlock(&cgrp->event_list_lock);
  
+ 	return 0;
+ }
 -- 
 1.8.0.2
