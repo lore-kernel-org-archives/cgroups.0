@@ -1,53 +1,46 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH 4/4] cgroup: adapt to the new way of detecting cgroup removal
-Date: Sat, 2 Feb 2013 14:51:51 +0800
-Message-ID: <510CB787.80003@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/4] cgroup: bug fixes for eventfd
+Date: Sat, 2 Feb 2013 14:59:47 +0800
+Message-ID: <510CB963.1020405@huawei.com>
 References: <510CB733.2080904@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <510CB733.2080904@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <510CB733.2080904-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Davide Libenzi <davidel@xmailserver.org>, Aaron Durbin <adurbin@google.com>, Greg Thelen <gthelen@google.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-If read() returns with errno == EIDRM, we know the cgroup has been
-removed.
+(forgot to cc Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, added)
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
----
- tools/cgroup/cgroup_event_listener.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/tools/cgroup/cgroup_event_listener.c b/tools/cgroup/cgroup_event_listener.c
-index 4eb5507..19e3d4a 100644
---- a/tools/cgroup/cgroup_event_listener.c
-+++ b/tools/cgroup/cgroup_event_listener.c
-@@ -62,18 +62,16 @@ int main(int argc, char **argv)
- 		if (ret == -1) {
- 			if (errno == EINTR)
- 				continue;
--			err(1, "Cannot read from eventfd");
-+			if (errno != EIDRM)
-+				err(1, "Cannot read from eventfd");
- 		}
--		assert(ret == sizeof(result));
- 
--		ret = access(event_control_path, W_OK);
--		if ((ret == -1) && (errno == ENOENT)) {
--			puts("The cgroup seems to have removed.");
-+		if (ret == -1 && errno == EIDRM) {
-+			puts("The cgroup has been removed.");
- 			break;
- 		}
- 
--		if (ret == -1)
--			err(1, "cgroup.event_control is not accessible any more");
-+		assert(ret == sizeof(result));
- 
- 		printf("%s %s: crossed\n", argv[1], argv[2]);
- 	}
--- 
-1.8.0.2
+On 2013/2/2 14:50, Li Zefan wrote:
+> There're three bugs.
+> 
+> - If thread A is removing a cgroup, while thread B is closing an eventfd, the
+> two threads might free the same cgroup event and thus crash the kernel.
+> 
+> This is fixed by patch #1 and patch #2.
+> 
+> - If there're multiple threads are blocking in read() on the same eventfd,
+> and someone removes the cgroup, only one thread will be notified and unblocked,
+> and others won't be unblocked until those threads are killed.
+> 
+> - If thread A is removing a cgroup, while thread B is registering a cgroup event
+> and then read the eventfd, it might block until the thread is killed.
+> 
+> These two are fixed by patch #3.
+> 
+> 0001-eventfd-Introduce-eventfd_signal_hangup.patch
+> 0002-cgroup-fix-cgroup_rmdir-vs-close-eventfd-race.patch
+> 0003-eventfd-make-operations-on-eventfd-return-EIDRM-if-i.patch
+> 0004-cgroup-adapt-to-the-new-way-of-detecting-cgroup-remo.patch
+> 
+> --
+>  fs/eventfd.c                         | 30 ++++++++++++++++++++++++++++++
+>  include/linux/eventfd.h              |  5 +++++
+>  kernel/cgroup.c                      | 30 ++++++++++++++++++------------
+>  tools/cgroup/cgroup_event_listener.c | 12 +++++-------
+>  4 files changed, 58 insertions(+), 19 deletions(-)
+> 
