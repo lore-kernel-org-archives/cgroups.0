@@ -1,108 +1,129 @@
-From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Subject: Re: [PATCH 2/4] cgroup: fix cgroup_rmdir() vs close(eventfd) race
-Date: Sat, 2 Feb 2013 17:59:09 +0200
-Message-ID: <20130202155909.GA12939@shutemov.name>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH 3/4] eventfd: make operations on eventfd return -EIDRM if
+ it's hung up
+Date: Sat, 2 Feb 2013 18:12:29 +0200
+Message-ID: <20130202161229.GB12939@shutemov.name>
 References: <510CB733.2080904@huawei.com>
- <510CB763.3020700@huawei.com>
+ <510CB772.80908@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <510CB763.3020700-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <510CB772.80908@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Davide Libenzi <davidel@xmailserver.org>, Aaron Durbin <adurbin@google.com>, Greg Thelen <gthelen@google.com>
 
-On Sat, Feb 02, 2013 at 02:51:15PM +0800, Li Zefan wrote:
-> commit 205a872bd6f9a9a09ef035ef1e90185a8245cc58 ("cgroup: fix lockdep
-> warning for event_control") sovled a deadlock by introducing a new
-> bug.
+On Sat, Feb 02, 2013 at 02:51:30PM +0800, Li Zefan wrote:
+> Currently when a cgroup is removed, it calls eventfd_signal() for
+> each registered cgroup event, so userspace can be notified and blocked
+> reads can be unblocked.
 > 
-> We can't access @event without event_list_lock, otherwise we'll race
-> with cgroup_event_wake() called when closing the eventfd, and then
-> both threads will try to free the same @event.
+> The problem is, if we have multiple threads blocked on the same eventfd,
+> only one of them will be unlocked.
 > 
-> CPU0                                  CPU1
-> ---------------------------           -----------------------------
-> cgroup_rmdir()                        close(eventfd)
->   list_for_each_entry()                 cgroup_event_wake()
->                                           list_del(event)
->     list_del(event)
->     cgroup_event_remove(event)
->                                           cgroup_event_remove(event)
+> This patch makes sure all operations on the same eventfd can be unbocked.
 > 
-> To fix this, use the new eventfd_signal_hangup() to notify userspace
-> cgroup is removed.
+> There's another problem, a new cgroup event can be registered while we
+> are removing the cgroup, and then reading the eventfd will be blocked
+> until the thread is killed. This patch also fixes this issue.
 > 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 > ---
->  kernel/cgroup.c | 31 +++++++++++++++++++------------
->  1 file changed, 19 insertions(+), 12 deletions(-)
+>  fs/eventfd.c    | 23 +++++++++++++++++++++--
+>  kernel/cgroup.c |  1 -
+>  2 files changed, 21 insertions(+), 3 deletions(-)
 > 
+> diff --git a/fs/eventfd.c b/fs/eventfd.c
+> index acf15e3..48de15a 100644
+> --- a/fs/eventfd.c
+> +++ b/fs/eventfd.c
+> @@ -35,6 +35,7 @@ struct eventfd_ctx {
+>  	 */
+>  	__u64 count;
+>  	unsigned int flags;
+> +	bool hung_up;
+>  };
+>  
+>  /**
+> @@ -71,11 +72,19 @@ EXPORT_SYMBOL_GPL(eventfd_signal);
+>   * eventfd_signal_hangup - Notify that this eventfd is hung up.
+>   * @ctx: [in] Pointer to the eventfd context.
+>   *
+> - * Issue a POLLHUP wakeup.
+> + * Issue a POLLHUP wakeup. All current blocked reads, writes and polls on
+> + * this eventfd will return with -EIDRM. Future operations on it will also
+> + * return with -EDIRM.
+>   */
+>  void eventfd_signal_hangup(struct eventfd_ctx *ctx)
+>  {
+> -	wake_up_poll(&ctx->wqh, POLLHUP);
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&ctx->wqh.lock, flags);
+> +	ctx->hung_up = true;
+> +	if (waitqueue_active(&ctx->wqh))
+> +		wake_up_locked_poll(&ctx->wqh, POLLHUP);
+> +	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
+>  }
+>  
+>  static void eventfd_free_ctx(struct eventfd_ctx *ctx)
+> @@ -140,6 +149,8 @@ static unsigned int eventfd_poll(struct file *file, poll_table *wait)
+>  		events |= POLLERR;
+>  	if (ULLONG_MAX - 1 > ctx->count)
+>  		events |= POLLOUT;
+> +	if (ctx->hung_up)
+> +		events |= POLLHUP;
+>  	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
+>  
+>  	return events;
+> @@ -208,6 +219,10 @@ ssize_t eventfd_ctx_read(struct eventfd_ctx *ctx, int no_wait, __u64 *cnt)
+>  		__add_wait_queue(&ctx->wqh, &wait);
+>  		for (;;) {
+>  			set_current_state(TASK_INTERRUPTIBLE);
+> +			if (ctx->hung_up) {
+> +				res = -EIDRM;
+> +				break;
+> +			}
+
+Shouldn't we just return indicate end-of-file if ctx->hung_up?
+
+>  			if (ctx->count > 0) {
+>  				res = 0;
+>  				break;
+> @@ -272,6 +287,10 @@ static ssize_t eventfd_write(struct file *file, const char __user *buf, size_t c
+>  		__add_wait_queue(&ctx->wqh, &wait);
+>  		for (res = 0;;) {
+>  			set_current_state(TASK_INTERRUPTIBLE);
+> +			if (ctx->hung_up) {
+> +				res = -EIDRM;
+
+-EPIPE?
+
+> +				break;
+> +			}
+>  			if (ULLONG_MAX - ctx->count > ucnt) {
+>  				res = sizeof(ucnt);
+>  				break;
 > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 3d21adf..a3d361b 100644
+> index a3d361b..fcb1ab6 100644
 > --- a/kernel/cgroup.c
 > +++ b/kernel/cgroup.c
-> @@ -4302,9 +4302,9 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
->  	struct dentry *d = cgrp->dentry;
->  	struct cgroup *parent = cgrp->parent;
->  	DEFINE_WAIT(wait);
-> -	struct cgroup_event *event, *tmp;
-> +	struct eventfd_ctx *ctx;
-> +	struct cgroup_event *event;
->  	struct cgroup_subsys *ss;
-> -	LIST_HEAD(tmp_list);
+> @@ -4373,7 +4373,6 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+>  		ctx = eventfd_ctx_get(event->eventfd);
+>  		spin_unlock(&cgrp->event_list_lock);
 >  
->  	lockdep_assert_held(&d->d_inode->i_mutex);
->  	lockdep_assert_held(&cgroup_mutex);
-> @@ -4359,20 +4359,27 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
->  	/*
->  	 * Unregister events and notify userspace.
->  	 * Notify userspace about cgroup removing only after rmdir of cgroup
-> +	 * directory to avoid race between userspace and kernelspace. Since
->  	 * cgroup_event_wake() is called with the wait queue head locked,
-> +	 * eventfd_signal() cannot be called while holding event_list_lock.
->  	 */
->  	spin_lock(&cgrp->event_list_lock);
-> -	list_splice_init(&cgrp->event_list, &tmp_list);
-> -	spin_unlock(&cgrp->event_list_lock);
-> -	list_for_each_entry_safe(event, tmp, &tmp_list, list) {
-> -		list_del_init(&event->list);
-> -		remove_wait_queue(event->wqh, &event->wait);
-> -		eventfd_signal(event->eventfd, 1);
-> -		schedule_work(&event->remove);
-> +	while (true) {
-> +		if (list_empty(&cgrp->event_list))
-> +			break;
-
-while (!list_empty(&cgrp->event_list)) ?
-
-Otherwise:
-Acked-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-
-> +
-> +		event = list_first_entry(&cgrp->event_list,
-> +					 struct cgroup_event, list);
-> +		ctx = eventfd_ctx_get(event->eventfd);
-> +		spin_unlock(&cgrp->event_list_lock);
-> +
-> +		eventfd_signal(ctx, 1);
-> +		eventfd_signal_hangup(ctx);
-> +		eventfd_ctx_put(ctx);
-> +
-> +		spin_lock(&cgrp->event_list_lock);
->  	}
-> +	spin_unlock(&cgrp->event_list_lock);
+> -		eventfd_signal(ctx, 1);
+>  		eventfd_signal_hangup(ctx);
+>  		eventfd_ctx_put(ctx);
 >  
->  	return 0;
->  }
 > -- 
 > 1.8.0.2
 > --
 > To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
