@@ -1,37 +1,133 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 55/62] cgroup: convert to idr_alloc()
-Date: Mon, 4 Feb 2013 10:49:29 +0800
-Message-ID: <510F21B9.4000604@huawei.com>
-References: <1359854463-2538-1-git-send-email-tj@kernel.org> <1359854463-2538-56-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 3/4] eventfd: make operations on eventfd return -EIDRM
+ if it's hung up
+Date: Mon, 4 Feb 2013 11:15:41 +0800
+Message-ID: <510F27DD.8090508@huawei.com>
+References: <510CB733.2080904@huawei.com> <510CB772.80908@huawei.com> <20130202161229.GB12939@shutemov.name>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1359854463-2538-56-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20130202161229.GB12939-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org, bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org, skinsbursky-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 2013/2/3 9:20, Tejun Heo wrote:
-> Convert to the much saner new idr interface.
+On 2013/2/3 0:12, Kirill A. Shutemov wrote:
+> On Sat, Feb 02, 2013 at 02:51:30PM +0800, Li Zefan wrote:
+>> Currently when a cgroup is removed, it calls eventfd_signal() for
+>> each registered cgroup event, so userspace can be notified and blocked
+>> reads can be unblocked.
+>>
+>> The problem is, if we have multiple threads blocked on the same eventfd,
+>> only one of them will be unlocked.
+>>
+>> This patch makes sure all operations on the same eventfd can be unbocked.
+>>
+>> There's another problem, a new cgroup event can be registered while we
+>> are removing the cgroup, and then reading the eventfd will be blocked
+>> until the thread is killed. This patch also fixes this issue.
+>>
+>> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>> ---
+>>  fs/eventfd.c    | 23 +++++++++++++++++++++--
+>>  kernel/cgroup.c |  1 -
+>>  2 files changed, 21 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/eventfd.c b/fs/eventfd.c
+>> index acf15e3..48de15a 100644
+>> --- a/fs/eventfd.c
+>> +++ b/fs/eventfd.c
+>> @@ -35,6 +35,7 @@ struct eventfd_ctx {
+>>  	 */
+>>  	__u64 count;
+>>  	unsigned int flags;
+>> +	bool hung_up;
+>>  };
+>>  
+>>  /**
+>> @@ -71,11 +72,19 @@ EXPORT_SYMBOL_GPL(eventfd_signal);
+>>   * eventfd_signal_hangup - Notify that this eventfd is hung up.
+>>   * @ctx: [in] Pointer to the eventfd context.
+>>   *
+>> - * Issue a POLLHUP wakeup.
+>> + * Issue a POLLHUP wakeup. All current blocked reads, writes and polls on
+>> + * this eventfd will return with -EIDRM. Future operations on it will also
+>> + * return with -EDIRM.
+>>   */
+>>  void eventfd_signal_hangup(struct eventfd_ctx *ctx)
+>>  {
+>> -	wake_up_poll(&ctx->wqh, POLLHUP);
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&ctx->wqh.lock, flags);
+>> +	ctx->hung_up = true;
+>> +	if (waitqueue_active(&ctx->wqh))
+>> +		wake_up_locked_poll(&ctx->wqh, POLLHUP);
+>> +	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
+>>  }
+>>  
+>>  static void eventfd_free_ctx(struct eventfd_ctx *ctx)
+>> @@ -140,6 +149,8 @@ static unsigned int eventfd_poll(struct file *file, poll_table *wait)
+>>  		events |= POLLERR;
+>>  	if (ULLONG_MAX - 1 > ctx->count)
+>>  		events |= POLLOUT;
+>> +	if (ctx->hung_up)
+>> +		events |= POLLHUP;
+>>  	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
+>>  
+>>  	return events;
+>> @@ -208,6 +219,10 @@ ssize_t eventfd_ctx_read(struct eventfd_ctx *ctx, int no_wait, __u64 *cnt)
+>>  		__add_wait_queue(&ctx->wqh, &wait);
+>>  		for (;;) {
+>>  			set_current_state(TASK_INTERRUPTIBLE);
+>> +			if (ctx->hung_up) {
+>> +				res = -EIDRM;
+>> +				break;
+>> +			}
 > 
-> Only compile tested.
+> Shouldn't we just return indicate end-of-file if ctx->hung_up?
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Looks good to me.
+makes sense
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
-> This patch depends on an earlier idr changes and I think it would be
-> best to route these together through -mm.  Please holler if there's
-> any objection.  Thanks.
+>>  			if (ctx->count > 0) {
+>>  				res = 0;
+>>  				break;
+>> @@ -272,6 +287,10 @@ static ssize_t eventfd_write(struct file *file, const char __user *buf, size_t c
+>>  		__add_wait_queue(&ctx->wqh, &wait);
+>>  		for (res = 0;;) {
+>>  			set_current_state(TASK_INTERRUPTIBLE);
+>> +			if (ctx->hung_up) {
+>> +				res = -EIDRM;
 > 
->  kernel/cgroup.c | 27 ++++++++-------------------
->  1 file changed, 8 insertions(+), 19 deletions(-)
+> -EPIPE?
+> 
+
+I wan't sure which errno is most appropriate, but EPIPE seems better.
+
+>> +				break;
+>> +			}
+>>  			if (ULLONG_MAX - ctx->count > ucnt) {
+>>  				res = sizeof(ucnt);
+>>  				break;
+>> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+>> index a3d361b..fcb1ab6 100644
+>> --- a/kernel/cgroup.c
+>> +++ b/kernel/cgroup.c
+>> @@ -4373,7 +4373,6 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+>>  		ctx = eventfd_ctx_get(event->eventfd);
+>>  		spin_unlock(&cgrp->event_list_lock);
+>>  
+>> -		eventfd_signal(ctx, 1);
+>>  		eventfd_signal_hangup(ctx);
+>>  		eventfd_ctx_put(ctx);
+>>  
+>> -- 
+>> 1.8.0.2
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
