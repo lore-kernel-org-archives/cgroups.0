@@ -1,37 +1,83 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 0/4] cgroup: bug fixes for eventfd
-Date: Mon, 4 Feb 2013 11:27:48 -0800
-Message-ID: <20130204192748.GX27963@mtj.dyndns.org>
-References: <510CB733.2080904@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/4] eventfd: introduce eventfd_signal_hangup()
+Date: Tue, 5 Feb 2013 11:40:50 +0800
+Message-ID: <51107F42.1090401@huawei.com>
+References: <510CB733.2080904@huawei.com> <510CB744.7000300@huawei.com> <20130202155858.GA13022@shutemov.name> <20130204101521.GA18322@shutemov.name>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=MSnYyPkWABzbHwwwsd2ZMLxfOvM5TEhGn41dvvaGGoI=;
-        b=LjomgX5AAVAD5nwL/Qh7LZJ8JdTMralpNAjtR92MiN3IRM2zYOpBM/k2URtf4EkjcG
-         yD7kr2z08LC4TKVmveVdCzRilRSYCF2WbBenKq7qSEtis/CFJ2kNCcPKMFo2IWTJ1K1J
-         TFRLM8Cj20yRElU6isTLeH/URxG+c/mVFpQ2nn5ggrvJajnZ2Q8AS4Z1xTMQ3VMqLcot
-         IJzrpToxmmlS2ldWlTM1TWx2J9bb+OlCBAtP2HWOpZNuLKH0hyyk829d0lsAKuAHAQ8i
-         8M7OZyKn+K/879s9RAFPDiGcu0YZqrkOc6nDaSoZq+ARc4melo5APNw7OFNCL9rufovo
-         +4Eg==
-Content-Disposition: inline
-In-Reply-To: <510CB733.2080904-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20130204101521.GA18322-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Sat, Feb 02, 2013 at 02:50:27PM +0800, Li Zefan wrote:
-> There're three bugs.
+On 2013/2/4 18:15, Kirill A. Shutemov wrote:
+> On Sat, Feb 02, 2013 at 05:58:58PM +0200, Kirill A. Shutemov wrote:
+>> On Sat, Feb 02, 2013 at 02:50:44PM +0800, Li Zefan wrote:
+>>> When an eventfd is closed, a wakeup with POLLHUP will be issued,
+>>> but cgroup wants to issue wakeup explicitly, so when a cgroup is
+>>> removed userspace can be notified.
+>>>
+>>> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> 
+> Hm.. Looks like it will break eventfd semantics:
+> 
+> 1. One eventfd can be used for deliver more then one notification from
+> one or more cgroups. POLLHUP on removing one of cgroups is not valid.
+> 
+> 2. It's valid to have eventfd opened only by one userspace application. We
+> should not close it, just because cgroup is removed.
+> 
+> I think problem with multiple threads waiting an event on eventfd should
+> be handled in userspace.
+> 
 
-You're gonna send an updated round, right?  Will wait for it.
+I didn't realize this.. and if a cgroup is removed, the woken thread may not
+be the thread that is waiting on this cgroup. How crappy.. I don't know how
+userspace is going to deal with all these.
 
-Thanks!
+And another bug spotted. We can pass fd of memory.usage_in_bytes of cgroup A
+to cgroup.event_control of cgroup B, and then we won't get memory usage
+notification from A but B! What's worse, if A and B are in different mount
+hierarchy, boom!
 
+
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 3d21adf..e496359 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3825,6 +3825,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 				      const char *buffer)
+ {
+ 	struct cgroup_event *event = NULL;
++	struct cgroup *cgrp_cfile;
+ 	unsigned int efd, cfd;
+ 	struct file *efile = NULL;
+ 	struct file *cfile = NULL;
+@@ -3880,6 +3881,16 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 		goto fail;
+ 	}
+ 
++	/*
++	 * The file to be monitored must be in the same cgroup as
++	 * cgroup.event_control is.
++	 */
++	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
++	if (cgrp_cfile != cgrp) {
++		ret = -EINVAL;
++		goto fail;
++	}
++
+ 	if (!event->cft->register_event || !event->cft->unregister_event) {
+ 		ret = -EINVAL;
+ 		goto fail;
 -- 
-tejun
+1.8.0.2
+
