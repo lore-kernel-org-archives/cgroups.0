@@ -1,120 +1,451 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from add_to_page_cache_locked
-Date: Tue, 05 Feb 2013 10:09:57 -0800
-Message-ID: <xr93a9ri4op6.fsf@gthelen.mtv.corp.google.com>
-References: <20121224142526.020165D3@pobox.sk>
-	<20121228162209.GA1455@dhcp22.suse.cz>
-	<20121230020947.AA002F34@pobox.sk>
-	<20121230110815.GA12940@dhcp22.suse.cz>
-	<20130125160723.FAE73567@pobox.sk>
-	<20130125163130.GF4721@dhcp22.suse.cz>
-	<20130205134937.GA22804@dhcp22.suse.cz>
-	<20130205154947.CD6411E2@pobox.sk>
-	<20130205160934.GB22804@dhcp22.suse.cz>
-	<xr93wqum4sh4.fsf@gthelen.mtv.corp.google.com>
-	<20130205174651.GA3959@dhcp22.suse.cz>
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v6 9/9] devcg: propagate local changes down the hierarchy
+Date: Tue, 5 Feb 2013 13:36:47 -0500
+Message-ID: <20130205183646.GT17632@redhat.com>
+References: <20130130171101.060853036@napanee.usersys.redhat.com>
+ <20130130171102.390708521@napanee.usersys.redhat.com>
+ <20130131043839.GA14726@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=x-received:from:to:cc:subject:references:date:in-reply-to
-         :message-id:user-agent:mime-version:content-type;
-        bh=k5Qq/M1KyiqE8cOQ0b22rhAb1QWvph8NVYvTLTNFsKU=;
-        b=Fs8MG/joKyRzVmoj9YZHqBKTfvrFRi6+qPf6XylTr7ioa8jnEKd3ZOQzeHMSMeF79b
-         mJi+nkCtNCk61Uh5FKK50mwDMBwgCCNX0t2xDW1KMVSI6LnRUoDz7ff0wEiOTVtHUQHN
-         Y5U0QjJAPzJY0zO4ywzDEJYzu/kla8Mz2yg0n/ikW7dEvzTwMUCeNboMKduxxHu+ya01
-         pU/2ToczxqFV4QrUnKlX9ieN5f6DFiJSkJQPvNLUsG1+mQFAbPyA4TwYCURRcImeiCew
-         TJ8oGSSOASZPzOkRINEFKMSrkOq9yWbusUre6c85/yYpWa02W2iJRTJjEVlCKiOYN+5e
-         UWBA==
-In-Reply-To: <20130205174651.GA3959@dhcp22.suse.cz> (Michal Hocko's message of
-	"Tue, 5 Feb 2013 18:46:51 +0100")
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130131043839.GA14726-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: azurIt <azurit@pobox.sk>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Tue, Feb 05 2013, Michal Hocko wrote:
+devcg: propagate local changes down the hierarchy
 
-> On Tue 05-02-13 08:48:23, Greg Thelen wrote:
->> On Tue, Feb 05 2013, Michal Hocko wrote:
->> 
->> > On Tue 05-02-13 15:49:47, azurIt wrote:
->> > [...]
->> >> Just to be sure - am i supposed to apply this two patches?
->> >> http://watchdog.sk/lkml/patches/
->> >
->> > 5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
->> > mentioned in a follow up email. Here is the full patch:
->> > ---
->> > From f2bf8437d5b9bb38a95a432bf39f32c584955171 Mon Sep 17 00:00:00 2001
->> > From: Michal Hocko <mhocko@suse.cz>
->> > Date: Mon, 26 Nov 2012 11:47:57 +0100
->> > Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
->> >
->> > memcg oom killer might deadlock if the process which falls down to
->> > mem_cgroup_handle_oom holds a lock which prevents other task to
->> > terminate because it is blocked on the very same lock.
->> > This can happen when a write system call needs to allocate a page but
->> > the allocation hits the memcg hard limit and there is nothing to reclaim
->> > (e.g. there is no swap or swap limit is hit as well and all cache pages
->> > have been reclaimed already) and the process selected by memcg OOM
->> > killer is blocked on i_mutex on the same inode (e.g. truncate it).
->> >
->> > Process A
->> > [<ffffffff811109b8>] do_truncate+0x58/0xa0		# takes i_mutex
->> > [<ffffffff81121c90>] do_last+0x250/0xa30
->> > [<ffffffff81122547>] path_openat+0xd7/0x440
->> > [<ffffffff811229c9>] do_filp_open+0x49/0xa0
->> > [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
->> > [<ffffffff8110f950>] sys_open+0x20/0x30
->> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
->> > [<ffffffffffffffff>] 0xffffffffffffffff
->> >
->> > Process B
->> > [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
->> > [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
->> > [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
->> > [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
->> > [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
->> > [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
->> > [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
->> > [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
->> > [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
->> > [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
->> > [<ffffffff8111156a>] do_sync_write+0xea/0x130
->> > [<ffffffff81112183>] vfs_write+0xf3/0x1f0
->> > [<ffffffff81112381>] sys_write+0x51/0x90
->> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
->> > [<ffffffffffffffff>] 0xffffffffffffffff
->> 
->> It looks like grab_cache_page_write_begin() passes __GFP_FS into
->> __page_cache_alloc() and mem_cgroup_cache_charge().  Which makes me
->> think that this deadlock is also possible in the page allocator even
->> before getting to add_to_page_cache_lru.  no?
->
-> I am not that familiar with VFS but i_mutex is a high level lock AFAIR
-> and it shouldn't be called from the pageout path so __page_cache_alloc
-> should be safe.
+This patch makes all changes propagate down in hierarchy respecting when
+possible local configurations.
 
-I wasn't clear, sorry.  My concern is not that pageout() grabs i_mutex.
-My concern is that __page_cache_alloc() will invoke the oom killer and
-select a victim which wants i_mutex.  This victim will deadlock because
-the oom killer caller already holds i_mutex.  The wild accusation I am
-making is that anyone who invokes the oom killer and waits on the victim
-to die is essentially grabbing all of the locks that any of the oom
-killer victims may grab (e.g. i_mutex).  To avoid deadlock the oom
-killer can only be called is while holding no locks that the oom victim
-demands.  I think some locks are grabbed in a way that allows the lock
-request to fail if the task has a fatal signal pending, so they are
-safe.  But any locks acquisitions that cannot fail (e.g. mutex_lock)
-will deadlock with the oom killing process.  So the oom killing process
-cannot hold any such locks which the victim will attempt to grab.
-Hopefully I'm missing something.
+Behavior changes will clean up exceptions in all the children except when the
+parent changes the behavior from allow to deny and the child's behavior was
+already deny, in which case the local exceptions will be reused. The inverse
+is not possible: you can't have a parent with behavior deny and a child with
+behavior accept.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+New exceptions allowing additional access to devices won't be propagated, but
+it'll be possible to add an exception to access all of part of the newly
+allowed device(s).
+
+New exceptions disallowing access to devices will be propagated down and the
+local group's exceptions will be revalidated for the new situation.
+Example:
+      A
+     / \
+        B
+
+    group        behavior          exceptions
+    A            allow             "b 8:* rwm", "c 116:1 rw"
+    B            deny              "c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
+
+If a new exception is added to group A:
+	# echo "c 116:* r" > A/devices.deny
+it'll propagate down and after revalidating B's local exceptions, the exception
+"c 116:2 rwm" will be removed.
+
+In case parent behavior or exceptions change and local settings are not
+allowed anymore, they'll be deleted.
+
+v6: fixed issues pointed by Serge Hallyn
+- only copy parent's exceptions while propagating behavior if the local
+  behavior is different
+- while propagating exceptions, do not clear and copy parent's: it'd be against
+  the premise we don't propagate access to more devices
+
+v5: fixed issues pointed by Serge Hallyn
+- updated documentation
+- not propagating when an exception is written to devices.allow
+- when propagating a new behavior, clean the local exceptions list if they're
+  for a different behavior
+
+v4: fixed issues pointed by Tejun Heo
+- separated function to walk the tree and collect valid propagation targets
+
+v3: fixed issues pointed by Tejun Heo
+- update documentation
+- move css_online/css_offline changes to a new patch
+- use cgroup_for_each_descendant_pre() instead of own descendant walk
+- move exception_copy rework to a separared patch
+- move exception_clean rework to a separated patch
+
+v2: fixed issues pointed by Tejun Heo
+- instead of keeping the local settings that won't apply anymore, remove them
+
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+---
+ Documentation/cgroups/devices.txt |   67 +++++++++++
+ security/device_cgroup.c          |  228 +++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 289 insertions(+), 6 deletions(-)
+
+--- github.orig/security/device_cgroup.c	2013-02-04 10:12:59.648315261 -0500
++++ github/security/device_cgroup.c	2013-02-05 11:35:26.925224339 -0500
+@@ -60,6 +60,9 @@ struct dev_cgroup {
+ 		struct list_head exceptions;
+ 		enum devcg_behavior behavior;
+ 	} local;
++
++	/* temporary list for pending propagation operations */
++	struct list_head propagate_pending;
+ };
+ 
+ static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+@@ -241,6 +244,11 @@ static void dev_exception_clean_all(stru
+ 	__dev_exception_clean_all(dev_cgroup);
+ }
+ 
++static inline bool is_devcg_online(const struct dev_cgroup *devcg)
++{
++	return (devcg->behavior != DEVCG_DEFAULT_NONE);
++}
++
+ /**
+  * devcgroup_online - initializes devcgroup's behavior and exceptions based on
+  * 		      parent's
+@@ -292,6 +300,7 @@ static struct cgroup_subsys_state *devcg
+ 		return ERR_PTR(-ENOMEM);
+ 	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+ 	INIT_LIST_HEAD(&dev_cgroup->local.exceptions);
++	INIT_LIST_HEAD(&dev_cgroup->propagate_pending);
+ 	dev_cgroup->local.behavior = DEVCG_DEFAULT_NONE;
+ 	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+ 	parent_cgroup = cgroup->parent;
+@@ -471,6 +480,195 @@ static inline int may_allow_all(struct d
+ 	return parent->behavior == DEVCG_DEFAULT_ALLOW;
+ }
+ 
++/**
++ * revalidate_active_exceptions - walks through the active exception list and
++ * 				  revalidates the exceptions based on parent's
++ * 				  behavior and exceptions. The exceptions that
++ * 				  are no longer valid will be removed.
++ * 				  Called with devcgroup_mutex held.
++ * @devcg: cgroup which exceptions will be checked
++ *
++ * This is one of the three key functions for hierarchy implementation.
++ * This function is responsible for re-evaluating all the cgroup's active
++ * exceptions due to a parent's exception change.
++ * Refer to Documentation/cgroups/devices.txt for more details.
++ */
++static void revalidate_active_exceptions(struct dev_cgroup *devcg)
++{
++	struct dev_exception_item *ex;
++	struct list_head *this, *tmp;
++
++	list_for_each_safe(this, tmp, &devcg->exceptions) {
++		ex = container_of(this, struct dev_exception_item, list);
++		if (!parent_has_perm(devcg, ex))
++			__dev_exception_rm(&devcg->exceptions, ex);
++	}
++}
++
++/**
++ * revalidate_local_exceptions - walks through the local exception list and
++ * 				 revalidates the exceptions based on
++ * 				 parent's behavior and exceptions. The
++ * 				 exceptions that are still valid will be copied
++ * 				 to the active exception list and the others
++ * 				 will be removed.
++ * @devcg: cgroup which exceptions will be checked
++ *
++ * returns: 0 in success, -ENOMEM in case of out of memory
++ *
++ * Called with devcgroup_mutex held.
++ * This is one of the three key functions for hierarchy implementation.
++ * This function is responsible for re-evaluating all the cgroup's locally
++ * set exceptions due to a parent's behavior or exception change.
++ * Refer to Documentation/cgroups/devices.txt for more details.
++ */
++static int revalidate_local_exceptions(struct dev_cgroup *devcg)
++{
++	struct dev_exception_item *ex;
++	struct list_head *this, *tmp;
++
++	list_for_each_safe(this, tmp, &devcg->local.exceptions) {
++		ex = container_of(this, struct dev_exception_item, list);
++		if (parent_has_perm(devcg, ex)) {
++			if (dev_exception_copy(&devcg->exceptions, ex))
++				goto error;
++		} else
++			__dev_exception_rm(&devcg->local.exceptions, ex);
++	}
++	return 0;
++
++error:
++	dev_exception_clean(&devcg->exceptions);
++	return -ENOMEM;
++}
++
++/**
++ * get_online_devcg - walks the cgroup tree and fills a list with the online
++ * 		      groups
++ * @root: cgroup used as starting point
++ * @online: list that will be filled with online groups
++ *
++ * Must be called with devcgroup_mutex held. Grabs RCU lock.
++ * Because devcgroup_mutex is held, no devcg will become online or offline
++ * during the tree walk (see devcgroup_online, devcgroup_offline)
++ * A separated list is needed because propagate_behavior() and
++ * propagate_exception() need to allocate memory and can block.
++ */
++static void get_online_devcg(struct cgroup *root, struct list_head *online)
++{
++	struct cgroup *pos;
++	struct dev_cgroup *devcg;
++
++	lockdep_assert_held(&devcgroup_mutex);
++
++	rcu_read_lock();
++	cgroup_for_each_descendant_pre(pos, root) {
++		devcg = cgroup_to_devcgroup(pos);
++		if (is_devcg_online(devcg))
++			list_add_tail(&devcg->propagate_pending, online);
++	}
++	rcu_read_unlock();
++}
++
++/**
++ * propagate_behavior - propagates a change in the behavior down in hierarchy
++ * @devcg_root: device cgroup that changed behavior
++ *
++ * returns: 0 in case of success, != 0 in case of error
++ *
++ * This is one of the two key functions for hierarchy implementation.
++ * All cgroup's children recursively will have the behavior changed and
++ * exceptions copied from the parent then its local behavior and exceptions
++ * re-evaluated and applied if they're still allowed.  Refer to
++ * Documentation/cgroups/devices.txt for more details.
++ */
++static int propagate_behavior(struct dev_cgroup *devcg_root)
++{
++	struct cgroup *root = devcg_root->css.cgroup;
++	struct dev_cgroup *parent, *devcg, *tmp;
++	int rc = 0;
++	LIST_HEAD(pending);
++
++	get_online_devcg(root, &pending);
++
++	list_for_each_entry_safe(devcg, tmp, &pending, propagate_pending) {
++		parent = cgroup_to_devcgroup(devcg->css.cgroup->parent);
++
++		/* first copy parent's state */
++		devcg->behavior = parent->behavior;
++		dev_exception_clean(&devcg->exceptions);
++
++		if (devcg->local.behavior == DEVCG_DEFAULT_DENY &&
++		    devcg->behavior == DEVCG_DEFAULT_ALLOW) {
++			/*
++			 * the only case when the local exceptions
++			 * will be reused
++			 */
++			devcg->behavior = DEVCG_DEFAULT_DENY;
++			rc = revalidate_local_exceptions(devcg);
++		} else {
++			dev_exception_clean(&devcg->local.exceptions);
++			devcg->local.behavior = DEVCG_DEFAULT_NONE;
++
++			/* just copy the parent's exceptions over */
++			rc = dev_exceptions_copy(&devcg->exceptions,
++						 &parent->exceptions);
++			if (rc)
++				devcg->behavior = DEVCG_DEFAULT_DENY;
++		}
++		if (rc)
++			break;
++		list_del_init(&devcg->propagate_pending);
++	}
++
++	return rc;
++}
++
++/**
++ * propagate_exception - propagates a new exception to the children
++ * @devcg_root: device cgroup that added a new exception
++ * @ex: new exception to be propagated
++ *
++ * returns: 0 in case of success, != 0 in case of error
++ */
++static int propagate_exception(struct dev_cgroup *devcg_root,
++			       struct dev_exception_item *ex)
++{
++	struct cgroup *root = devcg_root->css.cgroup;
++	struct dev_cgroup *devcg, *parent, *tmp;
++	int rc = 0;
++	LIST_HEAD(pending);
++
++	get_online_devcg(root, &pending);
++
++	list_for_each_entry_safe(devcg, tmp, &pending, propagate_pending) {
++		parent = cgroup_to_devcgroup(devcg->css.cgroup->parent);
++
++		/*
++		 * in case both root's behavior and devcg is allow, a new
++		 * restriction means adding to the exception list
++		 */
++		if (devcg_root->behavior == DEVCG_DEFAULT_ALLOW &&
++		    devcg->behavior == DEVCG_DEFAULT_ALLOW) {
++			rc = dev_exception_add(devcg, ex);
++			if (rc)
++				break;
++		} else {
++			/*
++			 * in the other possible cases:
++			 * root's behavior: allow, devcg's: deny
++			 * root's behavior: deny, devcg's: deny
++			 * the exception will be removed
++			 */
++			dev_exception_rm(devcg, ex);
++		}
++		revalidate_active_exceptions(devcg);
++
++		list_del_init(&devcg->propagate_pending);
++	}
++	return rc;
++}
++
+ /*
+  * Modify the exception list using allow/deny rules.
+  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
+@@ -510,16 +708,21 @@ 	memset(&ex, 0, sizeof(ex));
+ 			if (!may_allow_all(parent))
+ 				return -EPERM;
+ 			dev_exception_clean_all(devcgroup);
+-			if (parent)
++			if (parent) {
+ 				rc = dev_exceptions_copy(&devcgroup->exceptions,
+ 							 &parent->exceptions);
++				if (rc)
++					break;
++			}
+ 			devcgroup->behavior = DEVCG_DEFAULT_ALLOW;
+ 			devcgroup->local.behavior = DEVCG_DEFAULT_ALLOW;
++			rc = propagate_behavior(devcgroup);
+ 			break;
+ 		case DEVCG_DENY:
+ 			dev_exception_clean_all(devcgroup);
+ 			devcgroup->behavior = DEVCG_DEFAULT_DENY;
+ 			devcgroup->local.behavior = DEVCG_DEFAULT_DENY;
++			rc = propagate_behavior(devcgroup);
+ 			break;
+ 		default:
+ 			rc = -EINVAL;
+@@ -612,7 +815,11 @@ 		case '\0':
+ 			dev_exception_rm(devcgroup, &ex);
+ 			return 0;
+ 		}
+-		return dev_exception_add(devcgroup, &ex);
++		rc = dev_exception_add(devcgroup, &ex);
++		if (!rc)
++			/* if a local behavior wasn't explicitely choosen, pick it */
++			devcgroup->local.behavior = devcgroup->behavior;
++		break;
+ 	case DEVCG_DENY:
+ 		/*
+ 		 * If the default policy is to deny by default, try to remove
+@@ -621,13 +828,22 @@ 			return 0;
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+ 			dev_exception_rm(devcgroup, &ex);
+-			return 0;
++			rc = propagate_exception(devcgroup, &ex);
++			break;
+ 		}
+-		return dev_exception_add(devcgroup, &ex);
++		rc = dev_exception_add(devcgroup, &ex);
++		if (rc)
++			break;
++		/* we only propagate new restrictions */
++		rc = propagate_exception(devcgroup, &ex);
++		if (!rc)
++			/* if a local behavior wasn't explicitely choosen, pick it */
++			devcgroup->local.behavior = devcgroup->behavior;
++		break;
+ 	default:
+-		return -EINVAL;
++		rc = -EINVAL;
+ 	}
+-	return 0;
++	return rc;
+ }
+ 
+ static int devcgroup_access_write(struct cgroup *cgrp, struct cftype *cft,
+--- github.orig/Documentation/cgroups/devices.txt	2013-02-04 10:12:51.104189035 -0500
++++ github/Documentation/cgroups/devices.txt	2013-02-04 10:12:59.674315645 -0500
+@@ -50,3 +50,70 @@ task to a new cgroup.  (Again we'll prob
+ 
+ A cgroup may not be granted more permissions than the cgroup's
+ parent has.
++
++4. Hierarchy
++
++device cgroups maintain hierarchy by making sure a cgroup never has more
++access permissions than its parent.  Every time an entry is written to
++a cgroup's devices.deny file, all its children will have that entry removed
++from their whitelist and all the locally set whitelist entries will be
++re-evaluated.  In case one of the locally set whitelist entries would provide
++more access than the cgroup's parent, it'll be removed from the whitelist.
++
++Example:
++      A
++     / \
++        B
++
++    group        behavior	exceptions
++    A            allow		"b 8:* rwm", "c 116:1 rw"
++    B            deny		"c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
++
++If a device is denied in group A:
++	# echo "c 116:* r" > A/devices.deny
++it'll propagate down and after revalidating B's entries, the whitelist entry
++"c 116:2 rwm" will be removed:
++
++    group        whitelist entries                        denied devices
++    A            all                                      "b 8:* rwm", "c 116:* rw"
++    B            "c 1:3 rwm", "b 3:* rwm"                 all the rest
++
++In case parent behavior or exceptions change and local settings are not
++allowed anymore, they'll be deleted.
++
++Notice that new whitelist entries will not be propagated:
++      A
++     / \
++        B
++
++    group        whitelist entries                        denied devices
++    A            "c 1:3 rwm", "c 1:5 r"                   all the rest
++    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
++
++when adding "c *:3 rwm":
++	# echo "c *:3 rwm" >A/devices.allow
++
++the result:
++    group        whitelist entries                        denied devices
++    A            "c *:3 rwm", "c 1:5 r"                   all the rest
++    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
++
++but now it'll be possible to add new entries to B:
++	# echo "c 2:3 rwm" >B/devices.allow
++	# echo "c 50:3 r" >B/devices.allow
++or even
++	# echo "c *:3 rwm" >B/devices.allow
++
++4.1 Hierarchy (internal implementation)
++
++device cgroups is implemented internally using a behavior (ALLOW, DENY) and a
++list of exceptions.  The internal state is controlled using the same user
++interface to preserve compatibility with the previous whitelist-only
++implementation.  A change in behavior (writing "a" to devices.deny or
++devices.allow) will be propagated down the hierarchy as well as new exceptions
++that will reduce the access to devices (an exception when behavior is ALLOW).
++Each cgroup will have its local behavior and exception list to keep track what
++was set by the user for that cgroup in specific.  For every propagated change,
++the effective rules will be built starting with parent's rules and the locally
++set behavior and exceptions in case they still apply, otherwise those will be
++lost.
