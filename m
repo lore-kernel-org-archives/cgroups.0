@@ -1,101 +1,100 @@
-From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Subject: Re: [PATCH 1/4] eventfd: introduce eventfd_signal_hangup()
-Date: Tue, 5 Feb 2013 10:28:20 +0200
-Message-ID: <20130205082820.GA22220@shutemov.name>
-References: <510CB733.2080904@huawei.com>
- <510CB744.7000300@huawei.com>
- <20130202155858.GA13022@shutemov.name>
- <20130204101521.GA18322@shutemov.name>
- <51107F42.1090401@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
+ add_to_page_cache_locked
+Date: Tue, 5 Feb 2013 14:49:42 +0100
+Message-ID: <20130205134937.GA22804@dhcp22.suse.cz>
+References: <20121217192301.829A7020@pobox.sk>
+ <20121217195510.GA16375@dhcp22.suse.cz>
+ <20121218152223.6912832C@pobox.sk>
+ <20121218152004.GA25208@dhcp22.suse.cz>
+ <20121224142526.020165D3@pobox.sk>
+ <20121228162209.GA1455@dhcp22.suse.cz>
+ <20121230020947.AA002F34@pobox.sk>
+ <20121230110815.GA12940@dhcp22.suse.cz>
+ <20130125160723.FAE73567@pobox.sk>
+ <20130125163130.GF4721@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <51107F42.1090401-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20130125163130.GF4721-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue, Feb 05, 2013 at 11:40:50AM +0800, Li Zefan wrote:
-> On 2013/2/4 18:15, Kirill A. Shutemov wrote:
-> > On Sat, Feb 02, 2013 at 05:58:58PM +0200, Kirill A. Shutemov wrote:
-> >> On Sat, Feb 02, 2013 at 02:50:44PM +0800, Li Zefan wrote:
-> >>> When an eventfd is closed, a wakeup with POLLHUP will be issued,
-> >>> but cgroup wants to issue wakeup explicitly, so when a cgroup is
-> >>> removed userspace can be notified.
-> >>>
-> >>> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > 
-> > Hm.. Looks like it will break eventfd semantics:
-> > 
-> > 1. One eventfd can be used for deliver more then one notification from
-> > one or more cgroups. POLLHUP on removing one of cgroups is not valid.
-> > 
-> > 2. It's valid to have eventfd opened only by one userspace application. We
-> > should not close it, just because cgroup is removed.
-> > 
-> > I think problem with multiple threads waiting an event on eventfd should
-> > be handled in userspace.
-> > 
+On Fri 25-01-13 17:31:30, Michal Hocko wrote:
+> On Fri 25-01-13 16:07:23, azurIt wrote:
+> > Any news? Thnx!
 > 
-> I didn't realize this.. and if a cgroup is removed, the woken thread may not
-> be the thread that is waiting on this cgroup.
+> Sorry, but I didn't get to this one yet.
 
-Why? The only threads who read() or poll() the eventfd will be wake up,
-won't they? Do you have a code sample to demonstrate the issue?
+Sorry, to get back to this that late but I was busy as hell since the
+beginning of the year.
 
-> How crappy.. I don't know how
-> userspace is going to deal with all these.
-> 
-> And another bug spotted. We can pass fd of memory.usage_in_bytes of cgroup A
-> to cgroup.event_control of cgroup B, and then we won't get memory usage
-> notification from A but B! What's worse, if A and B are in different mount
-> hierarchy, boom!
+Has the issue repeated since then?
 
-I think we can ignore which cgroup event_control is belong to, and just
-use cgroup of cfile as base. It also means you can use one event_control fd
-for registering events to different cgroups. It can be handy.
+You said you didn't apply other than the above mentioned patch. Could
+you apply also debugging part of the patches I have sent?
+In case you don't have it handy then it should be this one:
+---
+From 1623420d964e7e8bc88e2a6239563052df891bf7 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Mon, 3 Dec 2012 16:16:01 +0100
+Subject: [PATCH] more debugging
 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  kernel/cgroup.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 3d21adf..e496359 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -3825,6 +3825,7 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
->  				      const char *buffer)
->  {
->  	struct cgroup_event *event = NULL;
-> +	struct cgroup *cgrp_cfile;
->  	unsigned int efd, cfd;
->  	struct file *efile = NULL;
->  	struct file *cfile = NULL;
-> @@ -3880,6 +3881,16 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
->  		goto fail;
->  	}
->  
-> +	/*
-> +	 * The file to be monitored must be in the same cgroup as
-> +	 * cgroup.event_control is.
-> +	 */
-> +	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
-> +	if (cgrp_cfile != cgrp) {
-> +		ret = -EINVAL;
-> +		goto fail;
-> +	}
-> +
->  	if (!event->cft->register_event || !event->cft->unregister_event) {
->  		ret = -EINVAL;
->  		goto fail;
-> -- 
-> 1.8.0.2
-> 
-> 
+---
+ mm/huge_memory.c |    6 +++---
+ mm/memcontrol.c  |    1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 470cbb4..01a11f1 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -671,7 +671,7 @@ static inline struct page *alloc_hugepage(int defrag)
+ }
+ #endif
+ 
+-int do_huge_pmd_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
++noinline int do_huge_pmd_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
+ 			       unsigned long address, pmd_t *pmd,
+ 			       unsigned int flags)
+ {
+@@ -790,7 +790,7 @@ pgtable_t get_pmd_huge_pte(struct mm_struct *mm)
+ 	return pgtable;
+ }
+ 
+-static int do_huge_pmd_wp_page_fallback(struct mm_struct *mm,
++static noinline int do_huge_pmd_wp_page_fallback(struct mm_struct *mm,
+ 					struct vm_area_struct *vma,
+ 					unsigned long address,
+ 					pmd_t *pmd, pmd_t orig_pmd,
+@@ -883,7 +883,7 @@ out_free_pages:
+ 	goto out;
+ }
+ 
+-int do_huge_pmd_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
++noinline int do_huge_pmd_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
+ 			unsigned long address, pmd_t *pmd, pmd_t orig_pmd)
+ {
+ 	int ret = 0;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c8425b1..1986c65 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2397,6 +2397,7 @@ done:
+ 	return 0;
+ nomem:
+ 	*ptr = NULL;
++	__WARN_printf("gfp_mask:%u nr_pages:%u oom:%d ret:%d\n", gfp_mask, nr_pages, oom, ret);
+ 	return -ENOMEM;
+ bypass:
+ 	*ptr = NULL;
+-- 
+1.7.10.4
 
 -- 
- Kirill A. Shutemov
+Michal Hocko
+SUSE Labs
