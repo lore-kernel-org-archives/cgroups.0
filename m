@@ -1,104 +1,117 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Tue, 5 Feb 2013 18:46:51 +0100
-Message-ID: <20130205174651.GA3959@dhcp22.suse.cz>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from add_to_page_cache_locked
+Date: Tue, 05 Feb 2013 10:09:57 -0800
+Message-ID: <xr93a9ri4op6.fsf@gthelen.mtv.corp.google.com>
 References: <20121224142526.020165D3@pobox.sk>
- <20121228162209.GA1455@dhcp22.suse.cz>
- <20121230020947.AA002F34@pobox.sk>
- <20121230110815.GA12940@dhcp22.suse.cz>
- <20130125160723.FAE73567@pobox.sk>
- <20130125163130.GF4721@dhcp22.suse.cz>
- <20130205134937.GA22804@dhcp22.suse.cz>
- <20130205154947.CD6411E2@pobox.sk>
- <20130205160934.GB22804@dhcp22.suse.cz>
- <xr93wqum4sh4.fsf@gthelen.mtv.corp.google.com>
+	<20121228162209.GA1455@dhcp22.suse.cz>
+	<20121230020947.AA002F34@pobox.sk>
+	<20121230110815.GA12940@dhcp22.suse.cz>
+	<20130125160723.FAE73567@pobox.sk>
+	<20130125163130.GF4721@dhcp22.suse.cz>
+	<20130205134937.GA22804@dhcp22.suse.cz>
+	<20130205154947.CD6411E2@pobox.sk>
+	<20130205160934.GB22804@dhcp22.suse.cz>
+	<xr93wqum4sh4.fsf@gthelen.mtv.corp.google.com>
+	<20130205174651.GA3959@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=sNz8eTPzOSmL14HKryJqfhf4UUdw/1oO2dC4xdbUw1w=;
-        b=dy964Dm9y35tPI1URk/T+D06DtekqQsVjb/buA2tE2Nv5ASnLOX48QDIlMBQh+YFFr
-         ZxfbkU/ogiXT8JQBrOsLFWfJjz08wopsM6+5QN4FU4Se9FatdK56TF4SuiibI81mcB0g
-         KBQfRu9dknr0gLJvH/Ao+sUORNetpzEFvmbaNCqAE8ou+YrbKpCyqUatUx+ui8nHY4r1
-         WPf2txQjCWmCUgbgDz8zVZVq3LOgW0kKQxxjOyd5itIYXmrOGcgib6AjAe9cmRvJKooh
-         aT+87g+uDFXk7oJYW7IWgRuIyJeTZPKZRqxbNFUP+K3ejaapwt0KUo8FAjH1Lyc8RpWP
-         05IQ==
-Content-Disposition: inline
-In-Reply-To: <xr93wqum4sh4.fsf@gthelen.mtv.corp.google.com>
+        d=google.com; s=20120113;
+        h=x-received:from:to:cc:subject:references:date:in-reply-to
+         :message-id:user-agent:mime-version:content-type;
+        bh=k5Qq/M1KyiqE8cOQ0b22rhAb1QWvph8NVYvTLTNFsKU=;
+        b=Fs8MG/joKyRzVmoj9YZHqBKTfvrFRi6+qPf6XylTr7ioa8jnEKd3ZOQzeHMSMeF79b
+         mJi+nkCtNCk61Uh5FKK50mwDMBwgCCNX0t2xDW1KMVSI6LnRUoDz7ff0wEiOTVtHUQHN
+         Y5U0QjJAPzJY0zO4ywzDEJYzu/kla8Mz2yg0n/ikW7dEvzTwMUCeNboMKduxxHu+ya01
+         pU/2ToczxqFV4QrUnKlX9ieN5f6DFiJSkJQPvNLUsG1+mQFAbPyA4TwYCURRcImeiCew
+         TJ8oGSSOASZPzOkRINEFKMSrkOq9yWbusUre6c85/yYpWa02W2iJRTJjEVlCKiOYN+5e
+         UWBA==
+In-Reply-To: <20130205174651.GA3959@dhcp22.suse.cz> (Michal Hocko's message of
+	"Tue, 5 Feb 2013 18:46:51 +0100")
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Greg Thelen <gthelen@google.com>
+To: Michal Hocko <mhocko@suse.cz>
 Cc: azurIt <azurit@pobox.sk>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Tue 05-02-13 08:48:23, Greg Thelen wrote:
-> On Tue, Feb 05 2013, Michal Hocko wrote:
-> 
-> > On Tue 05-02-13 15:49:47, azurIt wrote:
-> > [...]
-> >> Just to be sure - am i supposed to apply this two patches?
-> >> http://watchdog.sk/lkml/patches/
-> >
-> > 5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
-> > mentioned in a follow up email. Here is the full patch:
-> > ---
-> > From f2bf8437d5b9bb38a95a432bf39f32c584955171 Mon Sep 17 00:00:00 2001
-> > From: Michal Hocko <mhocko@suse.cz>
-> > Date: Mon, 26 Nov 2012 11:47:57 +0100
-> > Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
-> >
-> > memcg oom killer might deadlock if the process which falls down to
-> > mem_cgroup_handle_oom holds a lock which prevents other task to
-> > terminate because it is blocked on the very same lock.
-> > This can happen when a write system call needs to allocate a page but
-> > the allocation hits the memcg hard limit and there is nothing to reclaim
-> > (e.g. there is no swap or swap limit is hit as well and all cache pages
-> > have been reclaimed already) and the process selected by memcg OOM
-> > killer is blocked on i_mutex on the same inode (e.g. truncate it).
-> >
-> > Process A
-> > [<ffffffff811109b8>] do_truncate+0x58/0xa0		# takes i_mutex
-> > [<ffffffff81121c90>] do_last+0x250/0xa30
-> > [<ffffffff81122547>] path_openat+0xd7/0x440
-> > [<ffffffff811229c9>] do_filp_open+0x49/0xa0
-> > [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
-> > [<ffffffff8110f950>] sys_open+0x20/0x30
-> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
-> > [<ffffffffffffffff>] 0xffffffffffffffff
-> >
-> > Process B
-> > [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
-> > [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
-> > [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
-> > [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
-> > [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
-> > [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
-> > [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
-> > [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
-> > [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
-> > [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
-> > [<ffffffff8111156a>] do_sync_write+0xea/0x130
-> > [<ffffffff81112183>] vfs_write+0xf3/0x1f0
-> > [<ffffffff81112381>] sys_write+0x51/0x90
-> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
-> > [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> It looks like grab_cache_page_write_begin() passes __GFP_FS into
-> __page_cache_alloc() and mem_cgroup_cache_charge().  Which makes me
-> think that this deadlock is also possible in the page allocator even
-> before getting to add_to_page_cache_lru.  no?
+On Tue, Feb 05 2013, Michal Hocko wrote:
 
-I am not that familiar with VFS but i_mutex is a high level lock AFAIR
-and it shouldn't be called from the pageout path so __page_cache_alloc
-should be safe.
--- 
-Michal Hocko
-SUSE Labs
+> On Tue 05-02-13 08:48:23, Greg Thelen wrote:
+>> On Tue, Feb 05 2013, Michal Hocko wrote:
+>> 
+>> > On Tue 05-02-13 15:49:47, azurIt wrote:
+>> > [...]
+>> >> Just to be sure - am i supposed to apply this two patches?
+>> >> http://watchdog.sk/lkml/patches/
+>> >
+>> > 5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
+>> > mentioned in a follow up email. Here is the full patch:
+>> > ---
+>> > From f2bf8437d5b9bb38a95a432bf39f32c584955171 Mon Sep 17 00:00:00 2001
+>> > From: Michal Hocko <mhocko@suse.cz>
+>> > Date: Mon, 26 Nov 2012 11:47:57 +0100
+>> > Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
+>> >
+>> > memcg oom killer might deadlock if the process which falls down to
+>> > mem_cgroup_handle_oom holds a lock which prevents other task to
+>> > terminate because it is blocked on the very same lock.
+>> > This can happen when a write system call needs to allocate a page but
+>> > the allocation hits the memcg hard limit and there is nothing to reclaim
+>> > (e.g. there is no swap or swap limit is hit as well and all cache pages
+>> > have been reclaimed already) and the process selected by memcg OOM
+>> > killer is blocked on i_mutex on the same inode (e.g. truncate it).
+>> >
+>> > Process A
+>> > [<ffffffff811109b8>] do_truncate+0x58/0xa0		# takes i_mutex
+>> > [<ffffffff81121c90>] do_last+0x250/0xa30
+>> > [<ffffffff81122547>] path_openat+0xd7/0x440
+>> > [<ffffffff811229c9>] do_filp_open+0x49/0xa0
+>> > [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
+>> > [<ffffffff8110f950>] sys_open+0x20/0x30
+>> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+>> > [<ffffffffffffffff>] 0xffffffffffffffff
+>> >
+>> > Process B
+>> > [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
+>> > [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
+>> > [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
+>> > [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
+>> > [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
+>> > [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
+>> > [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
+>> > [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
+>> > [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
+>> > [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
+>> > [<ffffffff8111156a>] do_sync_write+0xea/0x130
+>> > [<ffffffff81112183>] vfs_write+0xf3/0x1f0
+>> > [<ffffffff81112381>] sys_write+0x51/0x90
+>> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+>> > [<ffffffffffffffff>] 0xffffffffffffffff
+>> 
+>> It looks like grab_cache_page_write_begin() passes __GFP_FS into
+>> __page_cache_alloc() and mem_cgroup_cache_charge().  Which makes me
+>> think that this deadlock is also possible in the page allocator even
+>> before getting to add_to_page_cache_lru.  no?
+>
+> I am not that familiar with VFS but i_mutex is a high level lock AFAIR
+> and it shouldn't be called from the pageout path so __page_cache_alloc
+> should be safe.
+
+I wasn't clear, sorry.  My concern is not that pageout() grabs i_mutex.
+My concern is that __page_cache_alloc() will invoke the oom killer and
+select a victim which wants i_mutex.  This victim will deadlock because
+the oom killer caller already holds i_mutex.  The wild accusation I am
+making is that anyone who invokes the oom killer and waits on the victim
+to die is essentially grabbing all of the locks that any of the oom
+killer victims may grab (e.g. i_mutex).  To avoid deadlock the oom
+killer can only be called is while holding no locks that the oom victim
+demands.  I think some locks are grabbed in a way that allows the lock
+request to fail if the task has a fatal signal pending, so they are
+safe.  But any locks acquisitions that cannot fail (e.g. mutex_lock)
+will deadlock with the oom killing process.  So the oom killing process
+cannot hold any such locks which the victim will attempt to grab.
+Hopefully I'm missing something.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
