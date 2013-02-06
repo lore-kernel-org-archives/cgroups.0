@@ -1,30 +1,65 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
-Date: Wed, 06 Feb 2013 02:17:21 +0100
-Message-ID: <20130206021721.1AE9E3C7@pobox.sk>
-References: <20121218152223.6912832C@pobox.sk>, <20121218152004.GA25208@dhcp22.suse.cz>, <20121224142526.020165D3@pobox.sk>, <20121228162209.GA1455@dhcp22.suse.cz>, <20121230020947.AA002F34@pobox.sk>, <20121230110815.GA12940@dhcp22.suse.cz>, <20130125160723.FAE73567@pobox.sk>, <20130125163130.GF4721@dhcp22.suse.cz>, <20130205134937.GA22804@dhcp22.suse.cz>, <20130205154947.CD6411E2@pobox.sk> <20130205160934.GB22804@dhcp22.suse.cz>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH 1/4] eventfd: introduce eventfd_signal_hangup()
+Date: Wed, 6 Feb 2013 09:48:20 +0800
+Message-ID: <5111B664.5050606@huawei.com>
+References: <510CB733.2080904@huawei.com> <510CB744.7000300@huawei.com> <20130202155858.GA13022@shutemov.name> <20130204101521.GA18322@shutemov.name> <51107F42.1090401@huawei.com> <20130205082820.GA22220@shutemov.name>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130205160934.GB22804@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130205082820.GA22220@shutemov.name>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Davide Libenzi <davidel@xmailserver.org>, Aaron Durbin <adurbin@google.com>, Greg Thelen <gthelen@google.com>
 
->5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
->mentioned in a follow up email. Here is the full patch:
+On 2013/2/5 16:28, Kirill A. Shutemov wrote:
+> On Tue, Feb 05, 2013 at 11:40:50AM +0800, Li Zefan wrote:
+>> On 2013/2/4 18:15, Kirill A. Shutemov wrote:
+>>> On Sat, Feb 02, 2013 at 05:58:58PM +0200, Kirill A. Shutemov wrote:
+>>>> On Sat, Feb 02, 2013 at 02:50:44PM +0800, Li Zefan wrote:
+>>>>> When an eventfd is closed, a wakeup with POLLHUP will be issued,
+>>>>> but cgroup wants to issue wakeup explicitly, so when a cgroup is
+>>>>> removed userspace can be notified.
+>>>>>
+>>>>> Signed-off-by: Li Zefan <lizefan@huawei.com>
+>>>
+>>> Hm.. Looks like it will break eventfd semantics:
+>>>
+>>> 1. One eventfd can be used for deliver more then one notification from
+>>> one or more cgroups. POLLHUP on removing one of cgroups is not valid.
+>>>
+>>> 2. It's valid to have eventfd opened only by one userspace application. We
+>>> should not close it, just because cgroup is removed.
+>>>
+>>> I think problem with multiple threads waiting an event on eventfd should
+>>> be handled in userspace.
+>>>
+>>
+>> I didn't realize this.. and if a cgroup is removed, the woken thread may not
+>> be the thread that is waiting on this cgroup.
+> 
+> Why? The only threads who read() or poll() the eventfd will be wake up,
+> won't they? Do you have a code sample to demonstrate the issue?
+> 
 
+All the threads will be woken up, but one of them will consume the event counter,
+and then all other threads will keep waiting.
 
-Here is the log where OOM, again, killed MySQL server [search for "(mysql=
-d)"]:
-http://www.watchdog.sk/lkml/oom_mysqld6
+>> How crappy.. I don't know how
+>> userspace is going to deal with all these.
+>>
+>> And another bug spotted. We can pass fd of memory.usage_in_bytes of cgroup A
+>> to cgroup.event_control of cgroup B, and then we won't get memory usage
+>> notification from A but B! What's worse, if A and B are in different mount
+>> hierarchy, boom!
+> 
+> I think we can ignore which cgroup event_control is belong to, and just
+> use cgroup of cfile as base. It also means you can use one event_control fd
+> for registering events to different cgroups. It can be handy.
+> 
 
-azur
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+The most reasonal usage is, cgroup.event_control exists in the root cgroup only,
+and it's used to register events to all cgroups. But I don't think we can
+change the current interface that each cgroup has a cgroup.event_control, so
+we'll restrict event registration as my patch does.
