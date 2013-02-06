@@ -1,105 +1,83 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
- add_to_page_cache_locked
-Date: Wed, 6 Feb 2013 15:22:19 +0100
-Message-ID: <20130206142219.GF10254@dhcp22.suse.cz>
-References: <20121228162209.GA1455@dhcp22.suse.cz>
- <20121230020947.AA002F34@pobox.sk>
- <20121230110815.GA12940@dhcp22.suse.cz>
- <20130125160723.FAE73567@pobox.sk>
- <20130125163130.GF4721@dhcp22.suse.cz>
- <20130205134937.GA22804@dhcp22.suse.cz>
- <20130205154947.CD6411E2@pobox.sk>
- <20130205160934.GB22804@dhcp22.suse.cz>
- <20130206021721.1AE9E3C7@pobox.sk>
- <20130206140119.GD10254@dhcp22.suse.cz>
+From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Subject: Re: [PATCH 1/4] eventfd: introduce eventfd_signal_hangup()
+Date: Wed, 6 Feb 2013 16:53:55 +0200
+Message-ID: <20130206145355.GA27191@shutemov.name>
+References: <510CB733.2080904@huawei.com>
+ <510CB744.7000300@huawei.com>
+ <20130202155858.GA13022@shutemov.name>
+ <20130204101521.GA18322@shutemov.name>
+ <51107F42.1090401@huawei.com>
+ <20130205082820.GA22220@shutemov.name>
+ <5111B664.5050606@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130206140119.GD10254-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <5111B664.5050606-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, Aaron Durbin <adurbin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed 06-02-13 15:01:19, Michal Hocko wrote:
-> On Wed 06-02-13 02:17:21, azurIt wrote:
-> > >5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
-> > >mentioned in a follow up email. Here is the full patch:
+On Wed, Feb 06, 2013 at 09:48:20AM +0800, Li Zefan wrote:
+> On 2013/2/5 16:28, Kirill A. Shutemov wrote:
+> > On Tue, Feb 05, 2013 at 11:40:50AM +0800, Li Zefan wrote:
+> >> On 2013/2/4 18:15, Kirill A. Shutemov wrote:
+> >>> On Sat, Feb 02, 2013 at 05:58:58PM +0200, Kirill A. Shutemov wrote:
+> >>>> On Sat, Feb 02, 2013 at 02:50:44PM +0800, Li Zefan wrote:
+> >>>>> When an eventfd is closed, a wakeup with POLLHUP will be issued,
+> >>>>> but cgroup wants to issue wakeup explicitly, so when a cgroup is
+> >>>>> removed userspace can be notified.
+> >>>>>
+> >>>>> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> >>>
+> >>> Hm.. Looks like it will break eventfd semantics:
+> >>>
+> >>> 1. One eventfd can be used for deliver more then one notification from
+> >>> one or more cgroups. POLLHUP on removing one of cgroups is not valid.
+> >>>
+> >>> 2. It's valid to have eventfd opened only by one userspace application. We
+> >>> should not close it, just because cgroup is removed.
+> >>>
+> >>> I think problem with multiple threads waiting an event on eventfd should
+> >>> be handled in userspace.
+> >>>
+> >>
+> >> I didn't realize this.. and if a cgroup is removed, the woken thread may not
+> >> be the thread that is waiting on this cgroup.
 > > 
+> > Why? The only threads who read() or poll() the eventfd will be wake up,
+> > won't they? Do you have a code sample to demonstrate the issue?
 > > 
-> > Here is the log where OOM, again, killed MySQL server [search for "(mysqld)"]:
-> > http://www.watchdog.sk/lkml/oom_mysqld6
 > 
-> [...]
-> WARNING: at mm/memcontrol.c:2409 T.1149+0x2d9/0x610()
-> Hardware name: S5000VSA
-> gfp_mask:4304 nr_pages:1 oom:0 ret:2
-> Pid: 3545, comm: apache2 Tainted: G        W    3.2.37-grsec #1
-> Call Trace:
->  [<ffffffff8105502a>] warn_slowpath_common+0x7a/0xb0
->  [<ffffffff81055116>] warn_slowpath_fmt+0x46/0x50
->  [<ffffffff81108163>] ? mem_cgroup_margin+0x73/0xa0
->  [<ffffffff8110b6f9>] T.1149+0x2d9/0x610
->  [<ffffffff812af298>] ? blk_finish_plug+0x18/0x50
->  [<ffffffff8110c6b4>] mem_cgroup_cache_charge+0xc4/0xf0
->  [<ffffffff810ca6bf>] add_to_page_cache_locked+0x4f/0x140
->  [<ffffffff810ca7d2>] add_to_page_cache_lru+0x22/0x50
->  [<ffffffff810cad32>] filemap_fault+0x252/0x4f0
->  [<ffffffff810eab18>] __do_fault+0x78/0x5a0
->  [<ffffffff810edcb4>] handle_pte_fault+0x84/0x940
->  [<ffffffff810e2460>] ? vma_prio_tree_insert+0x30/0x50
->  [<ffffffff810f2508>] ? vma_link+0x88/0xe0
->  [<ffffffff810ee6a8>] handle_mm_fault+0x138/0x260
->  [<ffffffff8102709d>] do_page_fault+0x13d/0x460
->  [<ffffffff810f46fc>] ? do_mmap_pgoff+0x3dc/0x430
->  [<ffffffff815b61ff>] page_fault+0x1f/0x30
-> ---[ end trace 8817670349022007 ]---
-> apache2 invoked oom-killer: gfp_mask=0x0, order=0, oom_adj=0, oom_score_adj=0
-> apache2 cpuset=uid mems_allowed=0
-> Pid: 3545, comm: apache2 Tainted: G        W    3.2.37-grsec #1
-> Call Trace:
->  [<ffffffff810ccd2e>] dump_header+0x7e/0x1e0
->  [<ffffffff810ccc2f>] ? find_lock_task_mm+0x2f/0x70
->  [<ffffffff810cd1f5>] oom_kill_process+0x85/0x2a0
->  [<ffffffff810cd8a5>] out_of_memory+0xe5/0x200
->  [<ffffffff810cda7d>] pagefault_out_of_memory+0xbd/0x110
->  [<ffffffff81026e76>] mm_fault_error+0xb6/0x1a0
->  [<ffffffff8102734e>] do_page_fault+0x3ee/0x460
->  [<ffffffff810f46fc>] ? do_mmap_pgoff+0x3dc/0x430
->  [<ffffffff815b61ff>] page_fault+0x1f/0x30
-> 
-> The first trace comes from the debugging WARN and it clearly points to
-> a file fault path. __do_fault pre-charges a page in case we need to
-> do CoW (copy-on-write) for the returned page. This one falls back to
-> memcg OOM and never returns ENOMEM as I have mentioned earlier. 
-> However, the fs fault handler (filemap_fault here) can fallback to
-> page_cache_read if the readahead (do_sync_mmap_readahead) fails
-> to get page to the page cache. And we can see this happening in
-> the first trace. page_cache_read then calls add_to_page_cache_lru
-> and eventually gets to add_to_page_cache_locked which calls
-> mem_cgroup_cache_charge_no_oom so we will get ENOMEM if oom should
-> happen. This ENOMEM gets to the fault handler and kaboom.
-> 
-> So the fix is really much more complex than I thought. Although
-> add_to_page_cache_locked sounded like a good place it turned out to be
-> not in fact.
-> 
-> We need something more clever appaerently. One way would be not misusing
-> __GFP_NORETRY for GFP_MEMCG_NO_OOM and give it a real flag. We have 32
-> bits for those flags in gfp_t so there should be some room there. 
-> Or we could do this per task flag, same we do for NO_IO in the current
-> -mm tree.
-> The later one seems easier wrt. gfp_mask passing horror - e.g.
-> __generic_file_aio_write doesn't pass flags and it can be called from
-> unlocked contexts as well.
+> All the threads will be woken up, but one of them will consume the event counter,
+> and then all other threads will keep waiting.
 
-Ouch, PF_ flags space seem to be drained already because
-task_struct::flags is just unsigned int so there is just one bit left. I
-am not sure this is the best use for it. This will be a real pain!
+The woken up thread can identify that cgroup had disappeared and notify
+other threads (probably with the same eventfd).
+
+For me it looks like userspace mess rather then kernel issue.
+
+> >> How crappy.. I don't know how
+> >> userspace is going to deal with all these.
+> >>
+> >> And another bug spotted. We can pass fd of memory.usage_in_bytes of cgroup A
+> >> to cgroup.event_control of cgroup B, and then we won't get memory usage
+> >> notification from A but B! What's worse, if A and B are in different mount
+> >> hierarchy, boom!
+> > 
+> > I think we can ignore which cgroup event_control is belong to, and just
+> > use cgroup of cfile as base. It also means you can use one event_control fd
+> > for registering events to different cgroups. It can be handy.
+> > 
+> 
+> The most reasonal usage is, cgroup.event_control exists in the root cgroup only,
+> and it's used to register events to all cgroups. But I don't think we can
+> change the current interface that each cgroup has a cgroup.event_control, so
+> we'll restrict event registration as my patch does.
+
+Looks good to me.
 
 -- 
-Michal Hocko
-SUSE Labs
+ Kirill A. Shutemov
