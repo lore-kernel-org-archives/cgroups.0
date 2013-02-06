@@ -1,37 +1,30 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: reduce the size of struct memcg 244-fold.
-Date: Tue, 5 Feb 2013 23:06:09 +0400
-Message-ID: <51115821.4020100@parallels.com>
-References: <1359009996-5350-1-git-send-email-glommer@parallels.com> <20130205185324.GB6481@cmpxchg.org> <20130205190454.GC3959@dhcp22.suse.cz>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_from_add=5Fto=5Fpage=5Fcache=5Flocked?=
+Date: Wed, 06 Feb 2013 02:17:21 +0100
+Message-ID: <20130206021721.1AE9E3C7@pobox.sk>
+References: <20121218152223.6912832C@pobox.sk>, <20121218152004.GA25208@dhcp22.suse.cz>, <20121224142526.020165D3@pobox.sk>, <20121228162209.GA1455@dhcp22.suse.cz>, <20121230020947.AA002F34@pobox.sk>, <20121230110815.GA12940@dhcp22.suse.cz>, <20130125160723.FAE73567@pobox.sk>, <20130125163130.GF4721@dhcp22.suse.cz>, <20130205134937.GA22804@dhcp22.suse.cz>, <20130205154947.CD6411E2@pobox.sk> <20130205160934.GB22804@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130205190454.GC3959-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130205160934.GB22804@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-On 02/05/2013 11:04 PM, Michal Hocko wrote:
-> On Tue 05-02-13 13:53:24, Johannes Weiner wrote:
-> [...]
->> Subject: [patch] memcg: reduce the size of struct memcg 244-fold morrr fix
->>
->> Remove struct mem_cgroup_lru_info.  It only holds the nodeinfo array
->> and is actively misleading because there is all kinds of per-node
->> stuff in addition to the LRU info in there.  On that note, remove the
->> incorrect comment as well.
->>
->> Move comment about the nodeinfo[0] array having to be the last field
->> in struct mem_cgroup after said array.  Should be more visible when
->> attempting to append new members to the struct.
->>
->> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> 
-> Yes, I like this. The info level is just artificatial and without any
-> good reason.
-> 
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> 
-Acked-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
+>mentioned in a follow up email. Here is the full patch:
+
+
+Here is the log where OOM, again, killed MySQL server [search for "(mysql=
+d)"]:
+http://www.watchdog.sk/lkml/oom_mysqld6
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
