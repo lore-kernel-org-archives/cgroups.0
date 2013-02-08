@@ -1,234 +1,144 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM from
  add_to_page_cache_locked
-Date: Fri, 8 Feb 2013 17:01:19 +0100
-Message-ID: <20130208160119.GE7557@dhcp22.suse.cz>
-References: <20121230110815.GA12940@dhcp22.suse.cz>
- <20130125160723.FAE73567@pobox.sk>
+Date: Fri, 8 Feb 2013 17:29:18 +0100
+Message-ID: <20130208162918.GF7557@dhcp22.suse.cz>
+References: <20130125160723.FAE73567@pobox.sk>
  <20130125163130.GF4721@dhcp22.suse.cz>
  <20130205134937.GA22804@dhcp22.suse.cz>
  <20130205154947.CD6411E2@pobox.sk>
  <20130205160934.GB22804@dhcp22.suse.cz>
- <20130206021721.1AE9E3C7@pobox.sk>
- <20130206140119.GD10254@dhcp22.suse.cz>
- <51138999.3090006@jp.fujitsu.com>
- <5114577D.70608@jp.fujitsu.com>
+ <xr93wqum4sh4.fsf@gthelen.mtv.corp.google.com>
+ <20130205174651.GA3959@dhcp22.suse.cz>
+ <xr93a9ri4op6.fsf@gthelen.mtv.corp.google.com>
+ <20130205185953.GB3959@dhcp22.suse.cz>
+ <xr93ip63ig6j.fsf@gthelen.mtv.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <5114577D.70608-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <xr93ip63ig6j.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Fri 08-02-13 10:40:13, KAMEZAWA Hiroyuki wrote:
-> (2013/02/07 20:01), Kamezawa Hiroyuki wrote:
-[...]
-> >Hmm. do we need to increase the "limit" virtually at memcg oom until
-> >the oom-killed process dies ?
+On Thu 07-02-13 20:27:00, Greg Thelen wrote:
+> On Tue, Feb 05 2013, Michal Hocko wrote:
 > 
-> Here is my naive idea...
+> > On Tue 05-02-13 10:09:57, Greg Thelen wrote:
+> >> On Tue, Feb 05 2013, Michal Hocko wrote:
+> >> 
+> >> > On Tue 05-02-13 08:48:23, Greg Thelen wrote:
+> >> >> On Tue, Feb 05 2013, Michal Hocko wrote:
+> >> >> 
+> >> >> > On Tue 05-02-13 15:49:47, azurIt wrote:
+> >> >> > [...]
+> >> >> >> Just to be sure - am i supposed to apply this two patches?
+> >> >> >> http://watchdog.sk/lkml/patches/
+> >> >> >
+> >> >> > 5-memcg-fix-1.patch is not complete. It doesn't contain the folloup I
+> >> >> > mentioned in a follow up email. Here is the full patch:
+> >> >> > ---
+> >> >> > From f2bf8437d5b9bb38a95a432bf39f32c584955171 Mon Sep 17 00:00:00 2001
+> >> >> > From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> >> >> > Date: Mon, 26 Nov 2012 11:47:57 +0100
+> >> >> > Subject: [PATCH] memcg: do not trigger OOM from add_to_page_cache_locked
+> >> >> >
+> >> >> > memcg oom killer might deadlock if the process which falls down to
+> >> >> > mem_cgroup_handle_oom holds a lock which prevents other task to
+> >> >> > terminate because it is blocked on the very same lock.
+> >> >> > This can happen when a write system call needs to allocate a page but
+> >> >> > the allocation hits the memcg hard limit and there is nothing to reclaim
+> >> >> > (e.g. there is no swap or swap limit is hit as well and all cache pages
+> >> >> > have been reclaimed already) and the process selected by memcg OOM
+> >> >> > killer is blocked on i_mutex on the same inode (e.g. truncate it).
+> >> >> >
+> >> >> > Process A
+> >> >> > [<ffffffff811109b8>] do_truncate+0x58/0xa0		# takes i_mutex
+> >> >> > [<ffffffff81121c90>] do_last+0x250/0xa30
+> >> >> > [<ffffffff81122547>] path_openat+0xd7/0x440
+> >> >> > [<ffffffff811229c9>] do_filp_open+0x49/0xa0
+> >> >> > [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
+> >> >> > [<ffffffff8110f950>] sys_open+0x20/0x30
+> >> >> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+> >> >> > [<ffffffffffffffff>] 0xffffffffffffffff
+> >> >> >
+> >> >> > Process B
+> >> >> > [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
+> >> >> > [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
+> >> >> > [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
+> >> >> > [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
+> >> >> > [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
+> >> >> > [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
+> >> >> > [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
+> >> >> > [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
+> >> >> > [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
+> >> >> > [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
+> >> >> > [<ffffffff8111156a>] do_sync_write+0xea/0x130
+> >> >> > [<ffffffff81112183>] vfs_write+0xf3/0x1f0
+> >> >> > [<ffffffff81112381>] sys_write+0x51/0x90
+> >> >> > [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
+> >> >> > [<ffffffffffffffff>] 0xffffffffffffffff
+> >> >> 
+> >> >> It looks like grab_cache_page_write_begin() passes __GFP_FS into
+> >> >> __page_cache_alloc() and mem_cgroup_cache_charge().  Which makes me
+> >> >> think that this deadlock is also possible in the page allocator even
+> >> >> before getting to add_to_page_cache_lru.  no?
+> >> >
+> >> > I am not that familiar with VFS but i_mutex is a high level lock AFAIR
+> >> > and it shouldn't be called from the pageout path so __page_cache_alloc
+> >> > should be safe.
+> >> 
+> >> I wasn't clear, sorry.  My concern is not that pageout() grabs i_mutex.
+> >> My concern is that __page_cache_alloc() will invoke the oom killer and
+> >> select a victim which wants i_mutex.  This victim will deadlock because
+> >> the oom killer caller already holds i_mutex.  
+> >
+> > That would be true for the memcg oom because that one is blocking but
+> > the global oom just puts the allocator into sleep for a while and then
+> > the allocator should back off eventually (unless this is NOFAIL
+> > allocation). I would need to look closer whether this is really the case
+> > - I haven't seen that allocator code path for a while...
+> 
+> I think the page allocator can loop forever waiting for an oom victim to
+> terminate even without NOFAIL.  Especially if the oom victim wants a
+> resource exclusively held by the allocating thread (e.g. i_mutex).  It
+> looks like the same deadlock you describe is also possible (though more
+> rare) without memcg.
 
-and the next step would be
-http://en.wikipedia.org/wiki/Credit_default_swap :P
+OK, I have checked the allocator slow path and you are right even
+GFP_KERNEL will not fail. This can lead to similar deadlocks - e.g.
+OOM killed task blocked on down_write(mmap_sem) while the page fault
+handler holding mmap_sem for reading and allocating a new page without
+any progress.
+Luckily there are memory reserves where the allocator fall back
+eventually so the allocation should be able to get some memory and
+release the lock. There is still a theoretical chance this would block
+though. This sounds like a corner case though so I wouldn't care about
+it very much.
 
-But seriously now. The idea is not bad at all. This implementation
-would need some tweaks to work though (e.g. you would need to wake oom
-sleepers when you get a loan - because those are ones which can block
-the resource).  We should also give the borrowed charges only to those
-who would oom to prevent from stealing.
-I think that it should be mem_cgroup_out_of_memory who establishes the
-loan and it can have a look at how much memory the killed task frees -
-e.g. some portion of get_mm_rss() or a more precise but much more
-expensive traversing via private vmas and check whether they charged
-memory from the target memcg hierarchy (this is a slow path anyway).
+> If the looping thread is an eligible oom victim (i.e. not oom disabled,
+> not an kernel thread, etc) then the page allocator can return NULL in so
+> long as NOFAIL is not used.  So any allocator which is able to call the
+> oom killer and is not oom disabled (kernel thread, etc) is already
+> exposed to the possibility of page allocator failure.  So if the page
+> allocator could detect the deadlock, then it could safely return NULL.
+> Maybe after looping N times without forward progress the page allocator
+> should consider failing unless NOFAIL is given.
 
-But who knows maybe a fixed 2MB would work out as well.
+page allocator is quite tricky to touch and the chances of this deadlock
+are not that big.
 
-Thanks!
+> if memcg oom kill has been tried a reasonable number of times.  Simply
+> failing the memcg charge with ENOMEM seems easier to support than
+> exceeding limit (Kame's loan patch).
 
-> ==
-> From 1a46318cf89e7df94bd4844f29105b61dacf335b Mon Sep 17 00:00:00 2001
-> From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Date: Fri, 8 Feb 2013 10:43:52 +0900
-> Subject: [PATCH] [Don't Apply][PATCH] memcg relax resource at OOM situation.
-> 
-> When an OOM happens, a task is killed and resources will be freed.
-> 
-> A problem here is that a task, which is oom-killed, may wait for
-> some other resource in which memory resource is required. Some thread
-> waits for free memory may holds some mutex and oom-killed process
-> wait for the mutex.
-> 
-> To avoid this, relaxing charged memory by giving virtual resource
-> can be a help. The system can get back it at uncharge().
-> This is a sample native implementation.
-> 
-> Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> ---
->  mm/memcontrol.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 73 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 25ac5f4..4dea49a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -301,6 +301,9 @@ struct mem_cgroup {
->  	/* set when res.limit == memsw.limit */
->  	bool		memsw_is_minimum;
-> +	/* extra resource at emergency situation */
-> +	unsigned long	loan;
-> +	spinlock_t	loan_lock;
->  	/* protect arrays of thresholds */
->  	struct mutex thresholds_lock;
-> @@ -2034,6 +2037,61 @@ static int mem_cgroup_soft_reclaim(struct mem_cgroup *root_memcg,
->  	mem_cgroup_iter_break(root_memcg, victim);
->  	return total;
->  }
-> +/*
-> + * When a memcg is in OOM situation, this lack of resource may cause deadlock
-> + * because of complicated lock dependency(i_mutex...). To avoid that, we
-> + * need extra resource or avoid charging.
-> + *
-> + * A memcg can request resource in an emergency state. We call it as loan.
-> + * A memcg will return a loan when it does uncharge resource. We disallow
-> + * double-loan and moving task to other groups until the loan is fully
-> + * returned.
-> + *
-> + * Note: the problem here is that we cannot know what amount resouce should
-> + * be necessary to exiting an emergency state.....
-> + */
-> +#define LOAN_MAX		(2 * 1024 * 1024)
-> +
-> +static void mem_cgroup_make_loan(struct mem_cgroup *memcg)
-> +{
-> +	u64 usage;
-> +	unsigned long amount;
-> +
-> +	amount = LOAN_MAX;
-> +
-> +	usage = res_counter_read_u64(&memcg->res, RES_USAGE);
-> +	if (amount > usage /2 )
-> +		amount = usage / 2;
-> +	spin_lock(&memcg->loan_lock);
-> +	if (memcg->loan) {
-> +		spin_unlock(&memcg->loan_lock);
-> +		return;
-> +	}
-> +	memcg->loan = amount;
-> +	res_counter_uncharge(&memcg->res, amount);
-> +	if (do_swap_account)
-> +		res_counter_uncharge(&memcg->memsw, amount);
-> +	spin_unlock(&memcg->loan_lock);
-> +}
-> +
-> +/* return amount of free resource which can be uncharged */
-> +static unsigned long
-> +mem_cgroup_may_return_loan(struct mem_cgroup *memcg, unsigned long val)
-> +{
-> +	unsigned long tmp;
-> +	/* we don't care small race here */
-> +	if (unlikely(!memcg->loan))
-> +		return val;
-> +	spin_lock(&memcg->loan_lock);
-> +	if (memcg->loan) {
-> +		tmp = min(memcg->loan, val);
-> +		memcg->loan -= tmp;
-> +		val -= tmp;
-> +	}
-> +	spin_unlock(&memcg->loan_lock);
-> +	return val;
-> +}
-> +
->  /*
->   * Check OOM-Killer is already running under our hierarchy.
-> @@ -2182,6 +2240,7 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
->  	if (need_to_kill) {
->  		finish_wait(&memcg_oom_waitq, &owait.wait);
->  		mem_cgroup_out_of_memory(memcg, mask, order);
-> +		mem_cgroup_make_loan(memcg);
->  	} else {
->  		schedule();
->  		finish_wait(&memcg_oom_waitq, &owait.wait);
-> @@ -2748,6 +2807,8 @@ static void __mem_cgroup_cancel_charge(struct mem_cgroup *memcg,
->  	if (!mem_cgroup_is_root(memcg)) {
->  		unsigned long bytes = nr_pages * PAGE_SIZE;
-> +		bytes = mem_cgroup_may_return_loan(memcg, bytes);
-> +
->  		res_counter_uncharge(&memcg->res, bytes);
->  		if (do_swap_account)
->  			res_counter_uncharge(&memcg->memsw, bytes);
-> @@ -3989,6 +4050,7 @@ static void mem_cgroup_do_uncharge(struct mem_cgroup *memcg,
->  {
->  	struct memcg_batch_info *batch = NULL;
->  	bool uncharge_memsw = true;
-> +	unsigned long val;
->  	/* If swapout, usage of swap doesn't decrease */
->  	if (!do_swap_account || ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT)
-> @@ -4029,9 +4091,11 @@ static void mem_cgroup_do_uncharge(struct mem_cgroup *memcg,
->  		batch->memsw_nr_pages++;
->  	return;
->  direct_uncharge:
-> -	res_counter_uncharge(&memcg->res, nr_pages * PAGE_SIZE);
-> +	val = nr_pages * PAGE_SIZE;
-> +	val = mem_cgroup_may_return_loan(memcg, val);
-> +	res_counter_uncharge(&memcg->res, val);
->  	if (uncharge_memsw)
-> -		res_counter_uncharge(&memcg->memsw, nr_pages * PAGE_SIZE);
-> +		res_counter_uncharge(&memcg->memsw, val);
->  	if (unlikely(batch->memcg != memcg))
->  		memcg_oom_recover(memcg);
->  }
-> @@ -4182,6 +4246,7 @@ void mem_cgroup_uncharge_start(void)
->  void mem_cgroup_uncharge_end(void)
->  {
->  	struct memcg_batch_info *batch = &current->memcg_batch;
-> +	unsigned long val;
->  	if (!batch->do_batch)
->  		return;
-> @@ -4192,16 +4257,16 @@ void mem_cgroup_uncharge_end(void)
->  	if (!batch->memcg)
->  		return;
-> +	val = batch->nr_pages * PAGE_SIZE;
-> +	val = mem_cgroup_may_return_loan(batch->memcg, val);
->  	/*
->  	 * This "batch->memcg" is valid without any css_get/put etc...
->  	 * bacause we hide charges behind us.
->  	 */
->  	if (batch->nr_pages)
-> -		res_counter_uncharge(&batch->memcg->res,
-> -				     batch->nr_pages * PAGE_SIZE);
-> +		res_counter_uncharge(&batch->memcg->res, val);
->  	if (batch->memsw_nr_pages)
-> -		res_counter_uncharge(&batch->memcg->memsw,
-> -				     batch->memsw_nr_pages * PAGE_SIZE);
-> +		res_counter_uncharge(&batch->memcg->memsw, val);
->  	memcg_oom_recover(batch->memcg);
->  	/* forget this pointer (for sanity check) */
->  	batch->memcg = NULL;
-> @@ -6291,6 +6356,8 @@ mem_cgroup_css_alloc(struct cgroup *cont)
->  	memcg->move_charge_at_immigrate = 0;
->  	mutex_init(&memcg->thresholds_lock);
->  	spin_lock_init(&memcg->move_lock);
-> +	memcg->loan = 0;
-> +	spin_lock_init(&memcg->loan_lock);
->  	return &memcg->css;
-> -- 
-> 1.7.10.2
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We cannot do that in the page fault path because this would lead to a
+global oom killer. We would need to either retry the page fault or send
+KILL to the faulting process. But I do not like this much as this could
+lead to DoS attacks.
 
 -- 
 Michal Hocko
