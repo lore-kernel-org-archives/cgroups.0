@@ -1,62 +1,183 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 0/7] memcg targeted shrinking
-Date: Fri,  8 Feb 2013 17:07:30 +0400
-Message-ID: <1360328857-28070-1-git-send-email-glommer@parallels.com>
+Subject: [PATCH 5/7] list_lru: per-memcg walks
+Date: Fri,  8 Feb 2013 17:07:35 +0400
+Message-ID: <1360328857-28070-6-git-send-email-glommer@parallels.com>
+References: <1360328857-28070-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1360328857-28070-1-git-send-email-glommer@parallels.com>
 Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Dave Shrinnker <david@fromorbit.com>, linux-fsdevel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Dave Shrinnker <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Hugh Dickins <hughd@google.com>
 
-This patchset implements targeted shrinking for memcg when kmem limits are
-present. So far, we've been accounting kernel objects but failing allocations
-when short of memory. This is because our only option would be to call the
-global shrinker, depleting objects from all caches and breaking isolation.
+This patch extend the list_lru interfaces to allow for a memcg
+parameter. Because most of its users won't need it, instead of
+modifying the function signatures we create a new set of _memcg()
+functions and write the old API ontop of that.
 
-This patchset builds upon the recent work from David Chinner
-(http://oss.sgi.com/archives/xfs/2012-11/msg00643.html) to implement NUMA
-aware per-node LRUs. I build heavily on its API, and its presence is implied.
+At this point, the infrastructure is mostly in place. We already walk
+the nodes using all memcg indexes, so we just need to make sure we skip
+all but the one we're interested in. We could just go directly to the
+memcg of interest, but I am assuming that given the gained simplicity,
+spending a few cycles here won't hurt *that* much (but that can be
+improved if needed, of course).
 
-The main idea is to associate per-memcg lists with each of the LRUs. The main
-LRU still provides a single entry point and when adding or removing an element
-from the LRU, we use the page information to figure out which memcg it belongs
-to and relay it to the right list.
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ include/linux/list_lru.h | 24 ++++++++++++++++++++----
+ lib/list_lru.c           | 41 ++++++++++++++++++++++++++++++++---------
+ 2 files changed, 52 insertions(+), 13 deletions(-)
 
-This patchset is still not perfect, and some uses cases still need to be
-dealt with. But I wanted to get this out in the open sooner rather than
-later. In particular, I have the following (noncomprehensive) todo list:
-
-TODO:
-* shrink dead memcgs when global pressure kicks in.
-* balance global reclaim among memcgs.
-* improve testing and reliability (I am still seeing some stalls in some cases)
-
-Glauber Costa (7):
-  vmscan: also shrink slab in memcg pressure
-  memcg,list_lru: duplicate LRUs upon kmemcg creation
-  lru: add an element to a memcg list
-  list_lru: also include memcg lists in counts and scans
-  list_lru: per-memcg walks
-  super: targeted memcg reclaim
-  memcg: per-memcg kmem shrinking
-
- fs/dcache.c                |   7 +-
- fs/inode.c                 |   6 +-
- fs/internal.h              |   5 +-
- fs/super.c                 |  37 ++++--
- include/linux/list_lru.h   |  81 +++++++++++-
- include/linux/memcontrol.h |  34 +++++
- include/linux/shrinker.h   |   4 +
- include/linux/swap.h       |   2 +
- lib/list_lru.c             | 301 ++++++++++++++++++++++++++++++++++++++-------
- mm/memcontrol.c            | 271 ++++++++++++++++++++++++++++++++++++++--
- mm/slab_common.c           |   1 -
- mm/vmscan.c                |  78 +++++++++++-
- 12 files changed, 747 insertions(+), 80 deletions(-)
-
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index 5d8f7ab..c7e6115 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -81,20 +81,36 @@ lru_node_of_index(struct list_lru *lru, int index, int nid);
+ int list_lru_init(struct list_lru *lru);
+ int list_lru_add(struct list_lru *lru, struct list_head *item);
+ int list_lru_del(struct list_lru *lru, struct list_head *item);
+-long list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count);
++
++long list_lru_count_nodemask_memcg(struct list_lru *lru,
++			nodemask_t *nodes_to_count, struct mem_cgroup *memcg);
++
++static inline long
++list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count)
++{
++	return list_lru_count_nodemask_memcg(lru, nodes_to_count, NULL);
++}
+ 
+ static inline long list_lru_count(struct list_lru *lru)
+ {
+ 	return list_lru_count_nodemask(lru, &lru->active_nodes);
+ }
+ 
+-
+ typedef int (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock,
+ 				void *cb_arg);
+ typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
+ 
+-long list_lru_walk_nodemask(struct list_lru *lru, list_lru_walk_cb isolate,
+-		   void *cb_arg, long nr_to_walk, nodemask_t *nodes_to_walk);
++long list_lru_walk_nodemask_memcg(struct list_lru *lru,
++	list_lru_walk_cb isolate, void *cb_arg, long nr_to_walk,
++	nodemask_t *nodes_to_walk, struct mem_cgroup *memcg);
++
++static inline long list_lru_walk_nodemask(struct list_lru *lru,
++	list_lru_walk_cb isolate, void *cb_arg, long nr_to_walk,
++	nodemask_t *nodes_to_walk)
++{
++	return list_lru_walk_nodemask_memcg(lru, isolate, cb_arg, nr_to_walk,
++					    &lru->active_nodes, NULL);
++}
+ 
+ static inline long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
+ 				 void *cb_arg, long nr_to_walk)
+diff --git a/lib/list_lru.c b/lib/list_lru.c
+index 1d16404..e2bbde6 100644
+--- a/lib/list_lru.c
++++ b/lib/list_lru.c
+@@ -86,25 +86,44 @@ list_lru_del(
+ EXPORT_SYMBOL_GPL(list_lru_del);
+ 
+ long
+-list_lru_count_nodemask(
++list_lru_count_nodemask_memcg(
+ 	struct list_lru *lru,
+-	nodemask_t	*nodes_to_count)
++	nodemask_t	*nodes_to_count,
++	struct mem_cgroup *memcg)
+ {
+ 	long count = 0;
+ 	int nid;
++	nodemask_t nodes;
++	struct list_lru_node *nlru;
++	int memcg_id = memcg_cache_id(memcg);
++
++	/*
++	 * Conservative code can call this setting nodes with node_setall.
++	 * This will generate an out of bound access for memcg.
++	 */
++	nodes_and(nodes, *nodes_to_count, node_online_map);
+ 
+-	for_each_node_mask(nid, *nodes_to_count) {
++	for_each_node_mask(nid, nodes) {
+ 		/*
+ 		 * We don't need to loop through all memcgs here, because we
+ 		 * have the node_totals information for the node. If we hadn't,
+ 		 * this would still be achieavable by a loop-over-all-groups
+ 		 */
+-		count += atomic_long_read(&lru->node_totals[nid]);
+-	}
++		if (!memcg)
++			count += atomic_long_read(&lru->node_totals[nid]);
++		else {
++			nlru = lru_node_of_index(lru, memcg_id, nid);
++			WARN_ON(!nlru);
+ 
++			spin_lock(&nlru->lock);
++			BUG_ON(nlru->nr_items < 0);
++			count += nlru->nr_items;
++			spin_unlock(&nlru->lock);
++		}
++	}
+ 	return count;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_count_nodemask);
++EXPORT_SYMBOL_GPL(list_lru_count_nodemask_memcg);
+ 
+ static long
+ list_lru_walk_node(
+@@ -151,16 +170,18 @@ restart:
+ }
+ 
+ long
+-list_lru_walk_nodemask(
++list_lru_walk_nodemask_memcg(
+ 	struct list_lru	*lru,
+ 	list_lru_walk_cb isolate,
+ 	void		*cb_arg,
+ 	long		nr_to_walk,
+-	nodemask_t	*nodes_to_walk)
++	nodemask_t	*nodes_to_walk,
++	struct mem_cgroup *memcg)
+ {
+ 	long isolated = 0;
+ 	int nid;
+ 	nodemask_t nodes;
++	int memcg_id = memcg_cache_id(memcg);
+ 	int idx;
+ 	struct list_lru_node *nlru;
+ 
+@@ -172,6 +193,8 @@ list_lru_walk_nodemask(
+ 
+ 	for_each_node_mask(nid, nodes) {
+ 		for_each_memcg_lru_index(lru, idx, nid) {
++			if ((memcg_id >= 0) &&  (idx != memcg_id))
++				continue;
+ 
+ 			nlru = lru_node_of_index(lru, idx, nid);
+ 			if (!nlru)
+@@ -185,7 +208,7 @@ list_lru_walk_nodemask(
+ 	}
+ 	return isolated;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_walk_nodemask);
++EXPORT_SYMBOL_GPL(list_lru_walk_nodemask_memcg);
+ 
+ long
+ list_lru_dispose_all_node(
 -- 
 1.8.1
 
