@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH 6/7] super: targeted memcg reclaim
-Date: Fri,  8 Feb 2013 17:07:36 +0400
-Message-ID: <1360328857-28070-7-git-send-email-glommer@parallels.com>
+Subject: [PATCH 1/7] vmscan: also shrink slab in memcg pressure
+Date: Fri,  8 Feb 2013 17:07:31 +0400
+Message-ID: <1360328857-28070-2-git-send-email-glommer@parallels.com>
 References: <1360328857-28070-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1360328857-28070-1-git-send-email-glommer@parallels.com>
@@ -13,12 +13,13 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Dave Shrinnker <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Hugh Dickins <hughd@google.com>
 
-We now have all our dentries and inodes placed in memcg-specific LRU
-lists. All we have to do, is to restrict the reclaim to the said lists
-in case of memcg pressure.
+Without the surrounding infrastructure, this patch is a bit of a hammer:
+it will basically shrink objects from all memcgs under memcg pressure.
+At least, however, we will keep the scan limited to the shrinkers marked
+as per-memcg.
 
-Marking the superblock shrinker and its LRUs as memcg-aware will
-guarantee that the shrinkers will get invoked during targetted reclaim.
+Future patches will implement the in-shrinker logic to filter objects
+based on its memcg association.
 
 Signed-off-by: Glauber Costa <glommer@parallels.com>
 Cc: Dave Chinner <dchinner@redhat.com>
@@ -30,193 +31,197 @@ Cc: Hugh Dickins <hughd@google.com>
 Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- fs/dcache.c   |  7 ++++---
- fs/inode.c    |  6 +++---
- fs/internal.h |  5 +++--
- fs/super.c    | 37 +++++++++++++++++++++++++++----------
- 4 files changed, 37 insertions(+), 18 deletions(-)
+ include/linux/memcontrol.h | 16 ++++++++++++++++
+ include/linux/shrinker.h   |  4 ++++
+ mm/memcontrol.c            | 11 ++++++++++-
+ mm/vmscan.c                | 41 ++++++++++++++++++++++++++++++++++++++---
+ 4 files changed, 68 insertions(+), 4 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index 7f107fb..6f74887 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -907,14 +907,15 @@ static int dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock,
-  * This function may fail to free any resources if all the dentries are in
-  * use.
-  */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0108a56..b7de557 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -200,6 +200,9 @@ void mem_cgroup_split_huge_fixup(struct page *head);
+ bool mem_cgroup_bad_page_check(struct page *page);
+ void mem_cgroup_print_bad_page(struct page *page);
+ #endif
 +
- long prune_dcache_sb(struct super_block *sb, long nr_to_scan,
--		     nodemask_t *nodes_to_walk)
-+		     nodemask_t *nodes_to_walk, struct mem_cgroup *memcg)
- {
- 	LIST_HEAD(dispose);
- 	long freed;
++unsigned long
++memcg_zone_reclaimable_pages(struct mem_cgroup *memcg, struct zone *zone);
+ #else /* CONFIG_MEMCG */
+ struct mem_cgroup;
  
--	freed = list_lru_walk_nodemask(&sb->s_dentry_lru, dentry_lru_isolate,
--				       &dispose, nr_to_scan, nodes_to_walk);
-+	freed = list_lru_walk_nodemask_memcg(&sb->s_dentry_lru,
-+		dentry_lru_isolate, &dispose, nr_to_scan, nodes_to_walk, memcg);
- 	shrink_dentry_list(&dispose);
- 	return freed;
- }
-diff --git a/fs/inode.c b/fs/inode.c
-index 5bb1e21..61673be 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -746,13 +746,13 @@ static int inode_lru_isolate(struct list_head *item, spinlock_t *lru_lock,
-  * then are freed outside inode_lock by dispose_list().
-  */
- long prune_icache_sb(struct super_block *sb, long nr_to_scan,
--		     nodemask_t *nodes_to_walk)
-+			nodemask_t *nodes_to_walk, struct mem_cgroup *memcg)
+@@ -384,6 +387,11 @@ static inline void mem_cgroup_replace_page_cache(struct page *oldpage,
+ 				struct page *newpage)
  {
- 	LIST_HEAD(freeable);
- 	long freed;
- 
--	freed = list_lru_walk_nodemask(&sb->s_inode_lru, inode_lru_isolate,
--				       &freeable, nr_to_scan, nodes_to_walk);
-+	freed = list_lru_walk_nodemask_memcg(&sb->s_inode_lru,
-+		inode_lru_isolate, &freeable, nr_to_scan, nodes_to_walk, memcg);
- 	dispose_list(&freeable);
- 	return freed;
  }
-diff --git a/fs/internal.h b/fs/internal.h
-index 0f37896..5e2211f 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -16,6 +16,7 @@ struct file_system_type;
- struct linux_binprm;
- struct path;
- struct mount;
-+struct mem_cgroup;
++
++static inline unsigned long
++memcg_zone_reclaimable_pages(struct mem_cgroup *memcg, struct zone *zone)
++{
++}
+ #endif /* CONFIG_MEMCG */
+ 
+ #if !defined(CONFIG_MEMCG) || !defined(CONFIG_DEBUG_VM)
+@@ -436,6 +444,8 @@ static inline bool memcg_kmem_enabled(void)
+ 	return static_key_false(&memcg_kmem_enabled_key);
+ }
+ 
++bool memcg_kmem_is_active(struct mem_cgroup *memcg);
++
+ /*
+  * In general, we'll do everything in our power to not incur in any overhead
+  * for non-memcg users for the kmem functions. Not even a function call, if we
+@@ -569,6 +579,12 @@ memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
+ 	return __memcg_kmem_get_cache(cachep, gfp);
+ }
+ #else
++
++static inline bool memcg_kmem_is_active(struct mem_cgroup *memcg)
++{
++	return false;
++}
++
+ #define for_each_memcg_cache_index(_idx)	\
+ 	for (; NULL; )
+ 
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index d4636a0..a767f2e 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -20,6 +20,9 @@ struct shrink_control {
+ 
+ 	/* shrink from these nodes */
+ 	nodemask_t nodes_to_scan;
++
++	/* reclaim from this memcg only (if not NULL) */
++	struct mem_cgroup *target_mem_cgroup;
+ };
  
  /*
-  * block_dev.c
-@@ -111,7 +112,7 @@ extern int open_check_o_direct(struct file *f);
-  */
- extern spinlock_t inode_sb_list_lock;
- extern long prune_icache_sb(struct super_block *sb, long nr_to_scan,
--			    nodemask_t *nodes_to_scan);
-+		    nodemask_t *nodes_to_scan, struct mem_cgroup *memcg);
- extern void inode_add_lru(struct inode *inode);
+@@ -45,6 +48,7 @@ struct shrinker {
  
- /*
-@@ -128,4 +129,4 @@ extern int invalidate_inodes(struct super_block *, bool);
-  */
- extern struct dentry *__d_alloc(struct super_block *, const struct qstr *);
- extern long prune_dcache_sb(struct super_block *sb, long nr_to_scan,
--			    nodemask_t *nodes_to_scan);
-+		    nodemask_t *nodes_to_scan, struct mem_cgroup *memcg);
-diff --git a/fs/super.c b/fs/super.c
-index fe3aa4c..f687cc2 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -34,6 +34,7 @@
- #include <linux/cleancache.h>
- #include <linux/fsnotify.h>
- #include <linux/lockdep.h>
-+#include <linux/memcontrol.h>
- #include "internal.h"
+ 	int seeks;	/* seeks to recreate an obj */
+ 	long batch;	/* reclaim batch size, 0 = default */
++	bool memcg_shrinker;
  
+ 	/* These are for internal use */
+ 	struct list_head list;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3817460..b1d4dfa 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -442,7 +442,7 @@ static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+ 	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ }
  
-@@ -56,6 +57,7 @@ static char *sb_writers_name[SB_FREEZE_LEVELS] = {
- static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+-static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
++bool memcg_kmem_is_active(struct mem_cgroup *memcg)
  {
- 	struct super_block *sb;
-+	struct mem_cgroup *memcg = sc->target_mem_cgroup;
- 	long	fs_objects = 0;
- 	long	total_objects;
- 	long	freed = 0;
-@@ -74,11 +76,13 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 	if (!grab_super_passive(sb))
- 		return -1;
+ 	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ }
+@@ -991,6 +991,15 @@ mem_cgroup_zone_nr_lru_pages(struct mem_cgroup *memcg, int nid, int zid,
+ 	return ret;
+ }
  
--	if (sb->s_op && sb->s_op->nr_cached_objects)
-+	if (sb->s_op && sb->s_op->nr_cached_objects && !memcg)
- 		fs_objects = sb->s_op->nr_cached_objects(sb, &sc->nodes_to_scan);
- 
--	inodes = list_lru_count_nodemask(&sb->s_inode_lru, &sc->nodes_to_scan);
--	dentries = list_lru_count_nodemask(&sb->s_dentry_lru, &sc->nodes_to_scan);
-+	inodes = list_lru_count_nodemask_memcg(&sb->s_inode_lru,
-+					 &sc->nodes_to_scan, memcg);
-+	dentries = list_lru_count_nodemask_memcg(&sb->s_dentry_lru,
-+					   &sc->nodes_to_scan, memcg);
- 	total_objects = dentries + inodes + fs_objects + 1;
- 
- 	/* proportion the scan between the caches */
-@@ -89,8 +93,8 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 	 * prune the dcache first as the icache is pinned by it, then
- 	 * prune the icache, followed by the filesystem specific caches
- 	 */
--	freed = prune_dcache_sb(sb, dentries, &sc->nodes_to_scan);
--	freed += prune_icache_sb(sb, inodes, &sc->nodes_to_scan);
-+	freed = prune_dcache_sb(sb, dentries, &sc->nodes_to_scan, memcg);
-+	freed += prune_icache_sb(sb, inodes, &sc->nodes_to_scan, memcg);
- 
- 	if (fs_objects) {
- 		fs_objects = (sc->nr_to_scan * fs_objects) / total_objects;
-@@ -106,20 +110,26 @@ static long super_cache_count(struct shrinker *shrink, struct shrink_control *sc
++unsigned long
++memcg_zone_reclaimable_pages(struct mem_cgroup *memcg, struct zone *zone)
++{
++	int nid = zone_to_nid(zone);
++	int zid = zone_idx(zone);
++
++	return mem_cgroup_zone_nr_lru_pages(memcg, nid, zid, LRU_ALL);
++}
++
+ static unsigned long
+ mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
+ 			int nid, unsigned int lru_mask)
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 6d96280..8af0e2b 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -138,11 +138,42 @@ static bool global_reclaim(struct scan_control *sc)
  {
- 	struct super_block *sb;
- 	long	total_objects = 0;
-+	struct mem_cgroup *memcg = sc->target_mem_cgroup;
- 
- 	sb = container_of(shrink, struct super_block, s_shrink);
- 
- 	if (!grab_super_passive(sb))
- 		return 0;
- 
--	if (sb->s_op && sb->s_op->nr_cached_objects)
-+	/*
-+	 * Ideally we would pass memcg to nr_cached_objects, and
-+	 * let the underlying filesystem decide. Most likely the
-+	 * path will be if (!memcg) return;, but even then.
-+	 */
-+	if (sb->s_op && sb->s_op->nr_cached_objects && !memcg)
- 		total_objects = sb->s_op->nr_cached_objects(sb,
- 						 &sc->nodes_to_scan);
- 
--	total_objects += list_lru_count_nodemask(&sb->s_dentry_lru,
--						 &sc->nodes_to_scan);
--	total_objects += list_lru_count_nodemask(&sb->s_inode_lru,
--						 &sc->nodes_to_scan);
-+	total_objects += list_lru_count_nodemask_memcg(&sb->s_dentry_lru,
-+						 &sc->nodes_to_scan, memcg);
-+	total_objects += list_lru_count_nodemask_memcg(&sb->s_inode_lru,
-+						 &sc->nodes_to_scan, memcg);
- 
- 	total_objects = vfs_pressure_ratio(total_objects);
- 	drop_super(sb);
-@@ -198,8 +208,12 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		INIT_HLIST_NODE(&s->s_instances);
- 		INIT_HLIST_BL_HEAD(&s->s_anon);
- 		INIT_LIST_HEAD(&s->s_inodes);
+ 	return !sc->target_mem_cgroup;
+ }
 +
-+		lru_memcg_enable(&s->s_dentry_lru);
- 		list_lru_init(&s->s_dentry_lru);
-+		lru_memcg_enable(&s->s_inode_lru);
- 		list_lru_init(&s->s_inode_lru);
++/*
++ * kmem reclaim should usually not be triggered when we are doing targetted
++ * reclaim. It is only valid when global reclaim is triggered, or when the
++ * underlying memcg has kmem objects.
++ */
++static bool has_kmem_reclaim(struct scan_control *sc)
++{
++	return !sc->target_mem_cgroup ||
++	(sc->target_mem_cgroup && memcg_kmem_is_active(sc->target_mem_cgroup));
++}
 +
- 		INIT_LIST_HEAD(&s->s_mounts);
- 		init_rwsem(&s->s_umount);
- 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
-@@ -235,6 +249,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		s->s_shrink.scan_objects = super_cache_scan;
- 		s->s_shrink.count_objects = super_cache_count;
- 		s->s_shrink.batch = 1024;
-+		s->s_shrink.memcg_shrinker = true;
- 	}
- out:
- 	return s;
-@@ -317,6 +332,8 @@ void deactivate_locked_super(struct super_block *s)
++static unsigned long
++zone_nr_reclaimable_pages(struct scan_control *sc, struct zone *zone)
++{
++	if (global_reclaim(sc))
++		return zone_reclaimable_pages(zone);
++	return memcg_zone_reclaimable_pages(sc->target_mem_cgroup, zone);
++}
++
+ #else
+ static bool global_reclaim(struct scan_control *sc)
+ {
+ 	return true;
+ }
++
++static bool has_kmem_reclaim(struct scan_control *sc)
++{
++	return true;
++}
++
++static unsigned long
++zone_nr_reclaimable_pages(struct scan_control *sc, struct zone *zone)
++{
++	return zone_reclaimable_pages(zone);
++}
+ #endif
  
- 		/* caches are now gone, we can safely kill the shrinker now */
- 		unregister_shrinker(&s->s_shrink);
-+		list_lru_destroy(&s->s_dentry_lru);
-+		list_lru_destroy(&s->s_inode_lru);
- 		put_filesystem(fs);
- 		put_super(s);
- 	} else {
+ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
+@@ -221,6 +252,9 @@ unsigned long shrink_slab(struct shrink_control *sc,
+ 		long batch_size = shrinker->batch ? shrinker->batch
+ 						  : SHRINK_BATCH;
+ 
++		if (!shrinker->memcg_shrinker && sc->target_mem_cgroup)
++			continue;
++
+ 		max_pass = shrinker->count_objects(shrinker, sc);
+ 		WARN_ON(max_pass < 0);
+ 		if (max_pass <= 0)
+@@ -2170,9 +2204,9 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 
+ 		/*
+ 		 * Don't shrink slabs when reclaiming memory from
+-		 * over limit cgroups
++		 * over limit cgroups, unless we know they have kmem objects
+ 		 */
+-		if (global_reclaim(sc)) {
++		if (has_kmem_reclaim(sc)) {
+ 			unsigned long lru_pages = 0;
+ 
+ 			nodes_clear(shrink->nodes_to_scan);
+@@ -2181,7 +2215,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 				if (!cpuset_zone_allowed_hardwall(zone, GFP_KERNEL))
+ 					continue;
+ 
+-				lru_pages += zone_reclaimable_pages(zone);
++				lru_pages += zone_nr_reclaimable_pages(sc, zone);
+ 				node_set(zone_to_nid(zone),
+ 					 shrink->nodes_to_scan);
+ 			}
+@@ -2443,6 +2477,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 	};
+ 	struct shrink_control shrink = {
+ 		.gfp_mask = sc.gfp_mask,
++		.target_mem_cgroup = memcg,
+ 	};
+ 
+ 	/*
 -- 
 1.8.1
 
