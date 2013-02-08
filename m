@@ -1,55 +1,34 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_if_PF=5FNO=5FMEMCG=5FOOM_is_set?=
-Date: Fri, 08 Feb 2013 14:56:16 +0100
-Message-ID: <20130208145616.FB78CE24@pobox.sk>
-References: <20130205134937.GA22804@dhcp22.suse.cz>, <20130205154947.CD6411E2@pobox.sk>, <20130205160934.GB22804@dhcp22.suse.cz>, <20130206021721.1AE9E3C7@pobox.sk>, <20130206140119.GD10254@dhcp22.suse.cz>, <20130206142219.GF10254@dhcp22.suse.cz>, <20130206160051.GG10254@dhcp22.suse.cz>, <20130208060304.799F362F@pobox.sk>, <20130208094420.GA7557@dhcp22.suse.cz>, <20130208120249.FD733220@pobox.sk> <20130208123854.GB7557@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM if PF_NO_MEMCG_OOM
+ is set
+Date: Fri, 8 Feb 2013 15:47:20 +0100
+Message-ID: <20130208144720.GC7557@dhcp22.suse.cz>
+References: <20130205160934.GB22804@dhcp22.suse.cz>
+ <20130206021721.1AE9E3C7@pobox.sk>
+ <20130206140119.GD10254@dhcp22.suse.cz>
+ <20130206142219.GF10254@dhcp22.suse.cz>
+ <20130206160051.GG10254@dhcp22.suse.cz>
+ <20130208060304.799F362F@pobox.sk>
+ <20130208094420.GA7557@dhcp22.suse.cz>
+ <20130208120249.FD733220@pobox.sk>
+ <20130208123854.GB7557@dhcp22.suse.cz>
+ <20130208145616.FB78CE24@pobox.sk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130208123854.GB7557@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130208145616.FB78CE24-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
->kernel log would be sufficient.
+On Fri 08-02-13 14:56:16, azurIt wrote:
+> Data are inside memcg-bug-5.tar.gz in directories bug/<timestamp>/<pids>/
 
-
-Full kernel log from kernel with you newest patch:
-http://watchdog.sk/lkml/kern2.log
-
-
-
->This limit is for top level groups, right? Those seem to children which
->have 62MB charged - is that a limit for those children?
-
-
-It was the limit for parent cgroup and processes were in one (the same) c=
-hild cgroup. Child cgroup has no memory limit set (so limit for parent wa=
-s also limit for child - 330 MB).
-
-
-
->Which are those two processes?
-
-
-Data are inside memcg-bug-5.tar.gz in directories bug/<timestamp>/<pids>/
-
-
->I have no idea what is the strace role here.
-
-
-I was stracing exactly two processes from that cgroup and exactly two pro=
-cesses were stucked later and was immpossible to kill them. Both of them =
-were waiting on 'ptrace_stop'. Maybe it's completely unrelated, just gues=
-sing.
-
-
-azur
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+ohh, I didn't get those were timestamp directories. It makes more sense
+now.
+-- 
+Michal Hocko
+SUSE Labs
