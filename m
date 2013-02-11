@@ -1,57 +1,85 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH] memcg: fix kmemcg registration for late caches
-Date: Mon, 11 Feb 2013 20:39:57 +0400
-Message-ID: <1360600797-27793-1-git-send-email-glommer@parallels.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH v6 9/9] devcg: propagate local changes down the
+ hierarchy
+Date: Mon, 11 Feb 2013 17:42:59 +0000
+Message-ID: <20130211174259.GA18179@mail.hallyn.com>
+References: <20130130171101.060853036@napanee.usersys.redhat.com>
+ <20130130171102.390708521@napanee.usersys.redhat.com>
+ <20130131043839.GA14726@mail.hallyn.com>
+ <20130205183646.GT17632@redhat.com>
+ <20130209040402.GA31942@mail.hallyn.com>
+ <20130211143241.GF30962@redhat.com>
+Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130211143241.GF30962@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>
+To: Aristeu Rozanski <aris@redhat.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>
 
-The designed workflow for the caches in kmemcg is: register it with
-memcg_register_cache() if kmemcg is already available or later on when a
-new kmemcg appears at memcg_update_cache_sizes() which will handle all
-caches in the system. The caches created at boot time will be handled by
-the later, and the memcg-caches as well as any system caches that are
-registered later on by the former.
+Quoting Aristeu Rozanski (aris@redhat.com):
+> On Sat, Feb 09, 2013 at 04:04:02AM +0000, Serge E. Hallyn wrote:
+> > Quoting Aristeu Rozanski (aris@redhat.com):
+> > > devcg: propagate local changes down the hierarchy
+> > > 
+> > > This patch makes all changes propagate down in hierarchy respecting when
+> > > possible local configurations.
+> > > 
+> > > Behavior changes will clean up exceptions in all the children except when the
+> > > parent changes the behavior from allow to deny and the child's behavior was
+> > > already deny, in which case the local exceptions will be reused. The inverse
+> > > is not possible: you can't have a parent with behavior deny and a child with
+> > > behavior accept.
+> > > 
+> > > New exceptions allowing additional access to devices won't be propagated, but
+> > > it'll be possible to add an exception to access all of part of the newly
+> > > allowed device(s).
+> > > 
+> > > New exceptions disallowing access to devices will be propagated down and the
+> > > local group's exceptions will be revalidated for the new situation.
+> > > Example:
+> > >       A
+> > >      / \
+> > >         B
+> > > 
+> > >     group        behavior          exceptions
+> > >     A            allow             "b 8:* rwm", "c 116:1 rw"
+> > >     B            deny              "c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
+> > > 
+> > > If a new exception is added to group A:
+> > > 	# echo "c 116:* r" > A/devices.deny
+> > > it'll propagate down and after revalidating B's local exceptions, the exception
+> > > "c 116:2 rwm" will be removed.
+> > > 
+> > > In case parent behavior or exceptions change and local settings are not
+> > > allowed anymore, they'll be deleted.
+> > 
+> > Do you have a use case which would be broken if we simply refuse to
+> > allow behavior changes for any cgroup with children?
+> > 
+> > It seems like that would drastically simplify much of this.  We would
+> > no longer need local.exceptions at all, right?  Your comment says
+> > 
+> >          * local set rules, saved so when a parent propagates new rules, the
+> >          * local preferences can be preserved
+> > 
+> > but if there were no parent behavior changes, then any exception change
+> > in a parent could be enforced by simply removing violating exceptions
+> > in the child, and subsequently refusing the addition of new rules in the
+> > child which are not allowed in the parent.  Both of which you already do.
+> > 
+> > Or am I thinking wrongly?
+> 
+> That would be an option even simpler than not keeping local settings. In
+> production I doubt the sysadmin will keep playing with permissions,
+> although until one gets right, it'll be annoying as hell to have to
+> remove the whole hierarchy because you forgot to add a certain device to
+> the list.
 
-There is a bug, however, in memcg_register_cache: we correctly set up
-the array size, but do not mark the cache as a root cache. This means
-that allocations for any cache appearing late in the game will see
-memcg->memcg_params->is_root_cache == false, and in particular, trigger
-VM_BUG_ON(!cachep->memcg_params->is_root_cache) in
-__memcg_kmem_cache_get.
+Note I said only forbid behavior changes - not exception changes - to
+cgroups with children.
 
-The obvious fix is to include the missing assignment.
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
----
- mm/memcontrol.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 03ebf68..d4e83d0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3147,7 +3147,9 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
- 	if (memcg) {
- 		s->memcg_params->memcg = memcg;
- 		s->memcg_params->root_cache = root_cache;
--	}
-+	} else
-+		s->memcg_params->is_root_cache = true;
-+
- 	return 0;
- }
- 
--- 
-1.8.1.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-serge
