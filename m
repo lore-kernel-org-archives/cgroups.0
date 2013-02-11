@@ -1,52 +1,170 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: replace cgroup_lock with memcg specific
- memcg_lock fix
-Date: Mon, 11 Feb 2013 10:04:57 +0100
-Message-ID: <20130211090457.GB19922@dhcp22.suse.cz>
-References: <1360569889-843-1-git-send-email-glommer@parallels.com>
- <1360569889-843-3-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH] memcg: Add memory.pressure_level events
+Date: Mon, 11 Feb 2013 14:17:06 +0400
+Message-ID: <5118C522.3070905@parallels.com>
+References: <20130211000220.GA28247@lizard.gateway.2wire.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1360569889-843-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130211000220.GA28247@lizard.gateway.2wire.net>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+To: Anton Vorontsov <anton.vorontsov@linaro.org>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Luiz Capitulino <lcapitulino@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Minchan Kim <minchan@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com
 
-Ouch, I have totally missed this one.
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Hi Anton,
 
-On Mon 11-02-13 12:04:49, Glauber Costa wrote:
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 28252c9..03ebf68 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5884,7 +5884,7 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
->  	mutex_lock(&memcg_create_mutex);
->  	/* oom-kill-disable is a flag for subhierarchy. */
->  	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
-> -		cgroup_unlock();
-> +		mutex_unlock(&memcg_create_mutex);
->  		return -EINVAL;
->  	}
->  	memcg->oom_kill_disable = val;
-> -- 
-> 1.8.1.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+> new file mode 100644
+> index 0000000..7922503
 
--- 
-Michal Hocko
-SUSE Labs
+
+> +struct vmpressure_event {
+> +	struct eventfd_ctx *efd;
+> +	enum vmpressure_levels level;
+> +	struct list_head node;
+> +};
+> +
+> +static bool vmpressure_event(struct vmpressure *vmpr,
+> +			     unsigned long s, unsigned long r)
+> +{
+> +	struct vmpressure_event *ev;
+> +	int level = vmpressure_calc_level(vmpressure_win, s, r);
+> +	bool signalled = 0;
+> +
+> +	mutex_lock(&vmpr->events_lock);
+> +
+> +	list_for_each_entry(ev, &vmpr->events, node) {
+> +		if (level >= ev->level) {
+> +			eventfd_signal(ev->efd, 1);
+> +			signalled++;
+> +		}
+> +	}
+> +
+> +	mutex_unlock(&vmpr->events_lock);
+> +
+> +	return signalled;
+> +}
+> +
+> +static struct vmpressure *vmpressure_parent(struct vmpressure *vmpr)
+> +{
+> +	struct cgroup *cg = vmpr_to_css(vmpr)->cgroup->parent;
+> +
+> +	if (!cg)
+> +		return NULL;
+> +	return cg_to_vmpr(cg);
+> +}
+
+Unfortunately, "parent" in memcg have different meanings for information
+propagation purposes depending on the value of the flag "use_hierarchy".
+That is set for deprecation, but still...
+
+I suggest you use the helper mem_cgroup_parent, that will already give
+you the right parent (either immediate parent or root) with all that
+taken into account.
+
+> +
+> +static int vmpressure_register_level(struct cgroup *cg, struct cftype *cft,
+> +				     struct eventfd_ctx *eventfd,
+> +				     const char *args)
+> +{
+> +	struct vmpressure *vmpr = cg_to_vmpr(cg);
+> +	struct vmpressure_event *ev;
+> +	int lvl;
+> +
+> +	for (lvl = 0; lvl < VMPRESSURE_NUM_LEVELS; lvl++) {
+> +		if (!strcmp(vmpressure_str_levels[lvl], args))
+> +			break;
+> +	}
+> +
+> +	if (lvl >= VMPRESSURE_NUM_LEVELS)
+> +		return -EINVAL;
+> +
+> +	ev = kzalloc(sizeof(*ev), GFP_KERNEL);
+> +	if (!ev)
+> +		return -ENOMEM;
+> +
+> +	ev->efd = eventfd;
+> +	ev->level = lvl;
+> +
+> +	mutex_lock(&vmpr->events_lock);
+> +	list_add(&ev->node, &vmpr->events);
+> +	mutex_unlock(&vmpr->events_lock);
+> +
+> +	return 0;
+> +}
+> +
+> +static void vmpressure_unregister_level(struct cgroup *cg, struct cftype *cft,
+> +					struct eventfd_ctx *eventfd)
+> +{
+> +	struct vmpressure *vmpr = cg_to_vmpr(cg);
+> +	struct vmpressure_event *ev;
+> +
+> +	mutex_lock(&vmpr->events_lock);
+> +	list_for_each_entry(ev, &vmpr->events, node) {
+> +		if (ev->efd != eventfd)
+> +			continue;
+> +		list_del(&ev->node);
+> +		kfree(ev);
+> +		break;
+> +	}
+> +	mutex_unlock(&vmpr->events_lock);
+> +}
+> +
+> +static struct cftype vmpressure_cgroup_files[] = {
+> +	{
+> +		.name = "pressure_level",
+> +		.read = vmpressure_read_level,
+> +		.register_event = vmpressure_register_level,
+> +		.unregister_event = vmpressure_unregister_level,
+> +	},
+> +	{},
+> +};
+> +
+
+> +
+> +void __init enable_pressure_cgroup(void)
+> +{
+> +	WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys,
+> +				   vmpressure_cgroup_files));
+> +}
+
+There is no functionality discovery going on here, and this is
+conditional on nothing. Isn't it better then to just add the register +
+read functions to memcontrol.c and add the files in the memcontrol cftype ?
+
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 88c5fed..34f09b9 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -1982,6 +1982,10 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
+>  			}
+>  			memcg = mem_cgroup_iter(root, memcg, &reclaim);
+>  		} while (memcg);
+> +
+> +		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
+> +			   sc->nr_scanned - nr_scanned, nr_reclaimed);
+> +
+>  	} while (should_continue_reclaim(zone, sc->nr_reclaimed - nr_reclaimed,
+>  					 sc->nr_scanned - nr_scanned, sc));
+>  }
+> @@ -2167,6 +2171,8 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+>  		count_vm_event(ALLOCSTALL);
+>  
+>  	do {
+> +		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
+> +				sc->priority);
+>  		sc->nr_scanned = 0;
+>  		aborted_reclaim = shrink_zones(zonelist, sc);
+>  
+vmscan part seems okay to me.
+
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
