@@ -1,48 +1,74 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v6 9/9] devcg: propagate local changes down the hierarchy
-Date: Mon, 11 Feb 2013 14:47:29 -0600
-Message-ID: <20130211204729.GA12224@sergelap>
-References: <20130130171101.060853036@napanee.usersys.redhat.com>
- <20130130171102.390708521@napanee.usersys.redhat.com>
- <20130131043839.GA14726@mail.hallyn.com>
- <20130205183646.GT17632@redhat.com>
- <20130209040402.GA31942@mail.hallyn.com>
- <20130211143241.GF30962@redhat.com>
- <20130211174259.GA18179@mail.hallyn.com>
- <20130211183847.GG30962@redhat.com>
- <20130211185239.GA18779@mail.hallyn.com>
- <20130211190251.GH30962@redhat.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] memcg: fix kmemcg registration for late caches
+Date: Tue, 12 Feb 2013 15:56:35 +0100
+Message-ID: <20130212145635.GF4863@dhcp22.suse.cz>
+References: <1360600797-27793-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130211190251.GH30962-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1360600797-27793-1-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> On Mon, Feb 11, 2013 at 06:52:39PM +0000, Serge E. Hallyn wrote:
-> > > getting rid of local settings would buy more simplicity
-> > 
-> > (Not sure which you mean here by 'getting rid of local settings')
+On Mon 11-02-13 20:39:57, Glauber Costa wrote:
+> The designed workflow for the caches in kmemcg is: register it with
+> memcg_register_cache() if kmemcg is already available or later on when a
+> new kmemcg appears at memcg_update_cache_sizes() which will handle all
+> caches in the system. The caches created at boot time will be handled by
+> the later, and the memcg-caches as well as any system caches that are
+> registered later on by the former.
 > 
-> no local.{behavior,exceptions}, which still would allow behavior
-> propagation, but simply wouldn't keep local behavior or exceptions.
-> a change in behavior on parent would simply reset the child to parent's
-
-Why would that be necessary?  If I add permission to the parent, I just
-don't propagate it.  If I remove permission from the parent, I make sure
-all children don't have that permission, but keep everything else.
-The child's permission is never allowed to exceed its parent's.
-
-We don't need to reset the child's to the parent's.
-
-> state. exception propagation would mean inserting/removing the new
-> exception and making sure the others are still valid.
+> There is a bug, however, in memcg_register_cache: we correctly set up
+> the array size, but do not mark the cache as a root cache. This means
+> that allocations for any cache appearing late in the game will see
+> memcg->memcg_params->is_root_cache == false, and in particular, trigger
+> VM_BUG_ON(!cachep->memcg_params->is_root_cache) in
+> __memcg_kmem_cache_get.
 > 
+> The obvious fix is to include the missing assignment.
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+
+Reviewed-by: Michal Hocko <mhocko@suse.cz>
+
+> ---
+>  mm/memcontrol.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 03ebf68..d4e83d0 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3147,7 +3147,9 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
+>  	if (memcg) {
+>  		s->memcg_params->memcg = memcg;
+>  		s->memcg_params->root_cache = root_cache;
+> -	}
+> +	} else
+> +		s->memcg_params->is_root_cache = true;
+> +
+>  	return 0;
+>  }
+>  
 > -- 
-> Aristeu
+> 1.8.1.2
 > 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
