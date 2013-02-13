@@ -1,42 +1,70 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: replace cgroup_lock with memcg specific memcg_lock
- fix
-Date: Wed, 13 Feb 2013 19:43:30 +0900
-Message-ID: <511B6E52.1090800@jp.fujitsu.com>
-References: <1360569889-843-1-git-send-email-glommer@parallels.com> <1360569889-843-3-git-send-email-glommer@parallels.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH] memcg: Add memory.pressure_level events
+Date: Wed, 13 Feb 2013 07:41:04 -0800
+Message-ID: <xr93sj50z0fj.fsf@gthelen.mtv.corp.google.com>
+References: <20130211000220.GA28247@lizard.gateway.2wire.net>
+	<xr9338x01zpw.fsf@gthelen.mtv.corp.google.com>
+	<20130213071503.GA20543@lizard.gateway.2wire.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1360569889-843-3-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=x-received:from:to:cc:subject:references:date:in-reply-to
+         :message-id:user-agent:mime-version:content-type;
+        bh=Rt7BsH55CXxAU2o84neeNsjZ3AqqhADSikWFWtplMN0=;
+        b=FgTAV8jiLNyT1v6TeNkuFQ4VmUW6BWYXE3wrjX3HBsqWL+7c9+J8lKVLeOmXpt73Hv
+         6lcnY1yt8PjPH1bS+T0mdaUTJC3yxvQd4TecjxBoqcbll3SKPW11pGmWmAvszvjlG60v
+         iUbkR9mkbAMVJjWf2dhOztceaDBxQIWxLYTcX2vfgIlT3adr0GkN0Lu2GVvmiaOWjtQZ
+         ZSuI5HpIxwutJBj3wilLGAh3nmb3TmCpmvFjkk7cTC90fLxHbhw/04QucbfRl0bYQbtS
+         dpXek3S3EW2N4/i7xa2qjZIEgQoE+yZi9HQshnl/nfnS9YKDkB/yN92YvAk9/0gfOQ15
+         fO2Q==
+In-Reply-To: <20130213071503.GA20543@lizard.gateway.2wire.net> (Anton
+	Vorontsov's message of "Tue, 12 Feb 2013 23:15:03 -0800")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Anton Vorontsov <anton@enomsg.org>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Luiz Capitulino <lcapitulino@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Minchan Kim <minchan@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com
 
-(2013/02/11 17:04), Glauber Costa wrote:
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+On Tue, Feb 12 2013, Anton Vorontsov wrote:
 
-I'm sorry I missed this...
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> Hi Greg,
+>
+> Thanks for taking a look!
+>
+> On Tue, Feb 12, 2013 at 10:42:51PM -0800, Greg Thelen wrote:
+> [...]
+>> > +static bool vmpressure_event(struct vmpressure *vmpr,
+>> > +			     unsigned long s, unsigned long r)
+>> > +{
+>> > +	struct vmpressure_event *ev;
+>> > +	int level = vmpressure_calc_level(vmpressure_win, s, r);
+>> > +	bool signalled = 0;
+>> s/bool/int/
+>
+> Um... I surely can do this, but why do you think it is a good idea?
 
-> ---
->   mm/memcontrol.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 28252c9..03ebf68 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5884,7 +5884,7 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
->   	mutex_lock(&memcg_create_mutex);
->   	/* oom-kill-disable is a flag for subhierarchy. */
->   	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
-> -		cgroup_unlock();
-> +		mutex_unlock(&memcg_create_mutex);
->   		return -EINVAL;
->   	}
->   	memcg->oom_kill_disable = val;
-> 
+Because you incremented signalled below.  Incrementing a bool seems
+strange.  A better fix would be to leave this a bool and
+s/signaled++/signaled = true/ below.
 
+>> > +
+>> > +	mutex_lock(&vmpr->events_lock);
+>> > +
+>> > +	list_for_each_entry(ev, &vmpr->events, node) {
+>> > +		if (level >= ev->level) {
+>> > +			eventfd_signal(ev->efd, 1);
+>> > +			signalled++;
+>> > +		}
+>> > +	}
+>> > +
+>> > +	mutex_unlock(&vmpr->events_lock);
+>> > +
+>> > +	return signalled;
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
