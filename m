@@ -1,41 +1,57 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: Add memory.pressure_level events
-Date: Wed, 13 Feb 2013 11:55:38 +0400
-Message-ID: <511B46FA.1090802@parallels.com>
-References: <20130211000220.GA28247@lizard.gateway.2wire.net> <5118C522.3070905@parallels.com> <20130213071922.GB20543@lizard.gateway.2wire.net>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] memcg: fix kmemcg registration for late caches
+Date: Wed, 13 Feb 2013 19:00:02 +0900
+Message-ID: <511B6422.8030408@jp.fujitsu.com>
+References: <1360600797-27793-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130213071922.GB20543-1CZZkhFgUWNRmOO2HpYVOJIbA5emDH3N@public.gmane.org>
+In-Reply-To: <1360600797-27793-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Anton Vorontsov <anton-9xeibp6oKSgdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Leonid Moiseichuk <leonid.moiseichuk-xNZwKgViW5gAvxtiuMwx3w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, patches-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
->>> +void __init enable_pressure_cgroup(void)
->>> +{
->>> +	WARN_ON(cgroup_add_cftypes(&mem_cgroup_subsys,
->>> +				   vmpressure_cgroup_files));
->>> +}
->>
->> There is no functionality discovery going on here, and this is
->> conditional on nothing. Isn't it better then to just add the register +
->> read functions to memcontrol.c and add the files in the memcontrol cftype ?
+(2013/02/12 1:39), Glauber Costa wrote:
+> The designed workflow for the caches in kmemcg is: register it with
+> memcg_register_cache() if kmemcg is already available or later on when a
+> new kmemcg appears at memcg_update_cache_sizes() which will handle all
+> caches in the system. The caches created at boot time will be handled by
+> the later, and the memcg-caches as well as any system caches that are
+> registered later on by the former.
 > 
-> I was trying to make the stuff similar to the existing CONFIG_MEMCG_SWAP
-> code, which does this kind of adding files to the cgroup. But I can surely
-> place files into memcontrol cftype as you suggest.
+> There is a bug, however, in memcg_register_cache: we correctly set up
+> the array size, but do not mark the cache as a root cache. This means
+> that allocations for any cache appearing late in the game will see
+> memcg->memcg_params->is_root_cache == false, and in particular, trigger
+> VM_BUG_ON(!cachep->memcg_params->is_root_cache) in
+> __memcg_kmem_cache_get.
 > 
-> Thanks a lot for the comments!
+> The obvious fix is to include the missing assignment.
 > 
-Note that swap can be command line disabled, and in that case we won't
-register the files.
+> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Then it makes sense to do it in a separate helper. If I understand your
-code correctly, once it is compiled in, it will always be enabled. So I
-personally think it is clearer if you register it together with the rest
-of the crew.
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
+> ---
+>   mm/memcontrol.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 03ebf68..d4e83d0 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3147,7 +3147,9 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
+>   	if (memcg) {
+>   		s->memcg_params->memcg = memcg;
+>   		s->memcg_params->root_cache = root_cache;
+> -	}
+> +	} else
+> +		s->memcg_params->is_root_cache = true;
+> +
+>   	return 0;
+>   }
+>   
+> 
 
