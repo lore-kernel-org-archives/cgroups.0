@@ -1,284 +1,283 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 2/2] cgroup: fix cgroup_path() vs rename() race, take 2
-Date: Mon, 18 Feb 2013 09:16:48 +0800
-Message-ID: <51218100.5020007@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [RFC][PATCH] kvm: fix a race when closing irq eventfd
+Date: Mon, 18 Feb 2013 11:13:27 +0800
+Message-ID: <51219C57.7080809@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Marcelo Tosatti <mtosatti@redhat.com>, Gleb Natapov <gleb@redhat.com>
+Cc: kvm@vger.kernel.org, Davide Libenzi <davidel@xmailserver.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Gregory Haskins <ghaskins@novell.com>, "Kirill A. Shutemov" <kirill@shutemov.name>
 
-rename() will change dentry->d_name. The result of this race can
-be worse than seeing partially rewritten name, but we might access
-a stale pointer because rename() will re-allocate memory to hold
-a longer name.
+While trying to fix a race when closing cgroup eventfd, I took a look
+at how kvm deals with this problem, and I found it doesn't.
 
-As accessing dentry->name must be protected by dentry->d_lock or
-parent inode's i_mutex, while on the other hand cgroup-path() can
-be called with some irq-safe spinlocks held, we can't generate
-cgroup path using dentry->d_name.
+I may be wrong, as I don't know kvm code, so correct me if I'm.
 
-Alternatively we make a copy of dentry->d_name and save it in
-cgrp->name when a cgroup is created, and update cgrp->name at
-rename().
+	/*
+	 * Race-free decouple logic (ordering is critical)
+	 */
+	static void
+	irqfd_shutdown(struct work_struct *work)
 
-v2: make cgrp->name RCU safe.
+I don't think it's race-free!
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+	static int
+	irqfd_wakeup(wait_queue_t *wait, unsigned mode, int sync, void *key)
+	{
+	...
+			 * We cannot race against the irqfd going away since the
+			 * other side is required to acquire wqh->lock, which we hold
+			 */
+			if (irqfd_is_active(irqfd))
+				irqfd_deactivate(irqfd);
+	}
+
+In kvm_irqfd_deassign() and kvm_irqfd_release() where irqfds are freed,
+wqh->lock is not acquired!
+
+So here is the race:
+
+CPU0                                    CPU1
+-----------------------------------     ---------------------------------
+kvm_irqfd_release()
+  spin_lock(kvm->irqfds.lock);
+  ...
+  irqfd_deactivate(irqfd);
+    list_del_init(&irqfd->list);
+  spin_unlock(kvm->irqfd.lock);
+  ...
+					close(eventfd)
+					  irqfd_wakeup();
+    irqfd_shutdown();
+      remove_waitqueue(irqfd->wait);
+      kfree(irqfd);
+					    spin_lock(kvm->irqfd.lock);
+					      if (!list_empty(&irqfd->list))
+						irqfd_deactivate(irqfd);
+						  list_del_init(&irqfd->list);
+					    spin_unlock(kvm->irqfd.lock);
+
+Look, we're accessing irqfd though it has already been freed!
+
+Here's a fix I have. Please enlighten me with a better fix.
+
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- block/blk-cgroup.h     |   2 -
- include/linux/cgroup.h |   1 +
- kernel/cgroup.c        | 113 ++++++++++++++++++++++++++++++++++++-------------
- 3 files changed, 85 insertions(+), 31 deletions(-)
+ fs/eventfd.c            | 34 ++++++++++++++--------------------
+ include/linux/eventfd.h | 17 +++++++++++++++++
+ virt/kvm/eventfd.c      | 45 +++++++++++++++++++++++++++++++++++----------
+ 3 files changed, 66 insertions(+), 30 deletions(-)
 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 2459730..e2e3404 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -216,9 +216,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
- {
- 	int ret;
+diff --git a/fs/eventfd.c b/fs/eventfd.c
+index 35470d9..cda8a4c 100644
+--- a/fs/eventfd.c
++++ b/fs/eventfd.c
+@@ -22,21 +22,6 @@
+ #include <linux/proc_fs.h>
+ #include <linux/seq_file.h>
  
--	rcu_read_lock();
- 	ret = cgroup_path(blkg->blkcg->css.cgroup, buf, buflen);
--	rcu_read_unlock();
- 	if (ret)
- 		strncpy(buf, "<unavailable>", buflen);
- 	return ret;
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 900af59..a3d87d9 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -171,6 +171,7 @@ struct cgroup {
- 
- 	struct cgroup *parent;		/* my parent */
- 	struct dentry *dentry;		/* cgroup fs entry, RCU protected */
-+	char __rcu *name;		/* a copy of dentry->d_name */
- 
- 	/* Private pointers for each registered subsystem */
- 	struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5d4c92e..26c071c 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -890,6 +890,7 @@ static void cgroup_free_fn(struct work_struct *work)
- 	simple_xattrs_free(&cgrp->xattrs);
- 
- 	ida_simple_remove(&cgrp->root->cgroup_ida, cgrp->id);
-+	kfree(cgrp->name);
- 	kfree(cgrp);
- }
- 
-@@ -1565,6 +1566,18 @@ static int cgroup_get_rootdir(struct super_block *sb)
- 	return 0;
- }
- 
-+static char *cgroup_alloc_name(struct dentry *dentry)
-+{
-+	char *name;
-+
-+	name = kmalloc(dentry->d_name.len + 1, GFP_KERNEL);
-+	if (!name)
-+		return NULL;
-+	memcpy(name, dentry->d_name.name, dentry->d_name.len);
-+	name[dentry->d_name.len] = '\0';
-+	return name;
-+}
-+
- static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 			 int flags, const char *unused_dev_name,
- 			 void *data)
-@@ -1613,13 +1626,19 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		int i;
- 		struct hlist_node *node;
- 		struct css_set *cg;
-+		struct dentry *dentry;
- 
- 		BUG_ON(sb->s_root != NULL);
- 
- 		ret = cgroup_get_rootdir(sb);
- 		if (ret)
- 			goto drop_new_super;
--		inode = sb->s_root->d_inode;
-+		dentry = sb->s_root;
-+		inode = dentry->d_inode;
-+
-+		root_cgrp->name = cgroup_alloc_name(dentry);
-+		if (!root_cgrp->name)
-+			goto drop_new_super;
- 
- 		mutex_lock(&inode->i_mutex);
- 		mutex_lock(&cgroup_mutex);
-@@ -1660,8 +1679,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		list_add(&root->root_list, &roots);
- 		root_count++;
- 
--		sb->s_root->d_fsdata = root_cgrp;
--		root->top_cgroup.dentry = sb->s_root;
-+		dentry->d_fsdata = root_cgrp;
-+		root->top_cgroup.dentry = dentry;
- 
- 		/* Link the top cgroup in this hierarchy into all
- 		 * the css_set objects */
-@@ -1751,6 +1770,8 @@ static void cgroup_kill_sb(struct super_block *sb) {
- 	mutex_unlock(&cgroup_root_mutex);
- 	mutex_unlock(&cgroup_mutex);
- 
-+	synchronize_rcu();
-+	kfree(cgrp->name);
- 	simple_xattrs_free(&cgrp->xattrs);
- 
- 	kill_litter_super(sb);
-@@ -1771,49 +1792,47 @@ static struct kobject *cgroup_kobj;
-  * @buf: the buffer to write the path into
-  * @buflen: the length of the buffer
-  *
-- * Called with cgroup_mutex held or else with an RCU-protected cgroup
-- * reference.  Writes path of cgroup into buf.  Returns 0 on success,
-- * -errno on error.
-+ * Writes path of cgroup into buf.  Returns 0 on success, -errno on error.
-+ *
-+ * We can't generate cgroup path using dentry->d_name, as accessing
-+ * dentry->name must be protected by irq-unsafe dentry->d_lock or parent
-+ * inode's i_mutex, while on the other hand cgroup_path() can be called
-+ * with some irq-safe spinlocks held.
+-struct eventfd_ctx {
+-	struct kref kref;
+-	wait_queue_head_t wqh;
+-	/*
+-	 * Every time that a write(2) is performed on an eventfd, the
+-	 * value of the __u64 being written is added to "count" and a
+-	 * wakeup is performed on "wqh". A read(2) will return the "count"
+-	 * value to userspace, and will reset "count" to zero. The kernel
+-	 * side eventfd_signal() also, adds to the "count" counter and
+-	 * issue a wakeup.
+-	 */
+-	__u64 count;
+-	unsigned int flags;
+-};
+-
+ /**
+  * eventfd_signal - Adds @n to the eventfd counter.
+  * @ctx: [in] Pointer to the eventfd context.
+@@ -153,20 +138,29 @@ static void eventfd_ctx_do_read(struct eventfd_ctx *ctx, __u64 *cnt)
+  * This is used to atomically remove a wait queue entry from the eventfd wait
+  * queue head, and read/reset the counter value.
   */
- int cgroup_path(const struct cgroup *cgrp, char *buf, int buflen)
+-int eventfd_ctx_remove_wait_queue(struct eventfd_ctx *ctx, wait_queue_t *wait,
++int eventfd_ctx_remove_wait_queue_locked(struct eventfd_ctx *ctx, wait_queue_t *wait,
+ 				  __u64 *cnt)
  {
--	struct dentry *dentry = cgrp->dentry;
-+	int ret = -ENAMETOOLONG;
- 	char *start;
- 
--	rcu_lockdep_assert(rcu_read_lock_held() || cgroup_lock_is_held(),
--			   "cgroup_path() called without proper locking");
+-	unsigned long flags;
 -
--	if (cgrp == dummytop) {
--		/*
--		 * Inactive subsystems have no dentry for their root
--		 * cgroup
--		 */
--		strcpy(buf, "/");
--		return 0;
--	}
--
- 	start = buf + buflen - 1;
--
- 	*start = '\0';
--	for (;;) {
--		int len = dentry->d_name.len;
+-	spin_lock_irqsave(&ctx->wqh.lock, flags);
+ 	eventfd_ctx_do_read(ctx, cnt);
+ 	__remove_wait_queue(&ctx->wqh, wait);
+ 	if (*cnt != 0 && waitqueue_active(&ctx->wqh))
+ 		wake_up_locked_poll(&ctx->wqh, POLLOUT);
+-	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
  
-+	rcu_read_lock();
-+	while (true) {
-+		char *p;
-+		int len;
-+
-+		p = rcu_dereference(cgrp->name);
-+		len = strlen(p);
- 		if ((start -= len) < buf)
--			return -ENAMETOOLONG;
--		memcpy(start, dentry->d_name.name, len);
-+			goto fail;
-+		memcpy(start, p, len);
-+
- 		cgrp = cgrp->parent;
- 		if (!cgrp)
- 			break;
- 
--		dentry = cgrp->dentry;
- 		if (!cgrp->parent)
- 			continue;
- 		if (--start < buf)
--			return -ENAMETOOLONG;
-+			goto fail;
- 		*start = '/';
- 	}
-+	ret = 0;
- 	memmove(buf, start, buf + buflen - start);
--	return 0;
-+fail:
-+	rcu_read_unlock();
-+	return ret;
+ 	return *cnt != 0 ? 0 : -EAGAIN;
  }
- EXPORT_SYMBOL_GPL(cgroup_path);
- 
-@@ -2539,13 +2558,41 @@ static int cgroup_file_release(struct inode *inode, struct file *file)
- static int cgroup_rename(struct inode *old_dir, struct dentry *old_dentry,
- 			    struct inode *new_dir, struct dentry *new_dentry)
- {
++EXPORT_SYMBOL_GPL(eventfd_ctx_remove_wait_queue_locked);
++
++int eventfd_ctx_remove_wait_queue(struct eventfd_ctx *ctx, wait_queue_t *wait,
++				  __u64 *cnt)
++{
++	unsigned long flags;
 +	int ret;
-+	char *name, *old_name;
-+	struct cgroup *cgrp;
 +
++	spin_lock_irqsave(&ctx->wqh.lock, flags);
++	ret = eventfd_ctx_remove_wait_queue_locked(ctx, wait, cnt);
++	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
++	return ret;
++}
+ EXPORT_SYMBOL_GPL(eventfd_ctx_remove_wait_queue);
+ 
+ /**
+diff --git a/include/linux/eventfd.h b/include/linux/eventfd.h
+index 3c3ef19..61085ac 100644
+--- a/include/linux/eventfd.h
++++ b/include/linux/eventfd.h
+@@ -26,6 +26,21 @@
+ #define EFD_SHARED_FCNTL_FLAGS (O_CLOEXEC | O_NONBLOCK)
+ #define EFD_FLAGS_SET (EFD_SHARED_FCNTL_FLAGS | EFD_SEMAPHORE)
+ 
++struct eventfd_ctx {
++	struct kref kref;
++	wait_queue_head_t wqh;
 +	/*
-+	 * It's convinient to use parent dir's i_mutex to protected
-+	 * cgrp->name.
++	 * Every time that a write(2) is performed on an eventfd, the
++	 * value of the __u64 being written is added to "count" and a
++	 * wakeup is performed on "wqh". A read(2) will return the "count"
++	 * value to userspace, and will reset "count" to zero. The kernel
++	 * side eventfd_signal() also, adds to the "count" counter and
++	 * issue a wakeup.
 +	 */
-+	lockdep_assert_held(&old_dir->i_mutex);
++	__u64 count;
++	unsigned int flags;
++};
 +
- 	if (!S_ISDIR(old_dentry->d_inode->i_mode))
- 		return -ENOTDIR;
- 	if (new_dentry->d_inode)
- 		return -EEXIST;
- 	if (old_dir != new_dir)
- 		return -EIO;
--	return simple_rename(old_dir, old_dentry, new_dir, new_dentry);
-+
-+	cgrp = __d_cgrp(old_dentry);
-+
-+	name = cgroup_alloc_name(new_dentry);
-+	if (!name)
-+		return -ENOMEM;
-+
-+	ret = simple_rename(old_dir, old_dentry, new_dir, new_dentry);
-+	if (ret) {
-+		kfree(name);
-+		return ret;
-+	}
-+
-+	old_name = cgrp->name;
-+	rcu_assign_pointer(cgrp->name, name);
-+
-+	synchronize_rcu();
-+	kfree(old_name);
-+	return 0;
- }
+ #ifdef CONFIG_EVENTFD
  
- static struct simple_xattrs *__d_xattrs(struct dentry *dentry)
-@@ -4144,9 +4191,13 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	if (!cgrp)
- 		return -ENOMEM;
+ struct file *eventfd_file_create(unsigned int count, int flags);
+@@ -38,6 +53,8 @@ __u64 eventfd_signal(struct eventfd_ctx *ctx, __u64 n);
+ ssize_t eventfd_ctx_read(struct eventfd_ctx *ctx, int no_wait, __u64 *cnt);
+ int eventfd_ctx_remove_wait_queue(struct eventfd_ctx *ctx, wait_queue_t *wait,
+ 				  __u64 *cnt);
++int eventfd_ctx_remove_wait_queue_locked(struct eventfd_ctx *ctx, wait_queue_t *wait,
++				  __u64 *cnt);
  
-+	cgrp->name = cgroup_alloc_name(dentry);
-+	if (!cgrp->name)
-+		goto err_free_cgrp;
-+
- 	cgrp->id = ida_simple_get(&root->cgroup_ida, 1, 0, GFP_KERNEL);
- 	if (cgrp->id < 0)
--		goto err_free_cgrp;
-+		goto err_free_name;
+ #else /* CONFIG_EVENTFD */
+ 
+diff --git a/virt/kvm/eventfd.c b/virt/kvm/eventfd.c
+index b6eea5c..ccbeb9a 100644
+--- a/virt/kvm/eventfd.c
++++ b/virt/kvm/eventfd.c
+@@ -89,6 +89,7 @@ struct _irqfd {
+ 	struct list_head list;
+ 	poll_table pt;
+ 	struct work_struct shutdown;
++	wait_queue_head_t *wqh;
+ };
+ 
+ static struct workqueue_struct *irqfd_cleanup_wq;
+@@ -160,13 +161,6 @@ static void
+ irqfd_shutdown(struct work_struct *work)
+ {
+ 	struct _irqfd *irqfd = container_of(work, struct _irqfd, shutdown);
+-	u64 cnt;
+-
+-	/*
+-	 * Synchronize with the wait-queue and unhook ourselves to prevent
+-	 * further events.
+-	 */
+-	eventfd_ctx_remove_wait_queue(irqfd->eventfd, &irqfd->wait, &cnt);
  
  	/*
- 	 * Only live parents can have children.  Note that the liveliness
-@@ -4252,6 +4303,8 @@ err_free_all:
- 	deactivate_super(sb);
- err_free_id:
- 	ida_simple_remove(&root->cgroup_ida, cgrp->id);
-+err_free_name:
-+	kfree(cgrp->name);
- err_free_cgrp:
- 	kfree(cgrp);
- 	return err;
-@@ -4656,6 +4709,8 @@ int __init cgroup_init_early(void)
- 	root_count = 1;
- 	init_task.cgroups = &init_css_set;
- 
-+	dummytop->name = "/";
+ 	 * We know no new events will be scheduled at this point, so block
+@@ -197,15 +191,23 @@ irqfd_is_active(struct _irqfd *irqfd)
+ /*
+  * Mark the irqfd as inactive and schedule it for removal
+  *
+- * assumes kvm->irqfds.lock is held
++ * assumes kvm->irqfds.lock and irqfd->wqh.lock are held
+  */
+ static void
+ irqfd_deactivate(struct _irqfd *irqfd)
+ {
++	u64 cnt;
 +
- 	init_css_set_link.cg = &init_css_set;
- 	init_css_set_link.cgrp = dummytop;
- 	list_add(&init_css_set_link.cgrp_link_list,
+ 	BUG_ON(!irqfd_is_active(irqfd));
+ 
+ 	list_del_init(&irqfd->list);
+ 
++	/*
++	 * Synchronize with the wait-queue and unhook ourselves to prevent
++	 * further events.
++	 */
++	eventfd_ctx_remove_wait_queue_locked(irqfd->eventfd, &irqfd->wait, &cnt);
++
+ 	queue_work(irqfd_cleanup_wq, &irqfd->shutdown);
+ }
+ 
+@@ -260,6 +262,7 @@ irqfd_ptable_queue_proc(struct file *file, wait_queue_head_t *wqh,
+ 			poll_table *pt)
+ {
+ 	struct _irqfd *irqfd = container_of(pt, struct _irqfd, pt);
++	irqfd->wqh = wqh;
+ 	add_wait_queue(wqh, &irqfd->wait);
+ }
+ 
+@@ -454,6 +457,7 @@ kvm_irqfd_deassign(struct kvm *kvm, struct kvm_irqfd *args)
+ 	if (IS_ERR(eventfd))
+ 		return PTR_ERR(eventfd);
+ 
++	spin_lock_irq(&eventfd->wqh.lock);
+ 	spin_lock_irq(&kvm->irqfds.lock);
+ 
+ 	list_for_each_entry_safe(irqfd, tmp, &kvm->irqfds.items, list) {
+@@ -472,6 +476,7 @@ kvm_irqfd_deassign(struct kvm *kvm, struct kvm_irqfd *args)
+ 	}
+ 
+ 	spin_unlock_irq(&kvm->irqfds.lock);
++	spin_unlock_irq(&eventfd->wqh.lock);
+ 	eventfd_ctx_put(eventfd);
+ 
+ 	/*
+@@ -504,14 +509,34 @@ void
+ kvm_irqfd_release(struct kvm *kvm)
+ {
+ 	struct _irqfd *irqfd, *tmp;
++	struct eventfd_ctx *ctx;
+ 
+ 	spin_lock_irq(&kvm->irqfds.lock);
++again:
++	if (list_empty(&kvm->irqfds.items)) {
++		spin_unlock_irq(&kvm->irqfds.lock);
++		goto out;
++	}
++
++	irqfd = list_first_entry(&kvm->irqfds.items, struct _irqfd, list);
++	ctx = eventfd_ctx_get(irqfd->eventfd);
++
++	spin_unlock_irq(&kvm->irqfds.lock);
+ 
+-	list_for_each_entry_safe(irqfd, tmp, &kvm->irqfds.items, list)
+-		irqfd_deactivate(irqfd);
++	spin_lock_irq(&ctx->wqh.lock);
++	spin_lock_irq(&kvm->irqfds.lock);
++
++	list_for_each_entry_safe(irqfd, tmp, &kvm->irqfds.items, list) {
++		if (irqfd->eventfd == ctx)
++			irqfd_deactivate(irqfd);
++	}
+ 
+ 	spin_unlock_irq(&kvm->irqfds.lock);
++	spin_unlock_irq(&ctx->wqh.lock);
+ 
++	eventfd_ctx_put(ctx);
++	goto again;
++out:
+ 	/*
+ 	 * Block until we know all outstanding shutdown jobs have completed
+ 	 * since we do not take a kvm* reference.
 -- 
 1.8.0.2
