@@ -1,105 +1,123 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC][PATCH] kvm: fix a race when closing irq eventfd
-Date: Mon, 18 Feb 2013 12:31:54 +0800
-Message-ID: <5121AEBA.2030205@huawei.com>
-References: <51219C57.7080809@huawei.com> <1361160167.2801.12.camel@bling.home> <5121A971.7000604@huawei.com>
+Subject: [PATCH v2] cgroup: fix cgroup_rmdir() vs close(eventfd) race
+Date: Mon, 18 Feb 2013 14:12:23 +0800
+Message-ID: <5121C647.7030608@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5121A971.7000604-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Gleb Natapov <gleb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Davide Libenzi <davidel-AhlLAIvw+VEjIGhXcJzhZg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Gregory Haskins <ghaskins-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 
-On 2013/2/18 12:09, Li Zefan wrote:
-> On 2013/2/18 12:02, Alex Williamson wrote:
->> On Mon, 2013-02-18 at 11:13 +0800, Li Zefan wrote:
->>> While trying to fix a race when closing cgroup eventfd, I took a look
->>> at how kvm deals with this problem, and I found it doesn't.
->>>
->>> I may be wrong, as I don't know kvm code, so correct me if I'm.
->>>
->>> 	/*
->>> 	 * Race-free decouple logic (ordering is critical)
->>> 	 */
->>> 	static void
->>> 	irqfd_shutdown(struct work_struct *work)
->>>
->>> I don't think it's race-free!
->>>
->>> 	static int
->>> 	irqfd_wakeup(wait_queue_t *wait, unsigned mode, int sync, void *key)
->>> 	{
->>> 	...
->>> 			 * We cannot race against the irqfd going away since the
->>> 			 * other side is required to acquire wqh->lock, which we hold
->>> 			 */
->>> 			if (irqfd_is_active(irqfd))
->>> 				irqfd_deactivate(irqfd);
->>> 	}
->>>
->>> In kvm_irqfd_deassign() and kvm_irqfd_release() where irqfds are freed,
->>> wqh->lock is not acquired!
->>>
->>> So here is the race:
->>>
->>> CPU0                                    CPU1
->>> -----------------------------------     ---------------------------------
->>> kvm_irqfd_release()
->>>   spin_lock(kvm->irqfds.lock);
->>>   ...
->>>   irqfd_deactivate(irqfd);
->>>     list_del_init(&irqfd->list);
->>>   spin_unlock(kvm->irqfd.lock);
->>>   ...
->>> 					close(eventfd)
->>> 					  irqfd_wakeup();
->>
->> irqfd_wakeup is assumed to be called with wqh->lock held
->>
-> 
-> I'm aware of this.
-> 
-> As I said, kvm_irqfd_deassign() and kvm_irqfd_release() are not acquiring
-> wqh->lock.
-> 
->>>     irqfd_shutdown();
->>
->> eventfd_ctx_remove_wait_queue has to acquire wqh->lock to complete or
->> else irqfd_shutdown never makes it to the kfree.  So in your scenario
->> this cpu0 spins here until cpu1 completes.
->>
+commit 205a872bd6f9a9a09ef035ef1e90185a8245cc58 ("cgroup: fix lockdep
+warning for event_control") solved a deadlock by introducing a new
+bug.
 
-Oh you're right, this is not obvious. Thanks for the explanation.
+Move cgrp->event_list to a temporary list doesn't mean you can traverse
+this list locklessly, because at the same time cgroup_event_wake() can
+be called and remove the event from the list. The result of this race
+is disastrous.
 
-Now I'll go to see how to fix cgroup.
+We adopt the way how kvm irqfd code implements race-free event removal,
+which is now described in the comments in cgroup_event_wake().
 
->>>       remove_waitqueue(irqfd->wait);
->>>       kfree(irqfd);
->>> 					    spin_lock(kvm->irqfd.lock);
->>> 					      if (!list_empty(&irqfd->list))
->>
->> We don't take this branch because we already did list_del_init above,
->> which makes irqfd->list empty.
->>
-> 
-> It doesn't matter if the list is empty or not.
-> 
-> The point is, irqfd has been kfreed, so the if statement is simply not safe!
-> 
->>> 						irqfd_deactivate(irqfd);
->>> 						  list_del_init(&irqfd->list);
->>> 					    spin_unlock(kvm->irqfd.lock);
->>>
->>> Look, we're accessing irqfd though it has already been freed!
->>
->> Unless the irqfd_wakeup path isn't acquiring wqh->lock, it looks
->> race-free to me.  Thanks,
->>
->> Alex
->>
->> .
->>
-> 
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 50 ++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 16 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 26c071c..65c8101 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -217,6 +217,10 @@ struct cgroup_event {
+ 	 */
+ 	struct list_head list;
+ 	/*
++	 * Need to notify userspace when this event is removed?
++	 */
++	bool signal_on_remove;
++	/*
+ 	 * All fields below needed to unregister event when
+ 	 * userspace closes eventfd.
+ 	 */
+@@ -3833,8 +3837,17 @@ static void cgroup_event_remove(struct work_struct *work)
+ 			remove);
+ 	struct cgroup *cgrp = event->cgrp;
+ 
++	remove_wait_queue(event->wqh, &event->wait);
++
+ 	event->cft->unregister_event(cgrp, event->cft, event->eventfd);
+ 
++	/*
++	 * If this event is to be removed due to cgroup removal,
++	 * we notify userspace.
++	 */
++	if (event->signal_on_remove)
++		eventfd_signal(event->eventfd, 1);
++
+ 	eventfd_ctx_put(event->eventfd);
+ 	kfree(event);
+ 	dput(cgrp->dentry);
+@@ -3854,15 +3867,25 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
+ 	unsigned long flags = (unsigned long)key;
+ 
+ 	if (flags & POLLHUP) {
+-		__remove_wait_queue(event->wqh, &event->wait);
+-		spin_lock(&cgrp->event_list_lock);
+-		list_del_init(&event->list);
+-		spin_unlock(&cgrp->event_list_lock);
+ 		/*
+-		 * We are in atomic context, but cgroup_event_remove() may
+-		 * sleep, so we have to call it in workqueue.
++		 * If the event has been detached at cgroup removal, we
++		 * can simply return knowing the other side will cleanup
++		 * for us.
++		 *
++		 * We can't race against event freeing since the other
++		 * side will require wqh->lock via remove_wait_queue(),
++		 * which we hold.
+ 		 */
+-		schedule_work(&event->remove);
++		spin_lock(&cgrp->event_list_lock);
++		if (!list_empty(&event->list)) {
++			list_del_init(&event->list);
++			/*
++			 * We are in atomic context, but cgroup_event_remove()
++			 * may sleep, so we have to call it in workqueue.
++			 */
++			schedule_work(&event->remove);
++		}
++		spin_unlock(&cgrp->event_list_lock);
+ 	}
+ 
+ 	return 0;
+@@ -4428,20 +4451,15 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	/*
+ 	 * Unregister events and notify userspace.
+ 	 * Notify userspace about cgroup removing only after rmdir of cgroup
+-	 * directory to avoid race between userspace and kernelspace. Use
+-	 * a temporary list to avoid a deadlock with cgroup_event_wake(). Since
+-	 * cgroup_event_wake() is called with the wait queue head locked,
+-	 * remove_wait_queue() cannot be called while holding event_list_lock.
++	 * directory to avoid race between userspace and kernelspace.
+ 	 */
+ 	spin_lock(&cgrp->event_list_lock);
+-	list_splice_init(&cgrp->event_list, &tmp_list);
+-	spin_unlock(&cgrp->event_list_lock);
+-	list_for_each_entry_safe(event, tmp, &tmp_list, list) {
++	list_for_each_entry_safe(event, tmp, &cgrp->event_list, list) {
++		event->signal_on_remove = true;
+ 		list_del_init(&event->list);
+-		remove_wait_queue(event->wqh, &event->wait);
+-		eventfd_signal(event->eventfd, 1);
+ 		schedule_work(&event->remove);
+ 	}
++	spin_unlock(&cgrp->event_list_lock);
+ 
+ 	return 0;
+ }
+-- 
+1.8.0.2
