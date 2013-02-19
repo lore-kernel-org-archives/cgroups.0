@@ -1,91 +1,384 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cpuset changes for 3.9-rc1
-Date: Tue, 19 Feb 2013 10:40:55 -0800
-Message-ID: <20130219184055.GR17414@htj.dyndns.org>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v5 4/4] devcg: propagate local changes down the
+ hierarchy
+Date: Tue, 19 Feb 2013 21:12:08 +0000
+Message-ID: <20130219211208.GC5399@mail.hallyn.com>
+References: <20130215165543.131282532@napanee.usersys.redhat.com>
+ <20130215165543.733711059@napanee.usersys.redhat.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130215165543.733711059-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:date:from:to:cc:subject:message-id:mime-version
-	:content-type:content-disposition:user-agent;
-	bh=DYKEzYumcNxV9lpJiK1Qr2ZeaIKNVOkNsWkHZfxiDiU=;
-	b=GtMlPTA8cNFJWETSfaV3MqLG3axNbDRCh2TVY1zxStG9Z8YiMs+nTmpqfti48qnHHH
-	l8wzaTkO2mz4t3mw//UFeQ0tiun80XQFAj6oWY4Arpwdp4zKP1h7u7hgOoPZ1VBc/KzA
-	am1cYgb4g+sT2JBYoVgbxV57l8ci8Rfum5q1qBJPUNpCnLY1lJejwbFrIrX04nJC3IIq
-	UGamNvCpGDb+eCNFmOs3lSEo0vF1CzEI227zptWF/+dnX6WKyWzkOCYlNebIJlVA/+Be
-	7dlLGgDk5ujFaCs7VM2gqYz+4ENlUz5tUIINutaENaycIzR+LupHo4k4OoqhiFALNPFL
-	j6rA==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-Hello, Linus.
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> This patch makes exception changes to propagate down in hierarchy respecting
+> when possible local exceptions.
+> 
+> New exceptions allowing additional access to devices won't be propagated, but
+> it'll be possible to add an exception to access all of part of the newly
+> allowed device(s).
+> 
+> New exceptions disallowing access to devices will be propagated down and the
+> local group's exceptions will be revalidated for the new situation.
+> Example:
+>       A
+>      / \
+>         B
+> 
+>     group        behavior          exceptions
+>     A            allow             "b 8:* rwm", "c 116:1 rw"
+>     B            deny              "c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
+> 
+> If a new exception is added to group A:
+> 	# echo "c 116:* r" > A/devices.deny
+> it'll propagate down and after revalidating B's local exceptions, the exception
+> "c 116:2 rwm" will be removed.
+> 
+> In case parent's exceptions change and local exceptions are not allowed anymore,
+> they'll be deleted.
+> 
+> v7:
+> - do not allow behavior change when the cgroup has children
+> - update documentation
+> 
+> v6: fixed issues pointed by Serge Hallyn
+> - only copy parent's exceptions while propagating behavior if the local
+>   behavior is different
+> - while propagating exceptions, do not clear and copy parent's: it'd be against
+>   the premise we don't propagate access to more devices
+> 
+> v5: fixed issues pointed by Serge Hallyn
+> - updated documentation
+> - not propagating when an exception is written to devices.allow
+> - when propagating a new behavior, clean the local exceptions list if they're
+>   for a different behavior
+> 
+> v4: fixed issues pointed by Tejun Heo
+> - separated function to walk the tree and collect valid propagation targets
+> 
+> v3: fixed issues pointed by Tejun Heo
+> - update documentation
+> - move css_online/css_offline changes to a new patch
+> - use cgroup_for_each_descendant_pre() instead of own descendant walk
+> - move exception_copy rework to a separared patch
+> - move exception_clean rework to a separated patch
+> 
+> v2: fixed issues pointed by Tejun Heo
+> - instead of keeping the local settings that won't apply anymore, remove them
+> 
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-This is cpuset changes for 3.9-rc1.
+Thanks!
 
-* Synchornization has seen a lot of changes with focus on decoupling
-  cpuset synchronization from cgroup internal locking.  After this
-  change, there only remain a couple of mostly trivial dependencies on
-  cgroup_lock outside cgroup core proper.  cgroup_lock is scheduled to
-  be unexported in this devel cycle.  This will finally remove the
-  fragile locking order around cgroup (cgroup locking wants to /
-  should be one of the outermost but yet has been acquired from deep
-  inside individual controllers).
+Reviewed-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-* At this point, Li is most knowlegeable with cpuset and taking over
-  the maintainership of cpuset.
+(one minor comment below)
 
-This depends on cgroup_rightmost_descendant() implemented in
-cgroup/for-3.9 and this pull request assumes that cgroup/for-3.9 is
-already pulled in.
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> ---
+>  Documentation/cgroups/devices.txt |   70 ++++++++++++++++++-
+>  security/device_cgroup.c          |  139 ++++++++++++++++++++++++++++++++++++--
+>  2 files changed, 199 insertions(+), 10 deletions(-)
+> 
+> --- github.orig/security/device_cgroup.c	2013-02-15 11:30:25.450085632 -0500
+> +++ github/security/device_cgroup.c	2013-02-15 11:30:37.510258447 -0500
+> @@ -49,6 +49,8 @@ struct dev_cgroup {
+>  	struct cgroup_subsys_state css;
+>  	struct list_head exceptions;
+>  	enum devcg_behavior behavior;
+> +	/* temporary list for pending propagation operations */
+> +	struct list_head propagate_pending;
+>  };
+>  
+>  static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+> @@ -180,6 +182,11 @@ static void dev_exception_clean(struct d
+>  	}
+>  }
+>  
+> +static inline bool is_devcg_online(const struct dev_cgroup *devcg)
+> +{
+> +	return (devcg->behavior != DEVCG_DEFAULT_NONE);
+> +}
+> +
+>  /**
+>   * devcgroup_online - initializes devcgroup's behavior and exceptions based on
+>   * 		      parent's
+> @@ -230,6 +237,7 @@ static struct cgroup_subsys_state *devcg
+>  	if (!dev_cgroup)
+>  		return ERR_PTR(-ENOMEM);
+>  	INIT_LIST_HEAD(&dev_cgroup->exceptions);
+> +	INIT_LIST_HEAD(&dev_cgroup->propagate_pending);
+>  	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
+>  	parent_cgroup = cgroup->parent;
+>  
+> @@ -410,6 +418,111 @@ static inline int may_allow_all(struct d
+>  	return parent->behavior == DEVCG_DEFAULT_ALLOW;
+>  }
+>  
+> +/**
+> + * revalidate_active_exceptions - walks through the active exception list and
+> + * 				  revalidates the exceptions based on parent's
+> + * 				  behavior and exceptions. The exceptions that
+> + * 				  are no longer valid will be removed.
+> + * 				  Called with devcgroup_mutex held.
+> + * @devcg: cgroup which exceptions will be checked
+> + *
+> + * This is one of the three key functions for hierarchy implementation.
+> + * This function is responsible for re-evaluating all the cgroup's active
+> + * exceptions due to a parent's exception change.
+> + * Refer to Documentation/cgroups/devices.txt for more details.
+> + */
+> +static void revalidate_active_exceptions(struct dev_cgroup *devcg)
+> +{
+> +	struct dev_exception_item *ex;
+> +	struct list_head *this, *tmp;
+> +
+> +	list_for_each_safe(this, tmp, &devcg->exceptions) {
+> +		ex = container_of(this, struct dev_exception_item, list);
+> +		if (!parent_has_perm(devcg, ex))
+> +			dev_exception_rm(devcg, ex);
+> +	}
+> +}
+> +
+> +/**
+> + * get_online_devcg - walks the cgroup tree and fills a list with the online
+> + * 		      groups
+> + * @root: cgroup used as starting point
+> + * @online: list that will be filled with online groups
+> + *
+> + * Must be called with devcgroup_mutex held. Grabs RCU lock.
+> + * Because devcgroup_mutex is held, no devcg will become online or offline
+> + * during the tree walk (see devcgroup_online, devcgroup_offline)
+> + * A separated list is needed because propagate_behavior() and
+> + * propagate_exception() need to allocate memory and can block.
+> + */
+> +static void get_online_devcg(struct cgroup *root, struct list_head *online)
+> +{
+> +	struct cgroup *pos;
+> +	struct dev_cgroup *devcg;
+> +
+> +	lockdep_assert_held(&devcgroup_mutex);
+> +
+> +	rcu_read_lock();
+> +	cgroup_for_each_descendant_pre(pos, root) {
+> +		devcg = cgroup_to_devcgroup(pos);
+> +		if (is_devcg_online(devcg))
+> +			list_add_tail(&devcg->propagate_pending, online);
+> +	}
+> +	rcu_read_unlock();
+> +}
+> +
+> +/**
+> + * propagate_exception - propagates a new exception to the children
+> + * @devcg_root: device cgroup that added a new exception
+> + * @ex: new exception to be propagated
+> + *
+> + * returns: 0 in case of success, != 0 in case of error
+> + */
+> +static int propagate_exception(struct dev_cgroup *devcg_root,
+> +			       struct dev_exception_item *ex)
+> +{
+> +	struct cgroup *root = devcg_root->css.cgroup;
+> +	struct dev_cgroup *devcg, *parent, *tmp;
+> +	int rc = 0;
+> +	LIST_HEAD(pending);
+> +
+> +	get_online_devcg(root, &pending);
+> +
+> +	list_for_each_entry_safe(devcg, tmp, &pending, propagate_pending) {
+> +		parent = cgroup_to_devcgroup(devcg->css.cgroup->parent);
+> +
+> +		/*
+> +		 * in case both root's behavior and devcg is allow, a new
+> +		 * restriction means adding to the exception list
+> +		 */
+> +		if (devcg_root->behavior == DEVCG_DEFAULT_ALLOW &&
+> +		    devcg->behavior == DEVCG_DEFAULT_ALLOW) {
+> +			rc = dev_exception_add(devcg, ex);
+> +			if (rc)
+> +				break;
+> +		} else {
+> +			/*
+> +			 * in the other possible cases:
+> +			 * root's behavior: allow, devcg's: deny
+> +			 * root's behavior: deny, devcg's: deny
+> +			 * the exception will be removed
+> +			 */
 
-The changes are available in the git repository at:
+Technically this case isn't needed, right?  Will the dev_exception_rm()
+also be done by revalidate_active_exceptions()?  So it's safe (but
+not necessary) to drop the else here.  Though the comment is very
+informative, and it might be worth keeping the code as is for clarity.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.9-cpuset
-
-for you to fetch changes up to d127027baf98dce3ca31bec18c2c0e048ceda7c4:
-
-  cpuset: drop spurious retval assignment in proc_cpuset_show() (2013-01-15 08:38:55 -0800)
-
-----------------------------------------------------------------
-Li Zefan (3):
-      cpuset: update MAINTAINERS
-      cpuset: fix RCU lockdep splat
-      cpuset: drop spurious retval assignment in proc_cpuset_show()
-
-Tejun Heo (15):
-      cpuset: remove unused cpuset_unlock()
-      cpuset: remove fast exit path from remove_tasks_in_empty_cpuset()
-      cpuset: introduce ->css_on/offline()
-      cpuset: introduce CS_ONLINE
-      cpuset: introduce cpuset_for_each_child()
-      cpuset: cleanup cpuset[_can]_attach()
-      cpuset: reorganize CPU / memory hotplug handling
-      cpuset: don't nest cgroup_mutex inside get_online_cpus()
-      cpuset: drop async_rebuild_sched_domains()
-      cpuset: make CPU / memory hotplug propagation asynchronous
-      cpuset: pin down cpus and mems while a task is being attached
-      cpuset: schedule hotplug propagation from cpuset_attach() if the cpuset is empty
-      cpuset: replace cgroup_mutex locking with cpuset internal locking
-      cpuset: replace cpuset->stack_list with cpuset_for_each_descendant_pre()
-      cpuset: remove cpuset->parent
-
- MAINTAINERS     |   4 +-
- kernel/cpuset.c | 872 +++++++++++++++++++++++++++++++-------------------------
- 2 files changed, 485 insertions(+), 391 deletions(-)
-
-Thanks.
-
---
-tejun
+> +			dev_exception_rm(devcg, ex);
+> +		}
+> +		revalidate_active_exceptions(devcg);
+> +
+> +		list_del_init(&devcg->propagate_pending);
+> +	}
+> +	return rc;
+> +}
+> +
+> +static inline bool has_children(struct dev_cgroup *devcgroup)
+> +{
+> +	struct cgroup *cgrp = devcgroup->css.cgroup;
+> +
+> +	return !list_empty(&cgrp->children);
+> +}
+> +
+>  /*
+>   * Modify the exception list using allow/deny rules.
+>   * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
+> @@ -446,6 +559,9 @@ 	memset(&ex, 0, sizeof(ex));
+>  	case 'a':
+>  		switch (filetype) {
+>  		case DEVCG_ALLOW:
+> +			if (has_children(devcgroup))
+> +				return -EINVAL;
+> +
+>  			if (!may_allow_all(parent))
+>  				return -EPERM;
+>  			dev_exception_clean(devcgroup);
+> @@ -459,6 +575,9 @@ 	memset(&ex, 0, sizeof(ex));
+>  				return rc;
+>  			break;
+>  		case DEVCG_DENY:
+> +			if (has_children(devcgroup))
+> +				return -EINVAL;
+> +
+>  			dev_exception_clean(devcgroup);
+>  			devcgroup->behavior = DEVCG_DEFAULT_DENY;
+>  			break;
+> @@ -553,22 +672,28 @@ 		case '\0':
+>  			dev_exception_rm(devcgroup, &ex);
+>  			return 0;
+>  		}
+> -		return dev_exception_add(devcgroup, &ex);
+> +		rc = dev_exception_add(devcgroup, &ex);
+> +		break;
+>  	case DEVCG_DENY:
+>  		/*
+>  		 * If the default policy is to deny by default, try to remove
+>  		 * an matching exception instead. And be silent about it: we
+>  		 * don't want to break compatibility
+>  		 */
+> -		if (devcgroup->behavior == DEVCG_DEFAULT_DENY) {
+> +		if (devcgroup->behavior == DEVCG_DEFAULT_DENY)
+>  			dev_exception_rm(devcgroup, &ex);
+> -			return 0;
+> -		}
+> -		return dev_exception_add(devcgroup, &ex);
+> +		else
+> +			rc = dev_exception_add(devcgroup, &ex);
+> +
+> +		if (rc)
+> +			break;
+> +		/* we only propagate new restrictions */
+> +		rc = propagate_exception(devcgroup, &ex);
+> +		break;
+>  	default:
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+>  	}
+> -	return 0;
+> +	return rc;
+>  }
+>  
+>  static int devcgroup_access_write(struct cgroup *cgrp, struct cftype *cft,
+> --- github.orig/Documentation/cgroups/devices.txt	2013-02-15 11:30:20.907020535 -0500
+> +++ github/Documentation/cgroups/devices.txt	2013-02-15 11:30:37.511258462 -0500
+> @@ -13,9 +13,7 @@ either an integer or * for all.  Access 
+>  The root device cgroup starts with rwm to 'all'.  A child device
+>  cgroup gets a copy of the parent.  Administrators can then remove
+>  devices from the whitelist or add new entries.  A child cgroup can
+> -never receive a device access which is denied by its parent.  However
+> -when a device access is removed from a parent it will not also be
+> -removed from the child(ren).
+> +never receive a device access which is denied by its parent.
+>  
+>  2. User Interface
+>  
+> @@ -50,3 +48,69 @@ task to a new cgroup.  (Again we'll prob
+>  
+>  A cgroup may not be granted more permissions than the cgroup's
+>  parent has.
+> +
+> +4. Hierarchy
+> +
+> +device cgroups maintain hierarchy by making sure a cgroup never has more
+> +access permissions than its parent.  Every time an entry is written to
+> +a cgroup's devices.deny file, all its children will have that entry removed
+> +from their whitelist and all the locally set whitelist entries will be
+> +re-evaluated.  In case one of the locally set whitelist entries would provide
+> +more access than the cgroup's parent, it'll be removed from the whitelist.
+> +
+> +Example:
+> +      A
+> +     / \
+> +        B
+> +
+> +    group        behavior	exceptions
+> +    A            allow		"b 8:* rwm", "c 116:1 rw"
+> +    B            deny		"c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
+> +
+> +If a device is denied in group A:
+> +	# echo "c 116:* r" > A/devices.deny
+> +it'll propagate down and after revalidating B's entries, the whitelist entry
+> +"c 116:2 rwm" will be removed:
+> +
+> +    group        whitelist entries                        denied devices
+> +    A            all                                      "b 8:* rwm", "c 116:* rw"
+> +    B            "c 1:3 rwm", "b 3:* rwm"                 all the rest
+> +
+> +In case parent's exceptions change and local exceptions are not allowed
+> +anymore, they'll be deleted.
+> +
+> +Notice that new whitelist entries will not be propagated:
+> +      A
+> +     / \
+> +        B
+> +
+> +    group        whitelist entries                        denied devices
+> +    A            "c 1:3 rwm", "c 1:5 r"                   all the rest
+> +    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
+> +
+> +when adding "c *:3 rwm":
+> +	# echo "c *:3 rwm" >A/devices.allow
+> +
+> +the result:
+> +    group        whitelist entries                        denied devices
+> +    A            "c *:3 rwm", "c 1:5 r"                   all the rest
+> +    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
+> +
+> +but now it'll be possible to add new entries to B:
+> +	# echo "c 2:3 rwm" >B/devices.allow
+> +	# echo "c 50:3 r" >B/devices.allow
+> +or even
+> +	# echo "c *:3 rwm" >B/devices.allow
+> +
+> +Allowing or denying all by writing 'a' to devices.allow or devices.deny will
+> +not be possible once the device cgroups has children.
+> +
+> +4.1 Hierarchy (internal implementation)
+> +
+> +device cgroups is implemented internally using a behavior (ALLOW, DENY) and a
+> +list of exceptions.  The internal state is controlled using the same user
+> +interface to preserve compatibility with the previous whitelist-only
+> +implementation.  Removal or addition of exceptions that will reduce the access
+> +to devices will be propagated down the hierarchy.
+> +For every propagated exception, the effective rules will be re-evaluated based
+> +on current parent's access rules.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
