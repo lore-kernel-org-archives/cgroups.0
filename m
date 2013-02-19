@@ -1,90 +1,89 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for 3.9-rc1
-Date: Tue, 19 Feb 2013 10:32:53 -0800
-Message-ID: <20130219183253.GQ17414@htj.dyndns.org>
+Subject: [GIT PULL] cpuset changes for 3.9-rc1
+Date: Tue, 19 Feb 2013 10:40:55 -0800
+Message-ID: <20130219184055.GR17414@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:mime-version
-         :content-type:content-disposition:user-agent;
-        bh=F9Cg5PvAdkL20UTadnJOOQV7as5hlJU7RQwz4v4FfmU=;
-        b=FUqF2YQDHFNcBfDGWdJYP22UpPJgySyZ76gujSHicrrkRnJpuYsWeAvgf5wsCa9gPM
-         6nFZucx4dKMn2odXrETlXxKYJ0W2D7+mjkAPSgKAzTGGtTXllucoC+ltUtXjRiPDSL4Z
-         5VzU0ZzH3IRZPys0ZmbZuMWMsTC/Mat4yWcRBdoyAI2I0JLdBW/RHEZobolPqUdkDhWe
-         IwVgGXunqtw25ak5i+Q/QS+DQRQrLdXzm+OHXgQR1Wgthz6NxxIo/EVVOWtM0MtEyW1k
-         QC2eoCTP+6ZjW47MSE8csM119o/GodL8Im9WVtXWLOUQMP8teZxmoTdMY/V0RbcAx7S/
-         ++RQ==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:mime-version
+	:content-type:content-disposition:user-agent;
+	bh=DYKEzYumcNxV9lpJiK1Qr2ZeaIKNVOkNsWkHZfxiDiU=;
+	b=GtMlPTA8cNFJWETSfaV3MqLG3axNbDRCh2TVY1zxStG9Z8YiMs+nTmpqfti48qnHHH
+	l8wzaTkO2mz4t3mw//UFeQ0tiun80XQFAj6oWY4Arpwdp4zKP1h7u7hgOoPZ1VBc/KzA
+	am1cYgb4g+sT2JBYoVgbxV57l8ci8Rfum5q1qBJPUNpCnLY1lJejwbFrIrX04nJC3IIq
+	UGamNvCpGDb+eCNFmOs3lSEo0vF1CzEI227zptWF/+dnX6WKyWzkOCYlNebIJlVA/+Be
+	7dlLGgDk5ujFaCs7VM2gqYz+4ENlUz5tUIINutaENaycIzR+LupHo4k4OoqhiFALNPFL
+	j6rA==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hello, Linus.
 
-These are cgroup changes for 3.9-rc1.  Nothing too drastic.
+This is cpuset changes for 3.9-rc1.
 
-* Removal of synchronize_rcu() from userland visible paths.
+* Synchornization has seen a lot of changes with focus on decoupling
+  cpuset synchronization from cgroup internal locking.  After this
+  change, there only remain a couple of mostly trivial dependencies on
+  cgroup_lock outside cgroup core proper.  cgroup_lock is scheduled to
+  be unexported in this devel cycle.  This will finally remove the
+  fragile locking order around cgroup (cgroup locking wants to /
+  should be one of the outermost but yet has been acquired from deep
+  inside individual controllers).
 
-* Various fixes and cleanups from Li.
+* At this point, Li is most knowlegeable with cpuset and taking over
+  the maintainership of cpuset.
 
-* cgroup_rightmost_descendant() added which will be used by cpuset
-  changes (it will be a separate pull request).
+This depends on cgroup_rightmost_descendant() implemented in
+cgroup/for-3.9 and this pull request assumes that cgroup/for-3.9 is
+already pulled in.
 
 The changes are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.9
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.9-cpuset
 
-for you to fetch changes up to f169007b2773f285e098cb84c74aac0154d65ff7:
+for you to fetch changes up to d127027baf98dce3ca31bec18c2c0e048ceda7c4:
 
-  cgroup: fail if monitored file and event_control are in different cgroup (2013-02-18 09:31:35 -0800)
+  cpuset: drop spurious retval assignment in proc_cpuset_show() (2013-01-15 08:38:55 -0800)
 
 ----------------------------------------------------------------
-Greg Thelen (2):
-      cgroups: move cgroup_event_listener.c to tools/cgroup
-      cgroups: fix cgroup_event_listener error handling
+Li Zefan (3):
+      cpuset: update MAINTAINERS
+      cpuset: fix RCU lockdep splat
+      cpuset: drop spurious retval assignment in proc_cpuset_show()
 
-Li Zefan (15):
-      cgroup: use new hashtable implementation
-      cgroup: remove synchronize_rcu() from cgroup_attach_{task|proc}()
-      cgroup: remove synchronize_rcu() from rebind_subsystems()
-      cgroup: fix bogus kernel warnings when cgroup_create() failed
-      cgroup: remove a NULL check in cgroup_exit()
-      cgroup: initialize cgrp->dentry before css_alloc()
-      sched: split out css_online/css_offline from tg creation/destruction
-      sched: remove redundant NULL cgroup check in task_group_path()
-      cgroup: remove duplicate RCU free on struct cgroup
-      cgroup: remove synchronize_rcu() from cgroup_diput()
-      cgroup: remove bogus comments in cgroup_diput()
-      cgroup: fix exit() vs rmdir() race
-      cpuset: fix cpuset_print_task_mems_allowed() vs rename() race
-      cgroup: fix cgroup_rmdir() vs close(eventfd) race
-      cgroup: fail if monitored file and event_control are in different cgroup
+Tejun Heo (15):
+      cpuset: remove unused cpuset_unlock()
+      cpuset: remove fast exit path from remove_tasks_in_empty_cpuset()
+      cpuset: introduce ->css_on/offline()
+      cpuset: introduce CS_ONLINE
+      cpuset: introduce cpuset_for_each_child()
+      cpuset: cleanup cpuset[_can]_attach()
+      cpuset: reorganize CPU / memory hotplug handling
+      cpuset: don't nest cgroup_mutex inside get_online_cpus()
+      cpuset: drop async_rebuild_sched_domains()
+      cpuset: make CPU / memory hotplug propagation asynchronous
+      cpuset: pin down cpus and mems while a task is being attached
+      cpuset: schedule hotplug propagation from cpuset_attach() if the cpuset is empty
+      cpuset: replace cgroup_mutex locking with cpuset internal locking
+      cpuset: replace cpuset->stack_list with cpuset_for_each_descendant_pre()
+      cpuset: remove cpuset->parent
 
-Tejun Heo (2):
-      cgroup: remove unused dummy cgroup_fork_callbacks()
-      cgroup: implement cgroup_rightmost_descendant()
-
- Documentation/cgroups/00-INDEX                     |   2 -
- Documentation/cgroups/memcg_test.txt               |   3 +-
- include/linux/cgroup.h                             |   3 +-
- include/linux/sched.h                              |   3 +
- kernel/cgroup.c                                    | 288 ++++++++++++---------
- kernel/cpuset.c                                    |  12 +-
- kernel/sched/auto_group.c                          |   3 +
- kernel/sched/core.c                                |  49 +++-
- kernel/sched/debug.c                               |   7 -
- tools/Makefile                                     |  19 +-
- tools/cgroup/.gitignore                            |   1 +
- tools/cgroup/Makefile                              |  11 +
- .../cgroup}/cgroup_event_listener.c                |  72 ++----
- 13 files changed, 270 insertions(+), 203 deletions(-)
- create mode 100644 tools/cgroup/.gitignore
- create mode 100644 tools/cgroup/Makefile
- rename {Documentation/cgroups => tools/cgroup}/cgroup_event_listener.c (54%)
+ MAINTAINERS     |   4 +-
+ kernel/cpuset.c | 872 +++++++++++++++++++++++++++++++-------------------------
+ 2 files changed, 485 insertions(+), 391 deletions(-)
 
 Thanks.
 
