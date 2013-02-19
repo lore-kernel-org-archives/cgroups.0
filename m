@@ -1,115 +1,614 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/2] cgroup: fix cgroup_path() vs rename() race, take
- 2
-Date: Tue, 19 Feb 2013 09:44:17 +0800
-Message-ID: <5122D8F1.8000101@huawei.com>
-References: <51218100.5020007@huawei.com> <20130218173023.GG17414@htj.dyndns.org>
+From: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2] memcg: Add memory.pressure_level events
+Date: Mon, 18 Feb 2013 20:40:12 -0800
+Message-ID: <20130219044012.GA23356@lizard.sbx00618.mountca.wayport.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130218173023.GG17414-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Sasha Levin <levinsasha928-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Leonid Moiseichuk <leonid.moiseichuk-xNZwKgViW5gAvxtiuMwx3w@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, patches-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-On 2013/2/19 1:30, Tejun Heo wrote:
-> Hello, Li.
-> 
-> On Mon, Feb 18, 2013 at 09:16:48AM +0800, Li Zefan wrote:
->> @@ -171,6 +171,7 @@ struct cgroup {
->>  
->>  	struct cgroup *parent;		/* my parent */
->>  	struct dentry *dentry;		/* cgroup fs entry, RCU protected */
->> +	char __rcu *name;		/* a copy of dentry->d_name */
-> 
-> A brief explanation of why this is necessary and how rcu is used would
-> be nice.
-> 
+With this patch userland applications that want to maintain the
+interactivity/memory allocation cost can use the pressure level
+notifications. The levels are defined like this:
 
-The comments in cgroup_path() explains why we can't use dentry->d_name,
-which suggests why cgrp->name is needed. I'll revise the comments there,
-and add comments on the rcu thing.
+The "low" level means that the system is reclaiming memory for new
+allocations. Monitoring this reclaiming activity might be useful for
+maintaining cache level. Upon notification, the program (typically
+"Activity Manager") might analyze vmstat and act in advance (i.e.
+prematurely shutdown unimportant services).
 
->> +static char *cgroup_alloc_name(struct dentry *dentry)
->> +{
->> +	char *name;
->> +
->> +	name = kmalloc(dentry->d_name.len + 1, GFP_KERNEL);
->> +	if (!name)
->> +		return NULL;
->> +	memcpy(name, dentry->d_name.name, dentry->d_name.len);
->> +	name[dentry->d_name.len] = '\0';
->> +	return name;
->> +}
-> 
-> While d_name has length field, it's always properly NULL terminated,
-> so kstrdup() should suffice here.  Right, Al?
-> 
+The "medium" level means that the system is experiencing medium memory
+pressure, the system might be making swap, paging out active file caches,
+etc. Upon this event applications may decide to further analyze
+vmstat/zoneinfo/memcg or internal memory usage statistics and free any
+resources that can be easily reconstructed or re-read from a disk.
 
-Oh you're right. We pass dentry->d_name.name to printk %s in other places.
+The "critical" level means that the system is actively thrashing, it is
+about to out of memory (OOM) or even the in-kernel OOM killer is on its
+way to trigger. Applications should do whatever they can to help the
+system. It might be too late to consult with vmstat or any other
+statistics, so it's advisable to take an immediate action.
 
->> @@ -1613,13 +1626,19 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
-> ...
->> -		inode = sb->s_root->d_inode;
->> +		dentry = sb->s_root;
->> +		inode = dentry->d_inode;
->> +
->> +		root_cgrp->name = cgroup_alloc_name(dentry);
->> +		if (!root_cgrp->name)
->> +			goto drop_new_super;
-> 
-> Don't we need an RCU assignment?  Is it safe because it isn't online
-> yet?  But wouldn't this still trigger sparse warning?
-> 
+The events are propagated upward until the event is handled, i.e. the
+events are not pass-through. Here is what this means: for example you have
+three cgroups: A->B->C. Now you set up an event listener on cgroups A, B
+and C, and suppose group C experiences some pressure. In this situation,
+only group C will receive the notification, i.e. groups A and B will not
+receive it. This is done to avoid excessive "broadcasting" of messages,
+which disturbs the system and which is especially bad if we are low on
+memory or thrashing. So, organize the cgroups wisely, or propagate the
+events manually (or, ask us to implement the pass-through events,
+explaining why would you need them.)
 
-Yeah, it's safe.
+Signed-off-by: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Acked-by: Kirill A. Shutemov <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+---
 
-To be frank, I haven't used sparse for years. Will check.
+Hi all,
 
->> @@ -1751,6 +1770,8 @@ static void cgroup_kill_sb(struct super_block *sb) {
->>  	mutex_unlock(&cgroup_root_mutex);
->>  	mutex_unlock(&cgroup_mutex);
->>  
->> +	synchronize_rcu();
-> 
-> An explanation on what we're synchronizing would be nice.  Barriers
-> without explanation sucks because there's nothing directly linking the
-> barriers to the things which are being protected.
-> 
->> @@ -2539,13 +2558,41 @@ static int cgroup_file_release(struct inode *inode, struct file *file)
->>  static int cgroup_rename(struct inode *old_dir, struct dentry *old_dentry,
->>  			    struct inode *new_dir, struct dentry *new_dentry)
->>  {
-> ...
->> +	old_name = cgrp->name;
->> +	rcu_assign_pointer(cgrp->name, name);
->> +
->> +	synchronize_rcu();
-> 
-> Please don't call synchronize_rcu() from interface which is directly
-> visible to userland.  It leads to sporadic difficult-to-reproduce
-> latencies which hurt enough in corner cases and this is kmalloc
-> memory.  It's not like kfree_rcu() is difficult to use or anything.
-> 
+Many thanks for the previous reviews! In this revision:
 
-ok
+- Addressed Glauber Costa's comments:
+  o Use parent_mem_cgroup() instead of own parent function (also suggested
+    by Kamezawa). This change also affected events distribution logic, so
+    it became more like memory thresholds notifications, i.e. we deliver
+    the event to the cgroup where the event originated, not to the parent
+    cgroup; (This also addreses Kamezawa's remark regarding which cgroup
+    receives which event.)
+  o Register vmpressure cgroup file directly in memcontrol.c.
 
->> +	kfree(old_name);
->> +	return 0;
->>  }
->>  
->>  static struct simple_xattrs *__d_xattrs(struct dentry *dentry)
->> @@ -4144,9 +4191,13 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
->>  	if (!cgrp)
->>  		return -ENOMEM;
->>  
->> +	cgrp->name = cgroup_alloc_name(dentry);
->> +	if (!cgrp->name)
->> +		goto err_free_cgrp;
-> 
-> Ditto with assignment.
-> 
-> Thanks.
-> 
+- Addressed Greg Thelen's comments:
+  o Fixed bool/int inconsistency in the code;
+  o Fixed nr_scanned accounting;
+  o Don't use cryptic 's', 'r' abbreviations; get rid of confusing
+    'window' argument.
+
+- Addressed Kamezawa Hiroyuki's comments:
+  o Moved declarations from mm/internal.h into linux/vmpressue.h;
+  o Removed Kconfig symbol. Vmpressure is pretty lightweight (especially
+    comparing to the memcg accounting). If it ever causes any measurable
+    performance effect, we want to fix it, not paper it over with a
+    Kconfig option. :-)
+  o Removed read operation on pressure_level cgroup file. In apps, we only
+    use notifications, we don't need the content of the file, so let's
+    keep things simple for now. Plus this resolves questions like what
+    should we return there when the system is not reclaiming;
+  o Reworded documentation;
+  o Improved comments for vmpressure_prio().
+
+
+Old changelogs/submissions:
+  v1: http://lkml.org/lkml/2013/2/10/140
+  mempressure cgroup: http://lkml.org/lkml/2013/1/4/55
+
+Thanks!
+
+Anton
+
+ Documentation/cgroups/memory.txt |  61 +++++++++-
+ include/linux/vmpressure.h       |  47 ++++++++
+ mm/Makefile                      |   2 +-
+ mm/memcontrol.c                  |  28 +++++
+ mm/vmpressure.c                  | 252 +++++++++++++++++++++++++++++++++++++++
+ mm/vmscan.c                      |   8 ++
+ 6 files changed, 396 insertions(+), 2 deletions(-)
+ create mode 100644 include/linux/vmpressure.h
+ create mode 100644 mm/vmpressure.c
+
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index addb1f1..0c004de 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -40,6 +40,7 @@ Features:
+  - soft limit
+  - moving (recharging) account at moving a task is selectable.
+  - usage threshold notifier
++ - memory pressure notifier
+  - oom-killer disable knob and oom-notifier
+  - Root cgroup has no limit controls.
+ 
+@@ -65,6 +66,7 @@ Brief summary of control files.
+  memory.stat			 # show various statistics
+  memory.use_hierarchy		 # set/show hierarchical account enabled
+  memory.force_empty		 # trigger forced move charge to parent
++ memory.pressure_level		 # set memory pressure notifications
+  memory.swappiness		 # set/show swappiness parameter of vmscan
+ 				 (See sysctl's vm.swappiness)
+  memory.move_charge_at_immigrate # set/show controls of moving charges
+@@ -778,7 +780,64 @@ At reading, current status of OOM is shown.
+ 	under_oom	 0 or 1 (if 1, the memory cgroup is under OOM, tasks may
+ 				 be stopped.)
+ 
+-11. TODO
++11. Memory Pressure
++
++The pressure level notifications can be used to monitor the memory
++allocation cost; based on the pressure, applications can implement
++different strategies of managing their memory resources. The pressure
++levels are defined as following:
++
++The "low" level means that the system is reclaiming memory for new
++allocations. Monitoring this reclaiming activity might be useful for
++maintaining cache level. Upon notification, the program (typically
++"Activity Manager") might analyze vmstat and act in advance (i.e.
++prematurely shutdown unimportant services).
++
++The "medium" level means that the system is experiencing medium memory
++pressure, the system might be making swap, paging out active file caches,
++etc. Upon this event applications may decide to further analyze
++vmstat/zoneinfo/memcg or internal memory usage statistics and free any
++resources that can be easily reconstructed or re-read from a disk.
++
++The "critical" level means that the system is actively thrashing, it is
++about to out of memory (OOM) or even the in-kernel OOM killer is on its
++way to trigger. Applications should do whatever they can to help the
++system. It might be too late to consult with vmstat or any other
++statistics, so it's advisable to take an immediate action.
++
++The events are propagated upward until the event is handled, i.e. the
++events are not pass-through. Here is what this means: for example you have
++three cgroups: A->B->C. Now you set up an event listener on cgroups A, B
++and C, and suppose group C experiences some pressure. In this situation,
++only group C will receive the notification, i.e. groups A and B will not
++receive it. This is done to avoid excessive "broadcasting" of messages,
++which disturbs the system and which is especially bad if we are low on
++memory or thrashing. So, organize the cgroups wisely, or propagate the
++events manually (or, ask us to implement the pass-through events,
++explaining why would you need them.)
++
++The file memory.pressure_level is only used to setup an eventfd,
++read/write operations are no implemented.
++
++Test:
++
++   Here is a small script example that makes a new cgroup, sets up a
++   memory limit, sets up a notification in the cgroup and then makes child
++   cgroup experience a critical pressure:
++
++   # cd /sys/fs/cgroup/memory/
++   # mkdir foo
++   # cd foo
++   # cgroup_event_listener memory.pressure_level low &
++   # echo 8000000 > memory.limit_in_bytes
++   # echo 8000000 > memory.memsw.limit_in_bytes
++   # echo $$ > tasks
++   # dd if=/dev/zero | read x
++
++   (Expect a bunch of notifications, and eventually, the oom-killer will
++   trigger.)
++
++12. TODO
+ 
+ 1. Add support for accounting huge pages (as a separate controller)
+ 2. Make per-cgroup scanner reclaim not-shared pages first
+diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
+new file mode 100644
+index 0000000..fa84783
+--- /dev/null
++++ b/include/linux/vmpressure.h
+@@ -0,0 +1,47 @@
++#ifndef __LINUX_VMPRESSURE_H
++#define __LINUX_VMPRESSURE_H
++
++#include <linux/mutex.h>
++#include <linux/list.h>
++#include <linux/workqueue.h>
++#include <linux/gfp.h>
++#include <linux/types.h>
++#include <linux/cgroup.h>
++
++struct vmpressure {
++	unsigned int scanned;
++	unsigned int reclaimed;
++	/* The lock is used to keep the scanned/reclaimed above in sync. */
++	struct mutex sr_lock;
++
++	struct list_head events;
++	/* Have to grab the lock on events traversal or modifications. */
++	struct mutex events_lock;
++
++	struct work_struct work;
++};
++
++struct mem_cgroup;
++
++#ifdef CONFIG_MEMCG
++extern void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
++		       unsigned long scanned, unsigned long reclaimed);
++extern void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio);
++#else
++static inline void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
++			      unsigned long scanned, unsigned long reclaimed) {}
++static inline void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg,
++				   int prio) {}
++#endif /* CONFIG_MEMCG */
++
++extern void vmpressure_init(struct vmpressure *vmpr);
++extern struct vmpressure *memcg_to_vmpr(struct mem_cgroup *memcg);
++extern struct cgroup_subsys_state *vmpr_to_css(struct vmpressure *vmpr);
++extern struct vmpressure *css_to_vmpr(struct cgroup_subsys_state *css);
++extern int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
++				     struct eventfd_ctx *eventfd,
++				     const char *args);
++extern void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
++					struct eventfd_ctx *eventfd);
++
++#endif /* __LINUX_VMPRESSURE_H */
+diff --git a/mm/Makefile b/mm/Makefile
+index 3a46287..72c5acb 100644
+--- a/mm/Makefile
++++ b/mm/Makefile
+@@ -50,7 +50,7 @@ obj-$(CONFIG_FS_XIP) += filemap_xip.o
+ obj-$(CONFIG_MIGRATION) += migrate.o
+ obj-$(CONFIG_QUICKLIST) += quicklist.o
+ obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o
+-obj-$(CONFIG_MEMCG) += memcontrol.o page_cgroup.o
++obj-$(CONFIG_MEMCG) += memcontrol.o page_cgroup.o vmpressure.o
+ obj-$(CONFIG_CGROUP_HUGETLB) += hugetlb_cgroup.o
+ obj-$(CONFIG_MEMORY_FAILURE) += memory-failure.o
+ obj-$(CONFIG_HWPOISON_INJECT) += hwpoison-inject.o
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 25ac5f4..b41727b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -49,6 +49,7 @@
+ #include <linux/fs.h>
+ #include <linux/seq_file.h>
+ #include <linux/vmalloc.h>
++#include <linux/vmpressure.h>
+ #include <linux/mm_inline.h>
+ #include <linux/page_cgroup.h>
+ #include <linux/cpu.h>
+@@ -370,6 +371,9 @@ struct mem_cgroup {
+ 	atomic_t	numainfo_events;
+ 	atomic_t	numainfo_updating;
+ #endif
++
++	struct vmpressure vmpr;
++
+ 	/*
+ 	 * Per cgroup active and inactive list, similar to the
+ 	 * per zone LRU lists.
+@@ -570,6 +574,24 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+ 	return container_of(s, struct mem_cgroup, css);
+ }
+ 
++/* Some nice accessors for the vmpressure. */
++struct vmpressure *memcg_to_vmpr(struct mem_cgroup *memcg)
++{
++	if (!memcg)
++		memcg = root_mem_cgroup;
++	return &memcg->vmpr;
++}
++
++struct cgroup_subsys_state *vmpr_to_css(struct vmpressure *vmpr)
++{
++	return &container_of(vmpr, struct mem_cgroup, vmpr)->css;
++}
++
++struct vmpressure *css_to_vmpr(struct cgroup_subsys_state *css)
++{
++	return &mem_cgroup_from_css(css)->vmpr;
++}
++
+ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
+ {
+ 	return (memcg == root_mem_cgroup);
+@@ -6000,6 +6022,11 @@ static struct cftype mem_cgroup_files[] = {
+ 		.unregister_event = mem_cgroup_oom_unregister_event,
+ 		.private = MEMFILE_PRIVATE(_OOM_TYPE, OOM_CONTROL),
+ 	},
++	{
++		.name = "pressure_level",
++		.register_event = vmpressure_register_event,
++		.unregister_event = vmpressure_unregister_event,
++	},
+ #ifdef CONFIG_NUMA
+ 	{
+ 		.name = "numa_stat",
+@@ -6291,6 +6318,7 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+ 	memcg->move_charge_at_immigrate = 0;
+ 	mutex_init(&memcg->thresholds_lock);
+ 	spin_lock_init(&memcg->move_lock);
++	vmpressure_init(&memcg->vmpr);
+ 
+ 	return &memcg->css;
+ 
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+new file mode 100644
+index 0000000..ae0ff8e
+--- /dev/null
++++ b/mm/vmpressure.c
+@@ -0,0 +1,252 @@
++/*
++ * Linux VM pressure
++ *
++ * Copyright 2012 Linaro Ltd.
++ *		  Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
++ *
++ * Based on ideas from Andrew Morton, David Rientjes, KOSAKI Motohiro,
++ * Leonid Moiseichuk, Mel Gorman, Minchan Kim and Pekka Enberg.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 as published
++ * by the Free Software Foundation.
++ */
++
++#include <linux/cgroup.h>
++#include <linux/fs.h>
++#include <linux/sched.h>
++#include <linux/mm.h>
++#include <linux/vmstat.h>
++#include <linux/eventfd.h>
++#include <linux/swap.h>
++#include <linux/printk.h>
++#include <linux/vmpressure.h>
++
++/*
++ * The window size is the number of scanned pages before we try to analyze
++ * the scanned/reclaimed ratio (or difference).
++ *
++ * It is used as a rate-limit tunable for the "low" level notification,
++ * and for averaging medium/critical levels. Using small window sizes can
++ * cause lot of false positives, but too big window size will delay the
++ * notifications.
++ *
++ * TODO: Make the window size depend on machine size, as we do for vmstat
++ * thresholds.
++ */
++static const unsigned int vmpressure_win = SWAP_CLUSTER_MAX * 16;
++static const unsigned int vmpressure_level_med = 60;
++static const unsigned int vmpressure_level_critical = 95;
++static const unsigned int vmpressure_level_critical_prio = 3;
++
++enum vmpressure_levels {
++	VMPRESSURE_LOW = 0,
++	VMPRESSURE_MEDIUM,
++	VMPRESSURE_CRITICAL,
++	VMPRESSURE_NUM_LEVELS,
++};
++
++static const char *vmpressure_str_levels[] = {
++	[VMPRESSURE_LOW] = "low",
++	[VMPRESSURE_MEDIUM] = "medium",
++	[VMPRESSURE_CRITICAL] = "critical",
++};
++
++static enum vmpressure_levels vmpressure_level(unsigned int pressure)
++{
++	if (pressure >= vmpressure_level_critical)
++		return VMPRESSURE_CRITICAL;
++	else if (pressure >= vmpressure_level_med)
++		return VMPRESSURE_MEDIUM;
++	return VMPRESSURE_LOW;
++}
++
++static enum vmpressure_levels vmpressure_calc_level(unsigned int scanned,
++						    unsigned int reclaimed)
++{
++	unsigned long scale = scanned + reclaimed;
++	unsigned long pressure;
++
++	if (!scanned)
++		return VMPRESSURE_LOW;
++
++	/*
++	 * We calculate the ratio (in percents) of how many pages were
++	 * scanned vs. reclaimed in a given time frame (window). Note that
++	 * time is in VM reclaimer's "ticks", i.e. number of pages
++	 * scanned. This makes it possible to set desired reaction time
++	 * and serves as a ratelimit.
++	 */
++	pressure = scale - (reclaimed * scale / scanned);
++	pressure = pressure * 100 / scale;
++
++	pr_debug("%s: %3lu  (s: %6u  r: %6u)\n", __func__, pressure,
++		 scanned, reclaimed);
++
++	return vmpressure_level(pressure);
++}
++
++void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
++		unsigned long scanned, unsigned long reclaimed)
++{
++	struct vmpressure *vmpr = memcg_to_vmpr(memcg);
++
++	/*
++	 * So far we are only interested application memory, or, in case
++	 * of low pressure, in FS/IO memory reclaim. We are also
++	 * interested indirect reclaim (kswapd sets sc->gfp_mask to
++	 * GFP_KERNEL).
++	 */
++	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
++		return;
++
++	if (!scanned)
++		return;
++
++	mutex_lock(&vmpr->sr_lock);
++	vmpr->scanned += scanned;
++	vmpr->reclaimed += reclaimed;
++	mutex_unlock(&vmpr->sr_lock);
++
++	if (scanned < vmpressure_win || work_pending(&vmpr->work))
++		return;
++	schedule_work(&vmpr->work);
++}
++
++void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio)
++{
++	if (prio > vmpressure_level_critical_prio)
++		return;
++
++	/*
++	 * OK, the prio is below the threshold, updating vmpressure
++	 * information before diving into long shrinking of long range
++	 * vmscan.
++	 */
++	vmpressure(gfp, memcg, vmpressure_win, 0);
++}
++
++static struct vmpressure *wk_to_vmpr(struct work_struct *wk)
++{
++	return container_of(wk, struct vmpressure, work);
++}
++
++static struct vmpressure *cg_to_vmpr(struct cgroup *cg)
++{
++	return css_to_vmpr(cgroup_subsys_state(cg, mem_cgroup_subsys_id));
++}
++
++struct vmpressure_event {
++	struct eventfd_ctx *efd;
++	enum vmpressure_levels level;
++	struct list_head node;
++};
++
++static bool vmpressure_event(struct vmpressure *vmpr,
++			     unsigned long scanned, unsigned long reclaimed)
++{
++	struct vmpressure_event *ev;
++	int level = vmpressure_calc_level(scanned, reclaimed);
++	bool signalled = false;
++
++	mutex_lock(&vmpr->events_lock);
++
++	list_for_each_entry(ev, &vmpr->events, node) {
++		if (level >= ev->level) {
++			eventfd_signal(ev->efd, 1);
++			signalled = true;
++		}
++	}
++
++	mutex_unlock(&vmpr->events_lock);
++
++	return signalled;
++}
++
++static struct vmpressure *vmpressure_parent(struct vmpressure *vmpr)
++{
++	struct cgroup *cg = vmpr_to_css(vmpr)->cgroup;
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cg);
++
++	memcg = parent_mem_cgroup(memcg);
++	if (!memcg)
++		return NULL;
++	return memcg_to_vmpr(memcg);
++}
++
++static void vmpressure_wk_fn(struct work_struct *wk)
++{
++	struct vmpressure *vmpr = wk_to_vmpr(wk);
++	unsigned long s;
++	unsigned long r;
++
++	mutex_lock(&vmpr->sr_lock);
++	s = vmpr->scanned;
++	r = vmpr->reclaimed;
++	vmpr->scanned = 0;
++	vmpr->reclaimed = 0;
++	mutex_unlock(&vmpr->sr_lock);
++
++	do {
++		if (vmpressure_event(vmpr, s, r))
++			break;
++		/*
++		 * If not handled, propagate the event upward into the
++		 * hierarchy.
++		 */
++	} while ((vmpr = vmpressure_parent(vmpr)));
++}
++
++int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
++			      struct eventfd_ctx *eventfd, const char *args)
++{
++	struct vmpressure *vmpr = cg_to_vmpr(cg);
++	struct vmpressure_event *ev;
++	int lvl;
++
++	for (lvl = 0; lvl < VMPRESSURE_NUM_LEVELS; lvl++) {
++		if (!strcmp(vmpressure_str_levels[lvl], args))
++			break;
++	}
++
++	if (lvl >= VMPRESSURE_NUM_LEVELS)
++		return -EINVAL;
++
++	ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++	if (!ev)
++		return -ENOMEM;
++
++	ev->efd = eventfd;
++	ev->level = lvl;
++
++	mutex_lock(&vmpr->events_lock);
++	list_add(&ev->node, &vmpr->events);
++	mutex_unlock(&vmpr->events_lock);
++
++	return 0;
++}
++
++void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
++				 struct eventfd_ctx *eventfd)
++{
++	struct vmpressure *vmpr = cg_to_vmpr(cg);
++	struct vmpressure_event *ev;
++
++	mutex_lock(&vmpr->events_lock);
++	list_for_each_entry(ev, &vmpr->events, node) {
++		if (ev->efd != eventfd)
++			continue;
++		list_del(&ev->node);
++		kfree(ev);
++		break;
++	}
++	mutex_unlock(&vmpr->events_lock);
++}
++
++void vmpressure_init(struct vmpressure *vmpr)
++{
++	mutex_init(&vmpr->sr_lock);
++	mutex_init(&vmpr->events_lock);
++	INIT_LIST_HEAD(&vmpr->events);
++	INIT_WORK(&vmpr->work, vmpressure_wk_fn);
++}
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 88c5fed..9530777 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -19,6 +19,7 @@
+ #include <linux/pagemap.h>
+ #include <linux/init.h>
+ #include <linux/highmem.h>
++#include <linux/vmpressure.h>
+ #include <linux/vmstat.h>
+ #include <linux/file.h>
+ #include <linux/writeback.h>
+@@ -1982,6 +1983,11 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
+ 			}
+ 			memcg = mem_cgroup_iter(root, memcg, &reclaim);
+ 		} while (memcg);
++
++		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
++			   sc->nr_scanned - nr_scanned,
++			   sc->nr_reclaimed - nr_reclaimed);
++
+ 	} while (should_continue_reclaim(zone, sc->nr_reclaimed - nr_reclaimed,
+ 					 sc->nr_scanned - nr_scanned, sc));
+ }
+@@ -2167,6 +2173,8 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 		count_vm_event(ALLOCSTALL);
+ 
+ 	do {
++		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
++				sc->priority);
+ 		sc->nr_scanned = 0;
+ 		aborted_reclaim = shrink_zones(zonelist, sc);
+ 
+-- 
+1.8.1.1
