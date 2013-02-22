@@ -1,107 +1,45 @@
-From: Minchan Kim <minchan@kernel.org>
-Subject: Re: [PATCH v2] memcg: Add memory.pressure_level events
-Date: Fri, 22 Feb 2013 16:26:37 +0900
-Message-ID: <20130222072637.GA26044@blaptop>
-References: <20130219044012.GA23356@lizard.sbx00618.mountca.wayport.net>
- <20130220001743.GE16950@blaptop>
- <CAOS58YOPjcH_pFFhPLJEAdaLkm5FoOy9mG2i-PkWAcb7O6V_Kw@mail.gmail.com>
- <20130221230425.GA22792@lizard.fhda.edu>
- <20130221235608.GH16950@blaptop>
- <20130222065552.GA26194@lizard.gateway.2wire.net>
+From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_if_PF=5FNO=5FMEMCG=5FOOM_is_set?=
+Date: Fri, 22 Feb 2013 09:23:32 +0100
+Message-ID: <20130222092332.4001E4B6@pobox.sk>
+References: <20130208094420.GA7557@dhcp22.suse.cz>, <20130208120249.FD733220@pobox.sk>, <20130208123854.GB7557@dhcp22.suse.cz>, <20130208145616.FB78CE24@pobox.sk>, <20130208152402.GD7557@dhcp22.suse.cz>, <20130208165805.8908B143@pobox.sk>, <20130208171012.GH7557@dhcp22.suse.cz>, <20130208220243.EDEE0825@pobox.sk>, <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk> <20130211112240.GC19922@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130222065552.GA26194@lizard.gateway.2wire.net>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130211112240.GC19922-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Anton Vorontsov <anton@enomsg.org>
-Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Luiz Capitulino <lcapitulino@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com, Orna Agmon Ben-Yehuda <ladypine@gmail.com>, Muli Ben-Yehuda <mulix@mulix.org>
+To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Thu, Feb 21, 2013 at 10:55:52PM -0800, Anton Vorontsov wrote:
-> On Fri, Feb 22, 2013 at 08:56:08AM +0900, Minchan Kim wrote:
-> > [...] The my point is that you have a plan to support? Why I have a
-> > question is that you said your goal is to replace lowmemory killer
-> 
-> In short: yes, of course, if the non-memcg interface will be in demand.
-> 
-> > but android don't have enabled CONFIG_MEMCG as you know well
-> > so they should enable it for using just notifier? or they need another hack to
-> > connect notifier to global thing?
-> 
-> A hack is not an option for me. :-) My final goal is to switch Android to
-> use the notifier without need for hacks/external patches or
-> drivers/staging.
-> 
-> But my current goal is to make the most generic case work, and do this in
-> the most correct way. That is, vmpressure + MEMCG. Once I accomplish this,
-> I can then think of any niche needs (such as Android).
-> 
-> There will be two possibilities for Android:
-> 
-> 1. Obviously, turn on CONFIG_MEMCG. We need to measure its effect on real
->    devices, and see if it makes sense. (Plus, maybe there are other uses
->    for MEMCG on Android?)
+>Unfortunately I am not able to reproduce this behavior even if I try
+>to hammer OOM like mad so I am afraid I cannot help you much without
+>further debugging patches.
+>I do realize that experimenting in your environment is a problem but I
+>do not many options left. Please do not use strace and rather collect
+>/proc/pid/stack instead. It would be also helpful to get group/tasks
+>file to have a full list of tasks in the group
 
-I'd like to see this one.
 
-> 
-> or
-> 
-> 2. Implement /sys/fs/cgroups/memory/memory.pressure_level interface
->    without MEMCG. Doing this will be really easy as we'll already have
->    vmpressure() core, and Android has CROUPS=y. But I do expect some
->    discussion like 'why don't you fix memcg instead?'. We'll have to
->    answer this question by looking back at '1.'
 
-Of course.
+Hi Michal,
 
-> 
-> Also note that cgroups vmpressure notifiers were tried by QEMU folks, and
-> it seemed to be useful:
-> 
->    http://lists.gnu.org/archive/html/qemu-devel/2012-12/msg02821.html 
 
-I saw that.
+sorry that i didn't response for a while. Today i installed kernel with your two patches and i'm running it now. I'm still having problems with OOM which is not able to handle low memory and is not killing processes. Here is some info:
 
-> 
-> So, nowadays it is not only about Android. Some time ago I also got an
-> email from Orna Agmon Ben-Yehuda, who suggested to use vmpressure stuff
-> with 'memcached' (but I didn't find time to actually try it, so far. :(
-> Thanks for the email, btw!).
+- data from cgroup 1258 while it was under OOM and no processes were killed (so OOM don't stop and cgroup was freezed)
+http://watchdog.sk/lkml/memcg-bug-6.tar.gz
 
-I also got received email from another people in embedded side about
-memory notifier which I worked long time ago and I used to introduce
-your work to them instead of my old solution.
-It seems they don't use Android and has very small RAM so they want
-to handle memory very efficiently. For such purpose, I hope vmpressure
-become tiny and can support even NOMMU system.
+I noticed problem about on 8:39 and waited until 8:57 (nothing happend). Then i killed process 19864 which seems to help and other processes probably ends and cgroup started to work. But problem accoured again about 20 seconds later, so i killed all processes at 8:58. The problem is occuring all the time since then. All processes (in that cgroup) are always in state 'D' when it occurs.
 
-> 
-> So it is useful with or without MEMCG, and if we will really need to
-> support vmpressure without MEMCG, I will have to implement the support in
-> addition to MEMCG case, yes.
 
-Thanks for your clarification.
+- kernel log from boot until now
+http://watchdog.sk/lkml/kern3.gz
 
-> 
-> Thanks,
-> 
-> Anton
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
--- 
-Kind regards,
-Minchan Kim
+Btw, something probably happened also at about 3:09 but i wasn't able to gather any data because my 'load check script' killed all apache processes (load was more than 100).
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
+azur
