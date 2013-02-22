@@ -1,71 +1,72 @@
-From: Minchan Kim <minchan@kernel.org>
+From: Anton Vorontsov <anton@enomsg.org>
 Subject: Re: [PATCH v2] memcg: Add memory.pressure_level events
-Date: Fri, 22 Feb 2013 08:56:08 +0900
-Message-ID: <20130221235608.GH16950@blaptop>
+Date: Thu, 21 Feb 2013 22:55:52 -0800
+Message-ID: <20130222065552.GA26194@lizard.gateway.2wire.net>
 References: <20130219044012.GA23356@lizard.sbx00618.mountca.wayport.net>
  <20130220001743.GE16950@blaptop>
  <CAOS58YOPjcH_pFFhPLJEAdaLkm5FoOy9mG2i-PkWAcb7O6V_Kw@mail.gmail.com>
  <20130221230425.GA22792@lizard.fhda.edu>
+ <20130221235608.GH16950@blaptop>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130221230425.GA22792@lizard.fhda.edu>
+In-Reply-To: <20130221235608.GH16950@blaptop>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Anton Vorontsov <anton@enomsg.org>
-Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Luiz Capitulino <lcapitulino@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com
+To: Minchan Kim <minchan@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Luiz Capitulino <lcapitulino@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com, Orna Agmon Ben-Yehuda <ladypine@gmail.com>, Muli Ben-Yehuda <mulix@mulix.org>
 
-Hi Anton,
+On Fri, Feb 22, 2013 at 08:56:08AM +0900, Minchan Kim wrote:
+> [...] The my point is that you have a plan to support? Why I have a
+> question is that you said your goal is to replace lowmemory killer
 
-On Thu, Feb 21, 2013 at 03:04:26PM -0800, Anton Vorontsov wrote:
-> On Tue, Feb 19, 2013 at 04:21:28PM -0800, Tejun Heo wrote:
-> > On Tue, Feb 19, 2013 at 4:17 PM, Minchan Kim <minchan@kernel.org> wrote:
-> > > Should we really enable memcg for just pressure notificaion in embedded side?
-> > > I didn't check the size(cgroup + memcg) and performance penalty but I don't want
-> > > to add unnecessary overhead if it is possible.
-> > > Do you have a plan to support it via global knob(ie, /proc/mempressure), NOT memcg?
-> > 
-> > That should be handled by mempressure at the root cgroup. If that adds
-> > significant amount of overhead code or memory-wise, we just need to
-> > fix root cgroup handling in memcg. No reason to further complicate the
-> > interface which already is pretty complex.
-> 
-> For what it worth, I agree here. Even if we decide to make another
-> interface to vmpressure (which, say, would not require memcg), then it is
-> better to keep the API the same: eventfd + control file. That way,
-> API/ABI-wise there will be no differnce between memcg and non-memcg
-> kernels, which is cool.
+In short: yes, of course, if the non-memcg interface will be in demand.
 
-I tend to agree Tejun's opinion POV maintain and I don't have a number
-of memcg static/dynamic effect for embedded side so I don't want to argue now.
-AFAIRC, Mel reported last year that memcg had rather no small runtime effect
-and some memcg guys are trying to solve it. The memcg guy among Cced guys of
-this thread could answer that more clearly.
+> but android don't have enabled CONFIG_MEMCG as you know well
+> so they should enable it for using just notifier? or they need another hack to
+> connect notifier to global thing?
 
-I don't care whatever API looks like. Of course, keeping the API the same is
-always good if we decide to need it. The my point is that you have a plan
-to support? Why I have a question is that you said your goal is to replace
-lowmemory killer but android don't have enabled CONFIG_MEMCG as you know well
-so they should enable it for using just notifier? or they need another hack to
-connect notifier to global thing?
+A hack is not an option for me. :-) My final goal is to switch Android to
+use the notifier without need for hacks/external patches or
+drivers/staging.
 
-What's the plan?
+But my current goal is to make the most generic case work, and do this in
+the most correct way. That is, vmpressure + MEMCG. Once I accomplish this,
+I can then think of any niche needs (such as Android).
 
-> 
-> Thanks,
-> Anton
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+There will be two possibilities for Android:
 
--- 
-Kind regards,
-Minchan Kim
+1. Obviously, turn on CONFIG_MEMCG. We need to measure its effect on real
+   devices, and see if it makes sense. (Plus, maybe there are other uses
+   for MEMCG on Android?)
+
+or
+
+2. Implement /sys/fs/cgroups/memory/memory.pressure_level interface
+   without MEMCG. Doing this will be really easy as we'll already have
+   vmpressure() core, and Android has CROUPS=y. But I do expect some
+   discussion like 'why don't you fix memcg instead?'. We'll have to
+   answer this question by looking back at '1.'
+
+Also note that cgroups vmpressure notifiers were tried by QEMU folks, and
+it seemed to be useful:
+
+   http://lists.gnu.org/archive/html/qemu-devel/2012-12/msg02821.html 
+
+So, nowadays it is not only about Android. Some time ago I also got an
+email from Orna Agmon Ben-Yehuda, who suggested to use vmpressure stuff
+with 'memcached' (but I didn't find time to actually try it, so far. :(
+Thanks for the email, btw!).
+
+So it is useful with or without MEMCG, and if we will really need to
+support vmpressure without MEMCG, I will have to implement the support in
+addition to MEMCG case, yes.
+
+Thanks,
+
+Anton
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
