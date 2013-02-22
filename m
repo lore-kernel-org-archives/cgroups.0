@@ -1,45 +1,106 @@
-From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=2E34=5D_memcg=3A_do_not_trigger_OOM_if_PF=5FNO=5FMEMCG=5FOOM_is_set?=
-Date: Fri, 22 Feb 2013 09:23:32 +0100
-Message-ID: <20130222092332.4001E4B6@pobox.sk>
-References: <20130208094420.GA7557@dhcp22.suse.cz>, <20130208120249.FD733220@pobox.sk>, <20130208123854.GB7557@dhcp22.suse.cz>, <20130208145616.FB78CE24@pobox.sk>, <20130208152402.GD7557@dhcp22.suse.cz>, <20130208165805.8908B143@pobox.sk>, <20130208171012.GH7557@dhcp22.suse.cz>, <20130208220243.EDEE0825@pobox.sk>, <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk> <20130211112240.GC19922@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130211112240.GC19922-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH] slub: correctly bootstrap boot caches
+Date: Fri, 22 Feb 2013 14:30:30 +0400
+Message-ID: <1361529030-17462-1-git-send-email-glommer@parallels.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Glauber Costa <glommer@parallels.com>, Christoph Lameter <cl@linux.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@kernel.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
->Unfortunately I am not able to reproduce this behavior even if I try
->to hammer OOM like mad so I am afraid I cannot help you much without
->further debugging patches.
->I do realize that experimenting in your environment is a problem but I
->do not many options left. Please do not use strace and rather collect
->/proc/pid/stack instead. It would be also helpful to get group/tasks
->file to have a full list of tasks in the group
+After we create a boot cache, we may allocate from it until it is bootstraped.
+This will move the page from the partial list to the cpu slab list. If this
+happens, the loop:
+
+	list_for_each_entry(p, &n->partial, lru)
+
+that we use to scan for all partial pages will yield nothing, and the pages
+will keep pointing to the boot cpu cache, which is of course, invalid. To do
+that, we should flush the cache to make sure that the cpu slab is back to the
+partial list.
+
+Although not verified in practice, I also point out that it is not safe to scan
+the full list only when debugging is on in this case. As unlikely as it is, it
+is theoretically possible for the pages to be full. If they are, they will
+become unreachable. Aside from scanning the full list, we also need to make
+sure that the pages indeed sit in there: the easiest way to do it is to make
+sure the boot caches have the SLAB_STORE_USER debug flag set.
+
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+Reported-by:  Steffen Michalke <StMichalke@web.de>
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
 
+ mm/slub.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
+---
+ mm/slub.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-Hi Michal,
-
-
-sorry that i didn't response for a while. Today i installed kernel with your two patches and i'm running it now. I'm still having problems with OOM which is not able to handle low memory and is not killing processes. Here is some info:
-
-- data from cgroup 1258 while it was under OOM and no processes were killed (so OOM don't stop and cgroup was freezed)
-http://watchdog.sk/lkml/memcg-bug-6.tar.gz
-
-I noticed problem about on 8:39 and waited until 8:57 (nothing happend). Then i killed process 19864 which seems to help and other processes probably ends and cgroup started to work. But problem accoured again about 20 seconds later, so i killed all processes at 8:58. The problem is occuring all the time since then. All processes (in that cgroup) are always in state 'D' when it occurs.
-
-
-- kernel log from boot until now
-http://watchdog.sk/lkml/kern3.gz
-
-
-Btw, something probably happened also at about 3:09 but i wasn't able to gather any data because my 'load check script' killed all apache processes (load was more than 100).
-
-
-
-azur
+diff --git a/mm/slub.c b/mm/slub.c
+index ba2ca53..ab372c8 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3617,6 +3617,12 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
+ 
+ 	memcpy(s, static_cache, kmem_cache->object_size);
+ 
++	/*
++	 * This runs very early, and only the boot processor is supposed to be
++	 * up.  Even if it weren't true, IRQs are not up so we couldn't fire
++	 * IPIs around.
++	 */
++	__flush_cpu_slab(s, smp_processor_id());
+ 	for_each_node_state(node, N_NORMAL_MEMORY) {
+ 		struct kmem_cache_node *n = get_node(s, node);
+ 		struct page *p;
+@@ -3625,12 +3631,13 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
+ 			list_for_each_entry(p, &n->partial, lru)
+ 				p->slab_cache = s;
+ 
+-#ifdef CONFIG_SLUB_DEBUG
+ 			list_for_each_entry(p, &n->full, lru)
+ 				p->slab_cache = s;
+-#endif
+ 		}
+ 	}
++
++	/* No longer needs to keep track of the full list */
++	s->flags &= ~SLAB_STORE_USER;
+ 	list_add(&s->list, &slab_caches);
+ 	return s;
+ }
+@@ -3648,8 +3655,14 @@ void __init kmem_cache_init(void)
+ 	kmem_cache_node = &boot_kmem_cache_node;
+ 	kmem_cache = &boot_kmem_cache;
+ 
++	/*
++	 * We want to keep early pages in the full list because of the
++	 * bootstrap process. If we don't do it, those pages become unreachable
++	 * and we can't update their page->slab_cache information.
++	 */
+ 	create_boot_cache(kmem_cache_node, "kmem_cache_node",
+-		sizeof(struct kmem_cache_node), SLAB_HWCACHE_ALIGN);
++			sizeof(struct kmem_cache_node),
++			SLAB_HWCACHE_ALIGN | SLAB_STORE_USER);
+ 
+ 	hotplug_memory_notifier(slab_memory_callback, SLAB_CALLBACK_PRI);
+ 
+@@ -3659,7 +3672,7 @@ void __init kmem_cache_init(void)
+ 	create_boot_cache(kmem_cache, "kmem_cache",
+ 			offsetof(struct kmem_cache, node) +
+ 				nr_node_ids * sizeof(struct kmem_cache_node *),
+-		       SLAB_HWCACHE_ALIGN);
++		       SLAB_HWCACHE_ALIGN | SLAB_STORE_USER);
+ 
+ 	kmem_cache = bootstrap(&boot_kmem_cache);
+ 
+-- 
+1.8.1.2
