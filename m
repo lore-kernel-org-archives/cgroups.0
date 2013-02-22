@@ -1,43 +1,27 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] slub: correctly bootstrap boot caches
-Date: Fri, 22 Feb 2013 19:45:14 +0400
-Message-ID: <5127928A.20000@parallels.com>
+Date: Fri, 22 Feb 2013 16:10:27 +0000
+Message-ID: <0000013d02ab8230-de441d64-395f-4c87-89e7-3f2cd2209680-000000@email.amazonses.com>
 References: <1361529030-17462-1-git-send-email-glommer@parallels.com> <0000013d026b4e5f-1b3deecb-7e37-4476-a27b-3a7db8c1f0a8-000000@email.amazonses.com> <51278A12.4000504@parallels.com> <0000013d028eec8e-012456de-9b98-4bcb-9427-2fbee58ecc74-000000@email.amazonses.com>
+ <5127928A.20000@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <0000013d028eec8e-012456de-9b98-4bcb-9427-2fbee58ecc74-000000@email.amazonses.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5127928A.20000-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl@linux.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Pekka Enberg <penberg@kernel.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On 02/22/2013 07:39 PM, Christoph Lameter wrote:
-> On Fri, 22 Feb 2013, Glauber Costa wrote:
-> 
->> As I've mentioned in the description, the real bug is from partial slabs
->> being temporarily in the cpu_slab during a recent allocation and
->> therefore unreachable through the partial list.
-> 
-> The bootstrap code does not use cpu slabs but goes directly to the slab
-> pages. See early_kmem_cache_node_alloc.
-> 
+On Fri, 22 Feb 2013, Glauber Costa wrote:
 
-That differs from what I am seeing here.
-I can trace an early __slab_alloc allocation from
-the kmem_cache_node cache, very likely coming from the kmem_cache boot
-cache creation. It takes the page out of the partial list and moves it
-to the cpu_slab. After that, that particular page becomes unreachable
-for bootstrap.
+> At this point, we are already slab_state == PARTIAL, while
+> init_kmem_cache_nodes will only differentiate against slab_state == DOWN.
 
-At this point, we are already slab_state == PARTIAL, while
-init_kmem_cache_nodes will only differentiate against slab_state == DOWN.
+kmem_cache_node creation runs before PARTIAL and kmem_cache runs
+after. So there would be 2 kmem_cache_node structures allocated. Ok so
+that would use cpu slabs and therefore remove pages from the partial list.
+Pushing that back using the flushing should fix this. But I thought there
+was already code that went through the cpu slabs to address this?
 
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
