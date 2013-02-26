@@ -1,91 +1,62 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/3] cpuset: use cgroup_name() in cpuset_print_task_mems_allowed()
-Date: Mon, 25 Feb 2013 14:18:50 +0800
-Message-ID: <512B024A.7080702@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/3] cgroup: add cgroup_name() API
+Date: Mon, 25 Feb 2013 18:27:03 -0800
+Message-ID: <20130226022703.GA13837@htj.dyndns.org>
 References: <512B01FA.5020506@huawei.com>
+ <512B020D.9040504@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <512B01FA.5020506-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=A9C3rvG/BdZyStiEK3XHzUyoLU1I3P1FlXTWFVb/+T8=;
+        b=PffmAoMQtCMKrt4ZKcWq3exeDgIVuX9PRdaRMrzkYJUX+T4CvHNZmDKUtp5ZpGKIr6
+         MMr7X7Wt4j90Peepo2IebW4LQHtIg75vqzX99bW9dy6Mq/GCU3Fs1kGo214Q9fEosfhZ
+         YESv209JURQM28+HC10EUlpN2C532sXdH+oxIAmf+4R97aD5f7QVO57xiSPjfEKhFIGN
+         y7RRUOHB7euyKpcGIBEZsx3FPQnzFLTsC0U9uYhz8d6NplrSs+68rdJQpt4E0F9A2C5P
+         jaSA14QzkuZKqA7Os+M3CtgS/NDgHCVPDWASUUGgqGHEDRl4v0lOJJA4U5AwfzhYkdVI
+         sq5Q==
+Content-Disposition: inline
+In-Reply-To: <512B020D.9040504-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Use cgroup_name() instead of cgrp->dentry->name. This makes the code
-simpler.
+On Mon, Feb 25, 2013 at 02:17:49PM +0800, Li Zefan wrote:
+> cgroup_name() returns the name of a cgroup and it must be called with
+> rcu_read_lock() held.
+> 
+> This will be used by cpuset.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+...
+>  /**
+> + * cgroup_name - get the name of a cgroup
+> + * @cgrp: the cgroup in question
+> + *
+> + * Must be called with rcu_read_lock() held.
+> + */
+> +char *cgroup_name(const struct cgroup *cgrp)
+> +{
+> +	if (!cgrp->parent)
+> +		return "/";
+> +	else
+> +		return rcu_dereference(cgrp->name)->name;
+> +}
 
-While at it, remove cpuset_name and make cpuset_nodelist a local variable
-to cpuset_print_task_mems_allowed().
+Can't we initialize ->name of root cgroup to "/" and lose the
+conditional?  We can lose the wrapper altogether but if you're worried
+that sparse check isn't enough, we can have trivial inline wrapper,
+but in that case it probably would help to rename cgrp->name to, say,
+cgrp->__name and put a comment directing people to the accessing
+wrapper which should probably return const char *.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cpuset.c | 32 +++++++++-----------------------
- 1 file changed, 9 insertions(+), 23 deletions(-)
+Thanks.
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 4f9dfe4..ace5bfc 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -265,17 +265,6 @@ static DEFINE_MUTEX(cpuset_mutex);
- static DEFINE_MUTEX(callback_mutex);
- 
- /*
-- * cpuset_buffer_lock protects both the cpuset_name and cpuset_nodelist
-- * buffers.  They are statically allocated to prevent using excess stack
-- * when calling cpuset_print_task_mems_allowed().
-- */
--#define CPUSET_NAME_LEN		(128)
--#define	CPUSET_NODELIST_LEN	(256)
--static char cpuset_name[CPUSET_NAME_LEN];
--static char cpuset_nodelist[CPUSET_NODELIST_LEN];
--static DEFINE_SPINLOCK(cpuset_buffer_lock);
--
--/*
-  * CPU / memory hotplug is handled asynchronously.
-  */
- static struct workqueue_struct *cpuset_propagate_hotplug_wq;
-@@ -2592,6 +2581,8 @@ int cpuset_mems_allowed_intersects(const struct task_struct *tsk1,
- 	return nodes_intersects(tsk1->mems_allowed, tsk2->mems_allowed);
- }
- 
-+#define CPUSET_NODELIST_LEN	(256)
-+
- /**
-  * cpuset_print_task_mems_allowed - prints task's cpuset and mems_allowed
-  * @task: pointer to task_struct of some task.
-@@ -2602,24 +2593,19 @@ int cpuset_mems_allowed_intersects(const struct task_struct *tsk1,
-  */
- void cpuset_print_task_mems_allowed(struct task_struct *tsk)
- {
--	struct dentry *dentry;
-+	 /* Statically allocated to prevent using excess stack. */
-+	static char cpuset_nodelist[CPUSET_NODELIST_LEN];
-+	static DEFINE_SPINLOCK(cpuset_buffer_lock);
- 
--	dentry = task_cs(tsk)->css.cgroup->dentry;
--	spin_lock(&cpuset_buffer_lock);
-+	struct cgroup *cgrp = task_cs(tsk)->css.cgroup;
- 
--	if (!dentry) {
--		strcpy(cpuset_name, "/");
--	} else {
--		spin_lock(&dentry->d_lock);
--		strlcpy(cpuset_name, (const char *)dentry->d_name.name,
--			CPUSET_NAME_LEN);
--		spin_unlock(&dentry->d_lock);
--	}
-+	spin_lock(&cpuset_buffer_lock);
- 
- 	nodelist_scnprintf(cpuset_nodelist, CPUSET_NODELIST_LEN,
- 			   tsk->mems_allowed);
- 	printk(KERN_INFO "%s cpuset=%s mems_allowed=%s\n",
--	       tsk->comm, cpuset_name, cpuset_nodelist);
-+	       tsk->comm, cgroup_name(cgrp), cpuset_nodelist);
-+
- 	spin_unlock(&cpuset_buffer_lock);
- }
- 
 -- 
-1.8.0.2
+tejun
