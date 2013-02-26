@@ -1,59 +1,43 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/3] cgroup: add cgroup_name() API
-Date: Tue, 26 Feb 2013 18:25:08 +0800
-Message-ID: <512C8D84.7090707@huawei.com>
-References: <512B01FA.5020506@huawei.com> <512B020D.9040504@huawei.com> <20130226022703.GA13837@htj.dyndns.org>
+Date: Tue, 26 Feb 2013 05:26:08 -0800
+Message-ID: <CAOS58YMb7HRQ3X+Z92vi3+jKr4DuNmAgxtc5e3Jkhy-s-7Os-g@mail.gmail.com>
+References: <512B01FA.5020506@huawei.com>
+	<512B020D.9040504@huawei.com>
+	<20130226022703.GA13837@htj.dyndns.org>
+	<512C8D84.7090707@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130226022703.GA13837-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=vnKPVffm1W0Y7oxHMAvzxSyGUt8ML/JrKyGLMB4XeoM=;
+        b=CKM63ZRJXIzq+fcbipilszhTm5B9nJo4HjQweSjiwANR0/b2CjKbm5tqa9HwJlaxCJ
+         Ll/sAbjE4kSCKczB4CHOCTMQqD6sUNT56vBLH2E0LEKz8HbZCMc8nJtB+/yGGALo/eMS
+         hHStQZ+mjxoW/rR+EvkOeCJqGwz34tTtz6c0Bg2zjJ2sBHUHbd+uarYg/AMOekdeCM17
+         H8qS4BiJjGG7QtIKRJ6V9o+P2j/hr9dBpTWsbKJLHnlLyno9LGaiXODwt11olO/RkBbQ
+         yHoPXUvIv6+1GdKMcnG35kUocmFQJKURrbtsABz+vk8xSmJn11CrikmiBp5cgprwkj6a
+         bohA==
+In-Reply-To: <512C8D84.7090707@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan@huawei.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On 2013/2/26 10:27, Tejun Heo wrote:
-> On Mon, Feb 25, 2013 at 02:17:49PM +0800, Li Zefan wrote:
->> cgroup_name() returns the name of a cgroup and it must be called with
->> rcu_read_lock() held.
->>
->> This will be used by cpuset.
->>
->> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ...
->>  /**
->> + * cgroup_name - get the name of a cgroup
->> + * @cgrp: the cgroup in question
->> + *
->> + * Must be called with rcu_read_lock() held.
->> + */
->> +char *cgroup_name(const struct cgroup *cgrp)
->> +{
->> +	if (!cgrp->parent)
->> +		return "/";
->> +	else
->> +		return rcu_dereference(cgrp->name)->name;
->> +}
-> 
-> Can't we initialize ->name of root cgroup to "/" and lose the
-> conditional? 
+Hello,
 
-Sure we can. We'll have to allocate cgrp->name in cgroup_remount() and
-cgroup_init(), and free cgrp->name in cgroup_kill_sb(). It looks to me
-the current version is a bit simpler.
+On Tue, Feb 26, 2013 at 2:25 AM, Li Zefan <lizefan@huawei.com> wrote:
+> Sure we can. We'll have to allocate cgrp->name in cgroup_remount() and
+> cgroup_init(), and free cgrp->name in cgroup_kill_sb(). It looks to me
+> the current version is a bit simpler.
 
-That said, I don't have strong preference. I'll revise the patchset if
-you still prefer to init root_cgrp->name.
+Can't we just set it to constant "/"?  Root cgroup init is a separate
+path anyway.
 
-> We can lose the wrapper altogether but if you're worried
-> that sparse check isn't enough, we can have trivial inline wrapper,
-> but in that case it probably would help to rename cgrp->name to, say,
-> cgrp->__name and put a comment directing people to the accessing
-> wrapper which should probably return const char *.
-> 
+Thanks.
 
-I do expect people always use cgroup_name(). Should anyone access
-cgrp->name directly and doesn't notice cgrp->name can be NULL, he'll
-get NULL ptr crash and turn to cgroup_name(), and a comment to guide
-people to cgroup_name() is helpful too.
+-- 
+tejun
