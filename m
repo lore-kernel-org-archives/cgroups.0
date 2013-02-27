@@ -1,48 +1,255 @@
-From: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] slub: correctly bootstrap boot caches
-Date: Wed, 27 Feb 2013 09:47:37 +0200
-Message-ID: <CAOJsxLFzrw0pCzUG7Ru4dB9=aPoNKHiJ_y3bopiFvBhzV9A5Zg@mail.gmail.com>
-References: <1361550000-14173-1-git-send-email-glommer@parallels.com>
-	<alpine.DEB.2.02.1302221034380.7600@gentwo.org>
-	<alpine.DEB.2.02.1302221057430.7600@gentwo.org>
-	<0000013d02d9ee83-9b41b446-ee42-4498-863e-33b3175c007c-000000@email.amazonses.com>
-	<5127A607.3040603@parallels.com>
-	<0000013d02ee5bf7-a2d47cfc-64fb-4faa-b92e-e567aeb6b587-000000@email.amazonses.com>
+From: Roman Gushchin <klamm@yandex-team.ru>
+Subject: [PATCH] memcg: implement low limits
+Date: Wed, 27 Feb 2013 12:02:36 +0400
+Message-ID: <8121361952156@webcorp1g.yandex-team.ru>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:x-received:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-        bh=yD8IkM5xY/YN8UwRgSmnsk4j+1g4/Qm48//91K5vdAQ=;
-        b=ZjnNiSyA0mg4oyN3Zh1KBeYIDOsEjAKLlfRCzDlMitzGCtTV87SyGaSRKQ/llcRaHw
-         8BCs2TxZf0Exo3L8TWfIod5pqnGErPuG+kbAaKAgSx9YQsOhm4tXqJNP3vO+KjhYtdhf
-         4WVzEvmiFjnb908UtouGx5JpzqAB2QCfvl0BCzD1h2J2uwpxtQM50nfIkH4959R/66I9
-         do71J6TcQpTfv7C+56Z4/mOZvu6msJDmbtLM5tQ/vVss2BEoW6YGNMp+NFNC4hbad8A/
-         b0HfXC2miEKdBqmSwBOIE9CW7pfoTQd1zR0Gvr767uI4RikPdxxWje9tasvTVvq3qEtV
-         rHuA==
-In-Reply-To: <0000013d02ee5bf7-a2d47cfc-64fb-4faa-b92e-e567aeb6b587-000000-p/GC64/jrecnJqMo6gzdpkEOCMrvLtNR@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
+	s=default; t=1361952156;
+	bh=bmZFTeJgW9CGDOzngZjUUIlJc4ZXf0VqtNWxgCHrePU=;
+	h=From:To:Subject:Date;
+	b=b9NHfMDXM3vxCrcKGhx4z+1/kDs36HNSNPeCAkvdP1g6CF5PsNMjVcoq1PGOD4gKv
+	 C6EY94QZnN3hBbqPvuHkXpfQyTDGcLEvbtmBUwr7/UPi+tzpMGAAxkYklf42w+WILK
+	 iTDUkQ9ixJp9XWpFSoJKUA0YtHfbIoM0JPYA4vz4=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Johannes Weiner-Arquette <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, kosaki.motohiro@jp.fujitsu.com, Rik van Riel <riel@redhat.com>, mel@csn.ul.ie, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Feb 22, 2013 at 7:23 PM, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org> wrote:
-> On Fri, 22 Feb 2013, Glauber Costa wrote:
->
->> On 02/22/2013 09:01 PM, Christoph Lameter wrote:
->> > Argh. This one was the final version:
->> >
->> > https://patchwork.kernel.org/patch/2009521/
->> >
->>
->> It seems it would work. It is all the same to me.
->> Which one do you prefer?
->
-> Flushing seems to be simpler and less code.
+Hi, all!
 
-Well, I completely lost track of what to apply... Can someone please
-send me the final version that everybody agrees on with proper ACKs
-and other attributions?
+I've implemented low limits for memory cgroups. The primary goal was to add an ability 
+to protect some memory from reclaiming without using mlock(). A kind of "soft mlock()".
+
+I think this patch will be helpful when it's necessary to protect production processes from
+memory-wasting backup processes.
+
+--
+
+Low limits for memory cgroup can be used to limit memory pressure on it.
+If memory usage of a cgroup is under it's low limit, it will not be
+affected by global reclaim. If it reaches it's low limit from above,
+the reclaiming speed will be dropped exponentially.
+
+Low limits don't affect soft reclaim.
+Also, it's possible that a cgroup with memory usage under low limit
+will be reclaimed slowly on very low scanning priorities.
+
+Signed-off-by: Roman Gushchin <klamm@yandex-team.ru>
+---
+ include/linux/memcontrol.h  |    7 +++++
+ include/linux/res_counter.h |   17 +++++++++++
+ kernel/res_counter.c        |    2 ++
+ mm/memcontrol.c             |   67 +++++++++++++++++++++++++++++++++++++++++++
+ mm/vmscan.c                 |    5 ++++
+ 5 files changed, 98 insertions(+)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d6183f0..33e233f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -183,6 +183,8 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+ 						gfp_t gfp_mask,
+ 						unsigned long *total_scanned);
+ 
++unsigned int mem_cgroup_low_limit_scale(struct lruvec *lruvec);
++
+ void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+ static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
+ 					     enum vm_event_item idx)
+@@ -365,6 +367,11 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+ 	return 0;
+ }
+ 
++static inline unsigned int mem_cgroup_low_limit_scale(struct lruvec *lruvec)
++{
++	return 0;
++}
++
+ static inline void mem_cgroup_split_huge_fixup(struct page *head)
+ {
+ }
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+index 5ae8456..df3510d 100644
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -39,6 +39,10 @@ struct res_counter {
+ 	 */
+ 	unsigned long long soft_limit;
+ 	/*
++	 * the secured guaranteed minimal limit of resource
++	 */
++	unsigned long long low_limit;
++	/*
+ 	 * the number of unsuccessful attempts to consume the resource
+ 	 */
+ 	unsigned long long failcnt;
+@@ -87,6 +91,7 @@ enum {
+ 	RES_LIMIT,
+ 	RES_FAILCNT,
+ 	RES_SOFT_LIMIT,
++	RES_LOW_LIMIT,
+ };
+ 
+ /*
+@@ -223,4 +228,16 @@ res_counter_set_soft_limit(struct res_counter *cnt,
+ 	return 0;
+ }
+ 
++static inline int
++res_counter_set_low_limit(struct res_counter *cnt,
++			   unsigned long long low_limit)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&cnt->lock, flags);
++	cnt->low_limit = low_limit;
++	spin_unlock_irqrestore(&cnt->lock, flags);
++	return 0;
++}
++
+ #endif
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index ff55247..ebfefc1 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -135,6 +135,8 @@ res_counter_member(struct res_counter *counter, int member)
+ 		return &counter->failcnt;
+ 	case RES_SOFT_LIMIT:
+ 		return &counter->soft_limit;
++	case RES_LOW_LIMIT:
++		return &counter->low_limit;
+ 	};
+ 
+ 	BUG();
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 53b8201..d8e6ee6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1743,6 +1743,53 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 			 NULL, "Memory cgroup out of memory");
+ }
+ 
++/*
++ * If a cgroup is under low limit or enough close to it,
++ * decrease speed of page scanning.
++ *
++ * mem_cgroup_low_limit_scale() returns a number
++ * from range [0, DEF_PRIORITY - 2], which is used
++ * in the reclaim code as a scanning priority modifier.
++ *
++ * If the low limit is not set, it returns 0;
++ *
++ * usage - low_limit > usage / 8  => 0
++ * usage - low_limit > usage / 16 => 1
++ * usage - low_limit > usage / 32 => 2
++ * ...
++ * usage - low_limit > usage / (2 ^ DEF_PRIORITY - 3) => DEF_PRIORITY - 3
++ * usage < low_limit => DEF_PRIORITY - 2
++ *
++ */
++unsigned int mem_cgroup_low_limit_scale(struct lruvec *lruvec)
++{
++	struct mem_cgroup_per_zone *mz;
++	struct mem_cgroup *memcg;
++	unsigned long long low_limit;
++	unsigned long long usage;
++	unsigned int i;
++
++	mz = container_of(lruvec, struct mem_cgroup_per_zone, lruvec);
++	memcg = mz->memcg;
++	if (!memcg)
++		return 0;
++
++	low_limit = res_counter_read_u64(&memcg->res, RES_LOW_LIMIT);
++	if (!low_limit)
++		return 0;
++
++	usage = res_counter_read_u64(&memcg->res, RES_USAGE);
++
++	if (usage < low_limit)
++		return DEF_PRIORITY - 2;
++
++	for (i = 0; i < DEF_PRIORITY - 2; i++)
++		if (usage - low_limit > (usage >> (i + 3)))
++			break;
++
++	return i;
++}
++
+ static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+ 					gfp_t gfp_mask,
+ 					unsigned long flags)
+@@ -5116,6 +5163,20 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ 		else
+ 			ret = -EINVAL;
+ 		break;
++	case RES_LOW_LIMIT:
++		ret = res_counter_memparse_write_strategy(buffer, &val);
++		if (ret)
++			break;
++		/*
++		 * For memsw, low limits (as also soft limits, see upper)
++		 * are hard to implement in terms of semantics,
++		 * for now, we support soft limits for control without swap
++		 */
++		if (type == _MEM)
++			ret = res_counter_set_low_limit(&memcg->res, val);
++		else
++			ret = -EINVAL;
++		break;
+ 	default:
+ 		ret = -EINVAL; /* should be BUG() ? */
+ 		break;
+@@ -5798,6 +5859,12 @@ static struct cftype mem_cgroup_files[] = {
+ 		.read = mem_cgroup_read,
+ 	},
+ 	{
++		.name = "low_limit_in_bytes",
++		.private = MEMFILE_PRIVATE(_MEM, RES_LOW_LIMIT),
++		.write_string = mem_cgroup_write,
++		.read = mem_cgroup_read,
++	},
++	{
+ 		.name = "failcnt",
+ 		.private = MEMFILE_PRIVATE(_MEM, RES_FAILCNT),
+ 		.trigger = mem_cgroup_reset,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 88c5fed..9c1c702 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1660,6 +1660,7 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 	bool force_scan = false;
+ 	unsigned long ap, fp;
+ 	enum lru_list lru;
++	unsigned int low_limit_scale = 0;
+ 
+ 	/*
+ 	 * If the zone or memcg is small, nr[l] can be 0.  This
+@@ -1779,6 +1780,9 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 	fraction[1] = fp;
+ 	denominator = ap + fp + 1;
+ out:
++	if (global_reclaim(sc))
++		low_limit_scale = mem_cgroup_low_limit_scale(lruvec);
++
+ 	for_each_evictable_lru(lru) {
+ 		int file = is_file_lru(lru);
+ 		unsigned long size;
+@@ -1786,6 +1790,7 @@ out:
+ 
+ 		size = get_lru_size(lruvec, lru);
+ 		scan = size >> sc->priority;
++		scan >>= low_limit_scale;
+ 
+ 		if (!scan && force_scan)
+ 			scan = min(size, SWAP_CLUSTER_MAX);
+-- 
+1.7.9.5
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
