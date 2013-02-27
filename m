@@ -1,77 +1,147 @@
-From: Greg Thelen <gthelen@google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH] memcg: implement low limits
-Date: Wed, 27 Feb 2013 00:20:36 -0800
-Message-ID: <xr93y5eacgmj.fsf@gthelen.mtv.corp.google.com>
+Date: Wed, 27 Feb 2013 10:40:54 +0100
+Message-ID: <20130227094054.GC16719@dhcp22.suse.cz>
 References: <8121361952156@webcorp1g.yandex-team.ru>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=x-received:from:to:cc:subject:references:date:in-reply-to
-         :message-id:user-agent:mime-version:content-type;
-        bh=gdgCa61rc9/ONT9g+vVb0uFfHFLiIurec0DUcoB0WFI=;
-        b=o/npXRTMTBiiq10I3tqRIQmIkyeD2M88tTXX3gFJJn2OBz2iMHjDhIG7fUSNVCI6h5
-         CabR53rrbuMx88arMpHdds6jkLfdqsApJkMJ5jckVhUYug9sEZxTD7WdzRtTjvHfeoJd
-         3HIH2G+sM3M7FtDABQjYxqzRrucR5IXZulmLIBp9XVZC6a5VzTvl0y8tTvR973dvMRYc
-         N0yd+SucRv0BhJEMAFfXaMISKFsGLo/DTMVv07+g2LSeNBdaYMBjINJBCtmowG09m7l3
-         pd6Kqn3rKr4bSdgpZSH6QZSchZbrR/IlslN3SwTMFkmC4Otv+fEwmAuCbr8hlbb5CMSN
-         85Cg==
-In-Reply-To: <8121361952156@webcorp1g.yandex-team.ru> (Roman Gushchin's
-	message of "Wed, 27 Feb 2013 12:02:36 +0400")
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <8121361952156-UZ+4eo27dRL0t1ZyImeKKJZIWCK8hONu@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <klamm@yandex-team.ru>
-Cc: Johannes Weiner-Arquette <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, kosaki.motohiro@jp.fujitsu.com, Rik van Riel <riel@redhat.com>, mel@csn.ul.ie, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Roman Gushchin <klamm-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Cc: Johannes Weiner-Arquette <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Feb 27 2013, Roman Gushchin wrote:
-
+On Wed 27-02-13 12:02:36, Roman Gushchin wrote:
 > Hi, all!
->
-> I've implemented low limits for memory cgroups. The primary goal was to add an ability 
-> to protect some memory from reclaiming without using mlock(). A kind of "soft mlock()".
->
-> I think this patch will be helpful when it's necessary to protect production processes from
-> memory-wasting backup processes.
->
-> --
->
-> Low limits for memory cgroup can be used to limit memory pressure on it.
-> If memory usage of a cgroup is under it's low limit, it will not be
-> affected by global reclaim. If it reaches it's low limit from above,
-> the reclaiming speed will be dropped exponentially.
->
-> Low limits don't affect soft reclaim.
-> Also, it's possible that a cgroup with memory usage under low limit
-> will be reclaimed slowly on very low scanning priorities.
+> 
+> I've implemented low limits for memory cgroups. The primary goal was
+> to add an ability to protect some memory from reclaiming without using
+> mlock(). A kind of "soft mlock()".
 
-So the new low limit is not a rigid limit.  Global reclaim can reclaim
-from a cgroup when its usage is below low_limit_in_bytes although such
-reclaim is less aggressive than when usage is above low_limit_in_bytes.
-Correct?
+Let me restate what I have already mentioned in the private
+communication.
 
-Why doesn't memcg reclaim (i.e. !global_reclaim) also consider
-low_limit_in_bytes?
+We already have soft limit which can be implemented to achieve the
+same/similar functionality and in fact this is a long term objective (at
+least for me). I hope I will be able to post my code soon. The last post
+by Ying Hand (cc-ing her) was here:
+http://comments.gmane.org/gmane.linux.kernel.mm/83499
 
-Do you have demonstration of how this improves system operation?
+To be honest I do not like introduction of a new limit because we have
+two already and the situation would get over complicated.
 
-Why is soft_limit insufficient?
+More comments on the code bellow.
 
-> Signed-off-by: Roman Gushchin <klamm@yandex-team.ru>
-> ---
->  include/linux/memcontrol.h  |    7 +++++
->  include/linux/res_counter.h |   17 +++++++++++
->  kernel/res_counter.c        |    2 ++
->  mm/memcontrol.c             |   67 +++++++++++++++++++++++++++++++++++++++++++
->  mm/vmscan.c                 |    5 ++++
->  5 files changed, 98 insertions(+)
+[...]
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 53b8201..d8e6ee6 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1743,6 +1743,53 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  			 NULL, "Memory cgroup out of memory");
+>  }
+>  
+> +/*
+> + * If a cgroup is under low limit or enough close to it,
+> + * decrease speed of page scanning.
+> + *
+> + * mem_cgroup_low_limit_scale() returns a number
+> + * from range [0, DEF_PRIORITY - 2], which is used
+> + * in the reclaim code as a scanning priority modifier.
+> + *
+> + * If the low limit is not set, it returns 0;
+> + *
+> + * usage - low_limit > usage / 8  => 0
+> + * usage - low_limit > usage / 16 => 1
+> + * usage - low_limit > usage / 32 => 2
+> + * ...
+> + * usage - low_limit > usage / (2 ^ DEF_PRIORITY - 3) => DEF_PRIORITY - 3
+> + * usage < low_limit => DEF_PRIORITY - 2
 
-Need to update Documentation/cgroups/memory.txt explaining the external
-behavior of this new know and how it interacts with soft_limit_in_bytes.
+Could you clarify why you have used this calculation. The comment
+exlaims _what_ is done but not _why_ it is done.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+It is also strange (and unexplained) that the low limit will work
+differently depending on the memcg memory usage - bigger groups have a
+bigger chance to be reclaimed even if they are under the limit.
+
+> + *
+> + */
+> +unsigned int mem_cgroup_low_limit_scale(struct lruvec *lruvec)
+> +{
+> +	struct mem_cgroup_per_zone *mz;
+> +	struct mem_cgroup *memcg;
+> +	unsigned long long low_limit;
+> +	unsigned long long usage;
+> +	unsigned int i;
+> +
+> +	mz = container_of(lruvec, struct mem_cgroup_per_zone, lruvec);
+> +	memcg = mz->memcg;
+> +	if (!memcg)
+> +		return 0;
+> +
+> +	low_limit = res_counter_read_u64(&memcg->res, RES_LOW_LIMIT);
+> +	if (!low_limit)
+> +		return 0;
+> +
+> +	usage = res_counter_read_u64(&memcg->res, RES_USAGE);
+> +
+> +	if (usage < low_limit)
+> +		return DEF_PRIORITY - 2;
+> +
+> +	for (i = 0; i < DEF_PRIORITY - 2; i++)
+> +		if (usage - low_limit > (usage >> (i + 3)))
+> +			break;
+
+why this doesn't depend in the current reclaim priority?
+
+> +
+> +	return i;
+> +}
+> +
+>  static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+>  					gfp_t gfp_mask,
+>  					unsigned long flags)
+[...]
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 88c5fed..9c1c702 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -1660,6 +1660,7 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+>  	bool force_scan = false;
+>  	unsigned long ap, fp;
+>  	enum lru_list lru;
+> +	unsigned int low_limit_scale = 0;
+>  
+>  	/*
+>  	 * If the zone or memcg is small, nr[l] can be 0.  This
+> @@ -1779,6 +1780,9 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+>  	fraction[1] = fp;
+>  	denominator = ap + fp + 1;
+>  out:
+> +	if (global_reclaim(sc))
+> +		low_limit_scale = mem_cgroup_low_limit_scale(lruvec);
+
+What if the group is reclaimed as a result from parent hitting its
+limit?
+
+> +
+>  	for_each_evictable_lru(lru) {
+>  		int file = is_file_lru(lru);
+>  		unsigned long size;
+> @@ -1786,6 +1790,7 @@ out:
+>  
+>  		size = get_lru_size(lruvec, lru);
+>  		scan = size >> sc->priority;
+> +		scan >>= low_limit_scale;
+>  
+>  		if (!scan && force_scan)
+>  			scan = min(size, SWAP_CLUSTER_MAX);
+
+Thanks!
+-- 
+Michal Hocko
+SUSE Labs
