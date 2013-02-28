@@ -1,71 +1,46 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: implement low limits
-Date: Thu, 28 Feb 2013 15:30:52 +0100
-Message-ID: <20130228143052.GE6573@dhcp22.suse.cz>
-References: <8121361952156@webcorp1g.yandex-team.ru>
- <20130227094054.GC16719@dhcp22.suse.cz>
- <38951361977052@webcorp2g.yandex-team.ru>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/3] cgroup: add cgroup_name() API
+Date: Thu, 28 Feb 2013 06:49:46 -0800
+Message-ID: <CAOS58YMBcvhfBWdQmt=JersRgB9nVgsrLACtLovz===2ZXfR=w@mail.gmail.com>
+References: <512B01FA.5020506@huawei.com>
+	<512B020D.9040504@huawei.com>
+	<20130226022703.GA13837@htj.dyndns.org>
+	<512C8D84.7090707@huawei.com>
+	<CAOS58YMb7HRQ3X+Z92vi3+jKr4DuNmAgxtc5e3Jkhy-s-7Os-g@mail.gmail.com>
+	<512DE4A8.5050303@huawei.com>
+	<CAOS58YMhm6Uia0bx6oUHwheXUhu8i31LPhh8VVggvg0vg-UmUQ@mail.gmail.com>
+	<512EFEDF.8080205@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <38951361977052-uV6RMHoE7x/0t1ZyImeKKJZIWCK8hONu@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=2T6lmVG38ghHciaOTYJIzxt7tZlQZyAOA62z7zOFKCU=;
+        b=V5Og19tQNiLwHBA11isy3r3854PgG9o/jR4FXkT7+9AA7U8+dHnFBT2UbDu0ZUZdwn
+         BSH1it8Fs6sduMhNiSwIoGd6K0IvyV52doaRV+Ak9bj1vndTuomudo9RaxFSjqyLOQK8
+         mSpIq19Y5/cIU7OcAyTv83WXc2HjdjO/1venFPXbYwczm+qMYs7J2PnjcZ+w2q90pZQa
+         22NmITsW4UaVR31uLV9QVbJYeiUJIqPrZZgruo2BDQbutX9RP1KHYrL7D7NJO7qkfHuV
+         6VGal/rVPf+YtMOR9ZNcVYl/bp2OwSidaaV1+s7Ap4SzVonfWxgNgiYZRmVKGF88sUoD
+         2yCw==
+In-Reply-To: <512EFEDF.8080205@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Roman Gushchin <klamm-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Cc: Johannes Weiner-Arquette <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org" <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan@huawei.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Wed 27-02-13 18:57:32, Roman Gushchin wrote:
-[...]
-> >> =A0+ *
-> >> =A0+ */
-> >> =A0+unsigned int mem_cgroup_low_limit_scale(struct lruvec *lruvec)
-> >> =A0+{
-> >> =A0+ struct mem_cgroup_per_zone *mz;
-> >> =A0+ struct mem_cgroup *memcg;
-> >> =A0+ unsigned long long low_limit;
-> >> =A0+ unsigned long long usage;
-> >> =A0+ unsigned int i;
-> >> =A0+
-> >> =A0+ mz =3D container_of(lruvec, struct mem_cgroup_per_zone, lruve=
-c);
-> >> =A0+ memcg =3D mz->memcg;
-> >> =A0+ if (!memcg)
-> >> =A0+ return 0;
-> >> =A0+
-> >> =A0+ low_limit =3D res_counter_read_u64(&memcg->res, RES_LOW_LIMIT=
-);
-> >> =A0+ if (!low_limit)
-> >> =A0+ return 0;
-> >> =A0+
-> >> =A0+ usage =3D res_counter_read_u64(&memcg->res, RES_USAGE);
-> >> =A0+
-> >> =A0+ if (usage < low_limit)
-> >> =A0+ return DEF_PRIORITY - 2;
-> >> =A0+
-> >> =A0+ for (i =3D 0; i < DEF_PRIORITY - 2; i++)
-> >> =A0+ if (usage - low_limit > (usage >> (i + 3)))
-> >> =A0+ break;
-> >
-> > why this doesn't depend in the current reclaim priority?
->=20
-> How do you want to use reclaim priority here?
+On Wed, Feb 27, 2013 at 10:53 PM, Li Zefan <lizefan@huawei.com> wrote:
+>> static const struct cgroup_name root_cgroup_name = { .name = "/" };
+>
+> Can't... That's char name[0] not char *name.
 
-But then you can get up to 2*DEF_PRIORITY-2 priority (in
-get_scan_count) in the end and we are back to my original and more
-fundamental objection that the low_limit depends on the group size
-because small groups basically do not get scanned when under/close_to
-limit while big groups do get scanned and reclaimed.
+Flexible array members can be statically initialized. If you wanna be
+really anal about it, you can do it manually with a wrapping struct
+but I don't think that would be necessary.
 
-> I don't like an idea to start ignoring low limit on some priorities.
+Thanks.
 
-Well, but you are doing that already. If you are reclaiming for prio 0 =
-then
-you add up just DEF_PRIORITY-2 which means you reclaim for all groups w=
-ith
-more than 1024 pages on the LRUs.
-[...]
---=20
-Michal Hocko
-SUSE Labs
+-- 
+tejun
