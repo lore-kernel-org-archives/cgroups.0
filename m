@@ -1,71 +1,71 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH] memcg: implement low limits
-Date: Thu, 28 Feb 2013 14:02:37 +0100
-Message-ID: <20130228130237.GD6573@dhcp22.suse.cz>
+Date: Thu, 28 Feb 2013 15:30:52 +0100
+Message-ID: <20130228143052.GE6573@dhcp22.suse.cz>
 References: <8121361952156@webcorp1g.yandex-team.ru>
  <20130227094054.GC16719@dhcp22.suse.cz>
- <17521361961576@webcorp1g.yandex-team.ru>
- <20130227161352.GF16719@dhcp22.suse.cz>
- <61661362049995@webcorp1g.yandex-team.ru>
+ <38951361977052@webcorp2g.yandex-team.ru>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <61661362049995@webcorp1g.yandex-team.ru>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <38951361977052-uV6RMHoE7x/0t1ZyImeKKJZIWCK8hONu@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Roman Gushchin <klamm@yandex-team.ru>
-Cc: Johannes Weiner-Arquette <hannes@cmpxchg.org>, "bsingharora@gmail.com" <bsingharora@gmail.com>, "kamezawa.hiroyu@jp.fujitsu.com" <kamezawa.hiroyu@jp.fujitsu.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kosaki.motohiro@jp.fujitsu.com" <kosaki.motohiro@jp.fujitsu.com>, Rik van Riel <riel@redhat.com>, "mel@csn.ul.ie" <mel@csn.ul.ie>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Ying Han <yinghan@google.com>
+To: Roman Gushchin <klamm-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Cc: Johannes Weiner-Arquette <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org" <mel-wPRd99KPJ+uzQB+pC5nmwQ@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu 28-02-13 15:13:15, Roman Gushchin wrote:
-> 27.02.2013, 20:14, "Michal Hocko" <mhocko@suse.cz>:
-> > On Wed 27-02-13 14:39:36, Roman Gushchin wrote:
+On Wed 27-02-13 18:57:32, Roman Gushchin wrote:
 [...]
-> >> =A02) cgroup's prioritization during global reclaim,
+> >> =A0+ *
+> >> =A0+ */
+> >> =A0+unsigned int mem_cgroup_low_limit_scale(struct lruvec *lruvec)
+> >> =A0+{
+> >> =A0+ struct mem_cgroup_per_zone *mz;
+> >> =A0+ struct mem_cgroup *memcg;
+> >> =A0+ unsigned long long low_limit;
+> >> =A0+ unsigned long long usage;
+> >> =A0+ unsigned int i;
+> >> =A0+
+> >> =A0+ mz =3D container_of(lruvec, struct mem_cgroup_per_zone, lruve=
+c);
+> >> =A0+ memcg =3D mz->memcg;
+> >> =A0+ if (!memcg)
+> >> =A0+ return 0;
+> >> =A0+
+> >> =A0+ low_limit =3D res_counter_read_u64(&memcg->res, RES_LOW_LIMIT=
+);
+> >> =A0+ if (!low_limit)
+> >> =A0+ return 0;
+> >> =A0+
+> >> =A0+ usage =3D res_counter_read_u64(&memcg->res, RES_USAGE);
+> >> =A0+
+> >> =A0+ if (usage < low_limit)
+> >> =A0+ return DEF_PRIORITY - 2;
+> >> =A0+
+> >> =A0+ for (i =3D 0; i < DEF_PRIORITY - 2; i++)
+> >> =A0+ if (usage - low_limit > (usage >> (i + 3)))
+> >> =A0+ break;
 > >
-> > Yes, group priorities sound like a useful feature not just for the
-> > reclaim I would like it for oom selection as well.
-> > I think that we shouldn't use any kind of limit for this task, though=
-.
+> > why this doesn't depend in the current reclaim priority?
 >=20
-> I'm thinking about them. Do you know, did someone any attempts to
-> implement them?
+> How do you want to use reclaim priority here?
 
-I do not remember any patches but we have touched that topic in the
-past. With no conclusion AFAIR. The primary issue is that this requires
-good justification and nobody seemed to have a good use case - other
-than "I can imagine this could be useful". But others might disagree and
-provide such use cases...
+But then you can get up to 2*DEF_PRIORITY-2 priority (in
+get_scan_count) in the end and we are back to my original and more
+fundamental objection that the low_limit depends on the group size
+because small groups basically do not get scanned when under/close_to
+limit while big groups do get scanned and reclaimed.
 
+> I don't like an idea to start ignoring low limit on some priorities.
+
+Well, but you are doing that already. If you are reclaiming for prio 0 =
+then
+you add up just DEF_PRIORITY-2 which means you reclaim for all groups w=
+ith
+more than 1024 pages on the LRUs.
 [...]
-> Actually, I don't like the name of soft limits - the word "soft". It's
-> not clear from the name if it's lower or upper limit.
-
-The name might be not the best one but it makes some sense.
-
-> It's a little bit confusing that "limit" means upper limit, and "soft
-> limit" means lower limit.
-
-It is not a lower limit. It is basically a (soft) high limit for
-memory contended situations. Now it just depends on what "memory
-contended situation" means and this is an internal implementation thing
-(e.g. reclaim only groups which are over soft limit to reduce the
-contention). Changing it from best-effort to (almost) guarantee doesn't
-change the semantic of the limit for users.
-
-> Assuming it's possible to implement strict lower limit efficiently,
-> how do you call them?
-
-This is not about efficiency but rather about an user interface. If the
-current one can be used we shouldn't introduce new or we will end up in
-an unusable mess.
 --=20
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
