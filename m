@@ -1,111 +1,69 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: per-cpu statistics
-Date: Mon, 04 Mar 2013 09:55:25 +0900
-Message-ID: <5133F0FD.3040501@jp.fujitsu.com>
+Date: Sun, 3 Mar 2013 17:01:42 -0800
+Message-ID: <20130304010142.GE3678@htj.dyndns.org>
 References: <512F0E76.2020707@parallels.com>
+ <5133F0FD.3040501@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <512F0E76.2020707-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=aXTfmsU2jKmZWhmTOE7hOA2IeI4v1wgQ+Zk4FDXXRWU=;
+        b=zk1qOKpB13ZoMR7hBPAjKA3m0sPYD0eWRMPu63nLsaSVgexOHmii+hdc3HB7LBbyNm
+         0Bz41pVlesjH5wcFsv35pRY9GfplqE2iJL/4lDzvhNC+Fj8KkhV9ca4DkZmbhMTDDv9O
+         JvyFltIeX8yJm9r3stgAt5gFdhu804b/K56nx2NCy75riRPSQfkl6U+XTw45EpUa0LTZ
+         pH1rS0+JS4L3oQx8q+BdSwy0mOyWgqSGqrzf3cIxzdgzM4MUbKPtE3ZhnVe5UnGCaI6k
+         +/Xvbz6sQCf0zYNbBaIeKWnOUqM1ZHy0PegUcB6GnXD496dA+1jvgT9/qEfFclIfFkdB
+         VvDA==
+Content-Disposition: inline
+In-Reply-To: <5133F0FD.3040501-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 
-(2013/02/28 16:59), Glauber Costa wrote:
-> Hi guys
->
-> Please enlighten me regarding some historic aspect of memcg before I go
-> changing something I shouldn't...
->
-> Regarding memcg stats, is there any reason for us to use the current
-> per-cpu implementation we have instead of a percpu_counter?
->
-> We are doing something like this:
->
->          get_online_cpus();
->          for_each_online_cpu(cpu)
->                  val += per_cpu(memcg->stat->count[idx], cpu);
+Hello,
+
+On Mon, Mar 04, 2013 at 09:55:25AM +0900, Kamezawa Hiroyuki wrote:
+> An reason I didn't like percpu_counter *was* its memory layout.
+> 
+> ==
+> struct percpu_counter {
+>         raw_spinlock_t lock;
+>         s64 count;
 > #ifdef CONFIG_HOTPLUG_CPU
->          spin_lock(&memcg->pcp_counter_lock);
->          val += memcg->nocpu_base.count[idx];
->          spin_unlock(&memcg->pcp_counter_lock);
+>         struct list_head list;  /* All percpu_counters are on a list */
 > #endif
->          put_online_cpus();
->
-> It seems to me that we are just re-implementing whatever percpu_counters
-> already do, handling the complication ourselves.
->
-> It surely is an array, and this keeps the fields together. But does it
-> really matter? Did it come from some measurable result?
->
-> I wouldn't touch it if it wouldn't be bothering me. But the reason I
-> ask, is that I am resurrecting the patches to bypass the root cgroup
-> charges when it is the only group in the system. For that, I would like
-> to transfer charges from global, to our memcg equivalents.
->
-> Things like MM_ANONPAGES are not percpu, though, and when I add it to
-> the memcg percpu structures, I would have to somehow distribute them
-> around. When we uncharge, that can become negative.
->
-> percpu_counters already handle all that, and then can cope well with
-> temporary negative charges in the percpu data, that is later on
-> withdrawn from the main base counter.
->
-> We are counting pages, so the fact that we're restricted to only half of
-> the 64-bit range in percpu counters doesn't seem to be that much of a
-> problem.
->
-> If this is just a historic leftover, I can replace them all with
-> percpu_counters. Any words on that ?
->
+>         s32 __percpu *counters;
+> };
+> ==
+> 
+> Assume we have counters in an array, then, we'll have
+> 
+>    lock
+>    count
+>    list
+>    pointer
+>    lock
+>    count
+>    list
+>    pointer
+>    ....
+> 
+> An counter's lock ops will invalidate pointers in the array.
+> We tend to update several counters at once.
 
-An reason I didn't like percpu_counter *was* its memory layout.
+I agree that percpu_counter leaves quite a bit to be desired.  It
+would be great if we can implement generic percpu stats facility which
+takes care of aggregating the values periodically preferably with
+provisions to limit the amount of deviation global counter may reach.
 
-==
-struct percpu_counter {
-         raw_spinlock_t lock;
-         s64 count;
-#ifdef CONFIG_HOTPLUG_CPU
-         struct list_head list;  /* All percpu_counters are on a list */
-#endif
-         s32 __percpu *counters;
-};
-==
+Thansk.
 
-Assume we have counters in an array, then, we'll have
-
-    lock
-    count
-    list
-    pointer
-    lock
-    count
-    list
-    pointer
-    ....
-
-An counter's lock ops will invalidate pointers in the array.
-We tend to update several counters at once.
-
-If you measure performance on enough large SMP and it looks good,
-I think it's ok to go with lib/percpu_counter.c.
-
-Thanks,
--Kame
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- 
+tejun
