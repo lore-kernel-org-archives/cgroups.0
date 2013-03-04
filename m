@@ -1,55 +1,127 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: per-cpu statistics
-Date: Mon, 4 Mar 2013 11:25:11 +0400
-Message-ID: <51344C57.7030807@parallels.com>
-References: <512F0E76.2020707@parallels.com> <CAFj3OHXJckvDPWSnq9R8nZ00Sb0Juxq9oCrGCBeO0UZmgH6OzQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: cgroup_release_agent() hung task warnings
+Date: Mon, 4 Mar 2013 09:33:58 -0800
+Message-ID: <20130304173358.GB30413@htj.dyndns.org>
+References: <CA+ydwtrRAf5VW_iZYOjzmTv6Y0ebprXw_RfWVmR1okQOxQx=CA@mail.gmail.com>
+ <51340E2E.4070805@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAFj3OHXJckvDPWSnq9R8nZ00Sb0Juxq9oCrGCBeO0UZmgH6OzQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=gc+gRy8Ommt3eiWGM5t1iRIuWAv4nH9ihYDRnSAFgxE=;
+        b=MDNkYl5HvSkIJG0bqkpNFblVNkgeMqtCWoJkvasGCa8Yfm/rlKN3Sx0LsFOTngLct9
+         mTh3mL95UKPmovlk0VAxvfLMAKJC5xZ9Z2YWSsp3zsKATOK6/p9Oj0bGgcmU0NXqjVma
+         rvf6UBsCVK7FrCvR9rDwrw9fZG5xmu4ddbQzNdvIbuxXMow5aR80QooG4tMfr4EhmMAK
+         OU2fqGd2KHFQi6xYr/KXbHb9tsifacmxryWp2gKVTwe6DEjbtIbzC6Wj2Am1jm8DcwAa
+         toTLCpOU/R9app4pf6FM8POadV2R7V3UD7qHsBm04Gzha9X/X9d++PhCPGsGQy/ozbQG
+         XYVA==
+Content-Disposition: inline
+In-Reply-To: <51340E2E.4070805-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tommi Rantala <tt.rantala-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>
 
-On 03/01/2013 05:48 PM, Sha Zhengju wrote:
-> Hi Glauber,
+(cc'ing Rusty Russell)
+
+On Mon, Mar 04, 2013 at 10:59:58AM +0800, Li Zefan wrote:
+> On 2013/3/3 3:23, Tommi Rantala wrote:
+> > Hello,
+> > 
+> > I'm seeing the following hung task warnings when fuzzing the kernel
+> > with trinity (in a qemu virtual machine, as the root user), that I
+> > have not seen before with 3.8 or earlier. The kernel is
+> > b0af9cd9aab60ceb17d3ebabb9fdf4ff0a99cf50 (Merge tag
+> > 'lzo-update-signature-20130226' of
+> > git://github.com/markus-oberhumer/linux).
+> > 
 > 
-> Forgive me, I'm replying not because I know the reason of current
-> per-cpu implementation but that I notice you're mentioning something
-> I'm also interested in. Below is the detail.
+> This doesn't look like a cgroup bug.
+
+Yes, it looks like a problem in usermodehelper.  Rusty, it looks like
+usermodehelper can jam with OOM killer going wild.  Any ideas?  The
+original report is at
+
+  https://lkml.org/lkml/2013/3/2/126
+
+> ...
+> > [  120.594088] INFO: task kworker/0:2:1079 blocked for more than 60 seconds.
+> > [  120.595877] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> > disables this message.
+> > [  120.598100] kworker/0:2     D ffff88007c518618     0  1079      2 0x00000000
+> > [  120.599958]  ffff88007adc9a38 0000000000000046 ffff88007b0b0000
+> > ffff88007adc9fd8
+> > [  120.601982]  ffff88007adc9fd8 ffff88007adc9fd8 ffff88007c518000
+> > ffff88007b0b0000
+> > [  120.603994]  ffff88007adc9a18 ffff88007adc9b88 ffff88007adc9b90
+> > 7fffffffffffffff
+> > [  120.606003] Call Trace:
+> > [  120.606684]  [<ffffffff81cd9d95>] schedule+0x55/0x60
+> > [  120.607973]  [<ffffffff81cd7786>] schedule_timeout+0x36/0x240
+> > [  120.609460]  [<ffffffff810f3303>] ? mark_held_locks+0x123/0x140
+> > [  120.610932]  [<ffffffff81cdb99b>] ? _raw_spin_unlock_irq+0x2b/0x40
+> > [  120.612521]  [<ffffffff810f3475>] ? trace_hardirqs_on_caller+0x155/0x1f0
+> > [  120.614471]  [<ffffffff810f351d>] ? trace_hardirqs_on+0xd/0x10
+> > [  120.615957]  [<ffffffff81cda037>] wait_for_completion+0x97/0x100
+> > [  120.617495]  [<ffffffff810d2310>] ? try_to_wake_up+0x340/0x340
+> > [  120.619013]  [<ffffffff810b615c>] call_usermodehelper_exec+0x14c/0x210
+> > [  120.620613]  [<ffffffff81cd9fcc>] ? wait_for_completion+0x2c/0x100
+> > [  120.622187]  [<ffffffff810b6948>] call_usermodehelper_fns+0xe8/0x100
+> > [  120.623821]  [<ffffffff8110921a>] cgroup_release_agent+0x15a/0x180
+> > [  120.625374]  [<ffffffff810b85cb>] process_one_work+0x29b/0x4c0
+> > [  120.626861]  [<ffffffff810b8560>] ? process_one_work+0x230/0x4c0
+> > [  120.628407]  [<ffffffff810b8da8>] worker_thread+0x248/0x380
+> > [  120.630183]  [<ffffffff810b8b60>] ? busy_worker_rebind_fn+0xb0/0xb0
+> > [  120.631761]  [<ffffffff810bfd71>] kthread+0xd1/0xe0
+> > [  120.633019]  [<ffffffff810f351d>] ? trace_hardirqs_on+0xd/0x10
+> > [  120.634479]  [<ffffffff810bfca0>] ? __kthread_bind+0x40/0x40
+> > [  120.635898]  [<ffffffff81cdcdfc>] ret_from_fork+0x7c/0xb0
+> > [  120.637254]  [<ffffffff810bfca0>] ? __kthread_bind+0x40/0x40
 > 
+> The completion was never done:
 > 
-> I'm not sure I fully understand your points, root memcg now don't
-> charge page already and only do some page stat
-> accounting(CACHE/RSS/SWAP).
-
-Can you point me to the final commits of this in the tree? I am using
-the latest git mm from mhocko and it is not entirely clear for me what
-are you talking about.
-
->  Now I'm also trying to do some
-> optimization specific to the overhead of root memcg stat accounting,
-> and the first attempt is posted here:
-> https://lkml.org/lkml/2013/1/2/71 . But it only covered
-> FILE_MAPPED/DIRTY/WRITEBACK(I've add the last two accounting in that
-> patchset) and Michal Hock accepted the approach (so did Kame) and
-> suggested I should handle all the stats in the same way including
-> CACHE/RSS. But I do not handle things related to memcg LRU where I
-> notice you have done some work.
+> static
+> int call_usermodehelper_exec(struct subprocess_info *sub_info, int wait)
+> {
+>         DECLARE_COMPLETION_ONSTACK(done);
 > 
-Yes, LRU is a bit tricky and it is what is keeping me from posting the
-patchset I have. I haven't fully done it, but I am on my way.
-
-
-> It's possible that we may take different ways to bypass root memcg
-> stat accounting. The next round of the part will be sent out in
-> following few days(doing some tests now), and for myself any comments
-> and collaboration are welcome. (Glad to cc to you of course if you're
-> also interest in it. :) )
+> 	...
+>         sub_info->complete = &done;
+>         sub_info->wait = wait;
+> 
+>         queue_work(khelper_wq, &sub_info->work);
+> 	...
+>         wait_for_completion(&done);
+> 	...
+>         return retval;
+> }
+> 
+> It should be done here:
+> 
+> static void __call_usermodehelper(struct work_struct *work)
+> {
+> 	...
+>                 pid = kernel_thread(call_helper, sub_info,
+>                                     CLONE_VFORK | SIGCHLD);
+> 	...
+> 
+>         switch (wait) {
+> 	...
+>         case UMH_WAIT_EXEC:
+>                 if (pid < 0)
+>                         sub_info->retval = pid;
+>                 umh_complete(sub_info);
+>         }
+> }
+> 
+> You may need to add some printks to see why completion can't be done.
+> Maybe khelper_wq was blocked and couldn't schedule any work?
 > 
 
-I am interested, of course. As you know, I started to work on this a
-while ago and had to interrupt it for a while. I resumed it last week,
-but if you managed to merge something already, I'd happy to rebase.
+-- 
+tejun
