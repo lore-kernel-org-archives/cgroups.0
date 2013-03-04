@@ -1,9 +1,17 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup_release_agent() hung task warnings
-Date: Mon, 4 Mar 2013 09:33:58 -0800
-Message-ID: <20130304173358.GB30413@htj.dyndns.org>
-References: <CA+ydwtrRAf5VW_iZYOjzmTv6Y0ebprXw_RfWVmR1okQOxQx=CA@mail.gmail.com>
- <51340E2E.4070805@huawei.com>
+Subject: Re: [PATCH 2/3] cgroup: add cgroup_name() API
+Date: Mon, 4 Mar 2013 09:38:25 -0800
+Message-ID: <20130304173825.GC30413@htj.dyndns.org>
+References: <512C8D84.7090707@huawei.com>
+ <CAOS58YMb7HRQ3X+Z92vi3+jKr4DuNmAgxtc5e3Jkhy-s-7Os-g@mail.gmail.com>
+ <512DE4A8.5050303@huawei.com>
+ <CAOS58YMhm6Uia0bx6oUHwheXUhu8i31LPhh8VVggvg0vg-UmUQ@mail.gmail.com>
+ <512EFEDF.8080205@huawei.com>
+ <CAOS58YMBcvhfBWdQmt=JersRgB9nVgsrLACtLovz===2ZXfR=w@mail.gmail.com>
+ <51304C6D.8050207@huawei.com>
+ <20130301203917.GT4503@ZenIV.linux.org.uk>
+ <CAOS58YPNAPhWUwNq9G39Airo+TvV2ecXBiNU5s9PFqkL3RbRFg@mail.gmail.com>
+ <51340ECD.1030905@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -11,117 +19,38 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
          :mime-version:content-type:content-disposition:in-reply-to
          :user-agent;
-        bh=gc+gRy8Ommt3eiWGM5t1iRIuWAv4nH9ihYDRnSAFgxE=;
-        b=MDNkYl5HvSkIJG0bqkpNFblVNkgeMqtCWoJkvasGCa8Yfm/rlKN3Sx0LsFOTngLct9
-         mTh3mL95UKPmovlk0VAxvfLMAKJC5xZ9Z2YWSsp3zsKATOK6/p9Oj0bGgcmU0NXqjVma
-         rvf6UBsCVK7FrCvR9rDwrw9fZG5xmu4ddbQzNdvIbuxXMow5aR80QooG4tMfr4EhmMAK
-         OU2fqGd2KHFQi6xYr/KXbHb9tsifacmxryWp2gKVTwe6DEjbtIbzC6Wj2Am1jm8DcwAa
-         toTLCpOU/R9app4pf6FM8POadV2R7V3UD7qHsBm04Gzha9X/X9d++PhCPGsGQy/ozbQG
-         XYVA==
+        bh=/gThhqWoTKQIO46kzKyRsD8coWUxaveckoFJ4V8H8t0=;
+        b=cD/BynlS7BzC/zCl2RkUJVa6AFLWlulNG8i0pL06YbvAfd0bjQn4QOYkpNVF+nz8e+
+         j36zq5OMPmL5oyGEpQYhaaMw7alqrIpccgrANt5JPFaVRPBeJzFU768fh2M+YT8AjmSp
+         VYN61LvrIwIS+GAiXtYs1RcEGcbesbgIGAhzgIfrHZ3JDvrRetN7784uQ1brMGwCE4TK
+         yR6nFIMZdJSKGlUkoNM543+nIr3/JalodKIW1mGW/6oARwlVpUF1jm4TV+gUDIcR77Hn
+         LWU6miDBGyTf97m/dcq1ij/dlzHEOZOTjti6b2j5DzEzgA1Erhl+xU3vwBaGGbzzdNo9
+         C+eA==
 Content-Disposition: inline
-In-Reply-To: <51340E2E.4070805-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <51340ECD.1030905-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tommi Rantala <tt.rantala-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>
+Cc: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-(cc'ing Rusty Russell)
+Hello,
 
-On Mon, Mar 04, 2013 at 10:59:58AM +0800, Li Zefan wrote:
-> On 2013/3/3 3:23, Tommi Rantala wrote:
-> > Hello,
-> > 
-> > I'm seeing the following hung task warnings when fuzzing the kernel
-> > with trinity (in a qemu virtual machine, as the root user), that I
-> > have not seen before with 3.8 or earlier. The kernel is
-> > b0af9cd9aab60ceb17d3ebabb9fdf4ff0a99cf50 (Merge tag
-> > 'lzo-update-signature-20130226' of
-> > git://github.com/markus-oberhumer/linux).
+On Mon, Mar 04, 2013 at 11:02:37AM +0800, Li Zefan wrote:
+> > Yeah, that's what I meant by the "anal" part although it seems like
+> > c99 doesn't even allow that. Do we care tho? It seems like a logical
+> > feature which should show up in the standard eventually. Maybe it
+> > could be a problem for clang?
 > > 
 > 
-> This doesn't look like a cgroup bug.
+> Do we have a decision now? Please pick v4 if this GNU extension can't be used
+> in kernel code, otherwise v5.
 
-Yes, it looks like a problem in usermodehelper.  Rusty, it looks like
-usermodehelper can jam with OOM killer going wild.  Any ideas?  The
-original report is at
+I'm just gonna apply the one with the initializer.  It's simpler and
+not like we can't back out easily if it ever becomes a problem.
 
-  https://lkml.org/lkml/2013/3/2/126
-
-> ...
-> > [  120.594088] INFO: task kworker/0:2:1079 blocked for more than 60 seconds.
-> > [  120.595877] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> > disables this message.
-> > [  120.598100] kworker/0:2     D ffff88007c518618     0  1079      2 0x00000000
-> > [  120.599958]  ffff88007adc9a38 0000000000000046 ffff88007b0b0000
-> > ffff88007adc9fd8
-> > [  120.601982]  ffff88007adc9fd8 ffff88007adc9fd8 ffff88007c518000
-> > ffff88007b0b0000
-> > [  120.603994]  ffff88007adc9a18 ffff88007adc9b88 ffff88007adc9b90
-> > 7fffffffffffffff
-> > [  120.606003] Call Trace:
-> > [  120.606684]  [<ffffffff81cd9d95>] schedule+0x55/0x60
-> > [  120.607973]  [<ffffffff81cd7786>] schedule_timeout+0x36/0x240
-> > [  120.609460]  [<ffffffff810f3303>] ? mark_held_locks+0x123/0x140
-> > [  120.610932]  [<ffffffff81cdb99b>] ? _raw_spin_unlock_irq+0x2b/0x40
-> > [  120.612521]  [<ffffffff810f3475>] ? trace_hardirqs_on_caller+0x155/0x1f0
-> > [  120.614471]  [<ffffffff810f351d>] ? trace_hardirqs_on+0xd/0x10
-> > [  120.615957]  [<ffffffff81cda037>] wait_for_completion+0x97/0x100
-> > [  120.617495]  [<ffffffff810d2310>] ? try_to_wake_up+0x340/0x340
-> > [  120.619013]  [<ffffffff810b615c>] call_usermodehelper_exec+0x14c/0x210
-> > [  120.620613]  [<ffffffff81cd9fcc>] ? wait_for_completion+0x2c/0x100
-> > [  120.622187]  [<ffffffff810b6948>] call_usermodehelper_fns+0xe8/0x100
-> > [  120.623821]  [<ffffffff8110921a>] cgroup_release_agent+0x15a/0x180
-> > [  120.625374]  [<ffffffff810b85cb>] process_one_work+0x29b/0x4c0
-> > [  120.626861]  [<ffffffff810b8560>] ? process_one_work+0x230/0x4c0
-> > [  120.628407]  [<ffffffff810b8da8>] worker_thread+0x248/0x380
-> > [  120.630183]  [<ffffffff810b8b60>] ? busy_worker_rebind_fn+0xb0/0xb0
-> > [  120.631761]  [<ffffffff810bfd71>] kthread+0xd1/0xe0
-> > [  120.633019]  [<ffffffff810f351d>] ? trace_hardirqs_on+0xd/0x10
-> > [  120.634479]  [<ffffffff810bfca0>] ? __kthread_bind+0x40/0x40
-> > [  120.635898]  [<ffffffff81cdcdfc>] ret_from_fork+0x7c/0xb0
-> > [  120.637254]  [<ffffffff810bfca0>] ? __kthread_bind+0x40/0x40
-> 
-> The completion was never done:
-> 
-> static
-> int call_usermodehelper_exec(struct subprocess_info *sub_info, int wait)
-> {
->         DECLARE_COMPLETION_ONSTACK(done);
-> 
-> 	...
->         sub_info->complete = &done;
->         sub_info->wait = wait;
-> 
->         queue_work(khelper_wq, &sub_info->work);
-> 	...
->         wait_for_completion(&done);
-> 	...
->         return retval;
-> }
-> 
-> It should be done here:
-> 
-> static void __call_usermodehelper(struct work_struct *work)
-> {
-> 	...
->                 pid = kernel_thread(call_helper, sub_info,
->                                     CLONE_VFORK | SIGCHLD);
-> 	...
-> 
->         switch (wait) {
-> 	...
->         case UMH_WAIT_EXEC:
->                 if (pid < 0)
->                         sub_info->retval = pid;
->                 umh_complete(sub_info);
->         }
-> }
-> 
-> You may need to add some printks to see why completion can't be done.
-> Maybe khelper_wq was blocked and couldn't schedule any work?
-> 
+Thanks.
 
 -- 
 tejun
