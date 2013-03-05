@@ -1,52 +1,118 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup: no need to check css refs for release
- notification
-Date: Mon, 4 Mar 2013 10:05:08 -0800
-Message-ID: <20130304180508.GF30413@htj.dyndns.org>
-References: <5130535F.7060201@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] cgroup: avoid accessing modular cgroup subsys structure
+ without locking
+Date: Tue, 5 Mar 2013 10:57:03 +0800
+Message-ID: <51355EFF.3080804@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=17aAn/3zS/Hz8ybl9jg2+WSJXY1jVO7yD5GMBF+e0W0=;
-        b=UP9ogOkIZ1nxMRgQJPurk7fPWYBANpLzZtdG6QjYY6fui2wualx4/zAIUXC3DqOAz4
-         8ueyRlxqgAt4umaUat5ld6IVi0md+hB23ZaSRn23dEu9NZ1lr+Oc5/w8ZiLRoEyKZ5Zk
-         T3XCpxrhCGl/JSri6mBtdjHygIvwZ+wXbb/uzRuearPbeGDEG0JHSR6Z/ZpLdiN30z+T
-         RZDh1Ez61bjpOnbhud3PT/SUMn9vYjx3Vi4NEpeWUhE1OpkMCQCbsj4LyhWL385zkxtM
-         1RX1M7xgFsL1UrTC6l7ryeUj0mt2hAmC4x0gyGWxp5S8Xh2AMHYEeqcXqgFaCdY6rGm1
-         EC/g==
-Content-Disposition: inline
-In-Reply-To: <5130535F.7060201-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Mar 01, 2013 at 03:06:07PM +0800, Li Zefan wrote:
-> We no longer fail rmdir() when there're still css refs, so we don't
-> need to check css refs in check_for_release().
-> 
-> This also voids a bug. cgroup_has_css_refs() accesses subsys[i]
-> without cgroup_mutex, so it can race with cgroup_unload_subsys().
-> 
-> cgroup_has_css_refs()
-> ...
->   if (ss == NULL || ss->root != cgrp->root)
-> 
-> if ss pointers to net_cls_subsys, and cls_cgroup module is unloaded
-> right after the former check but before the latter, the memory that
-> net_cls_subsys resides has become invalid.
-> 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+subsys[i] is set to NULL in cgroup_unload_subsys() at modular unload,
+and that's protected by cgroup_mutex, and then the memory *subsys[i]
+resides will be freed.
 
-Applied to cgroup/for-3.10.
+So this is unsafe without any locking:
 
-Thanks.
+  if (!ss || ss->module)
+  ...
 
+v2:
+- add a comment for enum cgroup_subsys_id
+- simplify the comment in cgroup_exit()
+
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cgroup.h | 17 ++++++++++++++---
+ kernel/cgroup.c        | 28 ++++++++++++++--------------
+ 2 files changed, 28 insertions(+), 17 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 75c6ec1..5f76829 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -44,14 +44,25 @@ extern void cgroup_unload_subsys(struct cgroup_subsys *ss);
+ 
+ extern const struct file_operations proc_cgroup_operations;
+ 
+-/* Define the enumeration of all builtin cgroup subsystems */
++/*
++ * Define the enumeration of all cgroup subsystems.
++ *
++ * We define ids for builtin subsystems and then modular ones.
++ */
+ #define SUBSYS(_x) _x ## _subsys_id,
+-#define IS_SUBSYS_ENABLED(option) IS_ENABLED(option)
+ enum cgroup_subsys_id {
++#define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
++#include <linux/cgroup_subsys.h>
++#undef IS_SUBSYS_ENABLED
++	CGROUP_BUILTIN_SUBSYS_COUNT,
++
++	__CGROUP_SUBSYS_TEMP_PLACEHOLDER = CGROUP_BUILTIN_SUBSYS_COUNT - 1,
++
++#define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
+ #include <linux/cgroup_subsys.h>
++#undef IS_SUBSYS_ENABLED
+ 	CGROUP_SUBSYS_COUNT,
+ };
+-#undef IS_SUBSYS_ENABLED
+ #undef SUBSYS
+ 
+ /* Per-subsystem/per-cgroup state maintained by the system. */
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 9df799d..7a6c4c7 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4940,17 +4940,17 @@ void cgroup_post_fork(struct task_struct *child)
+ 	 * and addition to css_set.
+ 	 */
+ 	if (need_forkexit_callback) {
+-		for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
++		/*
++		 * fork/exit callbacks are supported only for builtin
++		 * subsystems, and the builtin section of the subsys
++		 * array is immutable, so we don't need to lock the
++		 * subsys array here. On the other hand, modular section
++		 * of the array can be freed at module unload, so we
++		 * can't touch that.
++		 */
++		for (i = 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
+ 			struct cgroup_subsys *ss = subsys[i];
+ 
+-			/*
+-			 * fork/exit callbacks are supported only for
+-			 * builtin subsystems and we don't need further
+-			 * synchronization as they never go away.
+-			 */
+-			if (!ss || ss->module)
+-				continue;
+-
+ 			if (ss->fork)
+ 				ss->fork(child);
+ 		}
+@@ -5015,13 +5015,13 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+ 	tsk->cgroups = &init_css_set;
+ 
+ 	if (run_callbacks && need_forkexit_callback) {
+-		for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
++		/*
++		 * fork/exit callbacks are supported only for builtin
++		 * subsystems, see cgroup_post_fork() for details.
++		 */
++		for (i = 0; i < CGROUP_BUILTIN_SUBSYS_COUNT; i++) {
+ 			struct cgroup_subsys *ss = subsys[i];
+ 
+-			/* modular subsystems can't use callbacks */
+-			if (!ss || ss->module)
+-				continue;
+-
+ 			if (ss->exit) {
+ 				struct cgroup *old_cgrp =
+ 					rcu_dereference_raw(cg->subsys[i])->cgroup;
 -- 
-tejun
+1.8.0.2
