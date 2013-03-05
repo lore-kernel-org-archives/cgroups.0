@@ -1,76 +1,49 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] perf: remove include of cgroup.h from perf_event.h
-Date: Tue, 5 Mar 2013 18:37:12 +0800
-Message-ID: <5135CAD8.2020409@huawei.com>
-References: <513568A0.6020804@huawei.com> <CABPqkBTTn6E=FS6WiCWopcScHDVa9F6bu5-pw8Ma7TK2aunkvQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v2 0/5] bypass root memcg charges if no memcgs are possible
+Date: Tue,  5 Mar 2013 17:10:53 +0400
+Message-ID: <1362489058-3455-1-git-send-email-glommer@parallels.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CABPqkBTTn6E=FS6WiCWopcScHDVa9F6bu5-pw8Ma7TK2aunkvQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Stephane Eranian <eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 
-On 2013/3/5 16:33, Stephane Eranian wrote:
-> On Tue, Mar 5, 2013 at 4:38 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->> Move struct perf_cgroup_info and perf_cgroup to kernel/perf/core.c,
->> and then we can remove include of cgroup.h.
->>
->> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->> ---
->>  include/linux/perf_event.h | 18 +-----------------
->>  kernel/events/core.c       | 15 +++++++++++++++
->>  2 files changed, 16 insertions(+), 17 deletions(-)
->>
->> diff --git a/include/linux/perf_event.h b/include/linux/perf_event.h
->> index e47ee46..8737e1c 100644
->> --- a/include/linux/perf_event.h
->> +++ b/include/linux/perf_event.h
->> @@ -21,7 +21,6 @@
->>   */
->>
->>  #ifdef CONFIG_PERF_EVENTS
->> -# include <linux/cgroup.h>
->>  # include <asm/perf_event.h>
->>  # include <asm/local64.h>
->>  #endif
->> @@ -299,22 +298,7 @@ struct swevent_hlist {
->>  #define PERF_ATTACH_GROUP      0x02
->>  #define PERF_ATTACH_TASK       0x04
->>
->> -#ifdef CONFIG_CGROUP_PERF
->> -/*
->> - * perf_cgroup_info keeps track of time_enabled for a cgroup.
->> - * This is a per-cpu dynamically allocated data structure.
->> - */
->> -struct perf_cgroup_info {
->> -       u64                             time;
->> -       u64                             timestamp;
->> -};
->> -
->> -struct perf_cgroup {
->> -       struct                          cgroup_subsys_state css;
->> -       struct                          perf_cgroup_info *info; /* timing info, one per cpu */
->> -};
->> -#endif
->> -
->> +struct perf_cgroup;
-> 
-> The problem is that you have struct perf_cgroup in the struct perf_event
-> structure. Today, this field is not referenced outside of kernel/events/core.c
-> But it is available outside this file. If someday the field is reference, your
-> changes will have to do reverted. So I am wondering what is the point
-> of the change right now?
-> 
+Hi,
 
-I touch cgroup.h quite frequently, so I'd like to reduce the compile time caused
-by cgroup.h changes, so I've made a few patches to remove cgroup.h from some
-header files.
+Here is my recent changes in my patchset to bypass charges from the root cgroup
+if no other memcgs are present in the system. At the time, the main complaint
+came from Michal Hocko, correctly pointing out that if hierarchy == 0, we can't
+bypass the root memcg forever and at some point, we need to transfer charges.
+This is now done in this patch.
 
-It's better to expose as less interfaces as possible, and if someone wants to
-export someting he should think about if it's the right thing to do.
+DISCLAIMER:
 
-Like we often make static functions usable to external users, and also often do the
-reverse thing, this patch is nothing special.
+I haven't yet got access to a big box again. I am sending this with outdated
+numbers in the interest of having this in the open earlier. However, the main
+idea stands, and I believe the numbers are still generally valid (albeit of
+course, it would be better to have them updated. Independent evaluations always
+welcome)
+
+* v2
+- Fixed some LRU bugs
+- Only keep bypassing if we have root-level hierarchy.
+
+Glauber Costa (5):
+  memcg: make nocpu_base available for non hotplug
+  memcg: provide root figures from system totals
+  memcg: make it suck faster
+  memcg: do not call page_cgroup_init at system_boot
+  memcg: do not walk all the way to the root for memcg
+
+ include/linux/memcontrol.h  |  72 ++++++++++---
+ include/linux/page_cgroup.h |  28 ++---
+ init/main.c                 |   2 -
+ mm/memcontrol.c             | 243 ++++++++++++++++++++++++++++++++++++++++----
+ mm/page_cgroup.c            | 150 ++++++++++++++-------------
+ 5 files changed, 382 insertions(+), 113 deletions(-)
+
+-- 
+1.8.1.2
