@@ -1,55 +1,90 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v2 5/5] memcg: do not walk all the way to the root for
- memcg
-Date: Wed, 06 Mar 2013 10:08:11 +0900
-Message-ID: <513696FB.9080705@jp.fujitsu.com>
-References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-6-git-send-email-glommer@parallels.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH] cgroup: make cgrp->event_list_lock irqsafe
+Date: Wed, 6 Mar 2013 11:28:01 +0800
+Message-ID: <5136B7C1.6030403@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1362489058-3455-6-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-(2013/03/05 22:10), Glauber Costa wrote:
-> Since the root is special anyway, and we always get its figures from
-> global counters anyway, there is no make all cgroups its descendants,
-> wrt res_counters. The sad effect of doing that is that we need to lock
-> the root for all allocations, since it is a common ancestor of
-> everybody.
-> 
-> Not having the root as a common ancestor should lead to better
-> scalability for not-uncommon case of tasks in the cgroup being
-> node-bound to different nodes in NUMA systems.
-> 
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-> CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+cgroup_event_wake() is called with hardirq-safe wqh->lock held, so
+the nested cgrp->event_list_lock should also be hardirq-safe.
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Fortunately I don't think the deadlock can happen in real life.
 
-> ---
->   mm/memcontrol.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6019a32..252dc00 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6464,7 +6464,7 @@ mem_cgroup_css_online(struct cgroup *cont)
->   	memcg->oom_kill_disable = parent->oom_kill_disable;
->   	memcg->swappiness = mem_cgroup_swappiness(parent);
->   
-> -	if (parent->use_hierarchy) {
-> +	if (parent && !mem_cgroup_is_root(parent) && parent->use_hierarchy) {
->   		res_counter_init(&memcg->res, &parent->res);
->   		res_counter_init(&memcg->memsw, &parent->memsw);
->   		res_counter_init(&memcg->kmem, &parent->kmem);
-> 
+Lockdep never complained, maybe because it never found wqh->lock was
+held in irq context?
 
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+---
+ kernel/cgroup.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 7a6c4c7..e72c44e 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3845,9 +3845,10 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
+ 	struct cgroup_event *event = container_of(wait,
+ 			struct cgroup_event, wait);
+ 	struct cgroup *cgrp = event->cgrp;
+-	unsigned long flags = (unsigned long)key;
++	unsigned long poll_flags = (unsigned long)key;
++	unsigned long flags;
+ 
+-	if (flags & POLLHUP) {
++	if (poll_flags & POLLHUP) {
+ 		/*
+ 		 * If the event has been detached at cgroup removal, we
+ 		 * can simply return knowing the other side will cleanup
+@@ -3857,7 +3858,7 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
+ 		 * side will require wqh->lock via remove_wait_queue(),
+ 		 * which we hold.
+ 		 */
+-		spin_lock(&cgrp->event_list_lock);
++		spin_lock_irqsave(&cgrp->event_list_lock, flags);
+ 		if (!list_empty(&event->list)) {
+ 			list_del_init(&event->list);
+ 			/*
+@@ -3866,7 +3867,7 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
+ 			 */
+ 			schedule_work(&event->remove);
+ 		}
+-		spin_unlock(&cgrp->event_list_lock);
++		spin_unlock_irqrestore(&cgrp->event_list_lock, flags);
+ 	}
+ 
+ 	return 0;
+@@ -3981,9 +3982,9 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
+ 	 */
+ 	dget(cgrp->dentry);
+ 
+-	spin_lock(&cgrp->event_list_lock);
++	spin_lock_irq(&cgrp->event_list_lock);
+ 	list_add(&event->list, &cgrp->event_list);
+-	spin_unlock(&cgrp->event_list_lock);
++	spin_unlock_irq(&cgrp->event_list_lock);
+ 
+ 	fput(cfile);
+ 	fput(efile);
+@@ -4406,12 +4407,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	 * Notify userspace about cgroup removing only after rmdir of cgroup
+ 	 * directory to avoid race between userspace and kernelspace.
+ 	 */
+-	spin_lock(&cgrp->event_list_lock);
++	spin_lock_irq(&cgrp->event_list_lock);
+ 	list_for_each_entry_safe(event, tmp, &cgrp->event_list, list) {
+ 		list_del_init(&event->list);
+ 		schedule_work(&event->remove);
+ 	}
+-	spin_unlock(&cgrp->event_list_lock);
++	spin_unlock_irq(&cgrp->event_list_lock);
+ 
+ 	return 0;
+ }
+-- 
+1.8.0.2
