@@ -1,73 +1,60 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] memcg: provide root figures from system totals
-Date: Wed, 06 Mar 2013 19:59:49 +0900
-Message-ID: <513721A5.6080401@jp.fujitsu.com>
-References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-3-git-send-email-glommer@parallels.com> <51368D80.20701@jp.fujitsu.com> <5136FEC2.2050004@parallels.com> <51371E4A.7090807@jp.fujitsu.com> <51371FEF.3020507@parallels.com>
+From: Stephane Eranian <eranian@google.com>
+Subject: Re: [PATCH] perf: remove include of cgroup.h from perf_event.h
+Date: Wed, 6 Mar 2013 12:20:41 +0100
+Message-ID: <CABPqkBS7ceR1jvYq2rHMj0r7MU3yanQqdLN70FibZv+0SA-fBA@mail.gmail.com>
+References: <513568A0.6020804@huawei.com>
+	<CABPqkBTTn6E=FS6WiCWopcScHDVa9F6bu5-pw8Ma7TK2aunkvQ@mail.gmail.com>
+	<20130306103120.GA16827@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51371FEF.3020507-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:x-received:in-reply-to:references:date:message-id
+         :subject:from:to:cc:content-type;
+        bh=mGAqTn4RjFiOEps5SI8WIOyYo+WCAk9rcOdwb5BRtMY=;
+        b=fZYhD+lSvDsae9hHAyzK1IA/S5r4E07SdtDYSYUrsA3oGJyxE99y0fTx2qmy8/l/K/
+         GeL8JhBLAQSvBil4IoidFdAyqkT274kawcuoVx9qoLnZchPWNMS7hMcQBUs4CRVFYCHf
+         maZPRTpVXrJFowHwnnRn78DCRs3e/s1P1viEJBMnCWCAPlVZvrOCveI/CTLANiSqRCQc
+         6+MvDlMAS2FWJo+sGilX3RIJjUNhBn6ZHYzbbQ77pWumcxbd5oWfs4915/g8dB6AJI6B
+         pLi19Me8bweSg6VmdW5Ann0awGgxcloSRFHySLcObT2TUTSxSf7jjywn4lTbhD0J5MDy
+         rm3g==
+In-Reply-To: <20130306103120.GA16827@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>
 
-(2013/03/06 19:52), Glauber Costa wrote:
-> On 03/06/2013 02:45 PM, Kamezawa Hiroyuki wrote:
->> (2013/03/06 17:30), Glauber Costa wrote:
->>> On 03/06/2013 04:27 AM, Kamezawa Hiroyuki wrote:
->>>> (2013/03/05 22:10), Glauber Costa wrote:
->>>>> +	case _MEMSWAP: {
->>>>> +		struct sysinfo i;
->>>>> +		si_swapinfo(&i);
->>>>> +
->>>>> +		return ((memcg_read_root_rss() +
->>>>> +		atomic_long_read(&vm_stat[NR_FILE_PAGES])) << PAGE_SHIFT) +
->>>>> +		i.totalswap - i.freeswap;
->>>>
->>>> How swapcache is handled ? ...and How kmem works with this calc ?
->>>>
->>> I am ignoring kmem, because we don't account kmem for the root cgroup
->>> anyway.
->>>
->>> Setting the limit is invalid, and we don't account until the limit is
->>> set. Then it will be 0, always.
->>>
->>> For swapcache, I am hoping that totalswap - freeswap will cover
->>> everything swap related. If you think I am wrong, please enlighten me.
->>>
+On Wed, Mar 6, 2013 at 11:31 AM, Ingo Molnar <mingo@kernel.org> wrote:
+>
+> * Stephane Eranian <eranian@google.com> wrote:
+>
+>> > - * This is a per-cpu dynamically allocated data structure.
+>> > - */
+>> > -struct perf_cgroup_info {
+>> > -       u64                             time;
+>> > -       u64                             timestamp;
+>> > -};
+>> > -
+>> > -struct perf_cgroup {
+>> > -       struct                          cgroup_subsys_state css;
+>> > -       struct                          perf_cgroup_info *info; /* timing info, one per cpu */
+>> > -};
+>> > -#endif
+>> > -
+>> > +struct perf_cgroup;
 >>
->> i.totalswap - i.freeswap = # of used swap entries.
->>
->> SwapCache can be rss and used swap entry at the same time.
->>
-> 
-> Well, yes, but the rss entries would be accounted for in get_mm_rss(),
-> won't they ?
-> 
-> What am I missing ?
-
-
-I think the correct caluculation is
-
-  Sum of all RSS + All file caches + (i.total_swap - i.freeswap - # of mapped SwapCache)
-
-
-In the patch, mapped SwapCache is counted as both of rss and swap.
-
-BTW, how about
-
-  Sum of all LRU + (i.total_swap - i.freeswap - # of all SwapCache)
-?
-
-Thanks,
--Kame
-
-
-
-
-
-
-
-
+>> The problem is that you have struct perf_cgroup in the struct perf_event
+>> structure. Today, this field is not referenced outside of kernel/events/core.c But
+>> it is available outside this file. If someday the field is reference, your changes
+>> will have to do reverted. So I am wondering what is the point of the change right
+>> now?
+>
+> It's standard practice to not define the type for task_struct or other kernel
+> subsystems.
+>
+> For example slab caches can be created via kmem_cache_create() anywhere in the tree,
+> but the internal structure is only known to the SLAB subsystem.
+>
+I am fine with the change.
