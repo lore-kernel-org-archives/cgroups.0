@@ -1,48 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] cgroup: make cgrp->event_list_lock irqsafe
-Date: Tue, 5 Mar 2013 22:22:24 -0800
-Message-ID: <20130306062224.GJ1227@htj.dyndns.org>
-References: <5136B7C1.6030403@huawei.com>
+Date: Wed, 6 Mar 2013 15:00:52 +0800
+Message-ID: <5136E9A4.7000201@huawei.com>
+References: <5136B7C1.6030403@huawei.com> <20130306062224.GJ1227@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=3eVhUaP6US2Km2ULjUC+jljAdwoM9xReffzRQr0dx4A=;
-        b=fxLsO0Ujzgxp5GSfby8q42YvAqixjzzOSo1bo7YRme3JHsKIfb88GIVAvwSqa6OUgB
-         tElA5B9ZrKyHTiwtMafh+q2srbBS2SJn2c5ksmS4UcU/CAQAYAApcqRCzWZdYRzPAGjk
-         FB0oOapJYdFPfQ20iGxxQjRK0qakXzSHIL/ykI7HIvf3ru8pYPIIfi/3kfL766Qb70PH
-         qXzFYOjdphnKZKksBVDdZw14B3+y3OS9Bzgf1W8QmKIU4JxFm2iXUWOGMI17Bl8kuviN
-         7zr5JFZVYbxFtUawXoi7NmyoCiGV2Fu+IlApvk+k3l9UHBJc0uWGaN6hSm9JqUTHe/qB
-         Hwug==
-Content-Disposition: inline
-In-Reply-To: <5136B7C1.6030403@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130306062224.GJ1227-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Li.
-
-On Wed, Mar 06, 2013 at 11:28:01AM +0800, Li Zefan wrote:
-> cgroup_event_wake() is called with hardirq-safe wqh->lock held, so
-> the nested cgrp->event_list_lock should also be hardirq-safe.
+On 2013/3/6 14:22, Tejun Heo wrote:
+> Hello, Li.
 > 
-> Fortunately I don't think the deadlock can happen in real life.
+> On Wed, Mar 06, 2013 at 11:28:01AM +0800, Li Zefan wrote:
+>> cgroup_event_wake() is called with hardirq-safe wqh->lock held, so
+>> the nested cgrp->event_list_lock should also be hardirq-safe.
+>>
+>> Fortunately I don't think the deadlock can happen in real life.
+>>
+>> Lockdep never complained, maybe because it never found wqh->lock was
+>> held in irq context?
 > 
-> Lockdep never complained, maybe because it never found wqh->lock was
-> held in irq context?
+> Why should wqh->lock be hard-irq-safe?  Is it actually grabbed from
+> irq context?
 
-Why should wqh->lock be hard-irq-safe?  Is it actually grabbed from
-irq context?  Locks which are grabbed with irq disabled aren't
-necessarily irq context locks as that doesn't lead to deadlocks.  They
-need to be actually grabbed from irq context.
+becase cgroup_event_wake() is a callback to a wait queue, and it's wake_up()
+that acquires wqh->lock with irq disabled.
 
-Thanks.
-
--- 
-tejun
+> Locks which are grabbed with irq disabled aren't
+> necessarily irq context locks as that doesn't lead to deadlocks.  They
+> need to be actually grabbed from irq context.
+> 
+> Thanks.
+> 
