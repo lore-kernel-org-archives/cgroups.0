@@ -1,60 +1,68 @@
-From: Stephane Eranian <eranian@google.com>
-Subject: Re: [PATCH] perf: remove include of cgroup.h from perf_event.h
-Date: Wed, 6 Mar 2013 12:20:41 +0100
-Message-ID: <CABPqkBS7ceR1jvYq2rHMj0r7MU3yanQqdLN70FibZv+0SA-fBA@mail.gmail.com>
-References: <513568A0.6020804@huawei.com>
-	<CABPqkBTTn6E=FS6WiCWopcScHDVa9F6bu5-pw8Ma7TK2aunkvQ@mail.gmail.com>
-	<20130306103120.GA16827@gmail.com>
+From: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: cgroup: INFO: suspicious RCU usage. in cgroup_name
+Date: Wed, 06 Mar 2013 11:02:06 -0500
+Message-ID: <5137687E.50701@oracle.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:x-received:in-reply-to:references:date:message-id
-         :subject:from:to:cc:content-type;
-        bh=mGAqTn4RjFiOEps5SI8WIOyYo+WCAk9rcOdwb5BRtMY=;
-        b=fZYhD+lSvDsae9hHAyzK1IA/S5r4E07SdtDYSYUrsA3oGJyxE99y0fTx2qmy8/l/K/
-         GeL8JhBLAQSvBil4IoidFdAyqkT274kawcuoVx9qoLnZchPWNMS7hMcQBUs4CRVFYCHf
-         maZPRTpVXrJFowHwnnRn78DCRs3e/s1P1viEJBMnCWCAPlVZvrOCveI/CTLANiSqRCQc
-         6+MvDlMAS2FWJo+sGilX3RIJjUNhBn6ZHYzbbQ77pWumcxbd5oWfs4915/g8dB6AJI6B
-         pLi19Me8bweSg6VmdW5Ann0awGgxcloSRFHySLcObT2TUTSxSf7jjywn4lTbhD0J5MDy
-         rm3g==
-In-Reply-To: <20130306103120.GA16827@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Mar 6, 2013 at 11:31 AM, Ingo Molnar <mingo@kernel.org> wrote:
->
-> * Stephane Eranian <eranian@google.com> wrote:
->
->> > - * This is a per-cpu dynamically allocated data structure.
->> > - */
->> > -struct perf_cgroup_info {
->> > -       u64                             time;
->> > -       u64                             timestamp;
->> > -};
->> > -
->> > -struct perf_cgroup {
->> > -       struct                          cgroup_subsys_state css;
->> > -       struct                          perf_cgroup_info *info; /* timing info, one per cpu */
->> > -};
->> > -#endif
->> > -
->> > +struct perf_cgroup;
->>
->> The problem is that you have struct perf_cgroup in the struct perf_event
->> structure. Today, this field is not referenced outside of kernel/events/core.c But
->> it is available outside this file. If someday the field is reference, your changes
->> will have to do reverted. So I am wondering what is the point of the change right
->> now?
->
-> It's standard practice to not define the type for task_struct or other kernel
-> subsystems.
->
-> For example slab caches can be created via kmem_cache_create() anywhere in the tree,
-> but the internal structure is only known to the SLAB subsystem.
->
-I am fine with the change.
+Hi all,
+
+While fuzzing with trinity inside a KVM tools guest running latest -next kernel
+I've stumbled on the following:
+
+[  450.180599] ===============================
+[  450.181392] [ INFO: suspicious RCU usage. ]
+[  450.182101] 3.9.0-rc1-next-20130305-sasha-00048-g35e9ec5-dirty #1032 Tainted: G        W
+[  450.183482] -------------------------------
+[  450.184343] include/linux/cgroup.h:429 suspicious rcu_dereference_check() usage!
+[  450.185575]
+[  450.185575] other info that might help us debug this:
+[  450.185575]
+[  450.186961]
+[  450.186961] rcu_scheduler_active = 1, debug_locks = 1
+[  450.188001] 4 locks held by kworker/u:0/6:
+[  450.188646]  #0:  (khelper){.+.+.+}, at: [<ffffffff8112ba98>] process_one_work+0x238/0x570
+[  450.190186]  #1:  ((&sub_info->work)){+.+.+.}, at: [<ffffffff8112ba98>] process_one_work+0x238/0x570
+[  450.191824]  #2:  (&(&p->alloc_lock)->rlock){+.+.-.}, at: [<ffffffff812036d3>] dump_header+0x43/0xe0
+[  450.193366]  #3:  (cpuset_buffer_lock){+.+...}, at: [<ffffffff811a06d0>] cpuset_print_task_mems_allowed+0x60/0x150
+[  450.195281]
+[  450.195281] stack backtrace:
+[  450.195987] Pid: 6, comm: kworker/u:0 Tainted: G        W    3.9.0-rc1-next-20130305-sasha-00048-g35e9ec5-dirty #1032
+[  450.197678] Call Trace:
+[  450.198086]  [<ffffffff811793b3>] lockdep_rcu_suspicious+0x113/0x130
+[  450.199077]  [<ffffffff811a0757>] cpuset_print_task_mems_allowed+0xe7/0x150
+[  450.200263]  [<ffffffff8120370c>] dump_header+0x7c/0xe0
+[  450.201135]  [<ffffffff81203972>] oom_kill_process+0x82/0x370
+[  450.202048]  [<ffffffff812040cb>] out_of_memory+0x1ab/0x200
+[  450.202921]  [<ffffffff83d44e00>] ? _raw_write_unlock_irq+0x50/0x80
+[  450.204068]  [<ffffffff8120ad1f>] __alloc_pages_slowpath+0x5bf/0x700
+[  450.205075]  [<ffffffff8120b135>] __alloc_pages_nodemask+0x2d5/0x400
+[  450.206067]  [<ffffffff811047c8>] dup_task_struct+0x68/0x1c0
+[  450.206975]  [<ffffffff81105b19>] copy_process+0xe9/0xfd0
+[  450.207798]  [<ffffffff8114dd25>] ? sched_clock_local+0x25/0x90
+[  450.208679]  [<ffffffff81127c50>] ? call_helper+0x20/0x20
+[  450.209496]  [<ffffffff81106e6b>] do_fork+0xbb/0x280
+[  450.210384]  [<ffffffff811070b1>] kernel_thread+0x21/0x30
+[  450.211323]  [<ffffffff81127a93>] __call_usermodehelper+0x33/0xa0
+[  450.212260]  [<ffffffff8112bbc8>] process_one_work+0x368/0x570
+[  450.213201]  [<ffffffff8112ba98>] ? process_one_work+0x238/0x570
+[  450.214248]  [<ffffffff8112d735>] worker_thread+0x1f5/0x340
+[  450.215159]  [<ffffffff8112d540>] ? manage_workers+0x160/0x160
+[  450.216078]  [<ffffffff81135ec2>] kthread+0xe2/0xf0
+[  450.216901]  [<ffffffff8117e34a>] ? __lock_release+0x1da/0x1f0
+[  450.217824]  [<ffffffff81135de0>] ? __init_kthread_worker+0x70/0x70
+[  450.218791]  [<ffffffff83d4ddbc>] ret_from_fork+0x7c/0xb0
+[  450.219627]  [<ffffffff81135de0>] ? __init_kthread_worker+0x70/0x70
+[  450.220780] kworker/u:0 cpuset=/ mems_allowed=0
+
+The offending commit looks like "cgroup: fix cgroup_path() vs rename() race".
+
+
+Thanks,
+Sasha
