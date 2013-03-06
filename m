@@ -1,43 +1,104 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: make cgrp->event_list_lock irqsafe
-Date: Tue, 5 Mar 2013 23:23:24 -0800
-Message-ID: <CAOS58YOvVoe5KZXMB+mSF2OhXF9_eR+yipk96JW9Fenn2EJ1XA@mail.gmail.com>
-References: <5136B7C1.6030403@huawei.com>
-	<20130306062224.GJ1227@htj.dyndns.org>
-	<5136E9A4.7000201@huawei.com>
-	<CAOS58YN9K9OrvvdZjUV9dFOP=SpJYgeyPp0Y5yipNE47osqXpQ@mail.gmail.com>
-	<5136ED2F.8080400@huawei.com>
-	<CAOS58YNJd557hGDMGqavp8eq+B9x5WExCcpW+CwZ8dUainjUUw@mail.gmail.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 4/5] memcg: do not call page_cgroup_init at system_boot
+Date: Wed, 6 Mar 2013 12:22:39 +0400
+Message-ID: <5136FCCF.6090003@parallels.com>
+References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-5-git-send-email-glommer@parallels.com> <513696C1.3090301@jp.fujitsu.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:x-received:sender:in-reply-to:references:date
-         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-        bh=k5M45H88T/XRZRU0lOOTwU4yyY68NvjE0PRstAXw/uA=;
-        b=lzfbaEGWum1gLUBd2zJQRV4juidDUniufgpi0pj1GkVx1rXujq2Hi019wB4JxWWZIp
-         opzTjmdppXtJ6jAq0vBGsWYFRg0i++OXY7NUFoa6oCAlcoAlJ9WpFefbL3khLfPzCtcx
-         JOsc2QKaLOlSGW5NS9Au02n9HPu2NopXiPWo6C4BSbcXsIeUihezd0OIP5M6OLTuiu0R
-         OPpqyhN+XKMyWWQRpxwO7/DtQ3SnkRh4U7qX+H6+CFmDY1rZhiMAVF+DhkeG6h8WbDJK
-         clm7y8g+2p/jRCiSnqzncxiFvdsrWtQ6Xc/0ak3TS5DAtfo9Br4SXPY84WyVuWzSFxmo
-         D7Og==
-In-Reply-To: <CAOS58YNJd557hGDMGqavp8eq+B9x5WExCcpW+CwZ8dUainjUUw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <513696C1.3090301-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 
-On Tue, Mar 5, 2013 at 11:21 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->> wake_up() is also allowed to be called from irq handler?
->
-> Yeah, well, we don't consider everything which uses wake_up() to be
-> irq-safe. I'm not necessarily against making the lock irq-safe but at
+On 03/06/2013 05:07 AM, Kamezawa Hiroyuki wrote:
+> (2013/03/05 22:10), Glauber Costa wrote:
+>> If we are not using memcg, there is no reason why we should allocate
+>> this structure, that will be a memory waste at best. We can do better
+>> at least in the sparsemem case, and allocate it when the first cgroup
+>> is requested. It should now not panic on failure, and we have to handle
+>> this right.
+>>
+>> flatmem case is a bit more complicated, so that one is left out for
+>> the moment.
+>>
+>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> CC: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>> CC: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+>> CC: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>> CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+>> CC: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+>> ---
+>>   include/linux/page_cgroup.h |  28 +++++----
+>>   init/main.c                 |   2 -
+>>   mm/memcontrol.c             |   3 +-
+>>   mm/page_cgroup.c            | 150 ++++++++++++++++++++++++--------------------
+>>   4 files changed, 99 insertions(+), 84 deletions(-)
+> 
+> This patch seems a complicated mixture of clean-up and what-you-really-want.
+> 
+I swear it is all what-I-really-want, any cleanups are non-intentional!
 
-More precise way to think about it wiatqueue lock would be that it's
-built in a way that also allows it to be used from irq context. It
-doesn't *force* irq context on all its users.
+>> -#if !defined(CONFIG_SPARSEMEM)
+>> +static void *alloc_page_cgroup(size_t size, int nid)
+>> +{
+>> +	gfp_t flags = GFP_KERNEL | __GFP_ZERO | __GFP_NOWARN;
+>> +	void *addr = NULL;
+>> +
+>> +	addr = alloc_pages_exact_nid(nid, size, flags);
+>> +	if (addr) {
+>> +		kmemleak_alloc(addr, size, 1, flags);
+>> +		return addr;
+>> +	}
+> 
+> As far as I remember, this function was written for SPARSEMEM.
+> 
+> How big this "size" will be with FLATMEM/DISCONTIGMEM ?
+> if 16GB, 16 * 1024 * 1024 * 1024 / 4096 * 16 = 64MB. 
+> 
+> What happens if order > MAX_ORDER is passed to alloc_pages()...no warning ?
+> 
+> How about using vmalloc always if not SPARSEMEM ?
 
--- 
-tejun
+I don't oppose.
+
+>>   
+>> -void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat)
+>> +static void free_page_cgroup(void *addr)
+>> +{
+>> +	if (is_vmalloc_addr(addr)) {
+>> +		vfree(addr);
+>> +	} else {
+>> +		struct page *page = virt_to_page(addr);
+>> +		int nid = page_to_nid(page);
+>> +		BUG_ON(PageReserved(page));
+> 
+> This BUG_ON() can be removed.
+> 
+
+You are right, although it is still a bug =)
+
+>> +		free_pages_exact(addr, page_cgroup_table_size(nid));
+>> +	}
+>> +}
+>> +
+>> +static void page_cgroup_msg(void)
+>> +{
+>> +	printk(KERN_INFO "allocated %ld bytes of page_cgroup\n", total_usage);
+>> +	printk(KERN_INFO "please try 'cgroup_disable=memory' option if you "
+>> +			 "don't want memory cgroups.\nAlternatively, consider "
+>> +			 "deferring your memory cgroups creation.\n");
+>> +}
+> 
+> I think this warning can be removed because it's not boot option problem
+> after this patch. I guess the boot option can be obsolete....
+> 
+
+I think it is extremely useful, at least during the next couple of
+releases. A lot of distributions will create memcgs for no apparent
+reasons way before they are used (if used at all), as a placeholder only.
+
+This can at least tell them that there is a way to stop paying a memory
+penalty (together with the actual memory footprint)
