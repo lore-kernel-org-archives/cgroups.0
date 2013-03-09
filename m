@@ -1,69 +1,67 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: lockdep trace from prepare_bprm_creds
-Date: Sat, 9 Mar 2013 10:11:51 +0800
-Message-ID: <513A9A67.60909@huawei.com>
-References: <20130306223657.GA7392@redhat.com> <20130307172545.GA10353@redhat.com> <20130307180139.GD29601@htj.dyndns.org> <20130307180332.GE29601@htj.dyndns.org> <20130307191242.GA18265@redhat.com> <20130307193820.GB3209@htj.dyndns.org>
+Date: Fri, 8 Mar 2013 19:29:36 -0800
+Message-ID: <20130309032936.GT14556@mtj.dyndns.org>
+References: <20130306223657.GA7392@redhat.com>
+ <20130307172545.GA10353@redhat.com>
+ <20130307180139.GD29601@htj.dyndns.org>
+ <20130307180332.GE29601@htj.dyndns.org>
+ <20130307191242.GA18265@redhat.com>
+ <20130307193820.GB3209@htj.dyndns.org>
+ <513A9A67.60909@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130307193820.GB3209-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=6P67LbpMiJ9FUVX4yWbGAFwTj7nUF0pHmSiZhMzw5zc=;
+        b=CxIYsNRJDR0sMzBNlhL7yPGFtw0roUOilj2IfIIp+h5odaCE2MmvcCSHXJNdeO7q3H
+         ABdetKNK47q9Ge+EiRebmCzJ9x1KQ1hC5D/q2RxGVWRZcUIlM1OV52k4by6s0u2FvDUT
+         JaEwV5TPPg4NmCOn2rP9y28PnfDEloSeOPBEXHZ5K7uCrnZ8ILBWm07DAyzN9OC/OEbB
+         OCthSQWeV5UNW3eBHzyL3i2DwNyYYezFcX43mVHA5vfyGo3Nz2xL/xmukCmQHvECJwz7
+         gNHu4dPOLjSdCV9JhOHkxeRWqyK8IRlBbgig2k9FX0fHylwwJCHjCcJAkXvKBrvNmTi9
+         7Avg==
+Content-Disposition: inline
+In-Reply-To: <513A9A67.60909-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2013/3/8 3:38, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Mar 07, 2013 at 08:12:42PM +0100, Oleg Nesterov wrote:
->> Well yes, I agree. I think that perfomance-wise threadgroup_change_begin()
->> in de_thread() is fine, and perhaps it is even more clean because we are
->> going to do the thread-group change. The scope of cred_guard_mutex is huge,
->> it doesn't look very nice in threadgroup_lock().
->>
->> But we should avoid the cgroup-specific hooks as much as possible, so I
->> like your patch more.
-> 
-> I don't really mind how it's done but while my approach seems to limit
-> itself to cgroup proper, threadgroup locking is actually more invasive
-> by meddling with cred_mutex.  As you said, yours is the cleaner and
-> probably more permanent one here.
-> 
+Hello, Li.
 
-Agreed.
-
-Now we need that patch to be resent with SOB and proper changelog.
-
->>> +	if (threadgroup && !thread_group_leader(tsk)) {
->>> +		/*
->>> +		 * a race with de_thread from another thread's exec() may
->>> +		 * strip us of our leadership, if this happens, there is no
->>> +		 * choice but to throw this task away and try again; this
->>> +		 * is "double-double-toil-and-trouble-check locking".
->>> +		 */
->>> +		threadgroup_unlock(tsk);
->>> +		put_task_struct(tsk);
->>> +		goto retry_find_task;
->>> +	}
->>>
->>> +	ret = -ENODEV;
->>> +	if (cgroup_lock_live_group(cgrp)) {
->>> +		if (threadgroup)
->>> +			ret = cgroup_attach_proc(cgrp, tsk);
->>
->> Offtopic, but with or without this change I do not understand the
->> thread_group_leader/retry_find_task logic.
->>
->> Why do we actually need to restart? We do not really care if it is leader
->> or not, we only need to ensure we can safely use while_each_thread() to
->> find all !PF_EXITING threads.
+On Sat, Mar 09, 2013 at 10:11:51AM +0800, Li Zefan wrote:
+> On 2013/3/8 3:38, Tejun Heo wrote:
+> > On Thu, Mar 07, 2013 at 08:12:42PM +0100, Oleg Nesterov wrote:
+> >> Well yes, I agree. I think that perfomance-wise threadgroup_change_begin()
+> >> in de_thread() is fine, and perhaps it is even more clean because we are
+> >> going to do the thread-group change. The scope of cred_guard_mutex is huge,
+> >> it doesn't look very nice in threadgroup_lock().
+> >>
+> >> But we should avoid the cgroup-specific hooks as much as possible, so I
+> >> like your patch more.
+> > 
+> > I don't really mind how it's done but while my approach seems to limit
+> > itself to cgroup proper, threadgroup locking is actually more invasive
+> > by meddling with cred_mutex.  As you said, yours is the cleaner and
+> > probably more permanent one here.
+> > 
 > 
-> If my memory serves me right (which BTW often fails), it's cgroup API
-> thing.  cgroup wants to guarantee to the controllers that if multiple
-> tasks are migrated together, they always constitute a threadgroup and
-> the first one is the leader.  ISTR a controller callback which depends
-> on the first one being the leader.
+> Agreed.
 > 
+> Now we need that patch to be resent with SOB and proper changelog.
 
-It did serve you right this time. :)
+Now that I think more about it, I think I want both patches.  It is
+bothering that threadgroup lock is nested inside cgroup_lock.  It
+always has.  I just couldn't do anything about that until recently.
+Li, can you be persuaded into getting the lock reordering patch into a
+useable shape?  :)
+
+Thanks.
+
+-- 
+tejun
