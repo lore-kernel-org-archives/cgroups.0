@@ -1,20 +1,20 @@
 From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/6] memcg: Don't account root memcg CACHE/RSS stats
-Date: Tue, 12 Mar 2013 18:09:37 +0800
-Message-ID: <1363082977-3753-1-git-send-email-handai.szj@taobao.com>
+Subject: [PATCH 3/6] memcg: Don't account root memcg MEM_CGROUP_STAT_FILE_MAPPED stats
+Date: Tue, 12 Mar 2013 18:10:03 +0800
+Message-ID: <1363083003-3791-1-git-send-email-handai.szj@taobao.com>
 References: <1363082773-3598-1-git-send-email-handai.szj@taobao.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=9a4YzGRmQcsU9YoLx7UYP3iXYDt7iwmFTB25pT+eoVU=;
-        b=H0m0eZyrHvpkPzet8sXl1aJNY/+kQULVM8Eg1khNb6v0LKb+2ZVOMvu+ji4SJKef4y
-         GpnrI0oy30C9ZPkePGN17idhGDPwF5A66R/gup7C/r0HNYyvTgOSqAjBVxi7E0CbrFM2
-         QWr52sia3jPDlN09A54gghuoWkT+lv8SiPnnK6CYJ9KuQr8t1vnt2pxI8SlNCiPTqFE0
-         tFRjQZY0s8Av9JVEB8vGHJRbA9g2G20JyhOqtxSJ2tyHmivyBdwfhju8nA+8y1JNaQHl
-         9bkcg1OS9dbZs5JzU6FlmGobcBjN3QH6B01EUFBRxRde2K2wh96ZmULwGfZTnAXf1Qhd
-         Wn2w==
+        bh=5l1StivgDOPVGaQekvRedivUd2trTZK8XJ5R/nbJAbM=;
+        b=asWlb5bglDOqvalArPfyqGTb9ALQtM6gLLGNx9STbfsuaWJjKHPAiq0IErBjylKZHZ
+         GpNFmxDZbrqlmjucve65UNrj5RtBDtT9pK1BT6OkzXPiAsmXbLO48LLGO243uoMyJfwv
+         Zk3wTz90hCv3SL5M+bDcotuyLvolvCuQ4xuI1OjM1vgzD4i1sezjw2Yse/DZKWHGhV/Y
+         rSd/WiKJxVoGwyba9WzDDpdef+keVXIzO2PMtyhvVuSbE33YSKbm4oA6amXXax8FXQw1
+         klap8IgOKAeIGlpNPLN3JspbVjbcaPstqS9GaDqhrAL/gdbSRxhwkqnz6+qJnlJ03wnf
+         d9bQ==
 In-Reply-To: <1363082773-3598-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,111 +24,49 @@ Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-If memcg is enabled and no non-root memcg exists, all allocated pages
-belong to root_mem_cgroup and go through root memcg statistics routines
-which brings some overheads.
-
-So for the sake of performance, we can give up accounting stats of root
-memcg for MEM_CGROUP_STAT_CACHE/RSS and instead we pay special attention
-to memcg_stat_show() while showing root memcg numbers:
-as we don't account root memcg stats anymore, the root_mem_cgroup->stat
-numbers are actually 0. So we fake these numbers by using stats of global
-state and all other memcg. That is for root memcg:
-
-	nr(MEM_CGROUP_STAT_CACHE) = global_page_state(NR_FILE_PAGES) -
-                              sum_of_all_memcg(MEM_CGROUP_STAT_CACHE);
-
-Rss pages accounting are in the similar way.
+Similar with root memcg's CACHE/RSS, we don't account its stats counted
+by mem_cgroup_update_page_stat() (now MEM_CGROUP_STAT_FILE_MAPPED only)
+to improve performance.
 
 Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 ---
- mm/memcontrol.c |   50 ++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 34 insertions(+), 16 deletions(-)
+ mm/memcontrol.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 735cd41..e89204f 100644
+index e89204f..24ce5e6d 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -958,26 +958,27 @@ static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
- {
- 	preempt_disable();
+@@ -2277,6 +2277,10 @@ void mem_cgroup_update_page_stat(struct page *page,
+ 		return;
  
--	/*
--	 * Here, RSS means 'mapped anon' and anon's SwapCache. Shmem/tmpfs is
--	 * counted as CACHE even if it's on ANON LRU.
--	 */
--	if (anon)
--		__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_RSS],
--				nr_pages);
--	else
--		__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_CACHE],
--				nr_pages);
--
- 	/* pagein of a big page is an event. So, ignore page size */
- 	if (nr_pages > 0)
- 		__this_cpu_inc(memcg->stat->events[MEM_CGROUP_EVENTS_PGPGIN]);
--	else {
-+	else
- 		__this_cpu_inc(memcg->stat->events[MEM_CGROUP_EVENTS_PGPGOUT]);
--		nr_pages = -nr_pages; /* for event */
--	}
- 
--	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
-+	__this_cpu_add(memcg->stat->nr_page_events,
-+					nr_pages < 0 ? -nr_pages : nr_pages);
+ 	memcg = pc->mem_cgroup;
 +
-+	if (!mem_cgroup_is_root(memcg)) {
-+		/*
-+		 * Here, RSS means 'mapped anon' and anon's SwapCache. Shmem/tmpfs is
-+		 * counted as CACHE even if it's on ANON LRU.
-+		 */
-+		if (anon)
-+			__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_RSS],
-+					nr_pages);
-+		else
-+			__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_CACHE],
-+					nr_pages);
-+	}
++	if (mem_cgroup_is_root(memcg))
++		return;
++
+ 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+ 		return;
  
- 	preempt_enable();
- }
-@@ -5445,12 +5446,24 @@ static int memcg_stat_show(struct cgroup *cont, struct cftype *cft,
+@@ -5446,7 +5450,8 @@ static int memcg_stat_show(struct cgroup *cont, struct cftype *cft,
  	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
  	struct mem_cgroup *mi;
  	unsigned int i;
-+	enum zone_stat_item global_stat[] = {NR_FILE_PAGES, NR_ANON_PAGES};
-+	long root_stat[MEM_CGROUP_STAT_NSTATS] = {0};
+-	enum zone_stat_item global_stat[] = {NR_FILE_PAGES, NR_ANON_PAGES};
++	enum zone_stat_item global_stat[] = {NR_FILE_PAGES, NR_ANON_PAGES,
++					NR_FILE_MAPPED};
+ 	long root_stat[MEM_CGROUP_STAT_NSTATS] = {0};
  
  	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
-+		long val = 0;
-+
+@@ -5455,8 +5460,7 @@ static int memcg_stat_show(struct cgroup *cont, struct cftype *cft,
  		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
  			continue;
-+
-+		if (mem_cgroup_is_root(memcg) && (i == MEM_CGROUP_STAT_CACHE
-+					|| i == MEM_CGROUP_STAT_RSS)) {
-+			val = global_page_state(global_stat[i]) -
-+				mem_cgroup_recursive_stat(memcg, i);
-+			root_stat[i] = val = val < 0 ? 0 : val;
-+		} else
-+			val = mem_cgroup_read_stat(memcg, i);
- 		seq_printf(m, "%s %ld\n", mem_cgroup_stat_names[i],
--			   mem_cgroup_read_stat(memcg, i) * PAGE_SIZE);
-+					val * PAGE_SIZE);
- 	}
  
- 	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++)
-@@ -5478,6 +5491,11 @@ static int memcg_stat_show(struct cgroup *cont, struct cftype *cft,
- 			continue;
- 		for_each_mem_cgroup_tree(mi, memcg)
- 			val += mem_cgroup_read_stat(mi, i) * PAGE_SIZE;
-+
-+		/* Adding local stats of root memcg */
-+		if (mem_cgroup_is_root(memcg))
-+			val += root_stat[i] * PAGE_SIZE;
-+
- 		seq_printf(m, "total_%s %lld\n", mem_cgroup_stat_names[i], val);
- 	}
- 
+-		if (mem_cgroup_is_root(memcg) && (i == MEM_CGROUP_STAT_CACHE
+-					|| i == MEM_CGROUP_STAT_RSS)) {
++		if (mem_cgroup_is_root(memcg) && (i != MEM_CGROUP_STAT_SWAP)) {
+ 			val = global_page_state(global_stat[i]) -
+ 				mem_cgroup_recursive_stat(memcg, i);
+ 			root_stat[i] = val = val < 0 ? 0 : val;
 -- 
 1.7.9.5
