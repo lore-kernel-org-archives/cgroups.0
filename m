@@ -1,33 +1,78 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/8] cgroup: a bunch of cleanups
-Date: Tue, 12 Mar 2013 14:49:52 +0800
-Message-ID: <513ED010.5060906@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 1/8] cgroup: remove cgroup_is_descentant()
+Date: Tue, 12 Mar 2013 14:50:05 +0800
+Message-ID: <513ED01D.5020200@huawei.com>
+References: <513ED010.5060906@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <513ED010.5060906@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Hi Tejun,
+It was used by ns cgroup, and ns cgroup was removed long ago.
 
-If you're busy with other stuff, just take your time to go through those
-patches.
-
-0001-cgroup-remove-cgroup_is_descentant.patch
-0002-cgroup-remove-unused-variables-in-cgroup_destroy_loc.patch
-0003-cgroup-hold-cgroup_mutex-before-calling-css_offline.patch
-0004-cgroup-don-t-bother-to-resize-pid-array.patch
-0005-cgroup-remove-useless-code-in-cgroup_write_event_con.patch
-0006-cgroup-remove-unneeded-includes-from-cgroup.h.patch
-0007-cgroup-fix-an-almost-harmless-off-by-one-bug.patch
-0008-cgroup-consolidate-cgroup_attach_task-and-cgroup_att.patch
-
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- Documentation/cgroups/cgroups.txt |   1 +
- include/linux/cgroup.h            |  10 +--
- kernel/cgroup.c                   | 239 +++++++++++-----------------------------------------
- kernel/cpuset.c                   |   2 +-
- 4 files changed, 52 insertions(+), 200 deletions(-)
+ include/linux/cgroup.h |  3 ---
+ kernel/cgroup.c        | 28 ----------------------------
+ 2 files changed, 31 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 5f76829..7e818a3 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -448,9 +448,6 @@ int cgroup_path(const struct cgroup *cgrp, char *buf, int buflen);
+ 
+ int cgroup_task_count(const struct cgroup *cgrp);
+ 
+-/* Return true if cgrp is a descendant of the task's cgroup */
+-int cgroup_is_descendant(const struct cgroup *cgrp, struct task_struct *task);
+-
+ /*
+  * Control Group taskset, used to pass around set of tasks to cgroup_subsys
+  * methods.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e72c44e..02b02ca 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5036,34 +5036,6 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+ 	put_css_set_taskexit(cg);
+ }
+ 
+-/**
+- * cgroup_is_descendant - see if @cgrp is a descendant of @task's cgrp
+- * @cgrp: the cgroup in question
+- * @task: the task in question
+- *
+- * See if @cgrp is a descendant of @task's cgroup in the appropriate
+- * hierarchy.
+- *
+- * If we are sending in dummytop, then presumably we are creating
+- * the top cgroup in the subsystem.
+- *
+- * Called only by the ns (nsproxy) cgroup.
+- */
+-int cgroup_is_descendant(const struct cgroup *cgrp, struct task_struct *task)
+-{
+-	int ret;
+-	struct cgroup *target;
+-
+-	if (cgrp == dummytop)
+-		return 1;
+-
+-	target = task_cgroup_from_root(task, cgrp->root);
+-	while (cgrp != target && cgrp!= cgrp->top_cgroup)
+-		cgrp = cgrp->parent;
+-	ret = (cgrp == target);
+-	return ret;
+-}
+-
+ static void check_for_release(struct cgroup *cgrp)
+ {
+ 	/* All of these checks rely on RCU to keep the cgroup
+-- 
+1.8.0.2
