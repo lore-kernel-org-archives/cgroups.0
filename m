@@ -1,53 +1,49 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 0/8] cgroup: a bunch of cleanups
-Date: Tue, 12 Mar 2013 15:38:39 -0700
-Message-ID: <20130312223839.GM25266@htj.dyndns.org>
-References: <513ED010.5060906@huawei.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 1/6] memcg: use global stat directly for root memcg usage
+Date: Wed, 13 Mar 2013 10:05:15 +0900
+Message-ID: <513FD0CB.4000407@jp.fujitsu.com>
+References: <1363082773-3598-1-git-send-email-handai.szj@taobao.com> <1363082920-3711-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=HbX0LzPkhS21lq9Y5KGxrE6FnzhkND5Ua4Ri6qhIeSM=;
-        b=TNYd3BlEMNrSVvNQczJ5KPqrF6sE49IS5gPPSJcdxWzvDLw9b8QJ1OZhXEc1vX9Bcr
-         qeZ0PQp9bxLWdmXpoaEvh3Y1rPNmbZn8MGArVEdzlMUen70938t0ZTzNBBKkDDESQ/pw
-         qskouex/Y1+Mxp3LT59j2kSRxsVNALRUd57XF5KxxPIKldQ8wKSUMQCxbJg9s4VaM+5c
-         +tSeRFh9DiLAnKMQl8SSY7hICF4TO6fbR4b+NihYXjgosE4c++yapJ5Nx/TjHWwLfqql
-         7wNBRCWK8nJw6KyTONWxcAoHYICwuDKACNtx7swj08mvqzd3Ncl8mHlJUrCPrTbNQ8Bf
-         IBBw==
-Content-Disposition: inline
-In-Reply-To: <513ED010.5060906-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1363082920-3711-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Mar 12, 2013 at 02:49:52PM +0800, Li Zefan wrote:
-> Hi Tejun,
+(2013/03/12 19:08), Sha Zhengju wrote:
+> Since mem_cgroup_recursive_stat(root_mem_cgroup, INDEX) will sum up
+> all memcg stats without regard to root's use_hierarchy, we may use
+> global stats instead for simplicity.
 > 
-> If you're busy with other stuff, just take your time to go through those
-> patches.
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> ---
+>   mm/memcontrol.c |    6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> 0001-cgroup-remove-cgroup_is_descentant.patch
-> 0002-cgroup-remove-unused-variables-in-cgroup_destroy_loc.patch
-> 0003-cgroup-hold-cgroup_mutex-before-calling-css_offline.patch
-> 0004-cgroup-don-t-bother-to-resize-pid-array.patch
-> 0005-cgroup-remove-useless-code-in-cgroup_write_event_con.patch
-> 0006-cgroup-remove-unneeded-includes-from-cgroup.h.patch
-> 0007-cgroup-fix-an-almost-harmless-off-by-one-bug.patch
-> 0008-cgroup-consolidate-cgroup_attach_task-and-cgroup_att.patch
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 669d16a..735cd41 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4987,11 +4987,11 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+>   			return res_counter_read_u64(&memcg->memsw, RES_USAGE);
+>   	}
+>   
+> -	val = mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_CACHE);
+> -	val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
+> +	val = global_page_state(NR_FILE_PAGES);
+> +	val += global_page_state(NR_ANON_PAGES);
+>   
+you missed NR_ANON_TRANSPARENT_HUGEPAGES
 
-0001-0007 applied to cgroup/for-3.10.  0008 looks fine but in the diff
-cgroup_attach_task_all() is removed completely and added back in
-slightly different form.  If you wanna keep the functions ordered like
-you posted, please put a separate patch to move
-cgroup_attach_task_all() before the consolidation.
+>   	if (swap)
+> -		val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_SWAP);
+> +		val += total_swap_pages - atomic_long_read(&nr_swap_pages);
+>   
+Double count mapped SwapCache ? Did you saw Costa's trial in a week ago ?
 
-Thanks.
+Thanks,
+-Kame
 
--- 
-tejun
