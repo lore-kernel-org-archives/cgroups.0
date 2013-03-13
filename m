@@ -1,28 +1,28 @@
-From: Li Zefan <lizefan@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: [PATCH v2] cgroup: consolidate cgroup_attach_task() and cgroup_attach_proc()
-Date: Wed, 13 Mar 2013 09:14:42 +0800
-Message-ID: <513FD302.4030504@huawei.com>
+Date: Wed, 13 Mar 2013 09:17:09 +0800
+Message-ID: <513FD395.7000906@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
 These two functions share most of the code.
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
 
-v2: not necessary to move cgroup_attach_task_all()
+v2: Not necessary to move cgroup_attach_task_all().
 
 ---
  include/linux/cgroup.h |   3 +-
- kernel/cgroup.c        | 107 +++++++++----------------------------------------
+ kernel/cgroup.c        | 109 +++++++++----------------------------------------
  kernel/cpuset.c        |   2 +-
- 3 files changed, 22 insertions(+), 90 deletions(-)
+ 3 files changed, 23 insertions(+), 91 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
 index 1f75a59..013c6ce 100644
@@ -39,7 +39,7 @@ index 1f75a59..013c6ce 100644
  
  /*
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 4b92b9a..134d3c5 100644
+index 4b92b9a..c157f88 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
 @@ -59,7 +59,7 @@
@@ -155,7 +155,8 @@ index 4b92b9a..134d3c5 100644
 + * @threadgroup: attach the whole threadgroup?
   *
   * Call holding cgroup_mutex and the group_rwsem of the leader. Will take
-  * task_lock of each thread in leader's threadgroup individually in turn.
+- * task_lock of each thread in leader's threadgroup individually in turn.
++ * task_lock of @tsk or each thread in the threadgroup individually in turn.
   */
 -static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
 +int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
