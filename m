@@ -1,28 +1,113 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: consolidate cgroup_attach_task() and cgroup_attach_proc()
-Date: Wed, 13 Mar 2013 09:43:29 +0800
-Message-ID: <513FD9C1.4020604@huawei.com>
-References: <513FD395.7000906@huawei.com> <20130313011939.GC2999@htj.dyndns.org>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 2/5] memcg: provide root figures from system totals
+Date: Wed, 13 Mar 2013 14:58:41 +0800
+Message-ID: <CAFj3OHWm_GjLFwNEE=D69DR-YSF25AZvKTLHpyHq7aYDi12b0g@mail.gmail.com>
+References: <1362489058-3455-1-git-send-email-glommer@parallels.com>
+	<1362489058-3455-3-git-send-email-glommer@parallels.com>
+	<51368D80.20701@jp.fujitsu.com>
+	<5136FEC2.2050004@parallels.com>
+	<51371E4A.7090807@jp.fujitsu.com>
+	<51371FEF.3020507@parallels.com>
+	<513721A5.6080401@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130313011939.GC2999-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:in-reply-to:references:date:message-id
+         :subject:from:to:cc:content-type;
+        bh=MlnPFpypKsFKIq425jHDnv75HVONhCO/YAF6ZFU41mA=;
+        b=hhF8qqjFtYI1DiXvuWu6DRIWd0tl9Sg4DtqXcoPd4vxeH08p5eYFbrspjOL5sVayAs
+         0IQo7USU5Z/O0jQNW3hVSR/NRCYDwEKueZSWvarCrtn5E4PU7FyJl4zLNxXYDutI2jsV
+         qQyZ13Xz9E9fVTS/brBqJ14IpLMek5yqHGwMgFPBpic/UKBH/Wv1wvPu+14lb5m5lKLj
+         WmM6OCoauAz2BL1F4rMGP7+8NxFBn9Wsyy80kE5Mg6xTtmOilzkadLQbOAKnQUfF62Pn
+         JVsBCbZtaIrfoo5FpDztvGTSnplOyL5O+yDTMMhHfxYBnPWFnza4MdHyZr7CiHxfHVYk
+         JfLQ==
+In-Reply-To: <513721A5.6080401-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 
-On 2013/3/13 9:19, Tejun Heo wrote:
-> On Wed, Mar 13, 2013 at 09:17:09AM +0800, Li Zefan wrote:
->> These two functions share most of the code.
+On Wed, Mar 6, 2013 at 6:59 PM, Kamezawa Hiroyuki
+<kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org> wrote:
+> (2013/03/06 19:52), Glauber Costa wrote:
+>> On 03/06/2013 02:45 PM, Kamezawa Hiroyuki wrote:
+>>> (2013/03/06 17:30), Glauber Costa wrote:
+>>>> On 03/06/2013 04:27 AM, Kamezawa Hiroyuki wrote:
+>>>>> (2013/03/05 22:10), Glauber Costa wrote:
+>>>>>> + case _MEMSWAP: {
+>>>>>> +         struct sysinfo i;
+>>>>>> +         si_swapinfo(&i);
+>>>>>> +
+>>>>>> +         return ((memcg_read_root_rss() +
+>>>>>> +         atomic_long_read(&vm_stat[NR_FILE_PAGES])) << PAGE_SHIFT) +
+>>>>>> +         i.totalswap - i.freeswap;
+>>>>>
+>>>>> How swapcache is handled ? ...and How kmem works with this calc ?
+>>>>>
+>>>> I am ignoring kmem, because we don't account kmem for the root cgroup
+>>>> anyway.
+>>>>
+>>>> Setting the limit is invalid, and we don't account until the limit is
+>>>> set. Then it will be 0, always.
+>>>>
+>>>> For swapcache, I am hoping that totalswap - freeswap will cover
+>>>> everything swap related. If you think I am wrong, please enlighten me.
+>>>>
+>>>
+>>> i.totalswap - i.freeswap = # of used swap entries.
+>>>
+>>> SwapCache can be rss and used swap entry at the same time.
+>>>
 >>
->> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->> ---
+>> Well, yes, but the rss entries would be accounted for in get_mm_rss(),
+>> won't they ?
 >>
->> v2: Not necessary to move cgroup_attach_task_all().
-> 
-> I supposed this one is the one to apply?
-> 
+>> What am I missing ?
+>
+>
+> I think the correct caluculation is
+>
+>   Sum of all RSS + All file caches + (i.total_swap - i.freeswap - # of mapped SwapCache)
+>
+>
+> In the patch, mapped SwapCache is counted as both of rss and swap.
+>
 
-yep.
+After a quick look, swapcache is counted as file pages and meanwhile
+use a swap entry at the same time(__add_to{delete_from}_swap_cache()).
+Even though, I think we still do not need to exclude swapcache out,
+because it indeed uses two copy of resource: one is swap entry, one is
+cache, so the usage should count both of them in.
+
+What I think it matters is that swapcache may be counted as both file
+pages and rss(if it's a process's anonymous page), which we need to
+subtract # of swapcache to avoid double-counting. But it isn't always
+so: a shmem/tmpfs page may use swapcache and be counted as file pages
+but not a rss, then we can not subtract swapcache... Is there anything
+I lost?
+
+> BTW, how about
+>
+>   Sum of all LRU + (i.total_swap - i.freeswap - # of all SwapCache)
+> ?
+>
+> Thanks,
+> -Kame
+>
+>
+>
+>
+>
+>
+>
+>
+>
+
+
+
+-- 
+Thanks,
+Sha
