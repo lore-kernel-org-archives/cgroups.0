@@ -1,127 +1,67 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH v2 2/5] memcg: provide root figures from system totals
-Date: Thu, 14 Mar 2013 09:03:15 +0900
-Message-ID: <514113C3.2090505@jp.fujitsu.com>
-References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-3-git-send-email-glommer@parallels.com> <51368D80.20701@jp.fujitsu.com> <5136FEC2.2050004@parallels.com> <51371E4A.7090807@jp.fujitsu.com> <51371FEF.3020507@parallels.com> <513721A5.6080401@jp.fujitsu.com> <CAFj3OHWm_GjLFwNEE=D69DR-YSF25AZvKTLHpyHq7aYDi12b0g@mail.gmail.com> <514043B5.1090205@jp.fujitsu.com> <CAFj3OHUupqG-178gnTUWc787n5cJjGgGZRzXuNRVvOvYqkHvgA@mail.gmail.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH 0/4] fix depvpts in user namespaces
+Date: Fri, 15 Mar 2013 13:13:39 +0400
+Message-ID: <1363338823-25292-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAFj3OHUupqG-178gnTUWc787n5cJjGgGZRzXuNRVvOvYqkHvgA@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: Glauber Costa <glommer@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, anton.vorontsov@linaro.org, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
-(2013/03/13 18:59), Sha Zhengju wrote:
-> On Wed, Mar 13, 2013 at 5:15 PM, Kamezawa Hiroyuki
-> <kamezawa.hiroyu@jp.fujitsu.com> wrote:
->> (2013/03/13 15:58), Sha Zhengju wrote:
->>>
->>> On Wed, Mar 6, 2013 at 6:59 PM, Kamezawa Hiroyuki
->>> <kamezawa.hiroyu@jp.fujitsu.com> wrote:
->>>>
->>>> (2013/03/06 19:52), Glauber Costa wrote:
->>>>>
->>>>> On 03/06/2013 02:45 PM, Kamezawa Hiroyuki wrote:
->>>>>>
->>>>>> (2013/03/06 17:30), Glauber Costa wrote:
->>>>>>>
->>>>>>> On 03/06/2013 04:27 AM, Kamezawa Hiroyuki wrote:
->>>>>>>>
->>>>>>>> (2013/03/05 22:10), Glauber Costa wrote:
->>>>>>>>>
->>>>>>>>> + case _MEMSWAP: {
->>>>>>>>> +         struct sysinfo i;
->>>>>>>>> +         si_swapinfo(&i);
->>>>>>>>> +
->>>>>>>>> +         return ((memcg_read_root_rss() +
->>>>>>>>> +         atomic_long_read(&vm_stat[NR_FILE_PAGES])) << PAGE_SH=
-IFT)
->>>>>>>>> +
->>>>>>>>> +         i.totalswap - i.freeswap;
->>>>>>>>
->>>>>>>>
->>>>>>>> How swapcache is handled ? ...and How kmem works with this calc =
-?
->>>>>>>>
->>>>>>> I am ignoring kmem, because we don't account kmem for the root cg=
-roup
->>>>>>> anyway.
->>>>>>>
->>>>>>> Setting the limit is invalid, and we don't account until the limi=
-t is
->>>>>>> set. Then it will be 0, always.
->>>>>>>
->>>>>>> For swapcache, I am hoping that totalswap - freeswap will cover
->>>>>>> everything swap related. If you think I am wrong, please enlighte=
-n me.
->>>>>>>
->>>>>>
->>>>>> i.totalswap - i.freeswap =3D # of used swap entries.
->>>>>>
->>>>>> SwapCache can be rss and used swap entry at the same time.
->>>>>>
->>>>>
->>>>> Well, yes, but the rss entries would be accounted for in get_mm_rss=
-(),
->>>>> won't they ?
->>>>>
->>>>> What am I missing ?
->>>>
->>>>
->>>>
->>>> I think the correct caluculation is
->>>>
->>>>     Sum of all RSS + All file caches + (i.total_swap - i.freeswap - =
-# of
->>>> mapped SwapCache)
->>>>
->>>>
->>>> In the patch, mapped SwapCache is counted as both of rss and swap.
->>>>
->>>
->>> After a quick look, swapcache is counted as file pages and meanwhile
->>> use a swap entry at the same time(__add_to{delete_from}_swap_cache())=
-.
->>> Even though, I think we still do not need to exclude swapcache out,
->>> because it indeed uses two copy of resource: one is swap entry, one i=
-s
->>> cache, so the usage should count both of them in.
->>>
->>> What I think it matters is that swapcache may be counted as both file
->>> pages and rss(if it's a process's anonymous page), which we need to
->>> subtract # of swapcache to avoid double-counting. But it isn't always
->>> so: a shmem/tmpfs page may use swapcache and be counted as file pages
->>> but not a rss, then we can not subtract swapcache... Is there anythin=
-g
->>> I lost?
->>>
->>
->>
->> Please don't think difficult. All pages for user/caches are counted in
->> LRU. All swap-entry usage can be cauht by total_swap_pages - nr_swap_p=
-ages.
->> We just need to subtract number of swap-cache which is double counted
->> as swap-entry and a page in LRU.
->>
->> NR_ACTIVE_ANON + NR_INACTIVE_ANON + NR_ACTIVE_FILE + NR_INACTIVE_FILE
->> + NR_UNEVICTABLE + total_swap_pages - nr_swap_pages - NR_SWAP_CACHE
->>
->
-> Using LRU numbers is more suitable. But forgive me, I still doubt
-> whether we should subtract NR_SWAP_CACHE out because it uses both a
-> swap entry and a page cache and it isn't a real double counting.
->
+Hi,
 
-Used swap entry can be reclaimed if there are SwapCache on memory.
+devpts mounts in user namespaces is queued for 3.9. However, while playing
+with it I found it to be less than ideal. Although it could possibly work
+with custom software that can be made to point to /dev/pts/ptmx, a few things
+prevent it from working correctly for people that, like us, are booting full
+distributions.
 
-Thanks,
-=E3=83=BCKame
+In those scenarios, things like udev will kick in, maybe remount /dev undoing
+any setup we might have done, and then software like sshd or anything else
+calling openpty will search for /dev/ptmx, not /dev/pts/ptmx.
 
+One of the problems that I am addressing in here is that we are disallowing
+mknod in usernamespaces. Although I understand the motivation for that, I
+believe that to be too restrictive, specially because we already control access
+to the files separately. There should be no harm in mknod'ing something per se,
+if manipulating it is forbidden.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+That too, however, is too restrictive. Following the precedence that we set by
+letting memcg manage the memory for tmpfs mounts, I am doing the same here with
+the device cgroup. With the exception that instead of suggesting, here we have
+a way to actually enforce it. Unless the mount was specifically marked as
+nodev, reads and writes will be allowed to proceed if a device cgroup is
+containing the process. The device cgroup will then be the one responsible for
+setting fine grained access about which devices can and cannot be manipulated.
+
+Last, /dev/ptmx will still always be the global ptmx device. We need to somehow
+link it to our namespaces'. My proposal is to multiplex it and return the
+correct "root ptmx" depending on which userns is reading that device.
+
+Glauber Costa (4):
+  dev_cgroup: keep track of which cgroup is the root cgroup
+  fs: allow dev accesses in userns in controlled situations
+  fs: allow mknod in user namespaces
+  devpts: fix usage in user namespaces
+
+ fs/devpts/inode.c        | 157 +++++++++++++++++++++++++++++++++++++++++++++--
+ fs/namei.c               |   6 +-
+ fs/namespace.c           |   2 +-
+ include/linux/mount.h    |   2 +
+ include/linux/security.h |   1 +
+ security/device_cgroup.c |  15 ++++-
+ 6 files changed, 173 insertions(+), 10 deletions(-)
+
+-- 
+1.8.1.2
