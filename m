@@ -1,58 +1,40 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v2 4/5] memcg: do not call page_cgroup_init at system_boot
-Date: Tue, 19 Mar 2013 15:06:35 +0100
-Message-ID: <20130319140635.GH7869@dhcp22.suse.cz>
-References: <1362489058-3455-1-git-send-email-glommer@parallels.com>
- <1362489058-3455-5-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 0/4] devcg: introduce proper hierarchy support
+Date: Tue, 19 Mar 2013 14:30:39 -0700
+Message-ID: <20130319213039.GO3042@htj.dyndns.org>
+References: <20130215165543.131282532@napanee.usersys.redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=Q8a50Zsi2mhSivfpIy2g1ROlcsBlAmWwlCmGE/TTFyE=;
+        b=Q43Jl1NoGRmS0lor2HH/WrvVurakiZB0vtimuZ2l4qnvZST3MlQssWQxVNZkYatRN2
+         n7GY6zCPRwxpkfsV5o1zUzUAgifUTmQ5iKibYMksn2jkOuuYlAnWynn3XGnEpKjvw9HZ
+         IKoFFt83wQO2J8TaUKWCJ/H05i+Ce81DgVmHVyyIf40f+pbJuj+bL3sngoGxCV8ERrf2
+         vN/62j/lWg2/yzt3o3Imq/tH4kXFKnCzOwe+GYcz4ZDc+vZ7GDiBWmAFH4zCtdEIQuFa
+         L6NntBbW8CpX22Tl4SjLVJ5u4IaLeC2NXkprREl59EuTsuNhGZLl2/wbuNmKBN1tcp8U
+         JiVg==
 Content-Disposition: inline
-In-Reply-To: <1362489058-3455-5-git-send-email-glommer@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130215165543.131282532-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, handai.szj@gmail.com, anton.vorontsov@linaro.org, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Tue 05-03-13 17:10:57, Glauber Costa wrote:
-> If we are not using memcg, there is no reason why we should allocate
-> this structure, that will be a memory waste at best. We can do better
-> at least in the sparsemem case, and allocate it when the first cgroup
-> is requested. It should now not panic on failure, and we have to handle
-> this right.
+On Fri, Feb 15, 2013 at 11:55:43AM -0500, Aristeu Rozanski wrote:
+> This patchset implements device cgroup hierarchy. Exceptions will be
+> propagated down in the tree and local preferences will be re-evaluated
+> everytime a change in its parent occours, reapplying them if it's still
+> possible.
 
-lookup_page_cgroup needs a special handling as well. Callers are not
-prepared to get NULL and the current code would even explode with
-!CONFIG_DEBUG_VM.
+Applied to cgroup/for-3.10.
 
-Anyway, agreed with what Kame said. This is really hard to read. Would
-it be possible to split it up somehow - sorry for not being more helpful
-here...
+Thanks!
 
-> flatmem case is a bit more complicated, so that one is left out for
-> the moment.
-> 
-> Signed-off-by: Glauber Costa <glommer@parallels.com>
-> CC: Michal Hocko <mhocko@suse.cz>
-> CC: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> CC: Johannes Weiner <hannes@cmpxchg.org>
-> CC: Mel Gorman <mgorman@suse.de>
-> CC: Andrew Morton <akpm@linux-foundation.org>
-> ---
->  include/linux/page_cgroup.h |  28 +++++----
->  init/main.c                 |   2 -
->  mm/memcontrol.c             |   3 +-
->  mm/page_cgroup.c            | 150 ++++++++++++++++++++++++--------------------
->  4 files changed, 99 insertions(+), 84 deletions(-)
-> 
-[...]
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
