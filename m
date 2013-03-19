@@ -1,40 +1,40 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 0/4] devcg: introduce proper hierarchy support
-Date: Tue, 19 Mar 2013 14:30:39 -0700
-Message-ID: <20130319213039.GO3042@htj.dyndns.org>
-References: <20130215165543.131282532@napanee.usersys.redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] cgroup: consolidate cgroup_attach_task() and
+ cgroup_attach_proc()
+Date: Tue, 19 Mar 2013 14:32:15 -0700
+Message-ID: <20130319213215.GP3042@htj.dyndns.org>
+References: <513FD395.7000906@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
          :mime-version:content-type:content-disposition:in-reply-to
          :user-agent;
-        bh=Q8a50Zsi2mhSivfpIy2g1ROlcsBlAmWwlCmGE/TTFyE=;
-        b=Q43Jl1NoGRmS0lor2HH/WrvVurakiZB0vtimuZ2l4qnvZST3MlQssWQxVNZkYatRN2
-         n7GY6zCPRwxpkfsV5o1zUzUAgifUTmQ5iKibYMksn2jkOuuYlAnWynn3XGnEpKjvw9HZ
-         IKoFFt83wQO2J8TaUKWCJ/H05i+Ce81DgVmHVyyIf40f+pbJuj+bL3sngoGxCV8ERrf2
-         vN/62j/lWg2/yzt3o3Imq/tH4kXFKnCzOwe+GYcz4ZDc+vZ7GDiBWmAFH4zCtdEIQuFa
-         L6NntBbW8CpX22Tl4SjLVJ5u4IaLeC2NXkprREl59EuTsuNhGZLl2/wbuNmKBN1tcp8U
-         JiVg==
+        bh=EVBn8c0uZevZ0FuenIhk91EIj7mdlKGj+MX/Jqkjchs=;
+        b=TsPBuyPXBgjAhQIy1eWH/P0i1yR48isNHnDwmUKFpjcASS8W7Z6LcvsquQkv8Bs85y
+         mX2GRWiaz4794xkXKz/SUkt+y/awIF7G9jroZWaGAbvH+5SwC8TLs4+Ixwx6BRyPGcii
+         gtRd7S+M+tgLJLhG8q5sPMBb0Khs/fdko4GaPuO4hOfM0LppmNUvFtiwOV/XTY4Js8Jv
+         hXCjwdFlswZMZKn3tsanZrZD3Ni+ox1QcI8ubuTD+GZeTgwGtMAuT4av1BMlxnTJneHL
+         kjcqK9aXeGAX5zCM18gVvZ1F2XTk7e9tH+1+xuQOSCd2O/AceKaTOgyEQht0jcA7PmG5
+         riKg==
 Content-Disposition: inline
-In-Reply-To: <20130215165543.131282532-cd6kKtb6gxi3M6m420IelR/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <513FD395.7000906@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Fri, Feb 15, 2013 at 11:55:43AM -0500, Aristeu Rozanski wrote:
-> This patchset implements device cgroup hierarchy. Exceptions will be
-> propagated down in the tree and local preferences will be re-evaluated
-> everytime a change in its parent occours, reapplying them if it's still
-> possible.
+On Wed, Mar 13, 2013 at 09:17:09AM +0800, Li Zefan wrote:
+> These two functions share most of the code.
+> 
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 
 Applied to cgroup/for-3.10.
 
-Thanks!
+Thanks.
 
 -- 
 tejun
