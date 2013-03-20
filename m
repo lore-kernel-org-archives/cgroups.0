@@ -1,42 +1,40 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 2/5] memcg: provide root figures from system totals
-Date: Wed, 20 Mar 2013 11:04:07 +0400
-Message-ID: <51495F67.3040009@parallels.com>
-References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-3-git-send-email-glommer@parallels.com> <20130319124650.GE7869@dhcp22.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 2/6] memcg: Don't account root memcg CACHE/RSS stats
+Date: Wed, 20 Mar 2013 11:07:45 +0400
+Message-ID: <51496041.4090900@parallels.com>
+References: <1363082773-3598-1-git-send-email-handai.szj@taobao.com> <1363082977-3753-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130319124650.GE7869@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1363082977-3753-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, handai.szj@gmail.com, anton.vorontsov@linaro.org, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On 03/19/2013 04:46 PM, Michal Hocko wrote:
-> On Tue 05-03-13 17:10:55, Glauber Costa wrote:
->> For the root memcg, there is no need to rely on the res_counters if hierarchy
->> is enabled The sum of all mem cgroups plus the tasks in root itself, is
->> necessarily the amount of memory used for the whole system. Since those figures
->> are already kept somewhere anyway, we can just return them here, without too
->> much hassle.
->>
->> Limit and soft limit can't be set for the root cgroup, so they are left at
->> RESOURCE_MAX. Failcnt is left at 0, because its actual meaning is how many
->> times we failed allocations due to the limit being hit. We will fail
->> allocations in the root cgroup, but the limit will never the reason.
+On 03/12/2013 02:09 PM, Sha Zhengju wrote:
+> If memcg is enabled and no non-root memcg exists, all allocated pages
+> belong to root_mem_cgroup and go through root memcg statistics routines
+> which brings some overheads.
 > 
-> I do not like this very much to be honest. It just adds more hackery...
-> Why cannot we simply not account if nr_cgroups == 1 and move relevant
-> global counters to the root at the moment when a first group is
-> created?
-> The patch aims at reducing an overhead when there there are no other
-> groups, right?
+> So for the sake of performance, we can give up accounting stats of root
+> memcg for MEM_CGROUP_STAT_CACHE/RSS and instead we pay special attention
+> to memcg_stat_show() while showing root memcg numbers:
+> as we don't account root memcg stats anymore, the root_mem_cgroup->stat
+> numbers are actually 0. So we fake these numbers by using stats of global
+> state and all other memcg. That is for root memcg:
 > 
-You've already noted yourself that this is done in a later patch.
+> 	nr(MEM_CGROUP_STAT_CACHE) = global_page_state(NR_FILE_PAGES) -
+>                               sum_of_all_memcg(MEM_CGROUP_STAT_CACHE);
+> 
+> Rss pages accounting are in the similar way.
+> 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Well,
+
+The problem is that statistics is not the only cause for overhead. We
+will still incur in in the whole charging operation, and the same for
+uncharge. There is memory overhead from page_cgroup, etc.
+
+So my view is that this patch is far from complete.
