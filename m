@@ -1,107 +1,153 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.10] cgroup: make cgroup_mutex outer to threadgroup_lock
-Date: Wed, 20 Mar 2013 08:58:08 +0800
-Message-ID: <514909A0.4030808@huawei.com>
-References: <20130306223657.GA7392@redhat.com> <20130307172545.GA10353@redhat.com> <20130307180139.GD29601@htj.dyndns.org> <20130307180332.GE29601@htj.dyndns.org> <20130307191242.GA18265@redhat.com> <20130307193820.GB3209@htj.dyndns.org> <513A9A67.60909@huawei.com> <20130309032936.GT14556@mtj.dyndns.org> <513AE918.7020704@huawei.com> <20130319220246.GR3042@htj.dyndns.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v2 3/5] memcg: make it suck faster
+Date: Wed, 20 Mar 2013 11:00:03 +0400
+Message-ID: <51495E73.8090409@parallels.com>
+References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-4-git-send-email-glommer@parallels.com> <20130319135821.GG7869@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130319220246.GR3042-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130319135821.GG7869@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, handai.szj@gmail.com, anton.vorontsov@linaro.org, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>
 
-On 2013/3/20 6:02, Tejun Heo wrote:
-> It doesn't make sense to nest cgroup_mutex inside threadgroup_lock
-> when it should be outer to most all locks used by all cgroup
-> controllers.  It was nested inside threadgroup_lock only because some
-> controllers were abusing cgroup_mutex inside controllers leading to
-> locking order inversion.
+Sorry all for taking a lot of time to reply to this. I've been really busy.
+
+On 03/19/2013 05:58 PM, Michal Hocko wrote:
+> On Tue 05-03-13 17:10:56, Glauber Costa wrote:
+>> It is an accepted fact that memcg sucks. But can it suck faster?  Or in
+>> a more fair statement, can it at least stop draining everyone's
+>> performance when it is not in use?
+>>
+>> This experimental and slightly crude patch demonstrates that we can do
+>> that by using static branches to patch it out until the first memcg
+>> comes to life. There are edges to be trimmed, and I appreciate comments
+>> for direction. In particular, the events in the root are not fired, but
+>> I believe this can be done without further problems by calling a
+>> specialized event check from mem_cgroup_newpage_charge().
+>>
+>> My goal was to have enough numbers to demonstrate the performance gain
+>> that can come from it. I tested it in a 24-way 2-socket Intel box, 24 Gb
+>> mem. I used Mel Gorman's pft test, that he used to demonstrate this
+>> problem back in the Kernel Summit. There are three kernels:
+>>
+>> nomemcg  : memcg compile disabled.
+>> base     : memcg enabled, patch not applied.
+>> bypassed : memcg enabled, with patch applied.
+>>
+>>                 base    bypassed
+>> User          109.12      105.64
+>> System       1646.84     1597.98
+>> Elapsed       229.56      215.76
+>>
+>>              nomemcg    bypassed
+>> User          104.35      105.64
+>> System       1578.19     1597.98
+>> Elapsed       212.33      215.76
 > 
-> cgroup_mutex is no longer abused by controllers and can be put outer
-> to threadgroup_lock.  Reverse the locking order in
-> attach_task_by_pid().
+> Do you have profiles for where we spend the time?
 > 
 
-But the code contrast to the changelog. ;)
+I don't *have* in the sense that I never saved them, but it is easy to
+grab. I've just run Mel's pft test with perf top -a in parallel, and
+that was mostly the charge and uncharge functions being run.
 
-cgroup_mutex is currently outside of threadgroup_lock, and you're making
-it nested inside threadgroup_lock in the code.
+>>  #ifdef CONFIG_MEMCG
+>> +extern struct static_key memcg_in_use_key;
+>> +
+>> +static inline bool mem_cgroup_subsys_disabled(void)
+>> +{
+>> +	return !!mem_cgroup_subsys.disabled;
+>> +}
+>> +
+>> +static inline bool mem_cgroup_disabled(void)
+>> +{
+>> +	/*
+>> +	 * Will always be false if subsys is disabled, because we have no one
+>> +	 * to bump it up. So the test suffices and we don't have to test the
+>> +	 * subsystem as well
+>> +	 */
+> 
+> but static_key_false adds an atomic read here which is more costly so I
+> am not sure you are optimizing much.
+> 
 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
-> Li, can you please ack this?
+No it doesn't. You're missing the point of static branches: The code is
+*patched out* until it is not used. So it adds a predictable
+deterministic jump instruction to the false statement, and that's it
+(hence their previous name 'jump label').
+
+>> +
+>> +extern int __mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm,
+>> +				     gfp_t gfp_mask);
+>> +static inline int
+>> +mem_cgroup_cache_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
+>> +{
+>> +	if (mem_cgroup_disabled())
+>> +		return 0;
+>> +
+>> +	return __mem_cgroup_cache_charge(page, mm, gfp_mask);
+>> +}
 > 
-> Thanks!
+> Are there any reasons to not get down to __mem_cgroup_try_charge? We
+> will not be perfect, all right, because some wrappers already do some
+> work but we should at least cover most of them.
 > 
->  kernel/cgroup.c |   21 ++++++++-------------
->  1 file changed, 8 insertions(+), 13 deletions(-)
+> I am also thinking whether this stab at charging path is not just an
+> overkill. Wouldn't it suffice to do something like:
+
+I don't know. I could test. I just see no reason for that. Being able to
+patch out code in the caller level means we'll not incur even a function
+call. That's a generally accepted good thing to do in hot paths.
+Specially given the fact that the memcg overhead seems not to be
+concentrated in one single place, but as Christoph Lameter defined,
+"death by a thousand cuts", I'd much rather not even pay the function
+calls if I can avoid. If I introducing great complexity for that, fine,
+I could trade off. But honestly, the patch gets bigger but that's it.
+
+>>  struct lruvec *mem_cgroup_zone_lruvec(struct zone *, struct mem_cgroup *);
+>>  struct lruvec *mem_cgroup_page_lruvec(struct page *, struct zone *);
+> [...]
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index bfbf1c2..45c1886 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+> [...]
+>> @@ -1335,6 +1345,20 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct zone *zone)
+>>  	memcg = pc->mem_cgroup;
 > 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 04fa2ab..24106b8 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -2134,17 +2134,13 @@ static int attach_task_by_pid(struct cgroup *cgrp, u64 pid, bool threadgroup)
->  	const struct cred *cred = current_cred(), *tcred;
->  	int ret;
->  
-> -	if (!cgroup_lock_live_group(cgrp))
-> -		return -ENODEV;
-> -
->  retry_find_task:
->  	rcu_read_lock();
->  	if (pid) {
->  		tsk = find_task_by_vpid(pid);
->  		if (!tsk) {
->  			rcu_read_unlock();
-> -			ret= -ESRCH;
-> -			goto out_unlock_cgroup;
-> +			return -ESRCH;
->  		}
->  		/*
->  		 * even if we're attaching all tasks in the thread group, we
-> @@ -2155,8 +2151,7 @@ retry_find_task:
->  		    !uid_eq(cred->euid, tcred->uid) &&
->  		    !uid_eq(cred->euid, tcred->suid)) {
->  			rcu_read_unlock();
-> -			ret = -EACCES;
-> -			goto out_unlock_cgroup;
-> +			return -EACCES;
->  		}
->  	} else
->  		tsk = current;
-> @@ -2170,9 +2165,8 @@ retry_find_task:
->  	 * with no rt_runtime allocated.  Just say no.
->  	 */
->  	if (tsk == kthreadd_task || (tsk->flags & PF_THREAD_BOUND)) {
-> -		ret = -EINVAL;
->  		rcu_read_unlock();
-> -		goto out_unlock_cgroup;
-> +		return -EINVAL;
->  	}
->  
->  	get_task_struct(tsk);
-> @@ -2194,13 +2188,14 @@ retry_find_task:
->  		}
->  	}
->  
-> -	ret = cgroup_attach_task(cgrp, tsk, threadgroup);
-> +	ret = -ENODEV;
-> +	if (cgroup_lock_live_group(cgrp)) {
-> +		ret = cgroup_attach_task(cgrp, tsk, threadgroup);
-> +		cgroup_unlock();
-> +	}
->  
->  	threadgroup_unlock(tsk);
-> -
->  	put_task_struct(tsk);
-> -out_unlock_cgroup:
-> -	cgroup_unlock();
->  	return ret;
->  }
->  
-> .
+> I would expect that you want to prevent lookup as well if there are no
+> other groups.
+>
+well, that function in specific seems to be mostly called during
+reclaim, where I wasn't terribly concerned about optimizations, unlike
+the steady state functions.
+
+>>  	/*
+>> +	 * Because we lazily enable memcg only after first child group is
+>> +	 * created, we can have memcg == 0. Because page cgroup is created with
+>> +	 * GFP_ZERO, and after charging, all page cgroups will have a non-zero
+>> +	 * cgroup attached (even if root), we can be sure that this is a
+>> +	 * used-but-not-accounted page. (due to lazyness). We could get around
+>> +	 * that by scanning all pages on cgroup init is too expensive. We can
+>> +	 * ultimately pay, but prefer to just to defer the update until we get
+>> +	 * here. We could take the opportunity to set PageCgroupUsed, but it
+>> +	 * won't be that important for the root cgroup.
+>> +	 */
+>> +	if (!memcg && PageLRU(page))
+>> +		pc->mem_cgroup = memcg = root_mem_cgroup;
 > 
+> Why not return page_cgroup_zoneinfo(root_mem_cgroup, page);
+> This would require messing up with __mem_cgroup_uncharge_common but that
+> doesn't sound incredibly crazy (to the local standard of course ;)).
+> 
+
+Could you clarify?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
