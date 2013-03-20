@@ -1,87 +1,67 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v2 2/5] memcg: provide root figures from system totals
-Date: Wed, 20 Mar 2013 13:30:43 +0400
-Message-ID: <514981C3.8070304@parallels.com>
-References: <1362489058-3455-1-git-send-email-glommer@parallels.com> <1362489058-3455-3-git-send-email-glommer@parallels.com> <20130319124650.GE7869@dhcp22.suse.cz> <20130319125509.GF7869@dhcp22.suse.cz> <51495F35.9040302@parallels.com> <20130320080347.GE20045@dhcp22.suse.cz> <51496E71.5010707@parallels.com> <20130320081851.GG20045@dhcp22.suse.cz> <51497479.30701@parallels.com> <20130320085817.GH20045@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH cgroup/for-3.10] cgroup: make cgroup_mutex outer to
+ threadgroup_lock
+Date: Wed, 20 Mar 2013 08:03:51 -0700
+Message-ID: <20130320150351.GW3042@htj.dyndns.org>
+References: <20130307172545.GA10353@redhat.com>
+ <20130307180139.GD29601@htj.dyndns.org>
+ <20130307180332.GE29601@htj.dyndns.org>
+ <20130307191242.GA18265@redhat.com>
+ <20130307193820.GB3209@htj.dyndns.org>
+ <513A9A67.60909@huawei.com>
+ <20130309032936.GT14556@mtj.dyndns.org>
+ <513AE918.7020704@huawei.com>
+ <20130319220246.GR3042@htj.dyndns.org>
+ <514909A0.4030808@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130320085817.GH20045@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=FTK+h4irUNjtDunrg0MPwnkSV7i5F58gxckYEpdjXSg=;
+        b=hd+hLCRPPxoMVVpm+uqBQP6CSbB3r465Ida0i9vNy99YIukmstGqJZLz0hZu256Kpy
+         k4A2hoaEaEQpuGO8oS4Pz4qvKBV8rQPW0r2CgtBgjSlvoMdUn2V8wrI6e7WDgsZrkRDO
+         hFllZZBsFhsNMWNWFTUrOAXjsxwIoRr3j5A2WR++g0bCShuImBpT6OlRfkS2GuyjyG40
+         qnFuTprE9QwQi/udCdUXCvoUjbfyeo4rEemS7GDZ6sVNlDnjmiBtQM2E93MuAygbYViC
+         ozzVZt+whQwAfTeCgH2nPS/AjABbs6X2dHv13QX2TeAtWnVf1spPs7s9316t3wjMvvMy
+         jJhQ==
+Content-Disposition: inline
+In-Reply-To: <514909A0.4030808@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, kamezawa.hiroyu@jp.fujitsu.com, handai.szj@gmail.com, anton.vorontsov@linaro.org, Johannes Weiner <hannes@cmpxchg.org>, Mel
- Gorman <mgorman@suse.de>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan@huawei.com>
+Cc: Oleg Nesterov <oleg@redhat.com>, Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, cgroups@vger.kernel.org
 
-On 03/20/2013 12:58 PM, Michal Hocko wrote:
-> On Wed 20-03-13 12:34:01, Glauber Costa wrote:
->> On 03/20/2013 12:18 PM, Michal Hocko wrote:
->>> On Wed 20-03-13 12:08:17, Glauber Costa wrote:
->>>> On 03/20/2013 12:03 PM, Michal Hocko wrote:
->>>>> On Wed 20-03-13 11:03:17, Glauber Costa wrote:
->>>>>> On 03/19/2013 04:55 PM, Michal Hocko wrote:
->>>>>>> On Tue 19-03-13 13:46:50, Michal Hocko wrote:
->>>>>>>> On Tue 05-03-13 17:10:55, Glauber Costa wrote:
->>>>>>>>> For the root memcg, there is no need to rely on the res_counters if hierarchy
->>>>>>>>> is enabled The sum of all mem cgroups plus the tasks in root itself, is
->>>>>>>>> necessarily the amount of memory used for the whole system. Since those figures
->>>>>>>>> are already kept somewhere anyway, we can just return them here, without too
->>>>>>>>> much hassle.
->>>>>>>>>
->>>>>>>>> Limit and soft limit can't be set for the root cgroup, so they are left at
->>>>>>>>> RESOURCE_MAX. Failcnt is left at 0, because its actual meaning is how many
->>>>>>>>> times we failed allocations due to the limit being hit. We will fail
->>>>>>>>> allocations in the root cgroup, but the limit will never the reason.
->>>>>>>>
->>>>>>>> I do not like this very much to be honest. It just adds more hackery...
->>>>>>>> Why cannot we simply not account if nr_cgroups == 1 and move relevant
->>>>>>>> global counters to the root at the moment when a first group is
->>>>>>>> created?
->>>>>>>
->>>>>>> OK, it seems that the very next patch does what I was looking for. So
->>>>>>> why all the churn in this patch?
->>>>>>> Why do you want to make root even more special?
->>>>>>
->>>>>> Because I am operating under the assumption that we want to handle that
->>>>>> transparently and keep things working. If you tell me: "Hey, reading
->>>>>> memory.usage_in_bytes from root should return 0!", then I can get rid of
->>>>>> that.
->>>>>
->>>>> If you simply switch to accounting for root then you do not have to care
->>>>> about this, don't you?
->>>>>
->>>> Of course not, but the whole point here is *not* accounting root.
->>>
->>> I thought the objective was to not account root if there are no
->>> children. 
->>
->> It is the goal, yes. As I said: I want the root-only case to keep
->> providing userspace with meaningful statistics,
+On Wed, Mar 20, 2013 at 08:58:08AM +0800, Li Zefan wrote:
+> On 2013/3/20 6:02, Tejun Heo wrote:
+> > It doesn't make sense to nest cgroup_mutex inside threadgroup_lock
+> > when it should be outer to most all locks used by all cgroup
+> > controllers.  It was nested inside threadgroup_lock only because some
+> > controllers were abusing cgroup_mutex inside controllers leading to
+> > locking order inversion.
+> > 
+> > cgroup_mutex is no longer abused by controllers and can be put outer
+> > to threadgroup_lock.  Reverse the locking order in
+> > attach_task_by_pid().
+> > 
 > 
-> Sure, statistics need to stay at the place. I am not objecting on that.
+> But the code contrast to the changelog. ;)
 > 
->> therefore the bypass.
-> 
-> I am just arguing about bypassing root even when there are children and
-> use_hierarchy == 1 because it adds more code to maintain.
-> 
->> But since the machinery is in place, it is trivial to keep bypassing for
->> use_hierarchy = 1 at the root level. If you believe it would be simpler,
->> I could refrain from doing it.
-> 
-> I am all for "the simple the better" and add more optimizations on top.
-> We have a real issue now and we should eliminate it. My original plan
-> was to look at the bottlenecks and eliminate them one after another in
-> smaller steps. But all the work I have on the plate is preempting me
-> from looking into that...
-> 
-Been there, done that =)
+> cgroup_mutex is currently outside of threadgroup_lock, and you're making
+> it nested inside threadgroup_lock in the code.
 
-I have no objections removing the special case for use_hierarchy == 1.
+Heh heh, thanks for spotting my idiocy.  Yeah, the locking order
+between the two has been swapped a couple times while writing up the
+original threadgroup_lock patch and I misremembered how it was at the
+end and got totally confused when writing this patch.  Sorry about
+that.  So, let's leave the locking in cgroup alone.  I like
+cgroup_mutex to be the outer one.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
