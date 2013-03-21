@@ -1,91 +1,91 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH] memcg: fix memcg_cache_name() to use cgroup_name()
-Date: Thu, 21 Mar 2013 10:08:49 +0100
-Message-ID: <20130321090849.GF6094@dhcp22.suse.cz>
+Date: Thu, 21 Mar 2013 11:22:57 +0100
+Message-ID: <20130321102257.GH6094@dhcp22.suse.cz>
 References: <514A60CD.60208@huawei.com>
+ <20130321090849.GF6094@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <514A60CD.60208@huawei.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130321090849.GF6094-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Glauber Costa <glommer@parallels.com>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Thu 21-03-13 09:22:21, Li Zefan wrote:
-> As cgroup supports rename, it's unsafe to dereference dentry->d_name
-> without proper vfs locks. Fix this by using cgroup_name().
+On Thu 21-03-13 10:08:49, Michal Hocko wrote:
+> On Thu 21-03-13 09:22:21, Li Zefan wrote:
+> > As cgroup supports rename, it's unsafe to dereference dentry->d_name
+> > without proper vfs locks. Fix this by using cgroup_name().
+> > 
+> > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > ---
+> > 
+> > This patch depends on "cgroup: fix cgroup_path() vs rename() race",
+> > which has been queued for 3.10.
+> > 
+> > ---
+> >  mm/memcontrol.c | 15 +++++++--------
+> >  1 file changed, 7 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 53b8201..72be5c9 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -3217,17 +3217,16 @@ void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
+> >  static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *s)
+> >  {
+> >  	char *name;
+> > -	struct dentry *dentry;
+> > +
+> > +	name = (char *)__get_free_page(GFP_TEMPORARY);
 > 
-> Signed-off-by: Li Zefan <lizefan@huawei.com>
-> ---
+> Ouch. Can we use a static temporary buffer instead?
+
+> This is called from workqueue context so we do not have to be afraid
+> of the deep call chain.
+
+Bahh, I was thinking about two things at the same time and that is how
+it ends... I meant a temporary buffer on the stack. But a separate
+allocation sounds even easier.
+
+> It is also not a hot path AFAICS.
 > 
-> This patch depends on "cgroup: fix cgroup_path() vs rename() race",
-> which has been queued for 3.10.
-> 
-> ---
->  mm/memcontrol.c | 15 +++++++--------
->  1 file changed, 7 insertions(+), 8 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 53b8201..72be5c9 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3217,17 +3217,16 @@ void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
->  static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *s)
->  {
->  	char *name;
-> -	struct dentry *dentry;
-> +
-> +	name = (char *)__get_free_page(GFP_TEMPORARY);
+> Even GFP_ATOMIC for kasprintf would be an improvement IMO.
 
-Ouch. Can we use a static temporary buffer instead? This is called from
-workqueue context so we do not have to be afraid of the deep call chain.
-It is also not a hot path AFAICS.
-
-Even GFP_ATOMIC for kasprintf would be an improvement IMO.
-
-> +	if (!name)
-> +		return NULL;
->  
->  	rcu_read_lock();
-> -	dentry = rcu_dereference(memcg->css.cgroup->dentry);
-> +	snprintf(name, PAGE_SIZE, "%s(%d:%s)", s->name, memcg_cache_id(memcg),
-> +		 cgroup_name(memcg->css.cgroup));
->  	rcu_read_unlock();
->  
-> -	BUG_ON(dentry == NULL);
-> -
-> -	name = kasprintf(GFP_KERNEL, "%s(%d:%s)", s->name,
-> -			 memcg_cache_id(memcg), dentry->d_name.name);
-> -
->  	return name;
->  }
->  
-> @@ -3247,7 +3246,7 @@ static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
->  	if (new)
->  		new->allocflags |= __GFP_KMEMCG;
->  
-> -	kfree(name);
-> +	free_page((unsigned long)name);
->  	return new;
->  }
->  
-> -- 
-> 1.8.0.2
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
+What about the following (not even compile tested because I do not have
+cgroup_name in my tree yet):
+---
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f608546..ede0382 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3370,13 +3370,18 @@ static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *s)
+ 	struct dentry *dentry;
+ 
+ 	rcu_read_lock();
+-	dentry = rcu_dereference(memcg->css.cgroup->dentry);
++	name = kasprintf(GFP_ATOMIC, "%s(%d:%s)", s->name,
++			 memcg_cache_id(memcg), cgroup_name(memcg->css.cgroup));
+ 	rcu_read_unlock();
+ 
+-	BUG_ON(dentry == NULL);
+-
+-	name = kasprintf(GFP_KERNEL, "%s(%d:%s)", s->name,
+-			 memcg_cache_id(memcg), dentry->d_name.name);
++	if (!name) {
++		name = kmalloc(PAGE_SIZE, GFP_KERNEL);
++		rcu_read_lock();
++		name = snprintf(name, PAGE_SIZE, "%s(%d:%s)", s->name,
++				memcg_cache_id(memcg),
++				cgroup_name(memcg->css.cgroup));
++		rcu_read_unlock();
++	}
+ 
+ 	return name;
+ }
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
