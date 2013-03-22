@@ -1,58 +1,104 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH] do not abuse ->cred_guard_mutex in threadgroup_lock()
-Date: Thu, 21 Mar 2013 15:06:26 -0700
-Message-ID: <20130321150626.a7934d989fb80d835fa92255@linux-foundation.org>
-References: <20130306223657.GA7392@redhat.com>
-	<20130307172545.GA10353@redhat.com>
-	<20130307180139.GD29601@htj.dyndns.org>
-	<20130307180332.GE29601@htj.dyndns.org>
-	<20130307191242.GA18265@redhat.com>
-	<20130307193820.GB3209@htj.dyndns.org>
-	<513A9A67.60909@huawei.com>
-	<20130309032936.GT14556@mtj.dyndns.org>
-	<513AE918.7020704@huawei.com>
-	<20130309200046.GA8149@redhat.com>
-	<20130321162138.GA21859@redhat.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH] memcg: fix memcg_cache_name() to use cgroup_name()
+Date: Fri, 22 Mar 2013 09:22:06 +0800
+Message-ID: <514BB23E.70908@huawei.com>
+References: <514A60CD.60208@huawei.com> <20130321090849.GF6094@dhcp22.suse.cz> <20130321102257.GH6094@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130321162138.GA21859-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130321102257.GH6094@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Glauber Costa <glommer@parallels.com>
 
-On Thu, 21 Mar 2013 17:21:38 +0100 Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-
-> threadgroup_lock() takes signal->cred_guard_mutex to ensure that
-> thread_group_leader() is stable. This doesn't look nice, the scope
-> of this lock in do_execve() is huge.
+On 2013/3/21 18:22, Michal Hocko wrote:
+> On Thu 21-03-13 10:08:49, Michal Hocko wrote:
+>> On Thu 21-03-13 09:22:21, Li Zefan wrote:
+>>> As cgroup supports rename, it's unsafe to dereference dentry->d_name
+>>> without proper vfs locks. Fix this by using cgroup_name().
+>>>
+>>> Signed-off-by: Li Zefan <lizefan@huawei.com>
+>>> ---
+>>>
+>>> This patch depends on "cgroup: fix cgroup_path() vs rename() race",
+>>> which has been queued for 3.10.
+>>>
+>>> ---
+>>>  mm/memcontrol.c | 15 +++++++--------
+>>>  1 file changed, 7 insertions(+), 8 deletions(-)
+>>>
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 53b8201..72be5c9 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>>> @@ -3217,17 +3217,16 @@ void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
+>>>  static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *s)
+>>>  {
+>>>  	char *name;
+>>> -	struct dentry *dentry;
+>>> +
+>>> +	name = (char *)__get_free_page(GFP_TEMPORARY);
+>>
+>> Ouch. Can we use a static temporary buffer instead?
 > 
-> And as Dave pointed out this can lead to deadlock, we have the
-> following dependencies:
+>> This is called from workqueue context so we do not have to be afraid
+>> of the deep call chain.
 > 
-> 	do_execve:		cred_guard_mutex -> i_mutex
-> 	cgroup_mount:		i_mutex -> cgroup_mutex
-> 	attach_task_by_pid:	cgroup_mutex -> cred_guard_mutex
+> Bahh, I was thinking about two things at the same time and that is how
+> it ends... I meant a temporary buffer on the stack. But a separate
+> allocation sounds even easier.
 > 
-> Change de_thread() to take threadgroup_change_begin() around the
-> switch-the-leader code and change threadgroup_lock() to avoid
-> ->cred_guard_mutex.
+
+Actually I don't care much about which way to take. Use on-stack buffer (if stack
+usage is not a concern) or local static buffer (caller already held memcg_cache_mutex)
+is simplest.
+
+But why it's bad to allocate a page for temp use?
+
+>> It is also not a hot path AFAICS.
+>>
+>> Even GFP_ATOMIC for kasprintf would be an improvement IMO.
 > 
-> Note that de_thread() can't sleep with ->group_rwsem held, this
-> can obviously deadlock with the exiting leader if the writer is
-> active, so it does threadgroup_change_end() before schedule().
+> What about the following (not even compile tested because I do not have
+> cgroup_name in my tree yet):
 
-<formletter>
-When writing a changelog, please describe the end-user-visible effects
-of the bug, so that others can more easily decide which kernel
-version(s) should be fixed, and so that downstream kernel maintainers
-can more easily work out whether this patch will fix a problem which
-they or their customers are observing.
-</formletter>
+No, it won't compile. ;)
 
-> Reported-by: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index f608546..ede0382 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3370,13 +3370,18 @@ static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *s)
+>  	struct dentry *dentry;
+>  
+>  	rcu_read_lock();
+> -	dentry = rcu_dereference(memcg->css.cgroup->dentry);
+> +	name = kasprintf(GFP_ATOMIC, "%s(%d:%s)", s->name,
+> +			 memcg_cache_id(memcg), cgroup_name(memcg->css.cgroup));
+>  	rcu_read_unlock();
+>  
+> -	BUG_ON(dentry == NULL);
+> -
+> -	name = kasprintf(GFP_KERNEL, "%s(%d:%s)", s->name,
+> -			 memcg_cache_id(memcg), dentry->d_name.name);
+> +	if (!name) {
+> +		name = kmalloc(PAGE_SIZE, GFP_KERNEL);
+> +		rcu_read_lock();
+> +		name = snprintf(name, PAGE_SIZE, "%s(%d:%s)", s->name,
+> +				memcg_cache_id(memcg),
+> +				cgroup_name(memcg->css.cgroup));
+> +		rcu_read_unlock();
+> +	}
+>  
+>  	return name;
+>  }
+> 
 
-Perhaps Dave's report provides the needed info?  trinity went titsup?
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
