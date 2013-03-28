@@ -1,46 +1,47 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/5] cpuacct: Allocate per_cpu cpuusage for root cpuacct statically
-Date: Thu, 28 Mar 2013 15:20:41 +0800
-Message-ID: <5153EF49.5040502@huawei.com>
-References: <5153EF24.3040608@huawei.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH] memcg: fix memcg_cache_name() to use cgroup_name()
+Date: Thu, 28 Mar 2013 11:22:27 +0400
+Message-ID: <5153EFB3.5070002@parallels.com>
+References: <1364373399-17397-1-git-send-email-mhocko@suse.cz> <20130327161527.GA7395@htj.dyndns.org> <20130327161905.GN16579@dhcp22.suse.cz> <CAOS58YPsrZNU9qDeMgJG3-Hkn0cBaigz16eTS5M57G95E8fxUQ@mail.gmail.com> <20130327162707.GO16579@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5153EF24.3040608-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130327162707.GO16579@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a preparation, so later we can initialize cpuacct earlier.
+On 03/27/2013 08:27 PM, Michal Hocko wrote:
+> On Wed 27-03-13 09:21:02, Tejun Heo wrote:
+>> On Wed, Mar 27, 2013 at 9:19 AM, Michal Hocko <mhocko@suse.cz> wrote:
+>>>> Maybe the name could signify it's part of memcg?
+>>>
+>>> kmem_ prefix is used for all CONFIG_MEMCG_KMEM functions. I understand
+>>> it clashes with sl?b naming but this is out of scope of this patch IMO.
+>>
+>> Oh, it's not using kmemcg? I see. Maybe we can rename later.
+> 
+> Some parts use memcg_kmem_* other kmem_. A cleanup would be nice.
+> Glauber?
+> 
+I have been using kmem_ only in functions that will deal directly with
+the slab caches and with the single purpose of operating them.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/sched/cpuacct.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+kmem_cache_destroy_work_func => worker interface to kmem_cache_destroy
+kmem_cache_destroy_memcg_children => cache destructor iterator
+kmem_cache_dup => interface to kmem_cache_create
 
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index 9305fd2..a691c4d 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -58,6 +58,7 @@ static inline struct cpuacct *parent_ca(struct cpuacct *ca)
- 	return cgroup_ca(ca->css.cgroup->parent);
- }
- 
-+static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
- static struct cpuacct root_cpuacct;
- 
- /* create a new cpu accounting group */
-@@ -290,8 +291,7 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
- void __init cpuacct_init(void)
- {
- 	root_cpuacct.cpustat = &kernel_cpustat;
--	root_cpuacct.cpuusage = alloc_percpu(u64);
--	BUG_ON(!root_cpuacct.cpuusage); /* Too early, not expected to fail */
-+	root_cpuacct.cpuusage = &root_cpuacct_cpuusage;
- }
- 
- struct cgroup_subsys cpuacct_subsys = {
--- 
-1.8.0.2
+All the other functions start with memcg_
+Analogously, all slab-side functions that deal with memcg *ends* with
+_memcg. except the functions that are only there to operate memcg data
+structures:
+
+memcg_update_all_caches.
+
+In general, those functions could very well live in the other file (slab
+or memcg), but they need to take locks or manipulate data structures
+that are internal to slab/memcg.
+
+I believe this is a sound convention.
