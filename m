@@ -1,65 +1,147 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 5/5] cgroup: Remove subsys.active flag
-Date: Thu, 28 Mar 2013 15:21:49 +0800
-Message-ID: <5153EF8D.2080502@huawei.com>
-References: <5153EF24.3040608@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] memcg: fix memcg_cache_name() to use cgroup_name()
+Date: Thu, 28 Mar 2013 08:48:14 +0100
+Message-ID: <20130328074814.GA3018@dhcp22.suse.cz>
+References: <1364373399-17397-1-git-send-email-mhocko@suse.cz>
+ <20130327145727.GD29052@cmpxchg.org>
+ <20130327151104.GK16579@dhcp22.suse.cz>
+ <51530E1E.3010100@parallels.com>
+ <20130327153220.GL16579@dhcp22.suse.cz>
+ <20130327173223.GQ16579@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5153EF24.3040608-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130327173223.GQ16579-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The only user was cpuacct.
+On Wed 27-03-13 18:32:23, Michal Hocko wrote:
+[...]
+> Removed WARN_ON_ONCE as suggested by Johannes and kept kmalloc with
+> PATH_MAX used instead of PAGE_SIZE. I've kept Glauber's acked-by but I
+> can remove it.
+
+And hopefully the last version. I forgot to s/PAGE_SIZE/MAX_PATH/ in
+snprintf.
+---
+From 551d7b5960904503da8f050faa533278a1d1bc6c Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Thu, 28 Mar 2013 08:46:49 +0100
+Subject: [PATCH] memcg: fix memcg_cache_name() to use cgroup_name()
+
+As cgroup supports rename, it's unsafe to dereference dentry->d_name
+without proper vfs locks. Fix this by using cgroup_name() rather than
+dentry directly.
+
+Also open code memcg_cache_name because it is called only from
+kmem_cache_dup which frees the returned name right after
+kmem_cache_create_memcg makes a copy of it. Such a short-lived
+allocation doesn't make too much sense. So replace it by a static
+buffer as kmem_cache_dup is called with memcg_cache_mutex.
 
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Acked-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 ---
- include/linux/cgroup.h | 1 -
- kernel/cgroup.c        | 3 ---
- 2 files changed, 4 deletions(-)
+ mm/memcontrol.c |   63 ++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 32 insertions(+), 31 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 7d73905..a236a5b 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -457,7 +457,6 @@ struct cgroup_subsys {
- 	void (*bind)(struct cgroup *root);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 53b8201..9715c0c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3214,52 +3214,53 @@ void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
+ 	schedule_work(&cachep->memcg_params->destroy);
+ }
  
- 	int subsys_id;
--	int active;
- 	int disabled;
- 	int early_init;
- 	/*
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 4855892..64dd57d 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4415,7 +4415,6 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	 * need to invoke fork callbacks here. */
- 	BUG_ON(!list_empty(&init_task.tasks));
+-static char *memcg_cache_name(struct mem_cgroup *memcg, struct kmem_cache *s)
+-{
+-	char *name;
+-	struct dentry *dentry;
+-
+-	rcu_read_lock();
+-	dentry = rcu_dereference(memcg->css.cgroup->dentry);
+-	rcu_read_unlock();
+-
+-	BUG_ON(dentry == NULL);
+-
+-	name = kasprintf(GFP_KERNEL, "%s(%d:%s)", s->name,
+-			 memcg_cache_id(memcg), dentry->d_name.name);
+-
+-	return name;
+-}
++/*
++ * This lock protects updaters, not readers. We want readers to be as fast as
++ * they can, and they will either see NULL or a valid cache value. Our model
++ * allow them to see NULL, in which case the root memcg will be selected.
++ *
++ * We need this lock because multiple allocations to the same cache from a non
++ * will span more than one worker. Only one of them can create the cache.
++ */
++static DEFINE_MUTEX(memcg_cache_mutex);
  
--	ss->active = 1;
- 	BUG_ON(online_css(ss, dummytop));
++/*
++ * Called with memcg_cache_mutex held
++ */
+ static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
+ 					 struct kmem_cache *s)
+ {
+-	char *name;
+ 	struct kmem_cache *new;
++	static char *tmp_name = NULL;
  
- 	mutex_unlock(&cgroup_mutex);
-@@ -4523,7 +4522,6 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
- 	}
- 	write_unlock(&css_set_lock);
+-	name = memcg_cache_name(memcg, s);
+-	if (!name)
+-		return NULL;
++	lockdep_assert_held(&memcg_cache_mutex);
++
++	/*
++	 * kmem_cache_create_memcg duplicates the given name and
++	 * cgroup_name for this name requires RCU context.
++	 * This static temporary buffer is used to prevent from
++	 * pointless shortliving allocation.
++	 */
++	if (!tmp_name) {
++		tmp_name = kmalloc(PATH_MAX, GFP_KERNEL);
++		if (!tmp_name)
++			return NULL;
++	}
++
++	rcu_read_lock();
++	snprintf(tmp_name, PATH_MAX, "%s(%d:%s)", s->name,
++			 memcg_cache_id(memcg), cgroup_name(memcg->css.cgroup));
++	rcu_read_unlock();
  
--	ss->active = 1;
- 	ret = online_css(ss, dummytop);
- 	if (ret)
- 		goto err_unload;
-@@ -4565,7 +4563,6 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
- 	mutex_lock(&cgroup_mutex);
+-	new = kmem_cache_create_memcg(memcg, name, s->object_size, s->align,
++	new = kmem_cache_create_memcg(memcg, tmp_name, s->object_size, s->align,
+ 				      (s->flags & ~SLAB_PANIC), s->ctor, s);
  
- 	offline_css(ss, dummytop);
--	ss->active = 0;
+ 	if (new)
+ 		new->allocflags |= __GFP_KMEMCG;
  
- 	if (ss->use_id) {
- 		idr_remove_all(&ss->idr);
+-	kfree(name);
+ 	return new;
+ }
+ 
+-/*
+- * This lock protects updaters, not readers. We want readers to be as fast as
+- * they can, and they will either see NULL or a valid cache value. Our model
+- * allow them to see NULL, in which case the root memcg will be selected.
+- *
+- * We need this lock because multiple allocations to the same cache from a non
+- * will span more than one worker. Only one of them can create the cache.
+- */
+-static DEFINE_MUTEX(memcg_cache_mutex);
+ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 						  struct kmem_cache *cachep)
+ {
 -- 
-1.8.0.2
+1.7.10.4
+
+-- 
+Michal Hocko
+SUSE Labs
