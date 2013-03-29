@@ -1,40 +1,29 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] cpuacct, cgroup: Kill cgroup_subsys.active
-Date: Fri, 29 Mar 2013 11:36:00 +0100
-Message-ID: <1364553360.5053.84.camel@laptop>
-References: <51553813.10004@huawei.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH] memcg: take reference before releasing rcu_read_lock
+Date: Fri, 29 Mar 2013 14:48:42 +0400
+Message-ID: <5155718A.90108@parallels.com>
+References: <51556CE9.9060000@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51553813.10004-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <51556CE9.9060000-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Fri, 2013-03-29 at 14:43 +0800, Li Zefan wrote:
-> cpuacct is the only user of cgroup_subsys.active flag.
+On 03/29/2013 02:28 PM, Li Zefan wrote:
+> The memcg is not referenced, so it can be destroyed at anytime right
+> after we exit rcu read section, so it's not safe to access it.
 > 
-> The flag is needed because cpuacct_charge() and
-> cpuacct_account_field() can
-> be called when cpuacct hasn't been initialized during system bootup.
+> To fix this, we call css_tryget() to get a reference while we're still
+> in rcu read section.
 > 
-> This patch initializes cpuacct earlier, and the result is we don't
-> have
-> to check the flag in scheduler hot path.
+> This also removes a bogus comment above __memcg_create_cache_enqueue().
 > 
-> Note, this patchset is based on "[PATCH v2 0/7] sched: Split cpuacct"
-> 
->         http://lkml.org/lkml/2013/3/28/1
-> 
-> 0001-cpuacct-allocate-per_cpu-cpuusage-for-root-cpuacct-s.patch
-> 0002-cpuacct-Initialize-root-cpuacct-earlier.patch
-> 0003-cpuacct-Initialize-cpuacct-subsystem-earlier.patch
-> 0004-cpuacct-No-need-to-check-subsys-active-state.patch
-> 0005-cgroup-Remove-subsys.active-flag.patch
+Out of curiosity, did you see that happening ?
 
+Theoretically, the race you describe seem real, and the fix is sound.
 
-Seems sane enough
-
-Acked-by: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Acked-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
