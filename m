@@ -1,47 +1,47 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH v2 1/5] cpuacct: allocate per_cpu cpuusage for root cpuacct
- statically
-Date: Fri, 29 Mar 2013 14:43:46 +0800
-Message-ID: <51553822.5000403@huawei.com>
-References: <51553813.10004@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 0/5] cpuacct, cgroup: Kill cgroup_subsys.active
+Date: Fri, 29 Mar 2013 14:43:31 +0800
+Message-ID: <51553813.10004@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51553813.10004@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-This is a preparation, so later we can initialize cpuacct earlier.
+v2:
+- rebase against tip-tree
+- add acked-by
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
----
- kernel/sched/cpuacct.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I said this patchset needn't to be rebased, which is wrong. The last patch
+needs rebasing.
 
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index 9305fd2..a691c4d 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -58,6 +58,7 @@ static inline struct cpuacct *parent_ca(struct cpuacct *ca)
- 	return cgroup_ca(ca->css.cgroup->parent);
- }
- 
-+static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
- static struct cpuacct root_cpuacct;
- 
- /* create a new cpu accounting group */
-@@ -290,8 +291,7 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
- void __init cpuacct_init(void)
- {
- 	root_cpuacct.cpustat = &kernel_cpustat;
--	root_cpuacct.cpuusage = alloc_percpu(u64);
--	BUG_ON(!root_cpuacct.cpuusage); /* Too early, not expected to fail */
-+	root_cpuacct.cpuusage = &root_cpuacct_cpuusage;
- }
- 
- struct cgroup_subsys cpuacct_subsys = {
--- 
-1.8.0.2
+===================================
+
+cpuacct is the only user of cgroup_subsys.active flag.
+
+The flag is needed because cpuacct_charge() and cpuacct_account_field() can
+be called when cpuacct hasn't been initialized during system bootup.
+
+This patch initializes cpuacct earlier, and the result is we don't have
+to check the flag in scheduler hot path.
+
+Note, this patchset is based on "[PATCH v2 0/7] sched: Split cpuacct"
+
+	http://lkml.org/lkml/2013/3/28/1
+
+0001-cpuacct-allocate-per_cpu-cpuusage-for-root-cpuacct-s.patch
+0002-cpuacct-Initialize-root-cpuacct-earlier.patch
+0003-cpuacct-Initialize-cpuacct-subsystem-earlier.patch
+0004-cpuacct-No-need-to-check-subsys-active-state.patch
+0005-cgroup-Remove-subsys.active-flag.patch
+
+--
+ include/linux/cgroup.h |  1 -
+ kernel/cgroup.c        |  3 ---
+ kernel/sched/core.c    |  2 --
+ kernel/sched/cpuacct.c | 30 +++++++++++-------------------
+ kernel/sched/cpuacct.h |  5 -----
+ 5 files changed, 11 insertions(+), 30 deletions(-)
