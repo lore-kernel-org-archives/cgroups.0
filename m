@@ -1,89 +1,66 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 2/5] cpuacct: Initialize root cpuacct earlier
-Date: Fri, 29 Mar 2013 14:44:04 +0800
-Message-ID: <51553834.9090701@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH v2 5/5] cgroup: Kill subsys.active flag
+Date: Fri, 29 Mar 2013 14:44:42 +0800
+Message-ID: <5155385A.4040207@huawei.com>
 References: <51553813.10004@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51553813.10004-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <51553813.10004@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Now we don't need cpuacct_init(), and instead we just initialize
-root_cpuacct when it's defined.
+The only user was cpuacct.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- kernel/sched/core.c    |  2 --
- kernel/sched/cpuacct.c | 11 ++++-------
- kernel/sched/cpuacct.h |  5 -----
- 3 files changed, 4 insertions(+), 14 deletions(-)
+ include/linux/cgroup.h | 1 -
+ kernel/cgroup.c        | 3 ---
+ 2 files changed, 4 deletions(-)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index c7016c1..5338e6d 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6936,8 +6936,6 @@ void __init sched_init(void)
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 900af59..95c02c0 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -458,7 +458,6 @@ struct cgroup_subsys {
+ 	void (*bind)(struct cgroup *root);
  
- #endif /* CONFIG_CGROUP_SCHED */
+ 	int subsys_id;
+-	int active;
+ 	int disabled;
+ 	int early_init;
+ 	/*
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a32f943..5c46281 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4468,7 +4468,6 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
+ 	 * need to invoke fork callbacks here. */
+ 	BUG_ON(!list_empty(&init_task.tasks));
  
--	cpuacct_init();
--
- 	for_each_possible_cpu(i) {
- 		struct rq *rq;
+-	ss->active = 1;
+ 	BUG_ON(online_css(ss, dummytop));
  
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index a691c4d..0425581 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -59,7 +59,10 @@ static inline struct cpuacct *parent_ca(struct cpuacct *ca)
- }
+ 	mutex_unlock(&cgroup_mutex);
+@@ -4573,7 +4572,6 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
+ 	}
+ 	write_unlock(&css_set_lock);
  
- static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
--static struct cpuacct root_cpuacct;
-+static struct cpuacct root_cpuacct = {
-+	.cpustat	= &kernel_cpustat,
-+	.cpuusage	= &root_cpuacct_cpuusage,
-+};
+-	ss->active = 1;
+ 	ret = online_css(ss, dummytop);
+ 	if (ret)
+ 		goto err_unload;
+@@ -4614,7 +4612,6 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
+ 	mutex_lock(&cgroup_mutex);
  
- /* create a new cpu accounting group */
- static struct cgroup_subsys_state *cpuacct_css_alloc(struct cgroup *cgrp)
-@@ -288,12 +291,6 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
- 	rcu_read_unlock();
- }
+ 	offline_css(ss, dummytop);
+-	ss->active = 0;
  
--void __init cpuacct_init(void)
--{
--	root_cpuacct.cpustat = &kernel_cpustat;
--	root_cpuacct.cpuusage = &root_cpuacct_cpuusage;
--}
--
- struct cgroup_subsys cpuacct_subsys = {
- 	.name = "cpuacct",
- 	.css_alloc = cpuacct_css_alloc,
-diff --git a/kernel/sched/cpuacct.h b/kernel/sched/cpuacct.h
-index 51cd76e..ed60562 100644
---- a/kernel/sched/cpuacct.h
-+++ b/kernel/sched/cpuacct.h
-@@ -1,15 +1,10 @@
- #ifdef CONFIG_CGROUP_CPUACCT
- 
--extern void cpuacct_init(void);
- extern void cpuacct_charge(struct task_struct *tsk, u64 cputime);
- extern void cpuacct_account_field(struct task_struct *p, int index, u64 val);
- 
- #else
- 
--static inline void cpuacct_init(void)
--{
--}
--
- static inline void cpuacct_charge(struct task_struct *tsk, u64 cputime)
- {
- }
+ 	if (ss->use_id)
+ 		idr_destroy(&ss->idr);
 -- 
 1.8.0.2
