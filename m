@@ -1,42 +1,63 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroups: Documentation/kernel-parameters.txt.
-Date: Sat, 30 Mar 2013 17:33:29 +0800
-Message-ID: <5156B169.7000709@huawei.com>
-References: <1364628374-4554-1-git-send-email-wkevils@gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: remove unused parameter in cgroup_task_migrate().
+Date: Mon,  1 Apr 2013 00:08:10 +0300
+Message-ID: <1364764090-26369-1-git-send-email-wkevils@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1364628374-4554-1-git-send-email-wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
+        bh=BpKwBb8PKCUHJ9xXQ1SeC+2hRHhgWgsLLddWmWs5Pck=;
+        b=QcIrQdlsdxdxl6WgqHZzmXHQ47VICgwyYAcB/78a8xnchpHURPv46fHeX7v/7/OwGP
+         d2KSKdicbY139N7YxdU8prjwD2NR5vl79KGfJTWVy2SraBOABsZYs0KP+Rmm4gPI1Fz/
+         huRM4fA2nKxXd9y2+8hWNSgk/gehEU5YVaLb+TGhM+7U1qpiQqbWInhlNFFvDNWpsMVm
+         RKbcHZS3vQAWgiTrkxLeBujRvPWSIyzoveO4B/cHH/oqLcmTdgcp/AJNJ4uCLgiWZUK7
+         ig+7n/zn/aG+ygjuai3/+IdUm2Ny2HFcEj9q8V3RCgZmK22Q45wuEHoXRzco3t0JxW1n
+         NJtA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 2013/3/30 15:26, Kevin Wilson wrote:
-> This patch removes the line "{Currently supported controllers - "memory"}"
-> from Documentation/kernel-parameters.txt, as all controllers are supported.
+This patch removes unused parameter from cgroup_task_migrate().
 
-Only memcg is supported, because only memcg checks subsys.disabled.
-Greg mem_cgroup_disabled in include/linux/memcontrol.h and
-mm/memcontrol.c
+Signed-off-by: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> 
-> Signed-off-by: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  Documentation/kernel-parameters.txt | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 4609e81..a671c6f 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -451,7 +451,6 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  
->  	cgroup_disable= [KNL] Disable a particular controller
->  			Format: {name of the controller(s) to disable}
-> -				{Currently supported controllers - "memory"}
->  
->  	checkreqprot	[SELINUX] Set initial checkreqprot flag value.
->  			Format: { "0" | "1" }
-> 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a32f943..33fd0b4 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1900,7 +1900,7 @@ EXPORT_SYMBOL_GPL(cgroup_taskset_size);
+  *
+  * Must be called with cgroup_mutex and threadgroup locked.
+  */
+-static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
++static void cgroup_task_migrate(struct cgroup *oldcgrp,
+ 				struct task_struct *tsk, struct css_set *newcg)
+ {
+ 	struct css_set *oldcg;
+@@ -1983,7 +1983,7 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
+ 		goto out;
+ 	}
+ 
+-	cgroup_task_migrate(cgrp, oldcgrp, tsk, newcg);
++	cgroup_task_migrate(oldcgrp, tsk, newcg);
+ 
+ 	for_each_subsys(root, ss) {
+ 		if (ss->attach)
+@@ -2143,7 +2143,7 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
+ 	 */
+ 	for (i = 0; i < group_size; i++) {
+ 		tc = flex_array_get(group, i);
+-		cgroup_task_migrate(cgrp, tc->cgrp, tc->task, tc->cg);
++		cgroup_task_migrate(tc->cgrp, tc->task, tc->cg);
+ 	}
+ 	/* nothing is sensitive to fork() after this point. */
+ 
+-- 
+1.8.1.4
