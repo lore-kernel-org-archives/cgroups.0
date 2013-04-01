@@ -1,67 +1,57 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: avoid accessing memcg after releasing reference
-Date: Mon, 1 Apr 2013 11:39:27 +0200
-Message-ID: <20130401093927.GB30749@dhcp22.suse.cz>
-References: <5158F344.9020509@huawei.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH] memcg: implement boost mode
+Date: Mon, 01 Apr 2013 19:02:36 +0900
+Message-ID: <51595B3C.5090900@jp.fujitsu.com>
+References: <1364801670-10241-1-git-send-email-glommer@parallels.com> <51595311.7070509@jp.fujitsu.com> <515953AE.3000403@parallels.com> <20130401093740.GA30749@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=6Ue1BNap2zGQO+Ap061PcEB576MhHcVs4P2nt4XWN7k=;
-        b=C2ZqJ4p+wpZw7Gk0CJQaVx79KSky10HcDcL1TdTdTD4n26bkR96K+xf7gI8kc/4d+3
-         guciV5T7zAT0z3QttmS9s5ilpgyF7ss4DXm+RF6llO5bd1zncR9pQSSbDce7fatodq1y
-         2JuapylS24d2990/Fiu+XRxX7N6CiAqkqI+gtKsTJefVsxO3008yIC3bRm6JJGee8+6i
-         yNjOPAU2PgAQ+tVoZco5SvtMPYyW/ZR4/AbqaRDsyVMDLaYZwCPXpfXuDUgOqllOYCJ7
-         bt4kuZ3R2c5neC2LY9+VYTqY4KkZ/lQ/fUrYLCUnLKwW/kysy3hLR4QaI83OsKP6YUHP
-         xMcQ==
-Content-Disposition: inline
-In-Reply-To: <5158F344.9020509-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20130401093740.GA30749-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Mon 01-04-13 10:39:00, Li Zefan wrote:
-> This might cause use-after-free bug.
-> 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+(2013/04/01 18:37), Michal Hocko wrote:
+> On Mon 01-04-13 13:30:22, Glauber Costa wrote:
+>> On 04/01/2013 01:27 PM, Kamezawa Hiroyuki wrote:
+>>> (2013/04/01 16:34), Glauber Costa wrote:
+>>>> There are scenarios in which we would like our programs to run faster.
+>>>> It is a hassle, when they are contained in memcg, that some of its
+>>>> allocations will fail and start triggering reclaim. This is not good
+>>>> for the program, that will now be slower.
+>>>>
+>>>> This patch implements boost mode for memcg. It exposes a u64 file
+>>>> "memcg boost". Every time you write anything to it, it will reduce the
+>>>> counters by ~20 %. Note that we don't want to actually reclaim pages,
+>>>> which would defeat the very goal of boost mode. We just make the
+>>>> res_counters able to accomodate more.
+>>>>
+>>>> This file is also available in the root cgroup. But with a slightly
+>>>> different effect. Writing to it will make more memory physically
+>>>> available so our programs can profit.
+>>>>
+>>>> Please ack and apply.
+>>>>
+>>> Nack.
+>>>
+>>>> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>>>
+>>> Please update limit temporary. If you need call-shrink-explicitly-by-user,
+>>> I think you can add it.
+>>>
+>>
+>> I don't want to shrink memory because that will make applications
+>> slower. I want them to be faster, so they need to have more memory.
+>> There is solid research backing up my approach:
+>> http://www.dilbert.com/fast/2008-05-08/
+>
+> :)
+>
+;)
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+-Kame
 
-> ---
-> 
-> found when reading the code.
-> 
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8ec501c..6391046 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3186,12 +3186,12 @@ void memcg_release_cache(struct kmem_cache *s)
->  
->  	root = s->memcg_params->root_cache;
->  	root->memcg_params->memcg_caches[id] = NULL;
-> -	mem_cgroup_put(memcg);
->  
->  	mutex_lock(&memcg->slab_caches_mutex);
->  	list_del(&s->memcg_params->list);
->  	mutex_unlock(&memcg->slab_caches_mutex);
->  
-> +	mem_cgroup_put(memcg);
->  out:
->  	kfree(s->memcg_params);
->  }
-> -- 
-> 1.8.0.2
 
--- 
-Michal Hocko
-SUSE Labs
+
