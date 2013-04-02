@@ -1,120 +1,50 @@
-From: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 00/10] cgroups: Task counter subsystem v8
-Date: Mon, 1 Apr 2013 17:07:49 -0700
-Message-ID: <CAAAKZwt+7w67Kft+MbCXqtCQpOU5B6+6PAdZTCDyAGQQPCGz=w@mail.gmail.com>
-References: <1328067470-5980-1-git-send-email-fweisbec@gmail.com>
-	<CAAAKZwv9=NFmt6xj1KF2va1i6=UCvka0YkmdOY9JNUMHDOWpGw@mail.gmail.com>
-	<20130401184617.GB31435@htj.dyndns.org>
-	<CAAAKZwvemKDLeuKr6wWMUSVczkRVDZKSzYrXXEMcZ8qvcFR0zQ@mail.gmail.com>
-	<20130401202943.GC31435@htj.dyndns.org>
-	<CAAAKZwuZwN68vtk1qO08GXB_OnQNVtqqp+v_NQfP27W0P_aWZw@mail.gmail.com>
-	<20130401220309.GA2487@htj.dyndns.org>
-	<CAAAKZwuev7Y58ZQNtG+XdFRt0=NedD7zbYTAZbJ95ahBKLVhKA@mail.gmail.com>
-	<20130401223500.GB2487@htj.dyndns.org>
-	<CAAAKZwvdMUAZ+N5d-cdCJbKUq=t9M6BbCxzOTWnVQQBrg55vhw@mail.gmail.com>
-	<20130401231824.GC2487@htj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: don't do cleanup manually if mem_cgroup_css_online()
+ fails
+Date: Tue, 2 Apr 2013 15:35:28 +0800
+Message-ID: <515A8A40.6020406@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:mime-version:sender:in-reply-to:references:from:date
-	:x-google-sender-auth:message-id:subject:to:cc:content-type;
-	bh=6pcU5JPgQjLRtIlUzSl+b34opB0gC1v2IIU/yRK/Tdg=;
-	b=NI3Pr4B08DiBEJFzvRAkiggJCMsmE2pcCBA0gAStMrtq+olbmSH4H1lM7asCnc++u8
-	D/epYBpiAeRFJ9BGB89NOhHhNVPzx2CEdJayb6H/2cQ26Ps0RkXWYMm/rxpoM8jmxVJb
-	RkNtL98YhASAwzDYoBmDae3jeNhYyH+3ZEy6B8ZpaOTzmbHycBX3376LfWmCd2oETIma
-	J0ZvpQNC+Fw6jxyM1lkizHaNVaTcUoSVQH6i6w/Kq2oc2/pXP/SjtBZrD++cyjEC6OY2
-	ufU8oM3pHH6/+LzEzfjhJ8HGRRSoIQIY7VF41dj7nAi8fwzzc+LMbiy3oljgVNqrkFf6
-	2xUA==
-In-Reply-To: <20130401231824.GC2487-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paul Menage <paul-inf54ven1CmVyaH7bEyXVA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, Apr 1, 2013 at 4:18 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->
-> On Mon, Apr 01, 2013 at 03:57:46PM -0700, Tim Hockin wrote:
->> I am not limited by kernel memory, I am limited by PIDs, and I need to
->> be able to manage them.  memory.kmem.usage_in_bytes seems to be far
->> too noisy to be useful for this purpose.  It may work fine for "just
->> stop a fork bomb" but not for any sort of finer-grained control.
->
-> So, why are you limited by PIDs other than the arcane / weird
-> limitation that you have whereever that limitation is?
+If memcg_init_kmem() returns -errno when a memcg is being created,
+mem_cgroup_css_online() will decrement memcg and its parent's refcnt,
+(but strangely there's no mem_cgroup_put() for mem_cgroup_get() called
+in memcg_propagate_kmem()).
 
-Does anyone anywhere actually set PID_MAX > 64K?  As far as I can
-tell, distros default it to 32K or 64K because there's a lot of stuff
-out there that assumes this to be true.  This is the problem we have -
-deep down in the bowels of code that is taking literally years to
-overhaul, we have identified a bad assumption that PIDs are always 5
-characters long.  I can't fix it any faster.  That said, we also
-identified other software that make similar assumptions, though they
-are less critical to us.
+But then cgroup core will call mem_cgroup_css_free() to do cleanup...
 
->> > If you think you can tilt it the other way, please feel free to try.
->>
->> Just because others caved, doesn't make it less of a hack.  And I will
->> cave, too, because I don't have time to bang my head against a wall,
->> especially when I can see the remnants of other people who have tried.
->>
->> We'll work around it, or we'll hack around it, or we'll carry this
->> patch in our own tree and just grumble about ridiculous hacks every
->> time we have to forward port it.
->>
->> I was just hoping that things had worked themselves out in the last year.
->
-> It's kinda weird getting this response, as I don't think it has been
-> particularly walley.  The arguments were pretty sound from what I
-> recall and Frederic's use case was actually better covered by kmemcg,
-> so where's the said wall?  And I asked you why your use case is
-> different and the only reason you gave me is some arbitrary PID
-> limitation on whatever thing you're using, which you gotta agree is a
-> pretty hard sell.  So, if you think you have a valid case, please just
-> explain it.  Why go passive agressive on it?  If you don't have a
-> valid case for pushing it, yes, you'll have to hack around it - carry
-> the patches in your tree, whatever, or better, fix the weird PID
-> problem.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-Sorry Tejun, you're being very reasonable, I was not.  The history of
-this patch is what makes me frustrated.  It seems like such an obvious
-thing to support that it blows my mind that people argue it.
-
-You know our environment.  Users can use their memory budgets however
-they like - kernel or userspace.  We have good accounting, but we are
-PID limited.  We've even implemented some hacks of our own to make
-that hurt less because the previously-mentioned assumptions are just
-NOT going away any time soon.  I literally have user bugs every week
-on this.  Hopefully the hacks we have put in place will make the users
-stop hurting.  But we're left with some residual problems, some of
-which are because the only limits we can apply are per-user rather
-than per-container.
-
-From our POV building the cluster, cgroups are strictly superior to
-most other control interfaces because they work at the same
-granularity that we do.  I want more things to support cgroup control.
- This particular one was double-tasty because the ability to set the
-limit to 0 would actually solve a different problem we have in
-teardown.  But as I said, we can mostly work around that.
-
-So I am frustrated because I don't think my use case will convince you
-(at the root of it, it is a problem of our own making, but it LONG
-predates me), despite my belief that it is obviously a good feature.
-I find myself hoping that someone else comes along and says "me too"
-rather than using a totally different hack for this.
-
-Oh well.  Thanks for the update.  Off to do our own thing again.
-
-
-> --
-> tejun
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e80504e..e927fc6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6247,16 +6247,7 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 
+ 	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
+ 	mutex_unlock(&memcg_create_mutex);
+-	if (error) {
+-		/*
+-		 * We call put now because our (and parent's) refcnts
+-		 * are already in place. mem_cgroup_put() will internally
+-		 * call __mem_cgroup_free, so return directly
+-		 */
+-		mem_cgroup_put(memcg);
+-		if (parent->use_hierarchy)
+-			mem_cgroup_put(parent);
+-	}
++
+ 	return error;
+ }
+ 
+-- 
+1.8.0.2
