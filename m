@@ -1,77 +1,47 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] memcg: don't do cleanup manually if
- mem_cgroup_css_online() fails
-Date: Tue, 2 Apr 2013 16:16:46 +0200
-Message-ID: <20130402141646.GQ24345@dhcp22.suse.cz>
-References: <515A8A40.6020406@huawei.com>
- <20130402121600.GK24345@dhcp22.suse.cz>
+From: David Shwatrz <dshwatrz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: cpuset filesystems - a (short) doubt
+Date: Tue, 2 Apr 2013 17:17:21 +0300
+Message-ID: <CAJJAcocYoD2ZoUBXNa7jHMnhcwHBKNUKt5AKUUBkXH=-SRr5ZA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130402121600.GK24345@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:date:message-id:subject:from:to
+         :content-type;
+        bh=yDWddWk0h2cfjgrQSvvOM3wSv3ssKfHAmvsn7qfIdqY=;
+        b=pjbLS0POK4V/L3L7mtfB6Q2KcVFwxlntvWgwu7kF2+nqii3lJuPbY/haEnqO7zpDoB
+         C00qbMYLI1L76abpUPHEdaiaVZC4Jx7iWwHKZ0WvnSwUFsDZliiRzzZTgC8D5+Kpo+Hd
+         EP21cvwwVlC875erli9ykSp4WijijSxpvSkDPIAbwVJwxpfZb/ulw2aOqnapWwUNSyxc
+         /NC8OzjkfGOAH0/hJZm6Klt8QRg6xulG8yWboae66lc3hqnZpbjY0BxD6dxjfbyBht5F
+         FnMyuCHoop1lIUcxp2pOYV9cp4TlxqaPvo7E2wWTRxzJ6WDGdfpUdC7nFYQkUoJoI9IY
+         RInw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Glauber Costa <glommer@parallels.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 02-04-13 14:16:00, Michal Hocko wrote:
-> On Tue 02-04-13 15:35:28, Li Zefan wrote:
-> [...]
-> > @@ -6247,16 +6247,7 @@ mem_cgroup_css_online(struct cgroup *cont)
-> >  
-> >  	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
-> >  	mutex_unlock(&memcg_create_mutex);
-> > -	if (error) {
-> > -		/*
-> > -		 * We call put now because our (and parent's) refcnts
-> > -		 * are already in place. mem_cgroup_put() will internally
-> > -		 * call __mem_cgroup_free, so return directly
-> > -		 */
-> > -		mem_cgroup_put(memcg);
-> > -		if (parent->use_hierarchy)
-> > -			mem_cgroup_put(parent);
-> > -	}
-> > +
-> >  	return error;
-> >  }
-> 
-> The mem_cgroup_put(parent) part is incorrect because mem_cgroup_put goes
-> up the hierarchy already but I do not think mem_cgroup_put(memcg) should
-> go away as well. Who is going to free the last reference then?
-> 
-> Maybe I am missing something but we have:
+Hi,
+I have a question about cpuset filesystem - is it needed ?
 
-OK, I was missing something but "there is one reference without put"
-still holds...
+In the cpuset example given in:
+http://lxr.free-electrons.com/source/Documentation/cgroups/cgroups.txt
+we do not use the cpuset filesystsm but the cgroup filesystsm.
+(mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset)
 
-cgroup_create
-  css = ss->css_alloc(cgrp)
-    mem_cgroup_css_alloc
-      atomic_set(&memcg->refcnt, 1)
-  online_css(ss, cgrp)
-    mem_cgroup_css_online
-      memcg_init_kmem
-        mem_cgroup_get		# refcnt = 2
-          memcg_update_all_caches
-            memcg_update_cache_size	# fails with ENOMEM
-  goto err_destroy
-err_destroy:
-  cgroup_destroy_locked(cgrp)
-    offline_css
-      mem_cgroup_css_offline
+On my distro, which uses systemd + cgroups:
+mount | grep "type cpuset"
+gives nothing.
+
+On the other hands, mount | grep "type cgroup" | wc -l
+gives: 9
+
+I looked in the code of other subsystems (like blk cgroup and  memcg -
+memory control groups) and there is no filesystsm in the code; see
+block/blk-cgroup.c
+mm/memcontrol.c
+
+so is the cpuset filesystsm really needed ?
 
 
-There is one mem_cgroup_put from mem_cgroup_css_free from cgroup_diput
-but besides that I do not see any put after the patch is applied. So I
-think you really need to drop only the mem_cgroup_put on parent part.
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+DS
