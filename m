@@ -1,23 +1,37 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: remove unused parameter in cgroup_task_migrate().
-Date: Wed, 3 Apr 2013 17:16:35 +0800
-Message-ID: <515BF373.1090609@huawei.com>
-References: <1364802697-7875-1-git-send-email-wkevils@gmail.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as cgroup
+Date: Wed, 3 Apr 2013 13:19:25 +0400
+Message-ID: <515BF41D.9080300@parallels.com>
+References: <515BF233.6070308@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1364802697-7875-1-git-send-email-wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <515BF233.6070308@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 2013/4/1 15:51, Kevin Wilson wrote:
-> This patch removes unused parameter from cgroup_task_migrate().
+On 04/03/2013 01:11 PM, Li Zefan wrote:
+> The historical reason that memcg didn't use css_get in some cases, is that
+> cgroup couldn't be removed if there're still css refs. The situation has
+> changed so that rmdir a cgroup will succeed regardless css refs, but won't
+> be freed until css refs goes down to 0.
 > 
-> Signed-off-by: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> This is an early post, and it's NOT TESTED. I just want to see if the changes
+> are fine in general.
+Well, from my PoV, this will in general greatly simplify memcg lifecycle
+management.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Indeed, I can remember no other reason for those complications other
+than the problem with removing directories. If cgroup no longer have
+this limitation, I would much rather see your approach in.
 
-You should have retained the ack tag..
+I will look into the patches individually soon
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
