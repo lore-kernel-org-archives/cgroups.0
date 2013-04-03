@@ -1,94 +1,23 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: [RFC][PATCH 7/7] memcg: kill memcg refcnt
-Date: Wed, 3 Apr 2013 17:14:11 +0800
-Message-ID: <515BF2E3.4000605@huawei.com>
-References: <515BF233.6070308@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup: remove unused parameter in cgroup_task_migrate().
+Date: Wed, 3 Apr 2013 17:16:35 +0800
+Message-ID: <515BF373.1090609@huawei.com>
+References: <1364802697-7875-1-git-send-email-wkevils@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <515BF233.6070308@huawei.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1364802697-7875-1-git-send-email-wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm@kvack.org
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Now memcg has the same life cycle as the corresponding cgroup.
-Kill the useless refcnt.
+On 2013/4/1 15:51, Kevin Wilson wrote:
+> This patch removes unused parameter from cgroup_task_migrate().
+> 
+> Signed-off-by: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
----
- mm/memcontrol.c | 24 +-----------------------
- 1 file changed, 1 insertion(+), 23 deletions(-)
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 45129cd..9714a16 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -297,8 +297,6 @@ struct mem_cgroup {
- 	bool		oom_lock;
- 	atomic_t	under_oom;
- 
--	atomic_t	refcnt;
--
- 	int	swappiness;
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
-@@ -501,9 +499,6 @@ enum res_type {
-  */
- static DEFINE_MUTEX(memcg_create_mutex);
- 
--static void mem_cgroup_get(struct mem_cgroup *memcg);
--static void mem_cgroup_put(struct mem_cgroup *memcg);
--
- static inline
- struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
- {
-@@ -6117,22 +6112,6 @@ static void free_rcu(struct rcu_head *rcu_head)
- 	schedule_work(&memcg->work_freeing);
- }
- 
--static void mem_cgroup_get(struct mem_cgroup *memcg)
--{
--	atomic_inc(&memcg->refcnt);
--}
--
--static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
--{
--	if (atomic_sub_and_test(count, &memcg->refcnt))
--		call_rcu(&memcg->rcu_freeing, free_rcu);
--}
--
--static void mem_cgroup_put(struct mem_cgroup *memcg)
--{
--	__mem_cgroup_put(memcg, 1);
--}
--
- /*
-  * Returns the parent mem_cgroup in memcgroup hierarchy with hierarchy enabled.
-  */
-@@ -6192,7 +6171,6 @@ mem_cgroup_css_alloc(struct cgroup *cont)
- 
- 	memcg->last_scanned_node = MAX_NUMNODES;
- 	INIT_LIST_HEAD(&memcg->oom_notify);
--	atomic_set(&memcg->refcnt, 1);
- 	memcg->move_charge_at_immigrate = 0;
- 	mutex_init(&memcg->thresholds_lock);
- 	spin_lock_init(&memcg->move_lock);
-@@ -6279,7 +6257,7 @@ static void mem_cgroup_css_free(struct cgroup *cont)
- 
- 	mem_cgroup_sockets_destroy(memcg);
- 
--	mem_cgroup_put(memcg);
-+	call_rcu(&memcg->rcu_freeing, free_rcu);
- }
- 
- #ifdef CONFIG_MMU
--- 
-1.8.0.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+You should have retained the ack tag..
