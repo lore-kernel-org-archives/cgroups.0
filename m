@@ -1,77 +1,59 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg, kmem: clean up reference count handling on
- the error path
-Date: Wed, 3 Apr 2013 11:48:53 +0200
-Message-ID: <20130403094853.GG16471@dhcp22.suse.cz>
-References: <20130403085056.GD14384@dhcp22.suse.cz>
- <1364979234-16427-1-git-send-email-mhocko@suse.cz>
- <1364979234-16427-2-git-send-email-mhocko@suse.cz>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [RFC][PATCH 1/7] memcg: use css_get in sock_update_memcg()
+Date: Wed, 3 Apr 2013 16:58:48 +0400
+Message-ID: <515C2788.90907@parallels.com>
+References: <515BF233.6070308@huawei.com> <515BF249.50607@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1364979234-16427-2-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <515BF249.50607@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Wed 03-04-13 10:53:54, Michal Hocko wrote:
-> mem_cgroup_css_online calls mem_cgroup_put if memcg_init_kmem
-> fails. This is not correct because only memcg_propagate_kmem takes an
-> additional reference while mem_cgroup_sockets_init is allowed to fail as
-> well (although no current implementation fails) but it doesn't take any
-> reference. This all suggests that it should be memcg_propagate_kmem that
-> should clean up after itself so this patch moves mem_cgroup_put over
-> there.
-> Unfortunately this is not that easy (as pointed out by Li Zefan) because
-> memcg_kmem_mark_dead marks the group dead (KMEM_ACCOUNTED_DEAD) if it
-> is marked active (KMEM_ACCOUNTED_ACTIVE) which is the case even if
-> memcg_propagate_kmem fails so the additional reference is dropped in
-> that case in kmem_cgroup_destroy which means that the reference would be
-> dropped two times.
+On 04/03/2013 01:11 PM, Li Zefan wrote:
+> Use css_get/css_put instead of mem_cgroup_get/put.
 > 
-> The easiest way then would be to simply remove mem_cgrroup_put from
-> mem_cgroup_css_online and rely on kmem_cgroup_destroy doing the right
-> thing.
-
-Forgot to mention that this one could be marked for stable for 3.8
-
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Note, if at the same time someone is moving @current to a different
+> cgroup and removing the old cgroup, css_tryget() may return false,
+> and sock->sk_cgrp won't be initialized.
+> 
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 > ---
->  mm/memcontrol.c |    8 --------
->  1 file changed, 8 deletions(-)
+>  mm/memcontrol.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6de6d70..65b2850 100644
+> index 23d0f6e..43ca91d 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -6417,14 +6417,6 @@ mem_cgroup_css_online(struct cgroup *cont)
+> @@ -536,15 +536,15 @@ void sock_update_memcg(struct sock *sk)
+>  		 */
+>  		if (sk->sk_cgrp) {
+>  			BUG_ON(mem_cgroup_is_root(sk->sk_cgrp->memcg));
+> -			mem_cgroup_get(sk->sk_cgrp->memcg);
+> +			css_get(&sk->sk_cgrp->memcg->css);
+>  			return;
+>  		}
 >  
->  	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
->  	mutex_unlock(&memcg_create_mutex);
-> -	if (error) {
-> -		/*
-> -		 * We call put now because our (and parent's) refcnts
-> -		 * are already in place. mem_cgroup_put() will internally
-> -		 * call __mem_cgroup_free, so return directly
-> -		 */
-> -		mem_cgroup_put(memcg);
-> -	}
->  	return error;
->  }
->  
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+>  		rcu_read_lock();
+>  		memcg = mem_cgroup_from_task(current);
+>  		cg_proto = sk->sk_prot->proto_cgroup(memcg);
+> -		if (!mem_cgroup_is_root(memcg) && memcg_proto_active(cg_proto)) {
+> -			mem_cgroup_get(memcg);
+> +		if (!mem_cgroup_is_root(memcg) &&
+> +		    memcg_proto_active(cg_proto) && css_tryget(&memcg->css)) {
+>  			sk->sk_cgrp = cg_proto;
+>  		}
 
--- 
-Michal Hocko
-SUSE Labs
+What happens if this tryget fails ? Won't we leak a reference here? We
+will put regardless when the socket is released, and this may go
+negative. No?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
