@@ -1,64 +1,44 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH 2/2] memcg, kmem: clean up reference count handling on the error path
-Date: Wed,  3 Apr 2013 10:53:54 +0200
-Message-ID: <1364979234-16427-2-git-send-email-mhocko@suse.cz>
-References: <20130403085056.GD14384@dhcp22.suse.cz>
- <1364979234-16427-1-git-send-email-mhocko@suse.cz>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as cgroup
+Date: Wed, 3 Apr 2013 17:11:15 +0800
+Message-ID: <515BF233.6070308@huawei.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1364979234-16427-1-git-send-email-mhocko@suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Li Zefan <lizefan@huawei.com>, Glauber Costa <glommer@parallels.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-mem_cgroup_css_online calls mem_cgroup_put if memcg_init_kmem
-fails. This is not correct because only memcg_propagate_kmem takes an
-additional reference while mem_cgroup_sockets_init is allowed to fail as
-well (although no current implementation fails) but it doesn't take any
-reference. This all suggests that it should be memcg_propagate_kmem that
-should clean up after itself so this patch moves mem_cgroup_put over
-there.
-Unfortunately this is not that easy (as pointed out by Li Zefan) because
-memcg_kmem_mark_dead marks the group dead (KMEM_ACCOUNTED_DEAD) if it
-is marked active (KMEM_ACCOUNTED_ACTIVE) which is the case even if
-memcg_propagate_kmem fails so the additional reference is dropped in
-that case in kmem_cgroup_destroy which means that the reference would be
-dropped two times.
+(I'll be off from my office soon, and I won't be responsive in the following
+3 days.)
 
-The easiest way then would be to simply remove mem_cgrroup_put from
-mem_cgroup_css_online and rely on kmem_cgroup_destroy doing the right
-thing.
+I'm working on converting memcg to use cgroup->id, and then we can kill css_id.
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/memcontrol.c |    8 --------
- 1 file changed, 8 deletions(-)
+Now memcg has its own refcnt, so when a cgroup is destroyed, the memcg can
+still be alive. This patchset converts memcg to always use css_get/put, so
+memcg will have the same life cycle as its corresponding cgroup, and then
+it's always safe for memcg to use cgroup->id.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6de6d70..65b2850 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6417,14 +6417,6 @@ mem_cgroup_css_online(struct cgroup *cont)
- 
- 	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
- 	mutex_unlock(&memcg_create_mutex);
--	if (error) {
--		/*
--		 * We call put now because our (and parent's) refcnts
--		 * are already in place. mem_cgroup_put() will internally
--		 * call __mem_cgroup_free, so return directly
--		 */
--		mem_cgroup_put(memcg);
--	}
- 	return error;
- }
- 
--- 
-1.7.10.4
+The historical reason that memcg didn't use css_get in some cases, is that
+cgroup couldn't be removed if there're still css refs. The situation has
+changed so that rmdir a cgroup will succeed regardless css refs, but won't
+be freed until css refs goes down to 0.
+
+This is an early post, and it's NOT TESTED. I just want to see if the changes
+are fine in general.
+
+btw, after this patchset I think we don't need to free memcg via RCU, because
+cgroup is already freed in RCU callback.
+
+Note this patchset is based on a few memcg fixes I sent (but hasn't been
+accepted)
+
+--
+ kernel/cgroup.c |  10 ++++++++
+ mm/memcontrol.c | 129 ++++++++++++++++++++++++++++++++++++++-------------------------------------------------------
+ 2 files changed, 62 insertions(+), 77 deletions(-)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
