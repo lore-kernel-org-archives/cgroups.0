@@ -1,215 +1,106 @@
-From: Anton Vorontsov <anton@enomsg.org>
-Subject: Re: [PATCH v3] memcg: Add memory.pressure_level events
-Date: Tue, 2 Apr 2013 21:02:46 -0700
-Message-ID: <20130403040246.GA32229@lizard.gateway.2wire.net>
-References: <20130322071351.GA3971@lizard.gateway.2wire.net>
- <20130326134656.4e0e0aefcf881bffae769b1e@linux-foundation.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -v2] memcg: don't do cleanup manually if
+ mem_cgroup_css_online() fails
+Date: Wed, 3 Apr 2013 09:43:08 +0200
+Message-ID: <20130403074300.GA14384@dhcp22.suse.cz>
+References: <515A8A40.6020406@huawei.com>
+ <20130402121600.GK24345@dhcp22.suse.cz>
+ <20130402141646.GQ24345@dhcp22.suse.cz>
+ <515AE948.1000704@parallels.com>
+ <20130402142825.GA32520@dhcp22.suse.cz>
+ <515AEC3A.2030401@parallels.com>
+ <20130402150422.GB32520@dhcp22.suse.cz>
+ <515BA6C9.2000704@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130326134656.4e0e0aefcf881bffae769b1e@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <515BA6C9.2000704-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Glauber Costa <glommer@parallels.com>, Michal Hocko <mhocko@suse.cz>, "Kirill A. Shutemov" <kirill@shutemov.name>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Luiz Capitulino <lcapitulino@redhat.com>, Greg Thelen <gthelen@google.com>, Leonid Moiseichuk <leonid.moiseichuk@nokia.com>, KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Minchan Kim <minchan@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Stultz <john.stultz@linaro.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linaro-kernel@lists.linaro.org, patches@linaro.org, kernel-team@android.com
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, Mar 26, 2013 at 01:46:56PM -0700, Andrew Morton wrote:
-[...]
-> > +The file memory.pressure_level is only used to setup an eventfd,
-> > +read/write operations are no implemented.
-[...]
-> Did we tell people how to use the eventfd interface anywhere?
-
-Good point. In v4 I added a detailed instructions on how to setup the file
-descriptors.
-
-> >  1. Add support for accounting huge pages (as a separate controller)
-> >  2. Make per-cgroup scanner reclaim not-shared pages first
-> > diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
-> > --- /dev/null
-> > +++ b/include/linux/vmpressure.h
-> > @@ -0,0 +1,47 @@
-> > +#ifndef __LINUX_VMPRESSURE_H
-> > +#define __LINUX_VMPRESSURE_H
-> > +
-> > +#include <linux/mutex.h>
-> > +#include <linux/list.h>
-> > +#include <linux/workqueue.h>
-> > +#include <linux/gfp.h>
-> > +#include <linux/types.h>
-> > +#include <linux/cgroup.h>
-> > +
-> > +struct vmpressure {
-> > +	unsigned int scanned;
-> > +	unsigned int reclaimed;
-> > +	/* The lock is used to keep the scanned/reclaimed above in sync. */
-> > +	struct mutex sr_lock;
-> > +
-> > +	struct list_head events;
+On Wed 03-04-13 11:49:29, Li Zefan wrote:
+> >> Yes, indeed you are very right - and thanks for looking at such depth.
+> > 
+> > So what about the patch bellow? It seems that I provoked all this mess
+> > but my brain managed to push it away so I do not remember why I thought
+> > the parent needs reference drop... It is "only" 3.9 thing fortunately.
+> > ---
+> >>From 3aff5d958f1d0717795018f7d0d6b63d53ad1dd3 Mon Sep 17 00:00:00 2001
+> > From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > Date: Tue, 2 Apr 2013 16:37:39 +0200
+> > Subject: [PATCH] memcg: don't do cleanup manually if mem_cgroup_css_online()
+> >  fails
+> > 
+> > mem_cgroup_css_online is called with memcg with refcnt = 1 and it
+> > expects that mem_cgroup_css_free will drop this last reference.
+> > This doesn't hold when memcg_init_kmem fails though and a reference is
+> > dropped for both memcg and its parent explicitly if it returns with an
+> > error.
+> > 
+> > This is not correct for two reasons. Firstly mem_cgroup_put on parent is
+> > excessive because mem_cgroup_put is hierarchy aware and secondly only
+> > memcg_propagate_kmem takes an additional reference.
+> > 
+> > The first one is a real use-after-free bug introduced by e4715f01
+> > (memcg: avoid dangling reference count in creation failure)
+> > 
+> > The later one is non-issue right now because the only implementation
+> > of init_cgroup seems to be tcp_init_cgroup which doesn't fail
+> > but it is better to make the error handling saner and move the
+> > mem_cgroup_put(memcg) to memcg_propagate_kmem where it belongs.
+> > 
+> > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > ---
+> >  mm/memcontrol.c |   13 +++----------
+> >  1 file changed, 3 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index f608546..cf9ba7e 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -5306,6 +5306,8 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
+> >  	ret = memcg_update_cache_sizes(memcg);
+> >  	mutex_unlock(&set_limit_mutex);
+> >  out:
+> > +	if (ret)
+> > +		mem_cgroup_put(memcg);
 > 
-> A comment describing what goes at `events' would be nice.  Reference
-> "struct vmpressure_event".
-
-Done.
-
-> > +	/* Have to grab the lock on events traversal or modifications. */
-> > +	struct mutex events_lock;
-> > +
-> > +	struct work_struct work;
-> > +};
-> >
-> > ...
-> >
-> > +/*
-> > + * The window size is the number of scanned pages before we try to analyze
-> > + * the scanned/reclaimed ratio (or difference).
-> > + *
-> > + * It is used as a rate-limit tunable for the "low" level notification,
-> > + * and for averaging medium/critical levels. Using small window sizes can
-> > + * cause lot of false positives, but too big window size will delay the
-> > + * notifications.
-> > + *
-> > + * TODO: Make the window size depend on machine size, as we do for vmstat
-> > + * thresholds.
+> Correct me if I'm wrong, but I think:
 > 
-> Here "the window size" refers to vmpressure_win, yes?
-
-Yup.
-
-(To make it clear, in the new version I added a direct reference to the
-vmpressure_win.)
-
-> > + */
-> > +static const unsigned int vmpressure_win = SWAP_CLUSTER_MAX * 16;
-> > +static const unsigned int vmpressure_level_med = 60;
-> > +static const unsigned int vmpressure_level_critical = 95;
-> > +static const unsigned int vmpressure_level_critical_prio = 3;
+> When memcg_propagate_kmem() calls mem_cgroup_get(), it's because the kmemcg
+> is active by inheritance. Then when memcg_update_cache_sizes() fails, leading
+> to mem_cgroup_css_free() is called by cgroup core:
 > 
-> vmpressure_level_critical_prio is a bit mysterious and undocumented. 
-> Please document it here and/or at vmpressure_prio().
-
-I added documentation in v4.
-
-> > +void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
-> > +		unsigned long scanned, unsigned long reclaimed)
+> static void mem_cgroup_css_free(struct cgroup *cont)
+> {
+>         struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
 > 
-> Exported function and a primary inteface.  Needs nice documentation, please ;)
-
-Sure thing, all exported function now come with kernel-doc comments.
-
-[...]
-> > +	 */
-> > +	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
+>         kmem_cgroup_destroy(memcg);
 > 
-> I'm surprised at __GFP_HIGHMEM's inclusion.  On some machines the great
-> majority of user memory is in highmem.  What's up?
-
-In the new revision I included this comment:
-
-        /*
-         * Here we only want to account pressure that userland is able to
-         * help us with. For example, suppose that DMA zone is under
-         * pressure; if we notify userland about that kind of pressure,
-         * then it will be mostly a waste as it will trigger unnecessary
-         * freeing of memory by userland (since userland is more likely to
-         * have HIGHMEM/MOVABLE pages instead of the DMA fallback). That
-         * is why we include only movable, highmem and FS/IO pages.
-         * Indirect reclaim (kswapd) sets sc->gfp_mask to GFP_KERNEL, so
-         * we account it too.
-         */
-        if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
-                return;
-
-> > +	if (!scanned)
-> > +		return;
-> > +
-> > +	mutex_lock(&vmpr->sr_lock);
-> > +	vmpr->scanned += scanned;
-> > +	vmpr->reclaimed += reclaimed;
+>         mem_cgroup_put(memcg);
+> }
 > 
-> See, here we're accumulating into a 32-bit variable quantities which used
-> to be held in 64-bit variables.    The overflow risk gets higher...
-
-I see. I fixed this.
-
-> > +	mutex_unlock(&vmpr->sr_lock);
-> > +
-> > +	if (scanned < vmpressure_win || work_pending(&vmpr->work))
-> > +		return;
-> > +	schedule_work(&vmpr->work);
-> > +}
-> > +
-> > +void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio)
+> static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
+> {
+>         mem_cgroup_sockets_destroy(memcg);
 > 
-> Documentation please.
-
-Yup, done.
-
-> > +{
-> > +	if (prio > vmpressure_level_critical_prio)
-> > +		return;
-> > +
-> > +	/*
-> > +	 * OK, the prio is below the threshold, updating vmpressure
+>         memcg_kmem_mark_dead(memcg);
 > 
-> But you never told me what that threshold is for!  And I have no means
-> of working out why you chose "3", nor the effects of altering it, etc.
-
-True. This is explained it in a comment now.
-
-[...]
-> > +int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
-> > +			      struct eventfd_ctx *eventfd, const char *args)
+>         if (res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0)
+>                 return;
 > 
-> Document the interface, please.
+>         if (memcg_kmem_test_and_clear_dead(memcg))
+>                 mem_cgroup_put(memcg);    <------- !!!!!!!!!
+> }
 
-Done.
+But memcg_update_cache_sizes calls memcg_kmem_clear_activated on the
+error path.
 
-> > +{
-> > +	struct vmpressure *vmpr = cg_to_vmpr(cg);
-> > +	struct vmpressure_event *ev;
-> > +	int lvl;
-> 
-> These abbreviations are rather unlinuxy.  wk->work, vmpr->vmpressure,
-> lvl->level, etc.
-
-Yeah, I agree. Although, 'vmpressure' as a function-scope variable is
-kinda too long, the code becomes really hard to read. But in memcg struct
-and global namespace I now use the full 'vmpressure' name.
-
-> > +	for (lvl = 0; lvl < VMPRESSURE_NUM_LEVELS; lvl++) {
-> > +		if (!strcmp(vmpressure_str_levels[lvl], args))
-> > +			break;
-> > +	}
-> > +
-> > +	if (lvl >= VMPRESSURE_NUM_LEVELS)
-> > +		return -EINVAL;
-> > +
-> > +	ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-> > +	if (!ev)
-> > +		return -ENOMEM;
-> > +
-> > +	ev->efd = eventfd;
-> > +	ev->level = lvl;
-> > +
-> > +	mutex_lock(&vmpr->events_lock);
-> > +	list_add(&ev->node, &vmpr->events);
-> 
-> What's the upper bound on the length of this list?
-
-As of now, it is controlled by the cgroup core, so I would say the number
-of opened FDs, and if that is a problem, it should be fixed for everyone.
-The good thing is that the list is per-cgroup, it is not global.
-
-
-Thanks for the review, Andrew!
-
-Anton
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Michal Hocko
+SUSE Labs
