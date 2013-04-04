@@ -1,100 +1,51 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC][PATCH 7/7] memcg: kill memcg refcnt
-Date: Thu, 4 Apr 2013 17:35:00 +0200
-Message-ID: <20130404153500.GO29911@dhcp22.suse.cz>
-References: <515BF233.6070308@huawei.com>
- <515BF2E3.4000605@huawei.com>
-Mime-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] cgroup: unexport locking interface
+Date: Thu,  4 Apr 2013 16:36:24 -0700
+Message-ID: <1365118589-10619-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <515BF2E3.4000605-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=UxrzgmamzBiZh8R6N4gx7AdnSTD5w7RuIveSg7aykhQ=;
+        b=cXlMITKROrEWWm9rOn0g5P/US2YGVRhs8jLRuSpSiUiGwY5jS9I/ULYOi1MUAH178M
+         a1MFx3zKnz2Z+B09FGjEkdBVuUbl8ZXEM0haXaUjFeQw5mI800+nYghBtFJ6NpjzE8rT
+         4oByK+Ymq/l5p5U+VTxiW7+EgK60cEeoNWx1Q1LzbH1Kx8q3DRWGZaGE94NYbr7jqLVW
+         XyriB03FtgdIkew8MkrNUKSFnSmrfRVvoK5Sl+U6Z4KSL+w4toAbCBAIH37/i3cuU1u4
+         AXj/7WR0CF2xkwFQKr2gH973GmdkwRjwD3Mj0/rAg6hjuXM3+BkS+OWpQSeBsNvtY9zI
+         rerw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 03-04-13 17:14:11, Li Zefan wrote:
-> Now memcg has the same life cycle as the corresponding cgroup.
-> Kill the useless refcnt.
-> 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Hello,
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Most cgroup_mutex abuses outside cgroup core proper have been
+eradicated but there's still one use remaining and locking interface
+is still exported.  This patchset updates the last user and unexports
+the locking interface and is composed of the following five patches.
 
-Thanks!
+ 0001-cgroup-cpuset-replace-move_member_tasks_to_cpuset-wi.patch
+ 0002-cgroup-relocate-cgroup_lock_live_group-and-cgroup_at.patch
+ 0003-cgroup-unexport-locking-interface-and-cgroup_attach_.patch
+ 0004-cgroup-kill-cgroup_-un-lock.patch
+ 0005-cgroup-remove-cgroup_lock_is_held.patch
 
-> ---
->  mm/memcontrol.c | 24 +-----------------------
->  1 file changed, 1 insertion(+), 23 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 45129cd..9714a16 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -297,8 +297,6 @@ struct mem_cgroup {
->  	bool		oom_lock;
->  	atomic_t	under_oom;
->  
-> -	atomic_t	refcnt;
-> -
->  	int	swappiness;
->  	/* OOM-Killer disable */
->  	int		oom_kill_disable;
-> @@ -501,9 +499,6 @@ enum res_type {
->   */
->  static DEFINE_MUTEX(memcg_create_mutex);
->  
-> -static void mem_cgroup_get(struct mem_cgroup *memcg);
-> -static void mem_cgroup_put(struct mem_cgroup *memcg);
-> -
->  static inline
->  struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
->  {
-> @@ -6117,22 +6112,6 @@ static void free_rcu(struct rcu_head *rcu_head)
->  	schedule_work(&memcg->work_freeing);
->  }
->  
-> -static void mem_cgroup_get(struct mem_cgroup *memcg)
-> -{
-> -	atomic_inc(&memcg->refcnt);
-> -}
-> -
-> -static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
-> -{
-> -	if (atomic_sub_and_test(count, &memcg->refcnt))
-> -		call_rcu(&memcg->rcu_freeing, free_rcu);
-> -}
-> -
-> -static void mem_cgroup_put(struct mem_cgroup *memcg)
-> -{
-> -	__mem_cgroup_put(memcg, 1);
-> -}
-> -
->  /*
->   * Returns the parent mem_cgroup in memcgroup hierarchy with hierarchy enabled.
->   */
-> @@ -6192,7 +6171,6 @@ mem_cgroup_css_alloc(struct cgroup *cont)
->  
->  	memcg->last_scanned_node = MAX_NUMNODES;
->  	INIT_LIST_HEAD(&memcg->oom_notify);
-> -	atomic_set(&memcg->refcnt, 1);
->  	memcg->move_charge_at_immigrate = 0;
->  	mutex_init(&memcg->thresholds_lock);
->  	spin_lock_init(&memcg->move_lock);
-> @@ -6279,7 +6257,7 @@ static void mem_cgroup_css_free(struct cgroup *cont)
->  
->  	mem_cgroup_sockets_destroy(memcg);
->  
-> -	mem_cgroup_put(memcg);
-> +	call_rcu(&memcg->rcu_freeing, free_rcu);
->  }
->  
->  #ifdef CONFIG_MMU
-> -- 
-> 1.8.0.2
+It's on top of cgroup/for-3.10 a423ecb8a ("memcg: fix
+memcg_cache_name() to use cgroup_name()") and available in the
+following git branch.
 
--- 
-Michal Hocko
-SUSE Labs
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-unexport-locking
+
+diffstat follows.  Thanks.
+
+ include/linux/cgroup.h |   19 +++--
+ kernel/cgroup.c        |  162 ++++++++++++++++++++++++-------------------------
+ kernel/cpuset.c        |   51 +--------------
+ 3 files changed, 96 insertions(+), 136 deletions(-)
+
+--
+tejun
