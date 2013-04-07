@@ -1,53 +1,71 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET] cgroup: unexport locking interface
-Date: Sun, 7 Apr 2013 09:30:45 -0700
-Message-ID: <20130407163045.GB12038@htj.dyndns.org>
-References: <1365118589-10619-1-git-send-email-tj@kernel.org>
- <5161064D.30000@huawei.com>
+Subject: [PATCH cgroup/for-3.10] devcg: remove broken_hierarchy tag
+Date: Sun, 7 Apr 2013 10:28:18 -0700
+Message-ID: <20130407172818.GD12038@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=zKhrvpoXN4Lvcj1n3AdXReDqxiDgEMK25s9FcwUcuqA=;
-        b=cIhrO8ObRt1hZ8Mm18OaNdW0+doWdJGEg2nFk0olY3cfj39NpwKQW6Zz8lJ7GN+6NT
-         +xMIejPRIHST/IBykWViNNlMhhDdQn50DSbQAL2l/1EWED1SdS+GSjwcGRq+BgrUtiDD
-         RRnENnVg2LrLB//H+2+9x2HOYeYtmRsHO3xbD97uEv2Ff5FkqIHeyURYjGzqf85XT8Ak
-         ZXosl8+RQp+zT+0wp7VJjjFFYiQ1V6z7oDqHdIBy8hgrHbDMw6cALKy4G+etgrzd7xHK
-         /Qpmk68/C4BSKJJUgLBqTHPy9ywtawBhTUkleoakFvJZ0JyedvT1KXAYNI5uhVYk2/3x
-         q5Pg==
-Content-Disposition: inline
-In-Reply-To: <5161064D.30000-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:mime-version
+	:content-type:content-disposition:user-agent;
+	bh=UgKI00qFga8q4u3irPoWRUGG5v92tqeYLl2sG249clo=;
+	b=mGjsEwIeW9l+YN4UWKWw5+AtTUApW6XwnPeKdtGsW9s96LxHgWLhuJAXbNjhwEa5dk
+	3EiH7xeTtXxzqgXipMQRgcAMjZ7QnMDVTml/Gqqqv9OivBODHEjEv3kgIoSLlNomijmi
+	DJaytlcwRPgG1LyyqSQ+Hz5dMP3qCiGk5WSVNu26yX8PDT2j0uSBcJgM2KpyMrmRvhr6
+	/DNjt3+Bdscpkf5dIedivMANzk1edZKneVOlwuI+U+DzvQ8ZMq+b6NbpdQ0YMaF9noNE
+	tjH3gZ7+n3pdjtfkRyZ+q2nHUAKt8JMJvU+DRxwwHLOB0a5IrDYmbfoFmknU0K5o/XNL
+	vQFg==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Apr 07, 2013 at 01:38:21PM +0800, Li Zefan wrote:
-> On 2013/4/5 7:36, Tejun Heo wrote:
-> > Hello,
-> > 
-> > Most cgroup_mutex abuses outside cgroup core proper have been
-> > eradicated but there's still one use remaining and locking interface
-> > is still exported.  This patchset updates the last user and unexports
-> > the locking interface and is composed of the following five patches.
-> > 
-> >  0001-cgroup-cpuset-replace-move_member_tasks_to_cpuset-wi.patch
-> >  0002-cgroup-relocate-cgroup_lock_live_group-and-cgroup_at.patch
-> >  0003-cgroup-unexport-locking-interface-and-cgroup_attach_.patch
-> >  0004-cgroup-kill-cgroup_-un-lock.patch
-> >  0005-cgroup-remove-cgroup_lock_is_held.patch
-> > 
-> 
-> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From f913fbedbdfc08eeff742c4b3077e267d8fc867f Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Sun, 7 Apr 2013 10:25:39 -0700
 
-Applied to cgroup/for-3.10.
+bd2953ebbb ("devcg: propagate local changes down the hierarchy")
+implemented proper hierarchy support.  Remove the broken tag.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+Applying to cgroup/for-3.10.
 
 Thanks.
 
+ security/device_cgroup.c | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 221967d..994aecc 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -739,15 +739,6 @@ struct cgroup_subsys devices_subsys = {
+ 	.css_offline = devcgroup_offline,
+ 	.subsys_id = devices_subsys_id,
+ 	.base_cftypes = dev_cgroup_files,
+-
+-	/*
+-	 * While devices cgroup has the rudimentary hierarchy support which
+-	 * checks the parent's restriction, it doesn't properly propagates
+-	 * config changes in ancestors to their descendents.  A child
+-	 * should only be allowed to add more restrictions to the parent's
+-	 * configuration.  Fix it and remove the following.
+-	 */
+-	.broken_hierarchy = true,
+ };
+ 
+ /**
 -- 
-tejun
+1.8.1.4
