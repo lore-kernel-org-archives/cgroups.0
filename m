@@ -1,39 +1,60 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET] cgroup: unexport locking interface
-Date: Sun, 7 Apr 2013 13:38:21 +0800
-Message-ID: <5161064D.30000@huawei.com>
-References: <1365118589-10619-1-git-send-email-tj@kernel.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as cgroup
+Date: Sun, 7 Apr 2013 14:00:24 +0800
+Message-ID: <51610B78.7080001@huawei.com>
+References: <515BF233.6070308@huawei.com> <20130404120049.GI29911@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1365118589-10619-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130404120049.GI29911@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 2013/4/5 7:36, Tejun Heo wrote:
-> Hello,
+On 2013/4/4 20:00, Michal Hocko wrote:
+> On Wed 03-04-13 17:11:15, Li Zefan wrote:
+>> (I'll be off from my office soon, and I won't be responsive in the following
+>> 3 days.)
+>>
+>> I'm working on converting memcg to use cgroup->id, and then we can kill css_id.
+>>
+>> Now memcg has its own refcnt, so when a cgroup is destroyed, the memcg can
+>> still be alive. This patchset converts memcg to always use css_get/put, so
+>> memcg will have the same life cycle as its corresponding cgroup, and then
+>> it's always safe for memcg to use cgroup->id.
+>>
+>> The historical reason that memcg didn't use css_get in some cases, is that
+>> cgroup couldn't be removed if there're still css refs. The situation has
+>> changed so that rmdir a cgroup will succeed regardless css refs, but won't
+>> be freed until css refs goes down to 0.
+>>
+>> This is an early post, and it's NOT TESTED. I just want to see if the changes
+>> are fine in general.
 > 
-> Most cgroup_mutex abuses outside cgroup core proper have been
-> eradicated but there's still one use remaining and locking interface
-> is still exported.  This patchset updates the last user and unexports
-> the locking interface and is composed of the following five patches.
+> yes, I like the approach and it looks correct as well (some minor things
+> mentioned in the patches). Thanks a lot Li! This will make our lifes much
+> easier. The separate ref counting was PITA especially after
+> introduction of kmem accounting which made its usage even more trickier.
 > 
->  0001-cgroup-cpuset-replace-move_member_tasks_to_cpuset-wi.patch
->  0002-cgroup-relocate-cgroup_lock_live_group-and-cgroup_at.patch
->  0003-cgroup-unexport-locking-interface-and-cgroup_attach_.patch
->  0004-cgroup-kill-cgroup_-un-lock.patch
->  0005-cgroup-remove-cgroup_lock_is_held.patch
+>> btw, after this patchset I think we don't need to free memcg via RCU, because
+>> cgroup is already freed in RCU callback.
+> 
+> But this depends on changes waiting in for-3.10 branch, right?
+
+What changes? memcg changes or cgroup core changes? I don't think this depends
+on anything in cgroup 3.10 branch.
+
+> Anyway, I think we should be safe with the workqueue based releasing as
+> well once mem_cgroup_{get,put} are gone, right?
 > 
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+cgroup calls mem_cgroup_css_free() in a work function, so seems memcg doesn't
+need to use RCU or workqueue in mem_cgroup_css_free().
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
