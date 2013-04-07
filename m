@@ -1,72 +1,52 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as
  cgroup
-Date: Sun, 7 Apr 2013 22:21:30 +0200
-Message-ID: <20130407202130.GB12678@dhcp22.suse.cz>
+Date: Sun, 7 Apr 2013 21:51:12 +0200
+Message-ID: <20130407195112.GA12678@dhcp22.suse.cz>
 References: <515BF233.6070308@huawei.com>
- <20130404120049.GI29911@dhcp22.suse.cz>
- <51610B78.7080001@huawei.com>
+ <516131D7.8030004@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
          :mime-version:content-type:content-disposition:in-reply-to
          :user-agent;
-        bh=BbySNriuQiILfQBqdB3nxt3um0NhYD3rW9fUvTirE8k=;
-        b=0vUXA0TyIVpZm23VDaS4us77aflUSgKZv9OyDr8f562O8HWrkY2NLsnmacAqZrO9Ll
-         aKdhL9Br9JLbXWRYcDRxaqf+erAIiputiS+ELLqqKQsUT6KXiGQnnu5PMtOLwFTvJZsp
-         ntI4xgWMeFF4fRFnUZ5QA9JxurSW9r8HRdDrMv6ETgpyrHux2+HY0gnG9JCcRQTosE5X
-         18BEB7ITiqOciiePGSc4CK1c99MGltgPleoxkmAO64dMQyeAqU7onj90O1ROXvgxkgq+
-         b4k/RWkfyboBM8e9M9/ABegx+Tj1gEKzxNPIFQu5xUndE+v7jz0wfhGIc/UbORG3HbLE
-         9Nxw==
+        bh=WEu9oyFQM34DzjKS7nE0q9qjXmrQRUfybN8THO8IaZk=;
+        b=JlvvLXunSvmNEi6Q/XXmkkyZiHjPpvFL2KBoNrHg01WQSxNEZbuH0rxBaLu5CZkn/r
+         OBgUne71DOMcCVLBkiqPc52uy25zE8XmfWqo+XDRMO0chcn9JUMOlgaqGq/aONEl/je6
+         +HrwEdN7g8YZFDFpN4MPmZV/3x5IhxXi6k2EhYuHfFQwrwgffCB/FculTRGFwDctcJ9K
+         A2LusnBFnA5bXvQcpXaGCGhfBcoB1PxDdY4a/jVGC8/BKUGY9lAj2bITOh1MoW0ircd1
+         tcuQ7U/cWrJbX+35pHtqOs0X4prhB+RPl3vIayrt1cpoSbapjc7hoxTkEhchkNbQRKf5
+         PiZQ==
 Content-Disposition: inline
-In-Reply-To: <51610B78.7080001-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <516131D7.8030004@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: Glauber Costa <glommer@parallels.com>, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Sun 07-04-13 14:00:24, Li Zefan wrote:
-> On 2013/4/4 20:00, Michal Hocko wrote:
-> > On Wed 03-04-13 17:11:15, Li Zefan wrote:
-> >> (I'll be off from my office soon, and I won't be responsive in the following
-> >> 3 days.)
-> >>
-> >> I'm working on converting memcg to use cgroup->id, and then we can kill css_id.
-> >>
-> >> Now memcg has its own refcnt, so when a cgroup is destroyed, the memcg can
-> >> still be alive. This patchset converts memcg to always use css_get/put, so
-> >> memcg will have the same life cycle as its corresponding cgroup, and then
-> >> it's always safe for memcg to use cgroup->id.
-> >>
-> >> The historical reason that memcg didn't use css_get in some cases, is that
-> >> cgroup couldn't be removed if there're still css refs. The situation has
-> >> changed so that rmdir a cgroup will succeed regardless css refs, but won't
-> >> be freed until css refs goes down to 0.
-> >>
-> >> This is an early post, and it's NOT TESTED. I just want to see if the changes
-> >> are fine in general.
-> > 
-> > yes, I like the approach and it looks correct as well (some minor things
-> > mentioned in the patches). Thanks a lot Li! This will make our lifes much
-> > easier. The separate ref counting was PITA especially after
-> > introduction of kmem accounting which made its usage even more trickier.
-> > 
-> >> btw, after this patchset I think we don't need to free memcg via RCU, because
-> >> cgroup is already freed in RCU callback.
-> > 
-> > But this depends on changes waiting in for-3.10 branch, right?
+On Sun 07-04-13 16:44:07, Li Zefan wrote:
+> Hi,
 > 
-> What changes? memcg changes or cgroup core changes? I don't think this depends
-> on anything in cgroup 3.10 branch.
+> I'm rebasing this patchset against latest linux-next, and it conflicts with
+> "[PATCH v2] memcg: debugging facility to access dangling memcgs." slightly.
+> 
+> That is a debugging patch and will never be pushed into mainline, so should I
+> still base this patchset on that debugging patch?
 
-cgroup (be445626 e.g.) but now I've noticed that those are already
-merged in Linus tree.
+Could you split CONFIG_MEMCG_DEBUG_ASYNC_DESTROY changes into a separate
+patch so that Andrew could put it on top of the mentioned patch?
 
-FYI: I've cherry-picked themo my -mm git tree.
+> Also that patch needs update (and can be simplified) after this patchset:
+> - move memcg_dangling_add() to mem_cgroup_css_offline()
+> - remove memcg->memcg_name, and use cgroup_path() in mem_cgroup_dangling_read()?
+
+Every improvement is welcome.
+
+Thanks
 -- 
 Michal Hocko
 SUSE Labs
