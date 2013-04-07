@@ -1,60 +1,57 @@
-From: Li Zefan <lizefan@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as cgroup
-Date: Sun, 7 Apr 2013 14:00:24 +0800
-Message-ID: <51610B78.7080001@huawei.com>
-References: <515BF233.6070308@huawei.com> <20130404120049.GI29911@dhcp22.suse.cz>
+Date: Sun, 7 Apr 2013 16:44:07 +0800
+Message-ID: <516131D7.8030004@huawei.com>
+References: <515BF233.6070308@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130404120049.GI29911@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <515BF233.6070308-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 2013/4/4 20:00, Michal Hocko wrote:
-> On Wed 03-04-13 17:11:15, Li Zefan wrote:
->> (I'll be off from my office soon, and I won't be responsive in the following
->> 3 days.)
->>
->> I'm working on converting memcg to use cgroup->id, and then we can kill css_id.
->>
->> Now memcg has its own refcnt, so when a cgroup is destroyed, the memcg can
->> still be alive. This patchset converts memcg to always use css_get/put, so
->> memcg will have the same life cycle as its corresponding cgroup, and then
->> it's always safe for memcg to use cgroup->id.
->>
->> The historical reason that memcg didn't use css_get in some cases, is that
->> cgroup couldn't be removed if there're still css refs. The situation has
->> changed so that rmdir a cgroup will succeed regardless css refs, but won't
->> be freed until css refs goes down to 0.
->>
->> This is an early post, and it's NOT TESTED. I just want to see if the changes
->> are fine in general.
+Hi,
+
+I'm rebasing this patchset against latest linux-next, and it conflicts with
+"[PATCH v2] memcg: debugging facility to access dangling memcgs." slightly.
+
+That is a debugging patch and will never be pushed into mainline, so should I
+still base this patchset on that debugging patch?
+
+Also that patch needs update (and can be simplified) after this patchset:
+- move memcg_dangling_add() to mem_cgroup_css_offline()
+- remove memcg->memcg_name, and use cgroup_path() in mem_cgroup_dangling_read()?
+
+On 2013/4/3 17:11, Li Zefan wrote:
+> (I'll be off from my office soon, and I won't be responsive in the following
+> 3 days.)
 > 
-> yes, I like the approach and it looks correct as well (some minor things
-> mentioned in the patches). Thanks a lot Li! This will make our lifes much
-> easier. The separate ref counting was PITA especially after
-> introduction of kmem accounting which made its usage even more trickier.
+> I'm working on converting memcg to use cgroup->id, and then we can kill css_id.
 > 
->> btw, after this patchset I think we don't need to free memcg via RCU, because
->> cgroup is already freed in RCU callback.
+> Now memcg has its own refcnt, so when a cgroup is destroyed, the memcg can
+> still be alive. This patchset converts memcg to always use css_get/put, so
+> memcg will have the same life cycle as its corresponding cgroup, and then
+> it's always safe for memcg to use cgroup->id.
 > 
-> But this depends on changes waiting in for-3.10 branch, right?
-
-What changes? memcg changes or cgroup core changes? I don't think this depends
-on anything in cgroup 3.10 branch.
-
-> Anyway, I think we should be safe with the workqueue based releasing as
-> well once mem_cgroup_{get,put} are gone, right?
+> The historical reason that memcg didn't use css_get in some cases, is that
+> cgroup couldn't be removed if there're still css refs. The situation has
+> changed so that rmdir a cgroup will succeed regardless css refs, but won't
+> be freed until css refs goes down to 0.
 > 
-
-cgroup calls mem_cgroup_css_free() in a work function, so seems memcg doesn't
-need to use RCU or workqueue in mem_cgroup_css_free().
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> This is an early post, and it's NOT TESTED. I just want to see if the changes
+> are fine in general.
+> 
+> btw, after this patchset I think we don't need to free memcg via RCU, because
+> cgroup is already freed in RCU callback.
+> 
+> Note this patchset is based on a few memcg fixes I sent (but hasn't been
+> accepted)
+> 
+> --
+>  kernel/cgroup.c |  10 ++++++++
+>  mm/memcontrol.c | 129 ++++++++++++++++++++++++++++++++++++++-------------------------------------------------------
+>  2 files changed, 62 insertions(+), 77 deletions(-)
+> 
