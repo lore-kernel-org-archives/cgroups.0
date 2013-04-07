@@ -1,67 +1,39 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC][PATCH 2/7] memcg: don't use mem_cgroup_get() when creating
- a kmemcg cache
-Date: Sun, 7 Apr 2013 11:32:48 +0800
-Message-ID: <5160E8E0.2050602@huawei.com>
-References: <515BF233.6070308@huawei.com> <515BF275.5080408@huawei.com> <20130403153133.GM16471@dhcp22.suse.cz> <515EA73C.8050602@parallels.com> <20130405134557.GG31132@dhcp22.suse.cz>
+Subject: Re: [PATCHSET] cgroup: unexport locking interface
+Date: Sun, 7 Apr 2013 13:38:21 +0800
+Message-ID: <5161064D.30000@huawei.com>
+References: <1365118589-10619-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130405134557.GG31132-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1365118589-10619-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
->>> You are putting references but I do not see any single css_{try}get
->>> here. /me puzzled.
->>>
->>
->> There are two things being done in this code:
->> First, we acquired a css_ref to make sure that the underlying cgroup
->> would not go away. That is a short lived reference, and it is put as
->> soon as the cache is created.
->> At this point, we acquire a long-lived per-cache memcg reference count
->> to guarantee that the memcg will still be alive.
->>
->> so it is:
->>
->> enqueue: css_get
->> create : memcg_get, css_put
->> destroy: css_put
->>
->> If I understand Li's patch correctly, he is not touching the first
->> css_get, only turning that into the long lived reference (which was not
->> possible before, since that would prevent rmdir).
->>
->> Then he only needs to get rid of the memcg_get, change the memcg_put to
->> css_put, and get rid of the now extra css_put.
->>
->> He is issuing extra css_puts in memcg_create_kmem_cache, but only in
->> failure paths. So the code reads as:
->> * css_get on enqueue (already done, so not shown in patch)
->> * if it fails, css_put
->> * if it succeeds, don't do anything. This is already the long-lived
->> reference count. put it at release time.
+On 2013/4/5 7:36, Tejun Heo wrote:
+> Hello,
 > 
-> OK, this makes more sense now. It is __memcg_create_cache_enqueue which
-> takes the reference and it is not put after this because it replaced
-> mem_cgroup reference counting.
-> Li, please put something along these lines into the changelog. This is
-> really tricky and easy to get misunderstand.
+> Most cgroup_mutex abuses outside cgroup core proper have been
+> eradicated but there's still one use remaining and locking interface
+> is still exported.  This patchset updates the last user and unexports
+> the locking interface and is composed of the following five patches.
+> 
+>  0001-cgroup-cpuset-replace-move_member_tasks_to_cpuset-wi.patch
+>  0002-cgroup-relocate-cgroup_lock_live_group-and-cgroup_at.patch
+>  0003-cgroup-unexport-locking-interface-and-cgroup_attach_.patch
+>  0004-cgroup-kill-cgroup_-un-lock.patch
+>  0005-cgroup-remove-cgroup_lock_is_held.patch
 > 
 
-Yeah, I think I'll just steal Glauber's explanation as the changelog.
-
-> You can put my Acked-by then.
-> 
-
-Thanks!
-
->> The code looks correct, and of course, extremely simpler due to the
->> use of a single reference.
->>
->> Li, am I right in my understanding that this is your intention?
->>
-
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
