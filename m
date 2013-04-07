@@ -1,57 +1,53 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as cgroup
-Date: Sun, 7 Apr 2013 16:44:07 +0800
-Message-ID: <516131D7.8030004@huawei.com>
-References: <515BF233.6070308@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET] cgroup: unexport locking interface
+Date: Sun, 7 Apr 2013 09:30:45 -0700
+Message-ID: <20130407163045.GB12038@htj.dyndns.org>
+References: <1365118589-10619-1-git-send-email-tj@kernel.org>
+ <5161064D.30000@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <515BF233.6070308-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=zKhrvpoXN4Lvcj1n3AdXReDqxiDgEMK25s9FcwUcuqA=;
+        b=cIhrO8ObRt1hZ8Mm18OaNdW0+doWdJGEg2nFk0olY3cfj39NpwKQW6Zz8lJ7GN+6NT
+         +xMIejPRIHST/IBykWViNNlMhhDdQn50DSbQAL2l/1EWED1SdS+GSjwcGRq+BgrUtiDD
+         RRnENnVg2LrLB//H+2+9x2HOYeYtmRsHO3xbD97uEv2Ff5FkqIHeyURYjGzqf85XT8Ak
+         ZXosl8+RQp+zT+0wp7VJjjFFYiQ1V6z7oDqHdIBy8hgrHbDMw6cALKy4G+etgrzd7xHK
+         /Qpmk68/C4BSKJJUgLBqTHPy9ywtawBhTUkleoakFvJZ0JyedvT1KXAYNI5uhVYk2/3x
+         q5Pg==
+Content-Disposition: inline
+In-Reply-To: <5161064D.30000-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Sun, Apr 07, 2013 at 01:38:21PM +0800, Li Zefan wrote:
+> On 2013/4/5 7:36, Tejun Heo wrote:
+> > Hello,
+> > 
+> > Most cgroup_mutex abuses outside cgroup core proper have been
+> > eradicated but there's still one use remaining and locking interface
+> > is still exported.  This patchset updates the last user and unexports
+> > the locking interface and is composed of the following five patches.
+> > 
+> >  0001-cgroup-cpuset-replace-move_member_tasks_to_cpuset-wi.patch
+> >  0002-cgroup-relocate-cgroup_lock_live_group-and-cgroup_at.patch
+> >  0003-cgroup-unexport-locking-interface-and-cgroup_attach_.patch
+> >  0004-cgroup-kill-cgroup_-un-lock.patch
+> >  0005-cgroup-remove-cgroup_lock_is_held.patch
+> > 
+> 
+> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-I'm rebasing this patchset against latest linux-next, and it conflicts with
-"[PATCH v2] memcg: debugging facility to access dangling memcgs." slightly.
+Applied to cgroup/for-3.10.
 
-That is a debugging patch and will never be pushed into mainline, so should I
-still base this patchset on that debugging patch?
+Thanks.
 
-Also that patch needs update (and can be simplified) after this patchset:
-- move memcg_dangling_add() to mem_cgroup_css_offline()
-- remove memcg->memcg_name, and use cgroup_path() in mem_cgroup_dangling_read()?
-
-On 2013/4/3 17:11, Li Zefan wrote:
-> (I'll be off from my office soon, and I won't be responsive in the following
-> 3 days.)
-> 
-> I'm working on converting memcg to use cgroup->id, and then we can kill css_id.
-> 
-> Now memcg has its own refcnt, so when a cgroup is destroyed, the memcg can
-> still be alive. This patchset converts memcg to always use css_get/put, so
-> memcg will have the same life cycle as its corresponding cgroup, and then
-> it's always safe for memcg to use cgroup->id.
-> 
-> The historical reason that memcg didn't use css_get in some cases, is that
-> cgroup couldn't be removed if there're still css refs. The situation has
-> changed so that rmdir a cgroup will succeed regardless css refs, but won't
-> be freed until css refs goes down to 0.
-> 
-> This is an early post, and it's NOT TESTED. I just want to see if the changes
-> are fine in general.
-> 
-> btw, after this patchset I think we don't need to free memcg via RCU, because
-> cgroup is already freed in RCU callback.
-> 
-> Note this patchset is based on a few memcg fixes I sent (but hasn't been
-> accepted)
-> 
-> --
->  kernel/cgroup.c |  10 ++++++++
->  mm/memcontrol.c | 129 ++++++++++++++++++++++++++++++++++++++-------------------------------------------------------
->  2 files changed, 62 insertions(+), 77 deletions(-)
-> 
+-- 
+tejun
