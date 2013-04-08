@@ -1,334 +1,232 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v3 09/32] inode: convert inode lru list to generic lru list code.
-Date: Mon,  8 Apr 2013 18:00:36 +0400
-Message-ID: <1365429659-22108-10-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v3 06/32] mm: new shrinker API
+Date: Mon,  8 Apr 2013 18:00:33 +0400
+Message-ID: <1365429659-22108-7-git-send-email-glommer@parallels.com>
 References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@parallels.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1365429659-22108-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dave Shrinnker <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-[ glommer: adapted for new LRU return codes ]
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Glauber Costa <glommer@parallels.com>
+The current shrinker callout API uses an a single shrinker call for
+multiple functions. To determine the function, a special magical
+value is passed in a parameter to change the behaviour. This
+complicates the implementation and return value specification for
+the different behaviours.
+
+Separate the two different behaviours into separate operations, one
+to return a count of freeable objects in the cache, and another to
+scan a certain number of objects in the cache for freeing. In
+defining these new operations, ensure the return values and
+resultant behaviours are clearly defined and documented.
+
+Modify shrink_slab() to use the new API and implement the callouts
+for all the existing shrinkers.
+
+Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- fs/inode.c         | 174 +++++++++++++++++++++--------------------------------
- fs/super.c         |  12 ++--
- include/linux/fs.h |   6 +-
- 3 files changed, 76 insertions(+), 116 deletions(-)
+ include/linux/shrinker.h | 37 +++++++++++++++++++++++++----------
+ mm/vmscan.c              | 51 +++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 60 insertions(+), 28 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 1dd8908..61980f1 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -17,6 +17,7 @@
- #include <linux/prefetch.h>
- #include <linux/buffer_head.h> /* for inode_has_buffers */
- #include <linux/ratelimit.h>
-+#include <linux/list_lru.h>
- #include "internal.h"
- 
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index ac6b8ee..4f59615 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -4,31 +4,47 @@
  /*
-@@ -24,7 +25,7 @@
-  *
-  * inode->i_lock protects:
-  *   inode->i_state, inode->i_hash, __iget()
-- * inode->i_sb->s_inode_lru_lock protects:
-+ * Inode LRU list locks protect:
-  *   inode->i_sb->s_inode_lru, inode->i_lru
-  * inode_sb_list_lock protects:
-  *   sb->s_inodes, inode->i_sb_list
-@@ -37,7 +38,7 @@
-  *
-  * inode_sb_list_lock
-  *   inode->i_lock
-- *     inode->i_sb->s_inode_lru_lock
-+ *     Inode LRU list locks
-  *
-  * bdi->wb.list_lock
-  *   inode->i_lock
-@@ -399,13 +400,8 @@ EXPORT_SYMBOL(ihold);
- 
- static void inode_lru_list_add(struct inode *inode)
- {
--	spin_lock(&inode->i_sb->s_inode_lru_lock);
--	if (list_empty(&inode->i_lru)) {
--		list_add(&inode->i_lru, &inode->i_sb->s_inode_lru);
--		inode->i_sb->s_nr_inodes_unused++;
-+	if (list_lru_add(&inode->i_sb->s_inode_lru, &inode->i_lru))
- 		this_cpu_inc(nr_unused);
--	}
--	spin_unlock(&inode->i_sb->s_inode_lru_lock);
- }
- 
- /*
-@@ -423,13 +419,9 @@ void inode_add_lru(struct inode *inode)
- 
- static void inode_lru_list_del(struct inode *inode)
- {
--	spin_lock(&inode->i_sb->s_inode_lru_lock);
--	if (!list_empty(&inode->i_lru)) {
--		list_del_init(&inode->i_lru);
--		inode->i_sb->s_nr_inodes_unused--;
-+
-+	if (list_lru_del(&inode->i_sb->s_inode_lru, &inode->i_lru))
- 		this_cpu_dec(nr_unused);
--	}
--	spin_unlock(&inode->i_sb->s_inode_lru_lock);
- }
- 
- /**
-@@ -673,24 +665,8 @@ int invalidate_inodes(struct super_block *sb, bool kill_dirty)
- 	return busy;
- }
- 
--static int can_unuse(struct inode *inode)
--{
--	if (inode->i_state & ~I_REFERENCED)
--		return 0;
--	if (inode_has_buffers(inode))
--		return 0;
--	if (atomic_read(&inode->i_count))
--		return 0;
--	if (inode->i_data.nrpages)
--		return 0;
--	return 1;
--}
--
- /*
-- * Walk the superblock inode LRU for freeable inodes and attempt to free them.
-- * This is called from the superblock shrinker function with a number of inodes
-- * to trim from the LRU. Inodes to be freed are moved to a temporary list and
-- * then are freed outside inode_lock by dispose_list().
-+ * Isolate the inode from the LRU in preparation for freeing it.
-  *
-  * Any inodes which are pinned purely because of attached pagecache have their
-  * pagecache removed.  If the inode has metadata buffers attached to
-@@ -704,90 +680,78 @@ static int can_unuse(struct inode *inode)
-  * LRU does not have strict ordering. Hence we don't want to reclaim inodes
-  * with this flag set because they are the inodes that are out of order.
+  * This struct is used to pass information from page reclaim to the shrinkers.
+  * We consolidate the values for easier extention later.
++ *
++ * The 'gfpmask' refers to the allocation we are currently trying to
++ * fulfil.
++ *
++ * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
++ * querying the cache size, so a fastpath for that case is appropriate.
   */
--long prune_icache_sb(struct super_block *sb, long nr_to_scan)
-+static enum lru_status
-+inode_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
+ struct shrink_control {
+ 	gfp_t gfp_mask;
+ 
+ 	/* How many slab objects shrinker() should scan and try to reclaim */
+-	unsigned long nr_to_scan;
++	long nr_to_scan;
+ };
+ 
+ /*
+  * A callback you can register to apply pressure to ageable caches.
+  *
+- * 'sc' is passed shrink_control which includes a count 'nr_to_scan'
+- * and a 'gfpmask'.  It should look through the least-recently-used
+- * 'nr_to_scan' entries and attempt to free them up.  It should return
+- * the number of objects which remain in the cache.  If it returns -1, it means
+- * it cannot do any scanning at this time (eg. there is a risk of deadlock).
++ * @shrink() should look through the least-recently-used 'nr_to_scan' entries
++ * and attempt to free them up.  It should return the number of objects which
++ * remain in the cache.  If it returns -1, it means it cannot do any scanning at
++ * this time (eg. there is a risk of deadlock).
+  *
+- * The 'gfpmask' refers to the allocation we are currently trying to
+- * fulfil.
++ * @count_objects should return the number of freeable items in the cache. If
++ * there are no objects to free or the number of freeable items cannot be
++ * determined, it should return 0. No deadlock checks should be done during the
++ * count callback - the shrinker relies on aggregating scan counts that couldn't
++ * be executed due to potential deadlocks to be run at a later call when the
++ * deadlock condition is no longer pending.
+  *
+- * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
+- * querying the cache size, so a fastpath for that case is appropriate.
++ * @scan_objects will only be called if @count_objects returned a positive
++ * value for the number of freeable objects. The callout should scan the cache
++ * and attemp to free items from the cache. It should then return the number of
++ * objects freed during the scan, or -1 if progress cannot be made due to
++ * potential deadlocks. If -1 is returned, then no further attempts to call the
++ * @scan_objects will be made from the current reclaim context.
+  */
+ struct shrinker {
+ 	int (*shrink)(struct shrinker *, struct shrink_control *sc);
++	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
++	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
++
+ 	int seeks;	/* seeks to recreate an obj */
+ 	long batch;	/* reclaim batch size, 0 = default */
+ 
+@@ -36,6 +52,7 @@ struct shrinker {
+ 	struct list_head list;
+ 	atomic_long_t nr_in_batch; /* objs pending delete */
+ };
++
+ #define DEFAULT_SEEKS 2 /* A good number if you don't know better. */
+ extern void register_shrinker(struct shrinker *);
+ extern void unregister_shrinker(struct shrinker *);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index fc6d45a..64b0157 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -204,19 +204,19 @@ static inline int do_shrinker_shrink(struct shrinker *shrinker,
+  *
+  * Returns the number of slab objects which we shrunk.
+  */
+-unsigned long shrink_slab(struct shrink_control *shrink,
++unsigned long shrink_slab(struct shrink_control *sc,
+ 			  unsigned long nr_pages_scanned,
+ 			  unsigned long lru_pages)
  {
--	LIST_HEAD(freeable);
--	long nr_scanned;
--	long freed = 0;
--	unsigned long reap = 0;
-+	struct list_head *freeable = arg;
-+	struct inode	*inode = container_of(item, struct inode, i_lru);
+ 	struct shrinker *shrinker;
+-	unsigned long ret = 0;
++	unsigned long freed = 0;
  
--	spin_lock(&sb->s_inode_lru_lock);
--	for (nr_scanned = nr_to_scan; nr_scanned >= 0; nr_scanned--) {
--		struct inode *inode;
-+	/*
-+	 * we are inverting the lru lock/inode->i_lock here, so use a trylock.
-+	 * If we fail to get the lock, just skip it.
-+	 */
-+	if (!spin_trylock(&inode->i_lock))
-+		return LRU_SKIP;
+ 	if (nr_pages_scanned == 0)
+ 		nr_pages_scanned = SWAP_CLUSTER_MAX;
  
--		if (list_empty(&sb->s_inode_lru))
--			break;
-+	/*
-+	 * Referenced or dirty inodes are still in use. Give them another pass
-+	 * through the LRU as we canot reclaim them now.
-+	 */
-+	if (atomic_read(&inode->i_count) ||
-+	    (inode->i_state & ~I_REFERENCED)) {
-+		list_del_init(&inode->i_lru);
-+		spin_unlock(&inode->i_lock);
-+		this_cpu_dec(nr_unused);
-+		return LRU_REMOVED;
-+	}
+ 	if (!down_read_trylock(&shrinker_rwsem)) {
+ 		/* Assume we'll be able to shrink next time */
+-		ret = 1;
++		freed = 1;
+ 		goto out;
+ 	}
  
--		inode = list_entry(sb->s_inode_lru.prev, struct inode, i_lru);
-+	/* recently referenced inodes get one more pass */
-+	if (inode->i_state & I_REFERENCED) {
-+		inode->i_state &= ~I_REFERENCED;
-+		spin_unlock(&inode->i_lock);
-+		return LRU_ROTATE;
-+	}
+@@ -224,13 +224,16 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		unsigned long long delta;
+ 		long total_scan;
+ 		long max_pass;
+-		int shrink_ret = 0;
+ 		long nr;
+ 		long new_nr;
+ 		long batch_size = shrinker->batch ? shrinker->batch
+ 						  : SHRINK_BATCH;
  
--		/*
--		 * we are inverting the sb->s_inode_lru_lock/inode->i_lock here,
--		 * so use a trylock. If we fail to get the lock, just move the
--		 * inode to the back of the list so we don't spin on it.
--		 */
--		if (!spin_trylock(&inode->i_lock)) {
--			list_move_tail(&inode->i_lru, &sb->s_inode_lru);
--			continue;
-+	if (inode_has_buffers(inode) || inode->i_data.nrpages) {
-+		__iget(inode);
-+		spin_unlock(&inode->i_lock);
-+		spin_unlock(lru_lock);
-+		if (remove_inode_buffers(inode)) {
-+			unsigned long reap;
-+			reap = invalidate_mapping_pages(&inode->i_data, 0, -1);
-+			if (current_is_kswapd())
-+				__count_vm_events(KSWAPD_INODESTEAL, reap);
-+			else
-+				__count_vm_events(PGINODESTEAL, reap);
-+			if (current->reclaim_state)
-+				current->reclaim_state->reclaimed_slab += reap;
+-		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
++		if (shrinker->scan_objects) {
++			max_pass = shrinker->count_objects(shrinker, sc);
++			WARN_ON(max_pass < 0);
++		} else
++			max_pass = do_shrinker_shrink(shrinker, sc, 0);
+ 		if (max_pass <= 0)
+ 			continue;
+ 
+@@ -247,8 +250,8 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		do_div(delta, lru_pages + 1);
+ 		total_scan += delta;
+ 		if (total_scan < 0) {
+-			printk(KERN_ERR "shrink_slab: %pF negative objects to "
+-			       "delete nr=%ld\n",
++			printk(KERN_ERR
++			"shrink_slab: %pF negative objects to delete nr=%ld\n",
+ 			       shrinker->shrink, total_scan);
+ 			total_scan = max_pass;
  		}
-+		iput(inode);
-+		return LRU_RETRY;
-+	}
+@@ -276,20 +279,32 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		if (total_scan > max_pass * 2)
+ 			total_scan = max_pass * 2;
  
--		/*
--		 * Referenced or dirty inodes are still in use. Give them
--		 * another pass through the LRU as we canot reclaim them now.
--		 */
--		if (atomic_read(&inode->i_count) ||
--		    (inode->i_state & ~I_REFERENCED)) {
--			list_del_init(&inode->i_lru);
--			spin_unlock(&inode->i_lock);
--			sb->s_nr_inodes_unused--;
--			this_cpu_dec(nr_unused);
--			continue;
--		}
-+	WARN_ON(inode->i_state & I_NEW);
-+	inode->i_state |= I_FREEING;
-+	spin_unlock(&inode->i_lock);
+-		trace_mm_shrink_slab_start(shrinker, shrink, nr,
++		trace_mm_shrink_slab_start(shrinker, sc, nr,
+ 					nr_pages_scanned, lru_pages,
+ 					max_pass, delta, total_scan);
  
--		/* recently referenced inodes get one more pass */
--		if (inode->i_state & I_REFERENCED) {
--			inode->i_state &= ~I_REFERENCED;
--			list_move(&inode->i_lru, &sb->s_inode_lru);
--			spin_unlock(&inode->i_lock);
--			continue;
--		}
--		if (inode_has_buffers(inode) || inode->i_data.nrpages) {
--			__iget(inode);
--			spin_unlock(&inode->i_lock);
--			spin_unlock(&sb->s_inode_lru_lock);
--			if (remove_inode_buffers(inode))
--				reap += invalidate_mapping_pages(&inode->i_data,
--								0, -1);
--			iput(inode);
--			spin_lock(&sb->s_inode_lru_lock);
--
--			if (inode != list_entry(sb->s_inode_lru.next,
--						struct inode, i_lru))
--				continue;	/* wrong inode or list_empty */
--			/* avoid lock inversions with trylock */
--			if (!spin_trylock(&inode->i_lock))
--				continue;
--			if (!can_unuse(inode)) {
--				spin_unlock(&inode->i_lock);
--				continue;
--			}
--		}
--		WARN_ON(inode->i_state & I_NEW);
--		inode->i_state |= I_FREEING;
--		spin_unlock(&inode->i_lock);
-+	list_move(&inode->i_lru, freeable);
-+	this_cpu_dec(nr_unused);
-+	return LRU_REMOVED;
-+}
+ 		do {
+-			int nr_before;
++			long ret;
++
++			if (shrinker->scan_objects) {
++				sc->nr_to_scan = batch_size;
++				ret = shrinker->scan_objects(shrinker, sc);
++
++				if (ret == -1)
++					break;
++				freed += ret;
++			} else {
++				int nr_before;
++
++				nr_before = do_shrinker_shrink(shrinker, sc, 0);
++				ret = do_shrinker_shrink(shrinker, sc,
++								batch_size);
++				if (ret == -1)
++					break;
++				if (ret < nr_before)
++					freed += nr_before - ret;
++			}
  
--		list_move(&inode->i_lru, &freeable);
--		sb->s_nr_inodes_unused--;
--		this_cpu_dec(nr_unused);
--		freed++;
--	}
--	if (current_is_kswapd())
--		__count_vm_events(KSWAPD_INODESTEAL, reap);
--	else
--		__count_vm_events(PGINODESTEAL, reap);
--	spin_unlock(&sb->s_inode_lru_lock);
--	if (current->reclaim_state)
--		current->reclaim_state->reclaimed_slab += reap;
-+/*
-+ * Walk the superblock inode LRU for freeable inodes and attempt to free them.
-+ * This is called from the superblock shrinker function with a number of inodes
-+ * to trim from the LRU. Inodes to be freed are moved to a temporary list and
-+ * then are freed outside inode_lock by dispose_list().
-+ */
-+long prune_icache_sb(struct super_block *sb, long nr_to_scan)
-+{
-+	LIST_HEAD(freeable);
-+	long freed;
+-			nr_before = do_shrinker_shrink(shrinker, shrink, 0);
+-			shrink_ret = do_shrinker_shrink(shrinker, shrink,
+-							batch_size);
+-			if (shrink_ret == -1)
+-				break;
+-			if (shrink_ret < nr_before)
+-				ret += nr_before - shrink_ret;
+ 			count_vm_events(SLABS_SCANNED, batch_size);
+ 			total_scan -= batch_size;
  
-+	freed = list_lru_walk(&sb->s_inode_lru, inode_lru_isolate,
-+						&freeable, nr_to_scan);
- 	dispose_list(&freeable);
- 	return freed;
+@@ -307,12 +322,12 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		else
+ 			new_nr = atomic_long_read(&shrinker->nr_in_batch);
+ 
+-		trace_mm_shrink_slab_end(shrinker, shrink_ret, nr, new_nr);
++		trace_mm_shrink_slab_end(shrinker, freed, nr, new_nr);
+ 	}
+ 	up_read(&shrinker_rwsem);
+ out:
+ 	cond_resched();
+-	return ret;
++	return freed;
  }
-diff --git a/fs/super.c b/fs/super.c
-index 9d2f2e9..9049110 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -77,14 +77,13 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 	if (sb->s_op && sb->s_op->nr_cached_objects)
- 		fs_objects = sb->s_op->nr_cached_objects(sb);
  
--	total_objects = sb->s_nr_dentry_unused +
--			sb->s_nr_inodes_unused + fs_objects + 1;
-+	inodes = list_lru_count(&sb->s_inode_lru);
-+	total_objects = sb->s_nr_dentry_unused + inodes + fs_objects + 1;
- 
- 	/* proportion the scan between the caches */
- 	dentries = mult_frac(sc->nr_to_scan, sb->s_nr_dentry_unused,
- 								total_objects);
--	inodes = mult_frac(sc->nr_to_scan, sb->s_nr_inodes_unused,
--								total_objects);
-+	inodes = mult_frac(sc->nr_to_scan, inodes, total_objects);
- 
- 	/*
- 	 * prune the dcache first as the icache is pinned by it, then
-@@ -117,7 +116,7 @@ static long super_cache_count(struct shrinker *shrink, struct shrink_control *sc
- 		total_objects = sb->s_op->nr_cached_objects(sb);
- 
- 	total_objects += sb->s_nr_dentry_unused;
--	total_objects += sb->s_nr_inodes_unused;
-+	total_objects += list_lru_count(&sb->s_inode_lru);
- 
- 	total_objects = vfs_pressure_ratio(total_objects);
- 	drop_super(sb);
-@@ -198,8 +197,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		INIT_LIST_HEAD(&s->s_inodes);
- 		INIT_LIST_HEAD(&s->s_dentry_lru);
- 		spin_lock_init(&s->s_dentry_lru_lock);
--		INIT_LIST_HEAD(&s->s_inode_lru);
--		spin_lock_init(&s->s_inode_lru_lock);
-+		list_lru_init(&s->s_inode_lru);
- 		INIT_LIST_HEAD(&s->s_mounts);
- 		init_rwsem(&s->s_umount);
- 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index a49fe84..fdeaca1 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -10,6 +10,7 @@
- #include <linux/stat.h>
- #include <linux/cache.h>
- #include <linux/list.h>
-+#include <linux/list_lru.h>
- #include <linux/radix-tree.h>
- #include <linux/rbtree.h>
- #include <linux/init.h>
-@@ -1267,10 +1268,7 @@ struct super_block {
- 	struct list_head	s_dentry_lru;	/* unused dentry lru */
- 	int			s_nr_dentry_unused;	/* # of dentry on lru */
- 
--	/* s_inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
--	spinlock_t		s_inode_lru_lock ____cacheline_aligned_in_smp;
--	struct list_head	s_inode_lru;		/* unused inode lru */
--	int			s_nr_inodes_unused;	/* # of inodes on lru */
-+	struct list_lru		s_inode_lru ____cacheline_aligned_in_smp;
- 
- 	struct block_device	*s_bdev;
- 	struct backing_dev_info *s_bdi;
+ static inline int is_page_cache_freeable(struct page *page)
 -- 
 1.8.1.4
-
