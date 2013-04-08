@@ -1,220 +1,88 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v3 25/32] list_lru: per-memcg walks
-Date: Mon,  8 Apr 2013 18:00:52 +0400
-Message-ID: <1365429659-22108-26-git-send-email-glommer@parallels.com>
-References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+From: Rami Rosen <ramirose@gmail.com>
+Subject: [PATCH] Documentation: cgroup: add documentation for net_cls cgroups.
+Date: Mon,  8 Apr 2013 17:04:20 +0300
+Message-ID: <1365429860-3184-1-git-send-email-ramirose@gmail.com>
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
+        bh=vYYJufUhr7AMJ3OymA9iBFxxJFwUM56PL1XDVjHMRDs=;
+        b=CNtGFbOlOXBSPHCv7tS9bQtll0dGTgEHregi45tUjULoxpecxuZBJW7JpHn8O9P7OG
+         JlS9aEk7xzW9wF8W/QPdm8DSlc6bG60UU0rgVWTWu85ugkvvDtZ8Id//WPAmRTs2WCYE
+         HZ8aQezOwsNpcp4Oy9skWmVyyQAWfszVZbwO/EcUAYME0MEu25QbCIFN1i2c19BPOH60
+         qlpm9cQtOHlmb7C+zBscCtVsLfvLGeNo35Rg4bj5lyUlRRgXZJZt8sbYS9wSw0jhmNp+
+         nXRsoLbRLK1/L/5SUbTNK7aeEGDOrSvBrY3mr0Uid5GuScrSBJz9XTEBl4aNVQrJn4g6
+         3mhA==
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
+To: cgroups@vger.kernel.org
+Cc: tj@kernel.org, lizefan@huawei.com, netdev@vger.kernel.org, tgraf@suug.ch, Rami Rosen <ramirose@gmail.com>
 
-This patch extend the list_lru interfaces to allow for a memcg
-parameter. Because most of its users won't need it, instead of
-modifying the function signatures we create a new set of _memcg()
-functions and write the old API ontop of that.
+This patch adds a new file, Documentation/cgroups/net_cls.txt, with info
+about net_cls cgroups, and updates the 00-INDEX accordingly.
 
-At this point, the infrastructure is mostly in place. We already walk
-the nodes using all memcg indexes, so we just need to make sure we skip
-all but the one we're interested in. We could just go directly to the
-memcg of interest, but I am assuming that given the gained simplicity,
-spending a few cycles here won't hurt *that* much (but that can be
-improved if needed, of course).
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 ---
- include/linux/list_lru.h | 25 ++++++++++++++++-----
- lib/list_lru.c           | 56 ++++++++++++++++++++++++++++++++++++------------
- 2 files changed, 62 insertions(+), 19 deletions(-)
+ Documentation/cgroups/00-INDEX    |  2 ++
+ Documentation/cgroups/net_cls.txt | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
+ create mode 100644 Documentation/cgroups/net_cls.txt
 
-diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-index ea1ab4d..6f9e745 100644
---- a/include/linux/list_lru.h
-+++ b/include/linux/list_lru.h
-@@ -78,21 +78,36 @@ static inline int list_lru_init_memcg(struct list_lru *lru)
- 
- int list_lru_add(struct list_lru *lru, struct list_head *item);
- int list_lru_del(struct list_lru *lru, struct list_head *item);
--long list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count);
+diff --git a/Documentation/cgroups/00-INDEX b/Documentation/cgroups/00-INDEX
+index f5635a0..bc461b6 100644
+--- a/Documentation/cgroups/00-INDEX
++++ b/Documentation/cgroups/00-INDEX
+@@ -18,6 +18,8 @@ memcg_test.txt
+ 	- Memory Resource Controller; implementation details.
+ memory.txt
+ 	- Memory Resource Controller; design, accounting, interface, testing.
++net_cls.txt
++	- Network classifier cgroups details and usages.
+ net_prio.txt
+ 	- Network priority cgroups details and usages.
+ resource_counter.txt
+diff --git a/Documentation/cgroups/net_cls.txt b/Documentation/cgroups/net_cls.txt
+new file mode 100644
+index 0000000..9face6b
+--- /dev/null
++++ b/Documentation/cgroups/net_cls.txt
+@@ -0,0 +1,34 @@
++Network classifier cgroup
++-------------------------
 +
-+long list_lru_count_nodemask_memcg(struct list_lru *lru,
-+			nodemask_t *nodes_to_count, struct mem_cgroup *memcg);
++The Network classifier cgroup provides an interface to
++tag network packets with a class identifier (classid).
 +
-+static inline long
-+list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count)
-+{
-+	return list_lru_count_nodemask_memcg(lru, nodes_to_count, NULL);
-+}
- 
- static inline long list_lru_count(struct list_lru *lru)
- {
- 	return list_lru_count_nodemask(lru, &lru->active_nodes);
- }
- 
--
- typedef enum lru_status
- (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
--
- typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
- 
--long list_lru_walk_nodemask(struct list_lru *lru, list_lru_walk_cb isolate,
--		   void *cb_arg, long nr_to_walk, nodemask_t *nodes_to_walk);
-+long list_lru_walk_nodemask_memcg(struct list_lru *lru,
-+	list_lru_walk_cb isolate, void *cb_arg, long nr_to_walk,
-+	nodemask_t *nodes_to_walk, struct mem_cgroup *memcg);
++The Traffic Controller (tc) can be used to assign
++different priorities to packets from different cgroups.
 +
-+static inline long list_lru_walk_nodemask(struct list_lru *lru,
-+	list_lru_walk_cb isolate, void *cb_arg, long nr_to_walk,
-+	nodemask_t *nodes_to_walk)
-+{
-+	return list_lru_walk_nodemask_memcg(lru, isolate, cb_arg, nr_to_walk,
-+					    &lru->active_nodes, NULL);
-+}
- 
- static inline long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
- 				 void *cb_arg, long nr_to_walk)
-diff --git a/lib/list_lru.c b/lib/list_lru.c
-index dfc2c4a..3093f98 100644
---- a/lib/list_lru.c
-+++ b/lib/list_lru.c
-@@ -75,6 +75,11 @@ memcg_kmem_lru_of_page(struct list_lru *lru, struct page *page)
-  * memcg_limited_groups_array_size will be 0. _idx starts at -1, and it will
-  * still be allowed to execute once.
-  *
-+ * If a memcg is specified at memcg_id, we will make sure that the loop only
-+ * have one iteration, corresponding to that memcg. This makes sure that the
-+ * interface is kept for both cases and there is no need for separate code to
-+ * handle that case, at the price of complicating the macro a bit.
-+ *
-  * We convention that for _idx = -1, the global node info should be used.
-  * After that, we will go through each of the memcgs, starting at 0.
-  *
-@@ -83,8 +88,11 @@ memcg_kmem_lru_of_page(struct list_lru *lru, struct page *page)
-  * end. The old ones are just copied, and any interesting manipulation happen
-  * in the node list itself, and we already lock the list.
-  */
--#define for_each_memcg_lru_index(_idx)	\
--	for ((_idx) = -1; ((_idx) < memcg_limited_groups_array_size); (_idx)++)
-+#define for_each_memcg_lru_index(_idx, memcg_id)		\
-+	for ((_idx) = ((memcg_id) >= 0) ? memcg_id : -1;	\
-+	     ((memcg_id < 0) || ((_idx) <= (memcg_id))) &&	\
-+	     ((_idx) < memcg_limited_groups_array_size);	\
-+	     (_idx)++)
- 
- int
- list_lru_add(
-@@ -145,25 +153,44 @@ list_lru_del(
- EXPORT_SYMBOL_GPL(list_lru_del);
- 
- long
--list_lru_count_nodemask(
-+list_lru_count_nodemask_memcg(
- 	struct list_lru *lru,
--	nodemask_t	*nodes_to_count)
-+	nodemask_t	*nodes_to_count,
-+	struct mem_cgroup *memcg)
- {
- 	long count = 0;
- 	int nid;
-+	nodemask_t nodes;
-+	struct list_lru_node *nlru;
-+	int memcg_id = memcg_cache_id(memcg);
++Creating a net_cls cgroups instance creates a net_cls.classid file.
++This net_cls.classid value is initialized to 0.
 +
-+	/*
-+	 * Conservative code can call this setting nodes with node_setall.
-+	 * This will generate an out of bound access for memcg.
-+	 */
-+	nodes_and(nodes, *nodes_to_count, node_online_map);
- 
--	for_each_node_mask(nid, *nodes_to_count) {
-+	for_each_node_mask(nid, nodes) {
- 		/*
- 		 * We don't need to loop through all memcgs here, because we
- 		 * have the node_totals information for the node. If we hadn't,
- 		 * this would still be achieavable by a loop-over-all-groups
- 		 */
--		count += atomic_long_read(&lru->node_totals[nid]);
--	}
-+		if (!memcg)
-+			count += atomic_long_read(&lru->node_totals[nid]);
-+		else {
-+			nlru = lru_node_of_index(lru, memcg_id, nid);
-+			WARN_ON(!nlru);
- 
-+			spin_lock(&nlru->lock);
-+			BUG_ON(nlru->nr_items < 0);
-+			count += nlru->nr_items;
-+			spin_unlock(&nlru->lock);
-+		}
-+	}
- 	return count;
- }
--EXPORT_SYMBOL_GPL(list_lru_count_nodemask);
-+EXPORT_SYMBOL_GPL(list_lru_count_nodemask_memcg);
- 
- static long
- list_lru_walk_node(
-@@ -208,16 +235,18 @@ restart:
- }
- 
- long
--list_lru_walk_nodemask(
-+list_lru_walk_nodemask_memcg(
- 	struct list_lru	*lru,
- 	list_lru_walk_cb isolate,
- 	void		*cb_arg,
- 	long		nr_to_walk,
--	nodemask_t	*nodes_to_walk)
-+	nodemask_t	*nodes_to_walk,
-+	struct mem_cgroup *memcg)
- {
- 	long isolated = 0;
- 	int nid;
- 	nodemask_t nodes;
-+	int memcg_id = memcg_cache_id(memcg);
- 	int idx;
- 	struct list_lru_node *nlru;
- 
-@@ -228,8 +257,7 @@ list_lru_walk_nodemask(
- 	nodes_and(nodes, *nodes_to_walk, node_online_map);
- 
- 	for_each_node_mask(nid, nodes) {
--		for_each_memcg_lru_index(idx) {
--
-+		for_each_memcg_lru_index(idx, memcg_id) {
- 			nlru = lru_node_of_index(lru, idx, nid);
- 			if (!nlru)
- 				continue;
-@@ -242,7 +270,7 @@ list_lru_walk_nodemask(
- 	}
- 	return isolated;
- }
--EXPORT_SYMBOL_GPL(list_lru_walk_nodemask);
-+EXPORT_SYMBOL_GPL(list_lru_walk_nodemask_memcg);
- 
- static long
- list_lru_dispose_all_node(
-@@ -255,7 +283,7 @@ list_lru_dispose_all_node(
- 	long disposed = 0;
- 	int idx;
- 
--	for_each_memcg_lru_index(idx) {
-+	for_each_memcg_lru_index(idx, -1) {
- 		nlru = lru_node_of_index(lru, idx, nid);
- 		if (!nlru)
- 			continue;
++You can write hexadecimal values to net_cls.classid; the format for these
++values is 0xAAAABBBB; AAAA is the major handle number and BBBB
++is the minor handle number.
++Reading net_cls.classid yields a decimal result.
++
++Example:
++mkdir /sys/fs/cgroup/net_cls
++mount -t cgroup -onet_cls net_cls /sys/fs/cgroup/net_cls
++mkdir /sys/fs/cgroup/net_cls/0
++echo 0x100001 >  /sys/fs/cgroup/net_cls/0/net_cls.classid
++	- setting a 10:1 handle.
++
++cat /sys/fs/cgroup/net_cls/0/net_cls.classid
++1048577
++
++configuring tc:
++tc qdisc add dev eth0 root handle 10: htb
++
++tc class add dev eth0 parent 10: classid 10:1 htb rate 40mbit
++ - creating traffic class 10:1
++
++tc filter add dev eth0 parent 10: protocol ip prio 10 handle 1: cgroup
 -- 
 1.8.1.4
-
