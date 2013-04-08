@@ -1,77 +1,44 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 13/12] memcg: don't need memcg->memcg_name
-Date: Mon, 8 Apr 2013 16:25:03 +0200
-Message-ID: <20130408142503.GH17178@dhcp22.suse.cz>
-References: <5162648B.9070802@huawei.com>
- <51626584.7050405@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 8/8] cgroup: kill css_id
+Date: Mon, 8 Apr 2013 08:51:42 -0700
+Message-ID: <20130408155142.GF3021@htj.dyndns.org>
+References: <51627DA9.7020507@huawei.com>
+ <51627E8E.1010204@huawei.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=j9xMNfeSFk+gjoWZhNZP1VMY0jnhn1Gcm4mwoI4nGZU=;
+        b=aXW3RbKudRL0VwNhtNIpedTUI4+QD12M+2iTcw5BUp3U9brDXiQ6lBNUdrK0y4ZVHw
+         Nl3NUpaxmSrdjBnunzKMogZRM01+5cAyIEWevQ1dzTNVzOGnuPnzuYV2/r50BWHNRsBF
+         nkuNsjN42emCBGYRkMpyOaOodzRauLSlCRBr3o/FiB7nuatLTOoDuO3UGBmDmDwxStTm
+         6QeSwHNgq+qSFHaq36jsSUPk8/Kbq64iQV7DkYsyZMmSfHcQ30vR18AEm214457qyZDX
+         JZx5VFHJL9tf72I/ENJS175n/UNH362ZBArg8BbehwOzJ2BlJCNLfmC6q65EaMISsuxN
+         aPQg==
 Content-Disposition: inline
-In-Reply-To: <51626584.7050405@huawei.com>
+In-Reply-To: <51627E8E.1010204@huawei.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-On Mon 08-04-13 14:36:52, Li Zefan wrote:
-[...]
-> @@ -5188,12 +5154,28 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
->  					struct seq_file *m)
->  {
->  	struct mem_cgroup *memcg;
-> +	char *memcg_name;
-> +	int ret;
+On Mon, Apr 08, 2013 at 04:23:42PM +0800, Li Zefan wrote:
+> The only user of css_id was memcg, and it has been converted to
+> use cgroup->id, so kill css_id.
+> 
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 
-The interface is only for debugging, all right, but that doesn't mean we
-should allocate a buffer for each read. Why cannot we simply use
-cgroup_path for seq_printf directly? Can we still race with the group
-rename?
+Violently-acked-by: Tejun Heo <tj@kernel.org>
 
-> +
-> +	/*
-> +	 * cgroup.c will do page-sized allocations most of the time,
-> +	 * so we'll just follow the pattern. Also, __get_free_pages
-> +	 * is a better interface than kmalloc for us here, because
-> +	 * we'd like this memory to be always billed to the root cgroup,
-> +	 * not to the process removing the memcg. While kmalloc would
-> +	 * require us to wrap it into memcg_stop/resume_kmem_account,
-> +	 * with __get_free_pages we just don't pass the memcg flag.
-> +	 */
-> +	memcg_name = (char *)__get_free_pages(GFP_KERNEL, 0);
-> +	if (!memcg_name)
-> +		return -ENOMEM;
->  
->  	mutex_lock(&dangling_memcgs_mutex);
->  
->  	list_for_each_entry(memcg, &dangling_memcgs, dead) {
-> -		if (memcg->memcg_name)
-> -			seq_printf(m, "%s:\n", memcg->memcg_name);
-> +		ret = cgroup_path(memcg->css.cgroup, memcg_name, PAGE_SIZE);
-> +		if (!ret)
-> +			seq_printf(m, "%s:\n", memcg_name);
->  		else
->  			seq_printf(m, "%p (name lost):\n", memcg);
->  
-> @@ -5203,6 +5185,7 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
->  	}
->  
->  	mutex_unlock(&dangling_memcgs_mutex);
-> +	free_pages((unsigned long)memcg_name, 0);
->  	return 0;
->  }
->  #endif
-> -- 
-> 1.8.0.2
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks a lot for killing this abomination.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
