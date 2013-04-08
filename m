@@ -1,7 +1,8 @@
 From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH 13/12] memcg: don't need memcg->memcg_name
-Date: Mon, 8 Apr 2013 14:36:52 +0800
-Message-ID: <51626584.7050405@huawei.com>
+Subject: [PATCH 06/12] memcg: don't use mem_cgroup_get() when creating a kmemcg
+ cache
+Date: Mon, 8 Apr 2013 14:34:25 +0800
+Message-ID: <516264F1.8020904@huawei.com>
 References: <5162648B.9070802@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -13,119 +14,76 @@ Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-Now memcg has the same life cycle as its corresponding cgroup,
-we don't have to save the cgroup path name in memcg->memcg_name.
+Use css_get()/css_put() instead of mem_cgroup_get()/mem_cgroup_put().
+
+There are two things being done in the current code:
+
+First, we acquired a css_ref to make sure that the underlying cgroup
+would not go away. That is a short lived reference, and it is put as
+soon as the cache is created.
+
+At this point, we acquire a long-lived per-cache memcg reference count
+to guarantee that the memcg will still be alive.
+
+so it is:
+
+enqueue: css_get
+create : memcg_get, css_put
+destroy: memcg_put
+
+So we only need to get rid of the memcg_get, change the memcg_put to
+css_put, and get rid of the now extra css_put.
+
+(This changelog is basically written by Glauber)
 
 Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c | 65 +++++++++++++++++++++------------------------------------
- 1 file changed, 24 insertions(+), 41 deletions(-)
+ mm/memcontrol.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index aeab1d3..06e995e 100644
+index bbf5bf3..c308ea0 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -306,20 +306,12 @@ struct mem_cgroup {
- 		struct list_head dead;
- 	};
+@@ -3197,7 +3197,7 @@ void memcg_release_cache(struct kmem_cache *s)
+ 	list_del(&s->memcg_params->list);
+ 	mutex_unlock(&memcg->slab_caches_mutex);
  
--	union {
--		/*
--		 * Should we move charges of a task when a task is moved into
--		 * this mem_cgroup ? And what type of charges should we move ?
--		 */
--		unsigned long move_charge_at_immigrate;
-+	/*
-+	 * Should we move charges of a task when a task is moved into
-+	 * this mem_cgroup ? And what type of charges should we move ?
-+	 */
-+	unsigned long move_charge_at_immigrate;
- 
--		/*
--		 * We are no longer concerned about moving charges after memcg
--		 * is dead. So we will fill this up with its name, to aid
--		 * debugging.
--		 */
--		char *memcg_name;
--	};
- 	/*
- 	 * set > 0 if pages under this cgroup are moving to other cgroup.
- 	 */
-@@ -381,36 +373,10 @@ static inline void memcg_dangling_free(struct mem_cgroup *memcg)
- 	mutex_lock(&dangling_memcgs_mutex);
- 	list_del(&memcg->dead);
- 	mutex_unlock(&dangling_memcgs_mutex);
--	free_pages((unsigned long)memcg->memcg_name, 0);
+-	mem_cgroup_put(memcg);
++	css_put(&memcg->css);
+ out:
+ 	kfree(s->memcg_params);
  }
+@@ -3356,16 +3356,18 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
  
- static inline void memcg_dangling_add(struct mem_cgroup *memcg)
- {
--	/*
--	 * cgroup.c will do page-sized allocations most of the time,
--	 * so we'll just follow the pattern. Also, __get_free_pages
--	 * is a better interface than kmalloc for us here, because
--	 * we'd like this memory to be always billed to the root cgroup,
--	 * not to the process removing the memcg. While kmalloc would
--	 * require us to wrap it into memcg_stop/resume_kmem_account,
--	 * with __get_free_pages we just don't pass the memcg flag.
--	 */
--	memcg->memcg_name = (char *)__get_free_pages(GFP_KERNEL, 0);
--
--	/*
--	 * we will, in general, just ignore failures. No need to go crazy,
--	 * being this just a debugging interface. It is nice to copy a memcg
--	 * name over, but if we (unlikely) can't, just the address will do
--	 */
--	if (!memcg->memcg_name)
--		goto add_list;
--
--	if (cgroup_path(memcg->css.cgroup, memcg->memcg_name, PAGE_SIZE) < 0) {
--		free_pages((unsigned long)memcg->memcg_name, 0);
--		memcg->memcg_name = NULL;
--	}
--
--add_list:
- 	INIT_LIST_HEAD(&memcg->dead);
- 	mutex_lock(&dangling_memcgs_mutex);
- 	list_add(&memcg->dead, &dangling_memcgs);
-@@ -5188,12 +5154,28 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
- 					struct seq_file *m)
- {
- 	struct mem_cgroup *memcg;
-+	char *memcg_name;
-+	int ret;
-+
-+	/*
-+	 * cgroup.c will do page-sized allocations most of the time,
-+	 * so we'll just follow the pattern. Also, __get_free_pages
-+	 * is a better interface than kmalloc for us here, because
-+	 * we'd like this memory to be always billed to the root cgroup,
-+	 * not to the process removing the memcg. While kmalloc would
-+	 * require us to wrap it into memcg_stop/resume_kmem_account,
-+	 * with __get_free_pages we just don't pass the memcg flag.
-+	 */
-+	memcg_name = (char *)__get_free_pages(GFP_KERNEL, 0);
-+	if (!memcg_name)
-+		return -ENOMEM;
+ 	mutex_lock(&memcg_cache_mutex);
+ 	new_cachep = cachep->memcg_params->memcg_caches[idx];
+-	if (new_cachep)
++	if (new_cachep) {
++		css_put(&memcg->css);
+ 		goto out;
++	}
  
- 	mutex_lock(&dangling_memcgs_mutex);
- 
- 	list_for_each_entry(memcg, &dangling_memcgs, dead) {
--		if (memcg->memcg_name)
--			seq_printf(m, "%s:\n", memcg->memcg_name);
-+		ret = cgroup_path(memcg->css.cgroup, memcg_name, PAGE_SIZE);
-+		if (!ret)
-+			seq_printf(m, "%s:\n", memcg_name);
- 		else
- 			seq_printf(m, "%p (name lost):\n", memcg);
- 
-@@ -5203,6 +5185,7 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
+ 	new_cachep = kmem_cache_dup(memcg, cachep);
+ 	if (new_cachep == NULL) {
+ 		new_cachep = cachep;
++		css_put(&memcg->css);
+ 		goto out;
  	}
  
- 	mutex_unlock(&dangling_memcgs_mutex);
-+	free_pages((unsigned long)memcg_name, 0);
- 	return 0;
+-	mem_cgroup_get(memcg);
+ 	atomic_set(&new_cachep->memcg_params->nr_pages , 0);
+ 
+ 	cachep->memcg_params->memcg_caches[idx] = new_cachep;
+@@ -3453,8 +3455,6 @@ static void memcg_create_cache_work_func(struct work_struct *w)
+ 
+ 	cw = container_of(w, struct create_work, work);
+ 	memcg_create_kmem_cache(cw->memcg, cw->cachep);
+-	/* Drop the reference gotten when we enqueued. */
+-	css_put(&cw->memcg->css);
+ 	kfree(cw);
  }
- #endif
+ 
 -- 
 1.8.0.2
