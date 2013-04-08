@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v3 27/32] list_lru: reclaim proportionaly between memcgs and nodes
-Date: Mon,  8 Apr 2013 18:00:54 +0400
-Message-ID: <1365429659-22108-28-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 20/32] shrinker: Kill old ->shrink API.
+Date: Mon,  8 Apr 2013 18:00:47 +0400
+Message-ID: <1365429659-22108-21-git-send-email-glommer@parallels.com>
 References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
@@ -11,158 +11,160 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
+Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
 
-The current list_lru code will try to scan objects until nr_to_walk is
-reached, and then stop. This number can be different from the total
-number of objects we have as returned by our count function. This is
-because the main shrinker driver is the one ultimately responsible for
-determining how many objects to shrink from each shrinker.
+From: Dave Chinner <dchinner@redhat.com>
 
-Specially if this number is lower than the number of objects, and
-because we transverse the list always in the same order, we can have
-the last node and/or the last memcg always being less penalized than
-the others.
+There are no more users of this API, so kill it dead, dead, dead and
+quietly bury the corpse in a shallow, unmarked grave in a dark
+forest deep in the hills...
 
-My proposed solution is to introduce some metric of proportionality
-based on the total number of objects per node and then scan all nodes
-and memcgs up until their share is reached.
-
-Signed-off-by: Glauber Costa <glommer@parallels.com>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+[ glommer: added flowers to the grave ]
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- lib/list_lru.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 83 insertions(+), 13 deletions(-)
+ include/linux/shrinker.h      | 15 +++++----------
+ include/trace/events/vmscan.h |  4 ++--
+ mm/vmscan.c                   | 40 ++++++++--------------------------------
+ 3 files changed, 15 insertions(+), 44 deletions(-)
 
-diff --git a/lib/list_lru.c b/lib/list_lru.c
-index 3093f98..8434a18 100644
---- a/lib/list_lru.c
-+++ b/lib/list_lru.c
-@@ -234,6 +234,43 @@ restart:
- 	return isolated;
- }
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index e71286f..d4636a0 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -7,14 +7,15 @@
+  *
+  * The 'gfpmask' refers to the allocation we are currently trying to
+  * fulfil.
+- *
+- * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
+- * querying the cache size, so a fastpath for that case is appropriate.
+  */
+ struct shrink_control {
+ 	gfp_t gfp_mask;
  
-+static long
-+memcg_isolate_lru(
-+	struct list_lru	*lru,
-+	list_lru_walk_cb isolate,
-+	void		*cb_arg,
-+	long		nr_to_walk,
-+	struct mem_cgroup *memcg,
-+	int nid, unsigned long total_node)
-+{
-+	int memcg_id = memcg_cache_id(memcg);
-+	unsigned long nr_to_walk_this;
-+	long isolated = 0;
-+	int idx;
-+	struct list_lru_node *nlru;
-+
-+	for_each_memcg_lru_index(idx, memcg_id) {
-+		nlru = lru_node_of_index(lru, idx, nid);
-+		if (!nlru || !nlru->nr_items)
-+			continue;
-+
-+		/*
-+		 * no memcg: walk every memcg proportionally.
-+		 * memcg case: scan everything (total_node)
-+		 */
-+		if (!memcg)
-+			nr_to_walk_this = mult_frac(nlru->nr_items, nr_to_walk,
-+						    total_node);
-+		else
-+			nr_to_walk_this = total_node;
-+
-+		isolated += list_lru_walk_node(lru, nlru, nid, isolate,
-+				       cb_arg, &nr_to_walk_this);
-+	}
-+
-+	return isolated;
-+}
-+
- long
- list_lru_walk_nodemask_memcg(
- 	struct list_lru	*lru,
-@@ -246,9 +283,7 @@ list_lru_walk_nodemask_memcg(
- 	long isolated = 0;
- 	int nid;
- 	nodemask_t nodes;
--	int memcg_id = memcg_cache_id(memcg);
--	int idx;
--	struct list_lru_node *nlru;
-+	unsigned long n_node, total_node, total = 0;
- 
- 	/*
- 	 * Conservative code can call this setting nodes with node_setall.
-@@ -256,17 +291,52 @@ list_lru_walk_nodemask_memcg(
- 	 */
- 	nodes_and(nodes, *nodes_to_walk, node_online_map);
- 
+-	/* How many slab objects shrinker() should scan and try to reclaim */
 +	/*
-+	 * We will first find out how many objects there are in the LRU, in
-+	 * total. We could store that in a per-LRU counter as well, the same
-+	 * way we store it in a per-NLRU. But lru_add and lru_del are way more
-+	 * frequent operations, so it is better to pay the price here.
-+	 *
-+	 * Once we have that number, we will try to scan the nodes
-+	 * proportionally to the amount of objects they have. The main shrinker
-+	 * driver in vmscan.c will often ask us to shrink a quantity different
-+	 * from the total quantity we reported in the count function (usually
-+	 * less). This means that not scanning proportionally may leave nodes
-+	 * (usually the last), unfairly charged.
-+	 *
-+	 * The final number we want is
-+	 *
-+	 * n_node = nr_to_scan * total_node / total
++	 * How many objects scan_objects should scan and try to reclaim.
++	 * This is reset before every call, so it is safe for callees
++	 * to modify.
 +	 */
-+	for_each_node_mask(nid, nodes)
-+		total += atomic_long_read(&lru->node_totals[nid]);
-+
- 	for_each_node_mask(nid, nodes) {
--		for_each_memcg_lru_index(idx, memcg_id) {
--			nlru = lru_node_of_index(lru, idx, nid);
--			if (!nlru)
--				continue;
--
--			isolated += list_lru_walk_node(lru, nlru, nid, isolate,
--						       cb_arg, &nr_to_walk);
--			if (nr_to_walk <= 0)
--				break;
--		}
-+		total_node = atomic_long_read(&lru->node_totals[nid]);
-+		if (!total_node)
-+			continue;
-+
-+		 /*
-+		  * There are items, but in less proportion. Because we have no
-+		  * information about where exactly the pressure originates
-+		  * from, it is better to try shrinking the few we have than to
-+		  * skip it.  It might very well be that this node is under
-+		  * pressure and any help would be welcome.
-+		  */
-+		n_node = mult_frac(total_node, nr_to_walk, total);
-+		if (!n_node)
-+			n_node = total_node;
-+
-+		/*
-+		 * We will now scan all memcg-like entities (which includes the
-+		 * global LRU, of index -1, and also try to mantain
-+		 * proportionality among them.
-+		 *
-+		 * We will try to isolate:
-+		 *	nr_memcg = n_node * nr_memcg_lru / total_node
-+		 */
-+		isolated += memcg_isolate_lru(lru, isolate, cb_arg,
-+				      n_node, memcg, nid, total_node);
- 	}
- 	return isolated;
+ 	long nr_to_scan;
+ 
+ 	/* shrink from these nodes */
+@@ -24,11 +25,6 @@ struct shrink_control {
+ /*
+  * A callback you can register to apply pressure to ageable caches.
+  *
+- * @shrink() should look through the least-recently-used 'nr_to_scan' entries
+- * and attempt to free them up.  It should return the number of objects which
+- * remain in the cache.  If it returns -1, it means it cannot do any scanning at
+- * this time (eg. there is a risk of deadlock).
+- *
+  * @count_objects should return the number of freeable items in the cache. If
+  * there are no objects to free or the number of freeable items cannot be
+  * determined, it should return 0. No deadlock checks should be done during the
+@@ -44,7 +40,6 @@ struct shrink_control {
+  * @scan_objects will be made from the current reclaim context.
+  */
+ struct shrinker {
+-	int (*shrink)(struct shrinker *, struct shrink_control *sc);
+ 	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
+ 	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
+ 
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index 63cfccc..132a985 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -202,7 +202,7 @@ TRACE_EVENT(mm_shrink_slab_start,
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shrink = shr->shrink;
++		__entry->shrink = shr->scan_objects;
+ 		__entry->nr_objects_to_shrink = nr_objects_to_shrink;
+ 		__entry->gfp_flags = sc->gfp_mask;
+ 		__entry->pgs_scanned = pgs_scanned;
+@@ -241,7 +241,7 @@ TRACE_EVENT(mm_shrink_slab_end,
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shrink = shr->shrink;
++		__entry->shrink = shr->scan_objects;
+ 		__entry->unused_scan = unused_scan_cnt;
+ 		__entry->new_scan = new_scan_cnt;
+ 		__entry->retval = shrinker_retval;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 6926e09..232dfcb 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -176,14 +176,6 @@ void unregister_shrinker(struct shrinker *shrinker)
  }
+ EXPORT_SYMBOL(unregister_shrinker);
+ 
+-static inline int do_shrinker_shrink(struct shrinker *shrinker,
+-				     struct shrink_control *sc,
+-				     unsigned long nr_to_scan)
+-{
+-	sc->nr_to_scan = nr_to_scan;
+-	return (*shrinker->shrink)(shrinker, sc);
+-}
+-
+ #define SHRINK_BATCH 128
+ /*
+  * Call the shrink functions to age shrinkable caches
+@@ -229,11 +221,8 @@ unsigned long shrink_slab(struct shrink_control *sc,
+ 		long batch_size = shrinker->batch ? shrinker->batch
+ 						  : SHRINK_BATCH;
+ 
+-		if (shrinker->scan_objects) {
+-			max_pass = shrinker->count_objects(shrinker, sc);
+-			WARN_ON(max_pass < 0);
+-		} else
+-			max_pass = do_shrinker_shrink(shrinker, sc, 0);
++		max_pass = shrinker->count_objects(shrinker, sc);
++		WARN_ON(max_pass < 0);
+ 		if (max_pass <= 0)
+ 			continue;
+ 
+@@ -252,7 +241,7 @@ unsigned long shrink_slab(struct shrink_control *sc,
+ 		if (total_scan < 0) {
+ 			printk(KERN_ERR
+ 			"shrink_slab: %pF negative objects to delete nr=%ld\n",
+-			       shrinker->shrink, total_scan);
++			       shrinker->scan_objects, total_scan);
+ 			total_scan = max_pass;
+ 		}
+ 
+@@ -286,24 +275,11 @@ unsigned long shrink_slab(struct shrink_control *sc,
+ 		do {
+ 			long ret;
+ 
+-			if (shrinker->scan_objects) {
+-				sc->nr_to_scan = batch_size;
+-				ret = shrinker->scan_objects(shrinker, sc);
+-
+-				if (ret == -1)
+-					break;
+-				freed += ret;
+-			} else {
+-				int nr_before;
+-
+-				nr_before = do_shrinker_shrink(shrinker, sc, 0);
+-				ret = do_shrinker_shrink(shrinker, sc,
+-								batch_size);
+-				if (ret == -1)
+-					break;
+-				if (ret < nr_before)
+-					freed += nr_before - ret;
+-			}
++			sc->nr_to_scan = batch_size;
++			ret = shrinker->scan_objects(shrinker, sc);
++			if (ret == -1)
++				break;
++			freed += ret;
+ 
+ 			count_vm_events(SLABS_SCANNED, batch_size);
+ 			total_scan -= batch_size;
 -- 
 1.8.1.4
 
