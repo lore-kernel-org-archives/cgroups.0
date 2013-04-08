@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v3 03/32] dcache: convert dentry_stat.nr_unused to per-cpu counters
-Date: Mon,  8 Apr 2013 18:00:30 +0400
-Message-ID: <1365429659-22108-4-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 25/32] list_lru: per-memcg walks
+Date: Mon,  8 Apr 2013 18:00:52 +0400
+Message-ID: <1365429659-22108-26-git-send-email-glommer@parallels.com>
 References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
@@ -11,87 +11,210 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
+Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+This patch extend the list_lru interfaces to allow for a memcg
+parameter. Because most of its users won't need it, instead of
+modifying the function signatures we create a new set of _memcg()
+functions and write the old API ontop of that.
 
-Before we split up the dcache_lru_lock, the unused dentry counter
-needs to be made independent of the global dcache_lru_lock. Convert
-it to per-cpu counters to do this.
+At this point, the infrastructure is mostly in place. We already walk
+the nodes using all memcg indexes, so we just need to make sure we skip
+all but the one we're interested in. We could just go directly to the
+memcg of interest, but I am assuming that given the gained simplicity,
+spending a few cycles here won't hurt *that* much (but that can be
+improved if needed, of course).
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Glauber Costa <glommer@parallels.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- fs/dcache.c | 24 +++++++++++++++++++++---
- 1 file changed, 21 insertions(+), 3 deletions(-)
+ include/linux/list_lru.h | 25 ++++++++++++++++-----
+ lib/list_lru.c           | 56 ++++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 62 insertions(+), 19 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index fbfae008..ffdd461 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -118,6 +118,14 @@ struct dentry_stat_t dentry_stat = {
- };
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index ea1ab4d..6f9e745 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -78,21 +78,36 @@ static inline int list_lru_init_memcg(struct list_lru *lru)
  
- static DEFINE_PER_CPU(unsigned int, nr_dentry);
-+/*
-+ * The total counts for nr_dentry_unused are hotplug-safe, since we always loop
-+ * through all possible cpus. It is quite possible, though, that the counters
-+ * go negative.  That could easily happen for a dentry that is marked unused in
-+ * one CPU but decrements that count after being preempted to another CPU.
-+ * Therefore, we must use a signed quantity in here.
-+ */
-+static DEFINE_PER_CPU(long , nr_dentry_unused);
- 
- #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
- static int get_nr_dentry(void)
-@@ -129,10 +137,20 @@ static int get_nr_dentry(void)
- 	return sum < 0 ? 0 : sum;
- }
- 
-+static int get_nr_dentry_unused(void)
-+{
-+	int i;
-+	int sum = 0;
-+	for_each_possible_cpu(i)
-+		sum += per_cpu(nr_dentry_unused, i);
-+	return sum < 0 ? 0 : sum;
-+}
+ int list_lru_add(struct list_lru *lru, struct list_head *item);
+ int list_lru_del(struct list_lru *lru, struct list_head *item);
+-long list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count);
 +
- int proc_nr_dentry(ctl_table *table, int write, void __user *buffer,
- 		   size_t *lenp, loff_t *ppos)
++long list_lru_count_nodemask_memcg(struct list_lru *lru,
++			nodemask_t *nodes_to_count, struct mem_cgroup *memcg);
++
++static inline long
++list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count)
++{
++	return list_lru_count_nodemask_memcg(lru, nodes_to_count, NULL);
++}
+ 
+ static inline long list_lru_count(struct list_lru *lru)
  {
- 	dentry_stat.nr_dentry = get_nr_dentry();
-+	dentry_stat.nr_unused = get_nr_dentry_unused();
- 	return proc_dointvec(table, write, buffer, lenp, ppos);
- }
- #endif
-@@ -312,7 +330,7 @@ static void dentry_lru_add(struct dentry *dentry)
- 		spin_lock(&dcache_lru_lock);
- 		list_add(&dentry->d_lru, &dentry->d_sb->s_dentry_lru);
- 		dentry->d_sb->s_nr_dentry_unused++;
--		dentry_stat.nr_unused++;
-+		this_cpu_inc(nr_dentry_unused);
- 		spin_unlock(&dcache_lru_lock);
- 	}
- }
-@@ -322,7 +340,7 @@ static void __dentry_lru_del(struct dentry *dentry)
- 	list_del_init(&dentry->d_lru);
- 	dentry->d_flags &= ~DCACHE_SHRINK_LIST;
- 	dentry->d_sb->s_nr_dentry_unused--;
--	dentry_stat.nr_unused--;
-+	this_cpu_dec(nr_dentry_unused);
+ 	return list_lru_count_nodemask(lru, &lru->active_nodes);
  }
  
- /*
-@@ -360,7 +378,7 @@ static void dentry_lru_move_list(struct dentry *dentry, struct list_head *list)
- 	if (list_empty(&dentry->d_lru)) {
- 		list_add_tail(&dentry->d_lru, list);
- 		dentry->d_sb->s_nr_dentry_unused++;
--		dentry_stat.nr_unused++;
-+		this_cpu_inc(nr_dentry_unused);
- 	} else {
- 		list_move_tail(&dentry->d_lru, list);
+-
+ typedef enum lru_status
+ (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
+-
+ typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
+ 
+-long list_lru_walk_nodemask(struct list_lru *lru, list_lru_walk_cb isolate,
+-		   void *cb_arg, long nr_to_walk, nodemask_t *nodes_to_walk);
++long list_lru_walk_nodemask_memcg(struct list_lru *lru,
++	list_lru_walk_cb isolate, void *cb_arg, long nr_to_walk,
++	nodemask_t *nodes_to_walk, struct mem_cgroup *memcg);
++
++static inline long list_lru_walk_nodemask(struct list_lru *lru,
++	list_lru_walk_cb isolate, void *cb_arg, long nr_to_walk,
++	nodemask_t *nodes_to_walk)
++{
++	return list_lru_walk_nodemask_memcg(lru, isolate, cb_arg, nr_to_walk,
++					    &lru->active_nodes, NULL);
++}
+ 
+ static inline long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
+ 				 void *cb_arg, long nr_to_walk)
+diff --git a/lib/list_lru.c b/lib/list_lru.c
+index dfc2c4a..3093f98 100644
+--- a/lib/list_lru.c
++++ b/lib/list_lru.c
+@@ -75,6 +75,11 @@ memcg_kmem_lru_of_page(struct list_lru *lru, struct page *page)
+  * memcg_limited_groups_array_size will be 0. _idx starts at -1, and it will
+  * still be allowed to execute once.
+  *
++ * If a memcg is specified at memcg_id, we will make sure that the loop only
++ * have one iteration, corresponding to that memcg. This makes sure that the
++ * interface is kept for both cases and there is no need for separate code to
++ * handle that case, at the price of complicating the macro a bit.
++ *
+  * We convention that for _idx = -1, the global node info should be used.
+  * After that, we will go through each of the memcgs, starting at 0.
+  *
+@@ -83,8 +88,11 @@ memcg_kmem_lru_of_page(struct list_lru *lru, struct page *page)
+  * end. The old ones are just copied, and any interesting manipulation happen
+  * in the node list itself, and we already lock the list.
+  */
+-#define for_each_memcg_lru_index(_idx)	\
+-	for ((_idx) = -1; ((_idx) < memcg_limited_groups_array_size); (_idx)++)
++#define for_each_memcg_lru_index(_idx, memcg_id)		\
++	for ((_idx) = ((memcg_id) >= 0) ? memcg_id : -1;	\
++	     ((memcg_id < 0) || ((_idx) <= (memcg_id))) &&	\
++	     ((_idx) < memcg_limited_groups_array_size);	\
++	     (_idx)++)
+ 
+ int
+ list_lru_add(
+@@ -145,25 +153,44 @@ list_lru_del(
+ EXPORT_SYMBOL_GPL(list_lru_del);
+ 
+ long
+-list_lru_count_nodemask(
++list_lru_count_nodemask_memcg(
+ 	struct list_lru *lru,
+-	nodemask_t	*nodes_to_count)
++	nodemask_t	*nodes_to_count,
++	struct mem_cgroup *memcg)
+ {
+ 	long count = 0;
+ 	int nid;
++	nodemask_t nodes;
++	struct list_lru_node *nlru;
++	int memcg_id = memcg_cache_id(memcg);
++
++	/*
++	 * Conservative code can call this setting nodes with node_setall.
++	 * This will generate an out of bound access for memcg.
++	 */
++	nodes_and(nodes, *nodes_to_count, node_online_map);
+ 
+-	for_each_node_mask(nid, *nodes_to_count) {
++	for_each_node_mask(nid, nodes) {
+ 		/*
+ 		 * We don't need to loop through all memcgs here, because we
+ 		 * have the node_totals information for the node. If we hadn't,
+ 		 * this would still be achieavable by a loop-over-all-groups
+ 		 */
+-		count += atomic_long_read(&lru->node_totals[nid]);
+-	}
++		if (!memcg)
++			count += atomic_long_read(&lru->node_totals[nid]);
++		else {
++			nlru = lru_node_of_index(lru, memcg_id, nid);
++			WARN_ON(!nlru);
+ 
++			spin_lock(&nlru->lock);
++			BUG_ON(nlru->nr_items < 0);
++			count += nlru->nr_items;
++			spin_unlock(&nlru->lock);
++		}
++	}
+ 	return count;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_count_nodemask);
++EXPORT_SYMBOL_GPL(list_lru_count_nodemask_memcg);
+ 
+ static long
+ list_lru_walk_node(
+@@ -208,16 +235,18 @@ restart:
+ }
+ 
+ long
+-list_lru_walk_nodemask(
++list_lru_walk_nodemask_memcg(
+ 	struct list_lru	*lru,
+ 	list_lru_walk_cb isolate,
+ 	void		*cb_arg,
+ 	long		nr_to_walk,
+-	nodemask_t	*nodes_to_walk)
++	nodemask_t	*nodes_to_walk,
++	struct mem_cgroup *memcg)
+ {
+ 	long isolated = 0;
+ 	int nid;
+ 	nodemask_t nodes;
++	int memcg_id = memcg_cache_id(memcg);
+ 	int idx;
+ 	struct list_lru_node *nlru;
+ 
+@@ -228,8 +257,7 @@ list_lru_walk_nodemask(
+ 	nodes_and(nodes, *nodes_to_walk, node_online_map);
+ 
+ 	for_each_node_mask(nid, nodes) {
+-		for_each_memcg_lru_index(idx) {
+-
++		for_each_memcg_lru_index(idx, memcg_id) {
+ 			nlru = lru_node_of_index(lru, idx, nid);
+ 			if (!nlru)
+ 				continue;
+@@ -242,7 +270,7 @@ list_lru_walk_nodemask(
  	}
+ 	return isolated;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_walk_nodemask);
++EXPORT_SYMBOL_GPL(list_lru_walk_nodemask_memcg);
+ 
+ static long
+ list_lru_dispose_all_node(
+@@ -255,7 +283,7 @@ list_lru_dispose_all_node(
+ 	long disposed = 0;
+ 	int idx;
+ 
+-	for_each_memcg_lru_index(idx) {
++	for_each_memcg_lru_index(idx, -1) {
+ 		nlru = lru_node_of_index(lru, idx, nid);
+ 		if (!nlru)
+ 			continue;
 -- 
 1.8.1.4
 
