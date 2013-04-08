@@ -1,62 +1,69 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 6/8] memcg: fail to create cgroup if the cgroup id is too
- big
-Date: Mon, 8 Apr 2013 17:01:17 +0200
-Message-ID: <20130408150117.GN17178@dhcp22.suse.cz>
-References: <51627DA9.7020507@huawei.com>
- <51627E4A.6090807@huawei.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v3 02/32] vmscan: take at least one pass with shrinkers
+Date: Mon,  8 Apr 2013 18:00:29 +0400
+Message-ID: <1365429659-22108-3-git-send-email-glommer@parallels.com>
+References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <51627E4A.6090807@huawei.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1365429659-22108-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Dave Shrinnker <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Mon 08-04-13 16:22:34, Li Zefan wrote:
-> memcg requires the cgroup id to be smaller than 65536.
-> 
-> Signed-off-by: Li Zefan <lizefan@huawei.com>
+In very low free kernel memory situations, it may be the case that we
+have less objects to free than our initial batch size. If this is the
+case, it is better to shrink those, and open space for the new workload
+then to keep them and fail the new allocations.
 
-But this should be moved up the patch stack as mentioned in the previous
-email.
+More specifically, this happens because we encode this in a loop with
+the condition: "while (total_scan >= batch_size)". So if we are in such
+a case, we'll not even enter the loop.
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Minor nit bellow.
+This patch modifies turns it into a do () while {} loop, that will
+guarantee that we scan it at least once, while keeping the behaviour
+exactly the same for the cases in which total_scan > batch_size.
 
-> ---
->  mm/memcontrol.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c4e0173..947dff1 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -492,6 +492,12 @@ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
->  	return (memcg == root_mem_cgroup);
->  }
->  
-> +/*
-> + * We restrict the id in the range of [0, 65535], so it can fit into
-> + * an unsigned short.
-> + */
-> +#define MEM_CGROUP_ID_MAX	(65535)
+Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Reviewed-by: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Reviewed-by: Carlos Maiolino <cmaiolino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+CC: "Theodore Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>
+CC: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+---
+ mm/vmscan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-USHRT_MAX ?
-
-> +
->  static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
->  {
->  	return memcg->css.cgroup->id;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 88c5fed..fc6d45a 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -280,7 +280,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 					nr_pages_scanned, lru_pages,
+ 					max_pass, delta, total_scan);
+ 
+-		while (total_scan >= batch_size) {
++		do {
+ 			int nr_before;
+ 
+ 			nr_before = do_shrinker_shrink(shrinker, shrink, 0);
+@@ -294,7 +294,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 			total_scan -= batch_size;
+ 
+ 			cond_resched();
+-		}
++		} while (total_scan >= batch_size);
+ 
+ 		/*
+ 		 * move the unused scan count back into the shrinker in a
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.1.4
