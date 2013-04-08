@@ -1,52 +1,84 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [RFC][PATCH 0/7] memcg: make memcg's life cycle the same as
- cgroup
-Date: Sun, 7 Apr 2013 21:51:12 +0200
-Message-ID: <20130407195112.GA12678@dhcp22.suse.cz>
-References: <515BF233.6070308@huawei.com>
- <516131D7.8030004@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 11/12] memcg: kill memcg refcnt
+Date: Mon, 8 Apr 2013 14:36:04 +0800
+Message-ID: <51626554.7090706@huawei.com>
+References: <5162648B.9070802@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=WEu9oyFQM34DzjKS7nE0q9qjXmrQRUfybN8THO8IaZk=;
-        b=JlvvLXunSvmNEi6Q/XXmkkyZiHjPpvFL2KBoNrHg01WQSxNEZbuH0rxBaLu5CZkn/r
-         OBgUne71DOMcCVLBkiqPc52uy25zE8XmfWqo+XDRMO0chcn9JUMOlgaqGq/aONEl/je6
-         +HrwEdN7g8YZFDFpN4MPmZV/3x5IhxXi6k2EhYuHfFQwrwgffCB/FculTRGFwDctcJ9K
-         A2LusnBFnA5bXvQcpXaGCGhfBcoB1PxDdY4a/jVGC8/BKUGY9lAj2bITOh1MoW0ircd1
-         tcuQ7U/cWrJbX+35pHtqOs0X4prhB+RPl3vIayrt1cpoSbapjc7hoxTkEhchkNbQRKf5
-         PiZQ==
-Content-Disposition: inline
-In-Reply-To: <516131D7.8030004@huawei.com>
+In-Reply-To: <5162648B.9070802@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Glauber Costa <glommer@parallels.com>, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-On Sun 07-04-13 16:44:07, Li Zefan wrote:
-> Hi,
-> 
-> I'm rebasing this patchset against latest linux-next, and it conflicts with
-> "[PATCH v2] memcg: debugging facility to access dangling memcgs." slightly.
-> 
-> That is a debugging patch and will never be pushed into mainline, so should I
-> still base this patchset on that debugging patch?
+Now memcg has the same life cycle as its corresponding cgroup.
+Kill the useless refcnt.
 
-Could you split CONFIG_MEMCG_DEBUG_ASYNC_DESTROY changes into a separate
-patch so that Andrew could put it on top of the mentioned patch?
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+---
+ mm/memcontrol.c | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
 
-> Also that patch needs update (and can be simplified) after this patchset:
-> - move memcg_dangling_add() to mem_cgroup_css_offline()
-> - remove memcg->memcg_name, and use cgroup_path() in mem_cgroup_dangling_read()?
-
-Every improvement is welcome.
-
-Thanks
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9ca5a99..a6d44bc 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -297,8 +297,6 @@ struct mem_cgroup {
+ 	bool		oom_lock;
+ 	atomic_t	under_oom;
+ 
+-	atomic_t	refcnt;
+-
+ 	int	swappiness;
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
+@@ -501,8 +499,6 @@ enum res_type {
+  */
+ static DEFINE_MUTEX(memcg_create_mutex);
+ 
+-static void mem_cgroup_put(struct mem_cgroup *memcg);
+-
+ static inline
+ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *s)
+ {
+@@ -6124,17 +6120,6 @@ static void free_rcu(struct rcu_head *rcu_head)
+ 	schedule_work(&memcg->work_freeing);
+ }
+ 
+-static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
+-{
+-	if (atomic_sub_and_test(count, &memcg->refcnt))
+-		call_rcu(&memcg->rcu_freeing, free_rcu);
+-}
+-
+-static void mem_cgroup_put(struct mem_cgroup *memcg)
+-{
+-	__mem_cgroup_put(memcg, 1);
+-}
+-
+ /*
+  * Returns the parent mem_cgroup in memcgroup hierarchy with hierarchy enabled.
+  */
+@@ -6194,7 +6179,6 @@ mem_cgroup_css_alloc(struct cgroup *cont)
+ 
+ 	memcg->last_scanned_node = MAX_NUMNODES;
+ 	INIT_LIST_HEAD(&memcg->oom_notify);
+-	atomic_set(&memcg->refcnt, 1);
+ 	memcg->move_charge_at_immigrate = 0;
+ 	mutex_init(&memcg->thresholds_lock);
+ 	spin_lock_init(&memcg->move_lock);
+@@ -6285,7 +6269,7 @@ static void mem_cgroup_css_free(struct cgroup *cont)
+ 
+ 	mem_cgroup_sockets_destroy(memcg);
+ 
+-	mem_cgroup_put(memcg);
++	call_rcu(&memcg->rcu_freeing, free_rcu);
+ }
+ 
+ #ifdef CONFIG_MMU
 -- 
-Michal Hocko
-SUSE Labs
+1.8.0.2
