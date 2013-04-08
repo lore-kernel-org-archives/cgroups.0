@@ -1,89 +1,48 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 1/8] cgroup: implement cgroup_is_ancestor()
-Date: Mon, 8 Apr 2013 18:33:44 +0200
-Message-ID: <20130408163344.GP17178@dhcp22.suse.cz>
-References: <51627DA9.7020507@huawei.com>
- <51627DBB.5050005@huawei.com>
- <20130408144750.GK17178@dhcp22.suse.cz>
- <20130408155726.GG3021@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 09/12] cgroup: make sure parent won't be destroyed before
+ its children
+Date: Mon, 8 Apr 2013 08:36:35 -0700
+Message-ID: <20130408153635.GB3021@htj.dyndns.org>
+References: <5162648B.9070802@huawei.com>
+ <51626516.3000603@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=FyHyaMHOwopN6lyMiN+6OPVF4KH0vs2S5V/0KTqCU4A=;
+        b=HTowmxEJ91Qm6YaLjLKbKs1c2ymu+g84Bw/cV/VidHyNzHkRF3HKqG+J+4U4tOj4bb
+         yfnciIcMBu6WVw5ZzDXvzsmcKJw2kQOQLbWJEggo4u2XkeAasIy0/MBliqRb4215KpE0
+         zbk/kJWzMhtfPJSwg4UHk+h78GQIOt1heRbKCRSz0g1r4pcAbKofjEuVMjWIe1S+rj0/
+         WtdWh4c6gEh3F0PzHzQk/UmxwZfeC2VZSZPMYKgk3lxmQnb5ixmFOz/SRTj+InTWMEY6
+         TNdAEQ4e7JNq+ao9zEfKmr23m0osYH1/b2/h/adVX77Mzsn2fUS04G/cQgzuqi+m8WyT
+         l6Kw==
 Content-Disposition: inline
-In-Reply-To: <20130408155726.GG3021@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <51626516.3000603-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon 08-04-13 08:57:26, Tejun Heo wrote:
-> Hello,
+On Mon, Apr 08, 2013 at 02:35:02PM +0800, Li Zefan wrote:
+> Suppose we rmdir a cgroup and there're still css refs, this cgroup won't
+> be freed. Then we rmdir the parent cgroup, and the parent is freed
+> immediately due to css ref draining to 0. Now it would be a disaster if
+> the still-alive child cgroup tries to access its parent.
 > 
-> On Mon, Apr 08, 2013 at 04:47:50PM +0200, Michal Hocko wrote:
-> > On Mon 08-04-13 16:20:11, Li Zefan wrote:
-> > [...]
-> > > @@ -5299,6 +5300,26 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
-> > >  	return css ? css : ERR_PTR(-ENOENT);
-> > >  }
-> > >  
-> > > +/**
-> > > + * cgroup_is_ancestor - test "root" cgroup is an ancestor of "child"
-> > > + * @child: the cgroup to be tested.
-> > > + * @root: the cgroup supposed to be an ancestor of the child.
-> > > + *
-> > > + * Returns true if "root" is an ancestor of "child" in its hierarchy.
-> > > + */
-> > > +bool cgroup_is_ancestor(struct cgroup *child, struct cgroup *root)
-> > > +{
-> > > +	int depth = child->depth;
-> > 
-> > Is this functionality helpful for other controllers but memcg?
-> > css_is_ancestor is currently used only by memcg code AFAICS and we can
-> > get the same functionality easily by using something like:
+> Make sure this won't happen.
 > 
-> It's a basic hierarchy operation. 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Which nobody seem to need ATM so it could be added later when an user
-emerges.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-> I'd prefer it to be in cgroup and in general let's try to avoid
-> memcg-specific infrastructure. 
-
-Now that I am thinking about that some more css_is_ancestor is even not
-correct. Consider this for example
-root
- \
-  A (use_hierarchy = 0)
-   \
-    B (use_hierarchy = 1)
-     \
-      C
-
-__mem_cgroup_same_or_subtree(A, C) would happily return true even though
-this is not correct because A is not a part of the same hierarchy.
-So it seems that memcg will need a special treatment here anyway because
-cgroup core doesn't know about use_hierarchy thingy which is still with
-us...
-I will post a patch.
-
-> It doesn't seem to end well.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
