@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 8/8] cgroup: kill css_id
-Date: Mon, 8 Apr 2013 16:23:42 +0800
-Message-ID: <51627E8E.1010204@huawei.com>
+Subject: [PATCH 2/8] cgroup: implement cgroup_from_id()
+Date: Mon, 8 Apr 2013 16:20:59 +0800
+Message-ID: <51627DEB.4090104@huawei.com>
 References: <51627DA9.7020507@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -13,402 +13,116 @@ Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-The only user of css_id was memcg, and it has been converted to
-use cgroup->id, so kill css_id.
+This will be used as a replacement for css_lookup().
 
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup.h |  38 --------
- kernel/cgroup.c        | 258 -------------------------------------------------
- 2 files changed, 296 deletions(-)
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup.c        | 31 +++++++++++++++++++++++++------
+ 2 files changed, 26 insertions(+), 6 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 6ae8ae1..d2c06db 100644
+index 96072e4..6ae8ae1 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -495,11 +495,6 @@ struct cgroup_subsys {
- 	int active;
- 	int disabled;
- 	int early_init;
--	/*
--	 * True if this subsys uses ID. ID is not available before cgroup_init()
--	 * (not available in early_init time.)
--	 */
--	bool use_id;
- 
- 	/*
- 	 * If %false, this subsystem is properly hierarchical -
-@@ -525,9 +520,6 @@ struct cgroup_subsys {
- 	 */
- 	struct cgroupfs_root *root;
- 	struct list_head sibling;
--	/* used when use_id == true */
--	struct idr idr;
--	spinlock_t id_lock;
- 
- 	/* list of cftype_sets */
- 	struct list_head cftsets;
-@@ -699,36 +691,6 @@ int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
- 		       bool threadgroup);
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- 
--/*
-- * CSS ID is ID for cgroup_subsys_state structs under subsys. This only works
-- * if cgroup_subsys.use_id == true. It can be used for looking up and scanning.
-- * CSS ID is assigned at cgroup allocation (create) automatically
-- * and removed when subsys calls free_css_id() function. This is because
-- * the lifetime of cgroup_subsys_state is subsys's matter.
-- *
-- * Looking up and scanning function should be called under rcu_read_lock().
-- * Taking cgroup_mutex is not necessary for following calls.
-- * But the css returned by this routine can be "not populated yet" or "being
-- * destroyed". The caller should check css and cgroup's status.
-- */
--
--/*
-- * Typically Called at ->destroy(), or somewhere the subsys frees
-- * cgroup_subsys_state.
-- */
--void free_css_id(struct cgroup_subsys *ss, struct cgroup_subsys_state *css);
--
--/* Find a cgroup_subsys_state which has given ID */
--
--struct cgroup_subsys_state *css_lookup(struct cgroup_subsys *ss, int id);
--
--/* Returns true if root is ancestor of cg */
--bool css_is_ancestor(struct cgroup_subsys_state *cg,
--		     const struct cgroup_subsys_state *root);
--
--/* Get id and depth of css */
--unsigned short css_id(struct cgroup_subsys_state *css);
--unsigned short css_depth(struct cgroup_subsys_state *css);
+@@ -732,6 +732,7 @@ unsigned short css_depth(struct cgroup_subsys_state *css);
  struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id);
  
  bool cgroup_is_ancestor(struct cgroup *child, struct cgroup *root);
++struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id);
+ 
+ #else /* !CONFIG_CGROUPS */
+ 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5ae1e87..2389484 100644
+index e87872c..5ae1e87 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -165,38 +165,6 @@ struct cfent {
- };
+@@ -139,7 +139,7 @@ struct cgroupfs_root {
+ 	unsigned long flags;
  
- /*
-- * CSS ID -- ID per subsys's Cgroup Subsys State(CSS). used only when
-- * cgroup_subsys->use_id != 0.
-- */
--#define CSS_ID_MAX	(65535)
--struct css_id {
--	/*
--	 * The css to which this ID points. This pointer is set to valid value
--	 * after cgroup is populated. If cgroup is removed, this will be NULL.
--	 * This pointer is expected to be RCU-safe because destroy()
--	 * is called after synchronize_rcu(). But for safe use, css_tryget()
--	 * should be used for avoiding race.
--	 */
--	struct cgroup_subsys_state __rcu *css;
--	/*
--	 * ID of this css.
--	 */
--	unsigned short id;
--	/*
--	 * Depth in hierarchy which this ID belongs to.
--	 */
--	unsigned short depth;
--	/*
--	 * ID is freed by RCU. (and lookup routine is RCU safe.)
--	 */
--	struct rcu_head rcu_head;
--	/*
--	 * Hierarchy of CSS ID belongs to.
--	 */
--	unsigned short stack[0]; /* Array of Length (depth+1) */
--};
--
--/*
-  * cgroup_event represents events which userspace want to receive.
-  */
- struct cgroup_event {
-@@ -363,9 +331,6 @@ struct cg_cgroup_link {
- static struct css_set init_css_set;
- static struct cg_cgroup_link init_css_set_link;
+ 	/* IDs for cgroups in this hierarchy */
+-	struct ida cgroup_ida;
++	struct idr cgroup_idr;
  
--static int cgroup_init_idr(struct cgroup_subsys *ss,
--			   struct cgroup_subsys_state *css);
--
- /* css_set_lock protects the list of css_set objects, and the
-  * chain of tasks off each css_set.  Nests outside task->alloc_lock
-  * due to cgroup_iter_start() */
-@@ -843,9 +808,6 @@ static struct backing_dev_info cgroup_backing_dev_info = {
- 	.capabilities	= BDI_CAP_NO_ACCT_AND_WRITEBACK,
- };
+ 	/* The path to use for release notifications. */
+ 	char release_agent_path[PATH_MAX];
+@@ -908,7 +908,7 @@ static void cgroup_free_fn(struct work_struct *work)
  
--static int alloc_css_id(struct cgroup_subsys *ss,
--			struct cgroup *parent, struct cgroup *child);
--
- static struct inode *cgroup_new_inode(umode_t mode, struct super_block *sb)
- {
- 	struct inode *inode = new_inode(sb);
-@@ -4002,18 +3964,6 @@ static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
- 			cgroup_addrm_files(cgrp, ss, set->cfts, true);
- 	}
+ 	simple_xattrs_free(&cgrp->xattrs);
  
--	/* This cgroup is ready now */
--	for_each_subsys(cgrp->root, ss) {
--		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
--		/*
--		 * Update id->css pointer and make this css visible from
--		 * CSS ID functions. This pointer will be dereferened
--		 * from RCU-read-side without locks.
--		 */
--		if (css->id)
--			rcu_assign_pointer(css->id->css, css);
--	}
--
- 	return 0;
+-	ida_simple_remove(&cgrp->root->cgroup_ida, cgrp->id);
++	idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
+ 	kfree(rcu_dereference_raw(cgrp->name));
+ 	kfree(cgrp);
+ }
+@@ -1512,7 +1512,8 @@ static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
+ 
+ 	root->subsys_mask = opts->subsys_mask;
+ 	root->flags = opts->flags;
+-	ida_init(&root->cgroup_ida);
++	idr_init(&root->cgroup_idr);
++
+ 	if (opts->release_agent)
+ 		strcpy(root->release_agent_path, opts->release_agent);
+ 	if (opts->name)
+@@ -1531,7 +1532,7 @@ static void cgroup_drop_root(struct cgroupfs_root *root)
+ 	spin_lock(&hierarchy_id_lock);
+ 	ida_remove(&hierarchy_ida, root->hierarchy_id);
+ 	spin_unlock(&hierarchy_id_lock);
+-	ida_destroy(&root->cgroup_ida);
++	idr_destroy(&root->cgroup_idr);
+ 	kfree(root);
  }
  
-@@ -4158,11 +4108,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 			goto err_free_all;
- 		}
- 		init_cgroup_css(css, ss, cgrp);
--		if (ss->use_id) {
--			err = alloc_css_id(ss, parent, cgrp);
--			if (err)
--				goto err_free_all;
--		}
- 	}
+@@ -1645,6 +1646,11 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		mutex_lock(&cgroup_mutex);
+ 		mutex_lock(&cgroup_root_mutex);
  
- 	/*
-@@ -4448,12 +4393,6 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
++		root_cgrp->id = idr_alloc(&root->cgroup_idr, root_cgrp,
++					  0, 0, GFP_KERNEL);
++		if (root_cgrp->id < 0)
++			goto unlock_drop;
++
+ 		/* Check for name clashes with existing mounts */
+ 		ret = -EBUSY;
+ 		if (strlen(root->name))
+@@ -4104,7 +4110,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 		goto err_free_cgrp;
+ 	rcu_assign_pointer(cgrp->name, name);
  
- 	/* our new subsystem will be attached to the dummy hierarchy. */
- 	init_cgroup_css(css, ss, dummytop);
--	/* init_idr must be after init_cgroup_css because it sets css->id. */
--	if (ss->use_id) {
--		ret = cgroup_init_idr(ss, css);
--		if (ret)
--			goto err_unload;
--	}
+-	cgrp->id = ida_simple_get(&root->cgroup_ida, 1, 0, GFP_KERNEL);
++	cgrp->id = idr_alloc(&root->cgroup_idr, cgrp, 1, 0, GFP_KERNEL);
+ 	if (cgrp->id < 0)
+ 		goto err_free_name;
  
- 	/*
- 	 * Now we need to entangle the css into the existing css_sets. unlike
-@@ -4521,9 +4460,6 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
- 	offline_css(ss, dummytop);
- 	ss->active = 0;
+@@ -4215,7 +4221,7 @@ err_free_all:
+ 	/* Release the reference count that we took on the superblock */
+ 	deactivate_super(sb);
+ err_free_id:
+-	ida_simple_remove(&root->cgroup_ida, cgrp->id);
++	idr_remove(&root->cgroup_idr, cgrp->id);
+ err_free_name:
+ 	kfree(rcu_dereference_raw(cgrp->name));
+ err_free_cgrp:
+@@ -5320,6 +5326,19 @@ bool cgroup_is_ancestor(struct cgroup *child, struct cgroup *root)
+ 	return (child == root);
+ }
  
--	if (ss->use_id)
--		idr_destroy(&ss->idr);
--
- 	/* deassign the subsys_id */
- 	subsys[ss->subsys_id] = NULL;
- 
-@@ -4631,8 +4567,6 @@ int __init cgroup_init(void)
- 			continue;
- 		if (!ss->early_init)
- 			cgroup_init_subsys(ss);
--		if (ss->use_id)
--			cgroup_init_idr(ss, init_css_set.subsys[ss->subsys_id]);
- 	}
- 
- 	/* Add init_css_set to the hash table */
-@@ -5092,198 +5026,6 @@ static int __init cgroup_disable(char *str)
- __setup("cgroup_disable=", cgroup_disable);
- 
- /*
-- * Functons for CSS ID.
-- */
--
--/*
-- *To get ID other than 0, this should be called when !cgroup_is_removed().
-- */
--unsigned short css_id(struct cgroup_subsys_state *css)
--{
--	struct css_id *cssid;
--
--	/*
--	 * This css_id() can return correct value when somone has refcnt
--	 * on this or this is under rcu_read_lock(). Once css->id is allocated,
--	 * it's unchanged until freed.
--	 */
--	cssid = rcu_dereference_check(css->id, css_refcnt(css));
--
--	if (cssid)
--		return cssid->id;
--	return 0;
--}
--EXPORT_SYMBOL_GPL(css_id);
--
--unsigned short css_depth(struct cgroup_subsys_state *css)
--{
--	struct css_id *cssid;
--
--	cssid = rcu_dereference_check(css->id, css_refcnt(css));
--
--	if (cssid)
--		return cssid->depth;
--	return 0;
--}
--EXPORT_SYMBOL_GPL(css_depth);
--
--/**
-- *  css_is_ancestor - test "root" css is an ancestor of "child"
-- * @child: the css to be tested.
-- * @root: the css supporsed to be an ancestor of the child.
-- *
-- * Returns true if "root" is an ancestor of "child" in its hierarchy. Because
-- * this function reads css->id, the caller must hold rcu_read_lock().
-- * But, considering usual usage, the csses should be valid objects after test.
-- * Assuming that the caller will do some action to the child if this returns
-- * returns true, the caller must take "child";s reference count.
-- * If "child" is valid object and this returns true, "root" is valid, too.
-- */
--
--bool css_is_ancestor(struct cgroup_subsys_state *child,
--		    const struct cgroup_subsys_state *root)
--{
--	struct css_id *child_id;
--	struct css_id *root_id;
--
--	child_id  = rcu_dereference(child->id);
--	if (!child_id)
--		return false;
--	root_id = rcu_dereference(root->id);
--	if (!root_id)
--		return false;
--	if (child_id->depth < root_id->depth)
--		return false;
--	if (child_id->stack[root_id->depth] != root_id->id)
--		return false;
--	return true;
--}
--
--void free_css_id(struct cgroup_subsys *ss, struct cgroup_subsys_state *css)
--{
--	struct css_id *id = css->id;
--	/* When this is called before css_id initialization, id can be NULL */
--	if (!id)
--		return;
--
--	BUG_ON(!ss->use_id);
--
--	rcu_assign_pointer(id->css, NULL);
--	rcu_assign_pointer(css->id, NULL);
--	spin_lock(&ss->id_lock);
--	idr_remove(&ss->idr, id->id);
--	spin_unlock(&ss->id_lock);
--	kfree_rcu(id, rcu_head);
--}
--EXPORT_SYMBOL_GPL(free_css_id);
--
--/*
-- * This is called by init or create(). Then, calls to this function are
-- * always serialized (By cgroup_mutex() at create()).
-- */
--
--static struct css_id *get_new_cssid(struct cgroup_subsys *ss, int depth)
--{
--	struct css_id *newid;
--	int ret, size;
--
--	BUG_ON(!ss->use_id);
--
--	size = sizeof(*newid) + sizeof(unsigned short) * (depth + 1);
--	newid = kzalloc(size, GFP_KERNEL);
--	if (!newid)
--		return ERR_PTR(-ENOMEM);
--
--	idr_preload(GFP_KERNEL);
--	spin_lock(&ss->id_lock);
--	/* Don't use 0. allocates an ID of 1-65535 */
--	ret = idr_alloc(&ss->idr, newid, 1, CSS_ID_MAX + 1, GFP_NOWAIT);
--	spin_unlock(&ss->id_lock);
--	idr_preload_end();
--
--	/* Returns error when there are no free spaces for new ID.*/
--	if (ret < 0)
--		goto err_out;
--
--	newid->id = ret;
--	newid->depth = depth;
--	return newid;
--err_out:
--	kfree(newid);
--	return ERR_PTR(ret);
--
--}
--
--static int __init_or_module cgroup_init_idr(struct cgroup_subsys *ss,
--					    struct cgroup_subsys_state *rootcss)
--{
--	struct css_id *newid;
--
--	spin_lock_init(&ss->id_lock);
--	idr_init(&ss->idr);
--
--	newid = get_new_cssid(ss, 0);
--	if (IS_ERR(newid))
--		return PTR_ERR(newid);
--
--	newid->stack[0] = newid->id;
--	newid->css = rootcss;
--	rootcss->id = newid;
--	return 0;
--}
--
--static int alloc_css_id(struct cgroup_subsys *ss, struct cgroup *parent,
--			struct cgroup *child)
--{
--	int subsys_id, i, depth = 0;
--	struct cgroup_subsys_state *parent_css, *child_css;
--	struct css_id *child_id, *parent_id;
--
--	subsys_id = ss->subsys_id;
--	parent_css = parent->subsys[subsys_id];
--	child_css = child->subsys[subsys_id];
--	parent_id = parent_css->id;
--	depth = parent_id->depth + 1;
--
--	child_id = get_new_cssid(ss, depth);
--	if (IS_ERR(child_id))
--		return PTR_ERR(child_id);
--
--	for (i = 0; i < depth; i++)
--		child_id->stack[i] = parent_id->stack[i];
--	child_id->stack[depth] = child_id->id;
--	/*
--	 * child_id->css pointer will be set after this cgroup is available
--	 * see cgroup_populate_dir()
--	 */
--	rcu_assign_pointer(child_css->id, child_id);
--
--	return 0;
--}
--
--/**
-- * css_lookup - lookup css by id
-- * @ss: cgroup subsys to be looked into.
-- * @id: the id
-- *
-- * Returns pointer to cgroup_subsys_state if there is valid one with id.
-- * NULL if not. Should be called under rcu_read_lock()
-- */
--struct cgroup_subsys_state *css_lookup(struct cgroup_subsys *ss, int id)
--{
--	struct css_id *cssid = NULL;
--
--	BUG_ON(!ss->use_id);
--	cssid = idr_find(&ss->idr, id);
--
--	if (unlikely(!cssid))
--		return NULL;
--
--	return rcu_dereference(cssid->css);
--}
--EXPORT_SYMBOL_GPL(css_lookup);
--
--/*
-  * get corresponding css from file open on cgroupfs directory
-  */
- struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
++/**
++ * cgroup_from_id - lookup cgroup by id
++ * @ss: cgroup subsys to be looked into.
++ * @id: the id
++ *
++ * Returns pointer to cgroup if there is valid one with id.
++ * NULL if not. Should be called under rcu_read_lock()
++ */
++struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
++{
++	return idr_find(&ss->root->cgroup_idr, id);
++}
++
+ #ifdef CONFIG_CGROUP_DEBUG
+ static struct cgroup_subsys_state *debug_css_alloc(struct cgroup *cont)
+ {
 -- 
 1.8.0.2
