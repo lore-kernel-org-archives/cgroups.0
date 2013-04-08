@@ -1,48 +1,80 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: cgroup: status-quo and userland efforts
-Date: Mon, 8 Apr 2013 17:46:09 +0400
-Message-ID: <5162CA21.4060108@parallels.com>
-References: <20130406012159.GA17159@mtj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 13/12] memcg: don't need memcg->memcg_name
+Date: Mon, 8 Apr 2013 16:25:03 +0200
+Message-ID: <20130408142503.GH17178@dhcp22.suse.cz>
+References: <5162648B.9070802@huawei.com>
+ <51626584.7050405@huawei.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <51626584.7050405@huawei.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20130406012159.GA17159-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-On 04/06/2013 05:21 AM, Tejun Heo wrote:
-> Hello, guys.
-> 
-Hello Tejun, how are you?
+On Mon 08-04-13 14:36:52, Li Zefan wrote:
+[...]
+> @@ -5188,12 +5154,28 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
+>  					struct seq_file *m)
+>  {
+>  	struct mem_cgroup *memcg;
+> +	char *memcg_name;
+> +	int ret;
 
->  Status-quo
->  ==========
-> 
-tl;did read;
+The interface is only for debugging, all right, but that doesn't mean we
+should allocate a buffer for each read. Why cannot we simply use
+cgroup_path for seq_printf directly? Can we still race with the group
+rename?
 
-This is mostly sensible. There is still one problem that we hadn't yet
-had the bandwidth to tackle that should be added to your official TODO list.
+> +
+> +	/*
+> +	 * cgroup.c will do page-sized allocations most of the time,
+> +	 * so we'll just follow the pattern. Also, __get_free_pages
+> +	 * is a better interface than kmalloc for us here, because
+> +	 * we'd like this memory to be always billed to the root cgroup,
+> +	 * not to the process removing the memcg. While kmalloc would
+> +	 * require us to wrap it into memcg_stop/resume_kmem_account,
+> +	 * with __get_free_pages we just don't pass the memcg flag.
+> +	 */
+> +	memcg_name = (char *)__get_free_pages(GFP_KERNEL, 0);
+> +	if (!memcg_name)
+> +		return -ENOMEM;
+>  
+>  	mutex_lock(&dangling_memcgs_mutex);
+>  
+>  	list_for_each_entry(memcg, &dangling_memcgs, dead) {
+> -		if (memcg->memcg_name)
+> -			seq_printf(m, "%s:\n", memcg->memcg_name);
+> +		ret = cgroup_path(memcg->css.cgroup, memcg_name, PAGE_SIZE);
+> +		if (!ret)
+> +			seq_printf(m, "%s:\n", memcg_name);
+>  		else
+>  			seq_printf(m, "%p (name lost):\n", memcg);
+>  
+> @@ -5203,6 +5185,7 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
+>  	}
+>  
+>  	mutex_unlock(&dangling_memcgs_mutex);
+> +	free_pages((unsigned long)memcg_name, 0);
+>  	return 0;
+>  }
+>  #endif
+> -- 
+> 1.8.0.2
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The cpu cgroup needs a real-time timeslice to accept real time tasks. It
-defaults to 0, meaning that a newly created cpu cgroup cannot accept
-tasks (rt tasks) without the user having to manually configure it.
-As far as I know, this problem hasn't yet been fixed.
+-- 
+Michal Hocko
+SUSE Labs
 
-The fix of course, is as trivial as setting a new value instead of 0 as
-a default. The complication lies in determining which value should that be.
-
-There are many things that we should ask from a controller to implement
-in order to be able to handle fully joint hierarchies. One of them,
-IMHO, is that if you drop a task into a newly created cgroup it should
-run without the user having to do anything for it.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
