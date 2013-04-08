@@ -1,124 +1,50 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v3 12/32] shrinker: add node awareness
-Date: Mon,  8 Apr 2013 18:00:39 +0400
-Message-ID: <1365429659-22108-13-git-send-email-glommer@parallels.com>
-References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/8] cgroup: implement cgroup_from_id()
+Date: Mon, 8 Apr 2013 08:48:47 -0700
+Message-ID: <20130408154847.GE3021@htj.dyndns.org>
+References: <51627DA9.7020507@huawei.com>
+ <51627DEB.4090104@huawei.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=VBKEeFFuNLwpWAxTOA6LvT3J+BXfc/opvbU3psnWDAU=;
+        b=zhWPieTKRw7WZ2BPvMtE/bZQUP/eJJwggrYgkLiqgwXyAJRjjIsXGj8j1PFMz7ZTDi
+         QvVRmd4aN/enmf74GHA3hAFOuRECT6+6P1YE568UTEER7NEDr3TDbBklxOuMgg1Jsjtz
+         RQ//SWYN+FcDSASUMx1HPFhRqF9s1koDHM/ERQQJ8GIwxkTt/uXH9nUiHK3t0W+N7pUX
+         +qQEe6ZcwB6gfxj/vBBCMHqLv7xYx3DhB2MbfM/8FOTp4XmW/2qOrY/AB106L7AkcBNQ
+         BdA09RYg0loKcsckK2bq9eHgMZW4M1vViJO6GT8ygAqjYwXD3di1h87C4KIuyXdNnpbv
+         xkYg==
+Content-Disposition: inline
+In-Reply-To: <51627DEB.4090104@huawei.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
+To: Li Zefan <lizefan@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Oops, one more thing.
 
-Pass the node of the current zone being reclaimed to shrink_slab(),
-allowing the shrinker control nodemask to be set appropriately for
-node aware shrinkers.
+On Mon, Apr 08, 2013 at 04:20:59PM +0800, Li Zefan wrote:
+> -	cgrp->id = ida_simple_get(&root->cgroup_ida, 1, 0, GFP_KERNEL);
+> +	cgrp->id = idr_alloc(&root->cgroup_idr, cgrp, 1, 0, GFP_KERNEL);
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/drop_caches.c         |  1 +
- include/linux/shrinker.h |  3 +++
- mm/memory-failure.c      |  2 ++
- mm/vmscan.c              | 12 +++++++++---
- 4 files changed, 15 insertions(+), 3 deletions(-)
+This will allow lookups to return half-initialized cgroup, which
+shouldn't happen.  Either idr_alloc() should be moved to after
+initialization of other fields are finished, or it should be called
+with NULL @ptr with idr_replace() added at the end to install @cgrp.
 
-diff --git a/fs/drop_caches.c b/fs/drop_caches.c
-index c00e055..9fd702f 100644
---- a/fs/drop_caches.c
-+++ b/fs/drop_caches.c
-@@ -44,6 +44,7 @@ static void drop_slab(void)
- 		.gfp_mask = GFP_KERNEL,
- 	};
- 
-+	nodes_setall(shrink.nodes_to_scan);
- 	do {
- 		nr_objects = shrink_slab(&shrink, 1000, 1000);
- 	} while (nr_objects > 10);
-diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index 4f59615..e71286f 100644
---- a/include/linux/shrinker.h
-+++ b/include/linux/shrinker.h
-@@ -16,6 +16,9 @@ struct shrink_control {
- 
- 	/* How many slab objects shrinker() should scan and try to reclaim */
- 	long nr_to_scan;
-+
-+	/* shrink from these nodes */
-+	nodemask_t nodes_to_scan;
- };
- 
- /*
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index df0694c..857377e 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -248,10 +248,12 @@ void shake_page(struct page *p, int access)
- 	 */
- 	if (access) {
- 		int nr;
-+		int nid = page_to_nid(p);
- 		do {
- 			struct shrink_control shrink = {
- 				.gfp_mask = GFP_KERNEL,
- 			};
-+			node_set(nid, shrink.nodes_to_scan);
- 
- 			nr = shrink_slab(&shrink, 1000, 1000);
- 			if (page_count(p) == 1)
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 64b0157..6926e09 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2191,15 +2191,20 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
- 		 */
- 		if (global_reclaim(sc)) {
- 			unsigned long lru_pages = 0;
-+
-+			nodes_clear(shrink->nodes_to_scan);
- 			for_each_zone_zonelist(zone, z, zonelist,
- 					gfp_zone(sc->gfp_mask)) {
- 				if (!cpuset_zone_allowed_hardwall(zone, GFP_KERNEL))
- 					continue;
- 
- 				lru_pages += zone_reclaimable_pages(zone);
-+				node_set(zone_to_nid(zone),
-+					 shrink->nodes_to_scan);
- 			}
- 
- 			shrink_slab(shrink, sc->nr_scanned, lru_pages);
-+
- 			if (reclaim_state) {
- 				sc->nr_reclaimed += reclaim_state->reclaimed_slab;
- 				reclaim_state->reclaimed_slab = 0;
-@@ -2778,6 +2783,8 @@ loop_again:
- 				shrink_zone(zone, &sc);
- 
- 				reclaim_state->reclaimed_slab = 0;
-+				nodes_clear(shrink.nodes_to_scan);
-+				node_set(zone_to_nid(zone), shrink.nodes_to_scan);
- 				nr_slab = shrink_slab(&shrink, sc.nr_scanned, lru_pages);
- 				sc.nr_reclaimed += reclaim_state->reclaimed_slab;
- 				total_scanned += sc.nr_scanned;
-@@ -3364,10 +3371,9 @@ static int __zone_reclaim(struct zone *zone, gfp_t gfp_mask, unsigned int order)
- 		 * number of slab pages and shake the slab until it is reduced
- 		 * by the same nr_pages that we used for reclaiming unmapped
- 		 * pages.
--		 *
--		 * Note that shrink_slab will free memory on all zones and may
--		 * take a long time.
- 		 */
-+		nodes_clear(shrink.nodes_to_scan);
-+		node_set(zone_to_nid(zone), shrink.nodes_to_scan);
- 		for (;;) {
- 			unsigned long lru_pages = zone_reclaimable_pages(zone);
- 
+Similarly, the removal path should guarantee that the object is
+removed from idr *before* its grace period starts.
+
+Thanks.
+
 -- 
-1.8.1.4
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
