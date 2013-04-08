@@ -1,44 +1,62 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 02/12] memcg: avoid accessing memcg after releasing reference
-Date: Mon, 8 Apr 2013 14:33:19 +0800
-Message-ID: <516264AF.1040906@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 05/12] memcg: use css_get() in sock_update_memcg()
+Date: Mon, 8 Apr 2013 14:34:12 +0800
+Message-ID: <516264E4.5090405@huawei.com>
 References: <5162648B.9070802@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5162648B.9070802-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5162648B.9070802@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-This might cause use-after-free bug.
+Use css_get/css_put instead of mem_cgroup_get/put.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Note, if at the same time someone is moving @current to a different
+cgroup and removing the old cgroup, css_tryget() may return false,
+and sock->sk_cgrp won't be initialized, which is fine.
+
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/memcontrol.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e054ac0..2364f4e 100644
+index e65eaac..bbf5bf3 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3192,12 +3192,12 @@ void memcg_release_cache(struct kmem_cache *s)
+@@ -536,15 +536,15 @@ void sock_update_memcg(struct sock *sk)
+ 		 */
+ 		if (sk->sk_cgrp) {
+ 			BUG_ON(mem_cgroup_is_root(sk->sk_cgrp->memcg));
+-			mem_cgroup_get(sk->sk_cgrp->memcg);
++			css_get(&sk->sk_cgrp->memcg->css);
+ 			return;
+ 		}
  
- 	root = s->memcg_params->root_cache;
- 	root->memcg_params->memcg_caches[id] = NULL;
--	mem_cgroup_put(memcg);
- 
- 	mutex_lock(&memcg->slab_caches_mutex);
- 	list_del(&s->memcg_params->list);
- 	mutex_unlock(&memcg->slab_caches_mutex);
- 
-+	mem_cgroup_put(memcg);
- out:
- 	kfree(s->memcg_params);
+ 		rcu_read_lock();
+ 		memcg = mem_cgroup_from_task(current);
+ 		cg_proto = sk->sk_prot->proto_cgroup(memcg);
+-		if (!mem_cgroup_is_root(memcg) && memcg_proto_active(cg_proto)) {
+-			mem_cgroup_get(memcg);
++		if (!mem_cgroup_is_root(memcg) &&
++		    memcg_proto_active(cg_proto) && css_tryget(&memcg->css)) {
+ 			sk->sk_cgrp = cg_proto;
+ 		}
+ 		rcu_read_unlock();
+@@ -558,7 +558,7 @@ void sock_release_memcg(struct sock *sk)
+ 		struct mem_cgroup *memcg;
+ 		WARN_ON(!sk->sk_cgrp->memcg);
+ 		memcg = sk->sk_cgrp->memcg;
+-		mem_cgroup_put(memcg);
++		css_put(&sk->sk_cgrp->memcg->css);
+ 	}
  }
+ 
 -- 
 1.8.0.2
