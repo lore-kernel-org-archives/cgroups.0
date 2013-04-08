@@ -1,240 +1,301 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 00/32] memcg-aware slab shrinking with lasers and numbers
-Date: Mon,  8 Apr 2013 18:00:27 +0400
-Message-ID: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-Mime-Version: 1.0
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v3 13/32] fs: convert inode and dentry shrinking to be node aware
+Date: Mon,  8 Apr 2013 18:00:40 +0400
+Message-ID: <1365429659-22108-14-git-send-email-glommer@parallels.com>
+References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Dave Shrinnker <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
 
-Hi,
+From: Dave Chinner <dchinner@redhat.com>
 
-This patchset implements targeted shrinking for memcg when kmem limits are
-present. So far, we've been accounting kernel objects but failing allocations
-when short of memory. This is because our only option would be to call the
-global shrinker, depleting objects from all caches and breaking isolation.
+Now that the shrinker is passing a nodemask in the scan control
+structure, we can pass this to the the generic LRU list code to
+isolate reclaim to the lists on matching nodes.
 
-The main idea is to associate per-memcg lists with each of the LRUs. The main
-LRU still provides a single entry point and when adding or removing an element
-from the LRU, we use the page information to figure out which memcg it belongs
-to and relay it to the right list.
+This requires a small amount of refactoring of the LRU list API,
+which might be best split out into a separate patch.
 
-Base work:
-==========
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/dcache.c              |  8 +++++---
+ fs/inode.c               |  7 ++++---
+ fs/internal.h            |  6 ++++--
+ fs/super.c               | 22 +++++++++++++---------
+ fs/xfs/xfs_super.c       |  6 ++++--
+ include/linux/fs.h       |  4 ++--
+ include/linux/list_lru.h | 19 ++++++++++++++++---
+ lib/list_lru.c           | 18 ++++++++++--------
+ 8 files changed, 58 insertions(+), 32 deletions(-)
 
-Please note that this builds upon the recent work from Dave Chinner that
-sanitizes the LRU shrinking API and make the shrinkers node aware. Node
-awareness is not *strictly* needed for my work, but I still perceive it
-as an advantage. The API unification is a major need, and I build upon it
-heavily. That allows us to manipulate the LRUs without knowledge of the
-underlying objects with ease. This time, I am including that work here as
-a baseline.
-
-Main changes from *v2:
-* shrink dead memcgs when global pressure kicks in. Uses the new lru API.
-* bugfixes and comments from the mailing list.
-* proper hierarchy-aware walk in shrink_slab.
-
-Main changes from *v1:
-* merged comments from the mailing list
-* reworked lru-memcg API
-* effective proportional shrinking
-* sanitized locking on the memcg side
-* bill user memory first when kmem == umem
-* various bugfixes
-
-Numbers:
-========
-
-I've run kernbench with 2Gb setups and 3 different kernels. All of them are
-capable of cgroup kmem accounting,  but the first two ones won't be able to
-shrink it.
-
-Kernels
--------
-base: the current -mm
-davelru: that + dave's patches applied
-fulllru: that + my patches applied.
-
-I've ran all of them in a 1st level cgroup. Please note that the first
-two kernels are not capable of shrinking metadata, so I had to select a
-size that is enough to be in relatively constant pressure, but at the
-same time not having that pressure to be exclusively from kernel memory.
-2Gb did the job. This is a 2-node 24-way machine.
-
-Results:
---------
-
-Base:
-Average Optimal load -j 24 Run (std deviation):
-Elapsed Time 415.988 (8.37909)
-User Time 4142 (759.964)
-System Time 418.483 (62.0377)
-Percent CPU 1030.7 (267.462)
-Context Switches 391509 (268361)
-Sleeps 738483 (149934)
-
-Dave:
-Average Optimal load -j 24 Run (std deviation):
-Elapsed Time 424.486 (16.7365) ( + 2 % vs base)
-User Time 4146.8 (764.012) ( + 0.84 % vs base)
-System Time 419.24 (62.4507) (+ 0.18 % vs base)
-Percent CPU 1012.1 (264.558) (-1.8 % vs base)
-Context Switches 393363 (268899) (+ 0.47 % vs base)
-Sleeps 739905 (147344) (+ 0.19 % vs base)
-
-
-Full:
-Average Optimal load -j 24 Run (std deviation):
-Elapsed Time 456.644 (15.3567) ( + 9.7 % vs base)
-User Time 4036.3 (645.261) ( - 2.5 % vs base)
-System Time 438.134 (82.251) ( + 4.7 % vs base)
-Percent CPU 973 (168.581) ( - 5.6 % vs base)
-Context Switches 350796 (229700) ( - 10 % vs base)
-Sleeps 728156 (138808) ( - 1.4 % vs base )
-
-Discussion
------------
-
-First-level analysis: All figures fall within the std dev, except for
-Full LRU wall time. It does fall within 2 std devs, though.
-On the other hand, Full LRU kernel leads to better cpu utilization and
-greater efficiency.
-
-Details: The reclaim patterns in the three kernels are expected to be
-different. User memory will always be the main driver, but in case of
-pressure the first two kernels will shrink it while keeping the metadata
-intact. This should lead to smaller system times figure at expense of
-bigger user time figures, since user pages will be evicted more often.
-This is consistent with the figures I've found.
-
-Full LRU kernels have a 2.5 % better user time utilization, with 5.6 %
-less CPU consumed and 10 % less context switches.
-
-This comes at the expense of a 4.7 % loss of system time. Because we
-will have to bring more dentry and inode objects back from caches, we
-will stress more the slab code.
-
-Because this is a benchmark that stresses a lot of metadata, it is
-expected that this increase affects the end wall result proportionally.
-We notice that the mere introduction of LRU code (Dave's Kernel) does
-not affect the end wall time result outside the standard deviation.
-Shrinking those objects, however, will lead to bigger wall times. This
-is within the expected. No one would ever argue that the right kernel
-behavior for all cases should keep the metadata in memory at expense of
-user memory (and even if we should, we should do it the same way for the
-cgroups).
-
-My final conclusions is that performance wise the work is sound and
-operates within expectations.
-
-Dave Chinner (17):
-  dcache: convert dentry_stat.nr_unused to per-cpu counters
-  dentry: move to per-sb LRU locks
-  dcache: remove dentries from LRU before putting on dispose list
-  mm: new shrinker API
-  shrinker: convert superblock shrinkers to new API
-  list: add a new LRU list type
-  inode: convert inode lru list to generic lru list code.
-  dcache: convert to use new lru list infrastructure
-  list_lru: per-node list infrastructure
-  shrinker: add node awareness
-  fs: convert inode and dentry shrinking to be node aware
-  xfs: convert buftarg LRU to generic code
-  xfs: convert dquot cache lru to list_lru
-  fs: convert fs shrinkers to new scan/count API
-  drivers: convert shrinkers to new count/scan API
-  shrinker: convert remaining shrinkers to count/scan API
-  shrinker: Kill old ->shrink API.
-
-Glauber Costa (15):
-  super: fix calculation of shrinkable objects for small numbers
-  vmscan: take at least one pass with shrinkers
-  hugepage: convert huge zero page shrinker to new shrinker API
-  vmscan: also shrink slab in memcg pressure
-  memcg,list_lru: duplicate LRUs upon kmemcg creation
-  lru: add an element to a memcg list
-  list_lru: also include memcg lists in counts and scans
-  list_lru: per-memcg walks
-  memcg: per-memcg kmem shrinking
-  list_lru: reclaim proportionaly between memcgs and nodes
-  memcg: scan cache objects hierarchically
-  memcg: move initialization to memcg creation
-  memcg: shrink dead memcgs upon global memory pressure.
-  super: targeted memcg reclaim
-  memcg: debugging facility to access dangling memcgs
-
- Documentation/cgroups/memory.txt           |  16 +
- arch/x86/kvm/mmu.c                         |  35 +-
- drivers/gpu/drm/i915/i915_dma.c            |   4 +-
- drivers/gpu/drm/i915/i915_drv.h            |   2 +-
- drivers/gpu/drm/i915/i915_gem.c            |  69 +++-
- drivers/gpu/drm/i915/i915_gem_evict.c      |  10 +-
- drivers/gpu/drm/i915/i915_gem_execbuffer.c |   2 +-
- drivers/gpu/drm/ttm/ttm_page_alloc.c       |  48 ++-
- drivers/gpu/drm/ttm/ttm_page_alloc_dma.c   |  55 ++-
- drivers/md/dm-bufio.c                      |  65 +--
- drivers/staging/android/ashmem.c           |  44 ++-
- drivers/staging/android/lowmemorykiller.c  |  40 +-
- drivers/staging/zcache/zcache-main.c       |  29 +-
- fs/dcache.c                                | 240 ++++++-----
- fs/drop_caches.c                           |   1 +
- fs/ext4/extents_status.c                   |  30 +-
- fs/gfs2/glock.c                            |  30 +-
- fs/gfs2/main.c                             |   3 +-
- fs/gfs2/quota.c                            |  14 +-
- fs/gfs2/quota.h                            |   4 +-
- fs/inode.c                                 | 174 ++++----
- fs/internal.h                              |   5 +
- fs/mbcache.c                               |  53 +--
- fs/nfs/dir.c                               |  20 +-
- fs/nfs/internal.h                          |   4 +-
- fs/nfs/super.c                             |   3 +-
- fs/nfsd/nfscache.c                         |  31 +-
- fs/quota/dquot.c                           |  39 +-
- fs/super.c                                 | 107 +++--
- fs/ubifs/shrinker.c                        |  20 +-
- fs/ubifs/super.c                           |   3 +-
- fs/ubifs/ubifs.h                           |   3 +-
- fs/xfs/xfs_buf.c                           | 167 ++++----
- fs/xfs/xfs_buf.h                           |   5 +-
- fs/xfs/xfs_dquot.c                         |   7 +-
- fs/xfs/xfs_icache.c                        |   4 +-
- fs/xfs/xfs_icache.h                        |   2 +-
- fs/xfs/xfs_qm.c                            | 275 ++++++-------
- fs/xfs/xfs_qm.h                            |   4 +-
- fs/xfs/xfs_super.c                         |  12 +-
- include/linux/dcache.h                     |   4 +
- include/linux/fs.h                         |  25 +-
- include/linux/list_lru.h                   | 121 ++++++
- include/linux/memcontrol.h                 |  51 +++
- include/linux/shrinker.h                   |  45 ++-
- include/linux/swap.h                       |   2 +
- include/trace/events/vmscan.h              |   4 +-
- init/Kconfig                               |  17 +
- lib/Makefile                               |   2 +-
- lib/list_lru.c                             | 498 +++++++++++++++++++++++
- mm/huge_memory.c                           |  18 +-
- mm/memcontrol.c                            | 612 ++++++++++++++++++++++++++---
- mm/memory-failure.c                        |   2 +
- mm/slab_common.c                           |   1 -
- mm/vmscan.c                                | 322 ++++++++++-----
- net/sunrpc/auth.c                          |  45 ++-
- 56 files changed, 2529 insertions(+), 919 deletions(-)
- create mode 100644 include/linux/list_lru.h
- create mode 100644 lib/list_lru.c
-
+diff --git a/fs/dcache.c b/fs/dcache.c
+index baef78c..b276bb2 100644
+--- a/fs/dcache.c
++++ b/fs/dcache.c
+@@ -895,6 +895,7 @@ dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
+  * prune_dcache_sb - shrink the dcache
+  * @sb: superblock
+  * @nr_to_scan : number of entries to try to free
++ * @nodes_to_walk: which nodes to scan for freeable entities
+  *
+  * Attempt to shrink the superblock dcache LRU by @nr_to_scan entries. This is
+  * done when we need more memory an called from the superblock shrinker
+@@ -903,13 +904,14 @@ dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
+  * This function may fail to free any resources if all the dentries are in
+  * use.
+  */
+-long prune_dcache_sb(struct super_block *sb, long nr_to_scan)
++long prune_dcache_sb(struct super_block *sb, long nr_to_scan,
++		     nodemask_t *nodes_to_walk)
+ {
+ 	LIST_HEAD(dispose);
+ 	long freed;
+ 
+-	freed = list_lru_walk(&sb->s_dentry_lru, dentry_lru_isolate,
+-			      &dispose, nr_to_scan);
++	freed = list_lru_walk_nodemask(&sb->s_dentry_lru, dentry_lru_isolate,
++				       &dispose, nr_to_scan, nodes_to_walk);
+ 	shrink_dentry_list(&dispose);
+ 	return freed;
+ }
+diff --git a/fs/inode.c b/fs/inode.c
+index 61980f1..1b7a87a 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -745,13 +745,14 @@ inode_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
+  * to trim from the LRU. Inodes to be freed are moved to a temporary list and
+  * then are freed outside inode_lock by dispose_list().
+  */
+-long prune_icache_sb(struct super_block *sb, long nr_to_scan)
++long prune_icache_sb(struct super_block *sb, long nr_to_scan,
++		     nodemask_t *nodes_to_walk)
+ {
+ 	LIST_HEAD(freeable);
+ 	long freed;
+ 
+-	freed = list_lru_walk(&sb->s_inode_lru, inode_lru_isolate,
+-						&freeable, nr_to_scan);
++	freed = list_lru_walk_nodemask(&sb->s_inode_lru, inode_lru_isolate,
++				       &freeable, nr_to_scan, nodes_to_walk);
+ 	dispose_list(&freeable);
+ 	return freed;
+ }
+diff --git a/fs/internal.h b/fs/internal.h
+index 5099f87..ed6944e 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -110,7 +110,8 @@ extern int open_check_o_direct(struct file *f);
+  * inode.c
+  */
+ extern spinlock_t inode_sb_list_lock;
+-extern long prune_icache_sb(struct super_block *sb, long nr_to_scan);
++extern long prune_icache_sb(struct super_block *sb, long nr_to_scan,
++			    nodemask_t *nodes_to_scan);
+ extern void inode_add_lru(struct inode *inode);
+ 
+ /*
+@@ -126,4 +127,5 @@ extern int invalidate_inodes(struct super_block *, bool);
+  * dcache.c
+  */
+ extern struct dentry *__d_alloc(struct super_block *, const struct qstr *);
+-extern long prune_dcache_sb(struct super_block *sb, long nr_to_scan);
++extern long prune_dcache_sb(struct super_block *sb, long nr_to_scan,
++			    nodemask_t *nodes_to_scan);
+diff --git a/fs/super.c b/fs/super.c
+index 66f5cde..5c7b879 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -75,10 +75,10 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+ 		return -1;
+ 
+ 	if (sb->s_op && sb->s_op->nr_cached_objects)
+-		fs_objects = sb->s_op->nr_cached_objects(sb);
++		fs_objects = sb->s_op->nr_cached_objects(sb, &sc->nodes_to_scan);
+ 
+-	inodes = list_lru_count(&sb->s_inode_lru);
+-	dentries = list_lru_count(&sb->s_dentry_lru);
++	inodes = list_lru_count_nodemask(&sb->s_inode_lru, &sc->nodes_to_scan);
++	dentries = list_lru_count_nodemask(&sb->s_dentry_lru, &sc->nodes_to_scan);
+ 	total_objects = dentries + inodes + fs_objects + 1;
+ 
+ 	/* proportion the scan between the caches */
+@@ -89,13 +89,14 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+ 	 * prune the dcache first as the icache is pinned by it, then
+ 	 * prune the icache, followed by the filesystem specific caches
+ 	 */
+-	freed = prune_dcache_sb(sb, dentries);
+-	freed += prune_icache_sb(sb, inodes);
++	freed = prune_dcache_sb(sb, dentries, &sc->nodes_to_scan);
++	freed += prune_icache_sb(sb, inodes, &sc->nodes_to_scan);
+ 
+ 	if (fs_objects) {
+ 		fs_objects = mult_frac(sc->nr_to_scan, fs_objects,
+ 								total_objects);
+-		freed += sb->s_op->free_cached_objects(sb, fs_objects);
++		freed += sb->s_op->free_cached_objects(sb, fs_objects,
++						       &sc->nodes_to_scan);
+ 	}
+ 
+ 	drop_super(sb);
+@@ -113,10 +114,13 @@ static long super_cache_count(struct shrinker *shrink, struct shrink_control *sc
+ 		return -1;
+ 
+ 	if (sb->s_op && sb->s_op->nr_cached_objects)
+-		total_objects = sb->s_op->nr_cached_objects(sb);
++		total_objects = sb->s_op->nr_cached_objects(sb,
++						 &sc->nodes_to_scan);
+ 
+-	total_objects += list_lru_count(&sb->s_dentry_lru);
+-	total_objects += list_lru_count(&sb->s_inode_lru);
++	total_objects += list_lru_count_nodemask(&sb->s_dentry_lru,
++						 &sc->nodes_to_scan);
++	total_objects += list_lru_count_nodemask(&sb->s_inode_lru,
++						 &sc->nodes_to_scan);
+ 
+ 	total_objects = vfs_pressure_ratio(total_objects);
+ 	drop_super(sb);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 1ff991b..7fa6021 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1525,7 +1525,8 @@ xfs_fs_mount(
+ 
+ static long
+ xfs_fs_nr_cached_objects(
+-	struct super_block	*sb)
++	struct super_block	*sb,
++	nodemask_t		*nodes_to_count)
+ {
+ 	return xfs_reclaim_inodes_count(XFS_M(sb));
+ }
+@@ -1533,7 +1534,8 @@ xfs_fs_nr_cached_objects(
+ static long
+ xfs_fs_free_cached_objects(
+ 	struct super_block	*sb,
+-	long			nr_to_scan)
++	long			nr_to_scan,
++	nodemask_t		*nodes_to_scan)
+ {
+ 	return xfs_reclaim_inodes_nr(XFS_M(sb), nr_to_scan);
+ }
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 8b25de0..306c83e 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1607,8 +1607,8 @@ struct super_operations {
+ 	ssize_t (*quota_write)(struct super_block *, int, const char *, size_t, loff_t);
+ #endif
+ 	int (*bdev_try_to_free_page)(struct super_block*, struct page*, gfp_t);
+-	long (*nr_cached_objects)(struct super_block *);
+-	long (*free_cached_objects)(struct super_block *, long);
++	long (*nr_cached_objects)(struct super_block *, nodemask_t *);
++	long (*free_cached_objects)(struct super_block *, long, nodemask_t *);
+ };
+ 
+ /*
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index 9073f97..8f4db8e 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -31,15 +31,28 @@ struct list_lru {
+ int list_lru_init(struct list_lru *lru);
+ int list_lru_add(struct list_lru *lru, struct list_head *item);
+ int list_lru_del(struct list_lru *lru, struct list_head *item);
+-long list_lru_count(struct list_lru *lru);
++long list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count);
++
++static inline long list_lru_count(struct list_lru *lru)
++{
++	return list_lru_count_nodemask(lru, &lru->active_nodes);
++}
++
+ 
+ typedef enum lru_status
+ (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
+ 
+ typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
+ 
+-long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
+-		   void *cb_arg, long nr_to_walk);
++long list_lru_walk_nodemask(struct list_lru *lru, list_lru_walk_cb isolate,
++		   void *cb_arg, long nr_to_walk, nodemask_t *nodes_to_walk);
++
++static inline long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
++				 void *cb_arg, long nr_to_walk)
++{
++	return list_lru_walk_nodemask(lru, isolate, cb_arg, nr_to_walk,
++				      &lru->active_nodes);
++}
+ 
+ long list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
+ 
+diff --git a/lib/list_lru.c b/lib/list_lru.c
+index 0119af8..6c88dc5 100644
+--- a/lib/list_lru.c
++++ b/lib/list_lru.c
+@@ -54,13 +54,14 @@ list_lru_del(
+ EXPORT_SYMBOL_GPL(list_lru_del);
+ 
+ long
+-list_lru_count(
+-	struct list_lru *lru)
++list_lru_count_nodemask(
++	struct list_lru *lru,
++	nodemask_t	*nodes_to_count)
+ {
+ 	long count = 0;
+ 	int nid;
+ 
+-	for_each_node_mask(nid, lru->active_nodes) {
++	for_each_node_mask(nid, *nodes_to_count) {
+ 		struct list_lru_node *nlru = &lru->node[nid];
+ 
+ 		spin_lock(&nlru->lock);
+@@ -71,7 +72,7 @@ list_lru_count(
+ 
+ 	return count;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_count);
++EXPORT_SYMBOL_GPL(list_lru_count_nodemask);
+ 
+ static long
+ list_lru_walk_node(
+@@ -116,16 +117,17 @@ restart:
+ }
+ 
+ long
+-list_lru_walk(
++list_lru_walk_nodemask(
+ 	struct list_lru	*lru,
+ 	list_lru_walk_cb isolate,
+ 	void		*cb_arg,
+-	long		nr_to_walk)
++	long		nr_to_walk,
++	nodemask_t	*nodes_to_walk)
+ {
+ 	long isolated = 0;
+ 	int nid;
+ 
+-	for_each_node_mask(nid, lru->active_nodes) {
++	for_each_node_mask(nid, *nodes_to_walk) {
+ 		isolated += list_lru_walk_node(lru, nid, isolate,
+ 					       cb_arg, &nr_to_walk);
+ 		if (nr_to_walk <= 0)
+@@ -133,7 +135,7 @@ list_lru_walk(
+ 	}
+ 	return isolated;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_walk);
++EXPORT_SYMBOL_GPL(list_lru_walk_nodemask);
+ 
+ static long
+ list_lru_dispose_all_node(
 -- 
 1.8.1.4
+
