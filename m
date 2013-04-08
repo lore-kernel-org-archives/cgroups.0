@@ -1,116 +1,148 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 1/8] cgroup: implement cgroup_is_ancestor()
-Date: Mon, 8 Apr 2013 20:03:44 +0200
-Message-ID: <20130408180335.GA22512@dhcp22.suse.cz>
-References: <51627DA9.7020507@huawei.com>
- <51627DBB.5050005@huawei.com>
- <20130408144750.GK17178@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Workman-devel] cgroup: status-quo and userland efforts
+Date: Mon, 8 Apr 2013 11:16:07 -0700
+Message-ID: <20130408181607.GI3021@htj.dyndns.org>
+References: <20130406012159.GA17159@mtj.dyndns.org>
+	<20130408175925.GE28292@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=MZ5+0HD4hjcEfqHs3NyWEAL1iorcYmuWojOPFDN1768=;
-        b=nQJKQH9d+xue5wwqMVNnn+aQq9I0tTIKUnea7xC1MfY19p4VMmvcKF5+FquMPwMxdh
-         X6Tr7WSDpGWnO/yr/9ggu+h4jij/mzlxBFN+VRMagOVm+wgz9+DH1EKpmfB3lyce0WAl
-         1QOQwWZDXSugq86a7Msd2NO55hI09//Mi5NSAOtPQ6U4eoYUE74K6V0l9eF+7NU9us+W
-         PrGHsZ8ObSXyenIdjXNe6MXYuHXFIaaxPcOgkGP+J7jS3dhw1inuq6s3FTwzmTzr/ma7
-         qqr/gubL7RtLdPrZdX6CRV2PKq2fqB8cUbKdGmfmcz0dnmhOxYe4el4goprD3Ez5ldpw
-         OKvg==
-Content-Disposition: inline
-In-Reply-To: <20130408144750.GK17178@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=vn55Q4QE+6/GKa0TIsGk9egPKBc8NeQSBmP3NLLoDkw=;
+	b=bcJjkGBSHtUUBLlrRBYna801XCzqJtJjHJxdIK22MoyEIjgZEY/jEtRXRRxqERcYdY
+	MYJkHtWHRM3MPVRltsk3laAMTJx8Mp8QQE0qHIy8MDvhyus3ro3CxZNYMIfseYy+8fWa
+	xDs6UGEKiGFyPF1g/OtlX6x3Ea/xjb1KjfNGaXfBzUC15qAf0/Xvsnxh1+jx4koeFeDn
+	Q1fbf/o+lJlxHJTX/QoceC1g/e+/KkWoLTY8+QQD2EwuuA6PlrNurwZoPHv8r7W54zwX
+	dQe4/qUNkvONard8XMCHH1lcYF3Nhxyr1kpeH4hcjoWxDdF7vijnGhTtSOd2MSD0dcPw
+	HWuQ==
+Content-Disposition: inline
+In-Reply-To: <20130408175925.GE28292-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Mon 08-04-13 16:47:50, Michal Hocko wrote:
-> On Mon 08-04-13 16:20:11, Li Zefan wrote:
-> [...]
-> > @@ -5299,6 +5300,26 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
-> >  	return css ? css : ERR_PTR(-ENOENT);
-> >  }
-> >  
-> > +/**
-> > + * cgroup_is_ancestor - test "root" cgroup is an ancestor of "child"
-> > + * @child: the cgroup to be tested.
-> > + * @root: the cgroup supposed to be an ancestor of the child.
-> > + *
-> > + * Returns true if "root" is an ancestor of "child" in its hierarchy.
-> > + */
-> > +bool cgroup_is_ancestor(struct cgroup *child, struct cgroup *root)
-> > +{
-> > +	int depth = child->depth;
+Hey, Vivek.
+
+On Mon, Apr 08, 2013 at 01:59:26PM -0400, Vivek Goyal wrote:
+> But using the library admin application should be able to query the
+> full "paritition" hierarchy and their weigths and calculate % system
+> resources. I think one problem there is cpu controller where % resoruce
+> of a cgroup depends on tasks entities which are peer to group. But that's
+> a kernel issue and not user space thing.
+
+Yeah, we're gonna have to implement a different operation mode.
+
+> So I am not sure what are potential problems with proposed model of
+> configuration in workman. All the consumer managers still follow what
+> libarary has told them to do.
+
+Sure, if we assume everyone follows the rules and behaves nicely.
+It's more about the general approach.  Allowing / encouraging sharing
+or distributing control of cgroup hierarchy without forcing structure
+and rigid control over it is likely to lead to confusion and
+fragility.
+
+> >  or maybe some other program just happened to choose the
+> >   same name.
 > 
-> Is this functionality helpful for other controllers but memcg?
-> css_is_ancestor is currently used only by memcg code AFAICS and we can
-> get the same functionality easily by using something like:
+> Two programs ideally would have their own sub hiearchy. And if not one
+> of the programs should get the conflict when trying to create cgroup and
+> should back-off or fail or give warning...
 
-And as it turned out using css_is_ancestor is not correct. Here
-is a patch to fix the issue. I will leave the decision whether
-cgroup_is_ancestor makes sense even without users to you.
-Would you be willing to take this into your current series so that we to
-not clash over that code?
----
-From 684e90bf2fcd5e0f376a3c7bb0176c1267add7df Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
-Date: Mon, 8 Apr 2013 19:46:34 +0200
-Subject: [PATCH] memcg: fix __mem_cgroup_same_or_subtree
+And who's responsible for deleting it?  What if the program crashes?
 
-__mem_cgroup_same_or_subtree relies on css_is_ancestor if hierarchy is
-enabled for ages. This, however, is not correct because use_hierarchy
-doesn't need to be true all the way up the cgroup hierarchy. Consider
-the following example:
-root (use_hierarchy=0)
- \
-  A (use_hierarchy=0)
-   \
-    B (use_hierarchy=1)
-     \
-      C (use_hierarchy=1)
+> > Who owns config knobs in that directory?
+> 
+> IIUC, workman was looking at two types of cgroups. Once called
+> "partitions" which will be created by library at startup time and
+> library manages the configuration (something like cgconfig.conf).
+> 
+> And individual managers create their own children groups for various
+> services under that partition and control the config knobs for those
+> services.
+> 
+> 			user-defined-partition
+> 			     /    |    \
+>                            virt1  virt2 virt3  
+> 
+> So user should be able to define a partition and control the configuration
+> using workman lib. And if multiple virtual machines are being run in
+> the partition, then they create their own cgroups and libvirt controls
+> the properties of virt1, virt2, virt3 cgroups. I thought that was the
+> the understanding when we dicussed ownership of config knobs las time.
+> But things might have changed since last time. Workman folks should
+> be able to shed light on this.
 
-__mem_cgroup_same_or_subtree(A, C) would return true even though C is
-not from the same hierarchy subtree. The bug shouldn't be critical but
-at least dump_tasks might print unrelated tasks (via
-task_in_mem_cgroup).
+I just read the introduction doc and haven't delved into the API or
+code so I could be off but why should there be multiple managers?
+What's the benefit of that?  Wouldn't it make more sense to just have
+a central arbitrator that everyone talks to?  What's the benefit of
+distributing the responsiblities here?  It's not like we can put them
+in different security domains.
 
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/memcontrol.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> > * In many cases, resource distribution is system-wide policy decisions
+> >   and determining what to do often requires system-wide knowledge.
+> >   You can't provision memory limits without knowing what's available
+> >   in the system and what else is going on in the system, and you want
+> >   to be able to adjust them as situation and configuration changes.
+> >   Without anybody having full picture of how resources are
+> >   provisioned, how would any of that be possible?
+> 
+> I thought workman library will provide interfaces so that one can query
+> and be able to construct the full system view.
+> 
+> Their doc says.
+> 
+> GList *workmanager_partition_get_children(WorkmanPartition *partition,
+>                                             GError **error);
+> 
+> So I am assuming this can be used to construct the full partition
+> hierarchy and associated resource allocation.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f608546..177bec2 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1470,9 +1470,12 @@ bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
- {
- 	if (root_memcg == memcg)
- 		return true;
--	if (!root_memcg->use_hierarchy || !memcg)
-+	if (!memcg)
- 		return false;
--	return css_is_ancestor(&memcg->css, &root_memcg->css);
-+	while ((memcg = parent_mem_cgroup(memcg)))
-+		if (memcg == root_memcg)
-+			return true;
-+	return false;
- }
- 
- static bool mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
+Sure, maybe it can be used as a building block.
+
+> [..]
+> > I think the only logical thing to do is creating a centralized
+> > userland authority which takes full ownership of the cgroup filesystem
+> > interface, gives it a sane structure,
+> 
+> Right now systemd seems to be giving initial structure. I guess we will
+> require some changes where systemd itself runs in a cgroup and that
+> allows one to create peer groups. Something like.
+> 				
+> 				root
+> 				/  \
+> 			   systemd other-groups
+
+No, we need a single structured hierarchy which everyone uses
+*including* systemd.
+
+> > represents available resources
+> > in a sane form, and makes policy decisions based on configuration and
+> > requests.
+> 
+> Given the fact that library has view of full system resoruces (both
+> persistent view and active view), shouldn't we just be able to extend
+> the API to meet additional configuration or resource needs.
+
+Maybe, I don't know.  It just looks like a weird approach to me.
+Wouldn't it make more sense to implement it as a dbus service that
+everyone talks to?  That's how our base system is structured these
+days.  Why should this be any different?
+
+Thanks.
+
 -- 
-1.7.10.4
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
