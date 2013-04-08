@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@parallels.com>
-Subject: [PATCH v3 08/32] list: add a new LRU list type
-Date: Mon,  8 Apr 2013 18:00:35 +0400
-Message-ID: <1365429659-22108-9-git-send-email-glommer@parallels.com>
+Subject: [PATCH v3 27/32] list_lru: reclaim proportionaly between memcgs and nodes
+Date: Mon,  8 Apr 2013 18:00:54 +0400
+Message-ID: <1365429659-22108-28-git-send-email-glommer@parallels.com>
 References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
@@ -11,215 +11,158 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+The current list_lru code will try to scan objects until nr_to_walk is
+reached, and then stop. This number can be different from the total
+number of objects we have as returned by our count function. This is
+because the main shrinker driver is the one ultimately responsible for
+determining how many objects to shrink from each shrinker.
 
-Several subsystems use the same construct for LRU lists - a list
-head, a spin lock and and item count. They also use exactly the same
-code for adding and removing items from the LRU. Create a generic
-type for these LRU lists.
+Specially if this number is lower than the number of objects, and
+because we transverse the list always in the same order, we can have
+the last node and/or the last memcg always being less penalized than
+the others.
 
-This is the beginning of generic, node aware LRUs for shrinkers to
-work with.
+My proposed solution is to introduce some metric of proportionality
+based on the total number of objects per node and then scan all nodes
+and memcgs up until their share is reached.
 
-[ glommer: enum defined constants for lru. Suggested by gthelen ]
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Glauber Costa <glommer@parallels.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/list_lru.h |  44 ++++++++++++++++++
- lib/Makefile             |   2 +-
- lib/list_lru.c           | 117 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 162 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/list_lru.h
- create mode 100644 lib/list_lru.c
+ lib/list_lru.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 83 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-new file mode 100644
-index 0000000..394c28c
---- /dev/null
-+++ b/include/linux/list_lru.h
-@@ -0,0 +1,44 @@
-+/*
-+ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
-+ * Author: David Chinner
-+ *
-+ * Generic LRU infrastructure
-+ */
-+#ifndef _LRU_LIST_H
-+#define _LRU_LIST_H
-+
-+#include <linux/list.h>
-+
-+enum lru_status {
-+	LRU_REMOVED,		/* item removed from list */
-+	LRU_ROTATE,		/* item referenced, give another pass */
-+	LRU_SKIP,		/* item cannot be locked, skip */
-+	LRU_RETRY,		/* item not freeable, lock dropped */
-+};
-+
-+struct list_lru {
-+	spinlock_t		lock;
-+	struct list_head	list;
-+	long			nr_items;
-+};
-+
-+int list_lru_init(struct list_lru *lru);
-+int list_lru_add(struct list_lru *lru, struct list_head *item);
-+int list_lru_del(struct list_lru *lru, struct list_head *item);
-+
-+static inline long list_lru_count(struct list_lru *lru)
-+{
-+	return lru->nr_items;
-+}
-+
-+typedef enum lru_status
-+(*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
-+
-+typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
-+
-+long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
-+		   void *cb_arg, long nr_to_walk);
-+
-+long list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
-+
-+#endif /* _LRU_LIST_H */
-diff --git a/lib/Makefile b/lib/Makefile
-index d7946ff..f14abd9 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -13,7 +13,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
- 	 sha1.o md5.o irq_regs.o reciprocal_div.o argv_split.o \
- 	 proportions.o flex_proportions.o prio_heap.o ratelimit.o show_mem.o \
- 	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
--	 earlycpio.o
-+	 earlycpio.o list_lru.o
- 
- lib-$(CONFIG_MMU) += ioremap.o
- lib-$(CONFIG_SMP) += cpumask.o
 diff --git a/lib/list_lru.c b/lib/list_lru.c
-new file mode 100644
-index 0000000..03bd984
---- /dev/null
+index 3093f98..8434a18 100644
+--- a/lib/list_lru.c
 +++ b/lib/list_lru.c
-@@ -0,0 +1,117 @@
-+/*
-+ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
-+ * Author: David Chinner
-+ *
-+ * Generic LRU infrastructure
-+ */
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/list_lru.h>
-+
-+int
-+list_lru_add(
+@@ -234,6 +234,43 @@ restart:
+ 	return isolated;
+ }
+ 
++static long
++memcg_isolate_lru(
 +	struct list_lru	*lru,
-+	struct list_head *item)
-+{
-+	spin_lock(&lru->lock);
-+	if (list_empty(item)) {
-+		list_add_tail(item, &lru->list);
-+		lru->nr_items++;
-+		spin_unlock(&lru->lock);
-+		return 1;
-+	}
-+	spin_unlock(&lru->lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_add);
-+
-+int
-+list_lru_del(
-+	struct list_lru	*lru,
-+	struct list_head *item)
-+{
-+	spin_lock(&lru->lock);
-+	if (!list_empty(item)) {
-+		list_del_init(item);
-+		lru->nr_items--;
-+		spin_unlock(&lru->lock);
-+		return 1;
-+	}
-+	spin_unlock(&lru->lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_del);
-+
-+long
-+list_lru_walk(
-+	struct list_lru *lru,
 +	list_lru_walk_cb isolate,
 +	void		*cb_arg,
-+	long		nr_to_walk)
++	long		nr_to_walk,
++	struct mem_cgroup *memcg,
++	int nid, unsigned long total_node)
 +{
-+	struct list_head *item, *n;
-+	long removed = 0;
-+restart:
-+	spin_lock(&lru->lock);
-+	list_for_each_safe(item, n, &lru->list) {
-+		int ret;
++	int memcg_id = memcg_cache_id(memcg);
++	unsigned long nr_to_walk_this;
++	long isolated = 0;
++	int idx;
++	struct list_lru_node *nlru;
 +
-+		if (nr_to_walk-- < 0)
-+			break;
++	for_each_memcg_lru_index(idx, memcg_id) {
++		nlru = lru_node_of_index(lru, idx, nid);
++		if (!nlru || !nlru->nr_items)
++			continue;
 +
-+		ret = isolate(item, &lru->lock, cb_arg);
-+		switch (ret) {
-+		case LRU_REMOVED:
-+			lru->nr_items--;
-+			removed++;
-+			break;
-+		case LRU_ROTATE:
-+			list_move_tail(item, &lru->list);
-+			break;
-+		case LRU_SKIP:
-+			break;
-+		case LRU_RETRY:
-+			goto restart;
-+		default:
-+			BUG();
-+		}
++		/*
++		 * no memcg: walk every memcg proportionally.
++		 * memcg case: scan everything (total_node)
++		 */
++		if (!memcg)
++			nr_to_walk_this = mult_frac(nlru->nr_items, nr_to_walk,
++						    total_node);
++		else
++			nr_to_walk_this = total_node;
++
++		isolated += list_lru_walk_node(lru, nlru, nid, isolate,
++				       cb_arg, &nr_to_walk_this);
 +	}
-+	spin_unlock(&lru->lock);
-+	return removed;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_walk);
 +
-+long
-+list_lru_dispose_all(
-+	struct list_lru *lru,
-+	list_lru_dispose_cb dispose)
-+{
-+	long disposed = 0;
-+	LIST_HEAD(dispose_list);
-+
-+	spin_lock(&lru->lock);
-+	while (!list_empty(&lru->list)) {
-+		list_splice_init(&lru->list, &dispose_list);
-+		disposed += lru->nr_items;
-+		lru->nr_items = 0;
-+		spin_unlock(&lru->lock);
-+
-+		dispose(&dispose_list);
-+
-+		spin_lock(&lru->lock);
-+	}
-+	spin_unlock(&lru->lock);
-+	return disposed;
++	return isolated;
 +}
 +
-+int
-+list_lru_init(
-+	struct list_lru	*lru)
-+{
-+	spin_lock_init(&lru->lock);
-+	INIT_LIST_HEAD(&lru->list);
-+	lru->nr_items = 0;
+ long
+ list_lru_walk_nodemask_memcg(
+ 	struct list_lru	*lru,
+@@ -246,9 +283,7 @@ list_lru_walk_nodemask_memcg(
+ 	long isolated = 0;
+ 	int nid;
+ 	nodemask_t nodes;
+-	int memcg_id = memcg_cache_id(memcg);
+-	int idx;
+-	struct list_lru_node *nlru;
++	unsigned long n_node, total_node, total = 0;
+ 
+ 	/*
+ 	 * Conservative code can call this setting nodes with node_setall.
+@@ -256,17 +291,52 @@ list_lru_walk_nodemask_memcg(
+ 	 */
+ 	nodes_and(nodes, *nodes_to_walk, node_online_map);
+ 
++	/*
++	 * We will first find out how many objects there are in the LRU, in
++	 * total. We could store that in a per-LRU counter as well, the same
++	 * way we store it in a per-NLRU. But lru_add and lru_del are way more
++	 * frequent operations, so it is better to pay the price here.
++	 *
++	 * Once we have that number, we will try to scan the nodes
++	 * proportionally to the amount of objects they have. The main shrinker
++	 * driver in vmscan.c will often ask us to shrink a quantity different
++	 * from the total quantity we reported in the count function (usually
++	 * less). This means that not scanning proportionally may leave nodes
++	 * (usually the last), unfairly charged.
++	 *
++	 * The final number we want is
++	 *
++	 * n_node = nr_to_scan * total_node / total
++	 */
++	for_each_node_mask(nid, nodes)
++		total += atomic_long_read(&lru->node_totals[nid]);
 +
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_init);
+ 	for_each_node_mask(nid, nodes) {
+-		for_each_memcg_lru_index(idx, memcg_id) {
+-			nlru = lru_node_of_index(lru, idx, nid);
+-			if (!nlru)
+-				continue;
+-
+-			isolated += list_lru_walk_node(lru, nlru, nid, isolate,
+-						       cb_arg, &nr_to_walk);
+-			if (nr_to_walk <= 0)
+-				break;
+-		}
++		total_node = atomic_long_read(&lru->node_totals[nid]);
++		if (!total_node)
++			continue;
++
++		 /*
++		  * There are items, but in less proportion. Because we have no
++		  * information about where exactly the pressure originates
++		  * from, it is better to try shrinking the few we have than to
++		  * skip it.  It might very well be that this node is under
++		  * pressure and any help would be welcome.
++		  */
++		n_node = mult_frac(total_node, nr_to_walk, total);
++		if (!n_node)
++			n_node = total_node;
++
++		/*
++		 * We will now scan all memcg-like entities (which includes the
++		 * global LRU, of index -1, and also try to mantain
++		 * proportionality among them.
++		 *
++		 * We will try to isolate:
++		 *	nr_memcg = n_node * nr_memcg_lru / total_node
++		 */
++		isolated += memcg_isolate_lru(lru, isolate, cb_arg,
++				      n_node, memcg, nid, total_node);
+ 	}
+ 	return isolated;
+ }
 -- 
 1.8.1.4
 
