@@ -1,365 +1,207 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v3 10/32] dcache: convert to use new lru list infrastructure
-Date: Mon,  8 Apr 2013 18:00:37 +0400
-Message-ID: <1365429659-22108-11-git-send-email-glommer@parallels.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: [PATCH v3 18/32] shrinker: convert remaining shrinkers to count/scan API
+Date: Mon,  8 Apr 2013 18:00:45 +0400
+Message-ID: <1365429659-22108-19-git-send-email-glommer@parallels.com>
 References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-Mime-Version: 1.0
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1365429659-22108-1-git-send-email-glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dave Shrinnker <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
 
-From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-[ glommer: don't reintroduce double decrement of nr_unused_dentries,
-  adapted for new LRU return codes ]
-Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Convert the remaining couple of random shrinkers in the tree to the
+new API.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/dcache.c        | 189 ++++++++++++++++++++++++-----------------------------
- fs/super.c         |  11 ++--
- include/linux/fs.h |  15 ++---
- 3 files changed, 97 insertions(+), 118 deletions(-)
+ arch/x86/kvm/mmu.c | 35 +++++++++++++++++++++++++----------
+ net/sunrpc/auth.c  | 45 +++++++++++++++++++++++++++++++--------------
+ 2 files changed, 56 insertions(+), 24 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index 67a0d53..baef78c 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -37,6 +37,7 @@
- #include <linux/rculist_bl.h>
- #include <linux/prefetch.h>
- #include <linux/ratelimit.h>
-+#include <linux/list_lru.h>
- #include "internal.h"
- #include "mount.h"
+diff --git a/arch/x86/kvm/mmu.c b/arch/x86/kvm/mmu.c
+index 956ca35..bebb8b6 100644
+--- a/arch/x86/kvm/mmu.c
++++ b/arch/x86/kvm/mmu.c
+@@ -4185,26 +4185,28 @@ restart:
+ 	spin_unlock(&kvm->mmu_lock);
+ }
  
-@@ -325,20 +326,8 @@ static void dentry_unlink_inode(struct dentry * dentry)
-  */
- static void dentry_lru_add(struct dentry *dentry)
+-static void kvm_mmu_remove_some_alloc_mmu_pages(struct kvm *kvm,
++static long kvm_mmu_remove_some_alloc_mmu_pages(struct kvm *kvm,
+ 						struct list_head *invalid_list)
  {
--	if (list_empty(&dentry->d_lru)) {
--		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
--		list_add(&dentry->d_lru, &dentry->d_sb->s_dentry_lru);
--		dentry->d_sb->s_nr_dentry_unused++;
-+	if (list_lru_add(&dentry->d_sb->s_dentry_lru, &dentry->d_lru))
- 		this_cpu_inc(nr_dentry_unused);
--		spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
--	}
--}
--
--static void __dentry_lru_del(struct dentry *dentry)
--{
--	list_del_init(&dentry->d_lru);
--	dentry->d_sb->s_nr_dentry_unused--;
--	this_cpu_dec(nr_dentry_unused);
+ 	struct kvm_mmu_page *page;
+ 
+ 	if (list_empty(&kvm->arch.active_mmu_pages))
+-		return;
++		return 0;
+ 
+ 	page = container_of(kvm->arch.active_mmu_pages.prev,
+ 			    struct kvm_mmu_page, link);
+-	kvm_mmu_prepare_zap_page(kvm, page, invalid_list);
++	return kvm_mmu_prepare_zap_page(kvm, page, invalid_list);
  }
  
- /*
-@@ -348,11 +337,8 @@ static void dentry_lru_del(struct dentry *dentry)
+-static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
++
++static long
++mmu_shrink_scan(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
  {
- 	BUG_ON(dentry->d_flags & DCACHE_SHRINK_LIST);
- 
--	if (!list_empty(&dentry->d_lru)) {
--		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
--		__dentry_lru_del(dentry);
--		spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
--	}
-+	if (list_lru_del(&dentry->d_sb->s_dentry_lru, &dentry->d_lru))
-+		this_cpu_dec(nr_dentry_unused);
- }
- 
- /*
-@@ -368,35 +354,19 @@ static void dentry_lru_del(struct dentry *dentry)
-  */
- static void dentry_lru_prune(struct dentry *dentry)
- {
--	if (!list_empty(&dentry->d_lru)) {
-+	int prune = dentry->d_flags & DCACHE_OP_PRUNE;
- 
--		if (dentry->d_flags & DCACHE_OP_PRUNE)
--			dentry->d_op->d_prune(dentry);
+ 	struct kvm *kvm;
+ 	int nr_to_scan = sc->nr_to_scan;
 -
--		if ((dentry->d_flags & DCACHE_SHRINK_LIST))
--			list_del_init(&dentry->d_lru);
--		else {
--			spin_lock(&dentry->d_sb->s_dentry_lru_lock);
--			__dentry_lru_del(dentry);
--			spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
--		}
--		dentry->d_flags &= ~DCACHE_SHRINK_LIST;
--	}
--}
--
--static void dentry_lru_move_list(struct dentry *dentry, struct list_head *list)
--{
--	BUG_ON(dentry->d_flags & DCACHE_SHRINK_LIST);
--
--	spin_lock(&dentry->d_sb->s_dentry_lru_lock);
--	if (list_empty(&dentry->d_lru)) {
--		list_add_tail(&dentry->d_lru, list);
--	} else {
--		list_move_tail(&dentry->d_lru, list);
--		dentry->d_sb->s_nr_dentry_unused--;
-+	if (!list_empty(&dentry->d_lru) &&
-+	    (dentry->d_flags & DCACHE_SHRINK_LIST))
-+		list_del_init(&dentry->d_lru);
-+	else if (list_lru_del(&dentry->d_sb->s_dentry_lru, &dentry->d_lru))
- 		this_cpu_dec(nr_dentry_unused);
--	}
--	spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
-+	else
-+		prune = 0;
-+
-+	dentry->d_flags &= ~DCACHE_SHRINK_LIST;
-+	if (prune)
-+		dentry->d_op->d_prune(dentry);
- }
+-	if (nr_to_scan == 0)
+-		goto out;
++	long freed = 0;
  
- /**
-@@ -861,12 +831,72 @@ static void shrink_dentry_list(struct list_head *list)
- 	rcu_read_unlock();
- }
+ 	raw_spin_lock(&kvm_lock);
  
-+static enum lru_status
-+dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
-+{
-+	struct list_head *freeable = arg;
-+	struct dentry	*dentry = container_of(item, struct dentry, d_lru);
-+
-+
-+	/*
-+	 * we are inverting the lru lock/dentry->d_lock here,
-+	 * so use a trylock. If we fail to get the lock, just skip
-+	 * it
-+	 */
-+	if (!spin_trylock(&dentry->d_lock))
-+		return LRU_SKIP;
-+
-+	/*
-+	 * Referenced dentries are still in use. If they have active
-+	 * counts, just remove them from the LRU. Otherwise give them
-+	 * another pass through the LRU.
-+	 */
-+	if (dentry->d_count) {
-+		list_del_init(&dentry->d_lru);
-+		spin_unlock(&dentry->d_lock);
-+		return LRU_REMOVED;
-+	}
-+
-+	if (dentry->d_flags & DCACHE_REFERENCED) {
-+		dentry->d_flags &= ~DCACHE_REFERENCED;
-+		spin_unlock(&dentry->d_lock);
-+
+@@ -4232,24 +4234,37 @@ static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
+ 		idx = srcu_read_lock(&kvm->srcu);
+ 		spin_lock(&kvm->mmu_lock);
+ 
+-		kvm_mmu_remove_some_alloc_mmu_pages(kvm, &invalid_list);
++		freed += kvm_mmu_remove_some_alloc_mmu_pages(kvm, &invalid_list);
+ 		kvm_mmu_commit_zap_page(kvm, &invalid_list);
+ 
+ 		spin_unlock(&kvm->mmu_lock);
+ 		srcu_read_unlock(&kvm->srcu, idx);
+ 
 +		/*
-+		 * The list move itself will be made by the common LRU code. At
-+		 * this point, we've dropped the dentry->d_lock but keep the
-+		 * lru lock. This is safe to do, since every list movement is
-+		 * protected by the lru lock even if both locks are held.
-+		 *
-+		 * This is guaranteed by the fact that all LRU management
-+		 * functions are intermediated by the LRU API calls like
-+		 * list_lru_add and list_lru_del. List movement in this file
-+		 * only ever occur through this functions or through callbacks
-+		 * like this one, that are called from the LRU API.
-+		 *
-+		 * The only exceptions to this are functions like
-+		 * shrink_dentry_list, and code that first checks for the
-+		 * DCACHE_SHRINK_LIST flag.  Those are guaranteed to be
-+		 * operating only with stack provided lists after they are
-+		 * properly isolated from the main list.  It is thus, always a
-+		 * local access.
++		 * unfair on small ones
++		 * per-vm shrinkers cry out
++		 * sadness comes quickly
 +		 */
-+		return LRU_ROTATE;
-+	}
-+
-+	dentry->d_flags |= DCACHE_SHRINK_LIST;
-+	list_move_tail(&dentry->d_lru, freeable);
-+	this_cpu_dec(nr_dentry_unused);
-+	spin_unlock(&dentry->d_lock);
-+
-+	return LRU_REMOVED;
+ 		list_move_tail(&kvm->vm_list, &vm_list);
+ 		break;
+ 	}
+ 
+ 	raw_spin_unlock(&kvm_lock);
++	return freed;
+ 
+-out:
 +}
 +
- /**
-  * prune_dcache_sb - shrink the dcache
-  * @sb: superblock
-- * @count: number of entries to try to free
-+ * @nr_to_scan : number of entries to try to free
-  *
-- * Attempt to shrink the superblock dcache LRU by @count entries. This is
-+ * Attempt to shrink the superblock dcache LRU by @nr_to_scan entries. This is
-  * done when we need more memory an called from the superblock shrinker
-  * function.
-  *
-@@ -875,45 +905,12 @@ static void shrink_dentry_list(struct list_head *list)
-  */
- long prune_dcache_sb(struct super_block *sb, long nr_to_scan)
- {
--	struct dentry *dentry;
--	LIST_HEAD(referenced);
--	LIST_HEAD(tmp);
--	long freed = 0;
--
--relock:
--	spin_lock(&sb->s_dentry_lru_lock);
--	while (!list_empty(&sb->s_dentry_lru)) {
--		dentry = list_entry(sb->s_dentry_lru.prev,
--				struct dentry, d_lru);
--		BUG_ON(dentry->d_sb != sb);
--
--		if (!spin_trylock(&dentry->d_lock)) {
--			spin_unlock(&sb->s_dentry_lru_lock);
--			cpu_relax();
--			goto relock;
--		}
--
--		if (dentry->d_flags & DCACHE_REFERENCED) {
--			dentry->d_flags &= ~DCACHE_REFERENCED;
--			list_move(&dentry->d_lru, &referenced);
--			spin_unlock(&dentry->d_lock);
--		} else {
--			list_move_tail(&dentry->d_lru, &tmp);
--			dentry->d_flags |= DCACHE_SHRINK_LIST;
--			this_cpu_dec(nr_dentry_unused);
--			sb->s_nr_dentry_unused--;
--			spin_unlock(&dentry->d_lock);
--			freed++;
--			if (!--nr_to_scan)
--				break;
--		}
--		cond_resched_lock(&sb->s_dentry_lru_lock);
--	}
--	if (!list_empty(&referenced))
--		list_splice(&referenced, &sb->s_dentry_lru);
--	spin_unlock(&sb->s_dentry_lru_lock);
-+	LIST_HEAD(dispose);
-+	long freed;
- 
--	shrink_dentry_list(&tmp);
-+	freed = list_lru_walk(&sb->s_dentry_lru, dentry_lru_isolate,
-+			      &dispose, nr_to_scan);
-+	shrink_dentry_list(&dispose);
- 	return freed;
++static long
++mmu_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
+ 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
  }
  
-@@ -947,24 +944,7 @@ shrink_dcache_list(
-  */
- void shrink_dcache_sb(struct super_block *sb)
- {
--	LIST_HEAD(tmp);
--
--	spin_lock(&sb->s_dentry_lru_lock);
--	while (!list_empty(&sb->s_dentry_lru)) {
--		list_splice_init(&sb->s_dentry_lru, &tmp);
--
--		/*
--		 * account for removal here so we don't need to handle it later
--		 * even though the dentry is no longer on the lru list.
--		 */
--		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
--		sb->s_nr_dentry_unused = 0;
--
--		spin_unlock(&sb->s_dentry_lru_lock);
--		shrink_dcache_list(&tmp);
--		spin_lock(&sb->s_dentry_lru_lock);
--	}
--	spin_unlock(&sb->s_dentry_lru_lock);
-+	list_lru_dispose_all(&sb->s_dentry_lru, shrink_dcache_list);
- }
- EXPORT_SYMBOL(shrink_dcache_sb);
- 
-@@ -1235,7 +1215,8 @@ resume:
- 		if (dentry->d_count) {
- 			dentry_lru_del(dentry);
- 		} else if (!(dentry->d_flags & DCACHE_SHRINK_LIST)) {
--			dentry_lru_move_list(dentry, dispose);
-+			dentry_lru_del(dentry);
-+			list_add_tail(&dentry->d_lru, dispose);
- 			dentry->d_flags |= DCACHE_SHRINK_LIST;
- 			found++;
- 		}
-diff --git a/fs/super.c b/fs/super.c
-index 9049110..66f5cde 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -78,11 +78,11 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 		fs_objects = sb->s_op->nr_cached_objects(sb);
- 
- 	inodes = list_lru_count(&sb->s_inode_lru);
--	total_objects = sb->s_nr_dentry_unused + inodes + fs_objects + 1;
-+	dentries = list_lru_count(&sb->s_dentry_lru);
-+	total_objects = dentries + inodes + fs_objects + 1;
- 
- 	/* proportion the scan between the caches */
--	dentries = mult_frac(sc->nr_to_scan, sb->s_nr_dentry_unused,
--								total_objects);
-+	dentries = mult_frac(sc->nr_to_scan, dentries, total_objects);
- 	inodes = mult_frac(sc->nr_to_scan, inodes, total_objects);
- 
- 	/*
-@@ -115,7 +115,7 @@ static long super_cache_count(struct shrinker *shrink, struct shrink_control *sc
- 	if (sb->s_op && sb->s_op->nr_cached_objects)
- 		total_objects = sb->s_op->nr_cached_objects(sb);
- 
--	total_objects += sb->s_nr_dentry_unused;
-+	total_objects += list_lru_count(&sb->s_dentry_lru);
- 	total_objects += list_lru_count(&sb->s_inode_lru);
- 
- 	total_objects = vfs_pressure_ratio(total_objects);
-@@ -195,8 +195,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		INIT_HLIST_NODE(&s->s_instances);
- 		INIT_HLIST_BL_HEAD(&s->s_anon);
- 		INIT_LIST_HEAD(&s->s_inodes);
--		INIT_LIST_HEAD(&s->s_dentry_lru);
--		spin_lock_init(&s->s_dentry_lru_lock);
-+		list_lru_init(&s->s_dentry_lru);
- 		list_lru_init(&s->s_inode_lru);
- 		INIT_LIST_HEAD(&s->s_mounts);
- 		init_rwsem(&s->s_umount);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index fdeaca1..8b25de0 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1262,14 +1262,6 @@ struct super_block {
- 	struct list_head	s_files;
- #endif
- 	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
--
--	/* s_dentry_lru_lock protects s_dentry_lru and s_nr_dentry_unused */
--	spinlock_t		s_dentry_lru_lock ____cacheline_aligned_in_smp;
--	struct list_head	s_dentry_lru;	/* unused dentry lru */
--	int			s_nr_dentry_unused;	/* # of dentry on lru */
--
--	struct list_lru		s_inode_lru ____cacheline_aligned_in_smp;
--
- 	struct block_device	*s_bdev;
- 	struct backing_dev_info *s_bdi;
- 	struct mtd_info		*s_mtd;
-@@ -1320,6 +1312,13 @@ struct super_block {
- 
- 	/* Being remounted read-only */
- 	int s_readonly_remount;
-+
-+	/*
-+	 * Keep the lru lists last in the structure so they always sit on their
-+	 * own individual cachelines.
-+	 */
-+	struct list_lru		s_dentry_lru ____cacheline_aligned_in_smp;
-+	struct list_lru		s_inode_lru ____cacheline_aligned_in_smp;
+ static struct shrinker mmu_shrinker = {
+-	.shrink = mmu_shrink,
++	.count_objects = mmu_shrink_count,
++	.scan_objects = mmu_shrink_scan,
+ 	.seeks = DEFAULT_SEEKS * 10,
  };
  
- extern struct timespec current_fs_time(struct super_block *sb);
+diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
+index f529404..f340090 100644
+--- a/net/sunrpc/auth.c
++++ b/net/sunrpc/auth.c
+@@ -340,12 +340,13 @@ EXPORT_SYMBOL_GPL(rpcauth_destroy_credcache);
+ /*
+  * Remove stale credentials. Avoid sleeping inside the loop.
+  */
+-static int
++static long
+ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ {
+ 	spinlock_t *cache_lock;
+ 	struct rpc_cred *cred, *next;
+ 	unsigned long expired = jiffies - RPC_AUTH_EXPIRY_MORATORIUM;
++	long freed = 0;
+ 
+ 	list_for_each_entry_safe(cred, next, &cred_unused, cr_lru) {
+ 
+@@ -357,10 +358,11 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ 		 */
+ 		if (time_in_range(cred->cr_expire, expired, jiffies) &&
+ 		    test_bit(RPCAUTH_CRED_HASHED, &cred->cr_flags) != 0)
+-			return 0;
++			break;
+ 
+ 		list_del_init(&cred->cr_lru);
+ 		number_cred_unused--;
++		freed++;
+ 		if (atomic_read(&cred->cr_count) != 0)
+ 			continue;
+ 
+@@ -373,29 +375,43 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ 		}
+ 		spin_unlock(cache_lock);
+ 	}
+-	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
++	return freed;
+ }
+ 
+ /*
+  * Run memory cache shrinker.
+  */
+-static int
+-rpcauth_cache_shrinker(struct shrinker *shrink, struct shrink_control *sc)
++static long
++rpcauth_cache_shrink_scan(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++
+ {
+ 	LIST_HEAD(free);
+-	int res;
+-	int nr_to_scan = sc->nr_to_scan;
+-	gfp_t gfp_mask = sc->gfp_mask;
++	long freed;
++
++	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
++		return -1;
+ 
+-	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
+-		return (nr_to_scan == 0) ? 0 : -1;
++	/* nothing left, don't come back */
+ 	if (list_empty(&cred_unused))
+-		return 0;
++		return -1;
++
+ 	spin_lock(&rpc_credcache_lock);
+-	res = rpcauth_prune_expired(&free, nr_to_scan);
++	freed = rpcauth_prune_expired(&free, sc->nr_to_scan);
+ 	spin_unlock(&rpc_credcache_lock);
+ 	rpcauth_destroy_credlist(&free);
+-	return res;
++
++	return freed;
++}
++
++static long
++rpcauth_cache_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++
++{
++	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
+ }
+ 
+ /*
+@@ -711,7 +727,8 @@ rpcauth_uptodatecred(struct rpc_task *task)
+ }
+ 
+ static struct shrinker rpc_cred_shrinker = {
+-	.shrink = rpcauth_cache_shrinker,
++	.count_objects = rpcauth_cache_shrink_count,
++	.scan_objects = rpcauth_cache_shrink_scan,
+ 	.seeks = DEFAULT_SEEKS,
+ };
+ 
 -- 
 1.8.1.4
+
