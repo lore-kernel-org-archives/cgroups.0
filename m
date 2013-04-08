@@ -1,78 +1,117 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 10/12] memcg: don't need to get a reference to the parent
-Date: Mon, 8 Apr 2013 14:35:34 +0800
-Message-ID: <51626536.3040901@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 08/12] memcg: use css_get/put for swap memcg
+Date: Mon, 8 Apr 2013 14:34:49 +0800
+Message-ID: <51626509.2090806@huawei.com>
 References: <5162648B.9070802@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5162648B.9070802-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5162648B.9070802@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-The cgroup core guarantees it's always safe to access the parent.
+Use css_get/put instead of mem_cgroup_get/put. A simple replacement
+will do.
 
-v2:
-- added a comment in mem_cgroup_put() as suggested by Michal
-- removed mem_cgroup_get(), otherwise gcc will warn that it's not used
+The historical reason that memcg has its own refcnt instead of always
+using css_get/put, is that cgroup couldn't be removed if there're still
+css refs, so css refs can't be used as long-lived reference. The
+situation has changed so that rmdir a cgroup will succeed regardless
+css refs, but won't be freed until css refs goes down to 0.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/memcontrol.c | 19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
+ mm/memcontrol.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7fdd69d..9ca5a99 100644
+index 7be796c..7fdd69d 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -501,7 +501,6 @@ enum res_type {
-  */
- static DEFINE_MUTEX(memcg_create_mutex);
+@@ -4149,12 +4149,12 @@ __mem_cgroup_uncharge_common(struct page *page, enum charge_type ctype,
+ 	unlock_page_cgroup(pc);
+ 	/*
+ 	 * even after unlock, we have memcg->res.usage here and this memcg
+-	 * will never be freed.
++	 * will never be freed, so it's safe to call css_get().
+ 	 */
+ 	memcg_check_events(memcg, page);
+ 	if (do_swap_account && ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT) {
+ 		mem_cgroup_swap_statistics(memcg, true);
+-		mem_cgroup_get(memcg);
++		css_get(&memcg->css);
+ 	}
+ 	/*
+ 	 * Migration does not charge the res_counter for the
+@@ -4254,7 +4254,7 @@ mem_cgroup_uncharge_swapcache(struct page *page, swp_entry_t ent, bool swapout)
  
--static void mem_cgroup_get(struct mem_cgroup *memcg);
- static void mem_cgroup_put(struct mem_cgroup *memcg);
- 
- static inline
-@@ -6125,19 +6124,10 @@ static void free_rcu(struct rcu_head *rcu_head)
- 	schedule_work(&memcg->work_freeing);
+ 	/*
+ 	 * record memcg information,  if swapout && memcg != NULL,
+-	 * mem_cgroup_get() was called in uncharge().
++	 * css_get() was called in uncharge().
+ 	 */
+ 	if (do_swap_account && swapout && memcg)
+ 		swap_cgroup_record(ent, css_id(&memcg->css));
+@@ -4285,7 +4285,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t ent)
+ 		if (!mem_cgroup_is_root(memcg))
+ 			res_counter_uncharge(&memcg->memsw, PAGE_SIZE);
+ 		mem_cgroup_swap_statistics(memcg, false);
+-		mem_cgroup_put(memcg);
++		css_put(&memcg->css);
+ 	}
+ 	rcu_read_unlock();
  }
- 
--static void mem_cgroup_get(struct mem_cgroup *memcg)
--{
--	atomic_inc(&memcg->refcnt);
--}
--
- static void __mem_cgroup_put(struct mem_cgroup *memcg, int count)
- {
--	if (atomic_sub_and_test(count, &memcg->refcnt)) {
--		struct mem_cgroup *parent = parent_mem_cgroup(memcg);
-+	if (atomic_sub_and_test(count, &memcg->refcnt))
- 		call_rcu(&memcg->rcu_freeing, free_rcu);
--		if (parent)
--			mem_cgroup_put(parent);
--	}
- }
- 
- static void mem_cgroup_put(struct mem_cgroup *memcg)
-@@ -6239,12 +6229,9 @@ mem_cgroup_css_online(struct cgroup *cont)
- 		res_counter_init(&memcg->kmem, &parent->kmem);
- 
- 		/*
--		 * We increment refcnt of the parent to ensure that we can
--		 * safely access it on res_counter_charge/uncharge.
--		 * This refcnt will be decremented when freeing this
--		 * mem_cgroup(see mem_cgroup_put).
-+		 * No need to take a reference to the parent because cgroup
-+		 * core guarantees its existence.
+@@ -4319,11 +4319,14 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ 		 * This function is only called from task migration context now.
+ 		 * It postpones res_counter and refcount handling till the end
+ 		 * of task migration(mem_cgroup_clear_mc()) for performance
+-		 * improvement. But we cannot postpone mem_cgroup_get(to)
+-		 * because if the process that has been moved to @to does
+-		 * swap-in, the refcount of @to might be decreased to 0.
++		 * improvement. But we cannot postpone css_get(to)  because if
++		 * the process that has been moved to @to does swap-in, the
++		 * refcount of @to might be decreased to 0.
++		 *
++		 * We are in attach() phase, so the cgroup is guaranteed to be
++		 * alive, so we can just call css_get().
  		 */
--		mem_cgroup_get(parent);
- 	} else {
- 		res_counter_init(&memcg->res, NULL);
- 		res_counter_init(&memcg->memsw, NULL);
+-		mem_cgroup_get(to);
++		css_get(&to->css);
+ 		return 0;
+ 	}
+ 	return -EINVAL;
+@@ -6604,6 +6607,7 @@ static void __mem_cgroup_clear_mc(void)
+ {
+ 	struct mem_cgroup *from = mc.from;
+ 	struct mem_cgroup *to = mc.to;
++	int i;
+ 
+ 	/* we must uncharge all the leftover precharges from mc.to */
+ 	if (mc.precharge) {
+@@ -6624,7 +6628,9 @@ static void __mem_cgroup_clear_mc(void)
+ 		if (!mem_cgroup_is_root(mc.from))
+ 			res_counter_uncharge(&mc.from->memsw,
+ 						PAGE_SIZE * mc.moved_swap);
+-		__mem_cgroup_put(mc.from, mc.moved_swap);
++
++		for (i = 0; i < mc.moved_swap; i++)
++			css_put(&mc.from->css);
+ 
+ 		if (!mem_cgroup_is_root(mc.to)) {
+ 			/*
+@@ -6634,7 +6640,7 @@ static void __mem_cgroup_clear_mc(void)
+ 			res_counter_uncharge(&mc.to->res,
+ 						PAGE_SIZE * mc.moved_swap);
+ 		}
+-		/* we've already done mem_cgroup_get(mc.to) */
++		/* we've already done css_get(mc.to) */
+ 		mc.moved_swap = 0;
+ 	}
+ 	memcg_oom_recover(from);
 -- 
 1.8.0.2
