@@ -1,44 +1,32 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 07/12] memcg: use css_get/put when charging/uncharging
- kmem
-Date: Tue, 09 Apr 2013 11:55:13 +0900
-Message-ID: <51638311.8030707@jp.fujitsu.com>
-References: <5162648B.9070802@huawei.com> <516264FB.7030306@huawei.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 12/12] memcg: don't need to free memcg via RCU or workqueue
+Date: Tue, 09 Apr 2013 11:57:49 +0900
+Message-ID: <516383AD.9010305@jp.fujitsu.com>
+References: <5162648B.9070802@huawei.com> <51626570.8000400@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <516264FB.7030306@huawei.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51626570.8000400-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-(2013/04/08 15:34), Li Zefan wrote:
-> Use css_get/put instead of mem_cgroup_get/put.
+(2013/04/08 15:36), Li Zefan wrote:
+> Now memcg has the same life cycle with its corresponding cgroup, and
+> a cgroup is freed via RCU and then mem_cgroup_css_free() is called
+> in a work function, so we can simply call __mem_cgroup_free() in
+> mem_cgroup_css_free().
 > 
-> We can't do a simple replacement, because here mem_cgroup_put()
-> is called during mem_cgroup_css_free(), while mem_cgroup_css_free()
-> won't be called until css refcnt goes down to 0.
+> This actually reverts 59927fb984de1703c67bc640c3e522d8b5276c73
+> ("memcg: free mem_cgroup by RCU to fix oops").
 > 
-> Instead we increment css refcnt in mem_cgroup_css_offline(), and
-> then check if there's still kmem charges. If not, css refcnt will
-> be decremented immediately, otherwise the refcnt won't be decremented
-> when kmem charges goes down to 0.
-> 
-> v2:
-> - added wmb() in kmem_cgroup_css_offline(), pointed out by Michal
-> - revised comments as suggested by Michal
-> - fixed to check if kmem is activated in kmem_cgroup_css_offline()
-> 
-> Signed-off-by: Li Zefan <lizefan@huawei.com>
+> Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Very nice.
+
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
