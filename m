@@ -1,53 +1,66 @@
-From: Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup: status-quo and userland efforts
-Date: Tue, 09 Apr 2013 01:32:01 +0200
-Message-ID: <51635371.7070104@redhat.com>
-References: <20130406012159.GA17159@mtj.dyndns.org> <5162CA21.4060108@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 13/12] memcg: don't need memcg->memcg_name
+Date: Tue, 9 Apr 2013 09:28:12 +0800
+Message-ID: <51636EAC.10307@huawei.com>
+References: <5162648B.9070802@huawei.com> <51626584.7050405@huawei.com> <20130408142503.GH17178@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5162CA21.4060108-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+In-Reply-To: <20130408142503.GH17178-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Heya,
+On 2013/4/8 22:25, Michal Hocko wrote:
+> On Mon 08-04-13 14:36:52, Li Zefan wrote:
+> [...]
+>> @@ -5188,12 +5154,28 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
+>>  					struct seq_file *m)
+>>  {
+>>  	struct mem_cgroup *memcg;
+>> +	char *memcg_name;
+>> +	int ret;
+> 
+> The interface is only for debugging, all right, but that doesn't mean we
+> should allocate a buffer for each read. Why cannot we simply use
+> cgroup_path for seq_printf directly? Can we still race with the group
+> rename?
 
-On 08.04.2013 15:46, Glauber Costa wrote:
-> On 04/06/2013 05:21 AM, Tejun Heo wrote:
->> Hello, guys.
->>
-> Hello Tejun, how are you?
->
->>   Status-quo
->>   ==========
->>
-> tl;did read;
->
-> This is mostly sensible. There is still one problem that we hadn't yet
-> had the bandwidth to tackle that should be added to your official TODO list.
->
-> The cpu cgroup needs a real-time timeslice to accept real time tasks. It
-> defaults to 0, meaning that a newly created cpu cgroup cannot accept
-> tasks (rt tasks) without the user having to manually configure it.
-> As far as I know, this problem hasn't yet been fixed.
->
-> The fix of course, is as trivial as setting a new value instead of 0 as
-> a default. The complication lies in determining which value should that be.
->
-> There are many things that we should ask from a controller to implement
-> in order to be able to handle fully joint hierarchies. One of them,
-> IMHO, is that if you drop a task into a newly created cgroup it should
-> run without the user having to do anything for it.
+because cgroup_path() requires the caller pass a buffer to it.
 
-The other big thing we want from the systemd side is saner notifications 
-when cgroups run empty. i.e. currently we don't get these at all in 
-containers (since the agent can be only installed once, for the host). 
-And the way we get this is awful, via kernel-spawned processes. I am 
-looking for a way how I can establish a watch on a certain subtree (not 
-just one directory) and get simple notifications in a race-free whenever 
-a cgroup runs empty.
-
-Lennart
+> 
+>> +
+>> +	/*
+>> +	 * cgroup.c will do page-sized allocations most of the time,
+>> +	 * so we'll just follow the pattern. Also, __get_free_pages
+>> +	 * is a better interface than kmalloc for us here, because
+>> +	 * we'd like this memory to be always billed to the root cgroup,
+>> +	 * not to the process removing the memcg. While kmalloc would
+>> +	 * require us to wrap it into memcg_stop/resume_kmem_account,
+>> +	 * with __get_free_pages we just don't pass the memcg flag.
+>> +	 */
+>> +	memcg_name = (char *)__get_free_pages(GFP_KERNEL, 0);
+>> +	if (!memcg_name)
+>> +		return -ENOMEM;
+>>  
+>>  	mutex_lock(&dangling_memcgs_mutex);
+>>  
+>>  	list_for_each_entry(memcg, &dangling_memcgs, dead) {
+>> -		if (memcg->memcg_name)
+>> -			seq_printf(m, "%s:\n", memcg->memcg_name);
+>> +		ret = cgroup_path(memcg->css.cgroup, memcg_name, PAGE_SIZE);
+>> +		if (!ret)
+>> +			seq_printf(m, "%s:\n", memcg_name);
+>>  		else
+>>  			seq_printf(m, "%p (name lost):\n", memcg);
+>>  
+>> @@ -5203,6 +5185,7 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
+>>  	}
+>>  
+>>  	mutex_unlock(&dangling_memcgs_mutex);
+>> +	free_pages((unsigned long)memcg_name, 0);
+>>  	return 0;
+>>  }
+>>  #endif
