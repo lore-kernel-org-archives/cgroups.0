@@ -1,52 +1,53 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 3/8] memcg: convert to use cgroup_is_ancestor()
-Date: Tue, 9 Apr 2013 08:49:34 +0200
-Message-ID: <20130409064934.GA30386@dhcp22.suse.cz>
-References: <51627DA9.7020507@huawei.com>
- <51627DFA.9050007@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET] perf,
+	cgroup: implement hierarchy support for perf_event controller
+Date: Tue, 9 Apr 2013 15:07:56 +0800
+Message-ID: <5163BE4C.5040301@huawei.com>
+References: <1365474213-13354-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <51627DFA.9050007-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1365474213-13354-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: namhyung.kim-Hm3cg6mZ9cc@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 08-04-13 16:21:14, Li Zefan wrote:
-> This is a preparation to kill css_id.
+On 2013/4/9 10:23, Tejun Heo wrote:
+> perf_event cgroup controller is one of the remaining few with broken
+> hierarchy support.  It turns out it's pretty easy to implement - the
+> only thing necessary is making perf_cgroup_match() return %true also
+> when the cgroup of the current task is a descendant of the event's
+> cgroup.  This patchset implements cgroup_is_descendant() and uses it
+> to implement hierarchy support in perf_event controller.
 > 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> This patchset contains the following three patches.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 5aa6e91..14f1375 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1383,7 +1383,7 @@ bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
->  		return true;
->  	if (!root_memcg->use_hierarchy || !memcg)
->  		return false;
-> -	return css_is_ancestor(&memcg->css, &root_memcg->css);
-> +	return cgroup_is_ancestor(memcg->css.cgroup, root_memcg->css.cgroup);
->  }
->  
->  static bool mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
-> -- 
-> 1.8.0.2
+>  0001-cgroup-make-sure-parent-won-t-be-destroyed-before-it.patch
+>  0002-cgroup-implement-cgroup_is_descendant.patch
+>  0003-perf-make-perf_event-cgroup-hierarchical.patch
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The patches are also available in the following git branch, which is
+> based on top of cgroup/for-3.10.  It's currently based on top of
+> cgroup/for-3.10 as the first patch causes non-trivial conflict with it
+> otherwise, which is not difficult to resolve but still nice to avoid
+> anyway.
+> 
+> Li, Michal, I picked the first two patches from Li's memcg patchset.
+> Can we push the first two through cgroup/for-3.10 and put the rest in
+> -mm?
+> 
 
--- 
-Michal Hocko
-SUSE Labs
+Sure. Andrew asked me to resend the memcg patchset when we are at 3.10-rc1,
+because 3.9-rc6 is a bit too late and he's too busy.
+
+> Ingo, how should these be routed?
