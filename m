@@ -1,98 +1,77 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/3] perf: make perf_event cgroup hierarchical
-Date: Mon,  8 Apr 2013 19:23:33 -0700
-Message-ID: <1365474213-13354-4-git-send-email-tj@kernel.org>
-References: <1365474213-13354-1-git-send-email-tj@kernel.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [PATCH 1/2] memcg: consistently use vmalloc for page_cgroup allocations
+Date: Tue, 09 Apr 2013 11:41:59 +0900
+Message-ID: <51637FF7.4070101@jp.fujitsu.com>
+References: <1365156072-24100-1-git-send-email-glommer@parallels.com> <1365156072-24100-2-git-send-email-glommer@parallels.com> <20130405120604.GN1953@cmpxchg.org> <515EC34C.8040704@parallels.com> <20130405162536.GO1953@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-	:in-reply-to:references;
-	bh=zxy5yzAZB84o7g5+Sf7uCZmRBUmax5z04/VqJpgvn1I=;
-	b=jxfkvBrwC7lAL8XBteBNKLIuAOpm+8bB8oYfcyUgqvUlNMymzjuuoPnUATdEfJ1Tqd
-	Y76Ee1TF/U3IE9czR1XzBjCqcOgJyx+WnlCQw0yWXpdKl7AX9FjeoM4U949DxwblReWT
-	SpV6tb1EO/R8LRzAnYmBhhx1//z8Uis//NUuyVfLb6BE1JU6Cf4iJFkeWAr8kLuWF+N/
-	y2bsUQHvPeIs9Eh4OllNeFkXweT3CCV4Md1O3SobMwA8x5FgL+Gfdr/WlrwhNGH2EseF
-	MSV0x5DmJ/860mc1xQEsYThPDdRzHhKZqCMYpRQjJnlWlFn/P9ee18e57CipL9dOgsfY
-	JC3Q==
-In-Reply-To: <1365474213-13354-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: namhyung.kim-Hm3cg6mZ9cc@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130405162536.GO1953-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-perf_event is one of a couple remaining cgroup controllers with broken
-hierarchy support.  Converting it to support hierarchy is almost
-trivial.  The only thing necessary is to consider a task belonging to
-a descendant cgroup as a match.  IOW, if the cgroup of the currently
-executing task (@cpuctx->cgrp) equals or is a descendant of the
-event's cgroup (@event->cgrp), then the event should be enabled.
+(2013/04/06 1:25), Johannes Weiner wrote:
+> On Fri, Apr 05, 2013 at 04:27:56PM +0400, Glauber Costa wrote:
+>> On 04/05/2013 04:06 PM, Johannes Weiner wrote:
+>>> On Fri, Apr 05, 2013 at 02:01:11PM +0400, Glauber Costa wrote:
+>>>> Right now, allocation for page_cgroup is a bit complicated, dependent on
+>>>> a variety of system conditions:
+>>>>
+>>>> For flat memory, we are likely to need quite big pages, so the page
+>>>> allocator won't cut. We are forced to init flatmem mappings very early,
+>>>> because if we run after the page allocator is in place those allocations
+>>>> will be denied. Flatmem mappings thus resort to the bootmem allocator.
+>>>>
+>>>> We can fix this by using vmalloc for flatmem mappings. However, we now
+>>>> have the situation in which flatmem mapping allocate using vmalloc, but
+>>>> sparsemem may or may not allocate with vmalloc. It will try the
+>>>> page_allocator first, and retry vmalloc if it fails.
+>>>
+>>> Vmalloc space is a precious resource on 32-bit systems and harder on
+>>> the TLB than the identity mapping.
+>>>
+>>> It's a last resort thing for when you need an unusually large chunk of
+>>> contiguously addressable memory during runtime, like loading a module,
+>>> buffers shared with userspace etc..  But here we know, during boot
+>>> time, the exact amount of memory we need for the page_cgroup array.
+>>>
+>>> Code cleanup is not a good reason to use vmalloc in this case, IMO.
+>>>
+>> This is indeed a code cleanup, but a code cleanup with a side goal:
+>> freeing us from the need to register page_cgroup mandatorily at init
+>> time. This is done because page_cgroup_init_flatmem will use the bootmem
+>> allocator, to avoid the page allocator limitations.
+>>
+>> What I can try to do, and would happily do, is to try a normal page
+>> allocation and then resort to vmalloc if it is too big.
+>>
+>> Would that be okay to you ?
+>
+> With the size of page_cgroup right now (2 words), we need half a page
+> per MB of represented memory on 32 bit, so booting on a 4GB 32 bit
+> machine needs an order-11 (MAX_ORDER) allocation and thus fall back to
+> 8MB of the 128MB vmalloc space.  A 16GB machine falls back to 32MB, a
+> quarter of the vmalloc space.
+>
+> Now, I think we all agree that these are not necessarily recommended
+> configurations but we should not be breaking them for the hell of it
+> either.
+>
+> How about leaving flatmem as it is and have an on-demand allocation
+> model that just works with sparsemem?  A 128MB section on 64 bit
+> "only" needs order-7 pages, but we satisfy order-9 THP allocations all
+> the time during runtime, so this may just work.
+>
 
-Implement hierarchy support and remove .broken_hierarchy tag along
-with the incorrect comment on what needs to be done for hierarchy
-support.
+I agree to Johannes' option.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>
-Cc: Stephane Eranian <eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Namhyung Kim <namhyung.kim-Hm3cg6mZ9cc@public.gmane.org>
----
- kernel/events/core.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+Thanks,
+-Kame
 
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index b0cd865..310ec19 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -251,7 +251,22 @@ perf_cgroup_match(struct perf_event *event)
- 	struct perf_event_context *ctx = event->ctx;
- 	struct perf_cpu_context *cpuctx = __get_cpu_context(ctx);
- 
--	return !event->cgrp || event->cgrp == cpuctx->cgrp;
-+	/* @event doesn't care about cgroup */
-+	if (!event->cgrp)
-+		return true;
-+
-+	/* wants specific cgroup scope but @cpuctx isn't associated with any */
-+	if (!cpuctx->cgrp)
-+		return false;
-+
-+	/*
-+	 * Cgroup scoping is recursive.  An event enabled for a cgroup is
-+	 * also enabled for all its descendant cgroups.  If @cpuctx's
-+	 * cgroup is a descendant of @event's (the test covers identity
-+	 * case), it's a match.
-+	 */
-+	return cgroup_is_descendant(cpuctx->cgrp->css.cgroup,
-+				    event->cgrp->css.cgroup);
- }
- 
- static inline bool perf_tryget_cgroup(struct perf_event *event)
-@@ -7509,12 +7524,5 @@ struct cgroup_subsys perf_subsys = {
- 	.css_free	= perf_cgroup_css_free,
- 	.exit		= perf_cgroup_exit,
- 	.attach		= perf_cgroup_attach,
--
--	/*
--	 * perf_event cgroup doesn't handle nesting correctly.
--	 * ctx->nr_cgroups adjustments should be propagated through the
--	 * cgroup hierarchy.  Fix it and remove the following.
--	 */
--	.broken_hierarchy = true,
- };
- #endif /* CONFIG_CGROUP_PERF */
--- 
-1.8.1.4
+
+
+
+
