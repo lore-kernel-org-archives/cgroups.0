@@ -1,48 +1,59 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] cpuacct, cgroup: Kill cgroup_subsys.active
-Date: Tue, 9 Apr 2013 09:29:49 +0800
-Message-ID: <51636F0D.5060000@huawei.com>
-References: <51553813.10004@huawei.com> <1364553360.5053.84.camel@laptop>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] perf, cgroup: implement hierarchy support for perf_event controller
+Date: Mon,  8 Apr 2013 19:23:30 -0700
+Message-ID: <1365474213-13354-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1364553360.5053.84.camel@laptop>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=f16MD7/Ef0ULYl/SZLsMpMhdmZ0Evxs45wOazxweOL8=;
+        b=Y7uu0hnPbEhxLdcDUZutqPC1ub0l50ESVIeYnepurkVRzNWfDJ9fyYh8jO+9YcOs/q
+         lRhdTYCvvqoaPesmzdI3t9/g3UWX/7eh35/wXAkSZdaUNH5qomRtaPeGCvpqyvhHcI5g
+         YnDng6XhTvuaXtivhbRui6MOxj2zTr/wEI89Qs5iGExFeT6Sr/xGlSH8ipQeqrR0EU+e
+         wX889pHPYApZN30cwecQ847ZJFvQRUwCH4jrzL5wHVWQDS8/V1fwbdZdmC4OjjUsDlKW
+         AaMol92xv//E6yfyQJMYrvMw7dLoZUr6NPvatPA+1bxK4ULD8ACk0Oa4YoXVyNsKRxkF
+         X61Q==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org, eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, namhyung.kim-Hm3cg6mZ9cc@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Ingo,
+perf_event cgroup controller is one of the remaining few with broken
+hierarchy support.  It turns out it's pretty easy to implement - the
+only thing necessary is making perf_cgroup_match() return %true also
+when the cgroup of the current task is a descendant of the event's
+cgroup.  This patchset implements cgroup_is_descendant() and uses it
+to implement hierarchy support in perf_event controller.
 
-Any chance for this patchset and the other one to be queued for 3.10?
+This patchset contains the following three patches.
 
-Both of them has been acked by Peter.
+ 0001-cgroup-make-sure-parent-won-t-be-destroyed-before-it.patch
+ 0002-cgroup-implement-cgroup_is_descendant.patch
+ 0003-perf-make-perf_event-cgroup-hierarchical.patch
 
-On 2013/3/29 18:36, Peter Zijlstra wrote:
-> On Fri, 2013-03-29 at 14:43 +0800, Li Zefan wrote:
->> cpuacct is the only user of cgroup_subsys.active flag.
->>
->> The flag is needed because cpuacct_charge() and
->> cpuacct_account_field() can
->> be called when cpuacct hasn't been initialized during system bootup.
->>
->> This patch initializes cpuacct earlier, and the result is we don't
->> have
->> to check the flag in scheduler hot path.
->>
->> Note, this patchset is based on "[PATCH v2 0/7] sched: Split cpuacct"
->>
->>         http://lkml.org/lkml/2013/3/28/1
->>
->> 0001-cpuacct-allocate-per_cpu-cpuusage-for-root-cpuacct-s.patch
->> 0002-cpuacct-Initialize-root-cpuacct-earlier.patch
->> 0003-cpuacct-Initialize-cpuacct-subsystem-earlier.patch
->> 0004-cpuacct-No-need-to-check-subsys-active-state.patch
->> 0005-cgroup-Remove-subsys.active-flag.patch
-> 
-> 
-> Seems sane enough
-> 
-> Acked-by: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-> 
+The patches are also available in the following git branch, which is
+based on top of cgroup/for-3.10.  It's currently based on top of
+cgroup/for-3.10 as the first patch causes non-trivial conflict with it
+otherwise, which is not difficult to resolve but still nice to avoid
+anyway.
+
+Li, Michal, I picked the first two patches from Li's memcg patchset.
+Can we push the first two through cgroup/for-3.10 and put the rest in
+-mm?
+
+Ingo, how should these be routed?
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git perf_event-hierarchy-support
+
+diffstat follows, thanks.
+
+ include/linux/cgroup.h |    1 +
+ kernel/cgroup.c        |   30 ++++++++++++++++++++++++++++++
+ kernel/events/core.c   |   24 ++++++++++++++++--------
+ 3 files changed, 47 insertions(+), 8 deletions(-)
+
+--
+tejun
