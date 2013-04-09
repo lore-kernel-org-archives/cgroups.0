@@ -1,28 +1,67 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/8] cgroup: implement cgroup_is_ancestor()
-Date: Tue, 9 Apr 2013 11:29:47 +0800
-Message-ID: <51638B2B.4010305@huawei.com>
-References: <51627DA9.7020507@huawei.com> <51627DBB.5050005@huawei.com> <51638947.9060303@jp.fujitsu.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH 13/12] memcg: don't need memcg->memcg_name
+Date: Tue, 09 Apr 2013 12:46:51 +0900
+Message-ID: <51638F2B.3000800@jp.fujitsu.com>
+References: <5162648B.9070802@huawei.com> <51626584.7050405@huawei.com> <5163868B.3020905@jp.fujitsu.com> <5163887D.1040809@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51638947.9060303-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <5163887D.1040809@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-On 2013/4/9 11:21, Kamezawa Hiroyuki wrote:
-> (2013/04/08 17:20), Li Zefan wrote:
->> This will be used as a replacement for css_is_ancestor().
+(2013/04/09 12:18), Li Zefan wrote:
+>>> @@ -5188,12 +5154,28 @@ static int mem_cgroup_dangling_read(struct cgroup *cont, struct cftype *cft,
+>>>    					struct seq_file *m)
+>>>    {
+>>>    	struct mem_cgroup *memcg;
+>>> +	char *memcg_name;
+>>> +	int ret;
+>>> +
+>>> +	/*
+>>> +	 * cgroup.c will do page-sized allocations most of the time,
+>>> +	 * so we'll just follow the pattern. Also, __get_free_pages
+>>> +	 * is a better interface than kmalloc for us here, because
+>>> +	 * we'd like this memory to be always billed to the root cgroup,
+>>> +	 * not to the process removing the memcg. While kmalloc would
+>>> +	 * require us to wrap it into memcg_stop/resume_kmem_account,
+>>> +	 * with __get_free_pages we just don't pass the memcg flag.
+>>> +	 */
+>>> +	memcg_name = (char *)__get_free_pages(GFP_KERNEL, 0);
+>>> +	if (!memcg_name)
+>>> +		return -ENOMEM;
+>>>    
+>>>    	mutex_lock(&dangling_memcgs_mutex);
+>>>    
+>>>    	list_for_each_entry(memcg, &dangling_memcgs, dead) {
+>>> -		if (memcg->memcg_name)
+>>> -			seq_printf(m, "%s:\n", memcg->memcg_name);
+>>> +		ret = cgroup_path(memcg->css.cgroup, memcg_name, PAGE_SIZE);
+>>> +		if (!ret)
+>>> +			seq_printf(m, "%s:\n", memcg_name);
+>>>    		else
+>>>    			seq_printf(m, "%p (name lost):\n", memcg);
+>>>    
 >>
->> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>> I'm sorry for dawm question ...when this error happens ?
+>> We may get ENAMETOOLONG even with PAGE_SIZE(>=4096bytes) buffer ?
+>>
 > 
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> It does no harm to check the return value, and we don't have to
+> worry about if cgroup_path() will be changed to return some other
+> errno like ENOMEM in the future.
 > 
-> Hmm....but do we need "depth" ?
-> 
+Hmm. but the name is not lost, right ?
+How about returning error rather than making a mixture of lines in different formats ?
 
-which was removed in Tejun's
-"[PATCHSET] perf, cgroup: implement hierarchy support for perf_event controller"
+Thanks,
+-Kame
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
