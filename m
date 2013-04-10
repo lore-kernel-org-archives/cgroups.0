@@ -1,74 +1,69 @@
-From: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET] perf, cgroup: implement hierarchy support for
-	perf_event controller
-Date: Wed, 10 Apr 2013 11:37:55 +0200
-Message-ID: <20130410093755.GC24443@gmail.com>
-References: <1365474213-13354-1-git-send-email-tj@kernel.org>
-	<1365579146.30071.24.camel@laptop>
-Mime-Version: 1.0
+From: Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: remove bind() method from cgroup_subsys.
+Date: Wed, 10 Apr 2013 14:41:17 +0300
+Message-ID: <1365594077-17655-1-git-send-email-ramirose@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
+        bh=Tdnh0b9iUzmhTXEOhVkmDal+eLxXLQGhd4FrVj0mt9I=;
+        b=PW3FjrXHaFM2fQFWk1dDmB2FrTcC6X9Ekf10zW8/CDgV/u91h8CekYqdgX5ut31K9x
+         fxVrCU+jMOtPil7EGXj9RGbtb3pdIAKzVBNk32W/W3iJZ5FElT3DG6IBtDRv4sn0n1MU
+         FMcfgIrwaL8QTnnO7oqPLTxACj/hsqqBvcvblgWxA/ziJG04eqlSjx1hqOksXqNu4DVK
+         AmWjaEkiQHatEhWpDp5xfh7NnTziknnTTZuA9HhF7i8WUgrB2fNn7xBgGgIHLXzfvjJW
+         plPO4skd879PSE53SnUtLlcauK01WRF0ejEbl8pjAvQc8GY7fXjwBP6LjE6kFhhSnX0L
+         sADg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:date:from:to:cc:subject:message-id:references
-	:mime-version:content-type:content-disposition:in-reply-to
-	:user-agent; bh=HN1N1A5KUsdn1o2m2cVaC8thUFKl+jkM3TokWZ91xu0=;
-	b=QOJ6ZqLlOtfBd69K6ZV+XTOCUEANxz+RqKf/MbhZ3JFJObY8YZuuOCU5hu9FCcQM1F
-	iF9YQUOy5YfkEKkm+5NXgYrRQwmc8/BW4zwLHGrv/JHhrc/eo8BQSpYClhnjhc3/ZPj+
-	mqfF7jTPs0oO7SUWKoWxddZm02FWbIY+qQLJgx5mAAo/JnmqhTOXmt+pzGw2iOZuI+RG
-	s2UgSGL9ti8axvzmCBI+vqF3E31wASdCK2Gny7yNGYB/eVyGpVPw6NzZXRJZB2hRFuYi
-	cwtl6yOgEX34uVuBnvz04l4IxLjICDGfrogKqmsAwWETS0xELkBfodzz4GejMLQTUj0Q
-	WIng==
-Content-Disposition: inline
-In-Reply-To: <1365579146.30071.24.camel@laptop>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Cc: namhyung.kim-Hm3cg6mZ9cc@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+The bind() method of cgroup_subsys is not used in any of the controllers
+(cpuset, freezer, blkio, net_cls, memcg, net_prio, devices, perf, hugetlb, 
+cpu and cpuacct)
 
-* Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org> wrote:
+Signed-off-by: Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ include/linux/cgroup.h | 2 --
+ kernel/cgroup.c        | 4 ----
+ 2 files changed, 6 deletions(-)
 
-> On Mon, 2013-04-08 at 19:23 -0700, Tejun Heo wrote:
-> > perf_event cgroup controller is one of the remaining few with broken
-> > hierarchy support.  It turns out it's pretty easy to implement - the
-> > only thing necessary is making perf_cgroup_match() return %true also
-> > when the cgroup of the current task is a descendant of the event's
-> > cgroup.  This patchset implements cgroup_is_descendant() and uses it
-> > to implement hierarchy support in perf_event controller.
-> > 
-> > This patchset contains the following three patches.
-> > 
-> >  0001-cgroup-make-sure-parent-won-t-be-destroyed-before-it.patch
-> >  0002-cgroup-implement-cgroup_is_descendant.patch
-> >  0003-perf-make-perf_event-cgroup-hierarchical.patch
-> 
-> Thanks, looks simple and straight fwd. 
-> 
-> > Ingo, how should these be routed?
-> > 
-> >  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git perf_event-hierarchy-support
-> 
-> Ingo typically likes multi-maintainer sets to be pulled from a common
-> tree into all relevant maintainer trees so that git merges afterwards
-> just-work (tm). But I'll let him expand.
-
-Yeah - at least for larger changes that's a good workflow.
-
-For smaller changes we can pick one or the other tree. Tejun, do these changes 
-create any conflicts with the current tip:master tree? If not then you could carry 
-these changes in your tree. If there's significant conflicts then it might be 
-better to rebase this on top of perf/core and pull them into perf/core. (assuming 
-there's no other cgroups prereq patches beyond the ones in this series.)
-
-Thanks,
-
-	Ingo
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 515927e..92acf86 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -483,8 +483,6 @@ struct cgroup_subsys {
+ 	void (*fork)(struct task_struct *task);
+ 	void (*exit)(struct cgroup *cgrp, struct cgroup *old_cgrp,
+ 		     struct task_struct *task);
+-	void (*bind)(struct cgroup *root);
+-
+ 	int subsys_id;
+ 	int active;
+ 	int disabled;
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index ba3e24a..fd38e1c 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1064,16 +1064,12 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 			cgrp->subsys[i]->cgroup = cgrp;
+ 			list_move(&ss->sibling, &root->subsys_list);
+ 			ss->root = root;
+-			if (ss->bind)
+-				ss->bind(cgrp);
+ 			/* refcount was already taken, and we're keeping it */
+ 		} else if (bit & removed_mask) {
+ 			/* We're removing this subsystem */
+ 			BUG_ON(ss == NULL);
+ 			BUG_ON(cgrp->subsys[i] != dummytop->subsys[i]);
+ 			BUG_ON(cgrp->subsys[i]->cgroup != cgrp);
+-			if (ss->bind)
+-				ss->bind(dummytop);
+ 			dummytop->subsys[i]->cgroup = dummytop;
+ 			cgrp->subsys[i] = NULL;
+ 			subsys[i]->root = &rootnode;
+-- 
+1.8.1.4
