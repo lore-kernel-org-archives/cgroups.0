@@ -1,59 +1,39 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup: status-quo and userland efforts
-Date: Tue, 9 Apr 2013 14:11:52 -0700
-Message-ID: <20130409211152.GO6186@mtj.dyndns.org>
-References: <20130406012159.GA17159@mtj.dyndns.org>
- <20130409095024.GI25576@redhat.com>
- <20130409193851.GJ6186@mtj.dyndns.org>
- <20130409194640.GK6186@mtj.dyndns.org>
- <20130409210422.GA31120@sergelap>
+From: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Subject: Re: [PATCHSET] perf, cgroup: implement hierarchy support for
+ perf_event controller
+Date: Wed, 10 Apr 2013 09:32:26 +0200
+Message-ID: <1365579146.30071.24.camel@laptop>
+References: <1365474213-13354-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=QYmaQoaKeh5xHPRYtADM8L7O+QEs5wwbgA5I4oj3xMQ=;
-        b=e8WBdOwDiyQ6Eoqb74Wjwo1Y6C0IHy8SpM/ZgJctkR63UGQldC+XkyUaI6Ge9Yk/vm
-         csoGgBOKT1QLweyrBpTwHRGnUXQT2cDwvvSbc0LIZOhpxkneZ2QpsJeY54FV3B2fs5Y4
-         zouVNidsDlIWMtO1Fz77HZ7+MxnkWC/L3A/s2Nf+ZVh8O8FzjVQKEWu31yT0cOACNguV
-         wA9R32Ye1dWdvATV9lMf93K4lH9gOw8HjudkdryTqQpJH9m1nYdYgo3V28dxnEFNdQsa
-         Nbd9x3gwRh+3frT+0Hqo1pOx9qH+5J/0Ae3h8poSJEfVegRGUpD8f6Th22h2KzO1W61o
-         ZAuw==
-Content-Disposition: inline
-In-Reply-To: <20130409210422.GA31120@sergelap>
+In-Reply-To: <1365474213-13354-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org, eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, namhyung.kim-Hm3cg6mZ9cc@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hey, Serge.
+On Mon, 2013-04-08 at 19:23 -0700, Tejun Heo wrote:
+> perf_event cgroup controller is one of the remaining few with broken
+> hierarchy support.  It turns out it's pretty easy to implement - the
+> only thing necessary is making perf_cgroup_match() return %true also
+> when the cgroup of the current task is a descendant of the event's
+> cgroup.  This patchset implements cgroup_is_descendant() and uses it
+> to implement hierarchy support in perf_event controller.
+> 
+> This patchset contains the following three patches.
+> 
+>  0001-cgroup-make-sure-parent-won-t-be-destroyed-before-it.patch
+>  0002-cgroup-implement-cgroup_is_descendant.patch
+>  0003-perf-make-perf_event-cgroup-hierarchical.patch
 
-On Tue, Apr 09, 2013 at 04:04:22PM -0500, Serge Hallyn wrote:
-> So for instance if there is a dbus call saying "please create cgroup
-> /x with (some constraints) and put $$ into it", "something" in the
-> container can convert that into "please create cgroup /lxc/c1/x
-> and put (host_uid($$)) into it" and pass that to the host's (or
-> parent container's) "something".
+Thanks, looks simple and straight fwd. 
 
-Yeap, definitely.  It shouldn't be difficult to make it transparent to
-individual consumers.  It would actually be far easier to achieve that
-with userland agent which knows what's going on in the middle.
+> Ingo, how should these be routed?
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git perf_event-hierarchy-support
 
-> So perhaps it is best if the container monitor, living in the parent
-> namespaces, opens a socket '@cgroup_monitor' in the container
-> namespace (through setns), listens for container-userpsace requests
-> there, and passes them on to the host's monitor (which hopefully
-> also listens on '@cgroup_monitor', @ being '\0').  Note that my
-> mentino of converting pids requires a new kernel feature which we
-> don't currently have (but have wanted for a long time).
-
-Yeah, details may change but in principle something like that.
-
-Thanks.
-
--- 
-tejun
+Ingo typically likes multi-maintainer sets to be pulled from a common
+tree into all relevant maintainer trees so that git merges afterwards
+just-work (tm). But I'll let him expand.
