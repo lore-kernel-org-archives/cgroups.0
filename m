@@ -1,43 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET] perf, cgroup: implement hierarchy support for
- perf_event controller
-Date: Wed, 10 Apr 2013 11:08:06 -0700
-Message-ID: <20130410180806.GC17641@mtj.dyndns.org>
-References: <1365474213-13354-1-git-send-email-tj@kernel.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: remove bind() method from cgroup_subsys.
+Date: Thu, 11 Apr 2013 10:02:07 +0800
+Message-ID: <5166199F.7090104@huawei.com>
+References: <1365594077-17655-1-git-send-email-ramirose@gmail.com> <20130410175035.GA17641@mtj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=/NFO83+L5xy79g5xp/U6h/DhOdNc/YcuBSE5KsQbYYY=;
-        b=jnf/3oesw31wARsn6kUju1PBDeo1O7i4NmInJU0FP42dTBv39GygbtatYngAPri6LP
-         gSonw0JV1T6Ng/0ikLzg3WYpm4Ue6yrHWcfEgTJHjr4GhDnPTyi51nT4DczZrRKSw3rf
-         jIZy4KGl3GgnoamQjpp5KXQFmzT3lu3a39rTjxmWKk1uyRGip5+f9rk0AQ/iC2VWmucu
-         B1HhhK5P020uvfQg0LbHySlge5FUmLzt0ZMr4JFdtxrOg+0OiPm5vybFQmy1ZG8AKeab
-         4rDe0kRmfN5EV1IcwzkJ3W8QHrWn64RZ5BqfRpGJTwEz6TD7oLUByj5Gph2Lj6/fm12T
-         tjJA==
-Content-Disposition: inline
-In-Reply-To: <1365474213-13354-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20130410175035.GA17641-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org, eranian-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, namhyung.kim-Hm3cg6mZ9cc@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Mon, Apr 08, 2013 at 07:23:30PM -0700, Tejun Heo wrote:
-> perf_event cgroup controller is one of the remaining few with broken
-> hierarchy support.  It turns out it's pretty easy to implement - the
-> only thing necessary is making perf_cgroup_match() return %true also
-> when the cgroup of the current task is a descendant of the event's
-> cgroup.  This patchset implements cgroup_is_descendant() and uses it
-> to implement hierarchy support in perf_event controller.
+Cc: Galuber
 
-Applied to cgroup/for-3.10.
+On 2013/4/11 1:50, Tejun Heo wrote:
+>>From 84cfb6ab484b442d5115eb3baf9db7d74a3ea626 Mon Sep 17 00:00:00 2001
+> From: Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Date: Wed, 10 Apr 2013 14:41:17 +0300
+> 
+> The bind() method of cgroup_subsys is not used in any of the
+> controllers (cpuset, freezer, blkio, net_cls, memcg, net_prio,
+> devices, perf, hugetlb, cpu and cpuacct)
+> 
 
-Thanks.
+I remember Glauber once used the bind() callback to detect if cpuacct and
+cpu are mounted together and if so do some optimization.
 
--- 
-tejun
+Then he gave up on it and just deprecated cpuacct, but then it was decided
+that it can't be decprecated and removed as that will break userspace.
+
+So mayber Glauber will want to use this callback again?
+
+> tj: Removed the entry on ->bind() from
+>     Documentation/cgroups/cgroups.txt.  Also updated a couple
+>     paragraphs which were suggesting that dynamic re-binding may be
+>     implemented.  It's not gonna.
+> 
+> Signed-off-by: Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+> Applied to cgroup/for-3.10 with documentation updated.
+> 
