@@ -1,226 +1,54 @@
-From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 08/32] list: add a new LRU list type
-Date: Mon, 15 Apr 2013 10:56:57 -0700
-Message-ID: <xr93mwsz4qza.fsf@gthelen.mtv.corp.google.com>
-References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-	<1365429659-22108-9-git-send-email-glommer@parallels.com>
-	<xr93r4ic8ify.fsf@gthelen.mtv.corp.google.com>
+From: David Shwatrz <dshwatrz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: question about hierarchies
+Date: Mon, 15 Apr 2013 21:30:18 +0300
+Message-ID: <CAJJAcoe-qA+UF-myzejOFOkgtzbwWN_pMSUngy7BO1YjP1dERA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=x-received:from:to:cc:subject:references:date:in-reply-to
-         :message-id:user-agent:mime-version:content-type;
-        bh=aJU8pO1FMZhcv8eKfDtWB1Z61Vmbz7nyB1nRfSmR0pU=;
-        b=RDFCqTG0YCYFqt2/YjPFCtkMtSjsu2oET+jh5cOC23Bfx84WQ8jzRNN7ai1wpL9z4L
-         d7wt93WXV0eFdkhh+Fs3UFhVBt06HLxNvkZ0t1Ml1ZagciqwrPPbgrNnVh5VRYd5n7AP
-         BwORMpDQTUjQtnedygtytaMK2RixNBmupcn1nbbJ7ziOh1/khXJRDqY/zhRmjOvPbKnM
-         1HJ7KBwIRNJ9NlDRyrb737Ii0VIF2nTUIySNM+aZRVoyUQ7dzhqiqFtMXTCPhPVKomZy
-         EViX6pKjMVSuM9gi+2B0DKkzJTZRyisogdoY5y81cDUsB/iBatI6PotXf/chMz1XYTfy
-         kNBQ==
-In-Reply-To: <xr93r4ic8ify.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org> (Greg Thelen's
-	message of "Sun, 14 Apr 2013 22:35:29 -0700")
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:date:message-id:subject:from:to
+         :content-type;
+        bh=RICzIiEuc0fp8PqVyrxi7vgHt2lo2Y5+pdFqW5p/3Cs=;
+        b=yQ+zcDlp0OqutFkMSCfZ0pinS656iV4E+UheYv4X05M73hWUa4tazXrllOtYC/BCjx
+         /6SHdl+iAVAzYKAGjhawZI0tJFcekCd0KcwLvW7BhHe32aCZPvds3RHpT2761u3958bO
+         YfzBLvLDxh7/PuxcX06jXWJoT5lxM+F7niJJEryBjRAjlNWSNOw6Z8NcikM/xWs9PzNQ
+         0mFwZRRwBttzzJUzvasIxpU5ZfSSyeFhw9hbH2l+9R0OLtr/qeOmDSyCt+fZj+97Z9mx
+         xJycxvlrOaPM4t0KSeGrmQZs6WsnYrTxnWuys3HjNB+cYLpsB7ecz7gfVvKKx7d0jbst
+         +J4Q==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Shrinnker <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Apr 14 2013, Greg Thelen wrote:
+Hello,
 
-> On Mon, Apr 08 2013, Glauber Costa wrote:
->
->> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>
->> Several subsystems use the same construct for LRU lists - a list
->> head, a spin lock and and item count. They also use exactly the same
->> code for adding and removing items from the LRU. Create a generic
->> type for these LRU lists.
->>
->> This is the beginning of generic, node aware LRUs for shrinkers to
->> work with.
->>
->> [ glommer: enum defined constants for lru. Suggested by gthelen ]
->> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->
-> Optional nit pick below:
->
-> Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->
->
->> ---
->>  include/linux/list_lru.h |  44 ++++++++++++++++++
->>  lib/Makefile             |   2 +-
->>  lib/list_lru.c           | 117 +++++++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 162 insertions(+), 1 deletion(-)
->>  create mode 100644 include/linux/list_lru.h
->>  create mode 100644 lib/list_lru.c
->>
->> diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
->> new file mode 100644
->> index 0000000..394c28c
->> --- /dev/null
->> +++ b/include/linux/list_lru.h
->> @@ -0,0 +1,44 @@
->> +/*
->> + * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
->> + * Author: David Chinner
->> + *
->> + * Generic LRU infrastructure
->> + */
->> +#ifndef _LRU_LIST_H
->> +#define _LRU_LIST_H
->> +
->> +#include <linux/list.h>
->> +
->> +enum lru_status {
->> +	LRU_REMOVED,		/* item removed from list */
->> +	LRU_ROTATE,		/* item referenced, give another pass */
->> +	LRU_SKIP,		/* item cannot be locked, skip */
->> +	LRU_RETRY,		/* item not freeable, lock dropped */
->> +};
->> +
->> +struct list_lru {
->> +	spinlock_t		lock;
->> +	struct list_head	list;
->> +	long			nr_items;
->> +};
->> +
->> +int list_lru_init(struct list_lru *lru);
->> +int list_lru_add(struct list_lru *lru, struct list_head *item);
->> +int list_lru_del(struct list_lru *lru, struct list_head *item);
->> +
->> +static inline long list_lru_count(struct list_lru *lru)
->> +{
->> +	return lru->nr_items;
->> +}
->> +
->> +typedef enum lru_status
->> +(*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
->> +
->> +typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
->> +
->> +long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
->> +		   void *cb_arg, long nr_to_walk);
->> +
->> +long list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
->> +
->> +#endif /* _LRU_LIST_H */
->> diff --git a/lib/Makefile b/lib/Makefile
->> index d7946ff..f14abd9 100644
->> --- a/lib/Makefile
->> +++ b/lib/Makefile
->> @@ -13,7 +13,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
->>  	 sha1.o md5.o irq_regs.o reciprocal_div.o argv_split.o \
->>  	 proportions.o flex_proportions.o prio_heap.o ratelimit.o show_mem.o \
->>  	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
->> -	 earlycpio.o
->> +	 earlycpio.o list_lru.o
->>  
->>  lib-$(CONFIG_MMU) += ioremap.o
->>  lib-$(CONFIG_SMP) += cpumask.o
->> diff --git a/lib/list_lru.c b/lib/list_lru.c
->> new file mode 100644
->> index 0000000..03bd984
->> --- /dev/null
->> +++ b/lib/list_lru.c
->> @@ -0,0 +1,117 @@
->> +/*
->> + * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
->> + * Author: David Chinner
->> + *
->> + * Generic LRU infrastructure
->> + */
->> +#include <linux/kernel.h>
->> +#include <linux/module.h>
->> +#include <linux/list_lru.h>
->> +
->> +int
->> +list_lru_add(
->> +	struct list_lru	*lru,
->> +	struct list_head *item)
->> +{
->> +	spin_lock(&lru->lock);
->> +	if (list_empty(item)) {
->> +		list_add_tail(item, &lru->list);
->> +		lru->nr_items++;
->> +		spin_unlock(&lru->lock);
->> +		return 1;
->> +	}
->> +	spin_unlock(&lru->lock);
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(list_lru_add);
->> +
->> +int
->> +list_lru_del(
->> +	struct list_lru	*lru,
->> +	struct list_head *item)
->> +{
->> +	spin_lock(&lru->lock);
->> +	if (!list_empty(item)) {
->> +		list_del_init(item);
->> +		lru->nr_items--;
->> +		spin_unlock(&lru->lock);
->> +		return 1;
->> +	}
->> +	spin_unlock(&lru->lock);
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(list_lru_del);
->> +
->> +long
->> +list_lru_walk(
->> +	struct list_lru *lru,
->> +	list_lru_walk_cb isolate,
->> +	void		*cb_arg,
->> +	long		nr_to_walk)
->> +{
->> +	struct list_head *item, *n;
->> +	long removed = 0;
->> +restart:
->> +	spin_lock(&lru->lock);
+I am running: (On fedora 18)
+mount -t tmpfs tmpfs /cgroup
+mkdir /cgroup/test
+mount -t cgroup -o cpu,cpuacct test /cgroup/test/
 
-Sometimes isolate() drops the lru locks (when it returns LRU_RETRY) and
-sparse complains thus complains here:
+now
+ls /cgroup/test/system/
+shows all the services that were added by systemd (there are 36 services)
+like
+dbus.service                sshd.service
+cgroup.event_control        firewalld.service       systemd-fsck@.service
+cgroup.procs                getty@.service          systemd-journald.service
+colord.service              iprdump.service         systemd-logind.service
+configure-printer@.service  iprinit.service         systemd-udevd.service
+console-kit-daemon.service  iprupdate.service       tasks
+cpuacct.stat                ksmtuned.service        udisks2.service
+cpuacct.usage               mcelog.service          upower.service
+...
 
-  lib/list_lru.c:55:18: warning: context imbalance in 'list_lru_walk' - different lock contexts for basic block
+What this means is, if I understand correct, is that if I want
+to mount another path using the cpu,cpuacct combination in Fedora
+(a hierarchy which is mounted by systemd) then
+there is no way to avoid replicating the existing hierarchy (if exist);
+in the case, the  /sys/fs/cgroup/systemd/system folder with all its
+36 or so subfolders. This is what happened in fact; Or is there a way
+to avoid this ?
 
-It looks like other dcache code suffers similar sparse warnings.  Is
-there any way to annotate this warning away?  Or is this just something
-we live with?
-
->> +	list_for_each_safe(item, n, &lru->list) {
->> +		int ret;
->
-> enum lru_status ret;
->
->> +
->> +		if (nr_to_walk-- < 0)
->> +			break;
->> +
->> +		ret = isolate(item, &lru->lock, cb_arg);
->> +		switch (ret) {
->> +		case LRU_REMOVED:
->> +			lru->nr_items--;
->> +			removed++;
->> +			break;
->> +		case LRU_ROTATE:
->> +			list_move_tail(item, &lru->list);
->> +			break;
->> +		case LRU_SKIP:
->> +			break;
->> +		case LRU_RETRY:
->> +			goto restart;
->> +		default:
->> +			BUG();
->> +		}
->> +	}
->> +	spin_unlock(&lru->lock);
->> +	return removed;
->> +}
->> +EXPORT_SYMBOL_GPL(list_lru_walk);
->
-> [snip]
+Regards,
+DavidS
