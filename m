@@ -1,54 +1,108 @@
-From: David Shwatrz <dshwatrz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: question about hierarchies
-Date: Mon, 15 Apr 2013 21:30:18 +0300
-Message-ID: <CAJJAcoe-qA+UF-myzejOFOkgtzbwWN_pMSUngy7BO1YjP1dERA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 4/4] memcg: force use_hierarchy if sane_behavior
+Date: Mon, 15 Apr 2013 13:40:16 -0700
+Message-ID: <20130415204016.GA19531@mtj.dyndns.org>
+References: <1365808259-31073-1-git-send-email-tj@kernel.org>
+ <1365808259-31073-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:x-received:date:message-id:subject:from:to
-         :content-type;
-        bh=RICzIiEuc0fp8PqVyrxi7vgHt2lo2Y5+pdFqW5p/3Cs=;
-        b=yQ+zcDlp0OqutFkMSCfZ0pinS656iV4E+UheYv4X05M73hWUa4tazXrllOtYC/BCjx
-         /6SHdl+iAVAzYKAGjhawZI0tJFcekCd0KcwLvW7BhHe32aCZPvds3RHpT2761u3958bO
-         YfzBLvLDxh7/PuxcX06jXWJoT5lxM+F7niJJEryBjRAjlNWSNOw6Z8NcikM/xWs9PzNQ
-         0mFwZRRwBttzzJUzvasIxpU5ZfSSyeFhw9hbH2l+9R0OLtr/qeOmDSyCt+fZj+97Z9mx
-         xJycxvlrOaPM4t0KSeGrmQZs6WsnYrTxnWuys3HjNB+cYLpsB7ecz7gfVvKKx7d0jbst
-         +J4Q==
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=9ejK1zAHHLcuM94c5uYbI+bVfAKQf9zuvW4dZeGrbAY=;
+        b=MXHrZ12F+BJ4bqY3Dxcj/sVKqi24yHnJdorr7BN7dSj7xzMPIDeaAUws6SPM7yL/V/
+         qIbx9HJ4Mo9kkfGEGtBTY+czQ3FSa+Hw8fRZ3QasufQTgZdS4hKaLImabUSyd5/9IpsJ
+         OT/8AmXZc0MZDGIUWat9fpA/UhG3TSatEaG0tvQW9DJ4q+z366mbjxw9ZPhfsi+iRcRw
+         sCDJmYSP+vitJ64SELt3Adc8mKNLgesQUJ4UHbdvukKXNnGmlrljtsgYuARq9Ogurjdk
+         JS+5VqBg57bKULxuLJrseHiYI1bS2TJ+LKPeqXt5AOJ2JE3SjQ3ddX6hQ4lNNTIrExJS
+         qbJw==
+Content-Disposition: inline
+In-Reply-To: <1365808259-31073-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello,
+Turn on use_hierarchy by default if sane_behavior is specified and
+don't create .use_hierarchy file.
 
-I am running: (On fedora 18)
-mount -t tmpfs tmpfs /cgroup
-mkdir /cgroup/test
-mount -t cgroup -o cpu,cpuacct test /cgroup/test/
+It is debatable whether to remove .use_hierarchy file or make it ro as
+the former could make transition easier in certain cases; however, the
+behavior changes which will be gated by sane_behavior are intensive
+including changing basic meaning of certain control knobs in a few
+controllers and I don't really think keeping this piece would make
+things easier in any noticeable way, so let's remove it.
 
-now
-ls /cgroup/test/system/
-shows all the services that were added by systemd (there are 36 services)
-like
-dbus.service                sshd.service
-cgroup.event_control        firewalld.service       systemd-fsck@.service
-cgroup.procs                getty@.service          systemd-journald.service
-colord.service              iprdump.service         systemd-logind.service
-configure-printer@.service  iprinit.service         systemd-udevd.service
-console-kit-daemon.service  iprupdate.service       tasks
-cpuacct.stat                ksmtuned.service        udisks2.service
-cpuacct.usage               mcelog.service          upower.service
-...
+v2: Explain that mem_cgroup_bind() doesn't have to worry about
+    children as suggested by Michal Hocko.
 
-What this means is, if I understand correct, is that if I want
-to mount another path using the cpu,cpuacct combination in Fedora
-(a hierarchy which is mounted by systemd) then
-there is no way to avoid replicating the existing hierarchy (if exist);
-in the case, the  /sys/fs/cgroup/systemd/system folder with all its
-36 or so subfolders. This is what happened in fact; Or is there a way
-to avoid this ?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+Applying to cgroup/for-3.10.
 
-Regards,
-DavidS
+Thanks!
+
+ include/linux/cgroup.h |    3 +++
+ mm/memcontrol.c        |   17 +++++++++++++++++
+ 2 files changed, 20 insertions(+)
+
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -269,6 +269,9 @@ enum {
+ 	 *
+ 	 * - Remount is disallowed.
+ 	 *
++	 * - memcg: use_hierarchy is on by default and the cgroup file for
++	 *   the flag is not created.
++	 *
+ 	 * The followings are planned changes.
+ 	 *
+ 	 * - release_agent will be disallowed once replacement notification
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5814,6 +5814,7 @@ static struct cftype mem_cgroup_files[]
+ 	},
+ 	{
+ 		.name = "use_hierarchy",
++		.flags = CFTYPE_INSANE,
+ 		.write_u64 = mem_cgroup_hierarchy_write,
+ 		.read_u64 = mem_cgroup_hierarchy_read,
+ 	},
+@@ -6784,6 +6785,21 @@ static void mem_cgroup_move_task(struct
+ }
+ #endif
+ 
++/*
++ * Cgroup retains root cgroups across [un]mount cycles making it necessary
++ * to verify sane_behavior flag on each mount attempt.
++ */
++static void mem_cgroup_bind(struct cgroup *root)
++{
++	/*
++	 * use_hierarchy is forced with sane_behavior.  cgroup core
++	 * guarantees that @root doesn't have any children, so turning it
++	 * on for the root memcg is enough.
++	 */
++	if (cgroup_sane_behavior(root))
++		mem_cgroup_from_cont(root)->use_hierarchy = true;
++}
++
+ struct cgroup_subsys mem_cgroup_subsys = {
+ 	.name = "memory",
+ 	.subsys_id = mem_cgroup_subsys_id,
+@@ -6794,6 +6810,7 @@ struct cgroup_subsys mem_cgroup_subsys =
+ 	.can_attach = mem_cgroup_can_attach,
+ 	.cancel_attach = mem_cgroup_cancel_attach,
+ 	.attach = mem_cgroup_move_task,
++	.bind = mem_cgroup_bind,
+ 	.base_cftypes = mem_cgroup_files,
+ 	.early_init = 0,
+ 	.use_id = 1,
