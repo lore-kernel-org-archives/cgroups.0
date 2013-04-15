@@ -1,72 +1,217 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 4/4] memcg: force use_hierarchy if sane_behavior
-Date: Mon, 15 Apr 2013 00:29:24 -0500
-Message-ID: <20130415052923.GA28141@sergelap>
-References: <1365808259-31073-1-git-send-email-tj@kernel.org>
-	<1365808259-31073-5-git-send-email-tj@kernel.org>
-	<20130415011336.GF8408@sergelap>
-	<20130415023935.GE3050@htj.dyndns.org>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH v3 08/32] list: add a new LRU list type
+Date: Sun, 14 Apr 2013 22:35:29 -0700
+Message-ID: <xr93r4ic8ify.fsf@gthelen.mtv.corp.google.com>
+References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+	<1365429659-22108-9-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=x-received:from:to:cc:subject:references:date:message-id:user-agent
+         :mime-version:content-type;
+        bh=RlowHupjKOX7dN8srcPO1yeVXIBIwDy2emloANn/I4M=;
+        b=TWmGTTyPVONEsD7JJCH7VS+shysaRr4JhwqAvvsAMkqhS81mMwlw20WQXArUgzcrhv
+         ylPedJWguyP7nJgi6emrAXkN6aGEzp8t1a8Ss11wUQSYrYUZl5B4bvvRj5VRViJKfEGq
+         AKc5mBVjDZa/kC6SnNnC7sqJR441fZA4f2gYjMaXnCi2SeF0JSt/w7QAPjluEM09ATus
+         NZHtugvy/uE8LWbalgqxSO03QHn7o2SH0tDzRkET4rn8NYiWcDJGQFei1Gz48kS5eU72
+         ZnYdkgu6iXV8LRuqfON64qnnfTuBdTt+bkMk+/RBkJkJbF6uvxOuNWGd2ZFu05wb80oA
+         v8EQ==
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130415023935.GE3050-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Dave Chinner <dchinner@redhat.com>
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello, Serge.
-> 
-> On Sun, Apr 14, 2013 at 08:13:36PM -0500, Serge Hallyn wrote:
-> > If I do
-> > 
-> > 	cd /sys/fs/cgroup/memory
-> > 	mkdir b
-> > 	cd b
-> > 	echo 1 > memory.use_hierarchy
-> > 	echo 5000 > memory.limit_in_bytes
-> > 	cat memory.limit_in_bytes
-> > 8192
-> > 	mkdir c
-> > 	cd c
-> > 	cat memory.use_hierarchy
-> > 1
-> > 	cat memory.limit_in_bytes
-> > 9223372036854775807
-> > 	echo $$ > tasks
-> > 	bash
-> > <killed>
-> > 
-> > So it seems the hierarchy is being enforced, but not reported in
-> > child limit_in_bytes files.
-> 
-> Hmm.... if I understand you correctly, it ain't bug.  It's supposed to
-> work that way.  The parent has certain limits and the child doesn't.
-> The child will operate within the paren't limits but in those limits
-> it isn't restricted.  We actually have a controller which does
-> propagate configuration, the device security one, which I don't think
-> is really optimal but it seems to be the easier way to implement
-> hierarchical behavior for that controller.
-> 
-> Anyways, if you think about the use cases, the current memcg way makes
-> a lot more sense and is more flexible.  e.g. You can express things
-> like A + B shouldn't go above 1000 (whatever the unit is) but A and B
-> in each can go upto 700 when there's room.
+On Mon, Apr 08 2013, Glauber Costa wrote:
 
-True, that makes sense, thanks.
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> Several subsystems use the same construct for LRU lists - a list
+> head, a spin lock and and item count. They also use exactly the same
+> code for adding and removing items from the LRU. Create a generic
+> type for these LRU lists.
+>
+> This is the beginning of generic, node aware LRUs for shrinkers to
+> work with.
+>
+> [ glommer: enum defined constants for lru. Suggested by gthelen ]
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
 
-This example would be great to have in Documentation/cgroups/memory.txt.
-Perhaps as a new subsection 6.2?
+Optional nit pick below:
 
--serge
+Reviewed-by: Greg Thelen <gthelen@google.com>
+
+
+> ---
+>  include/linux/list_lru.h |  44 ++++++++++++++++++
+>  lib/Makefile             |   2 +-
+>  lib/list_lru.c           | 117 +++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 162 insertions(+), 1 deletion(-)
+>  create mode 100644 include/linux/list_lru.h
+>  create mode 100644 lib/list_lru.c
+>
+> diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+> new file mode 100644
+> index 0000000..394c28c
+> --- /dev/null
+> +++ b/include/linux/list_lru.h
+> @@ -0,0 +1,44 @@
+> +/*
+> + * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
+> + * Author: David Chinner
+> + *
+> + * Generic LRU infrastructure
+> + */
+> +#ifndef _LRU_LIST_H
+> +#define _LRU_LIST_H
+> +
+> +#include <linux/list.h>
+> +
+> +enum lru_status {
+> +	LRU_REMOVED,		/* item removed from list */
+> +	LRU_ROTATE,		/* item referenced, give another pass */
+> +	LRU_SKIP,		/* item cannot be locked, skip */
+> +	LRU_RETRY,		/* item not freeable, lock dropped */
+> +};
+> +
+> +struct list_lru {
+> +	spinlock_t		lock;
+> +	struct list_head	list;
+> +	long			nr_items;
+> +};
+> +
+> +int list_lru_init(struct list_lru *lru);
+> +int list_lru_add(struct list_lru *lru, struct list_head *item);
+> +int list_lru_del(struct list_lru *lru, struct list_head *item);
+> +
+> +static inline long list_lru_count(struct list_lru *lru)
+> +{
+> +	return lru->nr_items;
+> +}
+> +
+> +typedef enum lru_status
+> +(*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
+> +
+> +typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
+> +
+> +long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
+> +		   void *cb_arg, long nr_to_walk);
+> +
+> +long list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
+> +
+> +#endif /* _LRU_LIST_H */
+> diff --git a/lib/Makefile b/lib/Makefile
+> index d7946ff..f14abd9 100644
+> --- a/lib/Makefile
+> +++ b/lib/Makefile
+> @@ -13,7 +13,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
+>  	 sha1.o md5.o irq_regs.o reciprocal_div.o argv_split.o \
+>  	 proportions.o flex_proportions.o prio_heap.o ratelimit.o show_mem.o \
+>  	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
+> -	 earlycpio.o
+> +	 earlycpio.o list_lru.o
+>  
+>  lib-$(CONFIG_MMU) += ioremap.o
+>  lib-$(CONFIG_SMP) += cpumask.o
+> diff --git a/lib/list_lru.c b/lib/list_lru.c
+> new file mode 100644
+> index 0000000..03bd984
+> --- /dev/null
+> +++ b/lib/list_lru.c
+> @@ -0,0 +1,117 @@
+> +/*
+> + * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
+> + * Author: David Chinner
+> + *
+> + * Generic LRU infrastructure
+> + */
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/list_lru.h>
+> +
+> +int
+> +list_lru_add(
+> +	struct list_lru	*lru,
+> +	struct list_head *item)
+> +{
+> +	spin_lock(&lru->lock);
+> +	if (list_empty(item)) {
+> +		list_add_tail(item, &lru->list);
+> +		lru->nr_items++;
+> +		spin_unlock(&lru->lock);
+> +		return 1;
+> +	}
+> +	spin_unlock(&lru->lock);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(list_lru_add);
+> +
+> +int
+> +list_lru_del(
+> +	struct list_lru	*lru,
+> +	struct list_head *item)
+> +{
+> +	spin_lock(&lru->lock);
+> +	if (!list_empty(item)) {
+> +		list_del_init(item);
+> +		lru->nr_items--;
+> +		spin_unlock(&lru->lock);
+> +		return 1;
+> +	}
+> +	spin_unlock(&lru->lock);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(list_lru_del);
+> +
+> +long
+> +list_lru_walk(
+> +	struct list_lru *lru,
+> +	list_lru_walk_cb isolate,
+> +	void		*cb_arg,
+> +	long		nr_to_walk)
+> +{
+> +	struct list_head *item, *n;
+> +	long removed = 0;
+> +restart:
+> +	spin_lock(&lru->lock);
+> +	list_for_each_safe(item, n, &lru->list) {
+> +		int ret;
+
+enum lru_status ret;
+
+> +
+> +		if (nr_to_walk-- < 0)
+> +			break;
+> +
+> +		ret = isolate(item, &lru->lock, cb_arg);
+> +		switch (ret) {
+> +		case LRU_REMOVED:
+> +			lru->nr_items--;
+> +			removed++;
+> +			break;
+> +		case LRU_ROTATE:
+> +			list_move_tail(item, &lru->list);
+> +			break;
+> +		case LRU_SKIP:
+> +			break;
+> +		case LRU_RETRY:
+> +			goto restart;
+> +		default:
+> +			BUG();
+> +		}
+> +	}
+> +	spin_unlock(&lru->lock);
+> +	return removed;
+> +}
+> +EXPORT_SYMBOL_GPL(list_lru_walk);
+
+[snip]
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
