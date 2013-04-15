@@ -1,39 +1,42 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 4/4] memcg: force use_hierarchy if sane_behavior
-Date: Sun, 14 Apr 2013 19:35:52 -0700
-Message-ID: <20130415023552.GA9955@dhcp22.suse.cz>
+Date: Sun, 14 Apr 2013 19:39:35 -0700
+Message-ID: <20130415023935.GE3050@htj.dyndns.org>
 References: <1365808259-31073-1-git-send-email-tj@kernel.org>
- <1365808259-31073-5-git-send-email-tj@kernel.org>
- <20130415011336.GF8408@sergelap>
+	<1365808259-31073-5-git-send-email-tj@kernel.org>
+	<20130415011336.GF8408@sergelap>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130415011336.GF8408@sergelap>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=d+hTacFefBq0pwcBF/IAAFXWff6Ttno9EBahlDHPIj8=;
+	b=h+XixE38J2yot9TPTSEnaDB1tIda+KMoGdFCgJhy/9Q6ToDO9F4P/cXguNhfs7F9jG
+	gaWhIi0oGySfybaapEH8ZpqC0RsqNm8laq/OnUNjkoUPRy64J1DRet2np3lkgHld3dOv
+	XQMCNt5z9bqJKxmv+FxK4dLCfeZzp2pRZ6vnWk4j1d7OETYWJsru7GQQJH87KAUs0w1H
+	G6ZIbwIp2yymdOpEKd7NbYfD0ULj+oVnqmJFAAE/ussE4+NE7nzfomrkQo8vp89WGONM
+	TFw1dfeb9K/tRhmPiYs0OmLGs1TngHpBClJrI5FFpP46dE+jDIa2Cy7m/4TcctM1sZL6
+	a9IA==
+Content-Disposition: inline
+In-Reply-To: <20130415011336.GF8408@sergelap>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Sun 14-04-13 20:13:36, Serge Hallyn wrote:
-> Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> > Turn on use_hierarchy by default if sane_behavior is specified and
-> > don't create .use_hierarchy file.
-> > 
-> > It is debatable whether to remove .use_hierarchy file or make it ro as
-> > the former could make transition easier in certain cases; however, the
-> > behavior changes which will be gated by sane_behavior are intensive
-> > including changing basic meaning of certain control knobs in a few
-> > controllers and I don't really think keeping this piece would make
-> > things easier in any noticeable way, so let's remove it.
-> 
-> Hi Tejun,
-> 
-> this actually reminds me of something that's been on my todo list to
-> report for some time, but I haven't had time to find the source of the
-> bug...  And maybe it's already been reported...  but
-> 
+Hello, Serge.
+
+On Sun, Apr 14, 2013 at 08:13:36PM -0500, Serge Hallyn wrote:
 > If I do
 > 
 > 	cd /sys/fs/cgroup/memory
@@ -56,16 +59,20 @@ On Sun 14-04-13 20:13:36, Serge Hallyn wrote:
 > So it seems the hierarchy is being enforced, but not reported in
 > child limit_in_bytes files.
 
-This is an intended behavior. Limits are not propagated to the children
-because they are enforced anyway (by reclaim). The behavior would
-be quite inconsistent when the parent limit would be changed later
-otherwise. We only inherit properties which are enforced hierarchically:
-use_hierarchy, oom_disable and swappiness.
+Hmm.... if I understand you correctly, it ain't bug.  It's supposed to
+work that way.  The parent has certain limits and the child doesn't.
+The child will operate within the paren't limits but in those limits
+it isn't restricted.  We actually have a controller which does
+propagate configuration, the device security one, which I don't think
+is really optimal but it seems to be the easier way to implement
+hierarchical behavior for that controller.
 
-> (Last tested tonight on 3.8.0-17-generic #27-Ubuntu fwiw)
-> 
-> -serge
+Anyways, if you think about the use cases, the current memcg way makes
+a lot more sense and is more flexible.  e.g. You can express things
+like A + B shouldn't go above 1000 (whatever the unit is) but A and B
+in each can go upto 700 when there's room.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
