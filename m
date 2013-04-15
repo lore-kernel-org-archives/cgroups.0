@@ -1,37 +1,38 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove cgrp->top_cgroup
-Date: Sun, 14 Apr 2013 23:26:40 -0700
-Message-ID: <20130415062640.GQ3050@htj.dyndns.org>
-References: <516B9D41.8080508@huawei.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH v3 19/32] hugepage: convert huge zero page shrinker to
+ new shrinker API
+Date: Mon, 15 Apr 2013 11:10:58 +0300
+Message-ID: <20130415081058.GA11428@shutemov.name>
+References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
+ <1365429659-22108-20-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=SVvhqfj99K6Z4NbmQNq7pr2E6Db2YnZR5DSxEY9HK0s=;
-        b=MhlzS3O9Vd5Os0Zm3hbqkZMTZYNqizKnz+ym/oRzFiCygzmpmPaImf/8CICcnc6aCQ
-         hR/dx9cGGX41x2Ek+kJNcSMXX19eAuEXXnnaEcPw4SKS89JZGoW5k6YMECwhIjrjFLUo
-         SOmZGDGvZY0QMLal4/03EyTJwjg2nOdubVQnqYMXgwzaNKdtwiHQHi/4aTJ5KMF42xLx
-         QwnxhNO3ETLPugMuTIFY0L8FgviWPHFruJs5mIO5ppI4iOSywu4GtDL+DbtPn30tsX98
-         nc4GWz7NH3kWadXMy6KAWD43mEoooyqP7RRzAaMOw8UzGeWM6+XpALE6gvFMJkgaP6wW
-         vB9g==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <516B9D41.8080508-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1365429659-22108-20-git-send-email-glommer@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Glauber Costa <glommer@parallels.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Dave Shrinnker <david@fromorbit.com>, Serge Hallyn <serge.hallyn@canonical.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, hughd@google.com, linux-fsdevel@vger.kernel.org, containers@lists.linux-foundation.org, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
 
-On Mon, Apr 15, 2013 at 02:25:05PM +0800, Li Zefan wrote:
-> It's not used, and it can be retrieved via cgrp->root->top_cgroup.
+On Mon, Apr 08, 2013 at 06:00:46PM +0400, Glauber Costa wrote:
+> It consists of:
 > 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> * returning long instead of int
+> * separating count from scan
+> * returning the number of freed entities in scan
+> 
+> Signed-off-by: Glauber Costa <glommer@parallels.com>
+> CC: Dave Chinner <dchinner@redhat.com>
 
-Applied to cgroup/for-3.10.  Thanks.
+Acked-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 
 -- 
-tejun
+ Kirill A. Shutemov
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
