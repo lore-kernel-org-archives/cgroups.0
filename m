@@ -1,22 +1,22 @@
 From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 19/32] hugepage: convert huge zero page shrinker to new shrinker API
-Date: Sun, 14 Apr 2013 22:38:37 -0700
-Message-ID: <xr93y5ck73qa.fsf@gthelen.mtv.corp.google.com>
+Subject: Re: [PATCH v3 20/32] shrinker: Kill old ->shrink API.
+Date: Sun, 14 Apr 2013 22:38:43 -0700
+Message-ID: <xr93r4ic73q4.fsf@gthelen.mtv.corp.google.com>
 References: <1365429659-22108-1-git-send-email-glommer@parallels.com>
-	<1365429659-22108-20-git-send-email-glommer@parallels.com>
+	<1365429659-22108-21-git-send-email-glommer@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=x-received:from:to:cc:subject:references:date:message-id:user-agent
          :mime-version:content-type;
-        bh=6/z7q+SJGPNZjFXnUecWotyrFvKvxNYW2PU7bZzvm8E=;
-        b=Qy+7WX79kOFiscBhyyYwxmodgHnyDcgbi42+juQGlBMSclmnVgy7HQDIvjU3u+TE/r
-         cy1rwvvKsdlmHhu47Z34leTQeB1d2BXLOzLktpMMGB9PgZa6JSCGON/mKIfwZKo69MyJ
-         YeUT8f1kAv40y3BtNKYErOmEa7iT6ojCiWkFt4IeOARkPz9G5kZgXx0tf4QTErx+hk49
-         jC7oBSNJSK4mp1pKN4ja2sAw63jQH0aWXdGF3buDw+uOJqrq9ZOLLfbNSq4V2Yh/uZoP
-         rDOgHN3wONoP/n6XEUMmZhppxnXmXubLZXWTSPgxSGwx0JEJ7vQhY7z5NmvrMp6kwwt1
-         QmRA==
+        bh=pe2jwbUH/tVSvJ1w1u4rxUAZe0JXKp/u4dfjMgwJ3yk=;
+        b=autZZWytl06wnk2ReAKPDOIcQGLxdMF/+6ON6aLSbsj/SJtk6fl6xquWNdHNtLcSLf
+         vWhgK1WRwYWWWNcwUjEIIwcnTdxz8ScwRsOMD085X0FngxQSu7S5xMVYQ5muj/cN6J0J
+         1HVmbEwu7GWesZRyom4DVwOyvh9+00NJnhlYJ4rvGBGYRFEj6foiqT3A57hR7BYwToqR
+         oZbbNuYAkQIYyhwqCtLgymA4mucmef6EBtDoUl77eDF4gKVK0KadFQnrOxvAnOL5qMGB
+         1cGJIJjQ+CV2enMvOfySlUaOOuWGMCyMWSask63eOH+v8OzEDf4jxYnJfT8qWsHfJBkE
+         jnRQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,58 +26,158 @@ Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5
 
 On Mon, Apr 08 2013, Glauber Costa wrote:
 
-> It consists of:
+> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 >
-> * returning long instead of int
-> * separating count from scan
-> * returning the number of freed entities in scan
+> There are no more users of this API, so kill it dead, dead, dead and
+> quietly bury the corpse in a shallow, unmarked grave in a dark
+> forest deep in the hills...
 >
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> CC: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> [ glommer: added flowers to the grave ]
+> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
 > ---
->  mm/huge_memory.c | 18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
+>  include/linux/shrinker.h      | 15 +++++----------
+>  include/trace/events/vmscan.h |  4 ++--
+>  mm/vmscan.c                   | 40 ++++++++--------------------------------
+>  3 files changed, 15 insertions(+), 44 deletions(-)
 >
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index e2f7f5aa..8bf43d3 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -212,24 +212,30 @@ static void put_huge_zero_page(void)
->  	BUG_ON(atomic_dec_and_test(&huge_zero_refcount));
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index e71286f..d4636a0 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -7,14 +7,15 @@
+>   *
+>   * The 'gfpmask' refers to the allocation we are currently trying to
+>   * fulfil.
+> - *
+> - * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
+> - * querying the cache size, so a fastpath for that case is appropriate.
+>   */
+>  struct shrink_control {
+>  	gfp_t gfp_mask;
+>  
+> -	/* How many slab objects shrinker() should scan and try to reclaim */
+> +	/*
+> +	 * How many objects scan_objects should scan and try to reclaim.
+> +	 * This is reset before every call, so it is safe for callees
+> +	 * to modify.
+> +	 */
+>  	long nr_to_scan;
+>  
+>  	/* shrink from these nodes */
+> @@ -24,11 +25,6 @@ struct shrink_control {
+>  /*
+>   * A callback you can register to apply pressure to ageable caches.
+>   *
+> - * @shrink() should look through the least-recently-used 'nr_to_scan' entries
+> - * and attempt to free them up.  It should return the number of objects which
+> - * remain in the cache.  If it returns -1, it means it cannot do any scanning at
+> - * this time (eg. there is a risk of deadlock).
+> - *
+>   * @count_objects should return the number of freeable items in the cache. If
+>   * there are no objects to free or the number of freeable items cannot be
+>   * determined, it should return 0. No deadlock checks should be done during the
+> @@ -44,7 +40,6 @@ struct shrink_control {
+>   * @scan_objects will be made from the current reclaim context.
+>   */
+>  struct shrinker {
+> -	int (*shrink)(struct shrinker *, struct shrink_control *sc);
+>  	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
+>  	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
+>  
+> diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+> index 63cfccc..132a985 100644
+> --- a/include/trace/events/vmscan.h
+> +++ b/include/trace/events/vmscan.h
+> @@ -202,7 +202,7 @@ TRACE_EVENT(mm_shrink_slab_start,
+>  
+>  	TP_fast_assign(
+>  		__entry->shr = shr;
+> -		__entry->shrink = shr->shrink;
+> +		__entry->shrink = shr->scan_objects;
+>  		__entry->nr_objects_to_shrink = nr_objects_to_shrink;
+>  		__entry->gfp_flags = sc->gfp_mask;
+>  		__entry->pgs_scanned = pgs_scanned;
+> @@ -241,7 +241,7 @@ TRACE_EVENT(mm_shrink_slab_end,
+>  
+>  	TP_fast_assign(
+>  		__entry->shr = shr;
+> -		__entry->shrink = shr->shrink;
+> +		__entry->shrink = shr->scan_objects;
+>  		__entry->unused_scan = unused_scan_cnt;
+>  		__entry->new_scan = new_scan_cnt;
+>  		__entry->retval = shrinker_retval;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 6926e09..232dfcb 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -176,14 +176,6 @@ void unregister_shrinker(struct shrinker *shrinker)
 >  }
+>  EXPORT_SYMBOL(unregister_shrinker);
 >  
-> -static int shrink_huge_zero_page(struct shrinker *shrink,
-> -		struct shrink_control *sc)
-> +
-> +static long shrink_huge_zero_page_count(struct shrinker *shrink,
-> +					struct shrink_control *sc)
->  {
-> -	if (!sc->nr_to_scan)
-> -		/* we can free zero page only if last reference remains */
-> -		return atomic_read(&huge_zero_refcount) == 1 ? HPAGE_PMD_NR : 0;
-> +	/* we can free zero page only if last reference remains */
-> +	return atomic_read(&huge_zero_refcount) == 1 ? HPAGE_PMD_NR : 0;
-> +}
+> -static inline int do_shrinker_shrink(struct shrinker *shrinker,
+> -				     struct shrink_control *sc,
+> -				     unsigned long nr_to_scan)
+> -{
+> -	sc->nr_to_scan = nr_to_scan;
+> -	return (*shrinker->shrink)(shrinker, sc);
+> -}
+> -
+>  #define SHRINK_BATCH 128
+>  /*
+>   * Call the shrink functions to age shrinkable caches
+> @@ -229,11 +221,8 @@ unsigned long shrink_slab(struct shrink_control *sc,
+>  		long batch_size = shrinker->batch ? shrinker->batch
+>  						  : SHRINK_BATCH;
 >  
-> +static long shrink_huge_zero_page_scan(struct shrinker *shrink,
-> +				       struct shrink_control *sc)
-> +{
->  	if (atomic_cmpxchg(&huge_zero_refcount, 1, 0) == 1) {
->  		unsigned long zero_pfn = xchg(&huge_zero_pfn, 0);
->  		BUG_ON(zero_pfn == 0);
->  		__free_page(__pfn_to_page(zero_pfn));
-> +		return HPAGE_PMD_NR;
->  	}
+> -		if (shrinker->scan_objects) {
+> -			max_pass = shrinker->count_objects(shrinker, sc);
+> -			WARN_ON(max_pass < 0);
+> -		} else
+> -			max_pass = do_shrinker_shrink(shrinker, sc, 0);
+> +		max_pass = shrinker->count_objects(shrinker, sc);
+> +		WARN_ON(max_pass < 0);
+>  		if (max_pass <= 0)
+>  			continue;
 >  
->  	return 0;
->  }
+> @@ -252,7 +241,7 @@ unsigned long shrink_slab(struct shrink_control *sc,
+>  		if (total_scan < 0) {
+>  			printk(KERN_ERR
+>  			"shrink_slab: %pF negative objects to delete nr=%ld\n",
+> -			       shrinker->shrink, total_scan);
+> +			       shrinker->scan_objects, total_scan);
+>  			total_scan = max_pass;
+>  		}
 >  
->  static struct shrinker huge_zero_page_shrinker = {
-> -	.shrink = shrink_huge_zero_page,
-> +	.scan_objects = shrink_huge_zero_page_scan,
-> +	.count_objects = shrink_huge_zero_page_count,
->  	.seeks = DEFAULT_SEEKS,
->  };
+> @@ -286,24 +275,11 @@ unsigned long shrink_slab(struct shrink_control *sc,
+>  		do {
+>  			long ret;
+>  
+> -			if (shrinker->scan_objects) {
+> -				sc->nr_to_scan = batch_size;
+> -				ret = shrinker->scan_objects(shrinker, sc);
+> -
+> -				if (ret == -1)
+> -					break;
+> -				freed += ret;
+> -			} else {
+> -				int nr_before;
+> -
+> -				nr_before = do_shrinker_shrink(shrinker, sc, 0);
+> -				ret = do_shrinker_shrink(shrinker, sc,
+> -								batch_size);
+> -				if (ret == -1)
+> -					break;
+> -				if (ret < nr_before)
+> -					freed += nr_before - ret;
+> -			}
+> +			sc->nr_to_scan = batch_size;
+> +			ret = shrinker->scan_objects(shrinker, sc);
+> +			if (ret == -1)
+> +				break;
+> +			freed += ret;
+>  
+>  			count_vm_events(SLABS_SCANNED, batch_size);
+>  			total_scan -= batch_size;
