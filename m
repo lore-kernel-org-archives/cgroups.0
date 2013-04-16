@@ -1,71 +1,106 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] devcg: remove parent_cgroup.
-Date: Tue, 16 Apr 2013 17:10:10 -0400
-Message-ID: <20130416211010.GQ24899@redhat.com>
-References: <1366143895-21535-1-git-send-email-ramirose@gmail.com>
-	<20130416203700.GP24899@redhat.com>
-	<20130416210725.GA21536@sergelap>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] memcg: Check more strictly to avoid ULLONG overflow by
+ PAGE_ALIGN
+Date: Tue, 16 Apr 2013 15:30:36 -0700
+Message-ID: <20130416153036.23090c28485e52ba76cd5348@linux-foundation.org>
+References: <1365748763-4350-1-git-send-email-handai.szj@taobao.com>
+	<20130412171108.d3ef3e2d66e9c1bfcf69467c@mxp.nes.nec.co.jp>
+	<20130415135805.c552511917b0dbe113388acb@linux-foundation.org>
+	<20130416102938.e52fdf864f6991b960b8b055@mxp.nes.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130416210725.GA21536@sergelap>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130416102938.e52fdf864f6991b960b8b055-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+Cc: glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Apr 16, 2013 at 04:07:25PM -0500, Serge Hallyn wrote:
-> Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> > On Tue, Apr 16, 2013 at 11:24:55PM +0300, Rami Rosen wrote:
-> > > In devcgroup_css_alloc(), there is no longer need for parent_cgroup.
-> > > bd2953ebbb("devcg: propagate local changes down the hierarchy") made
-> > > the variable parent_cgroup redundant. This patch removes parent_cgroup
-> > > from devcgroup_css_alloc().
-> > > 
-> > > Signed-off-by: Rami Rosen <ramirose-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > > ---
-> > >  security/device_cgroup.c | 2 --
-> > >  1 file changed, 2 deletions(-)
-> > > 
-> > > diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-> > > index 994aecc..dd0dc57 100644
-> > > --- a/security/device_cgroup.c
-> > > +++ b/security/device_cgroup.c
-> > > @@ -236,7 +236,6 @@ static void devcgroup_offline(struct cgroup *cgroup)
-> > >  static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
-> > >  {
-> > >  	struct dev_cgroup *dev_cgroup;
-> > > -	struct cgroup *parent_cgroup;
-> > >  
-> > >  	dev_cgroup = kzalloc(sizeof(*dev_cgroup), GFP_KERNEL);
-> > >  	if (!dev_cgroup)
-> > > @@ -244,7 +243,6 @@ static struct cgroup_subsys_state *devcgroup_css_alloc(struct cgroup *cgroup)
-> > >  	INIT_LIST_HEAD(&dev_cgroup->exceptions);
-> > >  	INIT_LIST_HEAD(&dev_cgroup->propagate_pending);
-> > >  	dev_cgroup->behavior = DEVCG_DEFAULT_NONE;
-> > > -	parent_cgroup = cgroup->parent;
-> > >  
-> > >  	return &dev_cgroup->css;
-> > >  }
-> > 
-> > oops
-> > 
-> > ACK
+On Tue, 16 Apr 2013 10:29:38 +0900 Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
+
+> On Mon, 15 Apr 2013 13:58:05 -0700
+> Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
 > 
-> Not seeing the patches this is based on in Linus' tree yet, but given
-> the context above I don't see how it could not be right :)
+> > On Fri, 12 Apr 2013 17:11:08 +0900 Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
+> > 
+> > > > --- a/include/linux/res_counter.h
+> > > > +++ b/include/linux/res_counter.h
+> > > > @@ -54,7 +54,7 @@ struct res_counter {
+> > > >  	struct res_counter *parent;
+> > > >  };
+> > > >  
+> > > > -#define RESOURCE_MAX (unsigned long long)LLONG_MAX
+> > > > +#define RESOURCE_MAX (unsigned long long)ULLONG_MAX
+> > > >  
+> > > 
+> > > I don't think it's a good idea to change a user-visible value.
+> > 
+> > The old value was a mistake, surely.
+> > 
+> 
+> I introduced 'RESOURCE_MAX' in commit:c5b947b2, but I just used the
+> default value of the res_counter.limit. I'm not sure why it had been
+> initialized to (unsigned long long)LLONG_MAX.
+> 
+> > RESOURCE_MAX shouldn't be in this header file - that is far too general
+> > a name.  I suggest the definition be moved to res_counter.c.  And the
+> > (unsigned long long) cast is surely unneeded if we're to use
+> > ULLONG_MAX.
+> > 
+> 
+> Hmm, RESOUCE_MAX is now used outside of res_counter.c(e.g. tcp_memcontrol.c).
+> Adding Glauber Costa to the cc list.
+> Just changing the name to RES_COUNTER_MAX might be the choice.
 
-they're on Tejun's tree
+That sounds a lot better.
 
--- 
-Aristeu
+> > > >  /**
+> > > >   * Helpers to interact with userspace
+> > > > diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+> > > > index ff55247..6c35310 100644
+> > > > --- a/kernel/res_counter.c
+> > > > +++ b/kernel/res_counter.c
+> > > > @@ -195,6 +195,12 @@ int res_counter_memparse_write_strategy(const char *buf,
+> > > >  	if (*end != '\0')
+> > > >  		return -EINVAL;
+> > > >  
+> > > > -	*res = PAGE_ALIGN(*res);
+> > > > +	/* Since PAGE_ALIGN is aligning up(the next page boundary),
+> > > > +	 * check the left space to avoid overflow to 0. */
+> > > > +	if (RESOURCE_MAX - *res < PAGE_SIZE - 1)
+> > > > +		*res = RESOURCE_MAX;
+> > > > +	else
+> > > > +		*res = PAGE_ALIGN(*res);
+> > > > +
+> > > 
+> > > Current interface seems strange because we can set a bigger value than
+> > > the value which means "unlimited".
+> > 
+> > I'm not sure what you mean by this?
+> > 
+> 9223372036854775807(LLONG_MAX) means "unlimited" now. But we can set a bigger
+> value than that.
+
+Ah, hm, OK, that's pretty random.  I suggest we switch it to ~0ULL,
+which is apparently what was intended.  I don't think that will alter
+the API in terms of input - we still do "echo -1 > ...".
+
+> # cat /cgroup/memory/A/memory.memsw.limit_in_bytes
+> 9223372036854775807
+> # echo 9223372036854775808 >/cgroup/memory/A/memory.memsw.limit_in_bytes
+> # cat /cgroup/memory/A/memory.memsw.limit_in_bytes
+> 9223372036854775808
+
+But it affects the user *output*.
+
+> I feel "bigger than unlimited" is strange.
+
+Yes.  Let's just straighten it all out - I doubt if the small
+compatibility changes will hurt anyone.  But please do spell out the
+interface changes in full detail in the changelog so we can make the
+correct decision here.
+
+I suspect we're looking at two patches here: one to fix/change the
+control interface, one to clean up random/misc things we noticed on
+the way.
