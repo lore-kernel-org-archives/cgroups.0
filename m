@@ -1,106 +1,149 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Sha Zhengju <handai.szj@gmail.com>
 Subject: Re: [PATCH] memcg: Check more strictly to avoid ULLONG overflow by PAGE_ALIGN
-Date: Tue, 16 Apr 2013 15:29:25 +0800
-Message-ID: <CAFj3OHX3XZf85F7161jp8KT30fCLFmpAYCx7J-PHx7cKOkTrQA@mail.gmail.com>
+Date: Tue, 16 Apr 2013 15:30:14 +0800
+Message-ID: <CAFj3OHXLw+FAQsdbMDLt5EayGkgs2qsc9VVw16uA_c_-32kqrg@mail.gmail.com>
 References: <1365748763-4350-1-git-send-email-handai.szj@taobao.com>
 	<20130412171108.d3ef3e2d66e9c1bfcf69467c@mxp.nes.nec.co.jp>
 	<20130415135805.c552511917b0dbe113388acb@linux-foundation.org>
+	<20130416102938.e52fdf864f6991b960b8b055@mxp.nes.nec.co.jp>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=mime-version:x-received:in-reply-to:references:date:message-id
          :subject:from:to:cc:content-type;
-        bh=gmkFWHKdfuf2L73oZuTaQiwp2vh0RTnEdu6RusSkK6A=;
-        b=VjJp+/amAm03gM98pPiZYGG6PVx7pXerJRS792OUSF5IZbKJqIqbAw4BeVKjvJH++r
-         te+E5r20kIoKYTZ/Z/6TVWVvHyeu6cVQxGpESw463yobh38F/yL4u/Ap6vBZOzAfOTI1
-         hShp1nqUuTV9YaP/A/9cN/GVa++rR/LWleSiemouYNnNP+oW67iQJNv8l1uKbboHJEDD
-         X49dD9AvtcbiKJAcIfEOy4AbZZenz9SdVvCSskD4/X8kvj1vvZBEbBioFqIucjj8nTmD
-         NF+6sgCUT00vQaXrU9EIBj7+JEv0DWkgso46PNx7SyaGYwc1f1L3fXTISGQdv64iUgI9
-         BjZg==
-In-Reply-To: <20130415135805.c552511917b0dbe113388acb-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=NRgqK9dLUYczprmpwMZybLa4t2PQVVDkIscI57pnzMg=;
+        b=lw4Ykz+4OeuDrST5AH8eaym9nElNkYN24H0fbVzL16Hz460jDNAUqmhrclYLiiWJWe
+         Zlaw9+6ax2upBQ848N227cG93mkAzVnp6VAXwN1xaEsvKzgsgYCC3FExBbd8mPkrzArD
+         TBQ9bD1N0lZrUZTfBiIG7hXJpClh10Ywer2xT/BTtIPGeJIQO8YMobz1yR2I5p7uLZEz
+         Cf2BNDAWehwMFl4DzNkBScmK1YP4eSj3jvX28z1RNb+gEd4EDELMhdcWlCTrdV0AmCMC
+         HEW7ztTE1S3kdVfn8AgadiVXht5hAnIQ+AvUS7i38b6ymvSowBO/M+D0dOy96Myrzkdc
+         U4gw==
+In-Reply-To: <20130416102938.e52fdf864f6991b960b8b055@mxp.nes.nec.co.jp>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, jeff.liu@oracle.com, Sha Zhengju <handai.szj@taobao.com>
 
-On Tue, Apr 16, 2013 at 4:58 AM, Andrew Morton
-<akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> On Fri, 12 Apr 2013 17:11:08 +0900 Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
+On Tue, Apr 16, 2013 at 9:29 AM, Daisuke Nishimura
+<nishimura@mxp.nes.nec.co.jp> wrote:
+> On Mon, 15 Apr 2013 13:58:05 -0700
+> Andrew Morton <akpm@linux-foundation.org> wrote:
 >
->> > --- a/include/linux/res_counter.h
->> > +++ b/include/linux/res_counter.h
->> > @@ -54,7 +54,7 @@ struct res_counter {
->> >     struct res_counter *parent;
->> >  };
->> >
->> > -#define RESOURCE_MAX (unsigned long long)LLONG_MAX
->> > +#define RESOURCE_MAX (unsigned long long)ULLONG_MAX
->> >
+>> On Fri, 12 Apr 2013 17:11:08 +0900 Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp> wrote:
 >>
->> I don't think it's a good idea to change a user-visible value.
+>> > > --- a/include/linux/res_counter.h
+>> > > +++ b/include/linux/res_counter.h
+>> > > @@ -54,7 +54,7 @@ struct res_counter {
+>> > >   struct res_counter *parent;
+>> > >  };
+>> > >
+>> > > -#define RESOURCE_MAX (unsigned long long)LLONG_MAX
+>> > > +#define RESOURCE_MAX (unsigned long long)ULLONG_MAX
+>> > >
+>> >
+>> > I don't think it's a good idea to change a user-visible value.
+>>
+>> The old value was a mistake, surely.
+>>
 >
-> The old value was a mistake, surely.
+> I introduced 'RESOURCE_MAX' in commit:c5b947b2, but I just used the
+> default value of the res_counter.limit. I'm not sure why it had been
+> initialized to (unsigned long long)LLONG_MAX.
+
+Then let's correct it now.
+
 >
-> RESOURCE_MAX shouldn't be in this header file - that is far too general
-> a name.  I suggest the definition be moved to res_counter.c.  And the
-> (unsigned long long) cast is surely unneeded if we're to use
-> ULLONG_MAX.
+>> RESOURCE_MAX shouldn't be in this header file - that is far too general
+>> a name.  I suggest the definition be moved to res_counter.c.  And the
+>> (unsigned long long) cast is surely unneeded if we're to use
+>> ULLONG_MAX.
+>>
 >
->> >  /**
->> >   * Helpers to interact with userspace
->> > diff --git a/kernel/res_counter.c b/kernel/res_counter.c
->> > index ff55247..6c35310 100644
->> > --- a/kernel/res_counter.c
->> > +++ b/kernel/res_counter.c
->> > @@ -195,6 +195,12 @@ int res_counter_memparse_write_strategy(const char *buf,
->> >     if (*end != '\0')
+> Hmm, RESOUCE_MAX is now used outside of res_counter.c(e.g. tcp_memcontrol.c).
+
+Yeah, and another mm/memcontrol.c used it too.
+
+> Adding Glauber Costa to the cc list.
+> Just changing the name to RES_COUNTER_MAX might be the choice.
+>
+>> > >  /**
+>> > >   * Helpers to interact with userspace
+>> > > diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+>> > > index ff55247..6c35310 100644
+>> > > --- a/kernel/res_counter.c
+>> > > +++ b/kernel/res_counter.c
+>> > > @@ -195,6 +195,12 @@ int res_counter_memparse_write_strategy(const char *buf,
+>> > >   if (*end != '\0')
+>> > >           return -EINVAL;
+>> > >
+>> > > - *res = PAGE_ALIGN(*res);
+>> > > + /* Since PAGE_ALIGN is aligning up(the next page boundary),
+>> > > +  * check the left space to avoid overflow to 0. */
+>> > > + if (RESOURCE_MAX - *res < PAGE_SIZE - 1)
+>> > > +         *res = RESOURCE_MAX;
+>> > > + else
+>> > > +         *res = PAGE_ALIGN(*res);
+>> > > +
+>> >
+>> > Current interface seems strange because we can set a bigger value than
+>> > the value which means "unlimited".
+>>
+>> I'm not sure what you mean by this?
+>>
+> 9223372036854775807(LLONG_MAX) means "unlimited" now. But we can set a bigger
+> value than that.
+>
+> # cat /cgroup/memory/A/memory.memsw.limit_in_bytes
+> 9223372036854775807
+> # echo 9223372036854775808 >/cgroup/memory/A/memory.memsw.limit_in_bytes
+> # cat /cgroup/memory/A/memory.memsw.limit_in_bytes
+> 9223372036854775808
+>
+> I feel "bigger than unlimited" is strange.
+>
+>> > So, how about some thing like:
+>> >
+>> >     if (*res > RESOURCE_MAX)
 >> >             return -EINVAL;
+>> >     if (*res > PAGE_ALIGN(RESOURCE_MAX) - PAGE_SIZE)
+>> >             *res = RESOURCE_MAX;
+>> >     else
+>> >             *res = PAGE_ALIGN(*res);
 >> >
->> > -   *res = PAGE_ALIGN(*res);
->> > +   /* Since PAGE_ALIGN is aligning up(the next page boundary),
->> > +    * check the left space to avoid overflow to 0. */
->> > +   if (RESOURCE_MAX - *res < PAGE_SIZE - 1)
->> > +           *res = RESOURCE_MAX;
->> > +   else
->> > +           *res = PAGE_ALIGN(*res);
->> > +
 >>
->> Current interface seems strange because we can set a bigger value than
->> the value which means "unlimited".
->
-> I'm not sure what you mean by this?
->
->> So, how about some thing like:
+>> The first thing I'd do to res_counter_memparse_write_strategy() is to
+>> rename its second arg to `resp' then add a local called `res'.  Because
+>> that function dereferences res far too often.
 >>
->>       if (*res > RESOURCE_MAX)
->>               return -EINVAL;
->>       if (*res > PAGE_ALIGN(RESOURCE_MAX) - PAGE_SIZE)
->>               *res = RESOURCE_MAX;
+>> Then,
+>>
+>> -     *res = PAGE_ALIGN(*res);
+>>       if (PAGE_ALIGN(res) >= res)
+>>               res = PAGE_ALIGN(res);
 >>       else
->>               *res = PAGE_ALIGN(*res);
+>>               res = RESOURCE_MAX;     /* PAGE_ALIGN wrapped to zero */
 >>
+>>       *resp = res;
+>>       return 0;
+>>
+>>
+> Good idea :)
 >
-> The first thing I'd do to res_counter_memparse_write_strategy() is to
-> rename its second arg to `resp' then add a local called `res'.  Because
-> that function dereferences res far too often.
 >
-> Then,
->
-> -       *res = PAGE_ALIGN(*res);
->         if (PAGE_ALIGN(res) >= res)
->                 res = PAGE_ALIGN(res);
->         else
->                 res = RESOURCE_MAX;     /* PAGE_ALIGN wrapped to zero */
->
->         *resp = res;
->         return 0;
->
-
-Okay, this one is better.
+> Thanks,
+> Daisuke Nishimura.
 
 
+
+--
 Thanks,
 Sha
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
