@@ -1,106 +1,53 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH] memcg: Check more strictly to avoid ULLONG overflow by
- PAGE_ALIGN
-Date: Tue, 16 Apr 2013 15:30:36 -0700
-Message-ID: <20130416153036.23090c28485e52ba76cd5348@linux-foundation.org>
-References: <1365748763-4350-1-git-send-email-handai.szj@taobao.com>
-	<20130412171108.d3ef3e2d66e9c1bfcf69467c@mxp.nes.nec.co.jp>
-	<20130415135805.c552511917b0dbe113388acb@linux-foundation.org>
-	<20130416102938.e52fdf864f6991b960b8b055@mxp.nes.nec.co.jp>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Wed, 17 Apr 2013 09:29:32 +0800
+Message-ID: <516DFAFC.1030101@huawei.com>
+References: <20130406012159.GA17159@mtj.dyndns.org> <516D333D.4040703@huawei.com> <20130416171056.GA2874@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130416102938.e52fdf864f6991b960b8b055-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
+In-Reply-To: <20130416171056.GA2874-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>
-Cc: glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 16 Apr 2013 10:29:38 +0900 Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
-
-> On Mon, 15 Apr 2013 13:58:05 -0700
-> Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+On 2013/4/17 1:10, Tejun Heo wrote:
+> Hello, Li.
 > 
-> > On Fri, 12 Apr 2013 17:11:08 +0900 Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org> wrote:
-> > 
-> > > > --- a/include/linux/res_counter.h
-> > > > +++ b/include/linux/res_counter.h
-> > > > @@ -54,7 +54,7 @@ struct res_counter {
-> > > >  	struct res_counter *parent;
-> > > >  };
-> > > >  
-> > > > -#define RESOURCE_MAX (unsigned long long)LLONG_MAX
-> > > > +#define RESOURCE_MAX (unsigned long long)ULLONG_MAX
-> > > >  
-> > > 
-> > > I don't think it's a good idea to change a user-visible value.
-> > 
-> > The old value was a mistake, surely.
-> > 
+> On Tue, Apr 16, 2013 at 07:17:17PM +0800, Li Zefan wrote:
+> ...
+>>> hot-unplug).  It currently transfers all its tasks to the nearest
+>>> ancestor with executing resources, which is an irreversible process
+>>> which would affect all other co-mounted controllers.  We probably want
+>>> it to just take on the masks of the ancestor until its own executing
+>>> resources become online again, and the new behavior should be gated
+>>> behind a switch (Li, can you please look into this?).
+>>>
+>>
+>> Sure, I'll be working on sane hierarchy behavior for cpuset.
 > 
-> I introduced 'RESOURCE_MAX' in commit:c5b947b2, but I just used the
-> default value of the res_counter.limit. I'm not sure why it had been
-> initialized to (unsigned long long)LLONG_MAX.
+> Great, it'd be great if you can share how it's gonna be done once the
+> basic design gets settled before full implementation.
 > 
-> > RESOURCE_MAX shouldn't be in this header file - that is far too general
-> > a name.  I suggest the definition be moved to res_counter.c.  And the
-> > (unsigned long long) cast is surely unneeded if we're to use
-> > ULLONG_MAX.
-> > 
-> 
-> Hmm, RESOUCE_MAX is now used outside of res_counter.c(e.g. tcp_memcontrol.c).
-> Adding Glauber Costa to the cc list.
-> Just changing the name to RES_COUNTER_MAX might be the choice.
 
-That sounds a lot better.
+The basic idea is, when a cpuset becomes empty due to hotplug, we don't
+move the tasks in it, but instead we update tasks' cpumask/nodemask using
+the nearest non-empty acestor cpuset's cpus_allowed and mems_allowed.
 
-> > > >  /**
-> > > >   * Helpers to interact with userspace
-> > > > diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-> > > > index ff55247..6c35310 100644
-> > > > --- a/kernel/res_counter.c
-> > > > +++ b/kernel/res_counter.c
-> > > > @@ -195,6 +195,12 @@ int res_counter_memparse_write_strategy(const char *buf,
-> > > >  	if (*end != '\0')
-> > > >  		return -EINVAL;
-> > > >  
-> > > > -	*res = PAGE_ALIGN(*res);
-> > > > +	/* Since PAGE_ALIGN is aligning up(the next page boundary),
-> > > > +	 * check the left space to avoid overflow to 0. */
-> > > > +	if (RESOURCE_MAX - *res < PAGE_SIZE - 1)
-> > > > +		*res = RESOURCE_MAX;
-> > > > +	else
-> > > > +		*res = PAGE_ALIGN(*res);
-> > > > +
-> > > 
-> > > Current interface seems strange because we can set a bigger value than
-> > > the value which means "unlimited".
-> > 
-> > I'm not sure what you mean by this?
-> > 
-> 9223372036854775807(LLONG_MAX) means "unlimited" now. But we can set a bigger
-> value than that.
+- then it's allowed to move those tasks from the empty cpuset to another
+cpuset
 
-Ah, hm, OK, that's pretty random.  I suggest we switch it to ~0ULL,
-which is apparently what was intended.  I don't think that will alter
-the API in terms of input - we still do "echo -1 > ...".
+- when this acestor cpuset's cpumask/nodemask is changed (either by writing
+cpuset.cpus/mems or hotplug), not only the tasks in it but also tasks in
+the empty cpuset will be updated.
 
-> # cat /cgroup/memory/A/memory.memsw.limit_in_bytes
-> 9223372036854775807
-> # echo 9223372036854775808 >/cgroup/memory/A/memory.memsw.limit_in_bytes
-> # cat /cgroup/memory/A/memory.memsw.limit_in_bytes
-> 9223372036854775808
+- it's allowed to move a task to an empty cpuset, and the task's cpumask/nodemask
+will be updated according to the nearst non-empty acestor, no matter if this
+empty cpuset is exclusive or not.
 
-But it affects the user *output*.
+- if a previously offlined cpu becomes online again, the emtpy cpuset won't
+get this cpu resource automatically, which is the current behavior.
 
-> I feel "bigger than unlimited" is strange.
-
-Yes.  Let's just straighten it all out - I doubt if the small
-compatibility changes will hurt anyone.  But please do spell out the
-interface changes in full detail in the changelog so we can make the
-correct decision here.
-
-I suspect we're looking at two patches here: one to fix/change the
-control interface, one to clean up random/misc things we noticed on
-the way.
+How does this sound?
