@@ -1,46 +1,70 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 05/10] cpuset: don't update tasks' cpumask and nodemask
- in an empty cpuset
-Date: Fri, 19 Apr 2013 11:36:18 -0700
-Message-ID: <20130419183618.GC13811@mtj.dyndns.org>
+Subject: Re: [PATCH 09/10] cpuset: allow to keep tasks in empty cpusets
+Date: Fri, 19 Apr 2013 13:58:21 -0700
+Message-ID: <20130419205821.GA15543@mtj.dyndns.org>
 References: <517137A7.4020605@huawei.com>
- <51713819.8050708@huawei.com>
+ <517138A4.3070209@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=TKF86EBin2msPEce+5Gsmfi0c1DTqhMkgWd+3PbcxbA=;
-        b=XQ+YG52v9Fr4krQ5uVVNcNMkXngje39XhZpqEZFQJ47ky1oKSBZPnxuqPi9W4y+zod
-         jO1lcYMx2xwuT2cmThLUTHoSGd4TzDu/8dHgNDbb/UBKMOfU17gByoZaHHaG+Xmflngr
-         uQ18gm90Xz2x/Cq1agQ/UbmdONf6Py+MEvz3PTOPsZq2Zgw27Tqn1LlZ8yvXhlhFbxFC
-         n763LoUM5MUCQ39/9H82VexMLhmgKe/VH7UcZanAwqfGUtXVRvI+/EHdOaq0yHWy/P6d
-         RIAWhwhxl1veSXIG6WtrxyawShWWEydCwM7GL9GWrGNoXsulTqOVvB2+71K7sJs8XdVF
-         I6pQ==
-Content-Disposition: inline
-In-Reply-To: <51713819.8050708-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=0//zS0Ql1WB5B/ZQ/jaOMeyrGoTfDbQSCtq6TjcOq5c=;
+	b=hZrKKHZIUeVFLX42scVoWepog7jW6xg78m5vcfXyexIE7zVFoVllB76maGBKSno4qt
+	SsvkbO46K1jhL+ujshxBFNekg3yAtMFUcu+qVI568kKPRwtJYfiKhEbsWS0fB6KWbMpe
+	eQUGVeFSgmegL3eFygNKGGXa/OPUu+CClbITSI6m4l3A4j6Xwn4Ag1spYiC6iPCBL0m+
+	ZZmbhsKKw6UC2qnzpT6GJCRPllozGxZab26OEbyJKQ7LWEHNztxBVIvHa8MFYoSP+eS7
+	1CsarxSZ/9An6dIMf0xsJG3646Qxpr1ZyONg9JdrDgdkQigmwDujP7T5MOlEmblDpcYs
+	D9pw==
+Content-Disposition: inline
+In-Reply-To: <517138A4.3070209-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Li.
+Hello,
 
-On Fri, Apr 19, 2013 at 08:27:05PM +0800, Li Zefan wrote:
-> I think this was introduced unintentionally when cpuset hotplug was
-> made asynchronous. Fortunately it does no harm, as updating tasks'
-> cpumask will just return failure and there's a guarantee_online_mems()
-> when updating nodemask, and then the tasks will be moved to an ancestor
-> cpuset.
+On Fri, Apr 19, 2013 at 08:29:24PM +0800, Li Zefan wrote:
+> +static void update_tasks_cpumask_hier(struct cpuset *root_cs,
+> +				      bool update_root, struct ptr_heap *heap)
+> +{
+> +	struct cpuset *cp;
+> +	struct cgroup *pos_cgrp;
+> +
+> +	if (update_root)
+> +		update_tasks_cpumask(root_cs, heap);
+> +
+> +	rcu_read_lock();
+> +	cpuset_for_each_descendant_pre(cp, pos_cgrp, root_cs) {
+> +		/* skip the whole subtree if @cp have some CPU */
+> +		if (!cpumask_empty(cp->cpus_allowed)) {
+> +			pos_cgrp = cgroup_rightmost_descendant(pos_cgrp);
+> +			continue;
+> +		}
+> +
+> +		update_tasks_cpumask(cp, heap);
+> +	}
+> +	rcu_read_unlock();
 
-Yeah, which will update the masks to the proper values anyway, so it
-was intentionally written that way as it didn't really matter either
-way.  I suppose this helps future changes?  Maybe update the
-description a bit?
+I don't think we can call update_tasks_cpumask() under
+rcu_read_lock().  It calls into set_cpus_allowed_ptr() which may
+block, so you'll probably have to punt it to a work item like how
+migration is being done.  Another approach would be converting cgroup
+to use SRCU instead, which would lessen pain on other places too.  The
+only problem there would be that srcu_read_lock() is a bit more
+expensive than rcu_read_lock().  I'm not sure whether that'd show up
+in some hot path or not.  Ideas?
 
 Thanks.
 
