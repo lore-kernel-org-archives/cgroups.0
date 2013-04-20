@@ -1,51 +1,42 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: memcg: softlimit on internal nodes
-Date: Fri, 19 Apr 2013 17:42:21 -0700
-Message-ID: <20130420004221.GB17179@mtj.dyndns.org>
-References: <20130420002620.GA17179@mtj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 05/10] cpuset: don't update tasks' cpumask and nodemask
+ in an empty cpuset
+Date: Sat, 20 Apr 2013 09:06:44 +0800
+Message-ID: <5171EA24.3070001@huawei.com>
+References: <517137A7.4020605@huawei.com> <51713819.8050708@huawei.com> <20130419183618.GC13811@mtj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=ttqU7NJkgtrM/0tEOIUFmwCJNv0KNaieLr9no4wg/y8=;
-        b=jjzkD4UPJsxogFSqxv2Psqz3KA7eBGYsfwejR4fabUnjLjko84MeKDOVH+ZSxTbfx7
-         cYwgPmQNzIHlkFwXCRavB64B4Sm6BxRPwzc3z9+BoeiPDDI77OQLgl5Qbax+MViLgr7a
-         TIfiT19zuDMTHHYJMepLajg/YhIRkiPTmRKIlrdTssxXaLb9aL3k59z/oxhbKC/v9DzW
-         0Fxyrw9/Zl9IfDPt2DaRfi1aRi8wKQmNeMHb+/V+7U4ieZBnUKT8KfPaHalP5TruJKP3
-         D4We0el1Y4lC/+XNPaT/zlph6XJagtxQZIJErt9Ll/LxExThkJ1YHGImYrMlQKJ0/lQF
-         CIUQ==
-Content-Disposition: inline
-In-Reply-To: <20130420002620.GA17179-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130419183618.GC13811-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-On Fri, Apr 19, 2013 at 05:26:20PM -0700, Tejun Heo wrote:
-> If such actual soft limit is desired (I don't know, it just seems like
-> a very fundamental / logical feature to me), please don't try to
-> somehow overload "softlimit".  They are two fundamentally different
-> knobs, both make sense in their own ways, and when you stop confusing
-> the two, there's nothing ambiguous about what what each knob means in
-> hierarchical situations.  This goes the same for the "untrusted" flag
-> Ying told me, which seems like another confused way to overload two
-> meanings onto "softlimit".  Don't overload!
+On 2013/4/20 2:36, Tejun Heo wrote:
+> Hello, Li.
+> 
+> On Fri, Apr 19, 2013 at 08:27:05PM +0800, Li Zefan wrote:
+>> I think this was introduced unintentionally when cpuset hotplug was
+>> made asynchronous. Fortunately it does no harm, as updating tasks'
+>> cpumask will just return failure and there's a guarantee_online_mems()
+>> when updating nodemask, and then the tasks will be moved to an ancestor
+>> cpuset.
+> 
+> Yeah, which will update the masks to the proper values anyway, so it
+> was intentionally written that way as it didn't really matter either
+> way.  I suppose this helps future changes?  Maybe update the
+> description a bit?
+> 
 
-As for how actually to clean up this yet another mess in memcg, I
-don't know.  Maybe introduce completely new knobs - say,
-oom_threshold, reclaim_threshold, and reclaim_trigger - and alias
-hardlimit to oom_threshold and softlimit to recalim_trigger?  BTW,
-"softlimit" should default to 0.  Nothing else makes any sense.
+I was trying to fix a bug: before moving tasks out of empty cpusets,
+update_tasks_nodemask() is called, which calls do_migrate_pages(xx, from, to)
+finally, from == node_to_be_offlined, to == empty_nodeamsk, so I guess
+no pages will be migrated.
 
-Maybe you can gate it with "sane_behavior" flag or something.  I don't
-know.  It's your mess to clean up.  :P
+Then when those tasks are moving to an ancestor, do_migrate_pages(xx, from, to)
+is called again, from == empty_nodemask, to == ancestor's nodemask,
+so I guess again no pages will be migrated.
 
-Thanks.
-
--- 
-tejun
+This bug exists even before your changes.
