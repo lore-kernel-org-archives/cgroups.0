@@ -1,60 +1,58 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: memcg: softlimit on internal nodes
-Date: Fri, 19 Apr 2013 20:35:12 -0700
-Message-ID: <CAHH2K0aeNke1NzcnyeeyHH1XvGLGxFG0_fXKAi3JH+HMtYjV=Q@mail.gmail.com>
-References: <20130420002620.GA17179@mtj.dyndns.org> <20130420004221.GB17179@mtj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 09/10] cpuset: allow to keep tasks in empty cpusets
+Date: Sat, 20 Apr 2013 18:41:36 -0700
+Message-ID: <20130421014136.GB19097@mtj.dyndns.org>
+References: <517137A7.4020605@huawei.com> <517138A4.3070209@huawei.com>
+	<20130419205821.GA15543@mtj.dyndns.org>
+	<5171EDC1.4070805@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=x-received:mime-version:in-reply-to:references:from:date:message-id
-         :subject:to:cc:content-type;
-        bh=pHyS/ktethFh0Nx6Oq1nmi45v07SuFWIEBXrGYsA68A=;
-        b=O/4bllTD9oi2zeXJhmrNIyEZNMzTslQ5Xx3622XHSrXOSWDCEdzsE4LCBfZRqumAzI
-         DhxI9ylZUQXsKKERr/++QgR/NRN+NndVMNgjKbJUgI/0BvDQuPWMRgR04Fhd6vtB8elX
-         8Fm7Yxx4H+40RC+WoZ87WOEFEszU7XySZz21AofJV06cQrwa3HYQVLv1pjTttBmyEWi6
-         eRIWt263wHaGd+PWYOSkTxDTzcnBl1lephAZqyxh/1zgRhV6sDe9GpLF7TLjbVE8fo9K
-         07HhM8M/+LwU802VyS3iP4sSt7EoeHOgYMaVEo59aHjZ6fteO53N2jSSN+R7nKEuDhpK
-         x8gA==
-In-Reply-To: <20130420004221.GB17179@mtj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=DCdgf3T3RbL65O1yr4FL+gCMF8AzkVvqnHi6cfg2bTQ=;
+	b=TVsJMeKvtlAhuvdxvP9MaMPAfxrJTNFz2ZyJ0cxf3aUTXtQ/RvXGJZTEyH4x7rX5XH
+	gO3ZbehsLroqcNstkRiLxX3h/wKOqKksFaVlsYExuscFlTxFdTNRIuXt9PDsljAFYvFj
+	jiscxZPA5v95agxv5CnbZz/s/K3Ni029yjWFsFIkDIstexUFQl2YWXl90YXUlXfm4PJH
+	gf0GUmpuYmbmtv8noP+TSCnmOaAv0zFI5aN3rfEKVFrYDV+zCXbuG+AH60qyII+nvBol
+	Zm8f+dLTp7JcfphTQ47qIbDhelzy1S1TVUBYh/eFtaVv/3Bn0fPbATfMzCYD7NXT1pEF
+	/WSg==
+Content-Disposition: inline
+In-Reply-To: <5171EDC1.4070805-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Apr 19, 2013 at 5:42 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Apr 19, 2013 at 05:26:20PM -0700, Tejun Heo wrote:
->> If such actual soft limit is desired (I don't know, it just seems like
->> a very fundamental / logical feature to me), please don't try to
->> somehow overload "softlimit".  They are two fundamentally different
->> knobs, both make sense in their own ways, and when you stop confusing
->> the two, there's nothing ambiguous about what what each knob means in
->> hierarchical situations.  This goes the same for the "untrusted" flag
->> Ying told me, which seems like another confused way to overload two
->> meanings onto "softlimit".  Don't overload!
->
-> As for how actually to clean up this yet another mess in memcg, I
-> don't know.  Maybe introduce completely new knobs - say,
-> oom_threshold, reclaim_threshold, and reclaim_trigger - and alias
-> hardlimit to oom_threshold and softlimit to recalim_trigger?  BTW,
-> "softlimit" should default to 0.  Nothing else makes any sense.
+Hello, Li.
 
-I agree that the hard limit could be called the oom_threshold.
+On Sat, Apr 20, 2013 at 09:22:09AM +0800, Li Zefan wrote:
+> > migration is being done.  Another approach would be converting cgroup
+> > to use SRCU instead, which would lessen pain on other places too.  The
+> > only problem there would be that srcu_read_lock() is a bit more
+> > expensive than rcu_read_lock().  I'm not sure whether that'd show up
+> > in some hot path or not.  Ideas?
+> 
+> I guess we can live with rcu_read_lock() for now, and see if we can
+> change it to srcu when other significant changes are done in all
+> cgroup controllers. (hierarchy support in blkcg, etc..)
 
-The meaning of the term reclaim_threshold is not obvious to me.  I'd
-prefer to call the soft limit a reclaim_target.  System global
-pressure can steal memory from a cgroup until its usage drops to the
-soft limit (aka reclaim_target).  Pressure will try to avoid stealing
-memory below the reclaim target.  The soft limit (reclaim_target) is
-not checked until global pressure exists.  Currently we do not have a
-knob to set a reclaim_threshold, such that when usage exceeds the
-reclaim_threshold async reclaim is queued.  We are not discussing
-triggering anything when soft limit is exceeded.
+Ooh, I'm almost done with converting blk-throttle to support hierarchy
+as cfq is already ready, blkcg will be ready very soon.  The only
+thing left to do in terms of hierarchy support would be internal
+weight for cpu.  :)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
