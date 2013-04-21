@@ -1,56 +1,49 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 09/10] cpuset: allow to keep tasks in empty cpusets
-Date: Sat, 20 Apr 2013 18:41:36 -0700
-Message-ID: <20130421014136.GB19097@mtj.dyndns.org>
-References: <517137A7.4020605@huawei.com> <517138A4.3070209@huawei.com>
-	<20130419205821.GA15543@mtj.dyndns.org>
-	<5171EDC1.4070805@huawei.com>
+Subject: Re: [PATCH 05/10] cpuset: don't update tasks' cpumask and nodemask
+ in an empty cpuset
+Date: Sat, 20 Apr 2013 18:42:41 -0700
+Message-ID: <20130421014241.GC19097@mtj.dyndns.org>
+References: <517137A7.4020605@huawei.com>
+ <51713819.8050708@huawei.com>
+ <20130419183618.GC13811@mtj.dyndns.org>
+ <5171EA24.3070001@huawei.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=sZkdWHoEPP7Tn1tEMye70FKgvSyDJ2EAyUgMJ1qByVk=;
+        b=c+1qVAwLUCO/UI67O3Xq1UQrCG45F19LfPv3QUkzxsQoxyiW239F2bNPxW7BOGUjPh
+         taZDT6IoB6883Hhxjyio+GlKCZ2gW3GwXUFNQ2cQvpUbj65lJx0F6R829fmnrqkdJ/ab
+         3FaEvhe6XqE0qk2wRorWojss8MYBTz1zfbaoql6Vx5Nni3JKUjeZcej9aBq4YNJnCJWD
+         QnDcvEvFZhbuRQlCj3/AIakSHzS7OIVq271oRTW+AJDnvbmgiPkOUnv0kTjMny604Ifb
+         LN7f1AdFDvD7Cz3bFZFc1nRGClOiB3pudLHE/FLfh2hTWUuqq1Lm9L3XoFElKo76VD1g
+         e7ag==
+Content-Disposition: inline
+In-Reply-To: <5171EA24.3070001-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:date:from:to:cc:subject:message-id:references
-	:mime-version:content-type:content-disposition:in-reply-to
-	:user-agent; bh=DCdgf3T3RbL65O1yr4FL+gCMF8AzkVvqnHi6cfg2bTQ=;
-	b=TVsJMeKvtlAhuvdxvP9MaMPAfxrJTNFz2ZyJ0cxf3aUTXtQ/RvXGJZTEyH4x7rX5XH
-	gO3ZbehsLroqcNstkRiLxX3h/wKOqKksFaVlsYExuscFlTxFdTNRIuXt9PDsljAFYvFj
-	jiscxZPA5v95agxv5CnbZz/s/K3Ni029yjWFsFIkDIstexUFQl2YWXl90YXUlXfm4PJH
-	gf0GUmpuYmbmtv8noP+TSCnmOaAv0zFI5aN3rfEKVFrYDV+zCXbuG+AH60qyII+nvBol
-	Zm8f+dLTp7JcfphTQ47qIbDhelzy1S1TVUBYh/eFtaVv/3Bn0fPbATfMzCYD7NXT1pEF
-	/WSg==
-Content-Disposition: inline
-In-Reply-To: <5171EDC1.4070805-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 
-Hello, Li.
+Hello,
 
-On Sat, Apr 20, 2013 at 09:22:09AM +0800, Li Zefan wrote:
-> > migration is being done.  Another approach would be converting cgroup
-> > to use SRCU instead, which would lessen pain on other places too.  The
-> > only problem there would be that srcu_read_lock() is a bit more
-> > expensive than rcu_read_lock().  I'm not sure whether that'd show up
-> > in some hot path or not.  Ideas?
+On Sat, Apr 20, 2013 at 09:06:44AM +0800, Li Zefan wrote:
+> I was trying to fix a bug: before moving tasks out of empty cpusets,
+> update_tasks_nodemask() is called, which calls do_migrate_pages(xx, from, to)
+> finally, from == node_to_be_offlined, to == empty_nodeamsk, so I guess
+> no pages will be migrated.
 > 
-> I guess we can live with rcu_read_lock() for now, and see if we can
-> change it to srcu when other significant changes are done in all
-> cgroup controllers. (hierarchy support in blkcg, etc..)
+> Then when those tasks are moving to an ancestor, do_migrate_pages(xx, from, to)
+> is called again, from == empty_nodemask, to == ancestor's nodemask,
+> so I guess again no pages will be migrated.
 
-Ooh, I'm almost done with converting blk-throttle to support hierarchy
-as cfq is already ready, blkcg will be ready very soon.  The only
-thing left to do in terms of hierarchy support would be internal
-weight for cpu.  :)
+Oh, I see.  I was a bit confused by the description.  Maybe include
+the above?
 
 Thanks.
 
