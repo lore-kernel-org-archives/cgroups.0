@@ -1,85 +1,65 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: memcg: softlimit on internal nodes
-Date: Mon, 22 Apr 2013 17:54:54 +0200
-Message-ID: <20130422155454.GH18286@dhcp22.suse.cz>
+Date: Mon, 22 Apr 2013 08:57:03 -0700
+Message-ID: <20130422155703.GC12543@htj.dyndns.org>
 References: <20130420002620.GA17179@mtj.dyndns.org>
  <20130420031611.GA4695@dhcp22.suse.cz>
  <20130421022321.GE19097@mtj.dyndns.org>
- <CANN689GuN_5QdgPBjr7h6paVmPeCvLHYfLWNLsJMWib9V9G_Fw@mail.gmail.com>
- <20130422042445.GA25089@mtj.dyndns.org>
- <20130422153730.GG18286@dhcp22.suse.cz>
- <20130422154620.GB12543@htj.dyndns.org>
+ <20130421124554.GA8473@dhcp22.suse.cz>
+ <20130422043939.GB25089@mtj.dyndns.org>
+ <20130422151908.GF18286@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=172s0XK06XGs2StgAapYxvnYsiowG2qlrXBXgrLl1d0=;
+        b=Nc2bGMzC3cLjSbHV9IOwXVldRGTI+Pg3BFQu/BLZQNUmMEdODHrGl9UeWJ7dbihqD6
+         0so1ZxHob5DfE2CIm6nP6a9RRLI4hUcb1ZibxbFYQSs6jVI4ul9dKuxnRm57XnE2BdWo
+         vQJn+18fxWC6xfspJi3WwaamPKUi0ksEYR8+0RpavpeFG+7jLJcVvaUPoswKkhVkSHkX
+         HboBL8bUbdn09wkwQ6kHUrbOvD4wMysZVZKFIBQd3pOvrdwWTHhKpMmPFAN/0Da568+Y
+         BgL8JcVtSqqIVRp+aApu4spFMIujwDsIu1Z24CL3EzOkFp5q1qmw3Fw1N1gCsHwKGjXK
+         QKlw==
 Content-Disposition: inline
-In-Reply-To: <20130422154620.GB12543-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130422151908.GF18286-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon 22-04-13 08:46:20, Tejun Heo wrote:
-> Hey, Michal.
-> 
-> On Mon, Apr 22, 2013 at 05:37:30PM +0200, Michal Hocko wrote:
-> > > In fact, I'm planning to disallow changing ownership of cgroup files
-> > > when "sane_behavior" is specified. 
-> > 
-> > I would be wildly oposing this. Enabling user to play on its own ground
-> > while above levels of the groups enforce the reasonable behavior is very
-> > important use case.
-> 
-> We can continue this discussion on the original thread and I'm not too
-> firm on this not because it's a sane use case but because it is an
-> extra measure preventing root from shooting its feet which we
-> traditionally allow.  That said, really, no good can come from
-> delegating hierarchy to different security domains.  It's already
-> discouraged by the userland best practices doc.  Just don't do it.
+On Mon, Apr 22, 2013 at 05:19:08PM +0200, Michal Hocko wrote:
+> We can try to be clever during the outside pressure and prefer
+> reclaiming over soft limit groups first. Which we used to do and will
+> do after rework as well. As a side effect of that a properly designed
+> hierachy with opt-in soft limited groups can actually accomplish some
+> isolation is a nice side effect but no _guarantee_.
 
-OK, I will go to the original mail thread and discuss my concerns there.
+Okay, so it *is* a soft limit.  Good.  If so, a subtree going over the
+limit of course forces reclaim on its children even though their
+individual configs aren't over limit.  It's exactly the same as
+hardlimit.  There doesn't need to be any difference and there's
+nothing questionable or interesting about it.
 
-> > Tejun, stop this, finally! Current soft limit same as the reworked
-> > version follow the basic nesting rule we use for the hard limit which
-> > says that parent setting is always more strict than its children.
-> > So if you parent says you are hitting the hardlimit (resp. over soft
-> > limit) then children are reclaimed regardless their hard/soft limit
-> > setting.
-> 
-> Okay, thanks for making it clear.  Then, apparently, the fine folks at
-> google are hopelessly confused because at least Greg and Ying told me
-> something which is the completely opposite of what you're saying.  You
-> guys need to sort it out.
-> 
-> > It is you being confused and refuse to open the damn documentation and
-> > read what the hack is soft limit and what it is used for. Read the patch
-> > series I was talking about and you will hardly find anything regarding
-> > _guarantee_.
-> 
-> Oh, if so, I'm happy.  Sorry about being brash on the thread; however,
-> please talk with google memcg people.  They have very different
-> interpretation of what "softlimit" is and are using it according to
-> that interpretation.  If it *is* an actual soft limit, there is no
-> inherent isolation coming from it and that should be clear to
-> everyone.
+Also, then, a cgroup which has been configured explicitly shouldn't be
+disadvantaged compared to a cgroup with a limit configured.  ie. the
+current behavior of giving maximum to the knob on creation is the
+correct one.  The knob should create *extra* pressure.  It shouldn't
+lessen the pressure.  When populated weith other cgroups with limits
+configured, it would change the relative pressure felt by each but in
+general it's a limiting mechanism not an isolation one.  I think the
+bulk of confusion is coming from this, so please make that abundantly
+clear.
 
-We have discussed that for a long time. I will not speak for Greg & Ying
-but from my POV we have agreed that the current implementation will work
-for them with some (minor) changes in their layout.
-As I have said already with a careful configuration (e.i. setting the
-soft limit only where it matters - where it protects an important
-memory which is usually in the leaf nodes) you can actually achieve
-_high_ probability for not being reclaimed after the rework which was not
-possible before because of the implementation which was ugly and
-smelled.
+And, if people want a mechanism for isolation / lessening of pressure,
+which looks like a valid use case to me, add another knob for that
+which is prioritized under both hard and soft limits.  That is the
+only sensible way to do it.
 
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+Alright, no complaint anymore.  Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
