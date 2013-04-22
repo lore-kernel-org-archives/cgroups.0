@@ -1,83 +1,101 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
 Subject: Re: cgroup: status-quo and userland efforts
-Date: Mon, 22 Apr 2013 14:41:59 -0700
-Message-ID: <20130422214159.GG12543@htj.dyndns.org>
-References: <20130406012159.GA17159@mtj.dyndns.org>
-	<CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com>
+Date: Tue, 23 Apr 2013 00:33:04 +0200
+Message-ID: <CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
+References: <20130406012159.GA17159@mtj.dyndns.org> <CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com>
+ <20130422214159.GG12543@htj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:mime-version:sender:in-reply-to:references:from:date
+         :x-google-sender-auth:message-id:subject:to:cc:content-type;
+        bh=8p9QWPllWHT0ueTeOvPOMNT2SHzwHOu+oz4BioQsuTs=;
+        b=cE+0fKFnFa1zzTqCvf++MN9pIpQMWuqpsAtmGOQo5bhl6Z8LCOL7HTL2YTSL6kB8FX
+         v1QNM16WBhda/EA1JQ2dv+wnGcqCLEfucducOZ1Hl0jQwbft86nKXDxvTbw+puye4xLw
+         9mFoIlf7MbaDejdRbRJnt1Dqw3WIYouF7HkOQcI0huU61/w91KMlDzuxCdfWi/ksRBnL
+         xczGZhFlmULJk++31fiUvh1G9ach9xfKk9CySkoh9syj8A9EH3RMU+JHSFD82lV2rWal
+         sqvPB59gFvYbY6sUUNktcDXP8h5EsVOipusZg6qjL+om0/nLmb73FXmln7dmGVznCkZb
+         WD0Q==
+In-Reply-To: <20130422214159.GG12543-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:date:from:to:cc:subject:message-id:references
-	:mime-version:content-type:content-disposition:in-reply-to
-	:user-agent; bh=aPcH0+sVUBGwVIFk0jeBhhQGG44/XlfGXf52r2Z9NJU=;
-	b=Wn6ZWAPdOQNWgxaak+OLMDO1Ai9WhhCg3O3jOOKRZC178bEKEgYrwsDtgXJDgT/Z3k
-	0s2FqA4thpo5ttQ6DRarRXqFvIVuh/+bWuloTZRipF+MclCxBhhlbWbJwu7PZMl7h08R
-	LUSGVU9sDU2FjDw2p8h35M+XNkDEph4mGmUH0liOg9FZ1mBRPmbZxcZhWKjA9VEIqk6w
-	4WUcXURYg+FHmSda7xiGINSa2v5BgQkB8LgG39TNeiC8eK1Q7Twddacx0CUTbg/HJkgj
-	fS3hcOIezuXWL9Cfaau6fFf9xpFO1Jy4lSSBotTYCmmsuQsc+CKtlrUZLBjbztCZY8Ac
-	iCRA==
-Content-Disposition: inline
-In-Reply-To: <CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
-Cc: jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Tim.
+On Mon, Apr 22, 2013 at 11:41 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello, Tim.
+>
+> On Mon, Apr 22, 2013 at 11:26:48PM +0200, Tim Hockin wrote:
+>> We absolutely depend on the ability to split cgroup hierarchies.  It
+>> pretty much saved our fleet from imploding, in a way that a unified
+>> hierarchy just could not do.  A mandated unified hierarchy is madness.
+>>  Please step away from the ledge.
+>
+> You need to be a lot more specific about why unified hierarchy can't
+> be implemented.  The last time I asked around blk/memcg people in
+> google, while they said that they'll need different levels of
+> granularities for different controllers, google's use of cgroup
+> doesn't require multiple orthogonal classifications of the same group
+> of tasks.
 
-On Mon, Apr 22, 2013 at 11:26:48PM +0200, Tim Hockin wrote:
-> We absolutely depend on the ability to split cgroup hierarchies.  It
-> pretty much saved our fleet from imploding, in a way that a unified
-> hierarchy just could not do.  A mandated unified hierarchy is madness.
->  Please step away from the ledge.
+I'll pull some concrete examples together.  I don't have them on hand,
+and I am out of country this week.  I have looped in the gang at work
+(though some are here with me).
 
-You need to be a lot more specific about why unified hierarchy can't
-be implemented.  The last time I asked around blk/memcg people in
-google, while they said that they'll need different levels of
-granularities for different controllers, google's use of cgroup
-doesn't require multiple orthogonal classifications of the same group
-of tasks.
+> Also, cgroup isn't dropping multiple hierarchy support over-night.
+> What has been working till now will continue to work for very long
+> time.  If there is no fundamental conflict with the future changes,
+> there should be enough time to migrate gradually as desired.
+>
+>> More, going towards a unified hierarchy really limits what we can
+>> delegate, and that is the word of the day.  We've got a central
+>> authority agent running which manages cgroups, and we want out of this
+>> business.  At least, we want to be able to grant users a set of
+>> constraints, and then let them run wild within those constraints.
+>> Forcing all such work to go through a daemon has proven to be very
+>> problematic, and it has been great now that users can have DIY
+>> sub-cgroups.
+>
+> Sorry, but that doesn't work properly now.  It gives you the illusion
+> of proper delegation but it's inherently dangerous.  If that sort of
+> illusion has been / is good enough for your setup, fine.  Delegate at
+> your own risks, but cgroup in itself doesn't support delegation to
+> lesser security domains and it won't in the foreseeable future.
 
-Also, cgroup isn't dropping multiple hierarchy support over-night.
-What has been working till now will continue to work for very long
-time.  If there is no fundamental conflict with the future changes,
-there should be enough time to migrate gradually as desired.
+We've had great success letting users create sub-cgroups in a few
+specific controller types (cpu, cpuacct, memory).  This is, of course,
+with some restrictions.  We do not just give them blanket access to
+all knobs.  We don't need ALL cgroups, just the important ones.
 
-> More, going towards a unified hierarchy really limits what we can
-> delegate, and that is the word of the day.  We've got a central
-> authority agent running which manages cgroups, and we want out of this
-> business.  At least, we want to be able to grant users a set of
-> constraints, and then let them run wild within those constraints.
-> Forcing all such work to go through a daemon has proven to be very
-> problematic, and it has been great now that users can have DIY
-> sub-cgroups.
+For a simple example, letting users create sub-groups in freezer or
+job (we have a job group that we've been carrying) lets them launch
+sub-tasks and manage them in a very clean way.
 
-Sorry, but that doesn't work properly now.  It gives you the illusion
-of proper delegation but it's inherently dangerous.  If that sort of
-illusion has been / is good enough for your setup, fine.  Delegate at
-your own risks, but cgroup in itself doesn't support delegation to
-lesser security domains and it won't in the foreseeable future.
+We've been doing a LOT of development internally to make user-defined
+sub-memcgs work in our cluster scheduling system, and it's made some
+of our biggest, more insane users very happy.
 
-> Strong disagreement, here.  We use split hierarchies to great effect.
-> Containment should be composable.  If your users or abstractions can't
-> handle it, please feel free to co-mount the universe, but please
-> PLEASE don't force us to.
-> 
-> I'm happy to talk more about what we do and why.
+And for some cgroups, like cpuset, hierarchy just doesn't really make
+sense to me.  I just don't care if that never works, though I have no
+problem with others wanting it. :)   Aside: if the last CPU in your
+cpuset goes offline, you should go into a state akin to freezer.
+Running on any other CPU is an overt violation of policy that the
+user, or worse - the admin, set up.  Just my 2cents.
 
-Please do so.  Why do you need multiple orthogonal hierarchies?
+>> Strong disagreement, here.  We use split hierarchies to great effect.
+>> Containment should be composable.  If your users or abstractions can't
+>> handle it, please feel free to co-mount the universe, but please
+>> PLEASE don't force us to.
+>>
+>> I'm happy to talk more about what we do and why.
+>
+> Please do so.  Why do you need multiple orthogonal hierarchies?
 
-Thanks.
+Look for this in the next few days/weeks.  From our point of view,
+cgroups are the ideal match for how we want to manage things (no
+surprise, really, since Mr. Menage worked on both).
 
--- 
-tejun
+Tim
