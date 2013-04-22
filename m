@@ -1,113 +1,124 @@
-From: Tejun Heo <tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: memcg: softlimit on internal nodes
-Date: Mon, 22 Apr 2013 07:48:26 -0700
-Message-ID: <20130422144826.GA12543@htj.dyndns.org>
+Date: Mon, 22 Apr 2013 17:19:08 +0200
+Message-ID: <20130422151908.GF18286@dhcp22.suse.cz>
 References: <20130420002620.GA17179@mtj.dyndns.org>
  <20130420031611.GA4695@dhcp22.suse.cz>
  <20130421022321.GE19097@mtj.dyndns.org>
- <CANN689GuN_5QdgPBjr7h6paVmPeCvLHYfLWNLsJMWib9V9G_Fw@mail.gmail.com>
- <20130422042445.GA25089@mtj.dyndns.org>
- <CANN689F7X1X4i1M=nteGan0POdVbBMu0xviuWN70f_BTv==3eA@mail.gmail.com>
+ <20130421124554.GA8473@dhcp22.suse.cz>
+ <20130422043939.GB25089@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=qSCqeVWR84WUoSJHPYOgZ+PllrOAGN/xyHarErGbf3g=;
-        b=hU4JgSPmOykiSMmgHhINrOroIsrq3NNN+DFck8qVMCyesejSPRUM8iIBr20y62SJ/D
-         gq9PBWPduKxCIPpVAycKgxylU76E/QWFo4neQArGFgos3xgJZul5sYDmbzI5yKLPz2wr
-         SC//oIProLs7R/TciwpxY2QFPdM6NoA3J4NZXfHYQq6q+SB4DtO8juiwIDaUHp/NSgLR
-         BOvcgkQtFRmnCligtHxTs8mpOlQtoN/9VweUYyQXhFhE1i0ASz6w3dNkJPWPl53qpUVG
-         NJ9raYLJmHdaOVlKKxOO3E8v76sUcAzgDkdiHJUKHRZILT59Un8L+zYP3U8WBaP7XQpL
-         rxDA==
 Content-Disposition: inline
-In-Reply-To: <CANN689F7X1X4i1M=nteGan0POdVbBMu0xviuWN70f_BTv==3eA@mail.gmail.com>
+In-Reply-To: <20130422043939.GB25089@mtj.dyndns.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michel Lespinasse <walken@google.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Greg Thelen <gthelen@google.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>
 
-Hello, again.
-
-On Mon, Apr 22, 2013 at 12:14:53AM -0700, Michel Lespinasse wrote:
-> > I think I stayed until near the end of the hierarchy discussion and
-> > yeap I heard you saying that.
+On Sun 21-04-13 21:39:39, Tejun Heo wrote:
+> Hey, Michal.
 > 
-> All right. Too bad you had to leave - I think this is a discussion we
-> really need to have, so it would have been the perfect occasion.
-
-Eh well, it would have been better if I stayed but I think it served
-its purpose.  Conferences are great for raising awareness.  I usually
-find actual follow-up discussions done better in mailing lists.
-
-> > Cgroup doesn't and will not support delegation of subtrees to
-> > different security domains.  Please refer to the following thread.
-> >
-> >   http://thread.gmane.org/gmane.linux.kernel.cgroups/6638
+> On Sun, Apr 21, 2013 at 02:46:06PM +0200, Michal Hocko wrote:
+> > [I am terribly jet lagged so I should probably postpone any serious
+> > thinking for few days but let me try]
 > 
-> Ah, good. This is news to me. To be clear, I don't care much for the
-> delegation scenario myself, but it's always been mentioned as the
-> reason I couldn't get what I want when we've talked about hierarchical
-> soft limit behavior in the past. If the decision not to have subtree
-> delegation sticks, I am perfectly happy with your proposal.
-
-Oh, it's sticking. :)
-
-> > And I don't even get the delegation argument.  Isn't that already
-> > covered by hardlimit?  Sure, reclaimer won't look at it but if you
-> > don't trust a cgroup it of course will be put under certain hardlimit
-> > from parent and smacked when it misbehaves.  Hardlimit of course
-> > should have priority over allocation guarantee and the system wouldn't
-> > be in jeopardy due to a delegated cgroup misbehaving.  If each knob is
-> > given a clear meaning, these things should come naturally.  You just
-> > need a sane pecking order among the controls.  It almost feels surreal
-> > that this is suggested as a rationale for creating this chimera of a
-> > knob.  What the hell is going on here?
+> Sorry about raising a flame war so soon after the conference week.
+> None of these is really urgent, so please take your time.
 > 
-> People often overcommit the cgroup hard limits so that one cgroup can
-> make use of a larger share of the machine when the other cgroups are
-> idle.
-> This works well only if you can depend on soft limits to steer reclaim
-> when the other cgroups get active again.
+> > The current implementation stores all subtrees that are over the soft
+> > limit in a tree sorted by how much they are excessing the limit. Have
+> > a look at mem_cgroup_update_tree and its callers (namely down from
+> > __mem_cgroup_commit_charge). My patch _preserves_ this behavior it just
+> > makes the code much saner and as a bonus it doesn't touch groups (not
+> > hierarchies) under the limit unless necessary which wasn't the case
+> > previously.
+> 
+> What you describe is already confused.  What does that knob mean then?
 
-And that's fine too.  If you take a step back, it shouldn't be
-difficult to recognize that what you want is an actual soft limit at
-the parent level overriding the allocation guarantee (for the lack of
-a better name).  Don't overload "alloc guarantee" with that extra
-meaning messing up its fundamental properties.  Create a separate
-plane of control which is consistent within itself and give it
-priority over "alloc guarantee".  You sure can discuss the details of
-the override - should it be round-robin or proportional to whatever or
-what, but that's a separate discussion and can be firmly labeled as
-implementation details rather than this twisting of the fundamental
-semantics of "softlimit".
+Well, it would help to start with Documentation/cgroups/memory.txt
+"
+7. Soft limits
 
-I really am not saying any of the use cases that have been described
-are invalid.  They all sound pretty useful, but, to me, what seems to
-be recurring is that people want two separate features - actual soft
-limit and allocation guarantee, and for some reason that I can't
-understand, fail to recognize they're two very different controls and
-try to put both into this one poor knob.
+Soft limits allow for greater sharing of memory. The idea behind soft
+limits is to allow control groups to use as much of the memory as
+needed, provided
 
-It's like trying to combine accelerator and (flipped) clutch on a
-manual car.  Sure, it'll work fine while you're accelerating.  Good
-luck while cruising or on a long downhill.  You can try to tweak it
-all you want but things of course will get "interesting" and
-"questionable" as soon as the conditions change from the specific use
-cases which the specific tuning is made for.
+a. There is no memory contention
+b. They do not exceed their hard limit
 
-While car analogies can often be misleading, really, please stop
-trying to combine two completely separate controls into one knob.  It
-won't and can't work and is totally stupid.
+When the system detects memory contention or low memory, control groups
+are pushed back to their soft limits. If the soft limit of each control
+group is very high, they are pushed back as much as possible to make
+sure that one control group does not starve the others of memory.
 
-Thanks.
+Please note that soft limits is a best-effort feature; it comes with
+no guarantees, but it does its best to make sure that when memory is
+heavily contended for, memory is allocated based on the soft limit
+hints/setup. Currently soft limit based reclaim is set up such that
+it gets invoked from balance_pgdat (kswapd).
+"
+
+As you can see there no single mention about groups below their soft
+limits. All we are saying here is that those groups that are above will
+get reclaimed.
+
+> Google folks seem to think it's an allocation guarantee but global
+> reclaim is broken and breaches the configuration (which I suppose is
+> arising from their usage of memcg) and I don't understand what your
+> definition of the knob is apart from the description of what's
+> implemented now, which apparently is causing horrible confusion on all
+> the involved parties.
+
+OK, I guess I start understanding where all the confusion comes from.
+Let me stress again that the rework doesn't provide any guarantee. It
+just integrates the soft limit reclaim into the main reclaim routines,
+gets rid of a lot of code and last but not least makes a greater chance
+that under-the-soft limit groups are not reclaimed unless really
+necessary.
+
+So please take these into consideration for the future discussions.
+
+> > So yes, I can understand why this is confusing for you. The soft limit
+> > semantic is different because the limit is/was considered only if it
+> > is/was in excess.
+> > 
+> > Maybe I was using word _guarantee_ too often to confuse you, I am sorry
+> > if this is the case. The guarantee part comes from the group point of
+> > view. So the original semantic of the hierarchical behavior is
+> > unchanged.
+> 
+> I don't care what word you use.  There are two choices.  Pick one and
+> stick with it.  Don't make it something which inhibits reclaim if
+> under limit for leaf nodes but behaves somewhat differently if an
+> ancestor is under pressure or whatever.  Just pick one.  It is either
+> an reclaim inhibitor or actual soft limit.
+
+OK, I will not repeat the same mistake and let this frustrating
+discussion going on to "let's redo the soft limit reclaim again #1001"
+point again. No this is not about guarantee. And _never_ will be! Full
+stop.
+We can try to be clever during the outside pressure and prefer
+reclaiming over soft limit groups first. Which we used to do and will
+do after rework as well. As a side effect of that a properly designed
+hierachy with opt-in soft limited groups can actually accomplish some
+isolation is a nice side effect but no _guarantee_.
+
+> > What to does it mean that an inter node is under the soft limit
+> > for the subhierarchy is questionable and there are usecases where
+> 
+> It's not frigging questionable.  You're just horribly confused.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
