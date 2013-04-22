@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: memcg: softlimit on internal nodes
-Date: Mon, 22 Apr 2013 18:20:12 +0200
-Message-ID: <20130422162012.GI18286@dhcp22.suse.cz>
+Date: Mon, 22 Apr 2013 11:30:20 -0700
+Message-ID: <20130422183020.GF12543@htj.dyndns.org>
 References: <20130420002620.GA17179@mtj.dyndns.org>
  <20130420031611.GA4695@dhcp22.suse.cz>
  <20130421022321.GE19097@mtj.dyndns.org>
@@ -9,81 +9,93 @@ References: <20130420002620.GA17179@mtj.dyndns.org>
  <20130422043939.GB25089@mtj.dyndns.org>
  <20130422151908.GF18286@dhcp22.suse.cz>
  <20130422155703.GC12543@htj.dyndns.org>
+ <20130422162012.GI18286@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=fpDnU2e/x3gB4QRz8WoingerIQ9ObrbhQi7mteiCszE=;
+        b=ocMO12mU2WG2B/w6Y2YF/mh+JDs2B2emqhbUWzPyBbpIIrNtd5QCBDCsIEb2OywXyJ
+         bNVEOu5wONGGUcPp6NpYx+2XoL0UZcv7nFeq1PbXbMQgdNmVoegOtfO0Rx56dn0vYud5
+         4VFnkQHNcWxc3YDpKWL8Nw7MfzDs+KYQIknZyKiiS21wBPAUA4kAeOJv99EsEYJtEgpk
+         WZO4mFohNSF/L7/5LFDmQUTNShrE1AbYbPlasbg07QVEwTlksQfCQWEdaM5s2VtlMyZp
+         WcAsfMT0gUkpLBPsXe4n/HlMqV3MU5qmRT05P75jYRrpiQcL41QW4KlxyCkwUwP+Qzxj
+         EiBA==
 Content-Disposition: inline
-In-Reply-To: <20130422155703.GC12543@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130422162012.GI18286-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon 22-04-13 08:57:03, Tejun Heo wrote:
-> On Mon, Apr 22, 2013 at 05:19:08PM +0200, Michal Hocko wrote:
-> > We can try to be clever during the outside pressure and prefer
-> > reclaiming over soft limit groups first. Which we used to do and will
-> > do after rework as well. As a side effect of that a properly designed
-> > hierachy with opt-in soft limited groups can actually accomplish some
-> > isolation is a nice side effect but no _guarantee_.
+Hey,
+
+On Mon, Apr 22, 2013 at 06:20:12PM +0200, Michal Hocko wrote:
+> Although the default limit is correct it is impractical for use
+> because it doesn't allow for "I behave do not reclaim me if you can"
+> cases. And we can implement such a behavior really easily with backward
+> compatibility and new interfaces (aka reuse the soft limit for that).
+
+Okay, now we're back to square one and I'm reinstating all the mean
+things I said in this thread. :P No wonder everyone is so confused
+about this.  Michal, you can't overload two controls which exert
+pressure on the opposite direction onto a single knob and define a
+sane hierarchical behavior for it.  You're making it a point control
+rather than range one.  Maybe you can define some twisted rules
+serving certain specific use case, but it's gonna be confusing /
+broken for different use cases.
+
+You're so confused that you don't even know you're confused.
+
+> I am approaching this from a simple perspective. Reclaim from everybody
+
+No, you're just thinking about two immediate problems you're given and
+trying to jam them into something you already have not realizing those
+two can't be expressed with a single knob.
+
+> who doesn't care about the soft limit (it hasn't been set for that
+> group) or who is above the soft limit. If that is sufficient to meet the
+> reclaim target then there is no reason to touch groups that _do_ care
+> about soft limit and they are under. Although this doesn't give you
+> any guarantee it can give a certain prioritization for groups in the
+> overcommit situations and that is what soft limit was intended for from
+> the very beginning.
+
+For $DEITY's sake, soft limit should exert reclaim pressure.  That's
+it.  If a group is over limit, it'll feel *extra* pressure until it's
+back to the limit.  Once under the limit, it should be treated equally
+to any other tasks which are under the limit including the ones
+without any softlimit configured.  It is not different from hardlimit.
+There's nothing "interesting" about it.
+
+Even for flat hierarchy, with your interpretation of the knob, it is
+impossible to say "I don't really care about this thing, if it goes
+over 30M, hammer on it", which is a completely reasonable thing to
+want.
+
+> > And, if people want a mechanism for isolation / lessening of pressure,
+> > which looks like a valid use case to me, add another knob for that
+> > which is prioritized under both hard and soft limits.  That is the
+> > only sensible way to do it.
 > 
-> Okay, so it *is* a soft limit.  Good.  If so, a subtree going over the
-> limit of course forces reclaim on its children even though their
-> individual configs aren't over limit.  It's exactly the same as
-> hardlimit.  There doesn't need to be any difference and there's
-> nothing questionable or interesting about it.
-> 
-> Also, then, a cgroup which has been configured explicitly shouldn't be
-> disadvantaged compared to a cgroup with a limit configured.  ie. the
-> current behavior of giving maximum to the knob on creation is the
-> correct one. 
+> No, please no yet another knob. We have too many of them already. And
+> even those that are here for a long time can be confusing as one can
+> see.
 
-Although the default limit is correct it is impractical for use
-because it doesn't allow for "I behave do not reclaim me if you can"
-cases. And we can implement such a behavior really easily with backward
-compatibility and new interfaces (aka reuse the soft limit for that).
+Yes, sure, knobs are hard, let's combine two controls in the opposite
+directions into one.
 
-I am approaching this from a simple perspective. Reclaim from everybody
-who doesn't care about the soft limit (it hasn't been set for that
-group) or who is above the soft limit. If that is sufficient to meet the
-reclaim target then there is no reason to touch groups that _do_ care
-about soft limit and they are under. Although this doesn't give you
-any guarantee it can give a certain prioritization for groups in the
-overcommit situations and that is what soft limit was intended for from
-the very beginning.
+That is the crux of the confusion - trying to combine two things which
+can't and shouldn't be combined.  Just forget about the other thing or
+separate it out.  Please take a step back and look at it again.
+You're really epitomizing the confusion on this subject.
 
-> The knob should create *extra* pressure.  It shouldn't
-> lessen the pressure.  When populated weith other cgroups with limits
-> configured, it would change the relative pressure felt by each but in
-> general it's a limiting mechanism not an isolation one.  I think the
-> bulk of confusion is coming from this, so please make that abundantly
-> clear.
-> 
-> And, if people want a mechanism for isolation / lessening of pressure,
-> which looks like a valid use case to me, add another knob for that
-> which is prioritized under both hard and soft limits.  That is the
-> only sensible way to do it.
-
-No, please no yet another knob. We have too many of them already. And
-even those that are here for a long time can be confusing as one can
-see.
-
-> Alright, no complaint anymore.  Thanks.
-> 
-> -- 
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
