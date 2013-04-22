@@ -1,127 +1,85 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: memcg: softlimit on internal nodes
-Date: Mon, 22 Apr 2013 17:19:08 +0200
-Message-ID: <20130422151908.GF18286@dhcp22.suse.cz>
+Date: Mon, 22 Apr 2013 17:37:30 +0200
+Message-ID: <20130422153730.GG18286@dhcp22.suse.cz>
 References: <20130420002620.GA17179@mtj.dyndns.org>
  <20130420031611.GA4695@dhcp22.suse.cz>
  <20130421022321.GE19097@mtj.dyndns.org>
- <20130421124554.GA8473@dhcp22.suse.cz>
- <20130422043939.GB25089@mtj.dyndns.org>
+ <CANN689GuN_5QdgPBjr7h6paVmPeCvLHYfLWNLsJMWib9V9G_Fw@mail.gmail.com>
+ <20130422042445.GA25089@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130422043939.GB25089@mtj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130422042445.GA25089-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Sun 21-04-13 21:39:39, Tejun Heo wrote:
-> Hey, Michal.
+On Sun 21-04-13 21:24:45, Tejun Heo wrote:
+[...]
+> Cgroup doesn't and will not support delegation of subtrees to
+> different security domains.  Please refer to the following thread.
 > 
-> On Sun, Apr 21, 2013 at 02:46:06PM +0200, Michal Hocko wrote:
-> > [I am terribly jet lagged so I should probably postpone any serious
-> > thinking for few days but let me try]
+>   http://thread.gmane.org/gmane.linux.kernel.cgroups/6638
 > 
-> Sorry about raising a flame war so soon after the conference week.
-> None of these is really urgent, so please take your time.
+> In fact, I'm planning to disallow changing ownership of cgroup files
+> when "sane_behavior" is specified. 
+
+I would be wildly oposing this. Enabling user to play on its own ground
+while above levels of the groups enforce the reasonable behavior is very
+important use case.
+
+> We're having difficult time identifying our own asses as it is and I
+> have no intention of adding the huge extra burden of security policing
+> on top.  Delegation, if necessary, will happen from userland.
+
+> > Michal's proposal resolves this by saying that A,B and C all become
+> > reclaimable as soon as A goes over its soft limit.
 > 
-> > The current implementation stores all subtrees that are over the soft
-> > limit in a tree sorted by how much they are excessing the limit. Have
-> > a look at mem_cgroup_update_tree and its callers (namely down from
-> > __mem_cgroup_commit_charge). My patch _preserves_ this behavior it just
-> > makes the code much saner and as a bonus it doesn't touch groups (not
-> > hierarchies) under the limit unless necessary which wasn't the case
-> > previously.
+> This makes me doubly upset and reminds me strongly of the
+> .use_hierarchy mess.  It's so myopic in coming up with a solution for
+> the problem immediately at hand, it ends up ignoring basic rules and
+> implementing something which is fundamentally broken and confused.
+
+Tejun, stop this, finally! Current soft limit same as the reworked
+version follow the basic nesting rule we use for the hard limit which
+says that parent setting is always more strict than its children.
+So if you parent says you are hitting the hardlimit (resp. over soft
+limit) then children are reclaimed regardless their hard/soft limit
+setting.
+
+> Don't twist basic nesting rules to accomodate half-assed delegation
+> mechanism.  It's never gonna work properly and we'll need
+> "really_sane_behavior" flag eventually to clean up the mess again, and
+> we'll probably have to clarify that for memcg the 'c' stands for
+> "confused" instead of "control".
 > 
-> What you describe is already confused.  What does that knob mean then?
+> And I don't even get the delegation argument.  Isn't that already
+> covered by hardlimit?
 
-Well, it would help to start with Documentation/cgroups/memory.txt
-"
-7. Soft limits
+No it's not, because you want to overcommit the memory between different
+groups. And soft limit is a way how to handle memory pressure gracefully
+in contented situations.
 
-Soft limits allow for greater sharing of memory. The idea behind soft
-limits is to allow control groups to use as much of the memory as
-needed, provided
+> Sure, reclaimer won't look at it but if you don't trust a cgroup
+> it of course will be put under certain hardlimit from parent and
+> smacked when it misbehaves.  Hardlimit of course should have priority
+> over allocation guarantee and the system wouldn't be in jeopardy due
+> to a delegated cgroup misbehaving.  If each knob is given a clear
+> meaning, these things should come naturally.  You just need a sane
+> pecking order among the controls.  It almost feels surreal that this
+> is suggested as a rationale for creating this chimera of a knob.  What
+> the hell is going on here?
 
-a. There is no memory contention
-b. They do not exceed their hard limit
+It is you being confused and refuse to open the damn documentation and
+read what the hack is soft limit and what it is used for. Read the patch
+series I was talking about and you will hardly find anything regarding
+_guarantee_.
 
-When the system detects memory contention or low memory, control groups
-are pushed back to their soft limits. If the soft limit of each control
-group is very high, they are pushed back as much as possible to make
-sure that one control group does not starve the others of memory.
-
-Please note that soft limits is a best-effort feature; it comes with
-no guarantees, but it does its best to make sure that when memory is
-heavily contended for, memory is allocated based on the soft limit
-hints/setup. Currently soft limit based reclaim is set up such that
-it gets invoked from balance_pgdat (kswapd).
-"
-
-As you can see there no single mention about groups below their soft
-limits. All we are saying here is that those groups that are above will
-get reclaimed.
-
-> Google folks seem to think it's an allocation guarantee but global
-> reclaim is broken and breaches the configuration (which I suppose is
-> arising from their usage of memcg) and I don't understand what your
-> definition of the knob is apart from the description of what's
-> implemented now, which apparently is causing horrible confusion on all
-> the involved parties.
-
-OK, I guess I start understanding where all the confusion comes from.
-Let me stress again that the rework doesn't provide any guarantee. It
-just integrates the soft limit reclaim into the main reclaim routines,
-gets rid of a lot of code and last but not least makes a greater chance
-that under-the-soft limit groups are not reclaimed unless really
-necessary.
-
-So please take these into consideration for the future discussions.
-
-> > So yes, I can understand why this is confusing for you. The soft limit
-> > semantic is different because the limit is/was considered only if it
-> > is/was in excess.
-> > 
-> > Maybe I was using word _guarantee_ too often to confuse you, I am sorry
-> > if this is the case. The guarantee part comes from the group point of
-> > view. So the original semantic of the hierarchical behavior is
-> > unchanged.
-> 
-> I don't care what word you use.  There are two choices.  Pick one and
-> stick with it.  Don't make it something which inhibits reclaim if
-> under limit for leaf nodes but behaves somewhat differently if an
-> ancestor is under pressure or whatever.  Just pick one.  It is either
-> an reclaim inhibitor or actual soft limit.
-
-OK, I will not repeat the same mistake and let this frustrating
-discussion going on to "let's redo the soft limit reclaim again #1001"
-point again. No this is not about guarantee. And _never_ will be! Full
-stop.
-We can try to be clever during the outside pressure and prefer
-reclaiming over soft limit groups first. Which we used to do and will
-do after rework as well. As a side effect of that a properly designed
-hierachy with opt-in soft limited groups can actually accomplish some
-isolation is a nice side effect but no _guarantee_.
-
-> > What to does it mean that an inter node is under the soft limit
-> > for the subhierarchy is questionable and there are usecases where
-> 
-> It's not frigging questionable.  You're just horribly confused.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-
+[...]
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
