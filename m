@@ -1,97 +1,32 @@
-From: Anton Vorontsov <anton@enomsg.org>
+From: Anton Vorontsov <anton-9xeibp6oKSgdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 1/2] vmpressure: in-kernel notifications
-Date: Tue, 23 Apr 2013 16:24:46 -0400
-Message-ID: <20130423202446.GA2484@teo>
+Date: Tue, 23 Apr 2013 17:01:49 -0400
+Message-ID: <20130423210149.GA9019@teo>
 References: <1366705329-9426-1-git-send-email-glommer@openvz.org>
  <1366705329-9426-2-git-send-email-glommer@openvz.org>
+ <20130423202446.GA2484@teo>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1366705329-9426-2-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130423202446.GA2484@teo>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@openvz.org>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue, Apr 23, 2013 at 12:22:08PM +0400, Glauber Costa wrote:
-> From: Glauber Costa <glommer@parallels.com>
-> 
-> This patch extends that to also support in-kernel users. Events that
-> should be generated for in-kernel consumption will be marked as such,
-> and for those, we will call a registered function instead of triggering
-> an eventfd notification.
-
-Just a couple more questions... :-)
-
+On Tue, Apr 23, 2013 at 04:24:46PM -0400, Anton Vorontsov wrote:
 [...]
-> @@ -238,14 +244,16 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
->  	 * through vmpressure_prio(). But so far, keep calm.
->  	 */
->  	if (!scanned)
-> -		return;
-> +		goto schedule;
->  
->  	mutex_lock(&vmpr->sr_lock);
->  	vmpr->scanned += scanned;
->  	vmpr->reclaimed += reclaimed;
-> +	vmpr->notify_userspace = true;
+> >  /**
+> > + * vmpressure_register_kernel_event() - Register kernel-side notification
+> 
+> Why don't we need the unregister function? I see that the memcg portion
+> deals with dangling memcgs, but do they dangle forver?
 
-Setting the variable on every event seems a bit wasteful... does it make
-sense to set it in vmpressure_register_event()? We'll have to make it a
-counter, but the good thing is that we won't need any additional locks for
-the counter.
-
->  /**
-> + * vmpressure_register_kernel_event() - Register kernel-side notification
-
-Why don't we need the unregister function? I see that the memcg portion
-deals with dangling memcgs, but do they dangle forver?
-
-Oh, and a few cosmetic changes down below...
-
-Other than that, this particular patch looks perfect, feel free to add my:
-
-	Acked-by: Anton Vorontsov <anton@enomsg.org>
+Oh, I got it. vmpressure_unregister_event() will unregister all the events
+anyway. Cool.
 
 Thanks!
 
 Anton
-
-
-diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
-index 1862012..3131e72 100644
---- a/include/linux/vmpressure.h
-+++ b/include/linux/vmpressure.h
-@@ -19,7 +19,7 @@ struct vmpressure {
- 	/* Have to grab the lock on events traversal or modifications. */
- 	struct mutex events_lock;
- 
--	/* false if only kernel users want to be notified, true otherwise */
-+	/* False if only kernel users want to be notified, true otherwise. */
- 	bool notify_userspace;
- 
- 	struct work_struct work;
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index 8d77ad0..acd3e66 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -156,9 +156,9 @@ static bool vmpressure_event(struct vmpressure *vmpr,
- 	mutex_lock(&vmpr->events_lock);
- 
- 	list_for_each_entry(ev, &vmpr->events, node) {
--		if (ev->kernel_event)
-+		if (ev->kernel_event) {
- 			ev->fn();
--		else if (vmpr->notify_userspace && (level >= ev->level)) {
-+		} else if (vmpr->notify_userspace && level >= ev->level) {
- 			eventfd_signal(ev->efd, 1);
- 			signalled = true;
- 		}
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
