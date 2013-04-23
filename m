@@ -1,52 +1,56 @@
-From: Glauber Costa <glommer@parallels.com>
+From: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 1/2] vmpressure: in-kernel notifications
-Date: Tue, 23 Apr 2013 11:17:08 -0700
-Message-ID: <5176D024.5090007@parallels.com>
-References: <1366705329-9426-1-git-send-email-glommer@openvz.org> <1366705329-9426-2-git-send-email-glommer@openvz.org> <20130423171122.GA29983@teo>
+Date: Tue, 23 Apr 2013 22:13:42 +0300
+Message-ID: <CAOJsxLHHvcHZHTKO9WTOOJvNW21NgNsUkreQnzwk3Wp=6XCgPg@mail.gmail.com>
+References: <1366705329-9426-1-git-send-email-glommer@openvz.org>
+	<1366705329-9426-2-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130423171122.GA29983@teo>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=gwauIk7PS40bERVd0MorJEjZk8jgVzzp3P7djQE4UAc=;
+        b=pUNohl/l/MTtxMqySCexWPr9UHSFRXpFu6nwMSegfrgX783m0r9Z9Y9jxdhT3mCmEL
+         wYNPlEjI7WGrMZbSdPrvSabCONvBaky4EZUp26w6cMv9nXw3RnqEHqCSAbfxfqhGEUKP
+         MRYOLonTLsOvOVNXb3B/E77kUA6glmSyaj+VoS2C35cdMV31DIJAkMLmYm3FjkbnfMOR
+         gAnEB30VcjU6V4m2VKVKxRC0OqfZfseW8k3mHcJ53zuMhIDB9Zv2us1bSEDVsgr9c5dr
+         rjqlfcMvzqGd9sPWVwmaJMXesTc9dOT5vfckZi85Ouj6FFePtQtw1uPmeD/rPxi6I581
+         R8BA==
+In-Reply-To: <1366705329-9426-2-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Anton Vorontsov <anton@enomsg.org>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "<cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On 04/23/2013 10:11 AM, Anton Vorontsov wrote:
-> On Tue, Apr 23, 2013 at 12:22:08PM +0400, Glauber Costa wrote:
->> From: Glauber Costa <glommer@parallels.com>
-> [...]
->> This patch extends that to also support in-kernel users.
+On Tue, Apr 23, 2013 at 11:22 AM, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+> From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 >
-> Yup, that is the next logical step. ;-) The patches look good to me, just
-> one question...
+> During the past weeks, it became clear to us that the shrinker interface
+> we have right now works very well for some particular types of users,
+> but not that well for others. The later are usually people interested in
+> one-shot notifications, that were forced to adapt themselves to the
+> count+scan behavior of shrinkers. To do so, they had no choice than to
+> greatly abuse the shrinker interface producing little monsters all over.
 >
->> @@ -227,7 +233,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
->>   	 * we account it too.
->>   	 */
->>   	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
+> During LSF/MM, one of the proposals that popped out during our session
+> was to reuse Anton Voronstsov's vmpressure for this. They are designed
+> for userspace consumption, but also provide a well-stablished,
+> cgroup-aware entry point for notifications.
 >
-> I wonder if we want to let kernel users to specify the gfp mask here? The
-> current mask is good for userspace notifications, but in-kernel users
-> might be interested in including (or excluding) different types of
-> allocations, e.g. watch only for DMA allocations pressure?
+> This patch extends that to also support in-kernel users. Events that
+> should be generated for in-kernel consumption will be marked as such,
+> and for those, we will call a registered function instead of triggering
+> an eventfd notification.
 >
+> Please note that due to my lack of understanding of each shrinker user,
+> I will stay away from converting the actual users, you are all welcome
+> to do so.
+>
+> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-That is outside of the scope of this patch anyway. For this one, if you 
-believe it is good, could I have your tag? =)
+Looks good to me.
 
-But answering your question regardless of the scope, I believe the 
-context of the allocation is an implementation detail of the kernel - 
-regardless of how widely understood it is. The thing I like the most 
-about your work, is precisely the fact that is hides the implementation 
-details so well.
-
-So unless there is a strong use case that would benefit from it, I am 
-inclined to say this is not wanted.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
