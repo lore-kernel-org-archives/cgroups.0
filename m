@@ -1,143 +1,135 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 1/2] vmpressure: in-kernel notifications
-Date: Thu, 25 Apr 2013 00:04:50 +0400
-Message-ID: <51783AE2.4010402@parallels.com>
-References: <1366705329-9426-1-git-send-email-glommer@openvz.org> <1366705329-9426-2-git-send-email-glommer@openvz.org> <xr937gjrhg1f.fsf@gthelen.mtv.corp.google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: memcg: softlimit on internal nodes
+Date: Wed, 24 Apr 2013 17:45:31 -0400
+Message-ID: <20130424214531.GA18686@cmpxchg.org>
+References: <20130420002620.GA17179@mtj.dyndns.org>
+ <20130420031611.GA4695@dhcp22.suse.cz>
+ <20130421022321.GE19097@mtj.dyndns.org>
+ <20130421124554.GA8473@dhcp22.suse.cz>
+ <20130422043939.GB25089@mtj.dyndns.org>
+ <20130422151908.GF18286@dhcp22.suse.cz>
+ <20130422155703.GC12543@htj.dyndns.org>
+ <20130422162012.GI18286@dhcp22.suse.cz>
+ <20130422183020.GF12543@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <xr937gjrhg1f.fsf@gthelen.mtv.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130422183020.GF12543-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Greg Thelen <gthelen@google.com>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 04/24/2013 11:42 PM, Greg Thelen wrote:
-> On Tue, Apr 23 2013, Glauber Costa wrote:
+On Mon, Apr 22, 2013 at 11:30:20AM -0700, Tejun Heo wrote:
+> Hey,
 > 
->> From: Glauber Costa <glommer@parallels.com>
->>
->> During the past weeks, it became clear to us that the shrinker interface
->> we have right now works very well for some particular types of users,
->> but not that well for others. The later are usually people interested in
->> one-shot notifications, that were forced to adapt themselves to the
->> count+scan behavior of shrinkers. To do so, they had no choice than to
->> greatly abuse the shrinker interface producing little monsters all over.
->>
->> During LSF/MM, one of the proposals that popped out during our session
->> was to reuse Anton Voronstsov's vmpressure for this. They are designed
->> for userspace consumption, but also provide a well-stablished,
->> cgroup-aware entry point for notifications.
->>
->> This patch extends that to also support in-kernel users. Events that
->> should be generated for in-kernel consumption will be marked as such,
->> and for those, we will call a registered function instead of triggering
->> an eventfd notification.
->>
->> Please note that due to my lack of understanding of each shrinker user,
->> I will stay away from converting the actual users, you are all welcome
->> to do so.
->>
->> Signed-off-by: Glauber Costa <glommer@openvz.org>
->> Cc: Dave Chinner <david@fromorbit.com>
->> Cc: Anton Vorontsov <anton.vorontsov@linaro.org>
->> Cc: John Stultz <john.stultz@linaro.org>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Cc: Joonsoo Kim <js1304@gmail.com>
->> Cc: Michal Hocko <mhocko@suse.cz>
->> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
->> Cc: Johannes Weiner <hannes@cmpxchg.org>
->> ---
->>  include/linux/vmpressure.h |  6 ++++++
->>  mm/vmpressure.c            | 48 ++++++++++++++++++++++++++++++++++++++++++----
->>  2 files changed, 50 insertions(+), 4 deletions(-)
->>
->> diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
->> index 76be077..1862012 100644
->> --- a/include/linux/vmpressure.h
->> +++ b/include/linux/vmpressure.h
->> @@ -19,6 +19,9 @@ struct vmpressure {
->>  	/* Have to grab the lock on events traversal or modifications. */
->>  	struct mutex events_lock;
->>  
->> +	/* false if only kernel users want to be notified, true otherwise */
->> +	bool notify_userspace;
->> +
->>  	struct work_struct work;
->>  };
->>  
->> @@ -36,6 +39,9 @@ extern struct vmpressure *css_to_vmpressure(struct cgroup_subsys_state *css);
->>  extern int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
->>  				     struct eventfd_ctx *eventfd,
->>  				     const char *args);
->> +
->> +extern int vmpressure_register_kernel_event(struct cgroup *cg,
->> +					    void (*fn)(void));
->>  extern void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
->>  					struct eventfd_ctx *eventfd);
->>  #else
->> diff --git a/mm/vmpressure.c b/mm/vmpressure.c
->> index 736a601..8d77ad0 100644
->> --- a/mm/vmpressure.c
->> +++ b/mm/vmpressure.c
->> @@ -135,8 +135,12 @@ static enum vmpressure_levels vmpressure_calc_level(unsigned long scanned,
->>  }
->>  
->>  struct vmpressure_event {
->> -	struct eventfd_ctx *efd;
->> +	union {
->> +		struct eventfd_ctx *efd;
->> +		void (*fn)(void);
->> +	};
->>  	enum vmpressure_levels level;
->> +	bool kernel_event;
->>  	struct list_head node;
->>  };
->>  
->> @@ -152,7 +156,9 @@ static bool vmpressure_event(struct vmpressure *vmpr,
->>  	mutex_lock(&vmpr->events_lock);
->>  
->>  	list_for_each_entry(ev, &vmpr->events, node) {
->> -		if (level >= ev->level) {
->> +		if (ev->kernel_event)
->> +			ev->fn();
->> +		else if (vmpr->notify_userspace && (level >= ev->level)) {
->>  			eventfd_signal(ev->efd, 1);
->>  			signalled = true;
->>  		}
->> @@ -227,7 +233,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
->>  	 * we account it too.
->>  	 */
->>  	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
->> -		return;
->> +		goto schedule;
->>  
->>  	/*
->>  	 * If we got here with no pages scanned, then that is an indicator
->> @@ -238,14 +244,16 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
->>  	 * through vmpressure_prio(). But so far, keep calm.
->>  	 */
->>  	if (!scanned)
->> -		return;
->> +		goto schedule;
->>  
->>  	mutex_lock(&vmpr->sr_lock);
->>  	vmpr->scanned += scanned;
->>  	vmpr->reclaimed += reclaimed;
->> +	vmpr->notify_userspace = true;
+> On Mon, Apr 22, 2013 at 06:20:12PM +0200, Michal Hocko wrote:
+> > Although the default limit is correct it is impractical for use
+> > because it doesn't allow for "I behave do not reclaim me if you can"
+> > cases. And we can implement such a behavior really easily with backward
+> > compatibility and new interfaces (aka reuse the soft limit for that).
 > 
-> Should notify_userspace get cleared sometime?  Seems like we might need
-> to clear or decrement notify_userspace in vmpressure_event() when
-> calling eventfd_signal().
-> 
+> Okay, now we're back to square one and I'm reinstating all the mean
+> things I said in this thread. :P No wonder everyone is so confused
+> about this.  Michal, you can't overload two controls which exert
+> pressure on the opposite direction onto a single knob and define a
+> sane hierarchical behavior for it.  You're making it a point control
+> rather than range one.  Maybe you can define some twisted rules
+> serving certain specific use case, but it's gonna be confusing /
+> broken for different use cases.
 
-Hhummm, I was kind of assuming that it would always reach this point
-zeroed. But looking at the code again, I am wrong, and you are right: it
-should be cleared as soon as the notifications are fired.
+Historically soft limit meant prioritizing certain memcgs over others
+and the memcgs over their soft limit should experience relatively more
+reclaim pressure than the ones below their soft limit.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Now, if we go and say you are only reclaimed when you exceed your soft
+limit we would retain the prioritization aspect.  Groups in excess of
+their soft limits would still experience relatively more reclaim
+pressure than their well-behaved peers.  But it would have the nice
+side effect of acting more or less like a guarantee as well.
+
+I don't think this approach is as unreasonable as you make it out to
+be, but it does make things more complicated.  It could be argued that
+we should add a separate guarantee knob because two simple knobs might
+be better than a complicated one.
+
+The question is whether this solves Google's problem, though.
+
+Currently, when a memcg is selected for a certain type of reclaim, it
+and all its children are treated as one single leaf entity in the
+overall hierarchy: when a parent node hits its hard limit, we assume
+equal fault of every member in the hierarchy for that situation and,
+consequently, we reclaim all of them equally.  We do the same thing
+for the soft limit: if the parent, whose memory consumption is defined
+as the sum of memory consumed by all members of the hierarchy,
+breaches the soft limit then all members are reclaimed equally because
+no single member is more at fault than the others.  I would expect if
+we added a guarantee knob, this would also mean that no individual
+memcg can be treated as being within their guaranteed memory if the
+hierarchy as a whole is in excess of its guarantee.
+
+The root of the hierarchy represents the whole hierarchy.  Its memory
+usage is the combined memory usage of all members.  The limit set to
+the hierarchy root applies to the combined memory usage of the
+hierarchy.  Breaching that limit has consequences for the hierarchy as
+a whole.  Be it soft limit or guarantee.
+
+This is how hierarchies have always worked and it allows limits to be
+layered and apply depending on the source of pressure:
+
+       root (physical memory = 32G)
+      /    \
+     A      B (hard limit = 25G, guarantee = 16G)
+    / \    / \
+   A1 A2  /   B2 (guarantee = 10G)
+         /
+        B1 (guarantee = 15G)
+
+Remember that hard limits are usually overcommitted, so you allow B to
+use more of the fair share of memory when A does not need it, but you
+want to keep it capped to keep latency reasonable when A ramps up.
+
+As long as B is hitting its own hard limit, you value B1's and B2's
+guarantees in the context of pressure local to the hierarchy; in the
+context of B having 25G worth of memory; in the context of B1
+competing with B2 over the memory allowed by B.
+
+However, as soon as global reclaim kicks in, the context changes and
+the priorities shift.  Now, B does not have 25G anymore but only 16G
+*in its competition with A*.  We absolutely do not want to respect the
+guarantees made to B1 and B2.  Not only can they not be met anyway,
+but they are utterly meaningless at this point.  They were set with
+25G in mind.
+
+[ It may be conceivable that you want different guarantees for B1 and
+  B2 depending on where the pressure comes from.  One setting for when
+  the 25G limit applies, one setting when the 32G physical memory
+  limit applies.  Basically, every group would need a vector of
+  guarantee settings with one setting per ancestor.
+
+  That being said, I absolutely disagree with the idea of trying to
+  adhere to individual memcg guarantees in the first reclaim cycle,
+  regardless of context and then just ignore them on the second pass.
+  It's a horrible way to guess which context the admin had in mind. ]
+
+Now, there is of course the other scenario in which the current
+hierarchical limit application can get in your way: when you give
+intermediate nodes their own memory.  Because then you may see the
+need to apply certain limits to that hierarchy root's local memory
+only instead of all memory in the hierarchy.  But once we open that
+door, you might expect this to be an option for every limit, where
+even the hard limit of a hierarchy root only applies to that group's
+local memory instead of the whole hierarchy.  I certainly do not want
+to apply hierarchy semantics for some limits and not for others.  But
+Google has basically asked for hierarchical hard limits and local soft
+limits / guarantees.
+
+In summary, we are now looking at both local and hierarchical limits
+times number of ancestors PER MEMCG to support all those use cases
+properly.
+
+So I'm asking what I already asked a year ago: are you guys sure you
+can not change your cgroup tree layout and that we have to solve it by
+adding new limit semantics?!
