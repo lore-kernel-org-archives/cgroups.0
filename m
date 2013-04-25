@@ -1,260 +1,92 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: memcg: softlimit on internal nodes
-Date: Wed, 24 Apr 2013 17:33:35 -0700
-Message-ID: <20130425003335.GA32353@mtj.dyndns.org>
-References: <20130420002620.GA17179@mtj.dyndns.org>
- <20130420031611.GA4695@dhcp22.suse.cz>
- <20130421022321.GE19097@mtj.dyndns.org>
- <20130421124554.GA8473@dhcp22.suse.cz>
- <20130422043939.GB25089@mtj.dyndns.org>
- <20130422151908.GF18286@dhcp22.suse.cz>
- <20130422155703.GC12543@htj.dyndns.org>
- <20130422162012.GI18286@dhcp22.suse.cz>
- <20130422183020.GF12543@htj.dyndns.org>
- <20130424214531.GA18686@cmpxchg.org>
+From: Lingzhu Xiang <lxiang@redhat.com>
+Subject: BUG in __mem_cgroup_uncharge_common
+Date: Thu, 25 Apr 2013 09:24:16 +0800
+Message-ID: <517885C0.70701@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=klGBjAKaCXEWUzl+OZZIfJVV0Dbi3fFcyDg7mcO2aRQ=;
-        b=LDqjauBajBxjqdgj9RdiIdMDYnhSgVh5qYQFGvs3gDiHX5apaR/GWQBVRwQoLs6v4E
-         KCmONIhtqWOu4awHF+C5qwY6yFbh2+jW4R7PL18EMmmng2+j7Rl1lB46aceR1MRx2+NM
-         0KcM/Iw0v7UDZ0RKRXdZybjiFhqHWWxhPk7Xc+sUx/J9TEwiXV+YeNAwgSTfXWZll98M
-         /Yml6CjW/l/cU1RslVu10rTWeqEyaCApY71ZxpNA+dxyf5+1fBbRHm0dnjFgAbSSuZR0
-         lZ5Ovi8UBVaFSxZIsOPC4rH4YeuKyXdnsULH/g+OtrxJU1tIwvoNdiVSXjkM7k2eSXla
-         OuEw==
-Content-Disposition: inline
-In-Reply-To: <20130424214531.GA18686@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>
+To: linux-mm <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Hello, Johannes.
+Hit VM_BUG_ON(PageSwapCache(page)) in mm/memcontrol.c twice with 3.9-rc8
+and 3.7.6 during LTP run on ppc64 machines.
 
-On Wed, Apr 24, 2013 at 05:45:31PM -0400, Johannes Weiner wrote:
-> Historically soft limit meant prioritizing certain memcgs over others
-> and the memcgs over their soft limit should experience relatively more
-> reclaim pressure than the ones below their soft limit.
-> 
-> Now, if we go and say you are only reclaimed when you exceed your soft
-> limit we would retain the prioritization aspect.  Groups in excess of
-> their soft limits would still experience relatively more reclaim
-> pressure than their well-behaved peers.  But it would have the nice
-> side effect of acting more or less like a guarantee as well.
 
-But, at the same time, it has the not-so-nice side-effect of losing
-the ability to express negative prioritization.  It isn't difficult to
-imagine use cases where the system doesn't want to partition the whole
-system into discrete cgroups but wants to limit the amount of
-resources consumed by low-priority workloads.
+[ 9699.793674] ------------[ cut here ]------------ 
+[ 9699.793719] kernel BUG at mm/memcontrol.c:3994! 
+[ 9699.793745] Oops: Exception in kernel mode, sig: 5 [#1] 
+[ 9699.793756] SMP NR_CPUS=1024 NUMA pSeries 
+[ 9699.793768] Modules linked in: tun(F) scsi_transport_iscsi(F) ipt_ULOG(F) nfc(F) af_key(F) rds(F) af_802154(F) pppoe(F) pppox(F) ppp_generic(F) slhc(F) atm(F) sctp(F) ip6table_filter(F) ip6_tables(F) iptable_filter(F) ip_tables(F) btrfs(F) raid6_pq(F) xor(F) vfat(F) fat(F) nfsv3(F) nfs_acl(F) nfsv2(F) nfs(F) lockd(F) sunrpc(F) fscache(F) nfnetlink_log(F) nfnetlink(F) bluetooth(F) rfkill(F) arc4(F) md4(F) nls_utf8(F) cifs(F) dns_resolver(F) nf_tproxy_core(F) nls_koi8_u(F) nls_cp932(F) ts_kmp(F) fuse(F) sg(F) ehea(F) xfs(F) libcrc32c(F) sd_mod(F) crc_t10dif(F) ibmvscsi(F) scsi_transport_srp(F) scsi_tgt(F) dm_mirror(F) dm_region_hash(F) dm_log(F) dm_mod(F) [last unloaded: ipt_REJECT] 
+[ 9699.794061] NIP: c000000000201c40 LR: c0000000001cf770 CTR: 0000000000021f84 
+[ 9699.794082] REGS: c0000000210674e0 TRAP: 0700   Tainted: GF             (3.9.0-rc8) 
+[ 9699.794091] MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>  CR: 22824422  XER: 00000000 
+[ 9699.794141] SOFTE: 1 
+[ 9699.794151] CFAR: c0000000002076a8 
+[ 9699.794159] TASK = c000000075c4bfa0[48350] 'msgctl10' THREAD: c000000021064000 CPU: 15 
+GPR00: c0000000001cf770 c000000021067760 c0000000010f3dc8 c00000007f2236b0  
+GPR04: 0000000000000001 0000000000000000 0000000000000000 0000000000000000  
+GPR08: c00000007f2236c8 0000000000000001 0000000000000000 00000000187e8800  
+GPR12: 0000000022824428 c00000000ede3c00 c00000007f2236b0 ffffffffffffff80  
+GPR16: 4000000000000000 0000000000000001 00003fffd1f30000 c00000007f041bc8  
+GPR20: 00003fffd1f20000 c00000010c4ba9a0 0000000000000000 c000000000ae0788  
+GPR24: c000000000ae0788 0000187e88000393 c000000001163dc8 0000000000000001  
+GPR28: c000000001160900 c00000007f2236b0 ffffffffffffffff c00000007f2236b0  
+[ 9699.794381] NIP [c000000000201c40] .__mem_cgroup_uncharge_common+0x50/0x340 
+[ 9699.794398] LR [c0000000001cf770] .page_remove_rmap+0x120/0x1d0 
+[ 9699.794414] Call Trace: 
+[ 9699.794427] [c000000021067760] [c000000000201d00] .__mem_cgroup_uncharge_common+0x110/0x340 (unreliable) 
+[ 9699.794441] [c000000021067810] [c0000000001cf770] .page_remove_rmap+0x120/0x1d0 
+[ 9699.794461] [c0000000210678a0] [c0000000001c10f0] .unmap_single_vma+0x5b0/0x8c0 
+[ 9699.794494] [c0000000210679e0] [c0000000001c1ea4] .unmap_vmas+0x74/0xe0 
+[ 9699.794515] [c000000021067a80] [c0000000001cbd48] .exit_mmap+0xd8/0x1a0 
+[ 9699.794542] [c000000021067ba0] [c000000000082e90] .mmput+0xa0/0x170 
+[ 9699.794575] [c000000021067c30] [c00000000008d4e8] .do_exit+0x308/0xb40 
+[ 9699.794587] [c000000021067d30] [c00000000008ddc4] .do_group_exit+0x54/0xf0 
+[ 9699.794612] [c000000021067dc0] [c00000000008de74] .SyS_exit_group+0x14/0x20 
+[ 9699.794633] [c000000021067e30] [c000000000009e54] syscall_exit+0x0/0x98 
+[ 9699.794645] Instruction dump: 
+[ 9699.794663] fba1ffe8 fbc1fff0 fbe1fff8 2f890000 f8010010 91810008 f821ff51 409e019c  
+[ 9699.794702] e9230000 7c7d1b78 7c9b2378 792987e2 <0b090000> f8a10070 48006959 60000000  
+[ 9699.794761] ---[ end trace 18332a81b4a27c2d ]--- 
 
-Also, in the long-term, I really want cgroup to become something
-generally useful and automatically configurable (optional of course)
-by the base system according to the types of workloads.  For something
-like that to be possible, the control knobs shouldn't be fiddly,
-complex, or require full partitioning of the system.
-
-> I don't think this approach is as unreasonable as you make it out to
-> be, but it does make things more complicated.  It could be argued that
-> we should add a separate guarantee knob because two simple knobs might
-> be better than a complicated one.
-
-The problem that I see is that this is being done without clearing up
-the definition of the knob.  The knob's role is being changed or at
-least solidified into something which makes it inconsistent with
-everything else in cgroup in a way which seems very reactive to me.
-
-I can see such reactive customizations being useful in satisfying
-certain specific use cases - google's primarily right now; however,
-it's likely to come back and bite us when we want to do something
-different or generic with cgroup.  It's gonna be something which ends
-up being labeled as unusuable in other types of setups (e.g. where not
-all workloads are put under active control or whatever) after causing
-a lot of head-scratching and not-particularly-happy moments.  Cgroup
-as a whole strongly needs consistency across its control knobs for it
-to be generally useful.
-
-Well, that and past frustrations over interface and implementations of
-memcg, which seems to bear a lot of similarities with what's going on
-now, probably have made me go over-board.  Sorry about that, but I
-really hope memcg do better.
-
-...
-> no single member is more at fault than the others.  I would expect if
-> we added a guarantee knob, this would also mean that no individual
-> memcg can be treated as being within their guaranteed memory if the
-> hierarchy as a whole is in excess of its guarantee.
-
-I disagree here.  It should be symmetrical to how hardlimit works.
-Let's say there's one parent - P - and child - C.  For hardlimit, if P
-is over limit, it exerts pressure on its subtree regardless of C, and,
-if P is under limit, it doesn't affect C.
-
-For guarantee / protection, it should work the same but in the
-opposite direction.  If P is under limit, it should protect the
-subtree from reclaim regardless of C.  If P is over limit, it
-shouldn't affect C.
-
-As I draw in the other reply to Michal, each knob should be a starting
-point of a single range in the pre-defined direction and composition
-of those configurations across hierarchy should result in intersection
-of them.  I can't see any reason to deviate from that here.
-
-IOW, protection control shouldn't care about generating memory
-pressure.  That's the job of soft and hard limits, both of which
-should apparently override protection.  That way, each control knob
-becomes fully consistent within itself across the hierarchy and the
-questions become those of how soft limit should override protection
-rather than the semantics of soft limit itself.
-
-> The root of the hierarchy represents the whole hierarchy.  Its memory
-> usage is the combined memory usage of all members.  The limit set to
-> the hierarchy root applies to the combined memory usage of the
-> hierarchy.  Breaching that limit has consequences for the hierarchy as
-> a whole.  Be it soft limit or guarantee.
-> 
-> This is how hierarchies have always worked and it allows limits to be
-> layered and apply depending on the source of pressure:
-
-That's definitely true for soft and hard limits but flipped for
-guarantees and I think that's the primary source of confusion -
-guarantee being overloaded onto softlimit.
-
->        root (physical memory = 32G)
->       /    \
->      A      B (hard limit = 25G, guarantee = 16G)
->     / \    / \
->    A1 A2  /   B2 (guarantee = 10G)
->          /
->         B1 (guarantee = 15G)
-> 
-> Remember that hard limits are usually overcommitted, so you allow B to
-> use more of the fair share of memory when A does not need it, but you
-> want to keep it capped to keep latency reasonable when A ramps up.
-> 
-> As long as B is hitting its own hard limit, you value B1's and B2's
-> guarantees in the context of pressure local to the hierarchy; in the
-> context of B having 25G worth of memory; in the context of B1
-> competing with B2 over the memory allowed by B.
-> 
-> However, as soon as global reclaim kicks in, the context changes and
-> the priorities shift.  Now, B does not have 25G anymore but only 16G
-> *in its competition with A*.  We absolutely do not want to respect the
-> guarantees made to B1 and B2.  Not only can they not be met anyway,
-> but they are utterly meaningless at this point.  They were set with
-> 25G in mind.
-
-I find the configuration confusing.  What does it mean?  Let's say B
-doesn't consume memory itself and B1 is inactive.  Does that mean B2
-is guaranteed upto 16G?  Or is it that B2 is still guaranteed only
-upto 10G?
-
-If former, what if the intention was just to prevent B's total going
-past 16G and the configuration never meant to grant extra 6G to B2?
-
-The latter makes more sense as softlimit, but what happens when B
-itself consumes memory?  Is B's internal consumption guaranteed any
-memory?  If so, what if the internal usage is mostly uninteresting and
-the admin never meant them to get any guarantee and it unnecessarily
-eats into B1's guarantee when it comes up?  If not, what happens when
-B1 creates a sub-cgroup B11?  Do all internal usages of B1 lose the
-guarantee?
-
-If I'm not too confused, most of the confusions arise from the fact
-that guarantee's specificity is towards max (as evidenced by its
-default being zero) but composition through hierarchy happening in the
-other direction (ie. guarantee in internal node exerts pressure
-towards zero on its subtree).
-
-Doesn't something like the following suit what you had in mind better?
-
- h: hardlimit, s: softlimit, g: guarantee
-
-        root (physical memory = 32G)
-       /    \
-      A      B (h:25G, s:16G)
-     / \    / \
-    A1 A2  /   B2 (g:10G)
-          /
-         B1 (g:15G)
-
-It doesn't solve any of the execution issues arising from having to
-enforce 16G limit over 10G and 15G guarnatees but there is no room for
-misinterpreting the intention of the configuration.  You could say
-that this is just a convenient case because it doesn't actually have
-nesting of the same params.  Let's add one then.
-
-        root (physical memory = 32G)
-       /    \
-      A      B (h:25G, s:16G g:15G)
-     / \    / \
-    A1 A2  /   B2 (g:10G)
-          /
-         B1 (g:15G)
-
-If we follow the rule of composition by intersection, the
-interpretation of B's guarantee is clear.  If B's subtree is under
-15G, regardless of individual usages of B1 and B2, they shouldn't feel
-reclaim pressure.  When B's subtree goes over 15G, B1 and B2 will have
-to fend off for themselves.  If the ones which are over their own
-guarantee will feel the "normal" reclaim pressure; otherwise, they
-will continue to evade reclaim.  When B's subtree goes over 16G,
-someone in B's subtree have to pay, preferably the ones not guaranteed
-anything first.
-
-> [ It may be conceivable that you want different guarantees for B1 and
->   B2 depending on where the pressure comes from.  One setting for when
->   the 25G limit applies, one setting when the 32G physical memory
->   limit applies.  Basically, every group would need a vector of
->   guarantee settings with one setting per ancestor.
-
-I don't get this.  If a cgroup is under the guarantee limit and none
-of its parents are under hard/softlimit, it shouldn't feel any
-pressure.  If a cgroup ia above guarantee, it should feel the same
-pressure everyone else in that subtree is subject to.  If any of the
-ancestors has triggered soft / hard limit, it's gonna have to give up
-pages pretty quickly.
-
->   That being said, I absolutely disagree with the idea of trying to
->   adhere to individual memcg guarantees in the first reclaim cycle,
->   regardless of context and then just ignore them on the second pass.
->   It's a horrible way to guess which context the admin had in mind. ]
-
-I think there needs to be a way to avoid penalizing sub-cgroups under
-guarnatee amount when there are siblings which can give out pages over
-guarantee.  I don't think I'm following the "guessing the intention"
-part.  Can you please elaborate?
-
-> Now, there is of course the other scenario in which the current
-> hierarchical limit application can get in your way: when you give
-> intermediate nodes their own memory.  Because then you may see the
-> need to apply certain limits to that hierarchy root's local memory
-> only instead of all memory in the hierarchy.  But once we open that
-> door, you might expect this to be an option for every limit, where
-> even the hard limit of a hierarchy root only applies to that group's
-> local memory instead of the whole hierarchy.  I certainly do not want
-> to apply hierarchy semantics for some limits and not for others.  But
-> Google has basically asked for hierarchical hard limits and local soft
-> limits / guarantees.
-
-So, proportional controllers need this.  They need to be able to
-configure the amount the tasks belonging to an inner node can consume
-when competing against the children groups.  It isn't a particularly
-pretty thing but a necessity given that we allow tasks and resource
-consumptions in inner nodes.  I was wondering about this and asked
-Michal whether anybody wants something like that and IIRC his answer
-was negative.  Can you please expand on what google asked for?
-
-Thanks.
-
--- 
-tejun
+[ 6230.168170] ------------[ cut here ]------------ 
+[ 6230.168200] kernel BUG at mm/memcontrol.c:3027! 
+[ 6230.168206] Oops: Exception in kernel mode, sig: 5 [#1] 
+[ 6230.168210] SMP NR_CPUS=1024 NUMA pSeries 
+[ 6230.168215] Modules linked in: tun binfmt_misc hidp cmtp kernelcapi rfcomm l2tp_ppp l2tp_netlink l2tp_core bnep nfc af_802154 pppoe pppox ppp_generic slhc rds af_key atm sctp ip6table_filter ip6_tables iptable_filter ip_tables btrfs libcrc32c vfat fat nfsv3 nfs_acl nfsv2 nfs lockd sunrpc fscache nfnetlink_log nfnetlink bluetooth rfkill des_generic md4 nls_utf8 cifs dns_resolver nf_tproxy_core deflate lzo nls_koi8_u nls_cp932 ts_kmp sg ehea xfs sd_mod crc_t10dif ibmvscsi scsi_transport_srp scsi_tgt dm_mirror dm_region_hash dm_log dm_mod [last unloaded: ipt_REJECT] 
+[ 6230.168322] NIP: c0000000001f4d70 LR: c0000000001c5480 CTR: 0000000000000000 
+[ 6230.168327] REGS: c000000107c9f2c0 TRAP: 0700   Tainted: G        W     (3.7.6+) 
+[ 6230.168330] MSR: 8000000002029032 <SF,VEC,EE,ME,IR,DR,RI>  CR: 28004082  XER: 00000001 
+[ 6230.168341] SOFTE: 1 
+[ 6230.168343] CFAR: c0000000001f9448 
+[ 6230.168346] TASK = c000000108ef9a40[27179] 'msgctl10' THREAD: c000000107c9c000 CPU: 49 
+GPR00: c0000000001c5480 c000000107c9f540 c000000001133ab0 c00000013f2932f8  
+GPR04: 0000000000000001 0000000000000000 0000000000000c00 0000000000000011  
+GPR08: c00000013f293310 0000000000000001 0000000000000000 0000000000000060  
+GPR12: 0000000028004088 c00000000ee0ab80 0000000000000000 0000000000000000  
+GPR16: 0000000000000000 0000000000000000 0000000000000000 c00000013f1c0378  
+GPR20: 00003fffb1990000 00003fffb1980000 c00000011b0f0000 c00000000147da80  
+GPR24: 000045da80000393 c0000000ad960900 0000000000000001 c0000000011a09e0  
+GPR28: c00000013f2932f8 c0000000adf2cad0 c0000000010b8d58 c00000013f2932f8  
+[ 6230.168401] NIP [c0000000001f4d70] .__mem_cgroup_uncharge_common+0x50/0x320 
+[ 6230.168405] LR [c0000000001c5480] .page_remove_rmap+0x140/0x1d0 
+[ 6230.168408] Call Trace: 
+[ 6230.168411] [c000000107c9f5f0] [c0000000001c5480] .page_remove_rmap+0x140/0x1d0 
+[ 6230.168417] [c000000107c9f680] [c0000000001b6c30] .do_wp_page+0x3f0/0xd80 
+[ 6230.168421] [c000000107c9f780] [c0000000001b92e0] .handle_pte_fault+0x350/0xca0 
+[ 6230.168428] [c000000107c9f880] [c000000000708440] .do_page_fault+0x420/0x830 
+[ 6230.168433] [c000000107c9fab0] [c000000000005d68] handle_page_fault+0x10/0x30 
+[ 6230.168439] --- Exception: 301 at .schedule_tail+0x94/0x120 
+[ 6230.168439]     LR = .schedule_tail+0x8c/0x120 
+[ 6230.168444] [c000000107c9fda0] [c0000000000c5b4c] .schedule_tail+0x5c/0x120 (unreliable) 
+[ 6230.168449] [c000000107c9fe30] [c000000000009a9c] .ret_from_fork+0x4/0x54 
+[ 6230.168453] Instruction dump: 
+[ 6230.168455] ebc2bc58 f8010010 91810008 f821ff51 eb7e8000 813b0068 2f890000 409e019c  
+[ 6230.168463] e9230000 7c7c1b78 7c9a2378 792987e2 <0b090000> f8a10070 48005649 60000000  
+[ 6230.168476] ---[ end trace 13237c53a86ce213 ]--- 
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
