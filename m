@@ -1,68 +1,55 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH 1/2] vmpressure: in-kernel notifications
-Date: Thu, 25 Apr 2013 14:50:27 +0400
-Message-ID: <51790A73.3030805@parallels.com>
-References: <1366705329-9426-1-git-send-email-glommer@openvz.org> <1366705329-9426-2-git-send-email-glommer@openvz.org> <xr937gjrhg1f.fsf@gthelen.mtv.corp.google.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH 2/2] memcg: reap dead memcgs under pressure
+Date: Thu, 25 Apr 2013 20:50:14 +0800
+Message-ID: <51792686.50009@huawei.com>
+References: <1366705329-9426-1-git-send-email-glommer@openvz.org> <1366705329-9426-3-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="------------000807030105080807080004"
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <xr937gjrhg1f.fsf@gthelen.mtv.corp.google.com>
+In-Reply-To: <1366705329-9426-3-git-send-email-glommer@openvz.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: Greg Thelen <gthelen@google.com>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
---------------000807030105080807080004
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+> +static void memcg_vmpressure_shrink_dead(void)
+> +{
+> +	struct memcg_cache_params *params, *tmp;
+> +	struct kmem_cache *cachep;
+> +	struct mem_cgroup *memcg;
+> +
+> +	mutex_lock(&dangling_memcgs_mutex);
+> +	list_for_each_entry(memcg, &dangling_memcgs, dead) {
+> +
+> +		mem_cgroup_get(memcg);
 
-On 04/24/2013 11:42 PM, Greg Thelen wrote:
->> +	vmpr->notify_userspace = true;
-> Should notify_userspace get cleared sometime?  Seems like we might need
-> to clear or decrement notify_userspace in vmpressure_event() when
-> calling eventfd_signal().
-> 
-I am folding the attached patch and keeping the acks unless the ackers
-oppose.
+This mem_cgroup_get() looks redundant to me, because you're iterating the list
+and never release dangling_memcgs_mutex in the middle.
 
-Greg, any other problem you spot here? Thanks for the review BTW.
-
-
---------------000807030105080807080004
-Content-Type: text/x-patch; name="vmpressure.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="vmpressure.diff"
-
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index 1a082a0..e16256e 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -164,6 +164,7 @@ static bool vmpressure_event(struct vmpressure *vmpr,
- 		}
- 	}
- 
-+	vmpr->notify_userspace = false;
- 	mutex_unlock(&vmpr->events_lock);
- 
- 	return signalled;
-@@ -249,8 +250,13 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
- 	mutex_lock(&vmpr->sr_lock);
- 	vmpr->scanned += scanned;
- 	vmpr->reclaimed += reclaimed;
--	vmpr->notify_userspace = true;
- 	scanned = vmpr->scanned;
-+	/*
-+	 * If we didn't reach this point, only kernel events will be triggered.
-+	 * It is the job of the worker thread to clean this up once the
-+	 * notifications are all delivered.
-+	 */
-+	vmpr->notify_userspace = true;
- 	mutex_unlock(&vmpr->sr_lock);
- 
- schedule:
-
---------------000807030105080807080004--
+> +		mutex_lock(&memcg->slab_caches_mutex);
+> +		/* The element may go away as an indirect result of shrink */
+> +		list_for_each_entry_safe(params, tmp,
+> +					 &memcg->memcg_slab_caches, list) {
+> +
+> +			cachep = memcg_params_to_cache(params);
+> +			/*
+> +			 * the cpu_hotplug lock is taken in kmem_cache_create
+> +			 * outside the slab_caches_mutex manipulation. It will
+> +			 * be taken by kmem_cache_shrink to flush the cache.
+> +			 * So we need to drop the lock. It is all right because
+> +			 * the lock only protects elements moving in and out the
+> +			 * list.
+> +			 */
+> +			mutex_unlock(&memcg->slab_caches_mutex);
+> +			kmem_cache_shrink(cachep);
+> +			mutex_lock(&memcg->slab_caches_mutex);
+> +		}
+> +		mutex_unlock(&memcg->slab_caches_mutex);
+> +		mem_cgroup_put(memcg);
+> +	}
+> +	mutex_unlock(&dangling_memcgs_mutex);
+> +}
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
