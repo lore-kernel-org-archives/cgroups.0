@@ -1,77 +1,58 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup sysfs entry
-Date: Fri, 26 Apr 2013 09:31:01 +0800
-Message-ID: <5179D8D5.4050003@huawei.com>
-References: <CAJJAcod9kNkdEvVf8GyHqqdzzC0Px1EdHwNtv68e-XtMXVo8zw@mail.gmail.com>
+Subject: [PATCH] cgroup: fix use-after-free when umounting cgroupfs
+Date: Fri, 26 Apr 2013 10:54:11 +0800
+Message-ID: <5179EC53.6080006@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAJJAcod9kNkdEvVf8GyHqqdzzC0Px1EdHwNtv68e-XtMXVo8zw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: David Shwatrz <dshwatrz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-=E4=BA=8E 2013/4/26 3:39, David Shwatrz =E5=86=99=E9=81=93:
-> Hello,
->=20
-> I have a question about cgroup implementation:
->=20
-> The /sys/fs/cgroup entry is created in kernel/cgroup.c:
->=20
-> static struct kobject *cgroup_kobj;
->=20
-> cgroup_init(void) {
-> ...
-> cgroup_kobj =3D kobject_create_and_add("cgroup", fs_kobj);
->   if (!cgroup_kobj) {
->   err =3D -ENOMEM;
->   goto out;
->   }
->=20
-> }
->=20
-> I wondered about this two points:
-> 1) why is the /sys/fs/cgroup entry created at all?
-> 2) why is this done as a sysfs entry.
->=20
-> The cgroup_kobj is not used anywhere in this module apart from
-> its creation above (and destroying if we later fail with
-> register_filesystem() in this same method). I don't see anywhere usag=
-e
-> of syfs API to create files underneath
-> it. In fact, the entries beneath it are created by mkdir of admin or
-> systemd code. so what's the point of it being a sysfs entry ? wouldn'=
-t
-> simply mkdir be ok ? and why under /sys/fs?
->=20
-> Since cgroups can be mounted by definition on every path, why this is=
- needed?
->=20
+Try:
+  # mount -t cgroup xxx /cgroup
+  # mkdir /cgroup/sub && rmdir /cgroup/sub && umount /cgroup
 
-It's supposed to be the standard place to mount cgroupfs.
+And you might see this:
 
-commit 676db4af043014e852f67ba0349dae0071bd11f3
-Author: Greg KH <gregkh-l3A5Bk7waGM@public.gmane.org>
-Date:   Thu Aug 5 13:53:35 2010 -0700
+ida_remove called for id=1 which is not allocated.
 
-    cgroupfs: create /sys/fs/cgroup to mount cgroupfs on
+It's because cgroup_kill_sb() is called to destroy root->cgroup_ida
+and free cgrp->root before ida_simple_removed() is called. What's
+worse is we're accessing cgrp->root while it has been freed.
 
-    We really shouldn't be asking userspace to create new root filesyst=
-ems.
-    So follow along with all of the other in-kernel filesystems, and pr=
-ovide
-    a mount point in sysfs.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-    For cgroupfs, this should be in /sys/fs/cgroup/  This change provid=
-es
-    that mount point when the cgroup filesystem is registered in the ke=
-rnel.
-
-    Acked-by: Paul Menage <menage-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-    Acked-by: Dhaval Giani <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-    Cc: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-    Cc: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
-    Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
-    Signed-off-by: Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 6780459..a45aa12 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -845,9 +845,12 @@ static void cgroup_free_fn(struct work_struct *work)
+ 	 */
+ 	dput(cgrp->parent->dentry);
+ 
++	ida_simple_remove(&cgrp->root->cgroup_ida, cgrp->id);
++	
+ 	/*
+ 	 * Drop the active superblock reference that we took when we
+-	 * created the cgroup
++	 * created the cgroup. This will free cgrp->root, if we are
++	 * holding the last reference to @sb.
+ 	 */
+ 	deactivate_super(cgrp->root->sb);
+ 
+@@ -859,7 +862,6 @@ static void cgroup_free_fn(struct work_struct *work)
+ 
+ 	simple_xattrs_free(&cgrp->xattrs);
+ 
+-	ida_simple_remove(&cgrp->root->cgroup_ida, cgrp->id);
+ 	kfree(rcu_dereference_raw(cgrp->name));
+ 	kfree(cgrp);
+ }
+-- 
+1.8.0.2
