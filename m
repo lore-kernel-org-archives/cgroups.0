@@ -1,9 +1,8 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: memcg: softlimit on internal nodes
-Date: Fri, 26 Apr 2013 13:51:20 +0200
-Message-ID: <20130426115120.GG31157@dhcp22.suse.cz>
-References: <20130420031611.GA4695@dhcp22.suse.cz>
- <20130421022321.GE19097@mtj.dyndns.org>
+Date: Fri, 26 Apr 2013 11:37:41 -0700
+Message-ID: <20130426183741.GA25940@mtj.dyndns.org>
+References: <20130421022321.GE19097@mtj.dyndns.org>
  <20130421124554.GA8473@dhcp22.suse.cz>
  <20130422043939.GB25089@mtj.dyndns.org>
  <20130422151908.GF18286@dhcp22.suse.cz>
@@ -12,79 +11,51 @@ References: <20130420031611.GA4695@dhcp22.suse.cz>
  <20130422183020.GF12543@htj.dyndns.org>
  <20130423092944.GA8001@dhcp22.suse.cz>
  <20130423170900.GH12543@htj.dyndns.org>
+ <20130426115120.GG31157@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=42nMl9vLFJqugHdm0zlx8lhx2PLBOW4KYw1204WKBZU=;
+        b=nbuHTb4S1EFwVX9YQpAHP1Y0VFH2HkCTQq6SR5O24ujn4KtWK2CDoPKtX4irzADgnB
+         xC0DgPd8juZKqlIyzdrWa6TZ5T12muVpiHjq3MxZOQANqB+sO2dZKQZkN6oUziED3T+f
+         G8uQGegdJKdVIuGWOkbh4a7vpiB7Ri7kD7QjFE5C0Er1IzKGWAPiv2GW3xmlDxjqAkpb
+         JbYirtvSeuz7X6EKfTOm5xNDQC7GNc72DFrakgU1lHoBLxwqqQU+spvVrYzTqEad+jzm
+         doKNcIKIjTbAXWM9lAvbJ65uegx/oRNZmU+f7hCW5QGSljtM0/sdPMN/6ms1iHtgzZl0
+         +YJA==
 Content-Disposition: inline
-In-Reply-To: <20130423170900.GH12543@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130426115120.GG31157-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Ying Han <yinghan@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue 23-04-13 10:09:00, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Tue, Apr 23, 2013 at 11:29:56AM +0200, Michal Hocko wrote:
-> > Ohh, well and we are back in the circle again. Nobody is proposing
-> > overloading soft reclaim for any bottom-up (if that is what you mean by
-> > your opposite direction) pressure handling.
-> > 
-> > > You're making it a point control rather than range one.
-> > 
-> > Be more specific here, please?
-> > 
-> > > Maybe you can define some twisted rules serving certain specific use
-> > > case, but it's gonna be confusing / broken for different use cases.
-> > 
-> > Tejun, your argumentation is really hand wavy here. Which use cases will
-> > be broken and which one will be confusing. Name one for an illustration.
-> > 
-> > > You're so confused that you don't even know you're confused.
-> > 
-> > Yes, you keep repeating that. But you haven't pointed out any single
-> > confusing use case so far. Please please stop this, it is not productive.
-> > We are still talking about using soft limit to control overcommit
-> > situation as gracefully as possible. I hope we are on the same page
-> > about that at least.
-> 
-> Hmmm... I think I was at least somewhat clear on my points.  I'll try
-> again.  Let's see if I can at least make you understand what my point
-> is.  Maybe some diagrams will help.
+Hey,
 
-Maybe I should have been more explicit about this but _yes I do agree_
-that a separate limit would work as well. I just do not want to
-introduce yet-another-limit unless it is _really_ necessary. We have up
-to 4 of them depending on the configuration which is a lot already. And
-the new knob would certainly become a guarantee what ever words we use
-with more expectations than soft limit and I am afraid that won't be
-that easy (unless we provide a poison pill for emergency cases).
+On Fri, Apr 26, 2013 at 01:51:20PM +0200, Michal Hocko wrote:
+> Maybe I should have been more explicit about this but _yes I do agree_
+> that a separate limit would work as well. I just do not want to
 
-My rework was based on the soft limit semantic which we had for quite
-some time and tried to enhance it to be more useful. I do understand
-your concerns about the cleanness of the interface I just objected that
-the new meaning doesn't add any guarantee. The implementation just tries
-to be clever who to reclaim to handle an external pressure (for which
-the soft limit has been introduced in the first place) while using hints
-from the limit as much as possible .
+Heh, the point was more about what we shouldn't be doing, but, yeah,
+it's good that we at least agree on something.  :)
 
-Anyway, I will think about cons and pros of the new limit. I think we
-shouldn't block the first 3 patches in the series which keep the current
-semantic and just change the internals to do the same thing. Do you
-agree?
+> Anyway, I will think about cons and pros of the new limit. I think we
+> shouldn't block the first 3 patches in the series which keep the current
+> semantic and just change the internals to do the same thing. Do you
+> agree?
 
-We can discuss single vs. new knob in the mean time of course.
+As the merge window is coming right up, if it isn't something super
+urgent, can we please hold it off until after the merge window?  It
+would be really great if we can pin down the semantics of the knob
+before doing anything.  Please.  I'll think / study more about it in
+the coming weeks.
 
-[...]
+Thanks.
 
-Thanks!
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
