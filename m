@@ -1,40 +1,40 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: restore the call to eventfd->poll()
-Date: Fri, 26 Apr 2013 10:54:52 +0800
-Message-ID: <5179EC7C.5060208@huawei.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH 2/2] memcg: reap dead memcgs under pressure
+Date: Fri, 26 Apr 2013 11:38:31 +0400
+Message-ID: <517A2EF7.8020607@parallels.com>
+References: <1366705329-9426-1-git-send-email-glommer@openvz.org> <1366705329-9426-3-git-send-email-glommer@openvz.org> <51792686.50009@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <51792686.50009@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-I mistakenly removed the call to eventfd->poll() while I was actually
-intending to remove the return value...
+On 04/25/2013 04:50 PM, Li Zefan wrote:
+>> +static void memcg_vmpressure_shrink_dead(void)
+>> +{
+>> +	struct memcg_cache_params *params, *tmp;
+>> +	struct kmem_cache *cachep;
+>> +	struct mem_cgroup *memcg;
+>> +
+>> +	mutex_lock(&dangling_memcgs_mutex);
+>> +	list_for_each_entry(memcg, &dangling_memcgs, dead) {
+>> +
+>> +		mem_cgroup_get(memcg);
+> 
+> This mem_cgroup_get() looks redundant to me, because you're iterating the list
+> and never release dangling_memcgs_mutex in the middle.
+> 
+You are right. We will never go all the way through free because
+memcg_dangling_free is called before free, and needs the mutex.
 
-Calling evenfd->poll() will hook cgroup_event_wake() to the poll
-waitqueue, which will be called to unregister eventfd when rmdir a
-cgroup or close eventfd.
+Thanks
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a45aa12..4b0f2ef 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3882,6 +3882,8 @@ static int cgroup_write_event_control(struct cgroup *cgrp, struct cftype *cft,
- 	if (ret)
- 		goto fail;
- 
-+	efile->f_op->poll(efile, &event->pt);
-+
- 	/*
- 	 * Events should be removed after rmdir of cgroup directory, but before
- 	 * destroying subsystem state objects. Let's take reference to cgroup
--- 
-1.8.0.2
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
