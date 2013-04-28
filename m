@@ -1,27 +1,33 @@
-From: Li Zhong <zhong@linux.vnet.ibm.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] cpuset: fix compile warning when CONFIG_SMP=n
-Date: Sun, 28 Apr 2013 10:01:02 +0800
-Message-ID: <1367114462.6391.25.camel@ThinkPad-T5421.cn.ibm.com>
+Date: Sat, 27 Apr 2013 19:55:35 -0700
+Message-ID: <20130428025535.GA6569@htj.dyndns.org>
 References: <517C7F91.2030705@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <517C7F91.2030705@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=vGwh2Tnqb3wR2GRDYwvAYeOlhJe0ZkKnVF45eZV7jvU=;
+        b=h+OL2kFhTR0CP1KSVCUQCq2wUs+DKrLV/NWyVq0Oarr+xxxnzlPyv4Bc0C6hIvvG+g
+         MX+O+s11b5fy45t3jY/dTCagTFzzaNjfu4XgBSKjXCDDEGj5lA0coC0ipWtNx/ITxRau
+         eVykbKVaON6+y+VJ/NdueDOHpcOU8c8P/K3A/CPVZRCTTf7bSHJFsClTa0LmsdNET1Yd
+         z1YegNdqMk8//NOczOOH9UTTczZZ6LxxyFnSyDI7kJSl2CaoIvfzdUEQpcb+WkZSc8lw
+         LEIxcZzsrlzQm/kAvBYrv/XTRdKKQbShFhENLyTHnoW5Q1LBKnd3ERElu/U1ppEyeUvJ
+         EDTw==
+Content-Disposition: inline
+In-Reply-To: <517C7F91.2030705-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zhong <zhong-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Sun, 2013-04-28 at 09:46 +0800, Li Zefan wrote:
+On Sun, Apr 28, 2013 at 09:46:57AM +0800, Li Zefan wrote:
 > Reported by Fengguang's kbuild test robot:
-
-Thank you for the quick fix, Zefan. 
-
-Strong robot :)
-
-Thanks, Zhong
-
 > 
 > kernel/cpuset.c:787: warning: 'generate_sched_domains' defined but not used
 > 
@@ -29,28 +35,10 @@ Thanks, Zhong
 > ("cpuset: use rebuild_sched_domains() in cpuset_hotplug_workfn()),
 > which removed generate_sched_domains() from cpuset_hotplug_workfn().
 > 
-> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> Signed-off-by: Li Zefan <lizefan@huawei.com>
-> ---
->  kernel/cpuset.c | 7 -------
->  1 file changed, 7 deletions(-)
-> 
-> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-> index ef05901..2422c5b 100644
-> --- a/kernel/cpuset.c
-> +++ b/kernel/cpuset.c
-> @@ -789,13 +789,6 @@ out:
->  static void rebuild_sched_domains_locked(void)
->  {
->  }
-> -
-> -static int generate_sched_domains(cpumask_var_t **domains,
-> -			struct sched_domain_attr **attributes)
-> -{
-> -	*domains = NULL;
-> -	return 1;
-> -}
->  #endif /* CONFIG_SMP */
-> 
->  void rebuild_sched_domains(void)
+> Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+Applied to cgroup/for-3.10.  Thanks.
+
+-- 
+tejun
