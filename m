@@ -1,60 +1,298 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: memcg: softlimit on internal nodes
-Date: Mon, 29 Apr 2013 17:27:52 +0200
-Message-ID: <20130429152752.GD1172@dhcp22.suse.cz>
-References: <20130421124554.GA8473@dhcp22.suse.cz>
+Date: Mon, 29 Apr 2013 14:39:26 -0400
+Message-ID: <20130429183926.GA8083@cmpxchg.org>
+References: <20130420031611.GA4695@dhcp22.suse.cz>
+ <20130421022321.GE19097@mtj.dyndns.org>
+ <20130421124554.GA8473@dhcp22.suse.cz>
  <20130422043939.GB25089@mtj.dyndns.org>
  <20130422151908.GF18286@dhcp22.suse.cz>
  <20130422155703.GC12543@htj.dyndns.org>
  <20130422162012.GI18286@dhcp22.suse.cz>
  <20130422183020.GF12543@htj.dyndns.org>
- <20130423092944.GA8001@dhcp22.suse.cz>
- <20130423170900.GH12543@htj.dyndns.org>
- <20130426115120.GG31157@dhcp22.suse.cz>
- <20130426183741.GA25940@mtj.dyndns.org>
+ <20130424214531.GA18686@cmpxchg.org>
+ <20130425003335.GA32353@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130426183741.GA25940-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130425003335.GA32353-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri 26-04-13 11:37:41, Tejun Heo wrote:
-> Hey,
+On Wed, Apr 24, 2013 at 05:33:35PM -0700, Tejun Heo wrote:
+> Hello, Johannes.
 > 
-> On Fri, Apr 26, 2013 at 01:51:20PM +0200, Michal Hocko wrote:
-> > Maybe I should have been more explicit about this but _yes I do agree_
-> > that a separate limit would work as well. I just do not want to
+> On Wed, Apr 24, 2013 at 05:45:31PM -0400, Johannes Weiner wrote:
+> > Historically soft limit meant prioritizing certain memcgs over others
+> > and the memcgs over their soft limit should experience relatively more
+> > reclaim pressure than the ones below their soft limit.
+> > 
+> > Now, if we go and say you are only reclaimed when you exceed your soft
+> > limit we would retain the prioritization aspect.  Groups in excess of
+> > their soft limits would still experience relatively more reclaim
+> > pressure than their well-behaved peers.  But it would have the nice
+> > side effect of acting more or less like a guarantee as well.
 > 
-> Heh, the point was more about what we shouldn't be doing, but, yeah,
-> it's good that we at least agree on something.  :)
+> But, at the same time, it has the not-so-nice side-effect of losing
+> the ability to express negative prioritization.  It isn't difficult to
+> imagine use cases where the system doesn't want to partition the whole
+> system into discrete cgroups but wants to limit the amount of
+> resources consumed by low-priority workloads.
 > 
-> > Anyway, I will think about cons and pros of the new limit. I think we
-> > shouldn't block the first 3 patches in the series which keep the current
-> > semantic and just change the internals to do the same thing. Do you
-> > agree?
+> Also, in the long-term, I really want cgroup to become something
+> generally useful and automatically configurable (optional of course)
+> by the base system according to the types of workloads.  For something
+> like that to be possible, the control knobs shouldn't be fiddly,
+> complex, or require full partitioning of the system.
 > 
-> As the merge window is coming right up, if it isn't something super
-> urgent, can we please hold it off until after the merge window?  It
-> would be really great if we can pin down the semantics of the knob
-> before doing anything. 
+> > I don't think this approach is as unreasonable as you make it out to
+> > be, but it does make things more complicated.  It could be argued that
+> > we should add a separate guarantee knob because two simple knobs might
+> > be better than a complicated one.
+> 
+> The problem that I see is that this is being done without clearing up
+> the definition of the knob.  The knob's role is being changed or at
+> least solidified into something which makes it inconsistent with
+> everything else in cgroup in a way which seems very reactive to me.
+> 
+> I can see such reactive customizations being useful in satisfying
+> certain specific use cases - google's primarily right now; however,
+> it's likely to come back and bite us when we want to do something
+> different or generic with cgroup.  It's gonna be something which ends
+> up being labeled as unusuable in other types of setups (e.g. where not
+> all workloads are put under active control or whatever) after causing
+> a lot of head-scratching and not-particularly-happy moments.  Cgroup
+> as a whole strongly needs consistency across its control knobs for it
+> to be generally useful.
+> 
+> Well, that and past frustrations over interface and implementations of
+> memcg, which seems to bear a lot of similarities with what's going on
+> now, probably have made me go over-board.  Sorry about that, but I
+> really hope memcg do better.
 
-I think that merging it into 3.10 would be too ambitious but I think
-this core code cleanup makes sense for future discussions so I would
-like to post it for -mm tree at least. The sooner it will be the better
-IMHO.
+I understand your frustration, I want to get it right as well before
+committing to anything.
 
-> Please.  I'll think / study more about it in the coming weeks.
+> > no single member is more at fault than the others.  I would expect if
+> > we added a guarantee knob, this would also mean that no individual
+> > memcg can be treated as being within their guaranteed memory if the
+> > hierarchy as a whole is in excess of its guarantee.
 > 
-> Thanks.
+> I disagree here.  It should be symmetrical to how hardlimit works.
+> Let's say there's one parent - P - and child - C.  For hardlimit, if P
+> is over limit, it exerts pressure on its subtree regardless of C, and,
+> if P is under limit, it doesn't affect C.
 > 
-> -- 
-> tejun
+> For guarantee / protection, it should work the same but in the
+> opposite direction.  If P is under limit, it should protect the
+> subtree from reclaim regardless of C.  If P is over limit, it
+> shouldn't affect C.
+> 
+> As I draw in the other reply to Michal, each knob should be a starting
+> point of a single range in the pre-defined direction and composition
+> of those configurations across hierarchy should result in intersection
+> of them.  I can't see any reason to deviate from that here.
+> 
+> IOW, protection control shouldn't care about generating memory
+> pressure.  That's the job of soft and hard limits, both of which
+> should apparently override protection.  That way, each control knob
+> becomes fully consistent within itself across the hierarchy and the
+> questions become those of how soft limit should override protection
+> rather than the semantics of soft limit itself.
+> 
+> > The root of the hierarchy represents the whole hierarchy.  Its memory
+> > usage is the combined memory usage of all members.  The limit set to
+> > the hierarchy root applies to the combined memory usage of the
+> > hierarchy.  Breaching that limit has consequences for the hierarchy as
+> > a whole.  Be it soft limit or guarantee.
+> > 
+> > This is how hierarchies have always worked and it allows limits to be
+> > layered and apply depending on the source of pressure:
+> 
+> That's definitely true for soft and hard limits but flipped for
+> guarantees and I think that's the primary source of confusion -
+> guarantee being overloaded onto softlimit.
+> 
+> >        root (physical memory = 32G)
+> >       /    \
+> >      A      B (hard limit = 25G, guarantee = 16G)
+> >     / \    / \
+> >    A1 A2  /   B2 (guarantee = 10G)
+> >          /
+> >         B1 (guarantee = 15G)
+> > 
+> > Remember that hard limits are usually overcommitted, so you allow B to
+> > use more of the fair share of memory when A does not need it, but you
+> > want to keep it capped to keep latency reasonable when A ramps up.
+> > 
+> > As long as B is hitting its own hard limit, you value B1's and B2's
+> > guarantees in the context of pressure local to the hierarchy; in the
+> > context of B having 25G worth of memory; in the context of B1
+> > competing with B2 over the memory allowed by B.
+> > 
+> > However, as soon as global reclaim kicks in, the context changes and
+> > the priorities shift.  Now, B does not have 25G anymore but only 16G
+> > *in its competition with A*.  We absolutely do not want to respect the
+> > guarantees made to B1 and B2.  Not only can they not be met anyway,
+> > but they are utterly meaningless at this point.  They were set with
+> > 25G in mind.
+> 
+> I find the configuration confusing.  What does it mean?  Let's say B
+> doesn't consume memory itself and B1 is inactive.  Does that mean B2
+> is guaranteed upto 16G?  Or is it that B2 is still guaranteed only
+> upto 10G?
 
--- 
-Michal Hocko
-SUSE Labs
+Both.
+
+Global memory pressure will leave B and all its children alone as long
+as their sum memory usage is below 16G.  If B2 is the only memory user
+in there, it means that it won't be reclaimed until it uses 16G.
+
+However, I would not call it a guarantee of 16G from B2's point of
+view, because it does not control B1's usage.
+
+> If former, what if the intention was just to prevent B's total going
+> past 16G and the configuration never meant to grant extra 6G to B2?
+> 
+> The latter makes more sense as softlimit, but what happens when B
+> itself consumes memory?  Is B's internal consumption guaranteed any
+> memory?  If so, what if the internal usage is mostly uninteresting and
+> the admin never meant them to get any guarantee and it unnecessarily
+> eats into B1's guarantee when it comes up?  If not, what happens when
+> B1 creates a sub-cgroup B11?  Do all internal usages of B1 lose the
+> guarantee?
+> 
+> If I'm not too confused, most of the confusions arise from the fact
+> that guarantee's specificity is towards max (as evidenced by its
+> default being zero) but composition through hierarchy happening in the
+> other direction (ie. guarantee in internal node exerts pressure
+> towards zero on its subtree).
+> 
+> Doesn't something like the following suit what you had in mind better?
+> 
+>  h: hardlimit, s: softlimit, g: guarantee
+> 
+>         root (physical memory = 32G)
+>        /    \
+>       A      B (h:25G, s:16G)
+>      / \    / \
+>     A1 A2  /   B2 (g:10G)
+>           /
+>          B1 (g:15G)
+
+No, because I do not want B1 to be guaranteed half of memory in case
+of global memory pressure, only in the case where B has 25G available.
+
+Also, a soft limit does not guarantee that everything below B is left
+alone as long as it is within 16G of memory.
+
+> It doesn't solve any of the execution issues arising from having to
+> enforce 16G limit over 10G and 15G guarnatees but there is no room for
+> misinterpreting the intention of the configuration.  You could say
+> that this is just a convenient case because it doesn't actually have
+> nesting of the same params.  Let's add one then.
+> 
+>         root (physical memory = 32G)
+>        /    \
+>       A      B (h:25G, s:16G g:15G)
+>      / \    / \
+>     A1 A2  /   B2 (g:10G)
+>           /
+>          B1 (g:15G)
+> 
+> If we follow the rule of composition by intersection, the
+> interpretation of B's guarantee is clear.  If B's subtree is under
+> 15G, regardless of individual usages of B1 and B2, they shouldn't feel
+> reclaim pressure.  When B's subtree goes over 15G, B1 and B2 will have
+> to fend off for themselves.  If the ones which are over their own
+> guarantee will feel the "normal" reclaim pressure; otherwise, they
+> will continue to evade reclaim.  When B's subtree goes over 16G,
+> someone in B's subtree have to pay, preferably the ones not guaranteed
+> anything first.
+
+Yes, and that's the "intention guessing" that I do not agree with.
+The guarantees of B1 and B2 were written for the 25G available to B
+without global pressure.  They mean "if B exceeds 25G, reclaim B2 if
+it exceeds 10G and reclaim B1 if it exceeds 15G".
+
+All of a sudden, your actual constraint is 16G.  I don't want to use
+the guarantees that were meant for a different memory situation as a
+hint to decide which group should be reclaimed first.
+
+Either we have separate limits for the 25G situation and the 16G
+situation or we need to express guarantees as a percentage of
+available memory.
+
+> > [ It may be conceivable that you want different guarantees for B1 and
+> >   B2 depending on where the pressure comes from.  One setting for when
+> >   the 25G limit applies, one setting when the 32G physical memory
+> >   limit applies.  Basically, every group would need a vector of
+> >   guarantee settings with one setting per ancestor.
+> 
+> I don't get this.  If a cgroup is under the guarantee limit and none
+> of its parents are under hard/softlimit, it shouldn't feel any
+> pressure.  If a cgroup ia above guarantee, it should feel the same
+> pressure everyone else in that subtree is subject to.  If any of the
+> ancestors has triggered soft / hard limit, it's gonna have to give up
+> pages pretty quickly.
+> 
+> >   That being said, I absolutely disagree with the idea of trying to
+> >   adhere to individual memcg guarantees in the first reclaim cycle,
+> >   regardless of context and then just ignore them on the second pass.
+> >   It's a horrible way to guess which context the admin had in mind. ]
+> 
+> I think there needs to be a way to avoid penalizing sub-cgroups under
+> guarnatee amount when there are siblings which can give out pages over
+> guarantee.  I don't think I'm following the "guessing the intention"
+> part.  Can you please elaborate?
+
+Hope this is explained above.
+
+> > Now, there is of course the other scenario in which the current
+> > hierarchical limit application can get in your way: when you give
+> > intermediate nodes their own memory.  Because then you may see the
+> > need to apply certain limits to that hierarchy root's local memory
+> > only instead of all memory in the hierarchy.  But once we open that
+> > door, you might expect this to be an option for every limit, where
+> > even the hard limit of a hierarchy root only applies to that group's
+> > local memory instead of the whole hierarchy.  I certainly do not want
+> > to apply hierarchy semantics for some limits and not for others.  But
+> > Google has basically asked for hierarchical hard limits and local soft
+> > limits / guarantees.
+> 
+> So, proportional controllers need this.  They need to be able to
+> configure the amount the tasks belonging to an inner node can consume
+> when competing against the children groups.  It isn't a particularly
+> pretty thing but a necessity given that we allow tasks and resource
+> consumptions in inner nodes.  I was wondering about this and asked
+> Michal whether anybody wants something like that and IIRC his answer
+> was negative.  Can you please expand on what google asked for?
+
+My understanding is that they have groups of jobs:
+
+       G1
+       /|\
+      / | \
+    J1 J2 J3
+
+When a job exits, its J group is removed and its leftover cache is
+reparented to the G group.  Obviously, they want that cache to be
+reclaimed over currently used job memory, but if they set the soft
+limit in G1 to a very low value, it means that this low soft limit
+applies to the G1 hierarchy as a whole.
+
+Michal's and my suggestion was that they instead move this cache over
+to another sibling group that is dedicated to collect left over cache,
+i.e. Jcache.  Then set the soft limit of this group to 0.
+
+OR do not delete the job groups, set their soft limits to 0, and reap
+the groups once memory usage in them drops to 0 (easy to do with the
+events interface we have that wake you up for memory watermark events).
+
+Both solutions, to me, sound so much simpler than starting to
+recognize and provide exclusive limits for local memory usage of inner
+nodes.
