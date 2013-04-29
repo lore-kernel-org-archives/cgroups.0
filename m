@@ -1,44 +1,60 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cpuset: fix compile warning when CONFIG_SMP=n
-Date: Sat, 27 Apr 2013 19:55:35 -0700
-Message-ID: <20130428025535.GA6569@htj.dyndns.org>
-References: <517C7F91.2030705@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: memcg: softlimit on internal nodes
+Date: Mon, 29 Apr 2013 17:27:52 +0200
+Message-ID: <20130429152752.GD1172@dhcp22.suse.cz>
+References: <20130421124554.GA8473@dhcp22.suse.cz>
+ <20130422043939.GB25089@mtj.dyndns.org>
+ <20130422151908.GF18286@dhcp22.suse.cz>
+ <20130422155703.GC12543@htj.dyndns.org>
+ <20130422162012.GI18286@dhcp22.suse.cz>
+ <20130422183020.GF12543@htj.dyndns.org>
+ <20130423092944.GA8001@dhcp22.suse.cz>
+ <20130423170900.GH12543@htj.dyndns.org>
+ <20130426115120.GG31157@dhcp22.suse.cz>
+ <20130426183741.GA25940@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=vGwh2Tnqb3wR2GRDYwvAYeOlhJe0ZkKnVF45eZV7jvU=;
-        b=h+OL2kFhTR0CP1KSVCUQCq2wUs+DKrLV/NWyVq0Oarr+xxxnzlPyv4Bc0C6hIvvG+g
-         MX+O+s11b5fy45t3jY/dTCagTFzzaNjfu4XgBSKjXCDDEGj5lA0coC0ipWtNx/ITxRau
-         eVykbKVaON6+y+VJ/NdueDOHpcOU8c8P/K3A/CPVZRCTTf7bSHJFsClTa0LmsdNET1Yd
-         z1YegNdqMk8//NOczOOH9UTTczZZ6LxxyFnSyDI7kJSl2CaoIvfzdUEQpcb+WkZSc8lw
-         LEIxcZzsrlzQm/kAvBYrv/XTRdKKQbShFhENLyTHnoW5Q1LBKnd3ERElu/U1ppEyeUvJ
-         EDTw==
 Content-Disposition: inline
-In-Reply-To: <517C7F91.2030705-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20130426183741.GA25940-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zhong <zhong-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Sun, Apr 28, 2013 at 09:46:57AM +0800, Li Zefan wrote:
-> Reported by Fengguang's kbuild test robot:
+On Fri 26-04-13 11:37:41, Tejun Heo wrote:
+> Hey,
 > 
-> kernel/cpuset.c:787: warning: 'generate_sched_domains' defined but not used
+> On Fri, Apr 26, 2013 at 01:51:20PM +0200, Michal Hocko wrote:
+> > Maybe I should have been more explicit about this but _yes I do agree_
+> > that a separate limit would work as well. I just do not want to
 > 
-> Introduced by commit e0e80a02e5701c8790bd348ab59edb154fbda60b
-> ("cpuset: use rebuild_sched_domains() in cpuset_hotplug_workfn()),
-> which removed generate_sched_domains() from cpuset_hotplug_workfn().
+> Heh, the point was more about what we shouldn't be doing, but, yeah,
+> it's good that we at least agree on something.  :)
 > 
-> Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > Anyway, I will think about cons and pros of the new limit. I think we
+> > shouldn't block the first 3 patches in the series which keep the current
+> > semantic and just change the internals to do the same thing. Do you
+> > agree?
+> 
+> As the merge window is coming right up, if it isn't something super
+> urgent, can we please hold it off until after the merge window?  It
+> would be really great if we can pin down the semantics of the knob
+> before doing anything. 
 
-Applied to cgroup/for-3.10.  Thanks.
+I think that merging it into 3.10 would be too ambitious but I think
+this core code cleanup makes sense for future discussions so I would
+like to post it for -mm tree at least. The sooner it will be the better
+IMHO.
+
+> Please.  I'll think / study more about it in the coming weeks.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
