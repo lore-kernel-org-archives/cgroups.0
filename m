@@ -1,37 +1,52 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 02/10] freezer: skip waking up tasks with PF_FREEZER_SKIP set
-Date: Tue, 30 Apr 2013 13:48:43 +0200
-Message-ID: <14549764.SU5BpuG0MO@vostro.rjw.lan>
-References: <1367271946-7239-1-git-send-email-ccross@android.com> <20130429220831.GC2395@htj.dyndns.org> <20130429221624.GD2395@htj.dyndns.org>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH v4 01/31] super: fix calculation of shrinkable objects
+ for small numbers
+Date: Tue, 30 Apr 2013 14:03:30 +0100
+Message-ID: <20130430130330.GA6415@suse.de>
+References: <1367018367-11278-1-git-send-email-glommer@openvz.org>
+ <1367018367-11278-2-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130429221624.GD2395@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1367018367-11278-2-git-send-email-glommer@openvz.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Colin Cross <ccross@android.com>, Linux PM list <linux-pm@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve@android.com>, Li Zefan <lizefan@huawei.com>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, containers@lists.linux-foundation.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Monday, April 29, 2013 03:16:24 PM Tejun Heo wrote:
-> On Mon, Apr 29, 2013 at 03:08:31PM -0700, Tejun Heo wrote:
-> > > spent freezing by a factor of 5.  It will have a similar effect on a
-> > > non-Android system, although those generally don't care about
-> > > suspend/resume optimization.
-> > 
-> > Yeah, if it's something which makes actual difference rather than
-> > "this seems to be a good idea" thing, sure, let's find a way.
+On Sat, Apr 27, 2013 at 03:18:57AM +0400, Glauber Costa wrote:
+> The sysctl knob sysctl_vfs_cache_pressure is used to determine which
+> percentage of the shrinkable objects in our cache we should actively try
+> to shrink.
 > 
-> And a probably better approach would be rolling should_skip test into
-> freeze_task() with a comment explaining the interlocking rather than
-> adding should_skip test in its callers.
+> It works great in situations in which we have many objects (at least
+> more than 100), because the aproximation errors will be negligible. But
+> if this is not the case, specially when total_objects < 100, we may end
+> up concluding that we have no objects at all (total / 100 = 0,  if total
+> < 100).
+> 
+> This is certainly not the biggest killer in the world, but may matter in
+> very low kernel memory situations.
+> 
+> [ v2: fix it for all occurrences of sysctl_vfs_cache_pressure ]
+> 
+> Signed-off-by: Glauber Costa <glommer@openvz.org>
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> CC: Dave Chinner <david@fromorbit.com>
+> CC: "Theodore Ts'o" <tytso@mit.edu>
+> CC: Al Viro <viro@zeniv.linux.org.uk>
 
-Agreed.
-
-Thanks,
-Rafael
-
+Acked-by: Mel Gorman <mgorman@suse.de>
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Mel Gorman
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
