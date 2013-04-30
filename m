@@ -1,58 +1,75 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v4 02/31] vmscan: take at least one pass with shrinkers
-Date: Tue, 30 Apr 2013 17:31:32 +0400
-Message-ID: <517FC7B4.5030101@parallels.com>
-References: <1367018367-11278-1-git-send-email-glommer@openvz.org> <1367018367-11278-3-git-send-email-glommer@openvz.org> <20130430132239.GB6415@suse.de>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH v4 03/31] dcache: convert dentry_stat.nr_unused to
+ per-cpu counters
+Date: Tue, 30 Apr 2013 14:37:16 +0100
+Message-ID: <20130430133716.GC6415@suse.de>
+References: <1367018367-11278-1-git-send-email-glommer@openvz.org>
+ <1367018367-11278-4-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130430132239.GB6415@suse.de>
+Content-Disposition: inline
+In-Reply-To: <1367018367-11278-4-git-send-email-glommer@openvz.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mel Gorman <mgorman@suse.de>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>
 
-On 04/30/2013 05:22 PM, Mel Gorman wrote:
-> On Sat, Apr 27, 2013 at 03:18:58AM +0400, Glauber Costa wrote:
->> In very low free kernel memory situations, it may be the case that we
->> have less objects to free than our initial batch size. If this is the
->> case, it is better to shrink those, and open space for the new workload
->> then to keep them and fail the new allocations.
->>
->> More specifically, this happens because we encode this in a loop with
->> the condition: "while (total_scan >= batch_size)". So if we are in such
->> a case, we'll not even enter the loop.
->>
->> This patch modifies turns it into a do () while {} loop, that will
->> guarantee that we scan it at least once, while keeping the behaviour
->> exactly the same for the cases in which total_scan > batch_size.
->>
->> Signed-off-by: Glauber Costa <glommer@openvz.org>
->> Reviewed-by: Dave Chinner <david@fromorbit.com>
->> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
->> CC: "Theodore Ts'o" <tytso@mit.edu>
->> CC: Al Viro <viro@zeniv.linux.org.uk>
+On Sat, Apr 27, 2013 at 03:18:59AM +0400, Glauber Costa wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> There are two cases where this *might* cause a problem and worth keeping
-> an eye out for.
+> Before we split up the dcache_lru_lock, the unused dentry counter
+> needs to be made independent of the global dcache_lru_lock. Convert
+> it to per-cpu counters to do this.
 > 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/dcache.c | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/dcache.c b/fs/dcache.c
+> index e689268..8df1cd9 100644
+> --- a/fs/dcache.c
+> +++ b/fs/dcache.c
+> @@ -118,6 +118,7 @@ struct dentry_stat_t dentry_stat = {
+>  };
+>  
+>  static DEFINE_PER_CPU(unsigned int, nr_dentry);
+> +static DEFINE_PER_CPU(unsigned int, nr_dentry_unused);
+>  
+>  #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
+>  static int get_nr_dentry(void)
+> @@ -129,10 +130,20 @@ static int get_nr_dentry(void)
+>  	return sum < 0 ? 0 : sum;
+>  }
+>  
+> +static int get_nr_dentry_unused(void)
+> +{
+> +	int i;
+> +	int sum = 0;
+> +	for_each_possible_cpu(i)
+> +		sum += per_cpu(nr_dentry_unused, i);
+> +	return sum < 0 ? 0 : sum;
+> +}
+> +
 
-Any test case that you envision that could help bringing those issues
-forward should they exist ? (aside from getting it into upstream trees
-early?)
+I was going to raise questions on the use of for_each_possible_cpu() and
+ask why it was not for_each_online_cpu() but I see now that it has been
+discussed already -- it's to avoid lost counters from offlined CPUs
+without having to cope with CPU hotplug just to keep a proc handler
+happy.
 
-> 
-> Neither potential issue are the fault of your patch so I'm not going
-> to nack. However, bear in mind that we should watch out for bugs where
-> processes stall making forward progress because they are constantly
-> reallocating inodes or bugs like graphics stalls because their objects
-> keep getting fully reclaimed as only a small number exist.
-> 
-> I suspect that you need this patch because it's very reasonable for a memcg
-> to have slabs with tiny numbers of objects you want to reclaim.
+A comment either here or in the changelog saying that
+for_each_possible_cpu() is deliberate would not hurt in case someone
+tries to "fix" this but it's no big deal so
 
-Precisely.
+Acked-by: Mel Gorman <mgorman@suse.de>
+
+-- 
+Mel Gorman
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
