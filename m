@@ -1,78 +1,68 @@
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH v4 03/31] dcache: convert dentry_stat.nr_unused to
- per-cpu counters
-Date: Tue, 30 Apr 2013 14:37:16 +0100
-Message-ID: <20130430133716.GC6415@suse.de>
+From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH v4 04/31] dentry: move to per-sb LRU locks
+Date: Tue, 30 Apr 2013 15:01:44 +0100
+Message-ID: <20130430140144.GD6415@suse.de>
 References: <1367018367-11278-1-git-send-email-glommer@openvz.org>
- <1367018367-11278-4-git-send-email-glommer@openvz.org>
+ <1367018367-11278-5-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1367018367-11278-4-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1367018367-11278-5-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@openvz.org>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Sat, Apr 27, 2013 at 03:18:59AM +0400, Glauber Costa wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Sat, Apr 27, 2013 at 03:19:00AM +0400, Glauber Costa wrote:
+> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
-> Before we split up the dcache_lru_lock, the unused dentry counter
-> needs to be made independent of the global dcache_lru_lock. Convert
-> it to per-cpu counters to do this.
+> With the dentry LRUs being per-sb structures, there is no real need
+> for a global dentry_lru_lock. The locking can be made more
+> fine-grained by moving to a per-sb LRU lock, isolating the LRU
+> operations of different filesytsems completely from each other.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/dcache.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/dcache.c b/fs/dcache.c
-> index e689268..8df1cd9 100644
-> --- a/fs/dcache.c
-> +++ b/fs/dcache.c
-> @@ -118,6 +118,7 @@ struct dentry_stat_t dentry_stat = {
->  };
+> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+
+Acked-by: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+
+But one comment below
+
+> @@ -81,7 +81,6 @@
+>  int sysctl_vfs_cache_pressure __read_mostly = 100;
+>  EXPORT_SYMBOL_GPL(sysctl_vfs_cache_pressure);
 >  
->  static DEFINE_PER_CPU(unsigned int, nr_dentry);
-> +static DEFINE_PER_CPU(unsigned int, nr_dentry_unused);
+> -static __cacheline_aligned_in_smp DEFINE_SPINLOCK(dcache_lru_lock);
+>  __cacheline_aligned_in_smp DEFINE_SEQLOCK(rename_lock);
 >  
->  #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
->  static int get_nr_dentry(void)
-> @@ -129,10 +130,20 @@ static int get_nr_dentry(void)
->  	return sum < 0 ? 0 : sum;
->  }
->  
-> +static int get_nr_dentry_unused(void)
-> +{
-> +	int i;
-> +	int sum = 0;
-> +	for_each_possible_cpu(i)
-> +		sum += per_cpu(nr_dentry_unused, i);
-> +	return sum < 0 ? 0 : sum;
-> +}
+>  EXPORT_SYMBOL(rename_lock);
+
+It made sense to cache-align these locks because you don't want two
+unrelated global locks causing each other to bounce but ....
+
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 8d47c9a..df3174d 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1263,7 +1263,9 @@ struct super_block {
+>  	struct list_head	s_files;
+>  #endif
+>  	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
+> -	/* s_dentry_lru, s_nr_dentry_unused protected by dcache.c lru locks */
 > +
+> +	/* s_dentry_lru_lock protects s_dentry_lru and s_nr_dentry_unused */
+> +	spinlock_t		s_dentry_lru_lock ____cacheline_aligned_in_smp;
+>  	struct list_head	s_dentry_lru;	/* unused dentry lru */
+>  	int			s_nr_dentry_unused;	/* # of dentry on lru */
+>  
 
-I was going to raise questions on the use of for_each_possible_cpu() and
-ask why it was not for_each_online_cpu() but I see now that it has been
-discussed already -- it's to avoid lost counters from offlined CPUs
-without having to cope with CPU hotplug just to keep a proc handler
-happy.
-
-A comment either here or in the changelog saying that
-for_each_possible_cpu() is deliberate would not hurt in case someone
-tries to "fix" this but it's no big deal so
-
-Acked-by: Mel Gorman <mgorman@suse.de>
+It's less compelling to align within a structure like this. If move the
+lock and the fields it protects to a read-mostly section then there
+should be no need to cache-align the lock, create a large hole in the
+struct and grow the size of struct super_block unnecessarily.
 
 -- 
 Mel Gorman
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
