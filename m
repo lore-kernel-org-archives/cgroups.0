@@ -1,115 +1,128 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 28/31] blk-throttle: make tg_dispatch_one_bio() ready for hierarchy
-Date: Wed,  1 May 2013 17:39:46 -0700
-Message-ID: <1367455189-6957-29-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/31] blk-throttle: simplify throtl_grp flag handling
+Date: Wed,  1 May 2013 17:39:30 -0700
+Message-ID: <1367455189-6957-13-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=RKEMAe/SUYE+BucPMMt80XBMNehJymX+2LjbWlM1U+U=;
-        b=etSchBapd8+3pEZqgwOPESRnog4EcijPOA5aKgWBjchUsh8Hsq1XgyArvNMdYpGLza
-         6OWFDMwyJhwf3ZszIEz7z+U4s6IY0Bvv4ZT4SW+Qrd4WmVV4eiLajKXDJcT22Up7RDWZ
-         2mfEbX0IbSFR+upe9BODtjcztqWablbOhwKkUBUFpuIrRy2njfMEzj162UQ/w1S/b8X3
-         SQL5kjEhgzodQQeOfguQhEeiFgHB8hlhBow9cZ3eRY3InrEvPeqqCScuBbZ2Zyxf+vsL
-         LixxYuBsKu14F81tbhd6jAsy1tzkOduQkfMzIs4IFXuBxbYwGGRvy7EY3uTxlFEs/9Yj
-         cg1Q==
-In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+	:in-reply-to:references;
+	bh=2/qKXPw+wm3rlw+HJRWTC1BnWgpz7JFDmjvaKB0MRUA=;
+	b=YwU/jj1aI4f6625YJr9qrXOwe8ciHTkY3TTfMsFqRwTuXQcKNl0y2oatAhy0I+DeRD
+	qs1/QAIrNgytUPDt7mpvW3esIcqoN+nIlr7FusoFkEbW0uzc8UI/y/LohWuqCd/7Nf4v
+	dMxSMwjsM0WMKVpvUGCb47CSr/xSyF55D8FZwWHH6Zs/Ljm6OP578p3gHSnEf0ITQhxi
+	Wg8H9DqHodWpJZHRTrUp142mnNYO+LyQyrrAXbDX2oZj5wyDK4wXsBbmk1d8QYHbhfZl
+	EILlb41Xlcge5uGU0bL4J900kxAYBa1E3B5z0OOvOKwPDuJ+ajuCWmqioF38ZSKXgkHG
+	CILw==
+In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-tg_dispatch_one_bio() currently assumes that the parent_sq is the top
-level one and the bio being dispatched is ready to be issued; however,
-this assumption will be wrong with proper hierarchy support.  This
-patch makes the following changes to make tg_dispatch_on_bio() ready
-for hiearchy.
+blk-throttle is still using function-defining macros to define flag
+handling functions, which went out style at least a decade ago.
 
-* throtl_data->nr_queued[] is incremented in blk_throtl_bio() instead
-  of throtl_add_bio_tg() so that throtl_add_bio_tg() can be used to
-  transfer a bio from a child tg to its parent.
+Just define the flag as bitmask and use direct bit operations.
 
-* tg_dispatch_one_bio() is updated to distinguish whether its parent
-  is another throtl_grp or the throtl_data.  If former, the bio is
-  transferred to the parent throtl_grp using throtl_add_bio_tg().  If
-  latter, the bio is ready to be issued and put on the top-level
-  service_queue's bio_lists[] and throtl_data->nr_queued is
-  decremented.
-
-As all throtl_grps currently have the top level service_queue as their
-->parent_sq, this patch in itself doesn't make any behavior
-difference.
+This patch doesn't make any functional changes.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-throttle.c | 28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
+ block/blk-throttle.c | 34 +++++++++-------------------------
+ 1 file changed, 9 insertions(+), 25 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 99e1e78..367c269 100644
+index 6723ca2..fc55dda 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -821,7 +821,6 @@ static void throtl_add_bio_tg(struct bio *bio, struct throtl_grp *tg)
- 	/* Take a bio reference on tg */
- 	blkg_get(tg_to_blkg(tg));
- 	sq->nr_queued[rw]++;
--	tg->td->nr_queued[rw]++;
- 	throtl_enqueue_tg(tg);
+@@ -36,6 +36,10 @@ struct throtl_service_queue {
+ #define THROTL_SERVICE_QUEUE_INITIALIZER				\
+ 	(struct throtl_service_queue){ .pending_tree = RB_ROOT }
+ 
++enum tg_state_flags {
++	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
++};
++
+ #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
+ 
+ /* Per-cpu group stats */
+@@ -136,26 +140,6 @@ static inline struct throtl_grp *td_root_tg(struct throtl_data *td)
+ 	return blkg_to_tg(td->queue->root_blkg);
  }
  
-@@ -852,20 +851,34 @@ static void tg_update_disptime(struct throtl_grp *tg)
- static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
- {
- 	struct throtl_service_queue *sq = &tg->service_queue;
-+	struct throtl_service_queue *parent_sq = sq->parent_sq;
-+	struct throtl_grp *parent_tg = sq_to_tg(parent_sq);
- 	struct bio *bio;
- 
- 	bio = bio_list_pop(&sq->bio_lists[rw]);
- 	sq->nr_queued[rw]--;
--	/* Drop bio reference on blkg */
--	blkg_put(tg_to_blkg(tg));
+-enum tg_state_flags {
+-	THROTL_TG_FLAG_on_rr = 0,	/* on round-robin busy list */
+-};
 -
--	BUG_ON(tg->td->nr_queued[rw] <= 0);
--	tg->td->nr_queued[rw]--;
+-#define THROTL_TG_FNS(name)						\
+-static inline void throtl_mark_tg_##name(struct throtl_grp *tg)		\
+-{									\
+-	(tg)->flags |= (1 << THROTL_TG_FLAG_##name);			\
+-}									\
+-static inline void throtl_clear_tg_##name(struct throtl_grp *tg)	\
+-{									\
+-	(tg)->flags &= ~(1 << THROTL_TG_FLAG_##name);			\
+-}									\
+-static inline int throtl_tg_##name(const struct throtl_grp *tg)		\
+-{									\
+-	return ((tg)->flags & (1 << THROTL_TG_FLAG_##name)) != 0;	\
+-}
+-
+-THROTL_TG_FNS(on_rr);
+-
+ #define throtl_log_tg(td, tg, fmt, args...)	do {			\
+ 	char __pbuf[128];						\
+ 									\
+@@ -369,25 +353,25 @@ static void __throtl_enqueue_tg(struct throtl_data *td, struct throtl_grp *tg)
+ 	struct throtl_service_queue *sq = &td->service_queue;
  
- 	throtl_charge_bio(tg, bio);
--	bio_list_add(&sq->parent_sq->bio_lists[rw], bio);
-+
-+	/*
-+	 * If our parent is another tg, we just need to transfer @bio to
-+	 * the parent using throtl_add_bio_tg().  If our parent is
-+	 * @td->service_queue, @bio is ready to be issued.  Put it on its
-+	 * bio_lists[] and decrease total number queued.  The caller is
-+	 * responsible for issuing these bios.
-+	 */
-+	if (parent_tg) {
-+		throtl_add_bio_tg(bio, parent_tg);
-+	} else {
-+		bio_list_add(&parent_sq->bio_lists[rw], bio);
-+		BUG_ON(tg->td->nr_queued[rw] <= 0);
-+		tg->td->nr_queued[rw]--;
-+	}
- 
- 	throtl_trim_slice(tg, rw);
-+
-+	/* @bio is transferred to parent, drop its blkg reference */
-+	blkg_put(tg_to_blkg(tg));
+ 	tg_service_queue_add(sq, tg);
+-	throtl_mark_tg_on_rr(tg);
++	tg->flags |= THROTL_TG_PENDING;
+ 	sq->nr_pending++;
  }
  
- static int throtl_dispatch_tg(struct throtl_grp *tg)
-@@ -1283,6 +1296,7 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
- 		   sq->nr_queued[READ], sq->nr_queued[WRITE]);
+ static void throtl_enqueue_tg(struct throtl_data *td, struct throtl_grp *tg)
+ {
+-	if (!throtl_tg_on_rr(tg))
++	if (!(tg->flags & THROTL_TG_PENDING))
+ 		__throtl_enqueue_tg(td, tg);
+ }
  
- 	bio_associate_current(bio);
-+	tg->td->nr_queued[rw]++;
- 	throtl_add_bio_tg(bio, tg);
- 	throttled = true;
+ static void __throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
+ {
+ 	throtl_rb_erase(&tg->rb_node, &td->service_queue);
+-	throtl_clear_tg_on_rr(tg);
++	tg->flags &= ~THROTL_TG_PENDING;
+ }
  
+ static void throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
+ {
+-	if (throtl_tg_on_rr(tg))
++	if (tg->flags & THROTL_TG_PENDING)
+ 		__throtl_dequeue_tg(td, tg);
+ }
+ 
+@@ -964,7 +948,7 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	throtl_start_new_slice(td, tg, 0);
+ 	throtl_start_new_slice(td, tg, 1);
+ 
+-	if (throtl_tg_on_rr(tg)) {
++	if (tg->flags & THROTL_TG_PENDING) {
+ 		tg_update_disptime(td, tg);
+ 		throtl_schedule_next_dispatch(td);
+ 	}
 -- 
 1.8.1.4
