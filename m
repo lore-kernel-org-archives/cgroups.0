@@ -1,128 +1,94 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 12/31] blk-throttle: simplify throtl_grp flag handling
-Date: Wed,  1 May 2013 17:39:30 -0700
-Message-ID: <1367455189-6957-13-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 27/31] blk-throttle: make blk_throtl_bio() ready for hierarchy
+Date: Wed,  1 May 2013 17:39:45 -0700
+Message-ID: <1367455189-6957-28-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+         :in-reply-to:references;
+        bh=BBezV9ty5Op1B1yMBe8McEtD4l1p+OY38x+FgXVBAGs=;
+        b=0hFP4t8NSvgbGzmeLhIecKPQ2O/fKaTqPPQvjKRL1i6afUkOVO8CyhWlNX65iQX96m
+         GVxNVX8GFAzMmyb6bGFfV4LnNbu5KFzV4INdAdLNOGNXio1JKdoqoCCIMN1fZSHPkY3e
+         GWXf/pF9D0hkrVUamof1UQLiNGkwhxNZLmW4T0ncXUPPwpbyT+7OsIpTzMEbmoN5xqL0
+         U+UamtCCDp6Ddeq3F0C5DfN/KSQm86MJrwQImT0gnoc8CD4g5xDZt5L3NsQaLc9DkF6C
+         K0C+b8j+69ntiPXqL4tNX4zHN4Or9vmBriUCYGAbWKa6ayaTyHa5VXb6igK/I5/j3v7L
+         YhAA==
+In-Reply-To: <1367455189-6957-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-	:in-reply-to:references;
-	bh=2/qKXPw+wm3rlw+HJRWTC1BnWgpz7JFDmjvaKB0MRUA=;
-	b=YwU/jj1aI4f6625YJr9qrXOwe8ciHTkY3TTfMsFqRwTuXQcKNl0y2oatAhy0I+DeRD
-	qs1/QAIrNgytUPDt7mpvW3esIcqoN+nIlr7FusoFkEbW0uzc8UI/y/LohWuqCd/7Nf4v
-	dMxSMwjsM0WMKVpvUGCb47CSr/xSyF55D8FZwWHH6Zs/Ljm6OP578p3gHSnEf0ITQhxi
-	Wg8H9DqHodWpJZHRTrUp142mnNYO+LyQyrrAXbDX2oZj5wyDK4wXsBbmk1d8QYHbhfZl
-	EILlb41Xlcge5uGU0bL4J900kxAYBa1E3B5z0OOvOKwPDuJ+ajuCWmqioF38ZSKXgkHG
-	CILw==
-In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
 
-blk-throttle is still using function-defining macros to define flag
-handling functions, which went out style at least a decade ago.
+Currently, blk_throtl_bio() issues the passed in bio directly if it's
+within limits of its associated tg (throtl_grp).  This behavior
+becomes incorrect with hierarchy support as the bio should be
+accounted to and throttled by the ancestor throtl_grps too.
 
-Just define the flag as bitmask and use direct bit operations.
+This patch makes the direct issue path of blk_throtl_bio() to loop
+until it reaches the top-level service_queue or gets throttled.  If
+the former, the bio can be issued directly; otherwise, it gets queued
+at the first layer it was above limits.
 
-This patch doesn't make any functional changes.
+As tg->parent_sq is always the top-level service queue currently, this
+patch in itself doesn't make any behavior differences.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-throttle.c | 34 +++++++++-------------------------
- 1 file changed, 9 insertions(+), 25 deletions(-)
+ block/blk-throttle.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 6723ca2..fc55dda 100644
+index 1080563..99e1e78 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -36,6 +36,10 @@ struct throtl_service_queue {
- #define THROTL_SERVICE_QUEUE_INITIALIZER				\
- 	(struct throtl_service_queue){ .pending_tree = RB_ROOT }
+@@ -1239,12 +1239,16 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
  
-+enum tg_state_flags {
-+	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
-+};
+ 	sq = &tg->service_queue;
+ 
+-	/* throtl is FIFO - if other bios are already queued, should queue */
+-	if (sq->nr_queued[rw])
+-		goto queue_bio;
++	while (true) {
++		/* throtl is FIFO - if bios are already queued, should queue */
++		if (sq->nr_queued[rw])
++			break;
+ 
+-	/* Bio is with-in rate limit of group */
+-	if (tg_may_dispatch(tg, bio, NULL)) {
++		/* if above limits, break to queue */
++		if (!tg_may_dispatch(tg, bio, NULL))
++			break;
 +
- #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
++		/* within limits, let's charge and dispatch directly */
+ 		throtl_charge_bio(tg, bio);
  
- /* Per-cpu group stats */
-@@ -136,26 +140,6 @@ static inline struct throtl_grp *td_root_tg(struct throtl_data *td)
- 	return blkg_to_tg(td->queue->root_blkg);
- }
- 
--enum tg_state_flags {
--	THROTL_TG_FLAG_on_rr = 0,	/* on round-robin busy list */
--};
--
--#define THROTL_TG_FNS(name)						\
--static inline void throtl_mark_tg_##name(struct throtl_grp *tg)		\
--{									\
--	(tg)->flags |= (1 << THROTL_TG_FLAG_##name);			\
--}									\
--static inline void throtl_clear_tg_##name(struct throtl_grp *tg)	\
--{									\
--	(tg)->flags &= ~(1 << THROTL_TG_FLAG_##name);			\
--}									\
--static inline int throtl_tg_##name(const struct throtl_grp *tg)		\
--{									\
--	return ((tg)->flags & (1 << THROTL_TG_FLAG_##name)) != 0;	\
--}
--
--THROTL_TG_FNS(on_rr);
--
- #define throtl_log_tg(td, tg, fmt, args...)	do {			\
- 	char __pbuf[128];						\
- 									\
-@@ -369,25 +353,25 @@ static void __throtl_enqueue_tg(struct throtl_data *td, struct throtl_grp *tg)
- 	struct throtl_service_queue *sq = &td->service_queue;
- 
- 	tg_service_queue_add(sq, tg);
--	throtl_mark_tg_on_rr(tg);
-+	tg->flags |= THROTL_TG_PENDING;
- 	sq->nr_pending++;
- }
- 
- static void throtl_enqueue_tg(struct throtl_data *td, struct throtl_grp *tg)
- {
--	if (!throtl_tg_on_rr(tg))
-+	if (!(tg->flags & THROTL_TG_PENDING))
- 		__throtl_enqueue_tg(td, tg);
- }
- 
- static void __throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
- {
- 	throtl_rb_erase(&tg->rb_node, &td->service_queue);
--	throtl_clear_tg_on_rr(tg);
-+	tg->flags &= ~THROTL_TG_PENDING;
- }
- 
- static void throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
- {
--	if (throtl_tg_on_rr(tg))
-+	if (tg->flags & THROTL_TG_PENDING)
- 		__throtl_dequeue_tg(td, tg);
- }
- 
-@@ -964,7 +948,7 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
- 	throtl_start_new_slice(td, tg, 0);
- 	throtl_start_new_slice(td, tg, 1);
- 
--	if (throtl_tg_on_rr(tg)) {
-+	if (tg->flags & THROTL_TG_PENDING) {
- 		tg_update_disptime(td, tg);
- 		throtl_schedule_next_dispatch(td);
+ 		/*
+@@ -1259,10 +1263,19 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 		 * So keep on trimming slice even if bio is not queued.
+ 		 */
+ 		throtl_trim_slice(tg, rw);
+-		goto out_unlock;
++
++		/*
++		 * @bio passed through this layer without being throttled.
++		 * Climb up the ladder.  If we''re already at the top, it
++		 * can be executed directly.
++		 */
++		sq = sq->parent_sq;
++		tg = sq_to_tg(sq);
++		if (!tg)
++			goto out_unlock;
  	}
+ 
+-queue_bio:
++	/* out-of-limit, queue to @tg */
+ 	throtl_log(sq, "[%c] bio. bdisp=%llu sz=%u bps=%llu iodisp=%u iops=%u queued=%d/%d",
+ 		   rw == READ ? 'R' : 'W',
+ 		   tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
 -- 
 1.8.1.4
