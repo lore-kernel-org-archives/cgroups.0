@@ -1,133 +1,55 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 04/31] blkcg: invoke blkcg_policy->pd_init() after parent is
-	linked
-Date: Wed,  1 May 2013 17:39:22 -0700
-Message-ID: <1367455189-6957-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/31] blk-throttle: remove spurious throtl_enqueue_tg() call from throtl_select_dispatch()
+Date: Wed,  1 May 2013 17:39:24 -0700
+Message-ID: <1367455189-6957-7-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+         :in-reply-to:references;
+        bh=DDNupDLiQGdr0igBraZLcoPklNvyf6LheD1MuhyGCA0=;
+        b=VMS3rvgRjlByDYxRLIfGOOZu0CnRJJ+p9yDXYRba/8MONdWJ1ibhWk1f8Tkn7TA9Iv
+         mpG+yI4P2mlK6T0Og2Dv+nzV81ENAMKf8FTA+9JBU1MS9rQPGHF4uSqcf754XrhW5Nr6
+         ADcpXDfreLuMrTJtkUmxpGl5FGoJIdkvafN8A73SHuSfKD2CeXbzxHXGP+6I3LY/acMJ
+         dY+5GBulA+rdzy96YztDw1dD7R60lNiF6sw07kocxrqFCgneJkuLvEVssiEAoHGhaUaH
+         b4lrbFRZdGLbr8EDjoX/q1FIaRuicCpnqDO0O8s5tYCDvqxB6xf/xQDWTa2pTC5qpkw+
+         /nnQ==
+In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-	:in-reply-to:references;
-	bh=odSp6k7ccK2XPwz3dlJaqXjEmer14RNWk38bP2qBPho=;
-	b=r8jp6N+4k365HTt+Hw2gpwKY+sg5OFygIaZV4KuhUia3d6gObPDOhd3sBMb98ytdZt
-	9Me7Ti4YAOr9fPKKzgEMuTRkPlMikB0cUbDhWxtEHzl6Mh525JOLX3uu6Ekltocx6ex6
-	L0wEhaD7hHkurKvAPJhPxiU/9/SFEh02RjFEBZkAaNdcPfHIVjNuSorZoVLdqLzxt2pO
-	V1Xl0/i1+/ipPC3w/MyLoPydghgU10US5oJy2Q98nlz1aR+t0nOOGVkabJTl8LnCAuGz
-	UfnipZm9BiuWjlZTBKZKMQyfTdgMb9zMve5qHAP2Tm2wi6dhhqEcl7ghK+t4tnsYepny
-	6GCQ==
-In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Currently, when creating a new blkcg_gq, each policy's pd_init_fn() is
-invoked in blkg_alloc() before the parent is linked.  This makes it
-difficult for policies to perform initializations which are dependent
-on the parent.
+throtl_select_dispatch() calls throtl_enqueue_tg() right after
+tg_update_disptime(), which always calls the function anyway.  The
+call is, while harmless, unnecessary.  Remove it.
 
-This patch moves pd_init_fn() invocations to blkg_create() after the
-parent blkg is linked where the new blkg is fully initialized.  As
-this means that blkg_free() can't assume that pd's are initialized,
-pd_exit_fn() invocations are moved to __blkg_release().  This
-guarantees that pd_exit_fn() is also invoked with fully initialized
-blkgs with valid parent pointers.
-
-This will help implementing hierarchy support in blk-throttle.
+This patch doesn't introduce any behavior difference.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c | 39 ++++++++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 17 deletions(-)
+ block/blk-throttle.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 6b10d5c..f13cf95 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -51,18 +51,8 @@ static void blkg_free(struct blkcg_gq *blkg)
- 	if (!blkg)
- 		return;
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 3114622..3960787 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -816,10 +816,8 @@ static int throtl_select_dispatch(struct throtl_data *td, struct bio_list *bl)
  
--	for (i = 0; i < BLKCG_MAX_POLS; i++) {
--		struct blkcg_policy *pol = blkcg_policy[i];
--		struct blkg_policy_data *pd = blkg->pd[i];
--
--		if (!pd)
--			continue;
--
--		if (pol && pol->pd_exit_fn)
--			pol->pd_exit_fn(blkg);
--
--		kfree(pd);
--	}
-+	for (i = 0; i < BLKCG_MAX_POLS; i++)
-+		kfree(blkg->pd[i]);
+ 		nr_disp += throtl_dispatch_tg(td, tg, bl);
  
- 	blk_exit_rl(&blkg->rl);
- 	kfree(blkg);
-@@ -114,10 +104,6 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 		blkg->pd[i] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = i;
--
--		/* invoke per-policy init */
--		if (pol->pd_init_fn)
--			pol->pd_init_fn(blkg);
- 	}
+-		if (tg->nr_queued[0] || tg->nr_queued[1]) {
++		if (tg->nr_queued[0] || tg->nr_queued[1])
+ 			tg_update_disptime(td, tg);
+-			throtl_enqueue_tg(td, tg);
+-		}
  
- 	return blkg;
-@@ -214,7 +200,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	}
- 	blkg = new_blkg;
- 
--	/* link parent and insert */
-+	/* link parent */
- 	if (blkcg_parent(blkcg)) {
- 		blkg->parent = __blkg_lookup(blkcg_parent(blkcg), q, false);
- 		if (WARN_ON_ONCE(!blkg->parent)) {
-@@ -224,6 +210,15 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 		blkg_get(blkg->parent);
- 	}
- 
-+	/* invoke per-policy init */
-+	for (i = 0; i < BLKCG_MAX_POLS; i++) {
-+		struct blkcg_policy *pol = blkcg_policy[i];
-+
-+		if (blkg->pd[i] && pol->pd_init_fn)
-+			pol->pd_init_fn(blkg);
-+	}
-+
-+	/* insert */
- 	spin_lock(&blkcg->lock);
- 	ret = radix_tree_insert(&blkcg->blkg_tree, q->id, blkg);
- 	if (likely(!ret)) {
-@@ -381,6 +376,16 @@ static void blkg_rcu_free(struct rcu_head *rcu_head)
- 
- void __blkg_release(struct blkcg_gq *blkg)
- {
-+	int i;
-+
-+	/* tell policies that this one is being freed */
-+	for (i = 0; i < BLKCG_MAX_POLS; i++) {
-+		struct blkcg_policy *pol = blkcg_policy[i];
-+
-+		if (blkg->pd[i] && pol->pd_exit_fn)
-+			pol->pd_exit_fn(blkg);
-+	}
-+
- 	/* release the blkcg and parent blkg refs this blkg has been holding */
- 	css_put(&blkg->blkcg->css);
- 	if (blkg->parent)
+ 		if (nr_disp >= throtl_quantum)
+ 			break;
 -- 
 1.8.1.4
