@@ -1,186 +1,123 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 07/31] blk-throttle: removed deferred config application
-	mechanism
-Date: Wed,  1 May 2013 17:39:25 -0700
-Message-ID: <1367455189-6957-8-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 29/31] blk-throttle: make throtl_pending_timer_fn() ready for hierarchy
+Date: Wed,  1 May 2013 17:39:47 -0700
+Message-ID: <1367455189-6957-30-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+         :in-reply-to:references;
+        bh=jNRgvu5ckImBFltrDfAY+rEP5Xq11o27E1Y0Of7VO0M=;
+        b=iuPx7BDhsAhYaKh6iS0y6a/kCUDMnHyI8mzrs+fFr/1zUi9KGvIdsc/JnUxSMPayLn
+         5fBZX5Hmg/Nv+miwYbq7jPZ1Eaq6LfxpaYcHITmjB1P4NCFweBWOyhJfdv63Fxs2VYju
+         tHKxx2gtvHBRNOO679mKoAX+3MTNM+wR+kmdGf0MbNn/VeIH82ogCTwqH+c23U/7Xuk7
+         9KN6bo0HPG8Lbtvai/DeDcUeI/5cd6YQ2fV6XWbuqy1SUKyfviujThtwl4yrkpBcyotm
+         raonucoRqJ1qOetfh9iw5mlafB7DYNhPj10vUU1XedELZVdsS4744bOxTuIUQ9yiBZHX
+         o0Kg==
+In-Reply-To: <1367455189-6957-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-	:in-reply-to:references;
-	bh=JkI+lQJ077tZfeaV1FunHrMg1lKNNRt4NcObE1rHpv4=;
-	b=ZqX+F8SmGyH/wXLprW4zO2/bJKLgBaiS8GurJrKseDo/0gimvZGDRz4x2i9OQdXiH5
-	2zutz7u7f7MiqvxYA8/c3bkQpcajMAu/QVd3f0q20IKk7tDcW34WWwv5UZuy5DAMN4Oy
-	ldGxbMEPaxaIdLTCPLfhcoQ06Y3bG25cne4H2QrD9wVNPzYyFjJp0olZCU86wwlq4dxc
-	ParePP+yJo6I0tQba8KhHPwAcbkUD+GyWtCIR/Dr+suysvj9Mfnuk/lNihRcAGokM6+J
-	vZpjAf7KIF+y1CO2KBZGPQJFSlsfS7kkNbOT9Gu2OKHs7ohwkcpsxZPNp1hg1hcG6rhX
-	Wkmg==
-In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
 
-When bps or iops configuration changes, blk-throttle records the new
-configuration and sets a flag indicating that the config has changed.
-The flag is checked in the bio dispatch path and applied.  This
-deferred config application was necessary due to limitations in blkcg
-framework, which haven't existed for quite a while now.
+throtl_pending_timer_fn() currently assumes that the parent_sq is the
+top level one and the bio's dispatched are ready to be issued;
+however, this assumption will be wrong with proper hierarchy support.
+This patch makes the following changes to make
+throtl_pending_timer_fn() ready for hiearchy.
 
-This patch removes the deferred config application mechanism and
-applies new configurations directly from tg_set_conf(), which is
-simpler.
+* If the parent_sq isn't the top-level one, update the parent
+  throtl_grp's dispatch time and schedule the next dispatch as
+  necessary.  If the parent's dispatch time is now, repeat the
+  function for the parent throtl_grp.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+* If the parent_sq is the top-level one, kick issue work_item as
+  before.
+
+* The debug message printed by throtl_log() now prints out the
+  service_queue's nr_queued[] instead of the total nr_queued as the
+  latter becomes uninteresting and misleading with hierarchical
+  dispatch.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-throttle.c | 75 +++++++++++++++-------------------------------------
- 1 file changed, 22 insertions(+), 53 deletions(-)
+ block/blk-throttle.c | 40 +++++++++++++++++++++++++++++++++-------
+ 1 file changed, 33 insertions(+), 7 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 3960787..7a5e08e 100644
+index 367c269..f3bd278 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -85,9 +85,6 @@ struct throtl_grp {
- 	unsigned long slice_start[2];
- 	unsigned long slice_end[2];
- 
--	/* Some throttle limits got updated for the group */
--	int limits_changed;
--
- 	/* Per cpu stats pointer */
- 	struct tg_stats_cpu __percpu *stats_cpu;
- 
-@@ -112,8 +109,6 @@ struct throtl_data
- 
- 	/* Work for dispatching throttled bios */
- 	struct delayed_work throtl_work;
--
--	int limits_changed;
- };
- 
- /* list and work item to allocate percpu group stats */
-@@ -223,7 +218,6 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
- 	RB_CLEAR_NODE(&tg->rb_node);
- 	bio_list_init(&tg->bio_lists[0]);
- 	bio_list_init(&tg->bio_lists[1]);
--	tg->limits_changed = false;
- 
- 	tg->bps[READ] = -1;
- 	tg->bps[WRITE] = -1;
-@@ -826,45 +820,6 @@ static int throtl_select_dispatch(struct throtl_data *td, struct bio_list *bl)
- 	return nr_disp;
- }
- 
--static void throtl_process_limit_change(struct throtl_data *td)
--{
--	struct request_queue *q = td->queue;
--	struct blkcg_gq *blkg, *n;
--
--	if (!td->limits_changed)
--		return;
--
--	xchg(&td->limits_changed, false);
--
--	throtl_log(td, "limits changed");
--
--	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
--		struct throtl_grp *tg = blkg_to_tg(blkg);
--
--		if (!tg->limits_changed)
--			continue;
--
--		if (!xchg(&tg->limits_changed, false))
--			continue;
--
--		throtl_log_tg(td, tg, "limit change rbps=%llu wbps=%llu"
--			" riops=%u wiops=%u", tg->bps[READ], tg->bps[WRITE],
--			tg->iops[READ], tg->iops[WRITE]);
--
--		/*
--		 * Restart the slices for both READ and WRITES. It
--		 * might happen that a group's limit are dropped
--		 * suddenly and we don't want to account recently
--		 * dispatched IO with new low rate
--		 */
--		throtl_start_new_slice(td, tg, 0);
--		throtl_start_new_slice(td, tg, 1);
--
--		if (throtl_tg_on_rr(tg))
--			tg_update_disptime(td, tg);
--	}
--}
--
- /* Dispatch throttled bios. Should be called without queue lock held. */
- static int throtl_dispatch(struct request_queue *q)
+@@ -949,23 +949,33 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+  * This timer is armed when a child throtl_grp with active bio's become
+  * pending and queued on the service_queue's pending_tree and expires when
+  * the first child throtl_grp should be dispatched.  This function
+- * dispatches bio's from the children throtl_grps and kicks
+- * throtl_data->dispatch_work if there are bio's ready to be issued.
++ * dispatches bio's from the children throtl_grps to the parent
++ * service_queue.
++ *
++ * If the parent's parent is another throtl_grp, dispatching is propagated
++ * by either arming its pending_timer or repeating dispatch directly.  If
++ * the top-level service_tree is reached, throtl_data->dispatch_work is
++ * kicked so that the ready bio's are issued.
+  */
+ static void throtl_pending_timer_fn(unsigned long arg)
  {
-@@ -876,8 +831,6 @@ static int throtl_dispatch(struct request_queue *q)
+ 	struct throtl_service_queue *sq = (void *)arg;
++	struct throtl_grp *tg = sq_to_tg(sq);
+ 	struct throtl_data *td = sq_to_td(sq);
+ 	struct request_queue *q = td->queue;
+-	bool dispatched = false;
++	struct throtl_service_queue *parent_sq;
++	bool dispatched;
+ 	int ret;
  
  	spin_lock_irq(q->queue_lock);
++again:
++	parent_sq = sq->parent_sq;
++	dispatched = false;
  
--	throtl_process_limit_change(td);
--
- 	if (!total_nr_queued(td))
- 		goto out;
+ 	while (true) {
+ 		throtl_log(sq, "dispatch nr_queued=%u read=%u write=%u",
+-			   td->nr_queued[READ] + td->nr_queued[WRITE],
+-			   td->nr_queued[READ], td->nr_queued[WRITE]);
++			   sq->nr_queued[READ] + sq->nr_queued[WRITE],
++			   sq->nr_queued[READ], sq->nr_queued[WRITE]);
  
-@@ -925,8 +878,7 @@ throtl_schedule_delayed_work(struct throtl_data *td, unsigned long delay)
+ 		ret = throtl_select_dispatch(sq);
+ 		if (ret) {
+@@ -982,9 +992,25 @@ static void throtl_pending_timer_fn(unsigned long arg)
+ 		spin_lock_irq(q->queue_lock);
+ 	}
  
- 	struct delayed_work *dwork = &td->throtl_work;
+-	if (dispatched)
+-		queue_work(kthrotld_workqueue, &td->dispatch_work);
++	if (!dispatched)
++		goto out_unlock;
  
--	/* schedule work if limits changed even if no bio is queued */
--	if (total_nr_queued(td) || td->limits_changed) {
-+	if (total_nr_queued(td)) {
- 		mod_delayed_work(kthrotld_workqueue, dwork, delay);
- 		throtl_log(td, "schedule work. delay=%lu jiffies=%lu",
- 				delay, jiffies);
-@@ -1023,9 +975,27 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
- 	else
- 		*(unsigned int *)((void *)tg + cft->private) = ctx.v;
- 
--	/* XXX: we don't need the following deferred processing */
--	xchg(&tg->limits_changed, true);
--	xchg(&td->limits_changed, true);
-+	throtl_log_tg(td, tg, "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
-+		      tg->bps[READ], tg->bps[WRITE],
-+		      tg->iops[READ], tg->iops[WRITE]);
-+
-+	/*
-+	 * We're already holding queue_lock and know @tg is valid.  Let's
-+	 * apply the new config directly.
-+	 *
-+	 * Restart the slices for both READ and WRITES. It might happen
-+	 * that a group's limit are dropped suddenly and we don't want to
-+	 * account recently dispatched IO with new low rate.
-+	 */
-+	throtl_start_new_slice(td, tg, 0);
-+	throtl_start_new_slice(td, tg, 1);
-+
-+	if (throtl_tg_on_rr(tg)) {
-+		tg_update_disptime(td, tg);
-+		throtl_schedule_next_dispatch(td);
++	if (parent_sq) {
++		/* @parent_sq is another throl_grp, propagate dispatch */
++		if (tg->flags & THROTL_TG_WAS_EMPTY) {
++			tg_update_disptime(tg);
++			if (!throtl_schedule_next_dispatch(parent_sq, false)) {
++				/* window is already open, repeat dispatching */
++				sq = parent_sq;
++				tg = sq_to_tg(sq);
++				goto again;
++			}
++		}
++	} else {
++		/* reached the top-level, queue issueing */
++		queue_work(kthrotld_workqueue, &td->dispatch_work);
 +	}
-+
-+	/* kick dispatch in case disptime got shortened */
- 	throtl_schedule_delayed_work(td, 0);
++out_unlock:
+ 	spin_unlock_irq(q->queue_lock);
+ }
  
- 	blkg_conf_finish(&ctx);
-@@ -1239,7 +1209,6 @@ int blk_throtl_init(struct request_queue *q)
- 		return -ENOMEM;
- 
- 	td->tg_service_tree = THROTL_RB_ROOT;
--	td->limits_changed = false;
- 	INIT_DELAYED_WORK(&td->throtl_work, blk_throtl_work);
- 
- 	q->td = td;
 -- 
 1.8.1.4
