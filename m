@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 31/31] blk-throttle: implement proper hierarchy support
-Date: Wed,  1 May 2013 17:39:49 -0700
-Message-ID: <1367455189-6957-32-git-send-email-tj@kernel.org>
+Subject: [PATCH 30/31] blk-throttle: implement throtl_grp->has_rules[]
+Date: Wed,  1 May 2013 17:39:48 -0700
+Message-ID: <1367455189-6957-31-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=Sc6+xcaOYgjKoKGTe8zNOEVRV+NAsqr1+ZMUW7hlT68=;
-        b=V7PlDwOupEi+Mqo9IJ9JdbrcKuXSTyZOC95a7F9vCxsyIjUgCodaxm2zZKIZfSBPIL
-         qR/eVbi+bYJ98RWDSz9rzEw7zLryQxPXNhD3CiqcYrz2HDmKBqD4KJu7jZQhmsJId8KI
-         umrGBsTNHcHWOAwpfo/lWdZhnAnYe7USvPSyRgMVntzZMg/bmkBnN8F+Ylkzi64pXsef
-         TBhsiFc569wRfVv6aIBpn22siBA/9Mq4vLQwCSkkg5x5FXWuJrYJyRbrdw0mNns8Y8A/
-         3n9nZsRsXLbYdE1lm3mYryH0Csm9Wslb8CP1NcYkfKP4G7v+p7jbtNUfqWzSb3OPPUz5
-         Dkbg==
+        bh=Mv5LFn9nHNijwlMdcCgxEVi6JnXk/SqcQc5VeOZ1KqI=;
+        b=bbUJb/Iuvm2QqPjQHf9SmtUC5T6kusvYQ6ofummNmBXxsoQrk4CgR4DDUdsk/Sbchu
+         fdAfSOq/NjxzvQUDfMCc39TyM1CJm3i34b3Rs9DAp2/upsuYKdDp9L5XFj3XIm5mUM2k
+         8neNQfBcQeDbcx5w1mH+EbVaeL9GpZP+fo6Mxwahzm3zx1+LtlmJwAIOGBU1GNnCeo2u
+         +lossraU0HqDeYcHl0qsLVjynyQ5KQgq1UxVYCBb6c4Bas7dnZ0v43ETGGRbgrhRiMP3
+         Pr4TauRZ/smNenR1HJuPMpsTtCo/zDFfymqq3D6uLnoRgVDY3Ec5QiMcRtMrGaUI3BsU
+         1HJA==
 In-Reply-To: <1367455189-6957-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,90 +24,132 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
 
-With the recent updates, blk-throttle is finally ready for proper
-hierarchy support.  Dispatching now honors service_queue->parent_sq
-and propagates correctly.  The only thing missing is setting
-->parent_sq correctly so that throtl_grp hierarchy matches the cgroup
-hierarchy.
+blk_throtl_bio() has a quick exit path for throtl_grps without limits
+configured.  It looks at the bps and iops limits and if both are not
+configured, the bio is issued immediately.  While this is correct in
+the current flat hierarchy as each throtl_grp behaves completely
+independently, it would become wrong in proper hierarchy mode.  A
+group without any limits could still be limited by one of its
+ancestors and bio's queued for such group should not bypass
+blk-throtl.
 
-This patch updates throtl_pd_init() such that service_queues form the
-same hierarchy as the cgroup hierarchy if sane_behavior is enabled.
-As this concludes proper hierarchy support for blkcg, the shameful
-.broken_hierarchy tag is removed from blkio_subsys.
+As having a quick bypass mechanism is beneficial, this patch
+reimplements the mechanism such that it's correct even with proper
+hierarchy.  throtl_grp->has_rules[] is added.  These booleans are
+updated for the whole subtree whenever a config is updated so that
+has_rules[] of the whole subtree stays synchronized.  They're also
+updated when a new throtl_grp comes online so that it can't escape the
+limits of its ancestors.
+
+As no throtl_grp has another throtl_grp as parent now, this patch
+doesn't yet make any behavior differences.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
 ---
- block/blk-cgroup.c     |  8 --------
- block/blk-throttle.c   | 21 ++++++++++++++++++++-
- include/linux/cgroup.h |  2 ++
- 3 files changed, 22 insertions(+), 9 deletions(-)
+ block/blk-throttle.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 7 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index af2ca27..8d9edc8 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -911,14 +911,6 @@ struct cgroup_subsys blkio_subsys = {
- 	.subsys_id = blkio_subsys_id,
- 	.base_cftypes = blkcg_files,
- 	.module = THIS_MODULE,
--
--	/*
--	 * blkio subsystem is utterly broken in terms of hierarchy support.
--	 * It treats all cgroups equally regardless of where they're
--	 * located in the hierarchy - all cgroups are treated as if they're
--	 * right below the root.  Fix it and remove the following.
--	 */
--	.broken_hierarchy = true,
- };
- EXPORT_SYMBOL_GPL(blkio_subsys);
- 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 970355e..fa3e237 100644
+index f3bd278..970355e 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -271,9 +271,28 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
+@@ -84,6 +84,9 @@ struct throtl_grp {
+ 
+ 	unsigned int flags;
+ 
++	/* are there any throtl rules between this group and td? */
++	bool has_rules[2];
++
+ 	/* bytes per second rate limits */
+ 	uint64_t bps[2];
+ 
+@@ -290,6 +293,30 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
+ 	spin_unlock_irqrestore(&tg_stats_alloc_lock, flags);
+ }
+ 
++/*
++ * Set has_rules[] if @tg or any of its parents have limits configured.
++ * This doesn't require walking up to the top of the hierarchy as the
++ * parent's has_rules[] is guaranteed to be correct.
++ */
++static void tg_update_has_rules(struct throtl_grp *tg)
++{
++	struct throtl_grp *parent_tg = sq_to_tg(tg->service_queue.parent_sq);
++	int rw;
++
++	for (rw = READ; rw <= WRITE; rw++)
++		tg->has_rules[rw] = (parent_tg && parent_tg->has_rules[rw]) ||
++				    (tg->bps[rw] != -1 || tg->iops[rw] != -1);
++}
++
++static void throtl_pd_online(struct blkcg_gq *blkg)
++{
++	/*
++	 * We don't want new groups to escape the limits of its ancestors.
++	 * Update has_rules[] after a new group is brought online.
++	 */
++	tg_update_has_rules(blkg_to_tg(blkg));
++}
++
+ static void throtl_pd_exit(struct blkcg_gq *blkg)
  {
  	struct throtl_grp *tg = blkg_to_tg(blkg);
- 	struct throtl_data *td = blkg->q->td;
-+	struct throtl_service_queue *parent_sq;
- 	unsigned long flags;
+@@ -689,12 +716,6 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	return 0;
+ }
  
--	throtl_service_queue_init(&tg->service_queue, &td->service_queue);
-+	/*
-+	 * If sane_hierarchy is enabled, we switch to properly hierarchical
-+	 * behavior where limits on a given throtl_grp are applied to the
-+	 * whole subtree rather than just the group itself.  e.g. If 16M
-+	 * read_bps limit is set on the root group, the whole system can't
-+	 * exceed 16M for the device.
-+	 *
-+	 * If sane_hierarchy is not enabled, the broken flat hierarchy
-+	 * behavior is retained where all throtl_grps are treated as if
-+	 * they're all separate root groups right below throtl_data.
-+	 * Limits of a group don't interact with limits of other groups
-+	 * regardless of the position of the group in the hierarchy.
+-static bool tg_no_rule_group(struct throtl_grp *tg, bool rw) {
+-	if (tg->bps[rw] == -1 && tg->iops[rw] == -1)
+-		return 1;
+-	return 0;
+-}
+-
+ /*
+  * Returns whether one can dispatch a bio or not. Also returns approx number
+  * of jiffies to wait before this bio is with-in IO rate and can be dispatched
+@@ -1123,6 +1144,8 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	struct blkg_conf_ctx ctx;
+ 	struct throtl_grp *tg;
+ 	struct throtl_service_queue *sq;
++	struct blkcg_gq *blkg;
++	struct cgroup *pos_cgrp;
+ 	int ret;
+ 
+ 	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, buf, &ctx);
+@@ -1146,6 +1169,17 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 		   tg->iops[READ], tg->iops[WRITE]);
+ 
+ 	/*
++	 * Update has_rules[] flags for the updated tg's subtree.  A tg is
++	 * considered to have rules if either the tg itself or any of its
++	 * ancestors has rules.  This identifies groups without any
++	 * restrictions in the whole hierarchy and allows them to bypass
++	 * blk-throttle.
 +	 */
-+	parent_sq = &td->service_queue;
++	tg_update_has_rules(tg);
++	blkg_for_each_descendant_pre(blkg, pos_cgrp, ctx.blkg)
++		tg_update_has_rules(blkg_to_tg(blkg));
 +
-+	if (cgroup_sane_behavior(blkg->blkcg->css.cgroup) && blkg->parent)
-+		parent_sq = &blkg_to_tg(blkg->parent)->service_queue;
-+
-+	throtl_service_queue_init(&tg->service_queue, parent_sq);
- 	RB_CLEAR_NODE(&tg->rb_node);
- 	tg->td = td;
++	/*
+ 	 * We're already holding queue_lock and know @tg is valid.  Let's
+ 	 * apply the new config directly.
+ 	 *
+@@ -1234,6 +1268,7 @@ static struct blkcg_policy blkcg_policy_throtl = {
+ 	.cftypes		= throtl_files,
  
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c371888..3c5f780 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -271,6 +271,8 @@ enum {
- 	 * - memcg: use_hierarchy is on by default and the cgroup file for
- 	 *   the flag is not created.
- 	 *
-+	 * - blkcg: blk-throttle becomes properly hierarchical.
-+	 *
- 	 * The followings are planned changes.
- 	 *
- 	 * - release_agent will be disallowed once replacement notification
+ 	.pd_init_fn		= throtl_pd_init,
++	.pd_online_fn		= throtl_pd_online,
+ 	.pd_exit_fn		= throtl_pd_exit,
+ 	.pd_reset_stats_fn	= throtl_pd_reset_stats,
+ };
+@@ -1260,7 +1295,7 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 	blkcg = bio_blkcg(bio);
+ 	tg = throtl_lookup_tg(td, blkcg);
+ 	if (tg) {
+-		if (tg_no_rule_group(tg, rw)) {
++		if (!tg->has_rules[rw]) {
+ 			throtl_update_dispatch_stats(tg_to_blkg(tg),
+ 						     bio->bi_size, bio->bi_rw);
+ 			goto out_unlock_rcu;
 -- 
 1.8.1.4
