@@ -1,191 +1,117 @@
-From: Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: [PATCH v4 17/31] drivers: convert shrinkers to new count/scan API
-Date: Wed, 1 May 2013 17:26:38 +0200
-Message-ID: <CAKMK7uEkZ8nYZgB4pGiqJx+PAt6xL10FN3R5nFRgCAHVvPW8iQ@mail.gmail.com>
-References: <1367018367-11278-1-git-send-email-glommer@openvz.org>
-	<1367018367-11278-18-git-send-email-glommer@openvz.org>
-	<20130430215355.GN6415@suse.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] blk-throttle: implement proper hierarchy support
+Date: Wed,  1 May 2013 17:39:18 -0700
+Message-ID: <1367455189-6957-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=mime-version:x-received:x-originating-ip:in-reply-to:references
-         :date:message-id:subject:from:to:cc:content-type;
-        bh=qtX/WdVPvVqEtF7Vzqg50hOSXiX+gMQo0L5TQk6Ph2k=;
-        b=h8dSEGYaW1NhOmqWjiZyjNT4kkUcl5Ym+5Es7orH5arajX2oimRdm5FJ1GotZitrcG
-         6m9CIphW/Pfd1ZygO6xJ0iEK+MICNPXpd/0oEwOnNoMpM/puP0ngltJS4aT3dSYZxXSr
-         iQQbopEuMpDc2Wqj0BU5DclpcCXIKh6Eb56m8=
-In-Reply-To: <20130430215355.GN6415@suse.de>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman@suse.de>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, intel-gfx <intel-gfx@lists.freedesktop.org>, dri-devel <dri-devel@lists.freedesktop.org>, Kent Overstreet <koverstreet@google.com>, devel@driverdev.osuosl.org, Dan Magenheimer <dan.magenheimer@oracle.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer;
+	bh=j5N4W/kUmrd9b2JtSzhb96T5MujIv8jBLmZWylf3K6g=;
+	b=emNYa0yfZGQoMP7Kyb1Nv1izHrKl08o2vipwtDqHBMg/IU8LyU7+lXu3p9qNZ4VjwC
+	vH5p+PiT1KQm3wFU+NXalQcTFfKo5lkHRBhZUVRd/gd2zAXrJf9stTBOxjESiCYCGJD2
+	VN4Qop7xyN8UpRBqMujxJv6b2c7FV2VASTQs0Yn7M0SmID2L60O7Rf5NYnncb6ocMIxs
+	lP0GTavHR4nPsp35HxjPfaf/Howxl616lkIXYh/TGaYj4YDAzwgBRxfJrRh+mFACriQx
+	JgGn4GTo+RsTDv4bZCrFvMjjrF9KNq4entstJ5+TWkIg9bsTuRGn7sWrhlEHvFSpTh4W
+	Q55Q==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Tue, Apr 30, 2013 at 11:53 PM, Mel Gorman <mgorman@suse.de> wrote:
-> On Sat, Apr 27, 2013 at 03:19:13AM +0400, Glauber Costa wrote:
->> diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
->> index 6be940e..2e44733 100644
->> --- a/drivers/gpu/drm/i915/i915_gem.c
->> +++ b/drivers/gpu/drm/i915/i915_gem.c
->> @@ -1729,15 +1731,20 @@ i915_gem_purge(struct drm_i915_private *dev_priv, long target)
->>       return __i915_gem_shrink(dev_priv, target, true);
->>  }
->>
->> -static void
->> +static long
->>  i915_gem_shrink_all(struct drm_i915_private *dev_priv)
->>  {
->>       struct drm_i915_gem_object *obj, *next;
->> +     long freed = 0;
->>
->> -     i915_gem_evict_everything(dev_priv->dev);
->> +     freed += i915_gem_evict_everything(dev_priv->dev);
->>
->> -     list_for_each_entry_safe(obj, next, &dev_priv->mm.unbound_list, gtt_list)
->> +     list_for_each_entry_safe(obj, next, &dev_priv->mm.unbound_list, gtt_list) {
->> +             if (obj->pages_pin_count == 0)
->> +                     freed += obj->base.size >> PAGE_SHIFT;
->>               i915_gem_object_put_pages(obj);
->> +     }
->> +     return freed;
->>  }
->>
->
-> i915_gem_shrink_all is a sledge hammer! That i915_gem_evict_everything
-> looks like it switches to every GPU context, waits for everything to
-> complete and then retire it all. I don't know the details of what it's
-> doing but it's sounds very heavy handed and is called from shrinker
-> context if it fails to shrink 128 objects. Those shrinker callsback can
-> be very frequently called even from kswapd.
+blk-throttle is the last controller with broken hierarchy support
+making blkcg the last one tagged with .broken_hierarchy.  This
+patchset implements hierarchy support for blk-throttle.  The semantics
+is pretty simple - limits on an intermediate node applies to the whole
+subtree and the statistics remain local.
 
-i915_gem_shrink_all is our escape hatch, we only use it as a
-last-ditch effort when all else fails. Imo there's no point in passing
-the number of freed objects around from it since it really never
-should get called (as long as we don't get called with more objects to
-shrink than our counter counted beforehand at least). Also, the above
-hunk is broken since i915_gem_evict_everything only unbinds object
-from the gpu address space and puts them onto the unbound list, i.e.
-those objects will be double-counted.
+As this changes the meaning of the knobs in an incompatible manner -
+e.g. configuring limits on root cgroup now means setting the limit for
+the whole system - the hierarchy mode is enabled by "sane_behavior"
+cgroup mount flag.  If the flag is not specified, the original broken
+flat hierarchy behavior is retained.
 
->>  static int
->> @@ -4205,7 +4212,8 @@ i915_gem_load(struct drm_device *dev)
->>
->>       dev_priv->mm.interruptible = true;
->>
->> -     dev_priv->mm.inactive_shrinker.shrink = i915_gem_inactive_shrink;
->> +     dev_priv->mm.inactive_shrinker.scan_objects = i915_gem_inactive_scan;
->> +     dev_priv->mm.inactive_shrinker.count_objects = i915_gem_inactive_count;
->>       dev_priv->mm.inactive_shrinker.seeks = DEFAULT_SEEKS;
->>       register_shrinker(&dev_priv->mm.inactive_shrinker);
->>  }
->> @@ -4428,8 +4436,8 @@ static bool mutex_is_locked_by(struct mutex *mutex, struct task_struct *task)
->>  #endif
->>  }
->>
->> -static int
->> -i915_gem_inactive_shrink(struct shrinker *shrinker, struct shrink_control *sc)
->> +static long
->> +i915_gem_inactive_count(struct shrinker *shrinker, struct shrink_control *sc)
->>  {
->>       struct drm_i915_private *dev_priv =
->>               container_of(shrinker,
->> @@ -4437,9 +4445,8 @@ i915_gem_inactive_shrink(struct shrinker *shrinker, struct shrink_control *sc)
->>                            mm.inactive_shrinker);
->>       struct drm_device *dev = dev_priv->dev;
->>       struct drm_i915_gem_object *obj;
->> -     int nr_to_scan = sc->nr_to_scan;
->>       bool unlock = true;
->> -     int cnt;
->> +     long cnt;
->>
->>       if (!mutex_trylock(&dev->struct_mutex)) {
->>               if (!mutex_is_locked_by(&dev->struct_mutex, current))
->> @@ -4451,15 +4458,6 @@ i915_gem_inactive_shrink(struct shrinker *shrinker, struct shrink_control *sc)
->>               unlock = false;
->>       }
->>
->> -     if (nr_to_scan) {
->> -             nr_to_scan -= i915_gem_purge(dev_priv, nr_to_scan);
->> -             if (nr_to_scan > 0)
->> -                     nr_to_scan -= __i915_gem_shrink(dev_priv, nr_to_scan,
->> -                                                     false);
->> -             if (nr_to_scan > 0)
->> -                     i915_gem_shrink_all(dev_priv);
->> -     }
->> -
->>       cnt = 0;
->>       list_for_each_entry(obj, &dev_priv->mm.unbound_list, gtt_list)
->>               if (obj->pages_pin_count == 0)
->> @@ -4472,3 +4470,36 @@ i915_gem_inactive_shrink(struct shrinker *shrinker, struct shrink_control *sc)
->>               mutex_unlock(&dev->struct_mutex);
->>       return cnt;
->>  }
->> +static long
->> +i915_gem_inactive_scan(struct shrinker *shrinker, struct shrink_control *sc)
->> +{
->> +     struct drm_i915_private *dev_priv =
->> +             container_of(shrinker,
->> +                          struct drm_i915_private,
->> +                          mm.inactive_shrinker);
->> +     struct drm_device *dev = dev_priv->dev;
->> +     int nr_to_scan = sc->nr_to_scan;
->> +     long freed;
->> +     bool unlock = true;
->> +
->> +     if (!mutex_trylock(&dev->struct_mutex)) {
->> +             if (!mutex_is_locked_by(&dev->struct_mutex, current))
->> +                     return 0;
->> +
->
-> return -1 if it's about preventing potential deadlocks?
->
->> +             if (dev_priv->mm.shrinker_no_lock_stealing)
->> +                     return 0;
->> +
->
-> same?
+While this patchset contains many patches, the implementation is
+pretty straight-forward.  throtl_grp's form a tree anchored at
+throtl_data and bios climb the tree as they get dispatched at each
+level.  The bios which reach the top of the tree - throl_data - are
+issued.  The scheduling algorithm remains unchanged at each level and
+blk-throttle should behave the same for flat hierarchy after the
+changes.  The same algorithm is repeated until bios clear all limits
+to the top of the tree.
 
-No idea. Aside, the aggressive shrinking with shrink_all and the lock
-stealing madness here are to paper our current "one lock for
-everything" approach we have for i915 gem stuff. We've papered over
-the worst offenders through lock-dropping tricks while waiting, the
-lock stealing above plus aggressively calling shrink_all.
+This patchset contains the following 31 patches.
 
-Still it's pretty trivial to (spuriously) OOM if you compete a gpu
-workload with something else. Real fix is per-object locking plus some
-watermark limits on how many pages are locked down this way, but
-that's long term (and currently stalling for the wait/wound mutexes
-from Maarten Lankhorst to get in).
+ 0001-blkcg-fix-error-return-path-in-blkg_create.patch
+ 0002-blkcg-move-blkg_for_each_descendant_pre-to-block-blk.patch
+ 0003-blkcg-implement-blkg_for_each_descendant_post.patch
+ 0004-blkcg-invoke-blkcg_policy-pd_init-after-parent-is-li.patch
+ 0005-blkcg-move-bulk-of-blkcg_gq-release-operations-to-th.patch
+ 0006-blk-throttle-remove-spurious-throtl_enqueue_tg-call-.patch
+ 0007-blk-throttle-removed-deferred-config-application-mec.patch
+ 0008-blk-throttle-collapse-throtl_dispatch-into-the-work-.patch
+ 0009-blk-throttle-relocate-throtl_schedule_delayed_work.patch
+ 0010-blk-throttle-remove-pointless-throtl_nr_queued-optim.patch
+ 0011-blk-throttle-rename-throtl_rb_root-to-throtl_service.patch
+ 0012-blk-throttle-simplify-throtl_grp-flag-handling.patch
+ 0013-blk-throttle-add-backlink-pointer-from-throtl_grp-to.patch
+ 0014-blk-throttle-pass-around-throtl_service_queue-instea.patch
+ 0015-blk-throttle-reorganize-throtl_service_queue-passed-.patch
+ 0016-blk-throttle-add-throtl_grp-service_queue.patch
+ 0017-blk-throttle-move-bio_lists-and-friends-to-throtl_se.patch
+ 0018-blk-throttle-dispatch-to-throtl_data-service_queue.b.patch
+ 0019-blk-throttle-generalize-update_disptime-optimization.patch
+ 0020-blk-throttle-add-throtl_service_queue-parent_sq.patch
+ 0021-blk-throttle-implement-sq_to_tg-sq_to_td-and-throtl_.patch
+ 0022-blk-throttle-set-REQ_THROTTLED-from-throtl_charge_bi.patch
+ 0023-blk-throttle-separate-out-throtl_service_queue-pendi.patch
+ 0024-blk-throttle-implement-dispatch-looping.patch
+ 0025-blk-throttle-dispatch-from-throtl_pending_timer_fn.patch
+ 0026-blk-throttle-make-blk_throtl_drain-ready-for-hierarc.patch
+ 0027-blk-throttle-make-blk_throtl_bio-ready-for-hierarchy.patch
+ 0028-blk-throttle-make-tg_dispatch_one_bio-ready-for-hier.patch
+ 0029-blk-throttle-make-throtl_pending_timer_fn-ready-for-.patch
+ 0030-blk-throttle-implement-throtl_grp-has_rules.patch
+ 0031-blk-throttle-implement-proper-hierarchy-support.patch
 
->
->> +             unlock = false;
->> +     }
->> +
->> +     freed = i915_gem_purge(dev_priv, nr_to_scan);
->> +     if (freed < nr_to_scan)
->> +             freed += __i915_gem_shrink(dev_priv, nr_to_scan,
->> +                                                     false);
->> +     if (freed < nr_to_scan)
->> +             freed += i915_gem_shrink_all(dev_priv);
->> +
->
-> Do we *really* want to call i915_gem_shrink_all from the slab shrinker?
-> Are there any bug reports where i915 rendering jitters in low memory
-> situations while shrinkers might be active? Maybe it's really fast.
+0001-0005 prepare blkcg so that hierarchy operations are easier.
 
-It's terrible for interactivity in X, but we need it :( See above for
-how we plan to eventually fix this mess.
+0006-0016 reorganize code piece-by-piece so that hierarchy support can
+be added.  These don't change behaviors.
 
-Cheers, Daniel
---
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+0017-0025 prepare for hierarchy support.  Moves fields which are used
+in hierarchy to throtl_service_queue and define parent-child
+relationship.
+
+0026-0030 make queueing, dispatching and configuration changes
+propagate through the hierarchy.
+
+0031 implemenats hierarchy support.
+
+As we're in the middle of a merge window, this patchset is currently
+based on cgroup/for-3.10.  Once 3.10-rc1 drops, I'll rebase the tree
+and send pull request to Jens so that it can be routed with other
+block changes.  The patches are also available on the following git
+branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-throtl-hierarchy
+
+diffstat follows.  Thanks.
+
+ block/blk-cgroup.c     |  105 ++---
+ block/blk-cgroup.h     |   38 ++
+ block/blk-throttle.c   |  875 +++++++++++++++++++++++++++++++------------------
+ include/linux/cgroup.h |    2 
+ 4 files changed, 635 insertions(+), 385 deletions(-)
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
