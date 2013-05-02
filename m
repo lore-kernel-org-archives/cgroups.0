@@ -1,94 +1,371 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 27/31] blk-throttle: make blk_throtl_bio() ready for hierarchy
-Date: Wed,  1 May 2013 17:39:45 -0700
-Message-ID: <1367455189-6957-28-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 13/31] blk-throttle: add backlink pointer from throtl_grp to
+	throtl_data
+Date: Wed,  1 May 2013 17:39:31 -0700
+Message-ID: <1367455189-6957-14-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=BBezV9ty5Op1B1yMBe8McEtD4l1p+OY38x+FgXVBAGs=;
-        b=0hFP4t8NSvgbGzmeLhIecKPQ2O/fKaTqPPQvjKRL1i6afUkOVO8CyhWlNX65iQX96m
-         GVxNVX8GFAzMmyb6bGFfV4LnNbu5KFzV4INdAdLNOGNXio1JKdoqoCCIMN1fZSHPkY3e
-         GWXf/pF9D0hkrVUamof1UQLiNGkwhxNZLmW4T0ncXUPPwpbyT+7OsIpTzMEbmoN5xqL0
-         U+UamtCCDp6Ddeq3F0C5DfN/KSQm86MJrwQImT0gnoc8CD4g5xDZt5L3NsQaLc9DkF6C
-         K0C+b8j+69ntiPXqL4tNX4zHN4Or9vmBriUCYGAbWKa6ayaTyHa5VXb6igK/I5/j3v7L
-         YhAA==
-In-Reply-To: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+	:in-reply-to:references;
+	bh=xkH2BjQGHgOi0ElAWKwQwglPERKpLTPwuJiV3NVdguA=;
+	b=GZCERVNlYMCtJY7CgM205DT9VoKIq97mCrp3eo1UwbETPNFVErmwkXlOugyMCSKswD
+	RgB71F+jr3TGXXzcOcKT4zRDYwAp8pvVLUtJuU8udoRgO5Wmco6+gHiW08Anyyb/ACUH
+	RvkEQxSp/noElxQgFr7CX49qyISyyJovBFio5YRYPhtTcYcFEEFc50GrANkALOw4LCgr
+	zoHI2UkQ2O2k2NIGveds6zLeXyTfWlIIKR47VN/3J2jNCX6N/aLSwMSq9ytE7H2VODwc
+	KuoXJrSwgyapnLN3OxCsvB+3H/cvlV5mQ0HjBtTJInqzLt60ppViUqm6whZpNPpk3urL
+	HXpA==
+In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Currently, blk_throtl_bio() issues the passed in bio directly if it's
-within limits of its associated tg (throtl_grp).  This behavior
-becomes incorrect with hierarchy support as the bio should be
-accounted to and throttled by the ancestor throtl_grps too.
+Add throtl_grp->td so that the td (throtl_data) a given tg
+(throtl_grp) belongs to can be determined, and remove @td argument
+from functions which take both @td and @tg as the former now can be
+determined from the latter.
 
-This patch makes the direct issue path of blk_throtl_bio() to loop
-until it reaches the top-level service_queue or gets throttled.  If
-the former, the bio can be issued directly; otherwise, it gets queued
-at the first layer it was above limits.
+This generally simplifies the code and removes a number of cases where
+@td is passed as an argument without being actually used.  This will
+also help hierarchy support implementation.
 
-As tg->parent_sq is always the top-level service queue currently, this
-patch in itself doesn't make any behavior differences.
+While at it, in multi-line conditions, move the logical operators
+leading broken lines to the end of the previous line.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-throttle.c | 27 ++++++++++++++++++++-------
- 1 file changed, 20 insertions(+), 7 deletions(-)
+ block/blk-throttle.c | 106 +++++++++++++++++++++++++--------------------------
+ 1 file changed, 53 insertions(+), 53 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 1080563..99e1e78 100644
+index fc55dda..6aae239 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1239,12 +1239,16 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+@@ -57,6 +57,9 @@ struct throtl_grp {
+ 	/* active throtl group service_queue member */
+ 	struct rb_node rb_node;
  
- 	sq = &tg->service_queue;
- 
--	/* throtl is FIFO - if other bios are already queued, should queue */
--	if (sq->nr_queued[rw])
--		goto queue_bio;
-+	while (true) {
-+		/* throtl is FIFO - if bios are already queued, should queue */
-+		if (sq->nr_queued[rw])
-+			break;
- 
--	/* Bio is with-in rate limit of group */
--	if (tg_may_dispatch(tg, bio, NULL)) {
-+		/* if above limits, break to queue */
-+		if (!tg_may_dispatch(tg, bio, NULL))
-+			break;
++	/* throtl_data this group belongs to */
++	struct throtl_data *td;
 +
-+		/* within limits, let's charge and dispatch directly */
+ 	/*
+ 	 * Dispatch time in jiffies. This is the estimated time when group
+ 	 * will unthrottle and is ready to dispatch more bio. It is used as
+@@ -140,11 +143,11 @@ static inline struct throtl_grp *td_root_tg(struct throtl_data *td)
+ 	return blkg_to_tg(td->queue->root_blkg);
+ }
+ 
+-#define throtl_log_tg(td, tg, fmt, args...)	do {			\
++#define throtl_log_tg(tg, fmt, args...)	do {				\
+ 	char __pbuf[128];						\
+ 									\
+ 	blkg_path(tg_to_blkg(tg), __pbuf, sizeof(__pbuf));		\
+-	blk_add_trace_msg((td)->queue, "throtl %s " fmt, __pbuf, ##args); \
++	blk_add_trace_msg((tg)->td->queue, "throtl %s " fmt, __pbuf, ##args); \
+ } while (0)
+ 
+ #define throtl_log(td, fmt, args...)	\
+@@ -193,6 +196,7 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
+ 	unsigned long flags;
+ 
+ 	RB_CLEAR_NODE(&tg->rb_node);
++	tg->td = blkg->q->td;
+ 	bio_list_init(&tg->bio_lists[0]);
+ 	bio_list_init(&tg->bio_lists[1]);
+ 
+@@ -401,36 +405,34 @@ static void throtl_schedule_next_dispatch(struct throtl_data *td)
+ 		throtl_schedule_delayed_work(td, sq->first_pending_disptime - jiffies);
+ }
+ 
+-static inline void
+-throtl_start_new_slice(struct throtl_data *td, struct throtl_grp *tg, bool rw)
++static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
+ {
+ 	tg->bytes_disp[rw] = 0;
+ 	tg->io_disp[rw] = 0;
+ 	tg->slice_start[rw] = jiffies;
+ 	tg->slice_end[rw] = jiffies + throtl_slice;
+-	throtl_log_tg(td, tg, "[%c] new slice start=%lu end=%lu jiffies=%lu",
++	throtl_log_tg(tg, "[%c] new slice start=%lu end=%lu jiffies=%lu",
+ 			rw == READ ? 'R' : 'W', tg->slice_start[rw],
+ 			tg->slice_end[rw], jiffies);
+ }
+ 
+-static inline void throtl_set_slice_end(struct throtl_data *td,
+-		struct throtl_grp *tg, bool rw, unsigned long jiffy_end)
++static inline void throtl_set_slice_end(struct throtl_grp *tg, bool rw,
++					unsigned long jiffy_end)
+ {
+ 	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+ }
+ 
+-static inline void throtl_extend_slice(struct throtl_data *td,
+-		struct throtl_grp *tg, bool rw, unsigned long jiffy_end)
++static inline void throtl_extend_slice(struct throtl_grp *tg, bool rw,
++				       unsigned long jiffy_end)
+ {
+ 	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+-	throtl_log_tg(td, tg, "[%c] extend slice start=%lu end=%lu jiffies=%lu",
++	throtl_log_tg(tg, "[%c] extend slice start=%lu end=%lu jiffies=%lu",
+ 			rw == READ ? 'R' : 'W', tg->slice_start[rw],
+ 			tg->slice_end[rw], jiffies);
+ }
+ 
+ /* Determine if previously allocated or extended slice is complete or not */
+-static bool
+-throtl_slice_used(struct throtl_data *td, struct throtl_grp *tg, bool rw)
++static bool throtl_slice_used(struct throtl_grp *tg, bool rw)
+ {
+ 	if (time_in_range(jiffies, tg->slice_start[rw], tg->slice_end[rw]))
+ 		return 0;
+@@ -439,8 +441,7 @@ throtl_slice_used(struct throtl_data *td, struct throtl_grp *tg, bool rw)
+ }
+ 
+ /* Trim the used slices and adjust slice start accordingly */
+-static inline void
+-throtl_trim_slice(struct throtl_data *td, struct throtl_grp *tg, bool rw)
++static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ {
+ 	unsigned long nr_slices, time_elapsed, io_trim;
+ 	u64 bytes_trim, tmp;
+@@ -452,7 +453,7 @@ throtl_trim_slice(struct throtl_data *td, struct throtl_grp *tg, bool rw)
+ 	 * renewed. Don't try to trim the slice if slice is used. A new
+ 	 * slice will start when appropriate.
+ 	 */
+-	if (throtl_slice_used(td, tg, rw))
++	if (throtl_slice_used(tg, rw))
+ 		return;
+ 
+ 	/*
+@@ -463,7 +464,7 @@ throtl_trim_slice(struct throtl_data *td, struct throtl_grp *tg, bool rw)
+ 	 * is bad because it does not allow new slice to start.
+ 	 */
+ 
+-	throtl_set_slice_end(td, tg, rw, jiffies + throtl_slice);
++	throtl_set_slice_end(tg, rw, jiffies + throtl_slice);
+ 
+ 	time_elapsed = jiffies - tg->slice_start[rw];
+ 
+@@ -492,14 +493,14 @@ throtl_trim_slice(struct throtl_data *td, struct throtl_grp *tg, bool rw)
+ 
+ 	tg->slice_start[rw] += nr_slices * throtl_slice;
+ 
+-	throtl_log_tg(td, tg, "[%c] trim slice nr=%lu bytes=%llu io=%lu"
++	throtl_log_tg(tg, "[%c] trim slice nr=%lu bytes=%llu io=%lu"
+ 			" start=%lu end=%lu jiffies=%lu",
+ 			rw == READ ? 'R' : 'W', nr_slices, bytes_trim, io_trim,
+ 			tg->slice_start[rw], tg->slice_end[rw], jiffies);
+ }
+ 
+-static bool tg_with_in_iops_limit(struct throtl_data *td, struct throtl_grp *tg,
+-		struct bio *bio, unsigned long *wait)
++static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
++				  unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 	unsigned int io_allowed;
+@@ -548,8 +549,8 @@ static bool tg_with_in_iops_limit(struct throtl_data *td, struct throtl_grp *tg,
+ 	return 0;
+ }
+ 
+-static bool tg_with_in_bps_limit(struct throtl_data *td, struct throtl_grp *tg,
+-		struct bio *bio, unsigned long *wait)
++static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
++				 unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 	u64 bytes_allowed, extra_bytes, tmp;
+@@ -600,8 +601,8 @@ static bool tg_no_rule_group(struct throtl_grp *tg, bool rw) {
+  * Returns whether one can dispatch a bio or not. Also returns approx number
+  * of jiffies to wait before this bio is with-in IO rate and can be dispatched
+  */
+-static bool tg_may_dispatch(struct throtl_data *td, struct throtl_grp *tg,
+-				struct bio *bio, unsigned long *wait)
++static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
++			    unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 	unsigned long bps_wait = 0, iops_wait = 0, max_wait = 0;
+@@ -626,15 +627,15 @@ static bool tg_may_dispatch(struct throtl_data *td, struct throtl_grp *tg,
+ 	 * existing slice to make sure it is at least throtl_slice interval
+ 	 * long since now.
+ 	 */
+-	if (throtl_slice_used(td, tg, rw))
+-		throtl_start_new_slice(td, tg, rw);
++	if (throtl_slice_used(tg, rw))
++		throtl_start_new_slice(tg, rw);
+ 	else {
+ 		if (time_before(tg->slice_end[rw], jiffies + throtl_slice))
+-			throtl_extend_slice(td, tg, rw, jiffies + throtl_slice);
++			throtl_extend_slice(tg, rw, jiffies + throtl_slice);
+ 	}
+ 
+-	if (tg_with_in_bps_limit(td, tg, bio, &bps_wait)
+-	    && tg_with_in_iops_limit(td, tg, bio, &iops_wait)) {
++	if (tg_with_in_bps_limit(tg, bio, &bps_wait) &&
++	    tg_with_in_iops_limit(tg, bio, &iops_wait)) {
+ 		if (wait)
+ 			*wait = 0;
+ 		return 1;
+@@ -646,7 +647,7 @@ static bool tg_may_dispatch(struct throtl_data *td, struct throtl_grp *tg,
+ 		*wait = max_wait;
+ 
+ 	if (time_before(tg->slice_end[rw], jiffies + max_wait))
+-		throtl_extend_slice(td, tg, rw, jiffies + max_wait);
++		throtl_extend_slice(tg, rw, jiffies + max_wait);
+ 
+ 	return 0;
+ }
+@@ -707,10 +708,10 @@ static void tg_update_disptime(struct throtl_data *td, struct throtl_grp *tg)
+ 	struct bio *bio;
+ 
+ 	if ((bio = bio_list_peek(&tg->bio_lists[READ])))
+-		tg_may_dispatch(td, tg, bio, &read_wait);
++		tg_may_dispatch(tg, bio, &read_wait);
+ 
+ 	if ((bio = bio_list_peek(&tg->bio_lists[WRITE])))
+-		tg_may_dispatch(td, tg, bio, &write_wait);
++		tg_may_dispatch(tg, bio, &write_wait);
+ 
+ 	min_wait = min(read_wait, write_wait);
+ 	disptime = jiffies + min_wait;
+@@ -721,8 +722,8 @@ static void tg_update_disptime(struct throtl_data *td, struct throtl_grp *tg)
+ 	throtl_enqueue_tg(td, tg);
+ }
+ 
+-static void tg_dispatch_one_bio(struct throtl_data *td, struct throtl_grp *tg,
+-				bool rw, struct bio_list *bl)
++static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw,
++				struct bio_list *bl)
+ {
+ 	struct bio *bio;
+ 
+@@ -731,18 +732,17 @@ static void tg_dispatch_one_bio(struct throtl_data *td, struct throtl_grp *tg,
+ 	/* Drop bio reference on blkg */
+ 	blkg_put(tg_to_blkg(tg));
+ 
+-	BUG_ON(td->nr_queued[rw] <= 0);
+-	td->nr_queued[rw]--;
++	BUG_ON(tg->td->nr_queued[rw] <= 0);
++	tg->td->nr_queued[rw]--;
+ 
+ 	throtl_charge_bio(tg, bio);
+ 	bio_list_add(bl, bio);
+ 	bio->bi_rw |= REQ_THROTTLED;
+ 
+-	throtl_trim_slice(td, tg, rw);
++	throtl_trim_slice(tg, rw);
+ }
+ 
+-static int throtl_dispatch_tg(struct throtl_data *td, struct throtl_grp *tg,
+-				struct bio_list *bl)
++static int throtl_dispatch_tg(struct throtl_grp *tg, struct bio_list *bl)
+ {
+ 	unsigned int nr_reads = 0, nr_writes = 0;
+ 	unsigned int max_nr_reads = throtl_grp_quantum*3/4;
+@@ -751,20 +751,20 @@ static int throtl_dispatch_tg(struct throtl_data *td, struct throtl_grp *tg,
+ 
+ 	/* Try to dispatch 75% READS and 25% WRITES */
+ 
+-	while ((bio = bio_list_peek(&tg->bio_lists[READ]))
+-		&& tg_may_dispatch(td, tg, bio, NULL)) {
++	while ((bio = bio_list_peek(&tg->bio_lists[READ])) &&
++	       tg_may_dispatch(tg, bio, NULL)) {
+ 
+-		tg_dispatch_one_bio(td, tg, bio_data_dir(bio), bl);
++		tg_dispatch_one_bio(tg, bio_data_dir(bio), bl);
+ 		nr_reads++;
+ 
+ 		if (nr_reads >= max_nr_reads)
+ 			break;
+ 	}
+ 
+-	while ((bio = bio_list_peek(&tg->bio_lists[WRITE]))
+-		&& tg_may_dispatch(td, tg, bio, NULL)) {
++	while ((bio = bio_list_peek(&tg->bio_lists[WRITE])) &&
++	       tg_may_dispatch(tg, bio, NULL)) {
+ 
+-		tg_dispatch_one_bio(td, tg, bio_data_dir(bio), bl);
++		tg_dispatch_one_bio(tg, bio_data_dir(bio), bl);
+ 		nr_writes++;
+ 
+ 		if (nr_writes >= max_nr_writes)
+@@ -791,7 +791,7 @@ static int throtl_select_dispatch(struct throtl_data *td, struct bio_list *bl)
+ 
+ 		throtl_dequeue_tg(td, tg);
+ 
+-		nr_disp += throtl_dispatch_tg(td, tg, bl);
++		nr_disp += throtl_dispatch_tg(tg, bl);
+ 
+ 		if (tg->nr_queued[0] || tg->nr_queued[1])
+ 			tg_update_disptime(td, tg);
+@@ -933,7 +933,7 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	else
+ 		*(unsigned int *)((void *)tg + cft->private) = ctx.v;
+ 
+-	throtl_log_tg(td, tg, "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
++	throtl_log_tg(tg, "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
+ 		      tg->bps[READ], tg->bps[WRITE],
+ 		      tg->iops[READ], tg->iops[WRITE]);
+ 
+@@ -945,8 +945,8 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	 * that a group's limit are dropped suddenly and we don't want to
+ 	 * account recently dispatched IO with new low rate.
+ 	 */
+-	throtl_start_new_slice(td, tg, 0);
+-	throtl_start_new_slice(td, tg, 1);
++	throtl_start_new_slice(tg, 0);
++	throtl_start_new_slice(tg, 1);
+ 
+ 	if (tg->flags & THROTL_TG_PENDING) {
+ 		tg_update_disptime(td, tg);
+@@ -1079,7 +1079,7 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 	}
+ 
+ 	/* Bio is with-in rate limit of group */
+-	if (tg_may_dispatch(td, tg, bio, NULL)) {
++	if (tg_may_dispatch(tg, bio, NULL)) {
  		throtl_charge_bio(tg, bio);
  
  		/*
-@@ -1259,10 +1263,19 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+@@ -1093,12 +1093,12 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 		 *
  		 * So keep on trimming slice even if bio is not queued.
  		 */
- 		throtl_trim_slice(tg, rw);
--		goto out_unlock;
-+
-+		/*
-+		 * @bio passed through this layer without being throttled.
-+		 * Climb up the ladder.  If we''re already at the top, it
-+		 * can be executed directly.
-+		 */
-+		sq = sq->parent_sq;
-+		tg = sq_to_tg(sq);
-+		if (!tg)
-+			goto out_unlock;
+-		throtl_trim_slice(td, tg, rw);
++		throtl_trim_slice(tg, rw);
+ 		goto out_unlock;
  	}
  
--queue_bio:
-+	/* out-of-limit, queue to @tg */
- 	throtl_log(sq, "[%c] bio. bdisp=%llu sz=%u bps=%llu iodisp=%u iops=%u queued=%d/%d",
- 		   rw == READ ? 'R' : 'W',
- 		   tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
+ queue_bio:
+-	throtl_log_tg(td, tg, "[%c] bio. bdisp=%llu sz=%u bps=%llu"
++	throtl_log_tg(tg, "[%c] bio. bdisp=%llu sz=%u bps=%llu"
+ 			" iodisp=%u iops=%u queued=%d/%d",
+ 			rw == READ ? 'R' : 'W',
+ 			tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
+@@ -1145,9 +1145,9 @@ void blk_throtl_drain(struct request_queue *q)
+ 		throtl_dequeue_tg(td, tg);
+ 
+ 		while ((bio = bio_list_peek(&tg->bio_lists[READ])))
+-			tg_dispatch_one_bio(td, tg, bio_data_dir(bio), &bl);
++			tg_dispatch_one_bio(tg, bio_data_dir(bio), &bl);
+ 		while ((bio = bio_list_peek(&tg->bio_lists[WRITE])))
+-			tg_dispatch_one_bio(td, tg, bio_data_dir(bio), &bl);
++			tg_dispatch_one_bio(tg, bio_data_dir(bio), &bl);
+ 	}
+ 	spin_unlock_irq(q->queue_lock);
+ 
 -- 
 1.8.1.4
