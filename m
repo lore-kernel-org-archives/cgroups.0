@@ -1,92 +1,137 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 09/31] blk-throttle: relocate throtl_schedule_delayed_work()
-Date: Wed,  1 May 2013 17:39:27 -0700
-Message-ID: <1367455189-6957-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/31] blkcg: move bulk of blkcg_gq release operations to the
+	RCU callback
+Date: Wed,  1 May 2013 17:39:23 -0700
+Message-ID: <1367455189-6957-6-git-send-email-tj@kernel.org>
 References: <1367455189-6957-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=gLomw5S7hxOA3v/PH/K9MiyxX1DavyL9MQMik4hCPiA=;
-        b=WMmWvdCMCvlKcQ2JBQwA+A9LF4oDnfjuxkr5o66dajvm0kJQMyxjHJlXIBpu+7nVgQ
-         dMrBJGCe9RLUGoOtzI51g1AeQdr3M+iCN6NS4OtBO6BZdcKjwyXgnrxSh6nUb/5GLtNI
-         Q1R7Ee42HAAMJd7wUz/WO2YwACNe9CMU1rxGH1fElgFdC8JfEqgEJJKM5fE7BZKoCn3/
-         Fpo2gOF9zApuTMnKUpuzIUo1WgrQt/SWw5keVzXWXTNqYlZevAJBTX6Oo5WCz47CD372
-         4BAFpT0pZ09XuPanfu2RHtZIeTSBO0W5MEtx7/uhhQv82VyafrYARj4AgPJIIHpFojmY
-         QMNg==
-In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+	:in-reply-to:references;
+	bh=FMGMrXqL2uos2s+KGBOmwk1YmjTqXhuPmv6aTCFCfUg=;
+	b=jhgaZihXF6DIV3FGUpylkkFeCMOuOc6AMTuE0i5paHn4aiHXZtdSqVTYPe63mx0Y1w
+	xBMHRqwgrj2Rsbe0sKvwNBH3W2oF/75sgEMZyo6E8xtUsv7EcA0LJlu7ORaoLWDsa11E
+	HbJQnNJSytgAep7sRkrmp1PBhCxzi2c2RAZ52D9wuo1D+VmFo0n76D0qe2rel66MjIsv
+	GGrd7fdGJluZNczfcXozTPGeVWuY/KSvtyl/G+Cxq7IwQWcgHkEv7Cxufnjxnlz9RSVa
+	Jb8qjsZlq0IisX6rf5MNGJj1Sv15z28/gIfRikMCIqnD+J3XMUIXbEGt2eRFT1MHKf+e
+	Onyg==
+In-Reply-To: <1367455189-6957-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Move throtl_schedule_delayed_work() above its first user so that the
-forward declaration can be removed.
+Currently, when the last reference of a blkcg_gq is put, all then
+release operations sans the actual freeing happen directly in
+blkg_put().  As blkg_put() may be called under queue_lock, all
+pd_exit_fn()s may be too.  This makes it impossible for pd_exit_fn()s
+to use del_timer_sync() on timers which grab the queue_lock which is
+an irq-safe lock due to the deadlock possibility described in the
+comment on top of del_timer_sync().
 
-This patch is pure relocaiton.
+This can be easily avoided by perfoming the release operations in the
+RCU callback instead of directly from blkg_put().  This patch moves
+the blkcg_gq release operations to the RCU callback.
+
+As this leaves __blkg_release() with only call_rcu() invocation,
+blkg_rcu_free() is renamed to __blkg_release_rcu(), exported and
+call_rcu() invocation is now done directly from blkg_put() instead of
+going through __blkg_release() which is removed.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-throttle.c | 29 +++++++++++++----------------
- 1 file changed, 13 insertions(+), 16 deletions(-)
+ block/blk-cgroup.c | 34 ++++++++++++++++------------------
+ block/blk-cgroup.h |  4 ++--
+ 2 files changed, 18 insertions(+), 20 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index d50d8d1..00e72f4 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -25,8 +25,6 @@ static struct blkcg_policy blkcg_policy_throtl;
- 
- /* A workqueue to queue throttle related work */
- static struct workqueue_struct *kthrotld_workqueue;
--static void throtl_schedule_delayed_work(struct throtl_data *td,
--				unsigned long delay);
- 
- struct throtl_rb_root {
- 	struct rb_root rb;
-@@ -398,6 +396,19 @@ static void throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
- 		__throtl_dequeue_tg(td, tg);
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index f13cf95..af2ca27 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -369,13 +369,17 @@ static void blkg_destroy_all(struct request_queue *q)
+ 	q->root_rl.blkg = NULL;
  }
  
-+/* Call with queue lock held */
-+static void throtl_schedule_delayed_work(struct throtl_data *td,
-+					 unsigned long delay)
-+{
-+	struct delayed_work *dwork = &td->dispatch_work;
-+
-+	if (total_nr_queued(td)) {
-+		mod_delayed_work(kthrotld_workqueue, dwork, delay);
-+		throtl_log(td, "schedule work. delay=%lu jiffies=%lu",
-+			   delay, jiffies);
-+	}
-+}
-+
- static void throtl_schedule_next_dispatch(struct throtl_data *td)
- {
- 	struct throtl_rb_root *st = &td->tg_service_tree;
-@@ -863,20 +874,6 @@ out:
- 	}
- }
- 
--/* Call with queue lock held */
--static void
--throtl_schedule_delayed_work(struct throtl_data *td, unsigned long delay)
+-static void blkg_rcu_free(struct rcu_head *rcu_head)
 -{
--
--	struct delayed_work *dwork = &td->dispatch_work;
--
--	if (total_nr_queued(td)) {
--		mod_delayed_work(kthrotld_workqueue, dwork, delay);
--		throtl_log(td, "schedule work. delay=%lu jiffies=%lu",
--				delay, jiffies);
--	}
+-	blkg_free(container_of(rcu_head, struct blkcg_gq, rcu_head));
 -}
 -
- static u64 tg_prfill_cpu_rwstat(struct seq_file *sf,
- 				struct blkg_policy_data *pd, int off)
+-void __blkg_release(struct blkcg_gq *blkg)
++/*
++ * A group is RCU protected, but having an rcu lock does not mean that one
++ * can access all the fields of blkg and assume these are valid.  For
++ * example, don't try to follow throtl_data and request queue links.
++ *
++ * Having a reference to blkg under an rcu allows accesses to only values
++ * local to groups like group stats and group rate limits.
++ */
++void __blkg_release_rcu(struct rcu_head *rcu_head)
  {
++	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
+ 	int i;
+ 
+ 	/* tell policies that this one is being freed */
+@@ -388,21 +392,15 @@ void __blkg_release(struct blkcg_gq *blkg)
+ 
+ 	/* release the blkcg and parent blkg refs this blkg has been holding */
+ 	css_put(&blkg->blkcg->css);
+-	if (blkg->parent)
++	if (blkg->parent) {
++		spin_lock_irq(blkg->q->queue_lock);
+ 		blkg_put(blkg->parent);
++		spin_unlock_irq(blkg->q->queue_lock);
++	}
+ 
+-	/*
+-	 * A group is freed in rcu manner. But having an rcu lock does not
+-	 * mean that one can access all the fields of blkg and assume these
+-	 * are valid. For example, don't try to follow throtl_data and
+-	 * request queue links.
+-	 *
+-	 * Having a reference to blkg under an rcu allows acess to only
+-	 * values local to groups like group stats and group rate limits
+-	 */
+-	call_rcu(&blkg->rcu_head, blkg_rcu_free);
++	blkg_free(blkg);
+ }
+-EXPORT_SYMBOL_GPL(__blkg_release);
++EXPORT_SYMBOL_GPL(__blkg_release_rcu);
+ 
+ /*
+  * The next function used by blk_queue_for_each_rl().  It's a bit tricky
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index e15f731..8056c03 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -266,7 +266,7 @@ static inline void blkg_get(struct blkcg_gq *blkg)
+ 	blkg->refcnt++;
+ }
+ 
+-void __blkg_release(struct blkcg_gq *blkg);
++void __blkg_release_rcu(struct rcu_head *rcu);
+ 
+ /**
+  * blkg_put - put a blkg reference
+@@ -279,7 +279,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
+ 	lockdep_assert_held(blkg->q->queue_lock);
+ 	WARN_ON_ONCE(blkg->refcnt <= 0);
+ 	if (!--blkg->refcnt)
+-		__blkg_release(blkg);
++		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
+ }
+ 
+ struct blkcg_gq *__blkg_lookup(struct blkcg *blkcg, struct request_queue *q,
 -- 
 1.8.1.4
