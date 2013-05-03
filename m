@@ -1,88 +1,84 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: Re: [PATCH V3 4/8] memcg: add per cgroup dirty pages accounting
-Date: Fri, 3 May 2013 17:59:24 +0800
-Message-ID: <CAFj3OHU1DMVKuzaHGbnBnRGzzvzUC6+t-k2zb3v=BnZP0CiEcg@mail.gmail.com>
-References: <1356455919-14445-1-git-send-email-handai.szj@taobao.com>
-	<1356456367-14660-1-git-send-email-handai.szj@taobao.com>
-	<20130102104421.GC22160@dhcp22.suse.cz>
-	<20130503091149.GA17496@dhcp22.suse.cz>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET] blk-throttle: implement proper hierarchy support
+Date: Fri, 3 May 2013 13:56:52 -0400
+Message-ID: <20130503175652.GB6062@redhat.com>
+References: <20130502173428.GA4771@redhat.com>
+ <20130502175701.GL19814@mtj.dyndns.org>
+ <20130502181747.GH30020@redhat.com>
+ <20130502182933.GN19814@mtj.dyndns.org>
+ <20130502184514.GI30020@redhat.com>
+ <20130502184953.GP19814@mtj.dyndns.org>
+ <20130502190732.GK30020@redhat.com>
+ <CAOS58YOk7G=dBG1v5Ed2z3biMMyKkkutp30vH5XC72z0_Z85cw@mail.gmail.com>
+ <20130502193139.GL30020@redhat.com>
+ <20130502231307.GT19814@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:x-received:in-reply-to:references:date:message-id
-         :subject:from:to:cc:content-type;
-        bh=VtFkKZzek0HW8wzsdQHze30yTCqCqL7/w3Dse0+g0Rw=;
-        b=v34IRg3n+aM3HoYXx/UhpJLsfd/KRoBXc81lRB4jzO9YEXZSsCFcG1ICfw8sklqx/2
-         vDuGLpB0wzBV+o/6HzsWpYRSZlTQs5a077oSvdD3pOeppG2768h9xdyXfe7oNsKBuhYx
-         HLO03GpzYQ4dcFH6VlykkYiWZCkHBTGyKIdvKiCCG4eJP4zjXhq1vavk9Q1fgQL+3jmn
-         8R7l9Y+JnfdFUJzdpKpAhL2IsXrS3NhsNZ0HJfwM7g3P/yX7IbD3pJdKX4V74/F2kjvA
-         Xp/sCcvBqlUL2YRx9ekTNHtD3SK3jVNl3SKkwUpCJcAPKRQSdqUK0LECYzXBC/qO2H1e
-         /QZQ==
-In-Reply-To: <20130503091149.GA17496@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130502231307.GT19814-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Greg Thelen <gthelen@google.com>, Wu Fengguang <fengguang.wu@intel.com>, Glauber Costa <glommer@parallels.com>, Dave Chinner <dchinner@redhat.com>, Sha Zhengju <handai.szj@taobao.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, May 3, 2013 at 5:11 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> On Wed 02-01-13 11:44:21, Michal Hocko wrote:
->> On Wed 26-12-12 01:26:07, Sha Zhengju wrote:
->> > From: Sha Zhengju <handai.szj@taobao.com>
->> >
->> > This patch adds memcg routines to count dirty pages, which allows memory controller
->> > to maintain an accurate view of the amount of its dirty memory and can provide some
->> > info for users while cgroup's direct reclaim is working.
->>
->> I guess you meant targeted resp. (hard/soft) limit reclaim here,
->> right? It is true that this is direct reclaim but it is not clear to me
->> why the usefulnes should be limitted to the reclaim for users. I would
->> understand this if the users was in fact in-kernel users.
->>
->> [...]
->> > To prevent AB/BA deadlock mentioned by Greg Thelen in previous version
->> > (https://lkml.org/lkml/2012/7/30/227), we adjust the lock order:
->> > ->private_lock --> mapping->tree_lock --> memcg->move_lock.
->> > So we need to make mapping->tree_lock ahead of TestSetPageDirty in __set_page_dirty()
->> > and __set_page_dirty_nobuffers(). But in order to avoiding useless spinlock contention,
->> > a prepare PageDirty() checking is added.
->>
->> But there is another AA deadlock here I believe.
->> page_remove_rmap
->>   mem_cgroup_begin_update_page_stat           <<< 1
->>   set_page_dirty
->>     __set_page_dirty_buffers
->>       __set_page_dirty
->>         mem_cgroup_begin_update_page_stat     <<< 2
->>         move_lock_mem_cgroup
->>           spin_lock_irqsave(&memcg->move_lock, *flags);
->
-> JFYI since abf09bed (s390/mm: implement software dirty bits) this is no
-> longer possible. I haven't checked wheter there are other cases like
-> this one and it should be better if mem_cgroup_begin_update_page_stat
-> was recursive safe if that can be done without too many hacks.
-> I will have a look at this (hopefully) sometimes next week.
->
+On Thu, May 02, 2013 at 04:13:07PM -0700, Tejun Heo wrote:
+> Hello, Vivek.
+> 
+> On Thu, May 02, 2013 at 03:31:39PM -0400, Vivek Goyal wrote:
+> > I think my example was little flawed previously. I think you are right.
+> > Penalty is not probably as bad as I have been thinking.
+> > 
+> > So if both parent and child have limit of 1MB/s and application is doing
+> > IO (say at 2MB/sec), in long term it should still see 1MB/s rate.
+> > 
+> > 		T1	T2	T3	T4	T5	T6
+> > Parent group:		B1	B2	B3	B4	B5
+> > Child group:	B1	B2	B3	B4	B5	B6 
+> > 
+> > Above B1 to B6 are bios of 1MB size. T1 to T6 are 1 second time interval.
+> > B1 waits for T1 interval in child group and then for T2 interval in
+> > parent group and then gets dispatched. But a pipe line has formed in
+> > child group and B2 is waiting in child group in T2 slice. So penalty
+> > is not double.
+> > 
+> > So each group migration will add one extra wait period. In above case
+> > 5 bios dispatched in 6 seconds. Longer the sampling interval, delay
+> > remains the constant to one time interval and % penalty goes down.
+> 
+> Yeah, I think that's what *should* be happening but not what I'm
+> seeing.  I'm seeing ~15% penalty.
 
-Hi Michal,
+What test are you running. I am running a simple dd with directIO and
+I am not seeing any penalty.
 
+# set limit to 1000000 bytes/second both in parent and child cgroup
+# dd if=/dev/vdb of=/dev/null iflag=direct
 
-I'm sorry for not being able to return to this problem immediately after LSF/MM.
-That is good news. IIRC, it's the only place we have encountered
-recursive problem in accounting memcg dirty pages. But I'll try to
-revive my previous work of simplifying
-mem_cgroup_begin_update_page_stat() lock.
-I'll back to it in next few days.
+I will capture blktrace and analyze it though to understand better
+what's happening.
 
+>  It works fine if there are more
+> than one active children but with a single child configured at the
+> same limit, it doesn't work as expected.  I'm a bit lost where the
+> difference is coming from.  Hmmm... also in the above example, we
+> really should be doing the following.
+> 
+>  		T1	T2	T3	T4	T5	T6
+>  Parent group:	B1	B2	B3	B4	B5	B6
+>  Child group:	B1	B2	B3	B4	B5	B6 
+> 
+> I mean, if there's no other IO going on, there's no point in delaying
+> the first IO.  ie. the slice should be considered as started before so
+> that B1 can be issued immediately, right?
 
---
-Thanks,
-Sha
+Yes that's the right thing to do. So may be we can tell parent group when
+bio was queued in. Parent will have to start a new time slice. It also
+needs to look into when was the last slice it finished and take greater
+of last slice finished and time slice passed by child.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+/me needs to think little more about time slice management.
+
+Thanks
+Vivek
