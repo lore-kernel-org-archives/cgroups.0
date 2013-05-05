@@ -1,80 +1,105 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/3] memcg: check more strictly to avoid PAGE_ALIGN wrapped to 0
-Date: Sun,  5 May 2013 23:43:10 +0800
-Message-ID: <1367768590-4403-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH 3/3] memcg: replace memparse to avoid input overflow
+Date: Sun,  5 May 2013 23:44:41 +0800
+Message-ID: <1367768681-4451-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:from:to:cc:subject:date:message-id:x-mailer;
-        bh=2wKXjBBbZXapjiH2L2ULTCQ8yIw5bI7iYE7AHB74BZ8=;
-        b=g4kqzMR1J5PDijlgKiPQqox7iXXpErPz9D2A4BRr93Gz1VFzakrn27DWZKzTviMITi
-         udbXPOIaNinuwiASQPdMdLi71X2YF4fRJGBx0lM+pzui0D1UBJLbYnbrNCe9Dm04xp2L
-         xy6jn/E8x+bISBLTt/Qp08ifKXcxxTibrBW5DCQSBxCE6WURiLFab93BOx5ULspj8Vhr
-         EfsMFq3UC91g1/0a+ET4Jdl87ZbmourtIhmLlVgGYAkiaqc8qvE2tvviB/rZM3kmXr4F
-         IJw020r4sed5nmpdLxGzS9S3XNS3wX0+K7Aq/CfovxZzdhrM3jSwsHbbnYfrYVnjYdSW
-         ap2w==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=oP6SnSdyZfgnccP235vaQcuXB5KNZkk0vqVuO0HFbeg=;
+        b=PIlJnVtsuWEHvJCYzV+tSuGtLiO2BWilurOno94sPzjk/jRFhS7YyflyBM/+NaBdaV
+         MJETg9I+3u4M2f8xyF5BQWGAAGH1/IyHdMzaJkkwwyFsUrQeZcFb8osALVE+gZY4inZ3
+         yYBU0bM4M9LCPVK34+Bc8J5kO3WBmEOTxvyDRQIas9jamMoRqPXmTLTO9bcw/sj3wvwE
+         FTpaRIBC1g89vdCkylXlGA22ZjaBWoH4JXpxNw1U0pmyMYjOV71n62w0+AYrkDNMZzMB
+         c73DyrCgJ6oJcLs8gZs1imjaLOnrKVicAbm2F7lIP/Pbcx/jG6EYT22T5yvyCnZ41Z6d
+         mUww==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: cgroups@vger.kernel.org, linux-mm@kvack.org
+Cc: nishimura@mxp.nes.nec.co.jp, akpm@linux-foundation.org, mhocko@suse.cz, jeff.liu@oracle.com, Sha Zhengju <handai.szj@taobao.com>
 
-Since PAGE_ALIGN is aligning up(the next page boundary), this can
-prevent input values wrapped to 0 and cause strange result to user.
+memparse() doesn't check if overflow has happens, and it even has no
+args to inform user that the unexpected situation has occurred. Besides,
+some of its callers make a little artful use of the current implementation
+and it also seems to involve too much if changing memparse() interface.
 
-This patch also rename the second arg of
-res_counter_memparse_write_strategy() to 'resp' and add a local
-variable 'res' to save the too often dereferences. Thanks Andrew
-for pointing it out!
+This patch rewrites memcg's internal res_counter_memparse_write_strategy().
+It doesn't use memparse() any more and replaces simple_strtoull() with
+kstrtoull() to avoid input overflow.
 
-
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Reported-by: Li Wenpeng <xingke.lwp-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
 ---
- kernel/res_counter.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ kernel/res_counter.c |   41 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 36 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-index 3f0417f..be8ddda 100644
+index be8ddda..a990e8e0 100644
 --- a/kernel/res_counter.c
 +++ b/kernel/res_counter.c
-@@ -178,23 +178,29 @@ u64 res_counter_read_u64(struct res_counter *counter, int member)
- #endif
- 
- int res_counter_memparse_write_strategy(const char *buf,
--					unsigned long long *res)
-+					unsigned long long *resp)
+@@ -182,19 +182,50 @@ int res_counter_memparse_write_strategy(const char *buf,
  {
  	char *end;
-+	unsigned long long res;
+ 	unsigned long long res;
++	int ret, len, suffix = 0;
++	char *ptr;
  
  	/* return RES_COUNTER_MAX(unlimited) if "-1" is specified */
  	if (*buf == '-') {
--		*res = simple_strtoull(buf + 1, &end, 10);
--		if (*res != 1 || *end != '\0')
-+		res = simple_strtoull(buf + 1, &end, 10);
-+		if (res != 1 || *end != '\0')
+-		res = simple_strtoull(buf + 1, &end, 10);
+-		if (res != 1 || *end != '\0')
++		ret = kstrtoull(buf + 1, 10, &res);
++		if (res != 1 || ret)
  			return -EINVAL;
--		*res = RES_COUNTER_MAX;
-+		*resp = RES_COUNTER_MAX;
+ 		*resp = RES_COUNTER_MAX;
  		return 0;
  	}
  
--	*res = memparse(buf, &end);
-+	res = memparse(buf, &end);
- 	if (*end != '\0')
- 		return -EINVAL;
- 
--	*res = PAGE_ALIGN(*res);
-+	if (PAGE_ALIGN(res) >= res)
-+		res = PAGE_ALIGN(res);
-+	else
-+		res = RES_COUNTER_MAX; /* avoid PAGE_ALIGN wrapping to zero */
+-	res = memparse(buf, &end);
+-	if (*end != '\0')
+-		return -EINVAL;
++	len = strlen(buf);
++	end = buf + len - 1;
++	switch (*end) {
++	case 'G':
++	case 'g':
++		suffix ++;
++	case 'M':
++	case 'm':
++		suffix ++;
++	case 'K':
++	case 'k':
++		suffix ++;
++		len --;
++	default:
++		break;
++	}
 +
-+	*resp = res;
- 	return 0;
- }
++	ptr = kmalloc(len + 1, GFP_KERNEL);
++	if (!ptr) return -ENOMEM;
++
++	strlcpy(ptr, buf, len + 1);
++	ret = kstrtoull(ptr, 0, &res);
++	kfree(ptr);
++	if (ret) return -EINVAL;
++
++	while (suffix) {
++		/* check for overflow while multiplying suffix number */
++		if (unlikely(res & (~0ull << 54)))
++			return -EINVAL;
++		res <<= 10;
++		suffix --;
++	}
+ 
+ 	if (PAGE_ALIGN(res) >= res)
+ 		res = PAGE_ALIGN(res);
 -- 
 1.7.9.5
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
