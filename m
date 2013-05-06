@@ -1,198 +1,250 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 24/33] blk-throttle: implement dispatch looping
-Date: Mon,  6 May 2013 15:46:03 -0700
-Message-ID: <1367880372-28312-25-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 21/33] blk-throttle: implement sq_to_tg(),
+	sq_to_td() and throtl_log()
+Date: Mon,  6 May 2013 15:46:00 -0700
+Message-ID: <1367880372-28312-22-git-send-email-tj@kernel.org>
 References: <1367880372-28312-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-         :in-reply-to:references;
-        bh=YCUOdouKgYdAUXssTwCKEcfzrSumQwWLkGJfJI1Pwtk=;
-        b=KF6pzHLIj1isLvGsP7Y5R7kIIg5I/0bYBuwfwpFhRhgqelBS6r/p5HJYYn84QDP0tT
-         G/wkf/fx83Of1T3TVvbbQMgiLQ8E/YLm5JdTPnwOjhT8H24Dvnvkvzm8yCRMORj/Ua4q
-         bI1/xc1IoUVmJ/OJMgKx/3On2PwRRmgw0bc2dbdmgVOTodm/wg5V8smMo4DWo90CV9YZ
-         oy9XbbY19oorOwmn9qvh4x+Hi4xVIDjaRNgL5CoNzkvvdATAfAC/G6wR5EWnuK9FazsH
-         Al4fMmVjLO7oRys5yvGWRzx1E73XU+EtRL8cCeohYKevjknh/WGCUwaiz//LvWiibQbh
-         GUZw==
-In-Reply-To: <1367880372-28312-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
+	:in-reply-to:references;
+	bh=QGWAckOB9S877NXr3l5hbWBzetrySlXbAXlxL6wU+jk=;
+	b=nhRSCVi6cyIycrJDJNdMedAdA8UbRBEDthnP4JkSi81JBeTDjUzqGbuQ5rg270xr+b
+	dkbyia77ip37/0NlGlgSh7Qgg+V4ySv+8dwb3GL9JuOaEmkdWQN99Mx05AgnjYIsIQbI
+	OAb0K8WaOoWNj7fBWT1CQ+JvCPjJ4lbWpsRqaXRwesEgDjjyNXTZd9NhFZ3ljtY5Dc/w
+	/AWbf7WZYRqcH8RJgpnryeCRRL/hRTU6I9EOWD3KqfNlBDkaV/vF5H2se3gZvq8R9FJg
+	VYefc0yf6wfX3VgvWJPqZ5SZQy0tXTsMHFSY5mNJw0Q3485y71wZWPQMzvjQTBoR22K+
+	lz4g==
+In-Reply-To: <1367880372-28312-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-throtl_select_dispatch() only dispatches throtl_quantum bios on each
-invocation.  blk_throtl_dispatch_work_fn() in turn depends on
-throtl_schedule_next_dispatch() scheduling the next dispatch window
-immediately so that undue delays aren't incurred.  This effectively
-chains multiple dispatch work item executions back-to-back when there
-are more than throtl_quantum bios to dispatch on a given tick.
+Now that both throtl_data and throtl_grp embed throtl_service_queue,
+we can unify throtl_log() and throtl_log_tg().
 
-There is no reason to finish the current work item just to repeat it
-immediately.  This patch makes throtl_schedule_next_dispatch() return
-%false without doing anything if the current dispatch window is still
-open and updates blk_throtl_dispatch_work_fn() repeat dispatching
-after cpu_relax() on %false return.
+* sq_to_tg() is added.  This returns the throtl_grp a service_queue is
+  embedded in.  If the service_queue is the top-level one embedded in
+  throtl_data, NULL is returned.
 
-This change will help implementing hierarchy support as dispatching
-will be done from pending_timer and immediate reschedule of timer
-function isn't supported and doesn't make much sense.
+* sq_to_td() is added.  A service_queue is always associated with a
+  throtl_data.  This function finds the associated td and returns it.
 
-While this patch changes how dispatch behaves when there are more than
-throtl_quantum bios to dispatch on a single tick, the behavior change
-is immaterial.
+* throtl_log() is updated to take throtl_service_queue instead of
+  throtl_data.  If the service_queue is one embedded in throtl_grp, it
+  prints the same header as throtl_log_tg() did.  If it's one embedded
+  in throtl_data, it behaves the same as before.  This renders
+  throtl_log_tg() unnecessary.  Removed.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+This change is necessary for hierarchy support as we're gonna be using
+the same code paths to dispatch bios to intermediate service_queues
+embedded in throtl_grps and the top-level service_queue embedded in
+throtl_data.
+
+This patch doesn't make any behavior changes.
+
+v2: throtl_log() didn't print a space after blkg path.  Updated so
+    that it prints a space after throtl_grp path.  Spotted by Vivek.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 82 +++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 56 insertions(+), 26 deletions(-)
+ block/blk-throttle.c | 110 +++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 81 insertions(+), 29 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index a8d23f0..8ee8e4e 100644
+index 00cfdd0..2875ff6 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -467,24 +467,41 @@ static void throtl_schedule_pending_timer(struct throtl_service_queue *sq,
- 		   expires - jiffies, jiffies);
+@@ -151,16 +151,65 @@ static inline struct throtl_grp *td_root_tg(struct throtl_data *td)
+ 	return blkg_to_tg(td->queue->root_blkg);
  }
  
--static void throtl_schedule_next_dispatch(struct throtl_service_queue *sq)
+-#define throtl_log_tg(tg, fmt, args...)	do {				\
+-	char __pbuf[128];						\
 +/**
-+ * throtl_schedule_next_dispatch - schedule the next dispatch cycle
-+ * @sq: the service_queue to schedule dispatch for
-+ * @force: force scheduling
++ * sq_to_tg - return the throl_grp the specified service queue belongs to
++ * @sq: the throtl_service_queue of interest
 + *
-+ * Arm @sq->pending_timer so that the next dispatch cycle starts on the
-+ * dispatch time of the first pending child.  Returns %true if either timer
-+ * is armed or there's no pending child left.  %false if the current
-+ * dispatch window is still open and the caller should continue
-+ * dispatching.
-+ *
-+ * If @force is %true, the dispatch timer is always scheduled and this
-+ * function is guaranteed to return %true.  This is to be used when the
-+ * caller can't dispatch itself and needs to invoke pending_timer
-+ * unconditionally.  Note that forced scheduling is likely to induce short
-+ * delay before dispatch starts even if @sq->first_pending_disptime is not
-+ * in the future and thus shouldn't be used in hot paths.
++ * Return the throtl_grp @sq belongs to.  If @sq is the top-level one
++ * embedded in throtl_data, %NULL is returned.
 + */
-+static bool throtl_schedule_next_dispatch(struct throtl_service_queue *sq,
-+					  bool force)
- {
--	struct throtl_data *td = sq_to_td(sq);
++static struct throtl_grp *sq_to_tg(struct throtl_service_queue *sq)
++{
++	if (sq && sq->parent_sq)
++		return container_of(sq, struct throtl_grp, service_queue);
++	else
++		return NULL;
++}
++
++/**
++ * sq_to_td - return throtl_data the specified service queue belongs to
++ * @sq: the throtl_service_queue of interest
++ *
++ * A service_queue can be embeded in either a throtl_grp or throtl_data.
++ * Determine the associated throtl_data accordingly and return it.
++ */
++static struct throtl_data *sq_to_td(struct throtl_service_queue *sq)
++{
++	struct throtl_grp *tg = sq_to_tg(sq);
++
++	if (tg)
++		return tg->td;
++	else
++		return container_of(sq, struct throtl_data, service_queue);
++}
++
++/**
++ * throtl_log - log debug message via blktrace
++ * @sq: the service_queue being reported
++ * @fmt: printf format string
++ * @args: printf args
++ *
++ * The messages are prefixed with "throtl BLKG_NAME" if @sq belongs to a
++ * throtl_grp; otherwise, just "throtl".
++ *
++ * TODO: this should be made a function and name formatting should happen
++ * after testing whether blktrace is enabled.
++ */
++#define throtl_log(sq, fmt, args...)	do {				\
++	struct throtl_grp *__tg = sq_to_tg((sq));			\
++	struct throtl_data *__td = sq_to_td((sq));			\
++									\
++	(void)__td;							\
++	if ((__tg)) {							\
++		char __pbuf[128];					\
+ 									\
+-	blkg_path(tg_to_blkg(tg), __pbuf, sizeof(__pbuf));		\
+-	blk_add_trace_msg((tg)->td->queue, "throtl %s " fmt, __pbuf, ##args); \
++		blkg_path(tg_to_blkg(__tg), __pbuf, sizeof(__pbuf));	\
++		blk_add_trace_msg(__td->queue, "throtl %s " fmt, __pbuf, ##args); \
++	} else {							\
++		blk_add_trace_msg(__td->queue, "throtl " fmt, ##args);	\
++	}								\
+ } while (0)
+ 
+-#define throtl_log(td, fmt, args...)	\
+-	blk_add_trace_msg((td)->queue, "throtl " fmt, ##args)
 -
- 	/* any pending children left? */
- 	if (!sq->nr_pending)
--		return;
-+		return true;
+ /*
+  * Worker for allocating per cpu stat for tgs. This is scheduled on the
+  * system_wq once there are some groups on the alloc_list waiting for
+@@ -402,9 +451,10 @@ static void throtl_schedule_delayed_work(struct throtl_data *td,
+ 					 unsigned long delay)
+ {
+ 	struct delayed_work *dwork = &td->dispatch_work;
++	struct throtl_service_queue *sq = &td->service_queue;
  
- 	update_min_dispatch_time(sq);
- 
- 	/* is the next dispatch time in the future? */
--	if (time_after(sq->first_pending_disptime, jiffies)) {
-+	if (force || time_after(sq->first_pending_disptime, jiffies)) {
- 		throtl_schedule_pending_timer(sq, sq->first_pending_disptime);
--		return;
-+		return true;
- 	}
- 
--	/* kick immediate execution */
--	queue_work(kthrotld_workqueue, &td->dispatch_work);
-+	/* tell the caller to continue dispatching */
-+	return false;
+ 	mod_delayed_work(kthrotld_workqueue, dwork, delay);
+-	throtl_log(td, "schedule work. delay=%lu jiffies=%lu", delay, jiffies);
++	throtl_log(sq, "schedule work. delay=%lu jiffies=%lu", delay, jiffies);
  }
  
- static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
-@@ -930,39 +947,47 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
- 					      dispatch_work);
- 	struct throtl_service_queue *sq = &td->service_queue;
- 	struct request_queue *q = td->queue;
--	unsigned int nr_disp = 0;
- 	struct bio_list bio_list_on_stack;
- 	struct bio *bio;
- 	struct blk_plug plug;
--	int rw;
-+	bool dispatched = false;
-+	int rw, ret;
+ static void throtl_schedule_next_dispatch(struct throtl_data *td)
+@@ -429,9 +479,10 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
+ 	tg->io_disp[rw] = 0;
+ 	tg->slice_start[rw] = jiffies;
+ 	tg->slice_end[rw] = jiffies + throtl_slice;
+-	throtl_log_tg(tg, "[%c] new slice start=%lu end=%lu jiffies=%lu",
+-			rw == READ ? 'R' : 'W', tg->slice_start[rw],
+-			tg->slice_end[rw], jiffies);
++	throtl_log(&tg->service_queue,
++		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
++		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
++		   tg->slice_end[rw], jiffies);
+ }
  
- 	spin_lock_irq(q->queue_lock);
+ static inline void throtl_set_slice_end(struct throtl_grp *tg, bool rw,
+@@ -444,9 +495,10 @@ static inline void throtl_extend_slice(struct throtl_grp *tg, bool rw,
+ 				       unsigned long jiffy_end)
+ {
+ 	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+-	throtl_log_tg(tg, "[%c] extend slice start=%lu end=%lu jiffies=%lu",
+-			rw == READ ? 'R' : 'W', tg->slice_start[rw],
+-			tg->slice_end[rw], jiffies);
++	throtl_log(&tg->service_queue,
++		   "[%c] extend slice start=%lu end=%lu jiffies=%lu",
++		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
++		   tg->slice_end[rw], jiffies);
+ }
+ 
+ /* Determine if previously allocated or extended slice is complete or not */
+@@ -511,10 +563,10 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ 
+ 	tg->slice_start[rw] += nr_slices * throtl_slice;
+ 
+-	throtl_log_tg(tg, "[%c] trim slice nr=%lu bytes=%llu io=%lu"
+-			" start=%lu end=%lu jiffies=%lu",
+-			rw == READ ? 'R' : 'W', nr_slices, bytes_trim, io_trim,
+-			tg->slice_start[rw], tg->slice_end[rw], jiffies);
++	throtl_log(&tg->service_queue,
++		   "[%c] trim slice nr=%lu bytes=%llu io=%lu start=%lu end=%lu jiffies=%lu",
++		   rw == READ ? 'R' : 'W', nr_slices, bytes_trim, io_trim,
++		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
+ }
+ 
+ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+@@ -852,7 +904,7 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
  
  	bio_list_init(&bio_list_on_stack);
  
--	throtl_log(sq, "dispatch nr_queued=%u read=%u write=%u",
--		   td->nr_queued[READ] + td->nr_queued[WRITE],
--		   td->nr_queued[READ], td->nr_queued[WRITE]);
-+	while (true) {
-+		throtl_log(sq, "dispatch nr_queued=%u read=%u write=%u",
-+			   td->nr_queued[READ] + td->nr_queued[WRITE],
-+			   td->nr_queued[READ], td->nr_queued[WRITE]);
-+
-+		ret = throtl_select_dispatch(sq);
-+		if (ret) {
-+			for (rw = READ; rw <= WRITE; rw++) {
-+				bio_list_merge(&bio_list_on_stack, &sq->bio_lists[rw]);
-+				bio_list_init(&sq->bio_lists[rw]);
-+			}
-+			throtl_log(sq, "bios disp=%u", ret);
-+			dispatched = true;
-+		}
+-	throtl_log(td, "dispatch nr_queued=%u read=%u write=%u",
++	throtl_log(sq, "dispatch nr_queued=%u read=%u write=%u",
+ 		   td->nr_queued[READ] + td->nr_queued[WRITE],
+ 		   td->nr_queued[READ], td->nr_queued[WRITE]);
  
--	nr_disp = throtl_select_dispatch(sq);
-+		if (throtl_schedule_next_dispatch(sq, false))
-+			break;
- 
--	if (nr_disp) {
--		for (rw = READ; rw <= WRITE; rw++) {
--			bio_list_merge(&bio_list_on_stack, &sq->bio_lists[rw]);
--			bio_list_init(&sq->bio_lists[rw]);
--		}
--		throtl_log(sq, "bios disp=%u", nr_disp);
-+		/* this dispatch windows is still open, relax and repeat */
-+		spin_unlock_irq(q->queue_lock);
-+		cpu_relax();
-+		spin_lock_irq(q->queue_lock);
+@@ -863,7 +915,7 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
+ 			bio_list_merge(&bio_list_on_stack, &sq->bio_lists[rw]);
+ 			bio_list_init(&sq->bio_lists[rw]);
+ 		}
+-		throtl_log(td, "bios disp=%u", nr_disp);
++		throtl_log(sq, "bios disp=%u", nr_disp);
  	}
  
--	throtl_schedule_next_dispatch(sq);
--
- 	spin_unlock_irq(q->queue_lock);
+ 	throtl_schedule_next_dispatch(td);
+@@ -972,9 +1024,10 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	else
+ 		*(unsigned int *)((void *)tg + cft->private) = ctx.v;
+ 
+-	throtl_log_tg(tg, "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
+-		      tg->bps[READ], tg->bps[WRITE],
+-		      tg->iops[READ], tg->iops[WRITE]);
++	throtl_log(&tg->service_queue,
++		   "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
++		   tg->bps[READ], tg->bps[WRITE],
++		   tg->iops[READ], tg->iops[WRITE]);
  
  	/*
- 	 * If we dispatched some requests, unplug the queue to make sure
- 	 * immediate dispatch
- 	 */
--	if (nr_disp) {
-+	if (dispatched) {
- 		blk_start_plug(&plug);
- 		while((bio = bio_list_pop(&bio_list_on_stack)))
- 			generic_make_request(bio);
-@@ -1078,7 +1103,7 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
- 
- 	if (tg->flags & THROTL_TG_PENDING) {
- 		tg_update_disptime(tg);
--		throtl_schedule_next_dispatch(sq->parent_sq);
-+		throtl_schedule_next_dispatch(sq->parent_sq, true);
+ 	 * We're already holding queue_lock and know @tg is valid.  Let's
+@@ -1131,12 +1184,11 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
  	}
  
- 	blkg_conf_finish(&ctx);
-@@ -1229,10 +1254,15 @@ queue_bio:
+ queue_bio:
+-	throtl_log_tg(tg, "[%c] bio. bdisp=%llu sz=%u bps=%llu"
+-			" iodisp=%u iops=%u queued=%d/%d",
+-			rw == READ ? 'R' : 'W',
+-			tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
+-			tg->io_disp[rw], tg->iops[rw],
+-			sq->nr_queued[READ], sq->nr_queued[WRITE]);
++	throtl_log(sq, "[%c] bio. bdisp=%llu sz=%u bps=%llu iodisp=%u iops=%u queued=%d/%d",
++		   rw == READ ? 'R' : 'W',
++		   tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
++		   tg->io_disp[rw], tg->iops[rw],
++		   sq->nr_queued[READ], sq->nr_queued[WRITE]);
+ 
+ 	bio_associate_current(bio);
  	throtl_add_bio_tg(bio, tg);
- 	throttled = true;
- 
--	/* update @tg's dispatch time if @tg was empty before @bio */
-+	/*
-+	 * Update @tg's dispatch time and force schedule dispatch if @tg
-+	 * was empty before @bio.  The forced scheduling isn't likely to
-+	 * cause undue delay as @bio is likely to be dispatched directly if
-+	 * its @tg's disptime is not in the future.
-+	 */
- 	if (tg->flags & THROTL_TG_WAS_EMPTY) {
- 		tg_update_disptime(tg);
--		throtl_schedule_next_dispatch(tg->service_queue.parent_sq);
-+		throtl_schedule_next_dispatch(tg->service_queue.parent_sq, true);
- 	}
- 
- out_unlock:
 -- 
 1.8.1.4
