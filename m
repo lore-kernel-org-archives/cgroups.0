@@ -1,132 +1,182 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 10/33] blk-throttle: remove pointless throtl_nr_queued() optimizations
-Date: Mon,  6 May 2013 15:45:49 -0700
-Message-ID: <1367880372-28312-11-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 18/33] blk-throttle: dispatch to throtl_data->service_queue.bio_lists[]
+Date: Mon,  6 May 2013 15:45:57 -0700
+Message-ID: <1367880372-28312-19-git-send-email-tj@kernel.org>
 References: <1367880372-28312-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=qpt3RZl+ildNxZQM/Z9SMy4T8DBsYWiyLhGij0JAwpI=;
-        b=Z3hXq+M7WdJZK90OGbc+dowdT+uvej9PbX/EhBe9mGBi+hr5dTPuNdySJLJRFggUvc
-         xs7bNac0eoGn3Qr41BbtwYQB+9bO+kC1lKfkxc0LwSP1BLO6Yz6aO/5elJ1nsyduUBvS
-         BU60ScdfxPaoxVWls5FRAO9M1wwARhcQ1CXfCqWnrOAMW+eCmFNWhxyZcYQmqFf4IsJB
-         ET0dENl+aQtmDkMAqySGhub1KhihRwy8Z8VA8pN5WyQ+SYhvo/3ihPeGbxYmuWg6DmtV
-         ZeXm0QjjcnQy2Ou9XX864ZweNnXuwhWTDyzQxPMYnD0DG5zK5BuOO/FTpm0vN2zCXeyQ
-         7uQA==
-In-Reply-To: <1367880372-28312-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=Uo0XY/g14cWXpkv4uznJMcEoKBknOrUCB1hCjVYLeHk=;
+        b=KAYoP0nNDtb6DQNlbCcCQSyYPAqRtzkFfH06Pw2hUeHIihpLL6t8P5dxjP+tfrkjLi
+         0abSNZkxmzYCdjyiqMCqgZR+UJkXD/TAncpMpXcd8HdWNv+w1gb8tzrKoGZYy0690d43
+         TQinl/pvAeHt5qW+fI5t1N+/eF6hA9tP4ujHmCSRU/XRF3ZNQK8yrM6yCLGdhJ0hro10
+         BARWk2ILiDw6ZvM5Vh6ls2udqjnikrtvIO51uz8V8Hph0YJoyhyUEpBlSfQcAfmjk0zN
+         ++Oz6ln5EfWnYEH1parC8HNfF9FybEI54EMi8g32bNZ6WLkO4RUEHFZr3Nv2hMgv40tT
+         RlTA==
+In-Reply-To: <1367880372-28312-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-throtl_nr_queued() is used in several places to avoid performing
-certain operations when the throtl_data is empty.  This usually is
-useless as those paths usually aren't traveled if there's no bio
-queued.
+throtl_service_queues will eventually form a tree which is anchored at
+throtl_data->service_queue and queue bios will climb the tree to the
+top service_queue to be executed.
 
-* throtl_schedule_delayed_work() skips scheduling dispatch work item
-  if @td doesn't have any bios queued; however, the only case it can
-  be called when @td is empty is from tg_set_conf() which isn't
-  something we should be optimizing for.
+This patch makes the dispatch paths in blk_throtl_dispatch_work_fn()
+and blk_throtl_drain() to dispatch bios to
+throtl_data->service_queue.bio_lists[] instead of the on-stack
+bio_lists.  This will keep the final dispatch to the top level
+service_queue share the same mechanism as dispatches through the rest
+of the hierarchy.
 
-* throtl_schedule_next_dispatch() takes a quick exit if @td is empty;
-  however, right after that it triggers BUG if the service tree is
-  empty.  The two conditions are equivalent and it can just test
-  @st->count for the quick exit.
+As bio's should be issued in a sleepable context,
+blk_throtl_dispatch_work_fn() transfers all dispatched bio's from the
+service_queue bio_lists[] into an onstack one before dropping
+queue_lock and issuing the bio's.
 
-* blk_throtl_dispatch_work_fn() skips dispatch if @td is empty.  This
-  work function isn't usually invoked when @td is empty.  The only
-  possibility is from tg_set_conf() and when it happens the normal
-  dispatching path can handle empty @td fine.  No need to add special
-  skip path.
-
-This patch removes the above three unnecessary optimizations, which
-leave throtl_log() call in blk_throtl_dispatch_work_fn() the only user
-of throtl_nr_queued().  Remove throtl_nr_queued() and open code it in
-throtl_log().  I don't think we need td->nr_queued[] at all.  Maybe we
-can remove it later.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-throttle.c | 29 +++++++----------------------
- 1 file changed, 7 insertions(+), 22 deletions(-)
+ block/blk-throttle.c | 40 +++++++++++++++++++++++-----------------
+ 1 file changed, 23 insertions(+), 17 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 507b1c6..dbeef30 100644
+index 6f57f94..154bd63 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -166,11 +166,6 @@ THROTL_TG_FNS(on_rr);
- #define throtl_log(td, fmt, args...)	\
- 	blk_add_trace_msg((td)->queue, "throtl " fmt, ##args)
- 
--static inline unsigned int total_nr_queued(struct throtl_data *td)
--{
--	return td->nr_queued[0] + td->nr_queued[1];
--}
--
- /*
-  * Worker for allocating per cpu stat for tgs. This is scheduled on the
-  * system_wq once there are some groups on the alloc_list waiting for
-@@ -402,25 +397,18 @@ static void throtl_schedule_delayed_work(struct throtl_data *td,
- {
- 	struct delayed_work *dwork = &td->dispatch_work;
- 
--	if (total_nr_queued(td)) {
--		mod_delayed_work(kthrotld_workqueue, dwork, delay);
--		throtl_log(td, "schedule work. delay=%lu jiffies=%lu",
--			   delay, jiffies);
--	}
-+	mod_delayed_work(kthrotld_workqueue, dwork, delay);
-+	throtl_log(td, "schedule work. delay=%lu jiffies=%lu", delay, jiffies);
+@@ -743,7 +743,7 @@ static void tg_update_disptime(struct throtl_grp *tg,
  }
  
- static void throtl_schedule_next_dispatch(struct throtl_data *td)
+ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw,
+-				struct bio_list *bl)
++				struct throtl_service_queue *parent_sq)
  {
- 	struct throtl_rb_root *st = &td->tg_service_tree;
+ 	struct throtl_service_queue *sq = &tg->service_queue;
+ 	struct bio *bio;
+@@ -757,13 +757,14 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw,
+ 	tg->td->nr_queued[rw]--;
  
--	/*
--	 * If there are more bios pending, schedule more work.
--	 */
--	if (!total_nr_queued(td))
-+	/* any pending children left? */
-+	if (!st->count)
- 		return;
+ 	throtl_charge_bio(tg, bio);
+-	bio_list_add(bl, bio);
++	bio_list_add(&parent_sq->bio_lists[rw], bio);
+ 	bio->bi_rw |= REQ_THROTTLED;
  
--	BUG_ON(!st->count);
--
- 	update_min_dispatch_time(st);
+ 	throtl_trim_slice(tg, rw);
+ }
  
- 	if (time_before_eq(st->min_disptime, jiffies))
-@@ -844,14 +832,11 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
+-static int throtl_dispatch_tg(struct throtl_grp *tg, struct bio_list *bl)
++static int throtl_dispatch_tg(struct throtl_grp *tg,
++			      struct throtl_service_queue *parent_sq)
+ {
+ 	struct throtl_service_queue *sq = &tg->service_queue;
+ 	unsigned int nr_reads = 0, nr_writes = 0;
+@@ -776,7 +777,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg, struct bio_list *bl)
+ 	while ((bio = bio_list_peek(&sq->bio_lists[READ])) &&
+ 	       tg_may_dispatch(tg, bio, NULL)) {
+ 
+-		tg_dispatch_one_bio(tg, bio_data_dir(bio), bl);
++		tg_dispatch_one_bio(tg, bio_data_dir(bio), parent_sq);
+ 		nr_reads++;
+ 
+ 		if (nr_reads >= max_nr_reads)
+@@ -786,7 +787,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg, struct bio_list *bl)
+ 	while ((bio = bio_list_peek(&sq->bio_lists[WRITE])) &&
+ 	       tg_may_dispatch(tg, bio, NULL)) {
+ 
+-		tg_dispatch_one_bio(tg, bio_data_dir(bio), bl);
++		tg_dispatch_one_bio(tg, bio_data_dir(bio), parent_sq);
+ 		nr_writes++;
+ 
+ 		if (nr_writes >= max_nr_writes)
+@@ -796,8 +797,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg, struct bio_list *bl)
+ 	return nr_reads + nr_writes;
+ }
+ 
+-static int throtl_select_dispatch(struct throtl_service_queue *parent_sq,
+-				  struct bio_list *bl)
++static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+ {
+ 	unsigned int nr_disp = 0;
+ 
+@@ -813,7 +813,7 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq,
+ 
+ 		throtl_dequeue_tg(tg, parent_sq);
+ 
+-		nr_disp += throtl_dispatch_tg(tg, bl);
++		nr_disp += throtl_dispatch_tg(tg, parent_sq);
+ 
+ 		if (sq->nr_queued[0] || sq->nr_queued[1])
+ 			tg_update_disptime(tg, parent_sq);
+@@ -830,11 +830,13 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
+ {
+ 	struct throtl_data *td = container_of(to_delayed_work(work),
+ 					      struct throtl_data, dispatch_work);
++	struct throtl_service_queue *sq = &td->service_queue;
+ 	struct request_queue *q = td->queue;
+ 	unsigned int nr_disp = 0;
+ 	struct bio_list bio_list_on_stack;
+ 	struct bio *bio;
+ 	struct blk_plug plug;
++	int rw;
  
  	spin_lock_irq(q->queue_lock);
  
--	if (!total_nr_queued(td))
--		goto out;
--
- 	bio_list_init(&bio_list_on_stack);
+@@ -844,10 +846,15 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
+ 		   td->nr_queued[READ] + td->nr_queued[WRITE],
+ 		   td->nr_queued[READ], td->nr_queued[WRITE]);
  
- 	throtl_log(td, "dispatch nr_queued=%u read=%u write=%u",
--			total_nr_queued(td), td->nr_queued[READ],
--			td->nr_queued[WRITE]);
-+		   td->nr_queued[READ] + td->nr_queued[WRITE],
-+		   td->nr_queued[READ], td->nr_queued[WRITE]);
+-	nr_disp = throtl_select_dispatch(&td->service_queue, &bio_list_on_stack);
++	nr_disp = throtl_select_dispatch(sq);
  
- 	nr_disp = throtl_select_dispatch(td, &bio_list_on_stack);
- 
-@@ -859,7 +844,7 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
+-	if (nr_disp)
++	if (nr_disp) {
++		for (rw = READ; rw <= WRITE; rw++) {
++			bio_list_merge(&bio_list_on_stack, &sq->bio_lists[rw]);
++			bio_list_init(&sq->bio_lists[rw]);
++		}
  		throtl_log(td, "bios disp=%u", nr_disp);
++	}
  
  	throtl_schedule_next_dispatch(td);
--out:
-+
+ 
+@@ -1156,27 +1163,26 @@ void blk_throtl_drain(struct request_queue *q)
+ 	struct throtl_data *td = q->td;
+ 	struct throtl_service_queue *parent_sq = &td->service_queue;
+ 	struct throtl_grp *tg;
+-	struct bio_list bl;
+ 	struct bio *bio;
++	int rw;
+ 
+ 	queue_lockdep_assert_held(q);
+ 
+-	bio_list_init(&bl);
+-
+ 	while ((tg = throtl_rb_first(parent_sq))) {
+ 		struct throtl_service_queue *sq = &tg->service_queue;
+ 
+ 		throtl_dequeue_tg(tg, parent_sq);
+ 
+ 		while ((bio = bio_list_peek(&sq->bio_lists[READ])))
+-			tg_dispatch_one_bio(tg, bio_data_dir(bio), &bl);
++			tg_dispatch_one_bio(tg, bio_data_dir(bio), parent_sq);
+ 		while ((bio = bio_list_peek(&sq->bio_lists[WRITE])))
+-			tg_dispatch_one_bio(tg, bio_data_dir(bio), &bl);
++			tg_dispatch_one_bio(tg, bio_data_dir(bio), parent_sq);
+ 	}
  	spin_unlock_irq(q->queue_lock);
  
- 	/*
+-	while ((bio = bio_list_pop(&bl)))
+-		generic_make_request(bio);
++	for (rw = READ; rw <= WRITE; rw++)
++		while ((bio = bio_list_pop(&parent_sq->bio_lists[rw])))
++			generic_make_request(bio);
+ 
+ 	spin_lock_irq(q->queue_lock);
+ }
 -- 
 1.8.1.4
