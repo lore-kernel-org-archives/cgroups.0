@@ -1,98 +1,155 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 16/33] blk-throttle: add throtl_grp->service_queue
-Date: Mon,  6 May 2013 15:45:55 -0700
-Message-ID: <1367880372-28312-17-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 32/33] blk-throttle: implement throtl_grp->has_rules[]
+Date: Mon,  6 May 2013 15:46:11 -0700
+Message-ID: <1367880372-28312-33-git-send-email-tj@kernel.org>
 References: <1367880372-28312-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=DH32Iu5A2/B9SEjgkdoEETR+lmTj/riMXJoRhb7h+zQ=;
-        b=etANmDRfeM3dEpPEJRqG+2KOaT4ivRfGtyLSIkFvlSEhdBDHRagj/PNdMlwAax/0Ap
-         KADhDjjn5gA369mKQ2UOVEgZkMyFRQiT3yn+dXGqUvH2RpOEBsnJ8jhE6iBQECcpA5iv
-         3H1mFOv57R+N9v6tG/joYeX13vOzVccRioEeAAKgdzozG3HUIXWaKAMOe42abWrEOC42
-         harUuSQNx9dAj6tZGpLXptwF2P9dtxvLiCVcdCeE9+Xy4FG90fNlEODbGPwtTpkW8ieq
-         e6XVZlmnbICFFN6Ju0rw4/GZacUswgNj9HWWgwBNc0Co7yzBfn8frEwYWPFDMS+u9H1X
-         01xQ==
-In-Reply-To: <1367880372-28312-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=RIBHa7qucA4AJiHDJ8wznsvHG4TW90tOz7lbz+74cao=;
+        b=Oe2/9NNfgpuwRUp56CZPeOSpVEINUjyqh+e3hA5Ro5BkyBs7fKksH4UjBs+2HRVzNQ
+         V6O+Vh7IqTm1OZmc5Pap+jXTMN3ClYqn70lumPY0anZPMmDTBngs/5/HdP8+REkbwUI/
+         Y7qdwcNYP3HGJ+N4PT9XqGSivCaaqmUmseLJAszYwS/JLNDZKF/CEfXaeYTSb2WKE/HW
+         cxCJVs0nGxqLB/Y5qsfcRpfN/D329i0zWNqmyKUBxvqVURh4mF+TRzO2OOPb/noaGraw
+         zXuxhQLcLfxsp6uU3rCRZrlwdwe6sxs9jQlULSG7oLaiBU4tDxbRzZsk6n/NfefYjvmy
+         Sm3Q==
+In-Reply-To: <1367880372-28312-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
 
-Currently, there's single service_queue per queue -
-throtl_data->service_queue.  All active throtl_grp's are queued on the
-queue and dispatched according to their limits.  To support hierarchy,
-this will be expanded such that active throtl_grp's form a tree
-anchored at throtl_data->service_queue and chained through each
-intermediate throtl_grp's service_queue.
+blk_throtl_bio() has a quick exit path for throtl_grps without limits
+configured.  It looks at the bps and iops limits and if both are not
+configured, the bio is issued immediately.  While this is correct in
+the current flat hierarchy as each throtl_grp behaves completely
+independently, it would become wrong in proper hierarchy mode.  A
+group without any limits could still be limited by one of its
+ancestors and bio's queued for such group should not bypass
+blk-throtl.
 
-This patch adds throtl_grp->service_queue to prepare for hierarchy
-support.  The initialization function - throtl_service_queue_init() -
-is added and replaces the macro initializer.  The newly added
-tg->service_queue isn't used yet.  Following patches will do.
+As having a quick bypass mechanism is beneficial, this patch
+reimplements the mechanism such that it's correct even with proper
+hierarchy.  throtl_grp->has_rules[] is added.  These booleans are
+updated for the whole subtree whenever a config is updated so that
+has_rules[] of the whole subtree stays synchronized.  They're also
+updated when a new throtl_grp comes online so that it can't escape the
+limits of its ancestors.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+As no throtl_grp has another throtl_grp as parent now, this patch
+doesn't yet make any behavior differences.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-throttle.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ block/blk-throttle.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 7 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index ebaaaa9..7340440 100644
+index 7477f33..27f006b 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -33,9 +33,6 @@ struct throtl_service_queue {
- 	unsigned long		first_pending_disptime;	/* disptime of the first tg */
- };
+@@ -124,6 +124,9 @@ struct throtl_grp {
  
--#define THROTL_SERVICE_QUEUE_INITIALIZER				\
--	(struct throtl_service_queue){ .pending_tree = RB_ROOT }
--
- enum tg_state_flags {
- 	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
- };
-@@ -60,6 +57,9 @@ struct throtl_grp {
- 	/* throtl_data this group belongs to */
- 	struct throtl_data *td;
+ 	unsigned int flags;
  
-+	/* this group's service queue */
-+	struct throtl_service_queue service_queue;
++	/* are there any throtl rules between this group and td? */
++	bool has_rules[2];
 +
- 	/*
- 	 * Dispatch time in jiffies. This is the estimated time when group
- 	 * will unthrottle and is ready to dispatch more bio. It is used as
-@@ -190,11 +190,18 @@ alloc_stats:
- 		goto alloc_stats;
+ 	/* bytes per second rate limits */
+ 	uint64_t bps[2];
+ 
+@@ -422,6 +425,30 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
+ 	spin_unlock_irqrestore(&tg_stats_alloc_lock, flags);
  }
  
-+/* init a service_queue, assumes the caller zeroed it */
-+static void throtl_service_queue_init(struct throtl_service_queue *sq)
++/*
++ * Set has_rules[] if @tg or any of its parents have limits configured.
++ * This doesn't require walking up to the top of the hierarchy as the
++ * parent's has_rules[] is guaranteed to be correct.
++ */
++static void tg_update_has_rules(struct throtl_grp *tg)
 +{
-+	sq->pending_tree = RB_ROOT;
++	struct throtl_grp *parent_tg = sq_to_tg(tg->service_queue.parent_sq);
++	int rw;
++
++	for (rw = READ; rw <= WRITE; rw++)
++		tg->has_rules[rw] = (parent_tg && parent_tg->has_rules[rw]) ||
++				    (tg->bps[rw] != -1 || tg->iops[rw] != -1);
 +}
 +
- static void throtl_pd_init(struct blkcg_gq *blkg)
++static void throtl_pd_online(struct blkcg_gq *blkg)
++{
++	/*
++	 * We don't want new groups to escape the limits of its ancestors.
++	 * Update has_rules[] after a new group is brought online.
++	 */
++	tg_update_has_rules(blkg_to_tg(blkg));
++}
++
+ static void throtl_pd_exit(struct blkcg_gq *blkg)
  {
  	struct throtl_grp *tg = blkg_to_tg(blkg);
- 	unsigned long flags;
+@@ -843,12 +870,6 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	return 0;
+ }
  
-+	throtl_service_queue_init(&tg->service_queue);
- 	RB_CLEAR_NODE(&tg->rb_node);
- 	tg->td = blkg->q->td;
- 	bio_list_init(&tg->bio_lists[0]);
-@@ -1168,8 +1175,8 @@ int blk_throtl_init(struct request_queue *q)
- 	if (!td)
- 		return -ENOMEM;
+-static bool tg_no_rule_group(struct throtl_grp *tg, bool rw) {
+-	if (tg->bps[rw] == -1 && tg->iops[rw] == -1)
+-		return 1;
+-	return 0;
+-}
+-
+ /*
+  * Returns whether one can dispatch a bio or not. Also returns approx number
+  * of jiffies to wait before this bio is with-in IO rate and can be dispatched
+@@ -1307,6 +1328,8 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 	struct blkg_conf_ctx ctx;
+ 	struct throtl_grp *tg;
+ 	struct throtl_service_queue *sq;
++	struct blkcg_gq *blkg;
++	struct cgroup *pos_cgrp;
+ 	int ret;
  
--	td->service_queue = THROTL_SERVICE_QUEUE_INITIALIZER;
- 	INIT_DELAYED_WORK(&td->dispatch_work, blk_throtl_dispatch_work_fn);
-+	throtl_service_queue_init(&td->service_queue);
+ 	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, buf, &ctx);
+@@ -1330,6 +1353,17 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
+ 		   tg->iops[READ], tg->iops[WRITE]);
  
- 	q->td = td;
- 	td->queue = q;
+ 	/*
++	 * Update has_rules[] flags for the updated tg's subtree.  A tg is
++	 * considered to have rules if either the tg itself or any of its
++	 * ancestors has rules.  This identifies groups without any
++	 * restrictions in the whole hierarchy and allows them to bypass
++	 * blk-throttle.
++	 */
++	tg_update_has_rules(tg);
++	blkg_for_each_descendant_pre(blkg, pos_cgrp, ctx.blkg)
++		tg_update_has_rules(blkg_to_tg(blkg));
++
++	/*
+ 	 * We're already holding queue_lock and know @tg is valid.  Let's
+ 	 * apply the new config directly.
+ 	 *
+@@ -1415,6 +1449,7 @@ static struct blkcg_policy blkcg_policy_throtl = {
+ 	.cftypes		= throtl_files,
+ 
+ 	.pd_init_fn		= throtl_pd_init,
++	.pd_online_fn		= throtl_pd_online,
+ 	.pd_exit_fn		= throtl_pd_exit,
+ 	.pd_reset_stats_fn	= throtl_pd_reset_stats,
+ };
+@@ -1442,7 +1477,7 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 	blkcg = bio_blkcg(bio);
+ 	tg = throtl_lookup_tg(td, blkcg);
+ 	if (tg) {
+-		if (tg_no_rule_group(tg, rw)) {
++		if (!tg->has_rules[rw]) {
+ 			throtl_update_dispatch_stats(tg_to_blkg(tg),
+ 						     bio->bi_size, bio->bi_rw);
+ 			goto out_unlock_rcu;
 -- 
 1.8.1.4
