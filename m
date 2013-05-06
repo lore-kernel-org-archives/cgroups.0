@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 12/33] blk-throttle: simplify throtl_grp flag handling
-Date: Mon,  6 May 2013 15:45:51 -0700
-Message-ID: <1367880372-28312-13-git-send-email-tj@kernel.org>
+Subject: [PATCH 29/33] blk-throttle: make throtl_pending_timer_fn() ready for hierarchy
+Date: Mon,  6 May 2013 15:46:08 -0700
+Message-ID: <1367880372-28312-30-git-send-email-tj@kernel.org>
 References: <1367880372-28312-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=e07tBs+EiE1zI67NYNZwEIlp++o34gLc4Unwm9sEjSI=;
-        b=slOND33MtTHcDwhJCeSR8g9PpPimIuPPP6PvJCT/+lEnqJtx1P7/MXjXGVaiygNGMh
-         vsnf3NJeq2P6RYEtKk7x75fv9F3XiobclJvdR368CCEYV3su85u3IbF1ebhpLAG2CwnH
-         276skE5j1PmH6vgKDK6zlxEA0+YnILmQpGiKbbiHI6OJMBLat6ucd1M+hEqYa6vpDD1N
-         yFtGNyqxAzJyh/16U9dVhinRs8XNL98kvgMhEDf0N67Ht9Ioa+VbBBlEnK768NUcefJV
-         AGYIPx2fpTNOvAP+JjO4+AVopS8XiI15P8oX0To/SHLzM6o8iiYTEbtAv0a07/mRUvQ9
-         ivkg==
+        bh=XavisQIxAK0rIIXpcmGUlmhYsTbXkvjEDIKxYrsOmHo=;
+        b=ruGhDu7urt2pdoI6YO0skMXpJvvZF2uOIDoY/snjqYcP9ZJvSWZEZbj0YbCrS/y7h8
+         Czjc9EoVRyR4eMk7wnpXVeQDJl1L4WV0vhoP0K4Cyjz7iyUkm4+IR4QfXemW+a3hRejO
+         ueM2WEH9r8Ydbp8a7p8fvytEp/NwzAIbgbJyHhTboVb6Dwmhniv6Bis3xaD0VCoo1lLu
+         0bvQr4aXqn+8iwG1ErppZVWwhcaslu6eNCotQHMYEq/bpuGPmSYLDh9L5UcutHfHuY4F
+         QwZYnPfGle5cmCKBpsseomDyi22Cqv8J8cbwf8VZmLJbCIJdo+0KyLhymHt7aqHuvlwd
+         MFPg==
 In-Reply-To: <1367880372-28312-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,98 +24,100 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
 
-blk-throttle is still using function-defining macros to define flag
-handling functions, which went out style at least a decade ago.
+throtl_pending_timer_fn() currently assumes that the parent_sq is the
+top level one and the bio's dispatched are ready to be issued;
+however, this assumption will be wrong with proper hierarchy support.
+This patch makes the following changes to make
+throtl_pending_timer_fn() ready for hiearchy.
 
-Just define the flag as bitmask and use direct bit operations.
+* If the parent_sq isn't the top-level one, update the parent
+  throtl_grp's dispatch time and schedule the next dispatch as
+  necessary.  If the parent's dispatch time is now, repeat the
+  function for the parent throtl_grp.
 
-This patch doesn't make any functional changes.
+* If the parent_sq is the top-level one, kick issue work_item as
+  before.
+
+* The debug message printed by throtl_log() now prints out the
+  service_queue's nr_queued[] instead of the total nr_queued as the
+  latter becomes uninteresting and misleading with hierarchical
+  dispatch.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-throttle.c | 34 +++++++++-------------------------
- 1 file changed, 9 insertions(+), 25 deletions(-)
+ block/blk-throttle.c | 40 +++++++++++++++++++++++++++++++++-------
+ 1 file changed, 33 insertions(+), 7 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b279110..e8ef43d 100644
+index 0420261..bc65077 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -36,6 +36,10 @@ struct throtl_service_queue {
- #define THROTL_SERVICE_QUEUE_INITIALIZER				\
- 	(struct throtl_service_queue){ .pending_tree = RB_ROOT }
- 
-+enum tg_state_flags {
-+	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
-+};
-+
- #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
- 
- /* Per-cpu group stats */
-@@ -136,26 +140,6 @@ static inline struct throtl_grp *td_root_tg(struct throtl_data *td)
- 	return blkg_to_tg(td->queue->root_blkg);
- }
- 
--enum tg_state_flags {
--	THROTL_TG_FLAG_on_rr = 0,	/* on round-robin busy list */
--};
--
--#define THROTL_TG_FNS(name)						\
--static inline void throtl_mark_tg_##name(struct throtl_grp *tg)		\
--{									\
--	(tg)->flags |= (1 << THROTL_TG_FLAG_##name);			\
--}									\
--static inline void throtl_clear_tg_##name(struct throtl_grp *tg)	\
--{									\
--	(tg)->flags &= ~(1 << THROTL_TG_FLAG_##name);			\
--}									\
--static inline int throtl_tg_##name(const struct throtl_grp *tg)		\
--{									\
--	return ((tg)->flags & (1 << THROTL_TG_FLAG_##name)) != 0;	\
--}
--
--THROTL_TG_FNS(on_rr);
--
- #define throtl_log_tg(td, tg, fmt, args...)	do {			\
- 	char __pbuf[128];						\
- 									\
-@@ -369,25 +353,25 @@ static void __throtl_enqueue_tg(struct throtl_data *td, struct throtl_grp *tg)
- 	struct throtl_service_queue *sq = &td->service_queue;
- 
- 	tg_service_queue_add(sq, tg);
--	throtl_mark_tg_on_rr(tg);
-+	tg->flags |= THROTL_TG_PENDING;
- 	sq->nr_pending++;
- }
- 
- static void throtl_enqueue_tg(struct throtl_data *td, struct throtl_grp *tg)
+@@ -952,23 +952,33 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+  * This timer is armed when a child throtl_grp with active bio's become
+  * pending and queued on the service_queue's pending_tree and expires when
+  * the first child throtl_grp should be dispatched.  This function
+- * dispatches bio's from the children throtl_grps and kicks
+- * throtl_data->dispatch_work if there are bio's ready to be issued.
++ * dispatches bio's from the children throtl_grps to the parent
++ * service_queue.
++ *
++ * If the parent's parent is another throtl_grp, dispatching is propagated
++ * by either arming its pending_timer or repeating dispatch directly.  If
++ * the top-level service_tree is reached, throtl_data->dispatch_work is
++ * kicked so that the ready bio's are issued.
+  */
+ static void throtl_pending_timer_fn(unsigned long arg)
  {
--	if (!throtl_tg_on_rr(tg))
-+	if (!(tg->flags & THROTL_TG_PENDING))
- 		__throtl_enqueue_tg(td, tg);
- }
+ 	struct throtl_service_queue *sq = (void *)arg;
++	struct throtl_grp *tg = sq_to_tg(sq);
+ 	struct throtl_data *td = sq_to_td(sq);
+ 	struct request_queue *q = td->queue;
+-	bool dispatched = false;
++	struct throtl_service_queue *parent_sq;
++	bool dispatched;
+ 	int ret;
  
- static void __throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
- {
- 	throtl_rb_erase(&tg->rb_node, &td->service_queue);
--	throtl_clear_tg_on_rr(tg);
-+	tg->flags &= ~THROTL_TG_PENDING;
- }
+ 	spin_lock_irq(q->queue_lock);
++again:
++	parent_sq = sq->parent_sq;
++	dispatched = false;
  
- static void throtl_dequeue_tg(struct throtl_data *td, struct throtl_grp *tg)
- {
--	if (throtl_tg_on_rr(tg))
-+	if (tg->flags & THROTL_TG_PENDING)
- 		__throtl_dequeue_tg(td, tg);
- }
+ 	while (true) {
+ 		throtl_log(sq, "dispatch nr_queued=%u read=%u write=%u",
+-			   td->nr_queued[READ] + td->nr_queued[WRITE],
+-			   td->nr_queued[READ], td->nr_queued[WRITE]);
++			   sq->nr_queued[READ] + sq->nr_queued[WRITE],
++			   sq->nr_queued[READ], sq->nr_queued[WRITE]);
  
-@@ -964,7 +948,7 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
- 	throtl_start_new_slice(td, tg, 0);
- 	throtl_start_new_slice(td, tg, 1);
- 
--	if (throtl_tg_on_rr(tg)) {
-+	if (tg->flags & THROTL_TG_PENDING) {
- 		tg_update_disptime(td, tg);
- 		throtl_schedule_next_dispatch(td);
+ 		ret = throtl_select_dispatch(sq);
+ 		if (ret) {
+@@ -985,9 +995,25 @@ static void throtl_pending_timer_fn(unsigned long arg)
+ 		spin_lock_irq(q->queue_lock);
  	}
+ 
+-	if (dispatched)
+-		queue_work(kthrotld_workqueue, &td->dispatch_work);
++	if (!dispatched)
++		goto out_unlock;
+ 
++	if (parent_sq) {
++		/* @parent_sq is another throl_grp, propagate dispatch */
++		if (tg->flags & THROTL_TG_WAS_EMPTY) {
++			tg_update_disptime(tg);
++			if (!throtl_schedule_next_dispatch(parent_sq, false)) {
++				/* window is already open, repeat dispatching */
++				sq = parent_sq;
++				tg = sq_to_tg(sq);
++				goto again;
++			}
++		}
++	} else {
++		/* reached the top-level, queue issueing */
++		queue_work(kthrotld_workqueue, &td->dispatch_work);
++	}
++out_unlock:
+ 	spin_unlock_irq(q->queue_lock);
+ }
+ 
 -- 
 1.8.1.4
