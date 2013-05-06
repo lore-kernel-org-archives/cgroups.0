@@ -1,8 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 05/33] blkcg: move bulk of blkcg_gq release operations to the
-	RCU callback
-Date: Mon,  6 May 2013 15:45:44 -0700
-Message-ID: <1367880372-28312-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/33] blk-throttle: remove spurious throtl_enqueue_tg() call
+	from throtl_select_dispatch()
+Date: Mon,  6 May 2013 15:45:45 -0700
+Message-ID: <1367880372-28312-7-git-send-email-tj@kernel.org>
 References: <1367880372-28312-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,13 +11,13 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
 	:in-reply-to:references;
-	bh=FMGMrXqL2uos2s+KGBOmwk1YmjTqXhuPmv6aTCFCfUg=;
-	b=IiWGP/z/ZntfAY3qwrHHL5tH+Y9A7N6Hvqz3WcGjenX4IgrmfglWz7OSW0aDVfC7XH
-	kEKhDQ/okp+DYc1Wf1v3vVyFnxEgdJWB+muyTANHq0KCnDmxcSGk3mgMYeYPXe34dSFe
-	U1HjXpuq4xC6TqOsWySYyL0JcjwWX+SYAc1C5aad1IIP9221xt4bQUc+GAoRkB2O0989
-	99kP4ZSBadu0ChjBSndDcCLB/j5tw4Z6amCz3AfCs5XOJuKhAOlfcaarf7veQxdOAdt6
-	3NrbCtp4qLH/gww/b+lbCJSfKmiDB1SCI0ir2uEd9Ceprx1BKWJN7jcG8HjYqGrVHKt4
-	nCIg==
+	bh=DDNupDLiQGdr0igBraZLcoPklNvyf6LheD1MuhyGCA0=;
+	b=GcnOX4JQTjnTjjaeD9jxUzOMu3RFa1rtHu8+lrjsYyjjM8APwWoA+lNWYOdFVq0lAm
+	c/m80S0w5mhQmkrFw23ukBOXSQKs1Ie2pfg9RZVAeNv8RgLfl6CZMcKmp56LiXOhgcOR
+	gTvyucW0+o/j39X6oyZqHtcwgoLn305mpIrWKQSj9bakvFewDnn6HM3OHpWf+yYj03XM
+	DOrYbu752Fbr3SdwJSrmXa1XzkKrz9ygqfMbgfUj776SUZ1goJb6AVMNTshiSCE0XBY3
+	9A+frUQPgON5dJXgmOL0o16n6Byzq9FtvRd0k3tpLq+bqme1hFIl4UWU4c0NjXBU5YOW
+	lUlQ==
 In-Reply-To: <1367880372-28312-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -32,106 +32,32 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Currently, when the last reference of a blkcg_gq is put, all then
-release operations sans the actual freeing happen directly in
-blkg_put().  As blkg_put() may be called under queue_lock, all
-pd_exit_fn()s may be too.  This makes it impossible for pd_exit_fn()s
-to use del_timer_sync() on timers which grab the queue_lock which is
-an irq-safe lock due to the deadlock possibility described in the
-comment on top of del_timer_sync().
+throtl_select_dispatch() calls throtl_enqueue_tg() right after
+tg_update_disptime(), which always calls the function anyway.  The
+call is, while harmless, unnecessary.  Remove it.
 
-This can be easily avoided by perfoming the release operations in the
-RCU callback instead of directly from blkg_put().  This patch moves
-the blkcg_gq release operations to the RCU callback.
-
-As this leaves __blkg_release() with only call_rcu() invocation,
-blkg_rcu_free() is renamed to __blkg_release_rcu(), exported and
-call_rcu() invocation is now done directly from blkg_put() instead of
-going through __blkg_release() which is removed.
+This patch doesn't introduce any behavior difference.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c | 34 ++++++++++++++++------------------
- block/blk-cgroup.h |  4 ++--
- 2 files changed, 18 insertions(+), 20 deletions(-)
+ block/blk-throttle.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index f13cf95..af2ca27 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -369,13 +369,17 @@ static void blkg_destroy_all(struct request_queue *q)
- 	q->root_rl.blkg = NULL;
- }
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 3114622..3960787 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -816,10 +816,8 @@ static int throtl_select_dispatch(struct throtl_data *td, struct bio_list *bl)
  
--static void blkg_rcu_free(struct rcu_head *rcu_head)
--{
--	blkg_free(container_of(rcu_head, struct blkcg_gq, rcu_head));
--}
--
--void __blkg_release(struct blkcg_gq *blkg)
-+/*
-+ * A group is RCU protected, but having an rcu lock does not mean that one
-+ * can access all the fields of blkg and assume these are valid.  For
-+ * example, don't try to follow throtl_data and request queue links.
-+ *
-+ * Having a reference to blkg under an rcu allows accesses to only values
-+ * local to groups like group stats and group rate limits.
-+ */
-+void __blkg_release_rcu(struct rcu_head *rcu_head)
- {
-+	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
- 	int i;
+ 		nr_disp += throtl_dispatch_tg(td, tg, bl);
  
- 	/* tell policies that this one is being freed */
-@@ -388,21 +392,15 @@ void __blkg_release(struct blkcg_gq *blkg)
+-		if (tg->nr_queued[0] || tg->nr_queued[1]) {
++		if (tg->nr_queued[0] || tg->nr_queued[1])
+ 			tg_update_disptime(td, tg);
+-			throtl_enqueue_tg(td, tg);
+-		}
  
- 	/* release the blkcg and parent blkg refs this blkg has been holding */
- 	css_put(&blkg->blkcg->css);
--	if (blkg->parent)
-+	if (blkg->parent) {
-+		spin_lock_irq(blkg->q->queue_lock);
- 		blkg_put(blkg->parent);
-+		spin_unlock_irq(blkg->q->queue_lock);
-+	}
- 
--	/*
--	 * A group is freed in rcu manner. But having an rcu lock does not
--	 * mean that one can access all the fields of blkg and assume these
--	 * are valid. For example, don't try to follow throtl_data and
--	 * request queue links.
--	 *
--	 * Having a reference to blkg under an rcu allows acess to only
--	 * values local to groups like group stats and group rate limits
--	 */
--	call_rcu(&blkg->rcu_head, blkg_rcu_free);
-+	blkg_free(blkg);
- }
--EXPORT_SYMBOL_GPL(__blkg_release);
-+EXPORT_SYMBOL_GPL(__blkg_release_rcu);
- 
- /*
-  * The next function used by blk_queue_for_each_rl().  It's a bit tricky
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index e15f731..8056c03 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -266,7 +266,7 @@ static inline void blkg_get(struct blkcg_gq *blkg)
- 	blkg->refcnt++;
- }
- 
--void __blkg_release(struct blkcg_gq *blkg);
-+void __blkg_release_rcu(struct rcu_head *rcu);
- 
- /**
-  * blkg_put - put a blkg reference
-@@ -279,7 +279,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
- 	lockdep_assert_held(blkg->q->queue_lock);
- 	WARN_ON_ONCE(blkg->refcnt <= 0);
- 	if (!--blkg->refcnt)
--		__blkg_release(blkg);
-+		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
- }
- 
- struct blkcg_gq *__blkg_lookup(struct blkcg *blkcg, struct request_queue *q,
+ 		if (nr_disp >= throtl_quantum)
+ 			break;
 -- 
 1.8.1.4
