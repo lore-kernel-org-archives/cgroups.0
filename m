@@ -1,20 +1,20 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 31/33] blk-throttle: Account for child group's start time in parent while bio climbs up
-Date: Mon,  6 May 2013 15:46:10 -0700
-Message-ID: <1367880372-28312-32-git-send-email-tj@kernel.org>
+Subject: [PATCH 33/33] blk-throttle: implement proper hierarchy support
+Date: Mon,  6 May 2013 15:46:12 -0700
+Message-ID: <1367880372-28312-34-git-send-email-tj@kernel.org>
 References: <1367880372-28312-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
          :in-reply-to:references;
-        bh=AHpsmjpoWAGbTLe7V8IUGpisSGGusGx2UwuvwGGUqKw=;
-        b=ShJqKQoaC5meG91am6+qHp8AcqfcIscGXJeLcfuyFvfD62ToQC1iXZq3OyKZCYTJ6k
-         vSgwa4yAnKIgRnxFharScdPuVHVv27BeDZwW4pxA5YdNvUSP1s6pfU8Ulol7R1I5cKT1
-         NiSqXID1LD/fS7+DQdYHicUXSxC/BRpSjnc1OJoHit/fZy8bjHoiQ0vSlLV5u8svCwSg
-         60VurqinHX1+CD691rt5xKBqipq2DKfznh67b+gMAweLzPtLHuOqTFKzGEYoaO8fF4No
-         4nyVPzyYU6Q6nwlCfHBd4kQIYw0Asqy54yfmFZH1STdFWtctOa8aOhsqshj0L1VWwJoK
-         99bA==
+        bh=2cCgSFDi1yJ0Zd6JKdL+FDjxn7nMkT+ux2Uh+L25gxA=;
+        b=Zygvc/gZtLWoZxPg1/KJWvDSzhTeeu1rgiHw35i3EMggg+9DwT+QyeRwSi3YBkbbHh
+         Ul9sYCyKWUyJt2o6hLOWcLvbm7Uq5NufWljl78rIOJ2GoduSxvbOJk43ktfMVrVb1C3P
+         c2fAe2rFkwbyu4qL55PYyWzLt3Rlfkhe5MkykeeIJ2OfOhxk463CmsuATtuMcTRMJ9XT
+         mNrU9c2wR6xatoffAG/gNNuCEXhU6PnGYTWgwq/CE/QSbgT/fs2xw9HVupNJSS76P+NZ
+         S07zCbHETqCzmRb6VOPW9jseiHgugEexG8c3iFkIzgDF0p+xzKtK+8V/dnH8e7C9ZxZd
+         r0Ew==
 In-Reply-To: <1367880372-28312-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,107 +24,92 @@ Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
-With the planned proper hierarchy support, a bio will climb up the
-tree before actually being dispatched. This makes sure bio is also
-subjected to parent's throttling limits, if any.
-
-It might happen that parent is idle and when bio is transferred to
-parent, a new slice starts fresh. But that is incorrect as parents
-wait time should have started when bio was queued in child group and
-causes IOs to be throttled more than configured as they climb the
+With the recent updates, blk-throttle is finally ready for proper
+hierarchy support.  Dispatching now honors service_queue->parent_sq
+and propagates correctly.  The only thing missing is setting
+->parent_sq correctly so that throtl_grp hierarchy matches the cgroup
 hierarchy.
 
-Given the fact that we have not written hierarchical algorithm in a
-way where child's and parents time slices are synchronized, we
-transfer the child's start time to parent if parent was idling.  If
-parent was busy doing dispatch of other bios all this while, this is
-not an issue.
+This patch updates throtl_pd_init() such that service_queues form the
+same hierarchy as the cgroup hierarchy if sane_behavior is enabled.
+As this concludes proper hierarchy support for blkcg, the shameful
+.broken_hierarchy tag is removed from blkio_subsys.
 
-Child's slice start time is passed to parent. Parent looks at its
-last expired slice start time. If child's start time is after parents
-old start time, that means parent had been idle and after parent
-went idle, child had an IO queued. So use child's start time as
-parent start time.
-
-If parent's start time is after child's start time, that means,
-when IO got queued in child group, parent was not idle. But later
-it dispatched some IO, its slice got trimmed and then it went idle.
-After a while child's request got shifted in parent group. In this
-case use parent's old start time as new start time as that's the
-duration of slice we did not use.
-
-This logic is far from perfect as if there are multiple childs
-then first child transferring the bio decides the start time while
-a bio might have queued up even earlier in other child, which is
-yet to be transferred up to parent. In that case we will lose
-time and bandwidth in parent. This patch is just an approximation
-to make situation somewhat better.
-
-Signed-off-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ block/blk-cgroup.c     |  8 --------
+ block/blk-throttle.c   | 22 +++++++++++++++++++++-
+ include/linux/cgroup.h |  2 ++
+ 3 files changed, 23 insertions(+), 9 deletions(-)
 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index af2ca27..8d9edc8 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -911,14 +911,6 @@ struct cgroup_subsys blkio_subsys = {
+ 	.subsys_id = blkio_subsys_id,
+ 	.base_cftypes = blkcg_files,
+ 	.module = THIS_MODULE,
+-
+-	/*
+-	 * blkio subsystem is utterly broken in terms of hierarchy support.
+-	 * It treats all cgroups equally regardless of where they're
+-	 * located in the hierarchy - all cgroups are treated as if they're
+-	 * right below the root.  Fix it and remove the following.
+-	 */
+-	.broken_hierarchy = true,
+ };
+ EXPORT_SYMBOL_GPL(blkio_subsys);
+ 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 541bd0d..7477f33 100644
+index 27f006b..08a32df 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -633,6 +633,28 @@ static bool throtl_schedule_next_dispatch(struct throtl_service_queue *sq,
- 	return false;
- }
+@@ -397,10 +397,30 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
+ {
+ 	struct throtl_grp *tg = blkg_to_tg(blkg);
+ 	struct throtl_data *td = blkg->q->td;
++	struct throtl_service_queue *parent_sq;
+ 	unsigned long flags;
+ 	int rw;
  
-+static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
-+		bool rw, unsigned long start)
-+{
-+	tg->bytes_disp[rw] = 0;
-+	tg->io_disp[rw] = 0;
-+
+-	throtl_service_queue_init(&tg->service_queue, &td->service_queue);
 +	/*
-+	 * Previous slice has expired. We must have trimmed it after last
-+	 * bio dispatch. That means since start of last slice, we never used
-+	 * that bandwidth. Do try to make use of that bandwidth while giving
-+	 * credit.
++	 * If sane_hierarchy is enabled, we switch to properly hierarchical
++	 * behavior where limits on a given throtl_grp are applied to the
++	 * whole subtree rather than just the group itself.  e.g. If 16M
++	 * read_bps limit is set on the root group, the whole system can't
++	 * exceed 16M for the device.
++	 *
++	 * If sane_hierarchy is not enabled, the broken flat hierarchy
++	 * behavior is retained where all throtl_grps are treated as if
++	 * they're all separate root groups right below throtl_data.
++	 * Limits of a group don't interact with limits of other groups
++	 * regardless of the position of the group in the hierarchy.
 +	 */
-+	if (time_after_eq(start, tg->slice_start[rw]))
-+		tg->slice_start[rw] = start;
++	parent_sq = &td->service_queue;
 +
-+	tg->slice_end[rw] = jiffies + throtl_slice;
-+	throtl_log(&tg->service_queue,
-+		   "[%c] new slice with credit start=%lu end=%lu jiffies=%lu",
-+		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
-+		   tg->slice_end[rw], jiffies);
-+}
++	if (cgroup_sane_behavior(blkg->blkcg->css.cgroup) && blkg->parent)
++		parent_sq = &blkg_to_tg(blkg->parent)->service_queue;
 +
- static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
- {
- 	tg->bytes_disp[rw] = 0;
-@@ -992,6 +1014,16 @@ static void tg_update_disptime(struct throtl_grp *tg)
- 	tg->flags &= ~THROTL_TG_WAS_EMPTY;
- }
- 
-+static void start_parent_slice_with_credit(struct throtl_grp *child_tg,
-+					struct throtl_grp *parent_tg, bool rw)
-+{
-+	if (throtl_slice_used(parent_tg, rw)) {
-+		throtl_start_new_slice_with_credit(parent_tg, rw,
-+				child_tg->slice_start[rw]);
-+	}
++	throtl_service_queue_init(&tg->service_queue, parent_sq);
 +
-+}
-+
- static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
- {
- 	struct throtl_service_queue *sq = &tg->service_queue;
-@@ -1020,6 +1052,7 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
- 	 */
- 	if (parent_tg) {
- 		throtl_add_bio_tg(bio, &tg->qnode_on_parent[rw], parent_tg);
-+		start_parent_slice_with_credit(tg, parent_tg, rw);
- 	} else {
- 		throtl_qnode_add_bio(bio, &tg->qnode_on_parent[rw],
- 				     &parent_sq->queued[rw]);
+ 	for (rw = READ; rw <= WRITE; rw++) {
+ 		throtl_qnode_init(&tg->qnode_on_self[rw], tg);
+ 		throtl_qnode_init(&tg->qnode_on_parent[rw], tg);
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index c371888..3c5f780 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -271,6 +271,8 @@ enum {
+ 	 * - memcg: use_hierarchy is on by default and the cgroup file for
+ 	 *   the flag is not created.
+ 	 *
++	 * - blkcg: blk-throttle becomes properly hierarchical.
++	 *
+ 	 * The followings are planned changes.
+ 	 *
+ 	 * - release_agent will be disallowed once replacement notification
 -- 
 1.8.1.4
