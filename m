@@ -1,73 +1,76 @@
-From: Chen Gang <gang.chen-bOixZGp5f+dBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [Suggestion] kernel/cgroup.c: about kfree after 'get_new_cssid'
-Date: Tue, 07 May 2013 19:20:49 +0800
-Message-ID: <5188E391.6040505@asianux.com>
-References: <5188DB93.2080504@asianux.com> <5188DF27.4080000@huawei.com>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v4 02/31] vmscan: take at least one pass with shrinkers
+Date: Tue, 7 May 2013 17:35:50 +0400
+Message-ID: <51890336.2080509@parallels.com>
+References: <1367018367-11278-1-git-send-email-glommer@openvz.org> <1367018367-11278-3-git-send-email-glommer@openvz.org> <20130430132239.GB6415@suse.de> <517FC7B4.5030101@parallels.com> <20130430153707.GD11497@suse.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5188DF27.4080000-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130430153707.GD11497@suse.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Mel Gorman <mgorman@suse.de>
+Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
 
-On 2013=E5=B9=B405=E6=9C=8807=E6=97=A5 19:01, Li Zefan wrote:
-> On 2013/5/7 18:46, Chen Gang wrote:
->> Hello Maintainers:
+On 04/30/2013 07:37 PM, Mel Gorman wrote:
+> On Tue, Apr 30, 2013 at 05:31:32PM +0400, Glauber Costa wrote:
+>> On 04/30/2013 05:22 PM, Mel Gorman wrote:
+>>> On Sat, Apr 27, 2013 at 03:18:58AM +0400, Glauber Costa wrote:
+>>>> In very low free kernel memory situations, it may be the case that we
+>>>> have less objects to free than our initial batch size. If this is the
+>>>> case, it is better to shrink those, and open space for the new workload
+>>>> then to keep them and fail the new allocations.
+>>>>
+>>>> More specifically, this happens because we encode this in a loop with
+>>>> the condition: "while (total_scan >= batch_size)". So if we are in such
+>>>> a case, we'll not even enter the loop.
+>>>>
+>>>> This patch modifies turns it into a do () while {} loop, that will
+>>>> guarantee that we scan it at least once, while keeping the behaviour
+>>>> exactly the same for the cases in which total_scan > batch_size.
+>>>>
+>>>> Signed-off-by: Glauber Costa <glommer@openvz.org>
+>>>> Reviewed-by: Dave Chinner <david@fromorbit.com>
+>>>> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+>>>> CC: "Theodore Ts'o" <tytso@mit.edu>
+>>>> CC: Al Viro <viro@zeniv.linux.org.uk>
+>>>
+>>> There are two cases where this *might* cause a problem and worth keeping
+>>> an eye out for.
+>>>
 >>
->> After call get_new_cssid(), I can not find the related free function
->> (it seems free_css_id() is for that, but not used).
+>> Any test case that you envision that could help bringing those issues
+>> forward should they exist ? (aside from getting it into upstream trees
+>> early?)
 >>
->> The memory location is:
->>   get_new_cssid() --> kzalloc() for 'struct css_id'
->>   get_new_cssid() --> idr_alloc() for 'ss->idr'
->>
->> One work flow:
->>   cgroup_load_subsys() --> cgroup_init_idr() --> get_new_cssid()
->>   when get_new_cssid() fails, it will:
->>   cgroup_load_subsys() --> cgroup_unload_subsys() --> idr_destroy(),
->>   and also:
->>   cgroup_load_subsys() --> cgroup_unload_subsys() --> ss->css_free()=
-;
->>     ('css_free' may 'debug_css_free', or 'freezer_css_free' ...)
->>
->> It seems the work flow above is not 'kfree' 'struct css_id', is it t=
-rue?
->>
->> BTW: I also guess, for cgroup_init_idr() in cgroup_init(), need chec=
-k
->> the return value.
->>
->> Please help check.
->>
->=20
-> It's the specific cgroup subsystem that calls free_css_id() in it's s=
-ubsys->css_free()
-> callback. See __mem_cgroup_free() for example.
->=20
+> 
+> hmm.
+> 
+> fsmark multi-threaded in a small-memory machine with a small number of
+> very large files greater than the size of physical memory might trigger
+> it. There should be a small number of inodes active so less than the 128
+> that would have been ignored before the patch. As the files are larger
+> than memory, kswapd will be awake and calling shrinkers so if the
+> shrinker is really discarding active inodes then the performance will
+> degrade.
+> 
+FYI: The weird behavior you found on benchmarks is due to this patch.
+The problem is twofold:
 
-OK, thank you for your confirmation.
+first, by always scanning we fail to differentiate from the 0 condition,
+which means skip it. We should have at least 1 object in the counter to
+scan.
 
-> There's a bug in cgroup_unload_subsys() that idr_destroy() should be =
-called after
-> ss->css_free(). That said, given there's no modular cgroup subsystem =
-using css_id,
-> and the whole css_id thing will be eliminated in 3.11, why bother fix=
-ing it.
->=20
+second, nr_to_scan continues being a batch. So when count returns, say,
+3 objects, the shrinker will still try to free, say, 128 objects. And in
+some situations, it might very well succeed.
 
-I just find it by reading code (I also want to learn about kernel).
+I have already fixed this, and as soon as I finish merging all your
+suggestions I will send an updated version.
 
-I guess, for some stable versions, may focus on it, they are the
-different branches from the latest version.
-
-So, is it suitable to send related patch for the bug ?
-
-Thanks.
-
---=20
-Chen Gang
-
-Asianux Corporation
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
