@@ -1,96 +1,138 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/3] memcg: correct RESOURCE_MAX to ULLONG_MAX and rename
- it to a better one
-Date: Tue, 7 May 2013 23:10:31 +0800
-Message-ID: <CAFj3OHVVPLQnOKFFdV6pu7mP=8W6mKUusvaBU8aspRZeUNBaOw@mail.gmail.com>
-References: <1367768477-4360-1-git-send-email-handai.szj@taobao.com>
-	<20130507134004.GB9497@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 3/3] memcg: replace memparse to avoid input overflow
+Date: Tue, 7 May 2013 17:15:08 +0200
+Message-ID: <20130507151508.GF9497@dhcp22.suse.cz>
+References: <1367768681-4451-1-git-send-email-handai.szj@taobao.com>
+ <20130507141208.GD9497@dhcp22.suse.cz>
+ <51891816.806@oracle.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:x-received:in-reply-to:references:date:message-id
-         :subject:from:to:cc:content-type;
-        bh=4YjDB20FssuLerVbPPsTWBp+hAdUbSKgVTCwoIOm08k=;
-        b=sdEgrTAkgELePoPxWu/o0Khm1b+fuwG8qAKkOB2kluj1W/OH5Fjc1gqAY6QWvGPBli
-         G9hYE/rx0XXzXa+rz2dr8frqoGhE73qcwd17OxIBbfrzfSkxd2kqxM7VObM8A9vAjRFr
-         wXQBU+dE/RCNyF/c+f7qo85Pe4JfOB5ATTdgH+L6Os6ttwo4reQoB7u7kbS+GJ6kXRMt
-         YXt4ZLq8Q6x1Os7Xr9unwkYMl6SprgVzhjWYzeQM2EjLcboMBDDd3IN+gXhu/UYtdh6g
-         c6U3I6TvRvcCjsTaHH5WDATerFBbnflnGgMRoa6UkWF4qbYU3jxrsQn2vsYVdwyBRnDg
-         zfMw==
-In-Reply-To: <20130507134004.GB9497-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <51891816.806-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Hi Michal,
+On Tue 07-05-13 23:04:54, Jeff Liu wrote:
+> On 05/07/2013 10:12 PM, Michal Hocko wrote:
+> > On Sun 05-05-13 23:44:41, Sha Zhengju wrote:
+> >> memparse() doesn't check if overflow has happens, and it even has no
+> >> args to inform user that the unexpected situation has occurred. Besides,
+> >> some of its callers make a little artful use of the current implementation
+> >> and it also seems to involve too much if changing memparse() interface.
+> >>
+> >> This patch rewrites memcg's internal res_counter_memparse_write_strategy().
+> >> It doesn't use memparse() any more and replaces simple_strtoull() with
+> >> kstrtoull() to avoid input overflow.
+> > 
+> > I do not like this to be honest. I do not think we should be really
+> > worried about overflows here. Or where this turned out to be a real
+> > issue? 
+> Yes. e.g.
+> Without this validation, user could specify a big value larger than ULLONG_MAX
+> which would result in 0 because of an overflow.  Even worse, all the processes
+> belonging to this group will be killed by OOM-Killer in this situation.
 
-On Tue, May 7, 2013 at 9:40 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> On Sun 05-05-13 23:41:17, Sha Zhengju wrote:
->> Current RESOURCE_MAX(unlimited) is ULONG_MAX, but we can set a bigger value
->
-> You have a typo here. The current limit is LLONG_MAX
->
->> than it which is strange. This patch fix it to UULONG_MAX.
->
-> and the new one is ULLONG_MAX
+I would consider this to be a configuration problem. 
+ 
+> > The new implementation is inherently slower without a good
+> > reason.
+> In talking about this, I also concerned for the overhead as per an offline
+> discussion with Sha when she wrote this fix.  However, can we consider it to be
+> a tradeoff as this helper is not being used in any hot path?
 
-Oops... It was most thoughtless of me.
+what is the positive part of the trade off? Fixing a potential overflow
+when somebody sets a limit to an unreasonable value?
 
->
->> Notice that this change will affect user output of default *.limit_in_bytes:
->> before change:
->> $ cat /memcg/memory.limit_in_bytes
->> 9223372036854775807
->>
->> after change:
->> $ cat /memcg/memory.limit_in_bytes
->> 18446744073709551615
->>
->> But it doesn't alter the API in term of input - we can still use
->> "echo -1 > *.limit_in_bytes" to reset the numbers to "unlimited".
->>
->> Thanks the suggestions from Andrew and Daisuke Nishimura!
->>
->> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->
-> For the default change
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> That's why we didn't directly touch memparse(), but extracted those codes for
+> parsing memory string out of it to res_counter_memparse_write_strategy() instead.
+> 
+> Thanks,
+> -Jeff
+> > 
+> >> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+> >> ---
+> >>  kernel/res_counter.c |   41 ++++++++++++++++++++++++++++++++++++-----
+> >>  1 file changed, 36 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+> >> index be8ddda..a990e8e0 100644
+> >> --- a/kernel/res_counter.c
+> >> +++ b/kernel/res_counter.c
+> >> @@ -182,19 +182,50 @@ int res_counter_memparse_write_strategy(const char *buf,
+> >>  {
+> >>  	char *end;
+> >>  	unsigned long long res;
+> >> +	int ret, len, suffix = 0;
+> >> +	char *ptr;
+> >>  
+> >>  	/* return RES_COUNTER_MAX(unlimited) if "-1" is specified */
+> >>  	if (*buf == '-') {
+> >> -		res = simple_strtoull(buf + 1, &end, 10);
+> >> -		if (res != 1 || *end != '\0')
+> >> +		ret = kstrtoull(buf + 1, 10, &res);
+> >> +		if (res != 1 || ret)
+> >>  			return -EINVAL;
+> >>  		*resp = RES_COUNTER_MAX;
+> >>  		return 0;
+> >>  	}
+> >>  
+> >> -	res = memparse(buf, &end);
+> >> -	if (*end != '\0')
+> >> -		return -EINVAL;
+> >> +	len = strlen(buf);
+> >> +	end = buf + len - 1;
+> >> +	switch (*end) {
+> >> +	case 'G':
+> >> +	case 'g':
+> >> +		suffix ++;
+> >> +	case 'M':
+> >> +	case 'm':
+> >> +		suffix ++;
+> >> +	case 'K':
+> >> +	case 'k':
+> >> +		suffix ++;
+> >> +		len --;
+> >> +	default:
+> >> +		break;
+> >> +	}
+> >> +
+> >> +	ptr = kmalloc(len + 1, GFP_KERNEL);
+> >> +	if (!ptr) return -ENOMEM;
+> >> +
+> >> +	strlcpy(ptr, buf, len + 1);
+> >> +	ret = kstrtoull(ptr, 0, &res);
+> >> +	kfree(ptr);
+> >> +	if (ret) return -EINVAL;
+> >> +
+> >> +	while (suffix) {
+> >> +		/* check for overflow while multiplying suffix number */
+> >> +		if (unlikely(res & (~0ull << 54)))
+> >> +			return -EINVAL;
+> >> +		res <<= 10;
+> >> +		suffix --;
+> >> +	}
+> >>  
+> >>  	if (PAGE_ALIGN(res) >= res)
+> >>  		res = PAGE_ALIGN(res);
+> >> -- 
+> >> 1.7.9.5
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> >> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
 
-Thanks!
-
->
->> ---
->>  include/linux/res_counter.h |    2 +-
->>  kernel/res_counter.c        |    8 ++++----
->>  mm/memcontrol.c             |    4 ++--
->>  net/ipv4/tcp_memcontrol.c   |   10 +++++-----
->>  4 files changed, 12 insertions(+), 12 deletions(-)
->>
->> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
->> index c230994..d7e9056 100644
->> --- a/include/linux/res_counter.h
->> +++ b/include/linux/res_counter.h
->> @@ -54,7 +54,7 @@ struct res_counter {
->>       struct res_counter *parent;
->>  };
->>
->> -#define RESOURCE_MAX (unsigned long long)LLONG_MAX
->> +#define RES_COUNTER_MAX ULLONG_MAX
->
-> I do not think the renaming is worth bothering but if you feel it is a
-> better match then just do it in a separate patch, please.
-
-I've received comments from Andrew that he suggested we had better
-rename it since it is too general. (Sorry, it's my fault that I didn't
-mention the change log from V1, I will take care next time. The
-previous discussion is here:
-http://www.spinics.net/lists/cgroups/msg06788.html). I think we might
-as well do it and I'll separate it in next turn.
-
---
-Thanks,
-Sha
+-- 
+Michal Hocko
+SUSE Labs
