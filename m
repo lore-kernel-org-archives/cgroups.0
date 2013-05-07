@@ -1,71 +1,66 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v4 09/31] inode: convert inode lru list to generic lru
- list code.
-Date: Tue, 7 May 2013 17:47:00 +0400
-Message-ID: <518905D4.8080208@parallels.com>
-References: <1367018367-11278-1-git-send-email-glommer@openvz.org> <1367018367-11278-10-git-send-email-glommer@openvz.org> <20130430154649.GI6415@suse.de>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 33/33] blk-throttle: implement proper hierarchy support
+Date: Tue, 7 May 2013 09:55:11 -0400
+Message-ID: <20130507135511.GA7082@redhat.com>
+References: <1367880372-28312-1-git-send-email-tj@kernel.org>
+	<1367880372-28312-34-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130430154649.GI6415@suse.de>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mel Gorman <mgorman@suse.de>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1367880372-28312-34-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 04/30/2013 07:46 PM, Mel Gorman wrote:
-> On Sat, Apr 27, 2013 at 03:19:05AM +0400, Glauber Costa wrote:
->> From: Dave Chinner <dchinner@redhat.com>
->>
->> [ glommer: adapted for new LRU return codes ]
->> Signed-off-by: Dave Chinner <dchinner@redhat.com>
->> Signed-off-by: Glauber Costa <glommer@openvz.org>
+On Mon, May 06, 2013 at 03:46:12PM -0700, Tejun Heo wrote:
+> With the recent updates, blk-throttle is finally ready for proper
+> hierarchy support.  Dispatching now honors service_queue->parent_sq
+> and propagates correctly.  The only thing missing is setting
+> ->parent_sq correctly so that throtl_grp hierarchy matches the cgroup
+> hierarchy.
 > 
-> Looks mostly mechanical with the main mess in the conversion of the
-> isolate function.
+> This patch updates throtl_pd_init() such that service_queues form the
+> same hierarchy as the cgroup hierarchy if sane_behavior is enabled.
+> As this concludes proper hierarchy support for blkcg, the shameful
+> .broken_hierarchy tag is removed from blkio_subsys.
 > 
->> +	if (inode_has_buffers(inode) || inode->i_data.nrpages) {
->> +		__iget(inode);
->> +		spin_unlock(&inode->i_lock);
->> +		spin_unlock(lru_lock);
->> +		if (remove_inode_buffers(inode)) {
->> +			unsigned long reap;
->> +			reap = invalidate_mapping_pages(&inode->i_data, 0, -1);
->> +			if (current_is_kswapd())
->> +				__count_vm_events(KSWAPD_INODESTEAL, reap);
->> +			else
->> +				__count_vm_events(PGINODESTEAL, reap);
->> +			if (current->reclaim_state)
->> +				current->reclaim_state->reclaimed_slab += reap;
->>  		}
->> +		iput(inode);
->> +		spin_lock(lru_lock);
->> +		return LRU_RETRY;
->> +	}
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>  block/blk-cgroup.c     |  8 --------
+>  block/blk-throttle.c   | 22 +++++++++++++++++++++-
+>  include/linux/cgroup.h |  2 ++
+>  3 files changed, 23 insertions(+), 9 deletions(-)
 > 
-> Only concern is this and whether it can cause the lru_list_walk to
-> infinite loop if the inode is being continually used and the LRU list is
-> too small to win the race.
-> 
-The way I read, this situation only happens when we have pending
-buffers, and before returning LRU_RETRY, we do our best to release it.
-That means that eventually, it will be released.
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index af2ca27..8d9edc8 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -911,14 +911,6 @@ struct cgroup_subsys blkio_subsys = {
+>  	.subsys_id = blkio_subsys_id,
+>  	.base_cftypes = blkcg_files,
+>  	.module = THIS_MODULE,
+> -
+> -	/*
+> -	 * blkio subsystem is utterly broken in terms of hierarchy support.
+> -	 * It treats all cgroups equally regardless of where they're
+> -	 * located in the hierarchy - all cgroups are treated as if they're
+> -	 * right below the root.  Fix it and remove the following.
+> -	 */
+> -	.broken_hierarchy = true,
 
-Now, of course it is hard to determine how long it will going to take,
-and that can take a while in small LRUs. One way to avoid this, would be
-to use a new flag in the inode. Set it before we return LRU_RETRY, and
-don't retry twice.
+So if somebody does not specify __DEVEL_sane_behavior, hierarchy is
+still broken. Should we continue to display the message in that case?
 
-I actually think this is sensible, but I am talking from the top of my
-head. I haven't really measured how many retries does it usually take
-for us to be able to free it.
-
-Another option would be to just return LRU_SKIP and leave it to the next
-shrinking cycle to free it.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Vivek
