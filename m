@@ -1,250 +1,44 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 21/33] blk-throttle: implement sq_to_tg(),
-	sq_to_td() and throtl_log()
-Date: Mon,  6 May 2013 15:46:00 -0700
-Message-ID: <1367880372-28312-22-git-send-email-tj@kernel.org>
-References: <1367880372-28312-1-git-send-email-tj@kernel.org>
+From: Chen Gang <gang.chen-bOixZGp5f+dBDgjK7y7TUQ@public.gmane.org>
+Subject: [Suggestion] kernel/cgroup.c: about kfree after 'get_new_cssid'
+Date: Tue, 07 May 2013 18:46:43 +0800
+Message-ID: <5188DB93.2080504@asianux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=x-received:sender:from:to:cc:subject:date:message-id:x-mailer
-	:in-reply-to:references;
-	bh=QGWAckOB9S877NXr3l5hbWBzetrySlXbAXlxL6wU+jk=;
-	b=nhRSCVi6cyIycrJDJNdMedAdA8UbRBEDthnP4JkSi81JBeTDjUzqGbuQ5rg270xr+b
-	dkbyia77ip37/0NlGlgSh7Qgg+V4ySv+8dwb3GL9JuOaEmkdWQN99Mx05AgnjYIsIQbI
-	OAb0K8WaOoWNj7fBWT1CQ+JvCPjJ4lbWpsRqaXRwesEgDjjyNXTZd9NhFZ3ljtY5Dc/w
-	/AWbf7WZYRqcH8RJgpnryeCRRL/hRTU6I9EOWD3KqfNlBDkaV/vF5H2se3gZvq8R9FJg
-	VYefc0yf6wfX3VgvWJPqZ5SZQy0tXTsMHFSY5mNJw0Q3485y71wZWPQMzvjQTBoR22K+
-	lz4g==
-In-Reply-To: <1367880372-28312-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Now that both throtl_data and throtl_grp embed throtl_service_queue,
-we can unify throtl_log() and throtl_log_tg().
+Hello Maintainers:
 
-* sq_to_tg() is added.  This returns the throtl_grp a service_queue is
-  embedded in.  If the service_queue is the top-level one embedded in
-  throtl_data, NULL is returned.
+After call get_new_cssid(), I can not find the related free function
+(it seems free_css_id() is for that, but not used).
 
-* sq_to_td() is added.  A service_queue is always associated with a
-  throtl_data.  This function finds the associated td and returns it.
+The memory location is:
+  get_new_cssid() --> kzalloc() for 'struct css_id'
+  get_new_cssid() --> idr_alloc() for 'ss->idr'
 
-* throtl_log() is updated to take throtl_service_queue instead of
-  throtl_data.  If the service_queue is one embedded in throtl_grp, it
-  prints the same header as throtl_log_tg() did.  If it's one embedded
-  in throtl_data, it behaves the same as before.  This renders
-  throtl_log_tg() unnecessary.  Removed.
+One work flow:
+  cgroup_load_subsys() --> cgroup_init_idr() --> get_new_cssid()
+  when get_new_cssid() fails, it will:
+  cgroup_load_subsys() --> cgroup_unload_subsys() --> idr_destroy(),
+  and also:
+  cgroup_load_subsys() --> cgroup_unload_subsys() --> ss->css_free();
+    ('css_free' may 'debug_css_free', or 'freezer_css_free' ...)
 
-This change is necessary for hierarchy support as we're gonna be using
-the same code paths to dispatch bios to intermediate service_queues
-embedded in throtl_grps and the top-level service_queue embedded in
-throtl_data.
+It seems the work flow above is not 'kfree' 'struct css_id', is it true?
 
-This patch doesn't make any behavior changes.
+BTW: I also guess, for cgroup_init_idr() in cgroup_init(), need check
+the return value.
 
-v2: throtl_log() didn't print a space after blkg path.  Updated so
-    that it prints a space after throtl_grp path.  Spotted by Vivek.
+Please help check.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- block/blk-throttle.c | 110 +++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 81 insertions(+), 29 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 00cfdd0..2875ff6 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -151,16 +151,65 @@ static inline struct throtl_grp *td_root_tg(struct throtl_data *td)
- 	return blkg_to_tg(td->queue->root_blkg);
- }
- 
--#define throtl_log_tg(tg, fmt, args...)	do {				\
--	char __pbuf[128];						\
-+/**
-+ * sq_to_tg - return the throl_grp the specified service queue belongs to
-+ * @sq: the throtl_service_queue of interest
-+ *
-+ * Return the throtl_grp @sq belongs to.  If @sq is the top-level one
-+ * embedded in throtl_data, %NULL is returned.
-+ */
-+static struct throtl_grp *sq_to_tg(struct throtl_service_queue *sq)
-+{
-+	if (sq && sq->parent_sq)
-+		return container_of(sq, struct throtl_grp, service_queue);
-+	else
-+		return NULL;
-+}
-+
-+/**
-+ * sq_to_td - return throtl_data the specified service queue belongs to
-+ * @sq: the throtl_service_queue of interest
-+ *
-+ * A service_queue can be embeded in either a throtl_grp or throtl_data.
-+ * Determine the associated throtl_data accordingly and return it.
-+ */
-+static struct throtl_data *sq_to_td(struct throtl_service_queue *sq)
-+{
-+	struct throtl_grp *tg = sq_to_tg(sq);
-+
-+	if (tg)
-+		return tg->td;
-+	else
-+		return container_of(sq, struct throtl_data, service_queue);
-+}
-+
-+/**
-+ * throtl_log - log debug message via blktrace
-+ * @sq: the service_queue being reported
-+ * @fmt: printf format string
-+ * @args: printf args
-+ *
-+ * The messages are prefixed with "throtl BLKG_NAME" if @sq belongs to a
-+ * throtl_grp; otherwise, just "throtl".
-+ *
-+ * TODO: this should be made a function and name formatting should happen
-+ * after testing whether blktrace is enabled.
-+ */
-+#define throtl_log(sq, fmt, args...)	do {				\
-+	struct throtl_grp *__tg = sq_to_tg((sq));			\
-+	struct throtl_data *__td = sq_to_td((sq));			\
-+									\
-+	(void)__td;							\
-+	if ((__tg)) {							\
-+		char __pbuf[128];					\
- 									\
--	blkg_path(tg_to_blkg(tg), __pbuf, sizeof(__pbuf));		\
--	blk_add_trace_msg((tg)->td->queue, "throtl %s " fmt, __pbuf, ##args); \
-+		blkg_path(tg_to_blkg(__tg), __pbuf, sizeof(__pbuf));	\
-+		blk_add_trace_msg(__td->queue, "throtl %s " fmt, __pbuf, ##args); \
-+	} else {							\
-+		blk_add_trace_msg(__td->queue, "throtl " fmt, ##args);	\
-+	}								\
- } while (0)
- 
--#define throtl_log(td, fmt, args...)	\
--	blk_add_trace_msg((td)->queue, "throtl " fmt, ##args)
--
- /*
-  * Worker for allocating per cpu stat for tgs. This is scheduled on the
-  * system_wq once there are some groups on the alloc_list waiting for
-@@ -402,9 +451,10 @@ static void throtl_schedule_delayed_work(struct throtl_data *td,
- 					 unsigned long delay)
- {
- 	struct delayed_work *dwork = &td->dispatch_work;
-+	struct throtl_service_queue *sq = &td->service_queue;
- 
- 	mod_delayed_work(kthrotld_workqueue, dwork, delay);
--	throtl_log(td, "schedule work. delay=%lu jiffies=%lu", delay, jiffies);
-+	throtl_log(sq, "schedule work. delay=%lu jiffies=%lu", delay, jiffies);
- }
- 
- static void throtl_schedule_next_dispatch(struct throtl_data *td)
-@@ -429,9 +479,10 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
- 	tg->io_disp[rw] = 0;
- 	tg->slice_start[rw] = jiffies;
- 	tg->slice_end[rw] = jiffies + throtl_slice;
--	throtl_log_tg(tg, "[%c] new slice start=%lu end=%lu jiffies=%lu",
--			rw == READ ? 'R' : 'W', tg->slice_start[rw],
--			tg->slice_end[rw], jiffies);
-+	throtl_log(&tg->service_queue,
-+		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
-+		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
-+		   tg->slice_end[rw], jiffies);
- }
- 
- static inline void throtl_set_slice_end(struct throtl_grp *tg, bool rw,
-@@ -444,9 +495,10 @@ static inline void throtl_extend_slice(struct throtl_grp *tg, bool rw,
- 				       unsigned long jiffy_end)
- {
- 	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
--	throtl_log_tg(tg, "[%c] extend slice start=%lu end=%lu jiffies=%lu",
--			rw == READ ? 'R' : 'W', tg->slice_start[rw],
--			tg->slice_end[rw], jiffies);
-+	throtl_log(&tg->service_queue,
-+		   "[%c] extend slice start=%lu end=%lu jiffies=%lu",
-+		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
-+		   tg->slice_end[rw], jiffies);
- }
- 
- /* Determine if previously allocated or extended slice is complete or not */
-@@ -511,10 +563,10 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- 
- 	tg->slice_start[rw] += nr_slices * throtl_slice;
- 
--	throtl_log_tg(tg, "[%c] trim slice nr=%lu bytes=%llu io=%lu"
--			" start=%lu end=%lu jiffies=%lu",
--			rw == READ ? 'R' : 'W', nr_slices, bytes_trim, io_trim,
--			tg->slice_start[rw], tg->slice_end[rw], jiffies);
-+	throtl_log(&tg->service_queue,
-+		   "[%c] trim slice nr=%lu bytes=%llu io=%lu start=%lu end=%lu jiffies=%lu",
-+		   rw == READ ? 'R' : 'W', nr_slices, bytes_trim, io_trim,
-+		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
- }
- 
- static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
-@@ -852,7 +904,7 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
- 
- 	bio_list_init(&bio_list_on_stack);
- 
--	throtl_log(td, "dispatch nr_queued=%u read=%u write=%u",
-+	throtl_log(sq, "dispatch nr_queued=%u read=%u write=%u",
- 		   td->nr_queued[READ] + td->nr_queued[WRITE],
- 		   td->nr_queued[READ], td->nr_queued[WRITE]);
- 
-@@ -863,7 +915,7 @@ void blk_throtl_dispatch_work_fn(struct work_struct *work)
- 			bio_list_merge(&bio_list_on_stack, &sq->bio_lists[rw]);
- 			bio_list_init(&sq->bio_lists[rw]);
- 		}
--		throtl_log(td, "bios disp=%u", nr_disp);
-+		throtl_log(sq, "bios disp=%u", nr_disp);
- 	}
- 
- 	throtl_schedule_next_dispatch(td);
-@@ -972,9 +1024,10 @@ static int tg_set_conf(struct cgroup *cgrp, struct cftype *cft, const char *buf,
- 	else
- 		*(unsigned int *)((void *)tg + cft->private) = ctx.v;
- 
--	throtl_log_tg(tg, "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
--		      tg->bps[READ], tg->bps[WRITE],
--		      tg->iops[READ], tg->iops[WRITE]);
-+	throtl_log(&tg->service_queue,
-+		   "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
-+		   tg->bps[READ], tg->bps[WRITE],
-+		   tg->iops[READ], tg->iops[WRITE]);
- 
- 	/*
- 	 * We're already holding queue_lock and know @tg is valid.  Let's
-@@ -1131,12 +1184,11 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
- 	}
- 
- queue_bio:
--	throtl_log_tg(tg, "[%c] bio. bdisp=%llu sz=%u bps=%llu"
--			" iodisp=%u iops=%u queued=%d/%d",
--			rw == READ ? 'R' : 'W',
--			tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
--			tg->io_disp[rw], tg->iops[rw],
--			sq->nr_queued[READ], sq->nr_queued[WRITE]);
-+	throtl_log(sq, "[%c] bio. bdisp=%llu sz=%u bps=%llu iodisp=%u iops=%u queued=%d/%d",
-+		   rw == READ ? 'R' : 'W',
-+		   tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
-+		   tg->io_disp[rw], tg->iops[rw],
-+		   sq->nr_queued[READ], sq->nr_queued[WRITE]);
- 
- 	bio_associate_current(bio);
- 	throtl_add_bio_tg(bio, tg);
--- 
-1.8.1.4
+Thanks.
+
+--
+ Chen Gang
+
+ Asianux Corporation
