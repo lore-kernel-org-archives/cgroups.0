@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v5 08/31] list: add a new LRU list type
-Date: Thu,  9 May 2013 00:22:56 +0400
-Message-ID: <1368044599-3383-9-git-send-email-glommer@openvz.org>
+Subject: [PATCH v5 11/31] list_lru: per-node list infrastructure
+Date: Thu,  9 May 2013 00:22:59 +0400
+Message-ID: <1368044599-3383-12-git-send-email-glommer@openvz.org>
 References: <1368044599-3383-1-git-send-email-glommer@openvz.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1368044599-3383-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
@@ -15,215 +15,297 @@ Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel 
 
 From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Several subsystems use the same construct for LRU lists - a list
-head, a spin lock and and item count. They also use exactly the same
-code for adding and removing items from the LRU. Create a generic
-type for these LRU lists.
+Now that we have an LRU list API, we can start to enhance the
+implementation.  This splits the single LRU list into per-node lists
+and locks to enhance scalability. Items are placed on lists
+according to the node the memory belongs to. To make scanning the
+lists efficient, also track whether the per-node lists have entries
+in them in a active nodemask.
 
-This is the beginning of generic, node aware LRUs for shrinkers to
-work with.
-
-[ glommer: enum defined constants for lru. Suggested by gthelen,
-  don't relock over retry ]
+[ glommer: fixed warnings ]
 Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/list_lru.h |  46 ++++++++++++++++++
- lib/Makefile             |   2 +-
- lib/list_lru.c           | 118 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 165 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/list_lru.h
- create mode 100644 lib/list_lru.c
+ include/linux/list_lru.h |  14 ++--
+ lib/list_lru.c           | 162 +++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 130 insertions(+), 46 deletions(-)
 
 diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-new file mode 100644
-index 0000000..d77ddaa
---- /dev/null
+index d77ddaa..262d9d8 100644
+--- a/include/linux/list_lru.h
 +++ b/include/linux/list_lru.h
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
-+ * Author: David Chinner
-+ *
-+ * Generic LRU infrastructure
-+ */
-+#ifndef _LRU_LIST_H
-+#define _LRU_LIST_H
-+
-+#include <linux/list.h>
-+
-+enum lru_status {
-+	LRU_REMOVED,		/* item removed from list */
-+	LRU_ROTATE,		/* item referenced, give another pass */
-+	LRU_SKIP,		/* item cannot be locked, skip */
-+	LRU_RETRY,		/* item not freeable. May drop the lock
-+				   internally, but has to return locked. */
-+};
+@@ -8,6 +8,7 @@
+ #define _LRU_LIST_H
+ 
+ #include <linux/list.h>
++#include <linux/nodemask.h>
+ 
+ enum lru_status {
+ 	LRU_REMOVED,		/* item removed from list */
+@@ -17,20 +18,21 @@ enum lru_status {
+ 				   internally, but has to return locked. */
+ };
+ 
+-struct list_lru {
++struct list_lru_node {
+ 	spinlock_t		lock;
+ 	struct list_head	list;
+ 	long			nr_items;
++} ____cacheline_aligned_in_smp;
 +
 +struct list_lru {
-+	spinlock_t		lock;
-+	struct list_head	list;
-+	long			nr_items;
-+};
-+
-+int list_lru_init(struct list_lru *lru);
-+int list_lru_add(struct list_lru *lru, struct list_head *item);
-+int list_lru_del(struct list_lru *lru, struct list_head *item);
-+
-+static inline unsigned long list_lru_count(struct list_lru *lru)
-+{
-+	return lru->nr_items;
-+}
-+
-+typedef enum lru_status
-+(*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
-+
-+typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
-+
-+unsigned long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
-+		   void *cb_arg, long nr_to_walk);
-+
-+unsigned long
-+list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
-+
-+#endif /* _LRU_LIST_H */
-diff --git a/lib/Makefile b/lib/Makefile
-index af79e8c..40a6d4a 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -13,7 +13,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
- 	 sha1.o md5.o irq_regs.o reciprocal_div.o argv_split.o \
- 	 proportions.o flex_proportions.o prio_heap.o ratelimit.o show_mem.o \
- 	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
--	 earlycpio.o percpu-refcount.o
-+	 earlycpio.o percpu-refcount.o list_lru.o
++	struct list_lru_node	node[MAX_NUMNODES];
++	nodemask_t		active_nodes;
+ };
  
- obj-$(CONFIG_ARCH_HAS_DEBUG_STRICT_USER_COPY_CHECKS) += usercopy.o
- lib-$(CONFIG_MMU) += ioremap.o
+ int list_lru_init(struct list_lru *lru);
+ int list_lru_add(struct list_lru *lru, struct list_head *item);
+ int list_lru_del(struct list_lru *lru, struct list_head *item);
+-
+-static inline unsigned long list_lru_count(struct list_lru *lru)
+-{
+-	return lru->nr_items;
+-}
++unsigned long list_lru_count(struct list_lru *lru);
+ 
+ typedef enum lru_status
+ (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
 diff --git a/lib/list_lru.c b/lib/list_lru.c
-new file mode 100644
-index 0000000..219d79f
---- /dev/null
+index 219d79f..6a2ad81 100644
+--- a/lib/list_lru.c
 +++ b/lib/list_lru.c
-@@ -0,0 +1,118 @@
-+/*
-+ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
-+ * Author: David Chinner
-+ *
-+ * Generic LRU infrastructure
-+ */
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/list_lru.h>
+@@ -6,6 +6,7 @@
+  */
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/mm.h>
+ #include <linux/list_lru.h>
+ 
+ int
+@@ -13,14 +14,19 @@ list_lru_add(
+ 	struct list_lru	*lru,
+ 	struct list_head *item)
+ {
+-	spin_lock(&lru->lock);
++	int nid = page_to_nid(virt_to_page(item));
++	struct list_lru_node *nlru = &lru->node[nid];
 +
-+int
-+list_lru_add(
-+	struct list_lru	*lru,
-+	struct list_head *item)
-+{
-+	spin_lock(&lru->lock);
-+	if (list_empty(item)) {
-+		list_add_tail(item, &lru->list);
-+		lru->nr_items++;
-+		spin_unlock(&lru->lock);
-+		return 1;
++	spin_lock(&nlru->lock);
++	BUG_ON(nlru->nr_items < 0);
+ 	if (list_empty(item)) {
+-		list_add_tail(item, &lru->list);
+-		lru->nr_items++;
+-		spin_unlock(&lru->lock);
++		list_add_tail(item, &nlru->list);
++		if (nlru->nr_items++ == 0)
++			node_set(nid, lru->active_nodes);
++		spin_unlock(&nlru->lock);
+ 		return 1;
+ 	}
+-	spin_unlock(&lru->lock);
++	spin_unlock(&nlru->lock);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(list_lru_add);
+@@ -30,44 +36,73 @@ list_lru_del(
+ 	struct list_lru	*lru,
+ 	struct list_head *item)
+ {
+-	spin_lock(&lru->lock);
++	int nid = page_to_nid(virt_to_page(item));
++	struct list_lru_node *nlru = &lru->node[nid];
++
++	spin_lock(&nlru->lock);
+ 	if (!list_empty(item)) {
+ 		list_del_init(item);
+-		lru->nr_items--;
+-		spin_unlock(&lru->lock);
++		if (--nlru->nr_items == 0)
++			node_clear(nid, lru->active_nodes);
++		BUG_ON(nlru->nr_items < 0);
++		spin_unlock(&nlru->lock);
+ 		return 1;
+ 	}
+-	spin_unlock(&lru->lock);
++	spin_unlock(&nlru->lock);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(list_lru_del);
+ 
+ unsigned long
+-list_lru_walk(
+-	struct list_lru *lru,
+-	list_lru_walk_cb isolate,
+-	void		*cb_arg,
+-	long		nr_to_walk)
++list_lru_count(
++	struct list_lru *lru)
+ {
++	long count = 0;
++	int nid;
++
++	for_each_node_mask(nid, lru->active_nodes) {
++		struct list_lru_node *nlru = &lru->node[nid];
++
++		spin_lock(&nlru->lock);
++		BUG_ON(nlru->nr_items < 0);
++		count += nlru->nr_items;
++		spin_unlock(&nlru->lock);
 +	}
-+	spin_unlock(&lru->lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_add);
 +
-+int
-+list_lru_del(
-+	struct list_lru	*lru,
-+	struct list_head *item)
++	return count;
++}
++EXPORT_SYMBOL_GPL(list_lru_count);
++
++static unsigned long
++list_lru_walk_node(
++	struct list_lru		*lru,
++	int			nid,
++	list_lru_walk_cb	isolate,
++	void			*cb_arg,
++	long			*nr_to_walk)
 +{
-+	spin_lock(&lru->lock);
-+	if (!list_empty(item)) {
-+		list_del_init(item);
-+		lru->nr_items--;
-+		spin_unlock(&lru->lock);
-+		return 1;
-+	}
-+	spin_unlock(&lru->lock);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_del);
-+
-+unsigned long
++	struct list_lru_node	*nlru = &lru->node[nid];
+ 	struct list_head *item, *n;
+-	unsigned long removed = 0;
++	unsigned long isolated = 0;
+ 
+-	spin_lock(&lru->lock);
++	spin_lock(&nlru->lock);
+ restart:
+-	list_for_each_safe(item, n, &lru->list) {
++	list_for_each_safe(item, n, &nlru->list) {
+ 		enum lru_status ret;
+ 
+-		if (nr_to_walk-- < 0)
++		if ((*nr_to_walk)-- < 0)
+ 			break;
+ 
+-		ret = isolate(item, &lru->lock, cb_arg);
++		ret = isolate(item, &nlru->lock, cb_arg);
+ 		switch (ret) {
+ 		case LRU_REMOVED:
+-			lru->nr_items--;
+-			removed++;
++			if (--nlru->nr_items == 0)
++				node_clear(nid, lru->active_nodes);
++			BUG_ON(nlru->nr_items < 0);
++			isolated++;
+ 			break;
+ 		case LRU_ROTATE:
+-			list_move_tail(item, &lru->list);
++			list_move_tail(item, &nlru->list);
+ 			break;
+ 		case LRU_SKIP:
+ 			break;
+@@ -77,42 +112,89 @@ restart:
+ 			BUG();
+ 		}
+ 	}
+-	spin_unlock(&lru->lock);
+-	return removed;
++	spin_unlock(&nlru->lock);
++	return isolated;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_walk);
+ 
+ unsigned long
+-list_lru_dispose_all(
+-	struct list_lru *lru,
+-	list_lru_dispose_cb dispose)
 +list_lru_walk(
-+	struct list_lru *lru,
++	struct list_lru	*lru,
 +	list_lru_walk_cb isolate,
 +	void		*cb_arg,
 +	long		nr_to_walk)
-+{
-+	struct list_head *item, *n;
-+	unsigned long removed = 0;
+ {
+-	unsigned long disposed = 0;
++	long isolated = 0;
++	int nid;
 +
-+	spin_lock(&lru->lock);
-+restart:
-+	list_for_each_safe(item, n, &lru->list) {
-+		enum lru_status ret;
-+
-+		if (nr_to_walk-- < 0)
++	for_each_node_mask(nid, lru->active_nodes) {
++		isolated += list_lru_walk_node(lru, nid, isolate,
++					       cb_arg, &nr_to_walk);
++		if (nr_to_walk <= 0)
 +			break;
-+
-+		ret = isolate(item, &lru->lock, cb_arg);
-+		switch (ret) {
-+		case LRU_REMOVED:
-+			lru->nr_items--;
-+			removed++;
-+			break;
-+		case LRU_ROTATE:
-+			list_move_tail(item, &lru->list);
-+			break;
-+		case LRU_SKIP:
-+			break;
-+		case LRU_RETRY:
-+			goto restart;
-+		default:
-+			BUG();
-+		}
 +	}
-+	spin_unlock(&lru->lock);
-+	return removed;
++	return isolated;
 +}
 +EXPORT_SYMBOL_GPL(list_lru_walk);
 +
++static unsigned long
++list_lru_dispose_all_node(
++	struct list_lru		*lru,
++	int			nid,
++	list_lru_dispose_cb	dispose)
++{
++	struct list_lru_node	*nlru = &lru->node[nid];
+ 	LIST_HEAD(dispose_list);
++	unsigned long disposed = 0;
+ 
+-	spin_lock(&lru->lock);
+-	while (!list_empty(&lru->list)) {
+-		list_splice_init(&lru->list, &dispose_list);
+-		disposed += lru->nr_items;
+-		lru->nr_items = 0;
+-		spin_unlock(&lru->lock);
++	spin_lock(&nlru->lock);
++	while (!list_empty(&nlru->list)) {
++		list_splice_init(&nlru->list, &dispose_list);
++		disposed += nlru->nr_items;
++		nlru->nr_items = 0;
++		node_clear(nid, lru->active_nodes);
++		spin_unlock(&nlru->lock);
+ 
+ 		dispose(&dispose_list);
+ 
+-		spin_lock(&lru->lock);
++		spin_lock(&nlru->lock);
+ 	}
+-	spin_unlock(&lru->lock);
++	spin_unlock(&nlru->lock);
+ 	return disposed;
+ }
+ 
 +unsigned long
 +list_lru_dispose_all(
-+	struct list_lru *lru,
-+	list_lru_dispose_cb dispose)
++	struct list_lru		*lru,
++	list_lru_dispose_cb	dispose)
 +{
-+	unsigned long disposed = 0;
-+	LIST_HEAD(dispose_list);
++	unsigned long disposed;
++	unsigned long total = 0;
++	int nid;
 +
-+	spin_lock(&lru->lock);
-+	while (!list_empty(&lru->list)) {
-+		list_splice_init(&lru->list, &dispose_list);
-+		disposed += lru->nr_items;
-+		lru->nr_items = 0;
-+		spin_unlock(&lru->lock);
++	do {
++		disposed = 0;
++		for_each_node_mask(nid, lru->active_nodes) {
++			disposed += list_lru_dispose_all_node(lru, nid,
++							      dispose);
++		}
++		total += disposed;
++	} while (disposed != 0);
 +
-+		dispose(&dispose_list);
++	return total;
++}
 +
-+		spin_lock(&lru->lock);
+ int
+ list_lru_init(
+ 	struct list_lru	*lru)
+ {
+-	spin_lock_init(&lru->lock);
+-	INIT_LIST_HEAD(&lru->list);
+-	lru->nr_items = 0;
++	int i;
+ 
++	nodes_clear(lru->active_nodes);
++	for (i = 0; i < MAX_NUMNODES; i++) {
++		spin_lock_init(&lru->node[i].lock);
++		INIT_LIST_HEAD(&lru->node[i].list);
++		lru->node[i].nr_items = 0;
 +	}
-+	spin_unlock(&lru->lock);
-+	return disposed;
-+}
-+
-+int
-+list_lru_init(
-+	struct list_lru	*lru)
-+{
-+	spin_lock_init(&lru->lock);
-+	INIT_LIST_HEAD(&lru->list);
-+	lru->nr_items = 0;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(list_lru_init);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(list_lru_init);
 -- 
 1.8.1.4
