@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v5 18/31] shrinker: convert remaining shrinkers to count/scan API
-Date: Thu,  9 May 2013 00:23:06 +0400
-Message-ID: <1368044599-3383-19-git-send-email-glommer@openvz.org>
+Subject: [PATCH v5 21/31] vmscan: also shrink slab in memcg pressure
+Date: Thu,  9 May 2013 00:23:09 +0400
+Message-ID: <1368044599-3383-22-git-send-email-glommer@openvz.org>
 References: <1368044599-3383-1-git-send-email-glommer@openvz.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1368044599-3383-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
@@ -11,185 +11,227 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Gleb Natapov <gleb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Chuck Lever <chuck.lever-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "J. Bruce Fields" <bfields-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Without the surrounding infrastructure, this patch is a bit of a hammer:
+it will basically shrink objects from all memcgs under memcg pressure.
+At least, however, we will keep the scan limited to the shrinkers marked
+as per-memcg.
 
-Convert the remaining couple of random shrinkers in the tree to the
-new API.
+Future patches will implement the in-shrinker logic to filter objects
+based on its memcg association.
 
-Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-CC: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-CC: Gleb Natapov <gleb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-CC: Chuck Lever <chuck.lever-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-CC: J. Bruce Fields <bfields-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-CC: Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+Cc: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 ---
- arch/x86/kvm/mmu.c | 28 +++++++++++++++++++++-------
- net/sunrpc/auth.c  | 45 +++++++++++++++++++++++++++++++--------------
- 2 files changed, 52 insertions(+), 21 deletions(-)
+ include/linux/memcontrol.h | 17 +++++++++++++++++
+ include/linux/shrinker.h   |  4 ++++
+ mm/memcontrol.c            | 16 +++++++++++++++-
+ mm/vmscan.c                | 46 +++++++++++++++++++++++++++++++++++++++++++---
+ 4 files changed, 79 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/kvm/mmu.c b/arch/x86/kvm/mmu.c
-index 004cc87..19b4edf 100644
---- a/arch/x86/kvm/mmu.c
-+++ b/arch/x86/kvm/mmu.c
-@@ -4212,13 +4212,14 @@ restart:
- 	spin_unlock(&kvm->mmu_lock);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d6183f0..4c24249 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -199,6 +199,9 @@ void mem_cgroup_split_huge_fixup(struct page *head);
+ bool mem_cgroup_bad_page_check(struct page *page);
+ void mem_cgroup_print_bad_page(struct page *page);
+ #endif
++
++unsigned long
++memcg_zone_reclaimable_pages(struct mem_cgroup *memcg, struct zone *zone);
+ #else /* CONFIG_MEMCG */
+ struct mem_cgroup;
+ 
+@@ -377,6 +380,12 @@ static inline void mem_cgroup_replace_page_cache(struct page *oldpage,
+ 				struct page *newpage)
+ {
+ }
++
++static inline unsigned long
++memcg_zone_reclaimable_pages(struct mem_cgroup *memcg, struct zone *zone)
++{
++	return 0;
++}
+ #endif /* CONFIG_MEMCG */
+ 
+ #if !defined(CONFIG_MEMCG) || !defined(CONFIG_DEBUG_VM)
+@@ -429,6 +438,8 @@ static inline bool memcg_kmem_enabled(void)
+ 	return static_key_false(&memcg_kmem_enabled_key);
  }
  
--static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
-+static long
-+mmu_shrink_scan(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
++bool memcg_kmem_is_active(struct mem_cgroup *memcg);
++
+ /*
+  * In general, we'll do everything in our power to not incur in any overhead
+  * for non-memcg users for the kmem functions. Not even a function call, if we
+@@ -562,6 +573,12 @@ memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
+ 	return __memcg_kmem_get_cache(cachep, gfp);
+ }
+ #else
++
++static inline bool memcg_kmem_is_active(struct mem_cgroup *memcg)
++{
++	return false;
++}
++
+ #define for_each_memcg_cache_index(_idx)	\
+ 	for (; NULL; )
+ 
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 00a3e57..3b08869 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -20,6 +20,9 @@ struct shrink_control {
+ 
+ 	/* shrink from these nodes */
+ 	nodemask_t nodes_to_scan;
++
++	/* reclaim from this memcg only (if not NULL) */
++	struct mem_cgroup *target_mem_cgroup;
+ };
+ 
+ /*
+@@ -45,6 +48,7 @@ struct shrinker {
+ 
+ 	int seeks;	/* seeks to recreate an obj */
+ 	long batch;	/* reclaim batch size, 0 = default */
++	bool memcg_shrinker; /* memcg-aware shrinker */
+ 
+ 	/* These are for internal use */
+ 	struct list_head list;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a8a69b4..ef420e1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -397,7 +397,7 @@ static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+ 	set_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ }
+ 
+-static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
++bool memcg_kmem_is_active(struct mem_cgroup *memcg)
  {
- 	struct kvm *kvm;
- 	int nr_to_scan = sc->nr_to_scan;
--
--	if (nr_to_scan == 0)
--		goto out;
-+	long freed = 0;
+ 	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ }
+@@ -971,6 +971,20 @@ mem_cgroup_zone_nr_lru_pages(struct mem_cgroup *memcg, int nid, int zid,
+ 	return ret;
+ }
  
- 	raw_spin_lock(&kvm_lock);
++unsigned long
++memcg_zone_reclaimable_pages(struct mem_cgroup *memcg, struct zone *zone)
++{
++	int nid = zone_to_nid(zone);
++	int zid = zone_idx(zone);
++	unsigned long val;
++
++	val = mem_cgroup_zone_nr_lru_pages(memcg, nid, zid, LRU_ALL_FILE);
++	if (do_swap_account)
++		val += mem_cgroup_zone_nr_lru_pages(memcg, nid, zid,
++						    LRU_ALL_ANON);
++	return val;
++}
++
+ static unsigned long
+ mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
+ 			int nid, unsigned int lru_mask)
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 024e9c9..295f128 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -139,11 +139,42 @@ static bool global_reclaim(struct scan_control *sc)
+ {
+ 	return !sc->target_mem_cgroup;
+ }
++
++/*
++ * kmem reclaim should usually not be triggered when we are doing targetted
++ * reclaim. It is only valid when global reclaim is triggered, or when the
++ * underlying memcg has kmem objects.
++ */
++static bool has_kmem_reclaim(struct scan_control *sc)
++{
++	return !sc->target_mem_cgroup ||
++		memcg_kmem_is_active(sc->target_mem_cgroup);
++}
++
++static unsigned long
++zone_nr_reclaimable_pages(struct scan_control *sc, struct zone *zone)
++{
++	if (global_reclaim(sc))
++		return zone_reclaimable_pages(zone);
++	return memcg_zone_reclaimable_pages(sc->target_mem_cgroup, zone);
++}
++
+ #else
+ static bool global_reclaim(struct scan_control *sc)
+ {
+ 	return true;
+ }
++
++static bool has_kmem_reclaim(struct scan_control *sc)
++{
++	return true;
++}
++
++static unsigned long
++zone_nr_reclaimable_pages(struct scan_control *sc, struct zone *zone)
++{
++	return zone_reclaimable_pages(zone);
++}
+ #endif
  
-@@ -4246,24 +4247,37 @@ static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
- 		idx = srcu_read_lock(&kvm->srcu);
- 		spin_lock(&kvm->mmu_lock);
- 
--		prepare_zap_oldest_mmu_page(kvm, &invalid_list);
-+		freed += prepare_zap_oldest_mmu_page(kvm, &invalid_list);
- 		kvm_mmu_commit_zap_page(kvm, &invalid_list);
- 
- 		spin_unlock(&kvm->mmu_lock);
- 		srcu_read_unlock(&kvm->srcu, idx);
+ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
+@@ -222,6 +253,14 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
+ 		long batch_size = shrinker->batch ? shrinker->batch
+ 						  : SHRINK_BATCH;
  
 +		/*
-+		 * unfair on small ones
-+		 * per-vm shrinkers cry out
-+		 * sadness comes quickly
++		 * If we don't have a target mem cgroup, we scan them all.
++		 * Otherwise we will limit our scan to shrinkers marked as
++		 * memcg aware
 +		 */
- 		list_move_tail(&kvm->vm_list, &vm_list);
- 		break;
- 	}
- 
- 	raw_spin_unlock(&kvm_lock);
-+	return freed;
- 
--out:
-+}
++		if (shrinkctl->target_mem_cgroup && !shrinker->memcg_shrinker)
++			continue;
 +
-+static long
-+mmu_shrink_count(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
-+{
- 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
- }
+ 		max_pass = shrinker->count_objects(shrinker, shrinkctl);
+ 		WARN_ON(max_pass < 0);
+ 		if (max_pass <= 0)
+@@ -2189,9 +2228,9 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
  
- static struct shrinker mmu_shrinker = {
--	.shrink = mmu_shrink,
-+	.count_objects = mmu_shrink_count,
-+	.scan_objects = mmu_shrink_scan,
- 	.seeks = DEFAULT_SEEKS * 10,
- };
- 
-diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
-index ed2fdd2..9ce0976 100644
---- a/net/sunrpc/auth.c
-+++ b/net/sunrpc/auth.c
-@@ -413,12 +413,13 @@ EXPORT_SYMBOL_GPL(rpcauth_destroy_credcache);
- /*
-  * Remove stale credentials. Avoid sleeping inside the loop.
-  */
--static int
-+static long
- rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
- {
- 	spinlock_t *cache_lock;
- 	struct rpc_cred *cred, *next;
- 	unsigned long expired = jiffies - RPC_AUTH_EXPIRY_MORATORIUM;
-+	long freed = 0;
- 
- 	list_for_each_entry_safe(cred, next, &cred_unused, cr_lru) {
- 
-@@ -430,10 +431,11 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ 		/*
+ 		 * Don't shrink slabs when reclaiming memory from
+-		 * over limit cgroups
++		 * over limit cgroups, unless we know they have kmem objects
  		 */
- 		if (time_in_range(cred->cr_expire, expired, jiffies) &&
- 		    test_bit(RPCAUTH_CRED_HASHED, &cred->cr_flags) != 0)
--			return 0;
-+			break;
+-		if (global_reclaim(sc)) {
++		if (has_kmem_reclaim(sc)) {
+ 			unsigned long lru_pages = 0;
  
- 		list_del_init(&cred->cr_lru);
- 		number_cred_unused--;
-+		freed++;
- 		if (atomic_read(&cred->cr_count) != 0)
- 			continue;
+ 			nodes_clear(shrink->nodes_to_scan);
+@@ -2200,7 +2239,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 				if (!cpuset_zone_allowed_hardwall(zone, GFP_KERNEL))
+ 					continue;
  
-@@ -446,29 +448,43 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
- 		}
- 		spin_unlock(cache_lock);
- 	}
--	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
-+	return freed;
- }
+-				lru_pages += zone_reclaimable_pages(zone);
++				lru_pages += zone_nr_reclaimable_pages(sc, zone);
+ 				node_set(zone_to_nid(zone),
+ 					 shrink->nodes_to_scan);
+ 			}
+@@ -2469,6 +2508,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 	};
+ 	struct shrink_control shrink = {
+ 		.gfp_mask = sc.gfp_mask,
++		.target_mem_cgroup = memcg,
+ 	};
  
- /*
-  * Run memory cache shrinker.
-  */
--static int
--rpcauth_cache_shrinker(struct shrinker *shrink, struct shrink_control *sc)
-+static long
-+rpcauth_cache_shrink_scan(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
-+
- {
- 	LIST_HEAD(free);
--	int res;
--	int nr_to_scan = sc->nr_to_scan;
--	gfp_t gfp_mask = sc->gfp_mask;
-+	long freed;
-+
-+	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
-+		return -1;
- 
--	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
--		return (nr_to_scan == 0) ? 0 : -1;
-+	/* nothing left, don't come back */
- 	if (list_empty(&cred_unused))
--		return 0;
-+		return -1;
-+
- 	spin_lock(&rpc_credcache_lock);
--	res = rpcauth_prune_expired(&free, nr_to_scan);
-+	freed = rpcauth_prune_expired(&free, sc->nr_to_scan);
- 	spin_unlock(&rpc_credcache_lock);
- 	rpcauth_destroy_credlist(&free);
--	return res;
-+
-+	return freed;
-+}
-+
-+static long
-+rpcauth_cache_shrink_count(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
-+
-+{
-+	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
- }
- 
- /*
-@@ -784,7 +800,8 @@ rpcauth_uptodatecred(struct rpc_task *task)
- }
- 
- static struct shrinker rpc_cred_shrinker = {
--	.shrink = rpcauth_cache_shrinker,
-+	.count_objects = rpcauth_cache_shrink_count,
-+	.scan_objects = rpcauth_cache_shrink_scan,
- 	.seeks = DEFAULT_SEEKS,
- };
- 
+ 	/*
 -- 
 1.8.1.4
