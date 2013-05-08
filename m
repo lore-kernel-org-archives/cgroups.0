@@ -1,47 +1,195 @@
-From: Chen Gang <gang.chen-bOixZGp5f+dBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [Suggestion] kernel/cgroup.c: about kfree after 'get_new_cssid'
-Date: Wed, 08 May 2013 10:00:14 +0800
-Message-ID: <5189B1AE.4000906@asianux.com>
-References: <5188DB93.2080504@asianux.com> <5188DF27.4080000@huawei.com>
-	<5188E391.6040505@asianux.com> <5189A166.9080301@huawei.com>
+From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v5 00/31] kmemcg shrinkers
+Date: Thu,  9 May 2013 00:22:48 +0400
+Message-ID: <1368044599-3383-1-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <5189A166.9080301-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-T24gMjAxM+W5tDA15pyIMDjml6UgMDg6NTAsIExpIFplZmFuIHdyb3RlOgo+Pj4gVGhlcmUncyBh
-IGJ1ZyBpbiBjZ3JvdXBfdW5sb2FkX3N1YnN5cygpIHRoYXQgaWRyX2Rlc3Ryb3koKSBzaG91bGQg
-YmUgY2FsbGVkIGFmdGVyCj4+PiA+PiBzcy0+Y3NzX2ZyZWUoKS4gVGhhdCBzYWlkLCBnaXZlbiB0
-aGVyZSdzIG5vIG1vZHVsYXIgY2dyb3VwIHN1YnN5c3RlbSB1c2luZyBjc3NfaWQsCj4+PiA+PiBh
-bmQgdGhlIHdob2xlIGNzc19pZCB0aGluZyB3aWxsIGJlIGVsaW1pbmF0ZWQgaW4gMy4xMSwgd2h5
-IGJvdGhlciBmaXhpbmcgaXQuCj4+PiA+Pgo+PiA+IAo+PiA+IEkganVzdCBmaW5kIGl0IGJ5IHJl
-YWRpbmcgY29kZSAoSSBhbHNvIHdhbnQgdG8gbGVhcm4gYWJvdXQga2VybmVsKS4KPj4gPiAKPj4g
-PiBJIGd1ZXNzLCBmb3Igc29tZSBzdGFibGUgdmVyc2lvbnMsIG1heSBmb2N1cyBvbiBpdCwgdGhl
-eSBhcmUgdGhlCj4+ID4gZGlmZmVyZW50IGJyYW5jaGVzIGZyb20gdGhlIGxhdGVzdCB2ZXJzaW9u
-Lgo+PiA+IAo+PiA+IFNvLCBpcyBpdCBzdWl0YWJsZSB0byBzZW5kIHJlbGF0ZWQgcGF0Y2ggZm9y
-IHRoZSBidWcgPwo+PiA+IAo+IEFzIEkgc2FpZCwgdGhlcmUncyBubyBtb2R1bGFyIGNncm91cCBz
-dWJzeXN0ZW0gdXNpbmcgY3NzX2lkLCBzbyB0aGUgYnVnCj4gZG9lc24ndCBleGlzdCBpbiByZWFs
-IHdvcmxkLgo+IAo+IAo+IAoKRXhjdXNlIG1lLCBteSBFbmdsaXNoIGlzIG5vdCBxdWl0ZSB3ZWxs
-LCBJIGd1ZXNzIHdoYXQgeW91IHNhaWQgaXM6CgogIGEuIGlkcl9kZXN0cm95KCkgc2hvdWxkIGJl
-IGNhbGxlZCBhZnRlciBzcy0+Y3NzX2ZyZWUoKQogIGIuIG5lZWQgY2hlY2sgdGhlIHJldHVybiB2
-YWx1ZSBvZiBjZ3JvdXBfaW5pdF9pZHIoKSBpbiBjZ3JvdXBfaW5pdCgpLgoKICBidXQgYWxsIGZl
-YXR1cmVzIHdoaWNoIHJlbGF0ZWQgd2l0aCB0aGUgMiBpc3N1ZXMgYWJvdmUsIG5ldmVyIGJlIHVz
-ZWQKaW4gYW55IG1haW4gbGludXggbWFpbiBicmFuY2hlcy4KICBzbywgdGhlIDIgYnVncyBkb2Vz
-bid0IGV4aXN0IGluIHJlYWwgd29ybGQuCgpJcyB3aGF0IEkgZ3Vlc3MgY29ycmVjdCA/CgpUaGFu
-a3MuCgotLSAKQ2hlbiBHYW5nCgpBc2lhbnV4IENvcnBvcmF0aW9uCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkNvbnRhaW5lcnMgbWFpbGluZyBsaXN0CkNv
-bnRhaW5lcnNAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZv
-dW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vY29udGFpbmVycw==
+To Mel
+======
+
+Mel, I have identified the overly aggressive behavior you noticed to be a bug
+in the at-least-one-pass patch, that would ask the shrinkers to scan the full
+batch even when total_scan < batch. They would do their best for it, and
+eventually succeed. I also went further, and made that the behavior of direct
+reclaim only - The only case that really matter for memcg, and one in which
+we could argue that we are more or less desperate for small squeezes in memory.
+Thank you very much for spotting this.
+
+Running postmark on the final result (at least on my 2-node box) show something
+a lot saner. We are still stealing more inodes than before, but by a factor of
+around 15 %. Since the correct balance is somewhat heuristic anyway - I
+personally think this is acceptable. But I am waiting to hear from you on this
+matter. Meanwhile, I am investigating further to try to pinpoint where exactly
+this comes from. It might either be because of the new node-aware behavior, or
+because of the increased calculation precision in the first patch.
+
+In particular, I haven't done anything about your comment regarding MAX_NODES
+array. After the memcg patches are applying, fixing this is a lot easier,
+because memcg already departs from a static MAX_NODES array to a dynamic one.
+I wanted, however, to keep the noise introduction down in something that I
+expect to be merged soon. I would suggest merging a patch that fixes that
+on top of the series, instead of the middle, if you really think it matters.
+I, of course, commit to doing this in that case.
+
+The work
+========
+
+Hi,
+
+This patchset implements targeted shrinking for memcg when kmem limits are
+present. So far, we've been accounting kernel objects but failing allocations
+when short of memory. This is because our only option would be to call the
+global shrinker, depleting objects from all caches and breaking isolation.
+
+The main idea is to associate per-memcg lists with each of the LRUs. The main
+LRU still provides a single entry point and when adding or removing an element
+from the LRU, we use the page information to figure out which memcg it belongs
+to and relay it to the right list.
+
+Base work:
+==========
+
+Please note that this builds upon the recent work from Dave Chinner that
+sanitizes the LRU shrinking API and make the shrinkers node aware. Node
+awareness is not *strictly* needed for my work, but I still perceive it
+as an advantage. The API unification is a major need, and I build upon it
+heavily. That allows us to manipulate the LRUs without knowledge of the
+underlying objects with ease. This time, I am including that work here as
+a baseline.
+
+Main changes from *v4:
+* Fixed a bug in user-generated memcg pressure
+* Fixed overly-agressive slab shrinker behavior spotted by Mel Gorman
+* Various other fixes and comments by Mel Gorman
+
+Main changes from *v3:
+* Merged suggestions from mailing list.
+* Removed the memcg-walking code from LRU. vmscan now drives all the hierarchy
+  decisions, which makes more sense
+* lazily free the old memcg arrays (needs now to be saved in struct lru). Since
+  we need to call synchronize_rcu, calling it for every LRU can become expensive
+* Moved the dead memcg shrinker to vmpressure. Already independently sent to
+  linux-mm for review.
+* Changed locking convention for LRU_RETRY. It now needs to return locked, which
+  silents warnings about possible lock unbalance (although previous code was
+  correct)
+
+Main changes from *v2:
+* shrink dead memcgs when global pressure kicks in. Uses the new lru API.
+* bugfixes and comments from the mailing list.
+* proper hierarchy-aware walk in shrink_slab.
+
+Main changes from *v1:
+* merged comments from the mailing list
+* reworked lru-memcg API
+* effective proportional shrinking
+* sanitized locking on the memcg side
+* bill user memory first when kmem == umem
+* various bugfixes
+
+
+Dave Chinner (17):
+  dcache: convert dentry_stat.nr_unused to per-cpu counters
+  dentry: move to per-sb LRU locks
+  dcache: remove dentries from LRU before putting on dispose list
+  mm: new shrinker API
+  shrinker: convert superblock shrinkers to new API
+  list: add a new LRU list type
+  inode: convert inode lru list to generic lru list code.
+  dcache: convert to use new lru list infrastructure
+  list_lru: per-node list infrastructure
+  shrinker: add node awareness
+  fs: convert inode and dentry shrinking to be node aware
+  xfs: convert buftarg LRU to generic code
+  xfs: convert dquot cache lru to list_lru
+  fs: convert fs shrinkers to new scan/count API
+  drivers: convert shrinkers to new count/scan API
+  shrinker: convert remaining shrinkers to count/scan API
+  shrinker: Kill old ->shrink API.
+
+Glauber Costa (14):
+  super: fix calculation of shrinkable objects for small numbers
+  vmscan: take at least one pass with shrinkers
+  hugepage: convert huge zero page shrinker to new shrinker API
+  vmscan: also shrink slab in memcg pressure
+  memcg,list_lru: duplicate LRUs upon kmemcg creation
+  lru: add an element to a memcg list
+  list_lru: per-memcg walks
+  memcg: per-memcg kmem shrinking
+  memcg: scan cache objects hierarchically
+  super: targeted memcg reclaim
+  memcg: move initialization to memcg creation
+  vmpressure: in-kernel notifications
+  memcg: reap dead memcgs upon global memory pressure.
+  memcg: debugging facility to access dangling memcgs
+
+ Documentation/cgroups/memory.txt          |  16 +
+ arch/x86/kvm/mmu.c                        |  28 +-
+ drivers/gpu/drm/i915/i915_dma.c           |   4 +-
+ drivers/gpu/drm/i915/i915_gem.c           |  67 +++-
+ drivers/gpu/drm/ttm/ttm_page_alloc.c      |  48 ++-
+ drivers/gpu/drm/ttm/ttm_page_alloc_dma.c  |  55 ++-
+ drivers/md/bcache/btree.c                 |  30 +-
+ drivers/md/bcache/sysfs.c                 |   2 +-
+ drivers/md/dm-bufio.c                     |  65 ++--
+ drivers/staging/android/ashmem.c          |  46 ++-
+ drivers/staging/android/lowmemorykiller.c |  40 +-
+ drivers/staging/zcache/zcache-main.c      |  29 +-
+ fs/dcache.c                               | 234 +++++++-----
+ fs/drop_caches.c                          |   1 +
+ fs/ext4/extents_status.c                  |  30 +-
+ fs/gfs2/glock.c                           |  30 +-
+ fs/gfs2/main.c                            |   3 +-
+ fs/gfs2/quota.c                           |  14 +-
+ fs/gfs2/quota.h                           |   4 +-
+ fs/inode.c                                | 175 ++++-----
+ fs/internal.h                             |   5 +
+ fs/mbcache.c                              |  53 +--
+ fs/nfs/dir.c                              |  20 +-
+ fs/nfs/internal.h                         |   4 +-
+ fs/nfs/super.c                            |   3 +-
+ fs/nfsd/nfscache.c                        |  31 +-
+ fs/quota/dquot.c                          |  39 +-
+ fs/super.c                                | 107 ++++--
+ fs/ubifs/shrinker.c                       |  20 +-
+ fs/ubifs/super.c                          |   3 +-
+ fs/ubifs/ubifs.h                          |   3 +-
+ fs/xfs/xfs_buf.c                          | 169 ++++----
+ fs/xfs/xfs_buf.h                          |   5 +-
+ fs/xfs/xfs_dquot.c                        |   7 +-
+ fs/xfs/xfs_icache.c                       |   4 +-
+ fs/xfs/xfs_icache.h                       |   2 +-
+ fs/xfs/xfs_qm.c                           | 275 ++++++-------
+ fs/xfs/xfs_qm.h                           |   4 +-
+ fs/xfs/xfs_super.c                        |  12 +-
+ include/linux/dcache.h                    |   4 +
+ include/linux/fs.h                        |  25 +-
+ include/linux/list_lru.h                  | 134 +++++++
+ include/linux/memcontrol.h                |  45 +++
+ include/linux/shrinker.h                  |  44 ++-
+ include/linux/swap.h                      |   2 +
+ include/linux/vmpressure.h                |   6 +
+ include/trace/events/vmscan.h             |   4 +-
+ init/Kconfig                              |  17 +
+ lib/Makefile                              |   2 +-
+ lib/list_lru.c                            | 430 +++++++++++++++++++++
+ mm/huge_memory.c                          |  17 +-
+ mm/memcontrol.c                           | 614 +++++++++++++++++++++++++++---
+ mm/memory-failure.c                       |   2 +
+ mm/slab_common.c                          |   1 -
+ mm/vmpressure.c                           |  52 ++-
+ mm/vmscan.c                               | 334 +++++++++++-----
+ net/sunrpc/auth.c                         |  45 ++-
+ 57 files changed, 2537 insertions(+), 928 deletions(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 lib/list_lru.c
+
+-- 
+1.8.1.4
