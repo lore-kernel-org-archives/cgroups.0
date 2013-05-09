@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v5 06/31] mm: new shrinker API
-Date: Thu,  9 May 2013 10:06:23 +0400
-Message-ID: <1368079608-5611-7-git-send-email-glommer@openvz.org>
+Subject: [PATCH v5 08/31] list: add a new LRU list type
+Date: Thu,  9 May 2013 10:06:25 +0400
+Message-ID: <1368079608-5611-9-git-send-email-glommer@openvz.org>
 References: <1368079608-5611-1-git-send-email-glommer@openvz.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1368079608-5611-1-git-send-email-glommer@openvz.org>
@@ -11,214 +11,220 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@openvz.org>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The current shrinker callout API uses an a single shrinker call for
-multiple functions. To determine the function, a special magical
-value is passed in a parameter to change the behaviour. This
-complicates the implementation and return value specification for
-the different behaviours.
+Several subsystems use the same construct for LRU lists - a list
+head, a spin lock and and item count. They also use exactly the same
+code for adding and removing items from the LRU. Create a generic
+type for these LRU lists.
 
-Separate the two different behaviours into separate operations, one
-to return a count of freeable objects in the cache, and another to
-scan a certain number of objects in the cache for freeing. In
-defining these new operations, ensure the return values and
-resultant behaviours are clearly defined and documented.
+This is the beginning of generic, node aware LRUs for shrinkers to
+work with.
 
-Modify shrink_slab() to use the new API and implement the callouts
-for all the existing shrinkers.
-
+[ glommer: enum defined constants for lru. Suggested by gthelen,
+  don't relock over retry ]
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Glauber Costa <glommer@parallels.com>
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Reviewed-by: Greg Thelen <gthelen@google.com>
 ---
- include/linux/shrinker.h | 36 ++++++++++++++++++++++++----------
- mm/vmscan.c              | 50 ++++++++++++++++++++++++++++++++----------------
- 2 files changed, 59 insertions(+), 27 deletions(-)
+ include/linux/list_lru.h |  46 ++++++++++++++++++
+ lib/Makefile             |   2 +-
+ lib/list_lru.c           | 118 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 165 insertions(+), 1 deletion(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 lib/list_lru.c
 
-diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index ac6b8ee..c277b4e 100644
---- a/include/linux/shrinker.h
-+++ b/include/linux/shrinker.h
-@@ -4,31 +4,47 @@
- /*
-  * This struct is used to pass information from page reclaim to the shrinkers.
-  * We consolidate the values for easier extention later.
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+new file mode 100644
+index 0000000..d77ddaa
+--- /dev/null
++++ b/include/linux/list_lru.h
+@@ -0,0 +1,46 @@
++/*
++ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
++ * Author: David Chinner
 + *
-+ * The 'gfpmask' refers to the allocation we are currently trying to
-+ * fulfil.
++ * Generic LRU infrastructure
++ */
++#ifndef _LRU_LIST_H
++#define _LRU_LIST_H
++
++#include <linux/list.h>
++
++enum lru_status {
++	LRU_REMOVED,		/* item removed from list */
++	LRU_ROTATE,		/* item referenced, give another pass */
++	LRU_SKIP,		/* item cannot be locked, skip */
++	LRU_RETRY,		/* item not freeable. May drop the lock
++				   internally, but has to return locked. */
++};
++
++struct list_lru {
++	spinlock_t		lock;
++	struct list_head	list;
++	long			nr_items;
++};
++
++int list_lru_init(struct list_lru *lru);
++int list_lru_add(struct list_lru *lru, struct list_head *item);
++int list_lru_del(struct list_lru *lru, struct list_head *item);
++
++static inline unsigned long list_lru_count(struct list_lru *lru)
++{
++	return lru->nr_items;
++}
++
++typedef enum lru_status
++(*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
++
++typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
++
++unsigned long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
++		   void *cb_arg, long nr_to_walk);
++
++unsigned long
++list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
++
++#endif /* _LRU_LIST_H */
+diff --git a/lib/Makefile b/lib/Makefile
+index af79e8c..40a6d4a 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -13,7 +13,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
+ 	 sha1.o md5.o irq_regs.o reciprocal_div.o argv_split.o \
+ 	 proportions.o flex_proportions.o prio_heap.o ratelimit.o show_mem.o \
+ 	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
+-	 earlycpio.o percpu-refcount.o
++	 earlycpio.o percpu-refcount.o list_lru.o
+ 
+ obj-$(CONFIG_ARCH_HAS_DEBUG_STRICT_USER_COPY_CHECKS) += usercopy.o
+ lib-$(CONFIG_MMU) += ioremap.o
+diff --git a/lib/list_lru.c b/lib/list_lru.c
+new file mode 100644
+index 0000000..219d79f
+--- /dev/null
++++ b/lib/list_lru.c
+@@ -0,0 +1,118 @@
++/*
++ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
++ * Author: David Chinner
 + *
-+ * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
-+ * querying the cache size, so a fastpath for that case is appropriate.
-  */
- struct shrink_control {
- 	gfp_t gfp_mask;
- 
- 	/* How many slab objects shrinker() should scan and try to reclaim */
--	unsigned long nr_to_scan;
-+	long nr_to_scan;
- };
- 
- /*
-  * A callback you can register to apply pressure to ageable caches.
-  *
-- * 'sc' is passed shrink_control which includes a count 'nr_to_scan'
-- * and a 'gfpmask'.  It should look through the least-recently-used
-- * 'nr_to_scan' entries and attempt to free them up.  It should return
-- * the number of objects which remain in the cache.  If it returns -1, it means
-- * it cannot do any scanning at this time (eg. there is a risk of deadlock).
-+ * @shrink() should look through the least-recently-used 'nr_to_scan' entries
-+ * and attempt to free them up.  It should return the number of objects which
-+ * remain in the cache.  If it returns -1, it means it cannot do any scanning at
-+ * this time (eg. there is a risk of deadlock).
-  *
-- * The 'gfpmask' refers to the allocation we are currently trying to
-- * fulfil.
-+ * @count_objects should return the number of freeable items in the cache. If
-+ * there are no objects to free or the number of freeable items cannot be
-+ * determined, it should return 0. No deadlock checks should be done during the
-+ * count callback - the shrinker relies on aggregating scan counts that couldn't
-+ * be executed due to potential deadlocks to be run at a later call when the
-+ * deadlock condition is no longer pending.
-  *
-- * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
-- * querying the cache size, so a fastpath for that case is appropriate.
-+ * @scan_objects will only be called if @count_objects returned a positive
-+ * value for the number of freeable objects. The callout should scan the cache
-+ * and attempt to free items from the cache. It should then return the number of
-+ * objects freed during the scan, or -1 if progress cannot be made due to
-+ * potential deadlocks. If -1 is returned, then no further attempts to call the
-+ * @scan_objects will be made from the current reclaim context.
-  */
- struct shrinker {
- 	int (*shrink)(struct shrinker *, struct shrink_control *sc);
-+	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
-+	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
++ * Generic LRU infrastructure
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/list_lru.h>
 +
- 	int seeks;	/* seeks to recreate an obj */
- 	long batch;	/* reclaim batch size, 0 = default */
- 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 49691da..be53467 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -205,19 +205,19 @@ static inline int do_shrinker_shrink(struct shrinker *shrinker,
-  *
-  * Returns the number of slab objects which we shrunk.
-  */
--unsigned long shrink_slab(struct shrink_control *shrink,
-+unsigned long shrink_slab(struct shrink_control *shrinkctl,
- 			  unsigned long nr_pages_scanned,
- 			  unsigned long lru_pages)
- {
- 	struct shrinker *shrinker;
--	unsigned long ret = 0;
-+	unsigned long freed = 0;
- 
- 	if (nr_pages_scanned == 0)
- 		nr_pages_scanned = SWAP_CLUSTER_MAX;
- 
- 	if (!down_read_trylock(&shrinker_rwsem)) {
- 		/* Assume we'll be able to shrink next time */
--		ret = 1;
-+		freed = 1;
- 		goto out;
- 	}
- 
-@@ -225,13 +225,16 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 		unsigned long long delta;
- 		long total_scan;
- 		long max_pass;
--		int shrink_ret = 0;
- 		long nr;
- 		long new_nr;
- 		long batch_size = shrinker->batch ? shrinker->batch
- 						  : SHRINK_BATCH;
- 
--		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
-+		if (shrinker->scan_objects) {
-+			max_pass = shrinker->count_objects(shrinker, shrinkctl);
-+			WARN_ON(max_pass < 0);
-+		} else
-+			max_pass = do_shrinker_shrink(shrinker, shrinkctl, 0);
- 		if (max_pass <= 0)
- 			continue;
- 
-@@ -248,8 +251,8 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 		do_div(delta, lru_pages + 1);
- 		total_scan += delta;
- 		if (total_scan < 0) {
--			printk(KERN_ERR "shrink_slab: %pF negative objects to "
--			       "delete nr=%ld\n",
-+			printk(KERN_ERR
-+			"shrink_slab: %pF negative objects to delete nr=%ld\n",
- 			       shrinker->shrink, total_scan);
- 			total_scan = max_pass;
- 		}
-@@ -277,12 +280,12 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 		if (total_scan > max_pass * 2)
- 			total_scan = max_pass * 2;
- 
--		trace_mm_shrink_slab_start(shrinker, shrink, nr,
-+		trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
- 					nr_pages_scanned, lru_pages,
- 					max_pass, delta, total_scan);
- 
- 		do {
--			int nr_before;
-+			long ret;
- 
- 			/*
- 			 * When we are kswapd, there is no need for us to go
-@@ -302,13 +305,26 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 			if (!total_scan)
- 				break;
- 
--			nr_before = do_shrinker_shrink(shrinker, shrink, 0);
--			shrink_ret = do_shrinker_shrink(shrinker, shrink,
-+			if (shrinker->scan_objects) {
-+				shrinkctl->nr_to_scan = min(batch_size, total_scan);
-+				ret = shrinker->scan_objects(shrinker, shrinkctl);
++int
++list_lru_add(
++	struct list_lru	*lru,
++	struct list_head *item)
++{
++	spin_lock(&lru->lock);
++	if (list_empty(item)) {
++		list_add_tail(item, &lru->list);
++		lru->nr_items++;
++		spin_unlock(&lru->lock);
++		return 1;
++	}
++	spin_unlock(&lru->lock);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(list_lru_add);
 +
-+				if (ret == -1)
-+					break;
-+				freed += ret;
-+			} else {
-+				int nr_before;
++int
++list_lru_del(
++	struct list_lru	*lru,
++	struct list_head *item)
++{
++	spin_lock(&lru->lock);
++	if (!list_empty(item)) {
++		list_del_init(item);
++		lru->nr_items--;
++		spin_unlock(&lru->lock);
++		return 1;
++	}
++	spin_unlock(&lru->lock);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(list_lru_del);
 +
-+				nr_before = do_shrinker_shrink(shrinker,
-+						shrinkctl, 0);
-+				ret = do_shrinker_shrink(shrinker, shrinkctl,
- 						min(batch_size, total_scan));
--			if (shrink_ret == -1)
--				break;
--			if (shrink_ret < nr_before)
--				ret += nr_before - shrink_ret;
-+				if (ret == -1)
-+					break;
-+				if (ret < nr_before)
-+					freed += nr_before - ret;
-+			}
++unsigned long
++list_lru_walk(
++	struct list_lru *lru,
++	list_lru_walk_cb isolate,
++	void		*cb_arg,
++	long		nr_to_walk)
++{
++	struct list_head *item, *n;
++	unsigned long removed = 0;
 +
- 			count_vm_events(SLABS_SCANNED, batch_size);
- 			total_scan -= batch_size;
- 
-@@ -326,12 +342,12 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 		else
- 			new_nr = atomic_long_read(&shrinker->nr_in_batch);
- 
--		trace_mm_shrink_slab_end(shrinker, shrink_ret, nr, new_nr);
-+		trace_mm_shrink_slab_end(shrinker, freed, nr, new_nr);
- 	}
- 	up_read(&shrinker_rwsem);
- out:
- 	cond_resched();
--	return ret;
-+	return freed;
- }
- 
- static inline int is_page_cache_freeable(struct page *page)
++	spin_lock(&lru->lock);
++restart:
++	list_for_each_safe(item, n, &lru->list) {
++		enum lru_status ret;
++
++		if (nr_to_walk-- < 0)
++			break;
++
++		ret = isolate(item, &lru->lock, cb_arg);
++		switch (ret) {
++		case LRU_REMOVED:
++			lru->nr_items--;
++			removed++;
++			break;
++		case LRU_ROTATE:
++			list_move_tail(item, &lru->list);
++			break;
++		case LRU_SKIP:
++			break;
++		case LRU_RETRY:
++			goto restart;
++		default:
++			BUG();
++		}
++	}
++	spin_unlock(&lru->lock);
++	return removed;
++}
++EXPORT_SYMBOL_GPL(list_lru_walk);
++
++unsigned long
++list_lru_dispose_all(
++	struct list_lru *lru,
++	list_lru_dispose_cb dispose)
++{
++	unsigned long disposed = 0;
++	LIST_HEAD(dispose_list);
++
++	spin_lock(&lru->lock);
++	while (!list_empty(&lru->list)) {
++		list_splice_init(&lru->list, &dispose_list);
++		disposed += lru->nr_items;
++		lru->nr_items = 0;
++		spin_unlock(&lru->lock);
++
++		dispose(&dispose_list);
++
++		spin_lock(&lru->lock);
++	}
++	spin_unlock(&lru->lock);
++	return disposed;
++}
++
++int
++list_lru_init(
++	struct list_lru	*lru)
++{
++	spin_lock_init(&lru->lock);
++	INIT_LIST_HEAD(&lru->list);
++	lru->nr_items = 0;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(list_lru_init);
 -- 
 1.8.1.4
 
