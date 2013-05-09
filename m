@@ -1,229 +1,178 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v5 27/31] super: targeted memcg reclaim
-Date: Thu,  9 May 2013 10:06:44 +0400
-Message-ID: <1368079608-5611-28-git-send-email-glommer@openvz.org>
+Subject: [PATCH v5 20/31] shrinker: Kill old ->shrink API.
+Date: Thu,  9 May 2013 10:06:37 +0400
+Message-ID: <1368079608-5611-21-git-send-email-glommer@openvz.org>
 References: <1368079608-5611-1-git-send-email-glommer@openvz.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1368079608-5611-1-git-send-email-glommer@openvz.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@openvz.org>
 
-We now have all our dentries and inodes placed in memcg-specific LRU
-lists. All we have to do is restrict the reclaim to the said lists in
-case of memcg pressure.
+From: Dave Chinner <dchinner@redhat.com>
 
-That can't be done so easily for the fs_objects part of the equation,
-since this is heavily fs-specific. What we do is pass on the context,
-and let the filesystems decide if they ever chose or want to. At this
-time, we just don't shrink them in memcg pressure (none is supported),
-leaving that for global pressure only.
+There are no more users of this API, so kill it dead, dead, dead and
+quietly bury the corpse in a shallow, unmarked grave in a dark
+forest deep in the hills...
 
-Marking the superblock shrinker and its LRUs as memcg-aware will
-guarantee that the shrinkers will get invoked during targetted reclaim.
-
+[ glommer: added flowers to the grave ]
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Reviewed-by: Greg Thelen <gthelen@google.com>
 ---
- fs/dcache.c   |  6 +++---
- fs/inode.c    |  6 +++---
- fs/internal.h |  5 +++--
- fs/super.c    | 39 +++++++++++++++++++++++++++------------
- 4 files changed, 36 insertions(+), 20 deletions(-)
+ include/linux/shrinker.h      | 15 +++++----------
+ include/trace/events/vmscan.h |  4 ++--
+ mm/vmscan.c                   | 41 ++++++++---------------------------------
+ 3 files changed, 15 insertions(+), 45 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index e83a8c2..919c29f 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -899,13 +899,13 @@ dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
-  * use.
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 98be3ab..00a3e57 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -7,14 +7,15 @@
+  *
+  * The 'gfpmask' refers to the allocation we are currently trying to
+  * fulfil.
+- *
+- * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
+- * querying the cache size, so a fastpath for that case is appropriate.
   */
- long prune_dcache_sb(struct super_block *sb, unsigned long nr_to_scan,
--		     nodemask_t *nodes_to_walk)
-+		     nodemask_t *nodes_to_walk, struct mem_cgroup *memcg)
- {
- 	LIST_HEAD(dispose);
- 	long freed;
+ struct shrink_control {
+ 	gfp_t gfp_mask;
  
--	freed = list_lru_walk_nodemask(&sb->s_dentry_lru, dentry_lru_isolate,
--				       &dispose, nr_to_scan, nodes_to_walk);
-+	freed = list_lru_walk_nodemask_memcg(&sb->s_dentry_lru,
-+		dentry_lru_isolate, &dispose, nr_to_scan, nodes_to_walk, memcg);
- 	shrink_dentry_list(&dispose);
- 	return freed;
- }
-diff --git a/fs/inode.c b/fs/inode.c
-index 3cf4cb0..6565d88 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -747,13 +747,13 @@ inode_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
-  * then are freed outside inode_lock by dispose_list().
-  */
- long prune_icache_sb(struct super_block *sb, unsigned long nr_to_scan,
--		     nodemask_t *nodes_to_walk)
-+			nodemask_t *nodes_to_walk, struct mem_cgroup *memcg)
- {
- 	LIST_HEAD(freeable);
- 	long freed;
- 
--	freed = list_lru_walk_nodemask(&sb->s_inode_lru, inode_lru_isolate,
--				       &freeable, nr_to_scan, nodes_to_walk);
-+	freed = list_lru_walk_nodemask_memcg(&sb->s_inode_lru,
-+		inode_lru_isolate, &freeable, nr_to_scan, nodes_to_walk, memcg);
- 	dispose_list(&freeable);
- 	return freed;
- }
-diff --git a/fs/internal.h b/fs/internal.h
-index 91900f2..068c7f7 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -16,6 +16,7 @@ struct file_system_type;
- struct linux_binprm;
- struct path;
- struct mount;
-+struct mem_cgroup;
- 
- /*
-  * block_dev.c
-@@ -111,7 +112,7 @@ extern int open_check_o_direct(struct file *f);
-  */
- extern spinlock_t inode_sb_list_lock;
- extern long prune_icache_sb(struct super_block *sb, unsigned long nr_to_scan,
--			    nodemask_t *nodes_to_scan);
-+		    nodemask_t *nodes_to_scan, struct mem_cgroup *memcg);
- extern void inode_add_lru(struct inode *inode);
- 
- /*
-@@ -128,7 +129,7 @@ extern int invalidate_inodes(struct super_block *, bool);
-  */
- extern struct dentry *__d_alloc(struct super_block *, const struct qstr *);
- extern long prune_dcache_sb(struct super_block *sb, unsigned long nr_to_scan,
--			    nodemask_t *nodes_to_scan);
-+		    nodemask_t *nodes_to_scan, struct mem_cgroup *memcg);
- 
- /*
-  * read_write.c
-diff --git a/fs/super.c b/fs/super.c
-index 5c7b879..e92ebcb 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -34,6 +34,7 @@
- #include <linux/cleancache.h>
- #include <linux/fsnotify.h>
- #include <linux/lockdep.h>
-+#include <linux/memcontrol.h>
- #include "internal.h"
- 
- 
-@@ -56,6 +57,7 @@ static char *sb_writers_name[SB_FREEZE_LEVELS] = {
- static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- {
- 	struct super_block *sb;
-+	struct mem_cgroup *memcg = sc->target_mem_cgroup;
- 	long	fs_objects = 0;
- 	long	total_objects;
- 	long	freed = 0;
-@@ -74,11 +76,13 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 	if (!grab_super_passive(sb))
- 		return -1;
- 
--	if (sb->s_op && sb->s_op->nr_cached_objects)
-+	if (sb->s_op && sb->s_op->nr_cached_objects && !memcg)
- 		fs_objects = sb->s_op->nr_cached_objects(sb, &sc->nodes_to_scan);
- 
--	inodes = list_lru_count_nodemask(&sb->s_inode_lru, &sc->nodes_to_scan);
--	dentries = list_lru_count_nodemask(&sb->s_dentry_lru, &sc->nodes_to_scan);
-+	inodes = list_lru_count_nodemask_memcg(&sb->s_inode_lru,
-+					 &sc->nodes_to_scan, memcg);
-+	dentries = list_lru_count_nodemask_memcg(&sb->s_dentry_lru,
-+					   &sc->nodes_to_scan, memcg);
- 	total_objects = dentries + inodes + fs_objects + 1;
- 
- 	/* proportion the scan between the caches */
-@@ -89,8 +93,8 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 	 * prune the dcache first as the icache is pinned by it, then
- 	 * prune the icache, followed by the filesystem specific caches
- 	 */
--	freed = prune_dcache_sb(sb, dentries, &sc->nodes_to_scan);
--	freed += prune_icache_sb(sb, inodes, &sc->nodes_to_scan);
-+	freed = prune_dcache_sb(sb, dentries, &sc->nodes_to_scan, memcg);
-+	freed += prune_icache_sb(sb, inodes, &sc->nodes_to_scan, memcg);
- 
- 	if (fs_objects) {
- 		fs_objects = mult_frac(sc->nr_to_scan, fs_objects,
-@@ -107,20 +111,26 @@ static long super_cache_count(struct shrinker *shrink, struct shrink_control *sc
- {
- 	struct super_block *sb;
- 	long	total_objects = 0;
-+	struct mem_cgroup *memcg = sc->target_mem_cgroup;
- 
- 	sb = container_of(shrink, struct super_block, s_shrink);
- 
- 	if (!grab_super_passive(sb))
- 		return -1;
- 
--	if (sb->s_op && sb->s_op->nr_cached_objects)
+-	/* How many slab objects shrinker() should scan and try to reclaim */
 +	/*
-+	 * Ideally we would pass memcg to nr_cached_objects, and
-+	 * let the underlying filesystem decide. Most likely the
-+	 * path will be if (!memcg) return;, but even then.
++	 * How many objects scan_objects should scan and try to reclaim.
++	 * This is reset before every call, so it is safe for callees
++	 * to modify.
 +	 */
-+	if (sb->s_op && sb->s_op->nr_cached_objects && !memcg)
- 		total_objects = sb->s_op->nr_cached_objects(sb,
- 						 &sc->nodes_to_scan);
+ 	long nr_to_scan;
  
--	total_objects += list_lru_count_nodemask(&sb->s_dentry_lru,
--						 &sc->nodes_to_scan);
--	total_objects += list_lru_count_nodemask(&sb->s_inode_lru,
--						 &sc->nodes_to_scan);
-+	total_objects += list_lru_count_nodemask_memcg(&sb->s_dentry_lru,
-+					 &sc->nodes_to_scan, memcg);
-+	total_objects += list_lru_count_nodemask_memcg(&sb->s_inode_lru,
-+					 &sc->nodes_to_scan, memcg);
+ 	/* shrink from these nodes */
+@@ -24,11 +25,6 @@ struct shrink_control {
+ /*
+  * A callback you can register to apply pressure to ageable caches.
+  *
+- * @shrink() should look through the least-recently-used 'nr_to_scan' entries
+- * and attempt to free them up.  It should return the number of objects which
+- * remain in the cache.  If it returns -1, it means it cannot do any scanning at
+- * this time (eg. there is a risk of deadlock).
+- *
+  * @count_objects should return the number of freeable items in the cache. If
+  * there are no objects to free or the number of freeable items cannot be
+  * determined, it should return 0. No deadlock checks should be done during the
+@@ -44,7 +40,6 @@ struct shrink_control {
+  * @scan_objects will be made from the current reclaim context.
+  */
+ struct shrinker {
+-	int (*shrink)(struct shrinker *, struct shrink_control *sc);
+ 	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
+ 	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
  
- 	total_objects = vfs_pressure_ratio(total_objects);
- 	drop_super(sb);
-@@ -199,8 +209,10 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		INIT_HLIST_NODE(&s->s_instances);
- 		INIT_HLIST_BL_HEAD(&s->s_anon);
- 		INIT_LIST_HEAD(&s->s_inodes);
--		list_lru_init(&s->s_dentry_lru);
--		list_lru_init(&s->s_inode_lru);
-+
-+		list_lru_init_memcg(&s->s_dentry_lru);
-+		list_lru_init_memcg(&s->s_inode_lru);
-+
- 		INIT_LIST_HEAD(&s->s_mounts);
- 		init_rwsem(&s->s_umount);
- 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
-@@ -236,6 +248,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		s->s_shrink.scan_objects = super_cache_scan;
- 		s->s_shrink.count_objects = super_cache_count;
- 		s->s_shrink.batch = 1024;
-+		s->s_shrink.memcg_shrinker = true;
- 	}
- out:
- 	return s;
-@@ -318,6 +331,8 @@ void deactivate_locked_super(struct super_block *s)
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index 63cfccc..132a985 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -202,7 +202,7 @@ TRACE_EVENT(mm_shrink_slab_start,
  
- 		/* caches are now gone, we can safely kill the shrinker now */
- 		unregister_shrinker(&s->s_shrink);
-+		list_lru_destroy(&s->s_dentry_lru);
-+		list_lru_destroy(&s->s_inode_lru);
- 		put_filesystem(fs);
- 		put_super(s);
- 	} else {
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shrink = shr->shrink;
++		__entry->shrink = shr->scan_objects;
+ 		__entry->nr_objects_to_shrink = nr_objects_to_shrink;
+ 		__entry->gfp_flags = sc->gfp_mask;
+ 		__entry->pgs_scanned = pgs_scanned;
+@@ -241,7 +241,7 @@ TRACE_EVENT(mm_shrink_slab_end,
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shrink = shr->shrink;
++		__entry->shrink = shr->scan_objects;
+ 		__entry->unused_scan = unused_scan_cnt;
+ 		__entry->new_scan = new_scan_cnt;
+ 		__entry->retval = shrinker_retval;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 3ab5291..024e9c9 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -177,14 +177,6 @@ void unregister_shrinker(struct shrinker *shrinker)
+ }
+ EXPORT_SYMBOL(unregister_shrinker);
+ 
+-static inline int do_shrinker_shrink(struct shrinker *shrinker,
+-				     struct shrink_control *sc,
+-				     unsigned long nr_to_scan)
+-{
+-	sc->nr_to_scan = nr_to_scan;
+-	return (*shrinker->shrink)(shrinker, sc);
+-}
+-
+ #define SHRINK_BATCH 128
+ /*
+  * Call the shrink functions to age shrinkable caches
+@@ -230,11 +222,8 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
+ 		long batch_size = shrinker->batch ? shrinker->batch
+ 						  : SHRINK_BATCH;
+ 
+-		if (shrinker->scan_objects) {
+-			max_pass = shrinker->count_objects(shrinker, shrinkctl);
+-			WARN_ON(max_pass < 0);
+-		} else
+-			max_pass = do_shrinker_shrink(shrinker, shrinkctl, 0);
++		max_pass = shrinker->count_objects(shrinker, shrinkctl);
++		WARN_ON(max_pass < 0);
+ 		if (max_pass <= 0)
+ 			continue;
+ 
+@@ -253,7 +242,7 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
+ 		if (total_scan < 0) {
+ 			printk(KERN_ERR
+ 			"shrink_slab: %pF negative objects to delete nr=%ld\n",
+-			       shrinker->shrink, total_scan);
++			       shrinker->scan_objects, total_scan);
+ 			total_scan = max_pass;
+ 		}
+ 
+@@ -305,25 +294,11 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
+ 			if (!total_scan)
+ 				break;
+ 
+-			if (shrinker->scan_objects) {
+-				shrinkctl->nr_to_scan = min(batch_size, total_scan);
+-				ret = shrinker->scan_objects(shrinker, shrinkctl);
+-
+-				if (ret == -1)
+-					break;
+-				freed += ret;
+-			} else {
+-				int nr_before;
+-
+-				nr_before = do_shrinker_shrink(shrinker,
+-						shrinkctl, 0);
+-				ret = do_shrinker_shrink(shrinker, shrinkctl,
+-						min(batch_size, total_scan));
+-				if (ret == -1)
+-					break;
+-				if (ret < nr_before)
+-					freed += nr_before - ret;
+-			}
++			shrinkctl->nr_to_scan = min(batch_size, total_scan);
++			ret = shrinker->scan_objects(shrinker, shrinkctl);
++			if (ret == -1)
++				break;
++			freed += ret;
+ 
+ 			count_vm_events(SLABS_SCANNED, batch_size);
+ 			total_scan -= batch_size;
 -- 
 1.8.1.4
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
