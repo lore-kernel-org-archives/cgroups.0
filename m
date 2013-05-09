@@ -1,66 +1,197 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v5 28/31] memcg: move initialization to memcg creation
-Date: Thu,  9 May 2013 00:23:16 +0400
-Message-ID: <1368044599-3383-29-git-send-email-glommer@openvz.org>
-References: <1368044599-3383-1-git-send-email-glommer@openvz.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1368044599-3383-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Subject: [PATCH v5 00/31] kmemcg shrinkers
+Date: Thu,  9 May 2013 10:06:17 +0400
+Message-ID: <1368079608-5611-1-git-send-email-glommer@openvz.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org
 
-Those structures are only used for memcgs that are effectively using
-kmemcg. However, in a later patch I intend to use scan that list
-inconditionally (list empty meaning no kmem caches present), which
-simplifies the code a lot.
+[ Sending again, forgot to CC fsdevel. Shame on me ]
+To Mel
+======
 
-So move the initialization to early kmem creation.
+Mel, I have identified the overly aggressive behavior you noticed to be a bug
+in the at-least-one-pass patch, that would ask the shrinkers to scan the full
+batch even when total_scan < batch. They would do their best for it, and
+eventually succeed. I also went further, and made that the behavior of direct
+reclaim only - The only case that really matter for memcg, and one in which
+we could argue that we are more or less desperate for small squeezes in memory.
+Thank you very much for spotting this.
 
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Running postmark on the final result (at least on my 2-node box) show something
+a lot saner. We are still stealing more inodes than before, but by a factor of
+around 15 %. Since the correct balance is somewhat heuristic anyway - I
+personally think this is acceptable. But I am waiting to hear from you on this
+matter. Meanwhile, I am investigating further to try to pinpoint where exactly
+this comes from. It might either be because of the new node-aware behavior, or
+because of the increased calculation precision in the first patch.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e6a7848..1ff72f9 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3249,9 +3249,7 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
- 
- 	memcg_update_array_size(num + 1);
- 
--	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
- 	INIT_WORK(&memcg->kmemcg_shrink_work, kmemcg_shrink_work_fn);
--	mutex_init(&memcg->slab_caches_mutex);
- 
- 	return 0;
- out:
-@@ -6121,6 +6119,8 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	int ret;
- 
-+	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
-+	mutex_init(&memcg->slab_caches_mutex);
- 	memcg->kmemcg_id = -1;
- 	ret = memcg_propagate_kmem(memcg);
- 	if (ret)
+In particular, I haven't done anything about your comment regarding MAX_NODES
+array. After the memcg patches are applying, fixing this is a lot easier,
+because memcg already departs from a static MAX_NODES array to a dynamic one.
+I wanted, however, to keep the noise introduction down in something that I
+expect to be merged soon. I would suggest merging a patch that fixes that
+on top of the series, instead of the middle, if you really think it matters.
+I, of course, commit to doing this in that case.
+
+The work
+========
+
+Hi,
+
+This patchset implements targeted shrinking for memcg when kmem limits are
+present. So far, we've been accounting kernel objects but failing allocations
+when short of memory. This is because our only option would be to call the
+global shrinker, depleting objects from all caches and breaking isolation.
+
+The main idea is to associate per-memcg lists with each of the LRUs. The main
+LRU still provides a single entry point and when adding or removing an element
+from the LRU, we use the page information to figure out which memcg it belongs
+to and relay it to the right list.
+
+Base work:
+==========
+
+Please note that this builds upon the recent work from Dave Chinner that
+sanitizes the LRU shrinking API and make the shrinkers node aware. Node
+awareness is not *strictly* needed for my work, but I still perceive it
+as an advantage. The API unification is a major need, and I build upon it
+heavily. That allows us to manipulate the LRUs without knowledge of the
+underlying objects with ease. This time, I am including that work here as
+a baseline.
+
+Main changes from *v4:
+* Fixed a bug in user-generated memcg pressure
+* Fixed overly-agressive slab shrinker behavior spotted by Mel Gorman
+* Various other fixes and comments by Mel Gorman
+
+Main changes from *v3:
+* Merged suggestions from mailing list.
+* Removed the memcg-walking code from LRU. vmscan now drives all the hierarchy
+  decisions, which makes more sense
+* lazily free the old memcg arrays (needs now to be saved in struct lru). Since
+  we need to call synchronize_rcu, calling it for every LRU can become expensive
+* Moved the dead memcg shrinker to vmpressure. Already independently sent to
+  linux-mm for review.
+* Changed locking convention for LRU_RETRY. It now needs to return locked, which
+  silents warnings about possible lock unbalance (although previous code was
+  correct)
+
+Main changes from *v2:
+* shrink dead memcgs when global pressure kicks in. Uses the new lru API.
+* bugfixes and comments from the mailing list.
+* proper hierarchy-aware walk in shrink_slab.
+
+Main changes from *v1:
+* merged comments from the mailing list
+* reworked lru-memcg API
+* effective proportional shrinking
+* sanitized locking on the memcg side
+* bill user memory first when kmem == umem
+* various bugfixes
+
+
+Dave Chinner (17):
+  dcache: convert dentry_stat.nr_unused to per-cpu counters
+  dentry: move to per-sb LRU locks
+  dcache: remove dentries from LRU before putting on dispose list
+  mm: new shrinker API
+  shrinker: convert superblock shrinkers to new API
+  list: add a new LRU list type
+  inode: convert inode lru list to generic lru list code.
+  dcache: convert to use new lru list infrastructure
+  list_lru: per-node list infrastructure
+  shrinker: add node awareness
+  fs: convert inode and dentry shrinking to be node aware
+  xfs: convert buftarg LRU to generic code
+  xfs: convert dquot cache lru to list_lru
+  fs: convert fs shrinkers to new scan/count API
+  drivers: convert shrinkers to new count/scan API
+  shrinker: convert remaining shrinkers to count/scan API
+  shrinker: Kill old ->shrink API.
+
+Glauber Costa (14):
+  super: fix calculation of shrinkable objects for small numbers
+  vmscan: take at least one pass with shrinkers
+  hugepage: convert huge zero page shrinker to new shrinker API
+  vmscan: also shrink slab in memcg pressure
+  memcg,list_lru: duplicate LRUs upon kmemcg creation
+  lru: add an element to a memcg list
+  list_lru: per-memcg walks
+  memcg: per-memcg kmem shrinking
+  memcg: scan cache objects hierarchically
+  super: targeted memcg reclaim
+  memcg: move initialization to memcg creation
+  vmpressure: in-kernel notifications
+  memcg: reap dead memcgs upon global memory pressure.
+  memcg: debugging facility to access dangling memcgs
+
+ Documentation/cgroups/memory.txt          |  16 +
+ arch/x86/kvm/mmu.c                        |  28 +-
+ drivers/gpu/drm/i915/i915_dma.c           |   4 +-
+ drivers/gpu/drm/i915/i915_gem.c           |  67 +++-
+ drivers/gpu/drm/ttm/ttm_page_alloc.c      |  48 ++-
+ drivers/gpu/drm/ttm/ttm_page_alloc_dma.c  |  55 ++-
+ drivers/md/bcache/btree.c                 |  30 +-
+ drivers/md/bcache/sysfs.c                 |   2 +-
+ drivers/md/dm-bufio.c                     |  65 ++--
+ drivers/staging/android/ashmem.c          |  46 ++-
+ drivers/staging/android/lowmemorykiller.c |  40 +-
+ drivers/staging/zcache/zcache-main.c      |  29 +-
+ fs/dcache.c                               | 234 +++++++-----
+ fs/drop_caches.c                          |   1 +
+ fs/ext4/extents_status.c                  |  30 +-
+ fs/gfs2/glock.c                           |  30 +-
+ fs/gfs2/main.c                            |   3 +-
+ fs/gfs2/quota.c                           |  14 +-
+ fs/gfs2/quota.h                           |   4 +-
+ fs/inode.c                                | 175 ++++-----
+ fs/internal.h                             |   5 +
+ fs/mbcache.c                              |  53 +--
+ fs/nfs/dir.c                              |  20 +-
+ fs/nfs/internal.h                         |   4 +-
+ fs/nfs/super.c                            |   3 +-
+ fs/nfsd/nfscache.c                        |  31 +-
+ fs/quota/dquot.c                          |  39 +-
+ fs/super.c                                | 107 ++++--
+ fs/ubifs/shrinker.c                       |  20 +-
+ fs/ubifs/super.c                          |   3 +-
+ fs/ubifs/ubifs.h                          |   3 +-
+ fs/xfs/xfs_buf.c                          | 169 ++++----
+ fs/xfs/xfs_buf.h                          |   5 +-
+ fs/xfs/xfs_dquot.c                        |   7 +-
+ fs/xfs/xfs_icache.c                       |   4 +-
+ fs/xfs/xfs_icache.h                       |   2 +-
+ fs/xfs/xfs_qm.c                           | 275 ++++++-------
+ fs/xfs/xfs_qm.h                           |   4 +-
+ fs/xfs/xfs_super.c                        |  12 +-
+ include/linux/dcache.h                    |   4 +
+ include/linux/fs.h                        |  25 +-
+ include/linux/list_lru.h                  | 134 +++++++
+ include/linux/memcontrol.h                |  45 +++
+ include/linux/shrinker.h                  |  44 ++-
+ include/linux/swap.h                      |   2 +
+ include/linux/vmpressure.h                |   6 +
+ include/trace/events/vmscan.h             |   4 +-
+ init/Kconfig                              |  17 +
+ lib/Makefile                              |   2 +-
+ lib/list_lru.c                            | 430 +++++++++++++++++++++
+ mm/huge_memory.c                          |  17 +-
+ mm/memcontrol.c                           | 614 +++++++++++++++++++++++++++---
+ mm/memory-failure.c                       |   2 +
+ mm/slab_common.c                          |   1 -
+ mm/vmpressure.c                           |  52 ++-
+ mm/vmscan.c                               | 334 +++++++++++-----
+ net/sunrpc/auth.c                         |  45 ++-
+ 57 files changed, 2537 insertions(+), 928 deletions(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 lib/list_lru.c
+
 -- 
 1.8.1.4
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
