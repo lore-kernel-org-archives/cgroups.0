@@ -1,52 +1,35 @@
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH v5 11/31] list_lru: per-node list infrastructure
-Date: Thu, 9 May 2013 14:42:46 +0100
-Message-ID: <20130509134246.GX11497@suse.de>
+From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH v5 14/31] xfs: convert buftarg LRU to generic code
+Date: Thu, 9 May 2013 14:43:43 +0100
+Message-ID: <20130509134343.GY11497@suse.de>
 References: <1368079608-5611-1-git-send-email-glommer@openvz.org>
- <1368079608-5611-12-git-send-email-glommer@openvz.org>
+ <1368079608-5611-15-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1368079608-5611-12-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1368079608-5611-15-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@openvz.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, May 09, 2013 at 10:06:28AM +0400, Glauber Costa wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, May 09, 2013 at 10:06:31AM +0400, Glauber Costa wrote:
+> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
-> Now that we have an LRU list API, we can start to enhance the
-> implementation.  This splits the single LRU list into per-node lists
-> and locks to enhance scalability. Items are placed on lists
-> according to the node the memory belongs to. To make scanning the
-> lists efficient, also track whether the per-node lists have entries
-> in them in a active nodemask.
+> Convert the buftarg LRU to use the new generic LRU list and take
+> advantage of the functionality it supplies to make the buffer cache
+> shrinker node aware.
 > 
-> [ glommer: fixed warnings ]
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Glauber Costa <glommer@openvz.org>
-> Reviewed-by: Greg Thelen <gthelen@google.com>
+> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> Conflicts with 3b19034d4f:
+> 	fs/xfs/xfs_buf.c
 
-You've committed to addressing the problem of the size of struct
-list_lru so
-
-Acked-by: Mel Gorman <mgorman@suse.de>
-
-It would still be nice though if the size problem was highlighted with
-either a comment and/or a changelog entry describing the problem and how
-you plan to address it in case it takes a long time to get fixed. If the
-problem persists and we get a bug report about allocation warnings at
-mount time then the notes will be available.
+You can dump this Conflicts message
 
 -- 
 Mel Gorman
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
