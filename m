@@ -1,101 +1,105 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v5 02/31] vmscan: take at least one pass with shrinkers
-Date: Thu, 9 May 2013 15:35:26 +0400
-Message-ID: <518B89FE.9040100@parallels.com>
-References: <1368079608-5611-1-git-send-email-glommer@openvz.org> <1368079608-5611-3-git-send-email-glommer@openvz.org> <20130509111226.GR11497@suse.de> <518B884C.9090704@parallels.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v5 00/31] kmemcg shrinkers
+Date: Thu, 9 May 2013 23:18:23 +1000
+Message-ID: <20130509131823.GP24635@dastard>
+References: <1368079608-5611-1-git-send-email-glommer@openvz.org>
+ <20130509105519.GQ11497@suse.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <518B884C.9090704-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20130509105519.GQ11497@suse.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Mel Gorman <mgorman@suse.de>
+Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org
 
-On 05/09/2013 03:28 PM, Glauber Costa wrote:
-> On 05/09/2013 03:12 PM, Mel Gorman wrote:
->> On Thu, May 09, 2013 at 10:06:19AM +0400, Glauber Costa wrote:
->>> In very low free kernel memory situations, it may be the case that we
->>> have less objects to free than our initial batch size. If this is the
->>> case, it is better to shrink those, and open space for the new workload
->>> then to keep them and fail the new allocations. For the purpose of
->>> defining what "very low memory" means, we will purposefuly exclude
->>> kswapd runs.
->>>
->>> More specifically, this happens because we encode this in a loop with
->>> the condition: "while (total_scan >= batch_size)". So if we are in such
->>> a case, we'll not even enter the loop.
->>>
->>> This patch modifies turns it into a do () while {} loop, that will
->>> guarantee that we scan it at least once, while keeping the behaviour
->>> exactly the same for the cases in which total_scan > batch_size.
->>>
->>> [ v5: differentiate no-scan case, don't do this for kswapd ]
->>>
->>> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
->>> Reviewed-by: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
->>> Reviewed-by: Carlos Maiolino <cmaiolino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>> CC: "Theodore Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>
->>> CC: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
->>> ---
->>>  mm/vmscan.c | 24 +++++++++++++++++++++---
->>>  1 file changed, 21 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/mm/vmscan.c b/mm/vmscan.c
->>> index fa6a853..49691da 100644
->>> --- a/mm/vmscan.c
->>> +++ b/mm/vmscan.c
->>> @@ -281,12 +281,30 @@ unsigned long shrink_slab(struct shrink_control *shrink,
->>>  					nr_pages_scanned, lru_pages,
->>>  					max_pass, delta, total_scan);
->>>  
->>> -		while (total_scan >= batch_size) {
->>> +		do {
->>>  			int nr_before;
->>>  
->>> +			/*
->>> +			 * When we are kswapd, there is no need for us to go
->>> +			 * desperate and try to reclaim any number of objects
->>> +			 * regardless of batch size. Direct reclaim, OTOH, may
->>> +			 * benefit from freeing objects in any quantities. If
->>> +			 * the workload is actually stressing those objects,
->>> +			 * this may be the difference between succeeding or
->>> +			 * failing an allocation.
->>> +			 */
->>> +			if ((total_scan < batch_size) && current_is_kswapd())
->>> +				break;
->>> +			/*
->>> +			 * Differentiate between "few objects" and "no objects"
->>> +			 * as returned by the count step.
->>> +			 */
->>> +			if (!total_scan)
->>> +				break;
->>> +
->>
->> To reduce the risk of slab reclaiming the world in the reasonable cases
->> I outlined after the leader mail, I would go further than this and either
->> limit it to memcg after shrinkers are memcg aware or only do the full scan
->> if direct reclaim and priority == 0.
->>
->> What do you think?
->>
-> I of course understand your worries, but I myself believe makes things
-> less memcg specific is a long term win. There is a reason for memcg
-> needing this, and it might be helpful in other situations as well (maybe
-> very low memory in small systems, or a small zone, etc). All that, if
-> possible of course. As a last resort, I am obviously fine with
-> making it memcg specific if needed.
+On Thu, May 09, 2013 at 11:55:23AM +0100, Mel Gorman wrote:
+> On Thu, May 09, 2013 at 10:06:17AM +0400, Glauber Costa wrote:
+> > [ Sending again, forgot to CC fsdevel. Shame on me ]
+> > To Mel
+> > ======
+> > 
 > 
-> From the options you outlined above, I personally would prefer to add
-> the priority check test (since the direct reclaim part is implicit by
-> the current_is_kswapd test)
+> I'm surprised Dave Chinner is not on the cc. He may or may not see it
+> on fsdevel.
+
+I asked Glauber to send it to -fsdevel earlier today rather than
+scattergun CC my RH email address with various patches in the
+series. I'll be looking at this a bit more tomorrow now that I have
+some new perf baselines I can use for comparison.
+
+> > Mel, I have identified the overly aggressive behavior you noticed to be a bug
+> > in the at-least-one-pass patch, that would ask the shrinkers to scan the full
+> > batch even when total_scan < batch. They would do their best for it, and
+> > eventually succeed. I also went further, and made that the behavior of direct
+> > reclaim only - The only case that really matter for memcg, and one in which
+> > we could argue that we are more or less desperate for small squeezes in memory.
+> > Thank you very much for spotting this.
+> > 
 > 
-Ok. You also mentioned this as response to the opening e-mail, so:
+> I haven't seen the relevant code yet but in general I do not think it is
+> a good idea for direct reclaim to potentially reclaim all of slabs like
+> this. Direct reclaim does not necessarily mean the system is desperate
+> for small amounts of memory. Lets take a few examples where it would be
+> a poor decision to reclaim all the slab pages within direct reclaim.
+> 
+> 1. Direct reclaim triggers because kswapd is stalled writing pages for
+>    memcg (see code near comment "memcg doesn't have any dirty pages
+>    throttling"). A memcg dirtying its limit of pages may cause a lot of
+>    direct reclaim and dumping all the slab pages
+> 
+> 2. Direct reclaim triggers because kswapd is writing pages out to swap.
+>    Similar to memcg above, kswapd failing to make forward progress triggers
+>    direct reclaim which then potentially reclaims all slab
+> 
+> 3. Direct reclaim triggers because kswapd waits on congestion as there
+>    are too many pages under writeback. In this case, a large amounts of
+>    writes to slow storage like USB could result in all slab being reclaimed
+> 
+> 4. The system has been up a long time, memory is fragmented and the page
+>    allocator enters direct reclaim/compaction to allocate THPs. It would
+>    be very unfortunate if allocating a THP reclaimed all the slabs
+> 
+> All that is potentially bad and likely to make Dave put in his cranky
+> pants. I would much prefer if direct reclaim and kswapd treated slab
+> similarly and not ask the shrinkers to do a full scan unless the alternative
+> is OOM kill.
 
-I am fine with being conservative and making this memcg specific. This
-is relatively minor, and as much as I can argue, it may not justify the
-risks.
+Just keep in mind that I really don't care about micro-behaviours of
+the shrinker algorithm. What I look at is the overall cache balance
+under steady state workloads, the response to step changes in
+workload and what sort of overhead is seen to maintain system
+balance under memory pressure. So unless a micro-behaviour has an
+impact at the macro level, I just don't care one way or the other.
 
+But I can put on cranky panks if you want, Mel. :)
 
+> > Running postmark on the final result (at least on my 2-node box) show something
+> > a lot saner. We are still stealing more inodes than before, but by a factor of
+> > around 15 %. Since the correct balance is somewhat heuristic anyway - I
+> > personally think this is acceptable. But I am waiting to hear from you on this
+> > matter. Meanwhile, I am investigating further to try to pinpoint where exactly
+> > this comes from. It might either be because of the new node-aware behavior, or
+> > because of the increased calculation precision in the first patch.
+> > 
+> 
+> I'm going to defer to Dave as to whether that increased level of slab
+> reclaim is acceptable or not.
 
+Depends on how it changes the balance of the system. I won't know
+that until I run some new tests.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
