@@ -1,50 +1,49 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 04/31] dentry: move to per-sb LRU locks
-Date: Fri, 10 May 2013 18:16:41 +1000
-Message-ID: <20130510081641.GS23072@dastard>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH v5 17/31] drivers: convert shrinkers to new count/scan API
+Date: Fri, 10 May 2013 10:00:26 +0100
+Message-ID: <20130510090026.GJ11497@suse.de>
 References: <1368079608-5611-1-git-send-email-glommer@openvz.org>
- <1368079608-5611-5-git-send-email-glommer@openvz.org>
- <20130510052934.GR23072@dastard>
+ <1368079608-5611-18-git-send-email-glommer@openvz.org>
+ <20130509135209.GZ11497@suse.de>
+ <518C12D6.4060003@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130510052934.GR23072@dastard>
+In-Reply-To: <518C12D6.4060003@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@openvz.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Glauber Costa <glommer@parallels.com>
+Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, hughd@google.com, Greg Thelen <gthelen@google.com>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Kent Overstreet <koverstreet@google.com>, Arve Hj?nnev?g <arve@android.com>, John Stultz <john.stultz@linaro.org>, David Rientjes <rientjes@google.com>, Jerome Glisse <jglisse@redhat.com>, Thomas Hellstrom <thellstrom@vmware.com>
 
-On Fri, May 10, 2013 at 03:29:34PM +1000, Dave Chinner wrote:
-> On Thu, May 09, 2013 at 10:06:21AM +0400, Glauber Costa wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, May 10, 2013 at 01:19:18AM +0400, Glauber Costa wrote:
 > > 
-> > With the dentry LRUs being per-sb structures, there is no real need
-> > for a global dentry_lru_lock. The locking can be made more
-> > fine-grained by moving to a per-sb LRU lock, isolating the LRU
-> > operations of different filesytsems completely from each other.
+> > Last time I complained about some of the shrinker implementations but
+> > I'm not expecting them to be fixed in this series. However I still have
+> > questions about where -1 should be returned that I don't think were
+> > addressed so I'll repeat them.
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Acked-by: Mel Gorman <mgorman@suse.de>
 > 
-> Doesn't apply to a current linus tree. What is this patchset based
+> Note that the series try to keep the same behavior as we had before.
+> (modulo mistakes, spotting them are mostly welcome)
+> 
+> So if we are changing any of this, maybe better done in a separate patch?
+> 
 
-No, this is too painful. It doesn't apply to a 3.9 tree, and it
-BUG-ONs in the dcache on a current Linus tree, probably because I
-didn't resolve one of the 10 or so patches that didn't apply
-correctly....
+Ok, that's fair enough and a separate patch does make sense. I thought
+it was an oversight when the -1 return value was documented but not all
+callers were updated even though it looked appropriate. Slap a comment
+above the highlighted places suggesting that a return value of -1 be used
+instead so it does not get lost maybe?
 
-So, I'm going to wait until there's a version that applies to the
-current TOT and go from there....
+Whether you do that or not
 
-Cheers,
+Acked-by: Mel Gorman <mgorman@suse.de>
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Mel Gorman
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
