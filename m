@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v6 26/31] memcg: scan cache objects hierarchically
-Date: Sun, 12 May 2013 22:13:47 +0400
-Message-ID: <1368382432-25462-27-git-send-email-glommer@openvz.org>
+Subject: [PATCH v6 30/31] vmpressure: in-kernel notifications
+Date: Sun, 12 May 2013 22:13:51 +0400
+Message-ID: <1368382432-25462-31-git-send-email-glommer@openvz.org>
 References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1368382432-25462-1-git-send-email-glommer@openvz.org>
@@ -11,328 +11,170 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Hugh Dickins <hughd@google.com>
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@openvz.org>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <js1304@gmail.com>
 
-When reaching shrink_slab, we should descent in children memcg searching
-for objects that could be shrunk. This is true even if the memcg does
-not have kmem limits on, since the kmem res_counter will also be billed
-against the user res_counter of the parent.
+From: Glauber Costa <glommer@parallels.com>
 
-It is possible that we will free objects and not free any pages, that
-will just harm the child groups without helping the parent group at all.
-But at this point, we basically are prepared to pay the price.
+During the past weeks, it became clear to us that the shrinker interface
+we have right now works very well for some particular types of users,
+but not that well for others. The later are usually people interested in
+one-shot notifications, that were forced to adapt themselves to the
+count+scan behavior of shrinkers. To do so, they had no choice than to
+greatly abuse the shrinker interface producing little monsters all over.
+
+During LSF/MM, one of the proposals that popped out during our session
+was to reuse Anton Voronstsov's vmpressure for this. They are designed
+for userspace consumption, but also provide a well-stablished,
+cgroup-aware entry point for notifications.
+
+This patch extends that to also support in-kernel users. Events that
+should be generated for in-kernel consumption will be marked as such,
+and for those, we will call a registered function instead of triggering
+an eventfd notification.
+
+Please note that due to my lack of understanding of each shrinker user,
+I will stay away from converting the actual users, you are all welcome
+to do so.
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: Anton Vorontsov <anton@enomsg.org>
+Acked-by: Pekka Enberg <penberg@kernel.org>
+Reviewed-by: Greg Thelen <gthelen@google.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: John Stultz <john.stultz@linaro.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Joonsoo Kim <js1304@gmail.com>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/memcontrol.h |   6 ++
- mm/memcontrol.c            |  13 +++
- mm/vmscan.c                | 206 ++++++++++++++++++++++++++-------------------
- 3 files changed, 139 insertions(+), 86 deletions(-)
+ include/linux/vmpressure.h |  6 ++++++
+ mm/vmpressure.c            | 52 +++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 55 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 3eeece8..c8b1412 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -441,6 +441,7 @@ static inline bool memcg_kmem_enabled(void)
- 	return static_key_false(&memcg_kmem_enabled_key);
- }
+diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
+index 76be077..3131e72 100644
+--- a/include/linux/vmpressure.h
++++ b/include/linux/vmpressure.h
+@@ -19,6 +19,9 @@ struct vmpressure {
+ 	/* Have to grab the lock on events traversal or modifications. */
+ 	struct mutex events_lock;
  
-+bool memcg_kmem_should_reclaim(struct mem_cgroup *memcg);
- bool memcg_kmem_is_active(struct mem_cgroup *memcg);
++	/* False if only kernel users want to be notified, true otherwise. */
++	bool notify_userspace;
++
+ 	struct work_struct work;
+ };
  
- /*
-@@ -585,6 +586,11 @@ memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
- }
+@@ -36,6 +39,9 @@ extern struct vmpressure *css_to_vmpressure(struct cgroup_subsys_state *css);
+ extern int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
+ 				     struct eventfd_ctx *eventfd,
+ 				     const char *args);
++
++extern int vmpressure_register_kernel_event(struct cgroup *cg,
++					    void (*fn)(void));
+ extern void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
+ 					struct eventfd_ctx *eventfd);
  #else
- 
-+static inline bool memcg_kmem_should_reclaim(struct mem_cgroup *memcg)
-+{
-+	return false;
-+}
-+
- static inline bool memcg_kmem_is_active(struct mem_cgroup *memcg)
- {
- 	return false;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c563550..b8980d1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3043,6 +3043,19 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index 736a601..e16256e 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -135,8 +135,12 @@ static enum vmpressure_levels vmpressure_calc_level(unsigned long scanned,
  }
  
- #ifdef CONFIG_MEMCG_KMEM
-+bool memcg_kmem_should_reclaim(struct mem_cgroup *memcg)
-+{
-+	struct mem_cgroup *iter;
-+
-+	for_each_mem_cgroup_tree(iter, memcg) {
-+		if (memcg_kmem_is_active(iter)) {
-+			mem_cgroup_iter_break(memcg, iter);
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
- {
- 	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 731e798..9c45e5c 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -148,7 +148,7 @@ static bool global_reclaim(struct scan_control *sc)
- static bool has_kmem_reclaim(struct scan_control *sc)
- {
- 	return !sc->target_mem_cgroup ||
--		memcg_kmem_is_active(sc->target_mem_cgroup);
-+		memcg_kmem_should_reclaim(sc->target_mem_cgroup);
+ struct vmpressure_event {
+-	struct eventfd_ctx *efd;
++	union {
++		struct eventfd_ctx *efd;
++		void (*fn)(void);
++	};
+ 	enum vmpressure_levels level;
++	bool kernel_event;
+ 	struct list_head node;
+ };
+ 
+@@ -152,12 +156,15 @@ static bool vmpressure_event(struct vmpressure *vmpr,
+ 	mutex_lock(&vmpr->events_lock);
+ 
+ 	list_for_each_entry(ev, &vmpr->events, node) {
+-		if (level >= ev->level) {
++		if (ev->kernel_event) {
++			ev->fn();
++		} else if (vmpr->notify_userspace && level >= ev->level) {
+ 			eventfd_signal(ev->efd, 1);
+ 			signalled = true;
+ 		}
+ 	}
+ 
++	vmpr->notify_userspace = false;
+ 	mutex_unlock(&vmpr->events_lock);
+ 
+ 	return signalled;
+@@ -227,7 +234,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
+ 	 * we account it too.
+ 	 */
+ 	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
+-		return;
++		goto schedule;
+ 
+ 	/*
+ 	 * If we got here with no pages scanned, then that is an indicator
+@@ -244,8 +251,15 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
+ 	vmpr->scanned += scanned;
+ 	vmpr->reclaimed += reclaimed;
+ 	scanned = vmpr->scanned;
++	/*
++	 * If we didn't reach this point, only kernel events will be triggered.
++	 * It is the job of the worker thread to clean this up once the
++	 * notifications are all delivered.
++	 */
++	vmpr->notify_userspace = true;
+ 	mutex_unlock(&vmpr->sr_lock);
+ 
++schedule:
+ 	if (scanned < vmpressure_win || work_pending(&vmpr->work))
+ 		return;
+ 	schedule_work(&vmpr->work);
+@@ -328,6 +342,38 @@ int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
  }
  
- static unsigned long
-@@ -209,6 +209,101 @@ void unregister_shrinker(struct shrinker *shrinker)
- EXPORT_SYMBOL(unregister_shrinker);
- 
- #define SHRINK_BATCH 128
-+unsigned long
-+shrink_slab_one(struct shrinker *shrinker, struct shrink_control *shrinkctl,
-+		unsigned long nr_pages_scanned, unsigned long lru_pages)
+ /**
++ * vmpressure_register_kernel_event() - Register kernel-side notification
++ * @cg:		cgroup that is interested in vmpressure notifications
++ * @fn:		function to be called when pressure happens
++ *
++ * This function register in-kernel users interested in receiving notifications
++ * about pressure conditions. Pressure notifications will be triggered at the
++ * same time as userspace notifications (with no particular ordering relative
++ * to it).
++ *
++ * Pressure notifications are a alternative method to shrinkers and will serve
++ * well users that are interested in a one-shot notification, with a
++ * well-defined cgroup aware interface.
++ */
++int vmpressure_register_kernel_event(struct cgroup *cg, void (*fn)(void))
 +{
-+	unsigned long freed = 0;
-+	unsigned long long delta;
-+	long total_scan;
-+	long max_pass;
-+	long nr;
-+	long new_nr;
-+	long batch_size = shrinker->batch ? shrinker->batch
-+					  : SHRINK_BATCH;
++	struct vmpressure *vmpr = cg_to_vmpressure(cg);
++	struct vmpressure_event *ev;
 +
-+	max_pass = shrinker->count_objects(shrinker, shrinkctl);
-+	WARN_ON(max_pass < 0);
-+	if (max_pass <= 0)
-+		return 0;
++	ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++	if (!ev)
++		return -ENOMEM;
 +
-+	/*
-+	 * copy the current shrinker scan count into a local variable
-+	 * and zero it so that other concurrent shrinker invocations
-+	 * don't also do this scanning work.
-+	 */
-+	nr = atomic_long_xchg(&shrinker->nr_in_batch, 0);
++	ev->kernel_event = true;
++	ev->fn = fn;
 +
-+	total_scan = nr;
-+	delta = (4 * nr_pages_scanned) / shrinker->seeks;
-+	delta *= max_pass;
-+	do_div(delta, lru_pages + 1);
-+	total_scan += delta;
-+	if (total_scan < 0) {
-+		printk(KERN_ERR
-+		"shrink_slab: %pF negative objects to delete nr=%ld\n",
-+		       shrinker->scan_objects, total_scan);
-+		total_scan = max_pass;
-+	}
-+
-+	/*
-+	 * We need to avoid excessive windup on filesystem shrinkers
-+	 * due to large numbers of GFP_NOFS allocations causing the
-+	 * shrinkers to return -1 all the time. This results in a large
-+	 * nr being built up so when a shrink that can do some work
-+	 * comes along it empties the entire cache due to nr >>>
-+	 * max_pass.  This is bad for sustaining a working set in
-+	 * memory.
-+	 *
-+	 * Hence only allow the shrinker to scan the entire cache when
-+	 * a large delta change is calculated directly.
-+	 */
-+	if (delta < max_pass / 4)
-+		total_scan = min(total_scan, max_pass / 2);
-+
-+	/*
-+	 * Avoid risking looping forever due to too large nr value:
-+	 * never try to free more than twice the estimate number of
-+	 * freeable entries.
-+	 */
-+	if (total_scan > max_pass * 2)
-+		total_scan = max_pass * 2;
-+
-+	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
-+				nr_pages_scanned, lru_pages,
-+				max_pass, delta, total_scan);
-+
-+	while (total_scan >= batch_size) {
-+		long ret;
-+
-+		shrinkctl->nr_to_scan = batch_size;
-+		ret = shrinker->scan_objects(shrinker, shrinkctl);
-+		if (ret == -1)
-+			break;
-+		freed += ret;
-+
-+		count_vm_events(SLABS_SCANNED, batch_size);
-+		total_scan -= batch_size;
-+
-+		cond_resched();
-+	}
-+
-+	/*
-+	 * move the unused scan count back into the shrinker in a
-+	 * manner that handles concurrent updates. If we exhausted the
-+	 * scan, there is no need to do an update.
-+	 */
-+	if (total_scan > 0)
-+		new_nr = atomic_long_add_return(total_scan,
-+				&shrinker->nr_in_batch);
-+	else
-+		new_nr = atomic_long_read(&shrinker->nr_in_batch);
-+
-+	trace_mm_shrink_slab_end(shrinker, freed, nr, new_nr);
-+
-+	return freed;
++	mutex_lock(&vmpr->events_lock);
++	list_add(&ev->node, &vmpr->events);
++	mutex_unlock(&vmpr->events_lock);
++	return 0;
 +}
 +
- /*
-  * Call the shrink functions to age shrinkable caches
-  *
-@@ -234,6 +329,7 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
- {
- 	struct shrinker *shrinker;
- 	unsigned long freed = 0;
-+	struct mem_cgroup *root = shrinkctl->target_mem_cgroup;
- 
- 	if (nr_pages_scanned == 0)
- 		nr_pages_scanned = SWAP_CLUSTER_MAX;
-@@ -245,101 +341,39 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
- 	}
- 
- 	list_for_each_entry(shrinker, &shrinker_list, list) {
--		unsigned long long delta;
--		long total_scan;
--		long max_pass;
--		long nr;
--		long new_nr;
--		long batch_size = shrinker->batch ? shrinker->batch
--						  : SHRINK_BATCH;
-+		struct mem_cgroup *memcg;
- 
- 		/*
- 		 * If we don't have a target mem cgroup, we scan them all.
- 		 * Otherwise we will limit our scan to shrinkers marked as
- 		 * memcg aware
- 		 */
--		if (shrinkctl->target_mem_cgroup && !shrinker->memcg_shrinker)
--			continue;
--
--		max_pass = shrinker->count_objects(shrinker, shrinkctl);
--		WARN_ON(max_pass < 0);
--		if (max_pass <= 0)
-+		if (root && !shrinker->memcg_shrinker)
- 			continue;
- 
--		/*
--		 * copy the current shrinker scan count into a local variable
--		 * and zero it so that other concurrent shrinker invocations
--		 * don't also do this scanning work.
--		 */
--		nr = atomic_long_xchg(&shrinker->nr_in_batch, 0);
--
--		total_scan = nr;
--		delta = (4 * nr_pages_scanned) / shrinker->seeks;
--		delta *= max_pass;
--		do_div(delta, lru_pages + 1);
--		total_scan += delta;
--		if (total_scan < 0) {
--			printk(KERN_ERR
--			"shrink_slab: %pF negative objects to delete nr=%ld\n",
--			       shrinker->scan_objects, total_scan);
--			total_scan = max_pass;
--		}
--
--		/*
--		 * We need to avoid excessive windup on filesystem shrinkers
--		 * due to large numbers of GFP_NOFS allocations causing the
--		 * shrinkers to return -1 all the time. This results in a large
--		 * nr being built up so when a shrink that can do some work
--		 * comes along it empties the entire cache due to nr >>>
--		 * max_pass.  This is bad for sustaining a working set in
--		 * memory.
--		 *
--		 * Hence only allow the shrinker to scan the entire cache when
--		 * a large delta change is calculated directly.
--		 */
--		if (delta < max_pass / 4)
--			total_scan = min(total_scan, max_pass / 2);
--
--		/*
--		 * Avoid risking looping forever due to too large nr value:
--		 * never try to free more than twice the estimate number of
--		 * freeable entries.
--		 */
--		if (total_scan > max_pass * 2)
--			total_scan = max_pass * 2;
--
--		trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
--					nr_pages_scanned, lru_pages,
--					max_pass, delta, total_scan);
--
--		while (total_scan >= batch_size) {
--			long ret;
--
--			shrinkctl->nr_to_scan = batch_size;
--			ret = shrinker->scan_objects(shrinker, shrinkctl);
--
--			if (ret == -1)
--				break;
--			freed += ret;
--
--			count_vm_events(SLABS_SCANNED, batch_size);
--			total_scan -= batch_size;
--
--			cond_resched();
--		}
-+		memcg = mem_cgroup_iter(root, NULL, NULL);
-+		do {
-+			/*
-+			 * In a hierarchical chain, it might be that not all
-+			 * memcgs are kmem active. kmemcg design mandates that
-+			 * when one memcg is active, its children will be
-+			 * active as well. But it is perfectly possible that
-+			 * its parent is not.
-+			 *
-+			 * We also need to make sure we scan at least once, for
-+			 * the global case. So if we don't have a target memcg
-+			 * (saved in root), we proceed normally and expect to
-+			 * break in the next round.
-+			 */
- 
--		/*
--		 * move the unused scan count back into the shrinker in a
--		 * manner that handles concurrent updates. If we exhausted the
--		 * scan, there is no need to do an update.
--		 */
--		if (total_scan > 0)
--			new_nr = atomic_long_add_return(total_scan,
--					&shrinker->nr_in_batch);
--		else
--			new_nr = atomic_long_read(&shrinker->nr_in_batch);
-+			if (!root || memcg_kmem_is_active(memcg))
-+				freed += shrink_slab_one(shrinker, shrinkctl,
-+						 nr_pages_scanned, lru_pages);
-+			memcg = mem_cgroup_iter(root, memcg, NULL);
-+		} while (memcg);
- 
--		trace_mm_shrink_slab_end(shrinker, freed, nr, new_nr);
-+		/* restore original state */
-+		shrinkctl->target_mem_cgroup = root;
- 	}
- 	up_read(&shrinker_rwsem);
- out:
++/**
+  * vmpressure_unregister_event() - Unbind eventfd from vmpressure
+  * @cg:		cgroup handle
+  * @cft:	cgroup control files handle
 -- 
 1.8.1.4
 
