@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v6 29/31] memcg: move initialization to memcg creation
-Date: Sun, 12 May 2013 22:13:50 +0400
-Message-ID: <1368382432-25462-30-git-send-email-glommer@openvz.org>
+Subject: [PATCH v6 31/31] memcg: reap dead memcgs upon global memory pressure.
+Date: Sun, 12 May 2013 22:13:52 +0400
+Message-ID: <1368382432-25462-32-git-send-email-glommer@openvz.org>
 References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1368382432-25462-1-git-send-email-glommer@openvz.org>
@@ -13,12 +13,16 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Hugh Dickins <hughd@google.com>
 
-Those structures are only used for memcgs that are effectively using
-kmemcg. However, in a later patch I intend to use scan that list
-inconditionally (list empty meaning no kmem caches present), which
-simplifies the code a lot.
+When we delete kmem-enabled memcgs, they can still be zombieing
+around for a while. The reason is that the objects may still be alive,
+and we won't be able to delete them at destruction time.
 
-So move the initialization to early kmem creation.
+The only entry point for that, though, are the shrinkers. The
+shrinker interface, however, is not exactly tailored to our needs. It
+could be a little bit better by using the API Dave Chinner proposed, but
+it is still not ideal since we aren't really a count-and-scan event, but
+more a one-off flush-all-you-can event that would have to abuse that
+somehow.
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
 Cc: Dave Chinner <dchinner@redhat.com>
@@ -30,32 +34,118 @@ Cc: Hugh Dickins <hughd@google.com>
 Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 52 ++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 46 insertions(+), 6 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b8980d1..6f6a330 100644
+index 6f6a330..7006f03 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3323,9 +3323,7 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
+@@ -400,7 +400,6 @@ static size_t memcg_size(void)
+ 		nr_node_ids * sizeof(struct mem_cgroup_per_node);
+ }
  
- 	memcg_update_array_size(num + 1);
+-#ifdef CONFIG_MEMCG_DEBUG_ASYNC_DESTROY
+ static LIST_HEAD(dangling_memcgs);
+ static DEFINE_MUTEX(dangling_memcgs_mutex);
  
--	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
- 	INIT_WORK(&memcg->kmemcg_shrink_work, kmemcg_shrink_work_fn);
--	mutex_init(&memcg->slab_caches_mutex);
+@@ -409,11 +408,14 @@ static inline void memcg_dangling_free(struct mem_cgroup *memcg)
+ 	mutex_lock(&dangling_memcgs_mutex);
+ 	list_del(&memcg->dead);
+ 	mutex_unlock(&dangling_memcgs_mutex);
++#ifdef CONFIG_MEMCG_DEBUG_ASYNC_DESTROY
+ 	free_pages((unsigned long)memcg->memcg_name, 0);
++#endif
+ }
  
- 	return 0;
- out:
-@@ -6318,6 +6316,8 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ static inline void memcg_dangling_add(struct mem_cgroup *memcg)
+ {
++#ifdef CONFIG_MEMCG_DEBUG_ASYNC_DESTROY
+ 	/*
+ 	 * cgroup.c will do page-sized allocations most of the time,
+ 	 * so we'll just follow the pattern. Also, __get_free_pages
+@@ -439,15 +441,12 @@ static inline void memcg_dangling_add(struct mem_cgroup *memcg)
+ 	}
+ 
+ add_list:
++#endif
+ 	INIT_LIST_HEAD(&memcg->dead);
+ 	mutex_lock(&dangling_memcgs_mutex);
+ 	list_add(&memcg->dead, &dangling_memcgs);
+ 	mutex_unlock(&dangling_memcgs_mutex);
+ }
+-#else
+-static inline void memcg_dangling_free(struct mem_cgroup *memcg) {}
+-static inline void memcg_dangling_add(struct mem_cgroup *memcg) {}
+-#endif
+ 
+ static DEFINE_MUTEX(set_limit_mutex);
+ 
+@@ -6312,6 +6311,41 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+ }
+ 
+ #ifdef CONFIG_MEMCG_KMEM
++static void memcg_vmpressure_shrink_dead(void)
++{
++	struct memcg_cache_params *params, *tmp;
++	struct kmem_cache *cachep;
++	struct mem_cgroup *memcg;
++
++	mutex_lock(&dangling_memcgs_mutex);
++	list_for_each_entry(memcg, &dangling_memcgs, dead) {
++		mutex_lock(&memcg->slab_caches_mutex);
++		/* The element may go away as an indirect result of shrink */
++		list_for_each_entry_safe(params, tmp,
++					 &memcg->memcg_slab_caches, list) {
++			cachep = memcg_params_to_cache(params);
++			/*
++			 * the cpu_hotplug lock is taken in kmem_cache_create
++			 * outside the slab_caches_mutex manipulation. It will
++			 * be taken by kmem_cache_shrink to flush the cache.
++			 * So we need to drop the lock. It is all right because
++			 * the lock only protects elements moving in and out the
++			 * list.
++			 */
++			mutex_unlock(&memcg->slab_caches_mutex);
++			kmem_cache_shrink(cachep);
++			mutex_lock(&memcg->slab_caches_mutex);
++		}
++		mutex_unlock(&memcg->slab_caches_mutex);
++	}
++	mutex_unlock(&dangling_memcgs_mutex);
++}
++
++static void memcg_register_kmem_events(struct cgroup *cont)
++{
++	vmpressure_register_kernel_event(cont, memcg_vmpressure_shrink_dead);
++}
++
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
  {
  	int ret;
+@@ -6347,6 +6381,10 @@ static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
+ 	}
+ }
+ #else
++static inline void memcg_register_kmem_events(struct cgroup *cont)
++{
++}
++
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ {
+ 	return 0;
+@@ -6732,8 +6770,10 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 	struct mem_cgroup *memcg, *parent;
+ 	int error = 0;
  
-+	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
-+	mutex_init(&memcg->slab_caches_mutex);
- 	memcg->kmemcg_id = -1;
- 	ret = memcg_propagate_kmem(memcg);
- 	if (ret)
+-	if (!cont->parent)
++	if (!cont->parent) {
++		memcg_register_kmem_events(cont);
+ 		return 0;
++	}
+ 
+ 	mutex_lock(&memcg_create_mutex);
+ 	memcg = mem_cgroup_from_cont(cont);
 -- 
 1.8.1.4
 
