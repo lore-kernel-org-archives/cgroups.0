@@ -1,210 +1,39 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH V2 3/3] memcg: simplify lock of memcg page stat account
-Date: Mon, 13 May 2013 13:05:44 +0800
-Message-ID: <1368421545-4974-1-git-send-email-handai.szj@taobao.com>
-References: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
+From: Artem Bityutskiy <dedekind1@gmail.com>
+Subject: Re: [PATCH v6 15/31] fs: convert fs shrinkers to new scan/count API
+Date: Mon, 13 May 2013 09:12:10 +0300
+Message-ID: <1368425530.3208.13.camel@sauron.fi.intel.com>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
+	 <1368382432-25462-16-git-send-email-glommer@openvz.org>
+Reply-To: dedekind1@gmail.com
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-         :references;
-        bh=OlplbWrDZmvssJYIamvC5+ESXo30qdaahCm8xdqixoU=;
-        b=b7BtHkUAKz+xKX6PobO7ISHBgVBKQw6UNVFeWrhYO+hDtADLzFd7t4U2aIY4AliFLq
-         G/EaQOpNCwB4V4BTFhorFeboYXg5zbselXzULvv0C+56LV/wbmd62fcV1kEeZK0FkboN
-         ZW3RJ/PRe4jN+eZdBejjKcTD0QCeKxlZHJJC7/K59Nj7l01ZXU/huREgClmrzJwa+SZW
-         /2GYbDFsZMPf8hEhihGIOxqF5V2cYqWGz6foiiQ4apxeOw+cg8BLkqNjJk61bkzLnHPc
-         VDO3QnHIhq6vu/K4kDipSpUM+gd7Xy+NfNHnrgRzirYQ552DQ4O9j3yu91z2Cyo43XDF
-         8DGw==
-In-Reply-To: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
+In-Reply-To: <1368382432-25462-16-git-send-email-glommer@openvz.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org, linux-mm@kvack.org
-Cc: mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, hughd@google.com, gthelen@google.com, Sha Zhengju <handai.szj@taobao.com>
+To: Glauber Costa <glommer@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Dave Chinner <dchinner@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Adrian Hunter <adrian.hunter@intel.com>, Jan Kara <jack@suse.cz>
 
-From: Sha Zhengju <handai.szj@taobao.com>
+On Sun, 2013-05-12 at 22:13 +0400, Glauber Costa wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Convert the filesystem shrinkers to use the new API, and standardise
+> some of the behaviours of the shrinkers at the same time. For
+> example, nr_to_scan means the number of objects to scan, not the
+> number of objects to free.
+> 
+> I refactored the CIFS idmap shrinker a little - it really needs to
+> be broken up into a shrinker per tree and keep an item count with
+> the tree root so that we don't need to walk the tree every time the
+> shrinker needs to count the number of objects in the tree (i.e.
+> all the time under memory pressure).
 
-After removing duplicated information like PCG_* flags in
-'struct page_cgroup'(commit 2ff76f1193), there's a problem between
-"move" and "page stat accounting"(only FILE_MAPPED is supported now
-but other stats will be added in future, and here I'd like to take
-dirty page as an example):
+UBIFS part looks OK.
 
-Assume CPU-A does "page stat accounting" and CPU-B does "move"
-
-CPU-A                        CPU-B
-TestSet PG_dirty
-(delay)              	move_lock_mem_cgroup()
-                        if (PageDirty(page)) {
-                             old_memcg->nr_dirty --
-                             new_memcg->nr_dirty++
-                        }
-                        pc->mem_cgroup = new_memcg;
-                        move_unlock_mem_cgroup()
-
-move_lock_mem_cgroup()
-memcg = pc->mem_cgroup
-memcg->nr_dirty++
-move_unlock_mem_cgroup()
-
-while accounting information of new_memcg may be double-counted. So we
-use a bigger lock to solve this problem:  (commit: 89c06bd52f)
-
-      move_lock_mem_cgroup() <-- mem_cgroup_begin_update_page_stat()
-      TestSetPageDirty(page)
-      update page stats (without any checks)
-      move_unlock_mem_cgroup() <-- mem_cgroup_begin_update_page_stat()
-
-
-But this method also has its pros and cons: at present we use two layers
-of lock avoidance(memcg_moving and memcg->moving_account) then spinlock
-on memcg (see mem_cgroup_begin_update_page_stat()), but the lock
-granularity is a little bigger that not only the critical section but
-also some code logic is in the range of locking which may be deadlock
-prone. While trying to add memcg dirty page accounting, it gets into
-further difficulty with page cache radix-tree lock and even worse
-mem_cgroup_begin_update_page_stat() requires nesting
-(https://lkml.org/lkml/2013/1/2/48). However, when the current patch is
-preparing, the lock nesting problem is longer possible as s390/mm has
-reworked it out(commit:abf09bed), but it should be better
-if we can make the lock simpler and recursive safe.
-
-A choice may be:
-
-       CPU-A (stat)                 CPU-B (move)
-
-move_lock_mem_cgroup()
-if (PageCgroupUsed(pc)) ---(1)
-   needinc = 1;
-old_memcg = pc->mem_cgroup
-ret = TestSetPageDirty(page)	lock_page_cgroup();
-move_unlock_mem_cgroup()     	if (!PageCgroupUsed(pc)) ---(2)
-				  return;
-                             	move_lock_mem_cgroup()
-                             	if (PageDirty) {
-                                  old_memcg->nr_dirty --;
-                                  new_memcg->nr_dirty ++;
-                             	}
-                             	pc->mem_cgroup = new_memcg
-                             	move_unlock_mem_cgroup()
-if (needinc & ret)		unlock_page_cgroup();
-   old_memcg->nr_dirty ++
-
-
-For CPU-A, we save pc->mem_cgroup in a temporary variable just before
-TestSetPageDirty inside move_lock and then update stats if the page is set
-PG_dirty successfully. But CPU-B may do "moving" in advance that
-"old_memcg->nr_dirty --" will make old_memcg->nr_dirty incorrect but
-soon CPU-A will do "old_memcg->nr_dirty ++" finally that amend the stats.
-Now as only old_memcg saving and TestSetPageDirty is done under move_lock,
-the possibility of deadlock or recursion is greatly reduced.
-
-But is it race safe? As we know there're 4 candidates among which exist race
-condition: page stat, move account, charge and uncharge. In the previous
-illustration, PageCgroupUsed judgment can be different in step (1) and (2)
-because of charge or uncharge. But here we don't need additional
-synchronization since there's no race between stat & charge or stat & uncharge.
-For details please see comments above __mem_cgroup_begin_update_page_stat().
-
-
-Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
----
- mm/rmap.c |   23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/mm/rmap.c b/mm/rmap.c
-index a03c2a9..7b58576 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -57,6 +57,7 @@
- #include <linux/migrate.h>
- #include <linux/hugetlb.h>
- #include <linux/backing-dev.h>
-+#include <linux/page_cgroup.h>
- 
- #include <asm/tlbflush.h>
- 
-@@ -1111,6 +1112,7 @@ void page_add_file_rmap(struct page *page)
- 	unsigned long flags;
- 	struct page_cgroup *pc;
- 	struct mem_cgroup *memcg = NULL;
-+	bool ret;
- 
- 	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
- 	pc = lookup_page_cgroup(page);
-@@ -1119,15 +1121,15 @@ void page_add_file_rmap(struct page *page)
- 	memcg = pc->mem_cgroup;
- 	if (unlikely(!PageCgroupUsed(pc)))
- 		memcg = NULL;
-+	ret = atomic_inc_and_test(&page->_mapcount);
-+	mem_cgroup_end_update_page_stat(page, &locked, &flags);
- 
--	if (atomic_inc_and_test(&page->_mapcount)) {
-+	if (ret) {
- 		__inc_zone_page_state(page, NR_FILE_MAPPED);
- 		if (memcg)
- 			mem_cgroup_inc_page_stat(memcg, MEMCG_NR_FILE_MAPPED);
- 	}
- 	rcu_read_unlock();
--
--	mem_cgroup_end_update_page_stat(page, &locked, &flags);
- }
- 
- /**
-@@ -1143,6 +1145,7 @@ void page_remove_rmap(struct page *page)
- 	unsigned long flags;
- 	struct page_cgroup *pc;
- 	struct mem_cgroup *memcg = NULL;
-+	bool ret;
- 
- 	/*
- 	 * The anon case has no mem_cgroup page_stat to update; but may
-@@ -1158,16 +1161,20 @@ void page_remove_rmap(struct page *page)
- 			memcg = NULL;
- 	}
- 
-+	ret = atomic_add_negative(-1, &page->_mapcount);
-+	if (!anon)
-+		mem_cgroup_end_update_page_stat(page, &locked, &flags);
-+
- 	/* page still mapped by someone else? */
--	if (!atomic_add_negative(-1, &page->_mapcount))
--		goto out;
-+	if (!ret)
-+		return;
- 
- 	/*
- 	 * Hugepages are not counted in NR_ANON_PAGES nor NR_FILE_MAPPED
- 	 * and not charged by memcg for now.
- 	 */
- 	if (unlikely(PageHuge(page)))
--		goto out;
-+		return;
- 	if (anon) {
- 		mem_cgroup_uncharge_page(page);
- 		if (!PageTransHuge(page))
-@@ -1180,7 +1187,6 @@ void page_remove_rmap(struct page *page)
- 		if (memcg)
- 			mem_cgroup_dec_page_stat(memcg, MEMCG_NR_FILE_MAPPED);
- 		rcu_read_unlock();
--		mem_cgroup_end_update_page_stat(page, &locked, &flags);
- 	}
- 	if (unlikely(PageMlocked(page)))
- 		clear_page_mlock(page);
-@@ -1194,9 +1200,6 @@ void page_remove_rmap(struct page *page)
- 	 * faster for those pages still in swapcache.
- 	 */
- 	return;
--out:
--	if (!anon)
--		mem_cgroup_end_update_page_stat(page, &locked, &flags);
- }
- 
- /*
 -- 
-1.7.9.5
+Best Regards,
+Artem Bityutskiy
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
