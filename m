@@ -1,69 +1,33 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v6 00/31] kmemcg shrinkers
-Date: Mon, 13 May 2013 17:21:59 +1000
-Message-ID: <20130513072159.GN32675@dastard>
-References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
- <20130513071359.GM32675@dastard>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v6 15/31] fs: convert fs shrinkers to new scan/count API
+Date: Mon, 13 May 2013 11:28:16 +0400
+Message-ID: <51909610.1010801@parallels.com>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org>  <1368382432-25462-16-git-send-email-glommer@openvz.org> <1368425530.3208.13.camel@sauron.fi.intel.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130513071359.GM32675@dastard>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1368425530.3208.13.camel-Bxnoe/o8FG+Ef9UqXRslZEEOCMrvLtNR@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@openvz.org>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org
+To: dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 
-On Mon, May 13, 2013 at 05:14:00PM +1000, Dave Chinner wrote:
-> On Sun, May 12, 2013 at 10:13:21PM +0400, Glauber Costa wrote:
-> > Initial notes: ==============
-> > 
-> > Mel, Dave, this is the last round of fixes I have for the
-> > series. The fixes are few, and I was mostly interested in
-> > getting this out based on an up2date tree so Dave can verify it.
-> > This should apply fine ontop of Friday's linux-next.
-> > Alternatively, please grab from branch "kmemcg-lru-shrinker" at:
-> > 
-> > 	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git
-> > 
-> > Main changes from *v5: * Rebased to linux-next, and fix the
-> > conflicts with the dcache.  * Make sure LRU_RETRY only retry
-> > once * Prevent the bcache shrinker to scan the caches when
-> > disabled (by returning 0 in the count function) * Fix i915
-> > return code when mutex cannot be acquired.  * Only scan
-> > less-than-batch objects in memcg scenarios
+On 05/13/2013 10:12 AM, Artem Bityutskiy wrote:
+> On Sun, 2013-05-12 at 22:13 +0400, Glauber Costa wrote:
+>> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>
+>> Convert the filesystem shrinkers to use the new API, and standardise
+>> some of the behaviours of the shrinkers at the same time. For
+>> example, nr_to_scan means the number of objects to scan, not the
+>> number of objects to free.
+>>
+>> I refactored the CIFS idmap shrinker a little - it really needs to
+>> be broken up into a shrinker per tree and keep an item count with
+>> the tree root so that we don't need to walk the tree every time the
+>> shrinker needs to count the number of objects in the tree (i.e.
+>> all the time under memory pressure).
 > 
-> Ok, this is behaving a *lot* better than v5 in terms of initial
-> balance and sustained behaviour under pure inode/dentry press
-> workloads. The previous version was all over the place, not to
-> mention unstable and prone to unrealted lockups in the block
-> layer.
+> UBIFS part looks OK.
 > 
-> However, I'm not sure that the LRUness of reclaim is working
-> correctly at this point. When I switch from a write only workload
-> to a read-only workload (i.e. fsmark finishes and find starts), I
-> see this:
-....
-> So, yeah, there's still some broken stuff in this patchset that
-> needs fixing.  The script that I'm running to trigger these
-> problems is pretty basic - it's the same workload I've been using
-> for the past 3 years for measuring metadata performance of
-> filesystems:
-
-And unmounting an XFS filesystem after running this workload is
-hanging from time to time due to a reference counting problem on a
-buffer....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Great. Could I add your acked or reviewed by tag ?
