@@ -1,50 +1,75 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH V2 0/3] memcg: simply lock of page stat accounting
-Date: Mon, 13 May 2013 13:03:30 +0800
-Message-ID: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH V2 1/3] memcg: rewrite the comment about race condition of page stat accounting
+Date: Mon, 13 May 2013 13:04:51 +0800
+Message-ID: <1368421491-4897-1-git-send-email-handai.szj@taobao.com>
+References: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
-        bh=Cg6ZjW+pQEEc4NAm4XUpkHKsdFw48xNRmqNzC8mpbPg=;
-        b=si/wSzmrC62oPRP8h3h5AmV9wxXmzmU568LapCIhhTAHvHAhD68lrSiTDFSZpw6USA
-         mPz2Q1gZT5thFzKq3f1IRl91+LJGslbS9FCl+RQc+1/ENEUBEn+qxrhjDlM6CspTV/Fw
-         P7ZZ7EOTF2psNLZv5bLbhv8XWcCsXEEQLYDnj6o/tGNjS/BaNYwo31XHECE6Ti60AxYk
-         eYyptFbidU5/NFKfWBJNucE7zGDh5Y2yVR9c+irGPu4Lw1qJeFXbwrt4mcUOhozjP29B
-         friOAE7hK0LgkaM8S1/dJilQekEy+DmwhYMk/dmjwt9iTg5XxnSUVXI3N4DAm51tAn9R
-         OGhQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=uco7kFZMhoNbgU5uXDcZErcKbgoU3R2afsegaF6UHlk=;
+        b=jU2RSwpVbcCXVAtNLjbBoMJ5KE/1aK6Dc9zbPtlWB1zOHHEOEFg1eqOwY7QxgKvTi1
+         xSq2hAxYxMoQzTJ8u0FVEzmD/a3hVWlSe5buu29sYz4L6OON5TaG2utcpD0eb973fTPv
+         vWawqXTLxeg4vI7etSlEFmL+TEgpjPGFxIxl5HoBFVoJvP79CzWFpf9o7Pbwod56CW/a
+         17qfOu4kTXmXhNjRhdEBFMLMBljNTe9bXHYUCr2xlIhNkuGTyMRx7+VW+4hoFWV4yFdv
+         jpJu44dEtHvfkvTSSnL8u0kJ1NuG1OkcV2JIGzdMeAyP477XKLearjMoZj0ABACnPQ4k
+         2ELA==
+In-Reply-To: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: cgroups@vger.kernel.org, linux-mm@kvack.org
+Cc: mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, hughd@google.com, gthelen@google.com, Sha Zhengju <handai.szj@taobao.com>
 
-Hi,
+From: Sha Zhengju <handai.szj@taobao.com>
 
-This is my second attempt to make memcg page stat lock simpler, the
-first version: http://www.spinics.net/lists/linux-mm/msg50037.html.
+While doing memcg page stat accounting, we need to access page_cgroup
+members including pc->mem_cgroup and pc->flags, so there are 3 candidates
+which have potential race conditions with it: move account, charge, uncharge.
 
-In this version I investigate the potential race conditions among
-page stat, move_account, charge, uncharge and try to prove it race
-safe of my proposing lock scheme. The first patch is the basis of
-the patchset, so if I've made some stupid mistake please do not
-hesitate to point it out.
+But page stat and uncharge can also take it easy because the former is done
+before the page is deleted from radix-tree and the later is after the delete,
+so they will be serialized by some other locks(like page lock).
 
-Change log:
-v2 <- v1:
-   * rewrite comments on race condition
-   * split orignal large patch to two parts
-   * change too heavy try_get_mem_cgroup_from_page() to rcu_read_lock
-     to hold memcg alive
+So the races among them will be solved by:
 
-Sha Zhengju (3):
-   memcg: rewrite the comment about race condition of page stat accounting
-   memcg: alter mem_cgroup_{update,inc,dec}_page_stat() args to memcg pointer
-   memcg: simplify lock of memcg page stat account	
+	  stat	   	move		  charge	    uncharge
+stat	   X	      move lock   	 no race	    no race
+move	       		 X	     lock_page_cgroup    lock_page_cgroup
+charge  				    X		 lock_page_cgroup
+uncharge						       X
 
- include/linux/memcontrol.h |   14 ++++++-------
- mm/memcontrol.c            |   16 ++++++---------
- mm/rmap.c                  |   49 +++++++++++++++++++++++++++++++++-----------
- 3 files changed, 50 insertions(+), 29 deletions(-)
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+---
+ mm/memcontrol.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index fe4f123..b31513e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2317,9 +2317,10 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
+  * are no race with "charge".
+  *
+  * Considering "uncharge", we know that memcg doesn't clear pc->mem_cgroup
+- * at "uncharge" intentionally. So, we always see valid pc->mem_cgroup even
+- * if there are race with "uncharge". Statistics itself is properly handled
+- * by flags.
++ * at "uncharge" intentionally but clear PageCgroupUsed flag for that page.
++ * Besides, the file-stat operations happen before a page is deleted from
++ * radix-tree while uncharge is after the delete. So there are no race with
++ * "uncharge" too.
+  *
+  * Considering "move", this is an only case we see a race. To make the race
+  * small, we check mm->moving_account and detect there are possibility of race
+-- 
+1.7.9.5
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
