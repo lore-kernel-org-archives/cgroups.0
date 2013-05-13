@@ -1,88 +1,50 @@
-From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v6 27/31] vmscan: take at least one pass with shrinkers
-Date: Sun, 12 May 2013 22:13:48 +0400
-Message-ID: <1368382432-25462-28-git-send-email-glommer@openvz.org>
-References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1368382432-25462-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH V2 0/3] memcg: simply lock of page stat accounting
+Date: Mon, 13 May 2013 13:03:30 +0800
+Message-ID: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:from:to:cc:subject:date:message-id:x-mailer;
+        bh=Cg6ZjW+pQEEc4NAm4XUpkHKsdFw48xNRmqNzC8mpbPg=;
+        b=si/wSzmrC62oPRP8h3h5AmV9wxXmzmU568LapCIhhTAHvHAhD68lrSiTDFSZpw6USA
+         mPz2Q1gZT5thFzKq3f1IRl91+LJGslbS9FCl+RQc+1/ENEUBEn+qxrhjDlM6CspTV/Fw
+         P7ZZ7EOTF2psNLZv5bLbhv8XWcCsXEEQLYDnj6o/tGNjS/BaNYwo31XHECE6Ti60AxYk
+         eYyptFbidU5/NFKfWBJNucE7zGDh5Y2yVR9c+irGPu4Lw1qJeFXbwrt4mcUOhozjP29B
+         friOAE7hK0LgkaM8S1/dJilQekEy+DmwhYMk/dmjwt9iTg5XxnSUVXI3N4DAm51tAn9R
+         OGhQ==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@openvz.org>, Carlos Maiolino <cmaiolino@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-In very low free kernel memory situations, it may be the case that we
-have less objects to free than our initial batch size. If this is the
-case, it is better to shrink those, and open space for the new workload
-then to keep them and fail the new allocations.
+Hi,
 
-In particular, we are concerned with the direct reclaim case for memcg.
-Although this same technique can be applied to other situations just as well,
-we will start conservative and apply it for that case, which is the one
-that matters the most.
+This is my second attempt to make memcg page stat lock simpler, the
+first version: http://www.spinics.net/lists/linux-mm/msg50037.html.
 
-[ v6: only do it per memcg ]
-[ v5: differentiate no-scan case, don't do this for kswapd ]
+In this version I investigate the potential race conditions among
+page stat, move_account, charge, uncharge and try to prove it race
+safe of my proposing lock scheme. The first patch is the basis of
+the patchset, so if I've made some stupid mistake please do not
+hesitate to point it out.
 
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-CC: Dave Chinner <david@fromorbit.com>
-CC: Carlos Maiolino <cmaiolino@redhat.com>
-CC: "Theodore Ts'o" <tytso@mit.edu>
-CC: Al Viro <viro@zeniv.linux.org.uk>
----
- mm/vmscan.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+Change log:
+v2 <- v1:
+   * rewrite comments on race condition
+   * split orignal large patch to two parts
+   * change too heavy try_get_mem_cgroup_from_page() to rcu_read_lock
+     to hold memcg alive
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 9c45e5c..6bac41e 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -273,20 +273,33 @@ shrink_slab_one(struct shrinker *shrinker, struct shrink_control *shrinkctl,
- 				nr_pages_scanned, lru_pages,
- 				max_pass, delta, total_scan);
- 
--	while (total_scan >= batch_size) {
-+	do {
- 		long ret;
-+		unsigned long nr_to_scan = min(batch_size, total_scan);
-+		struct mem_cgroup *memcg = shrinkctl->target_mem_cgroup;
-+
-+		/*
-+		 * Differentiate between "few objects" and "no objects"
-+		 * as returned by the count step.
-+		 */
-+		if (!total_scan)
-+			break;
-+
-+		if ((total_scan < batch_size) &&
-+		   !(memcg && memcg_kmem_is_active(memcg)))
-+			break;
- 
--		shrinkctl->nr_to_scan = batch_size;
-+		shrinkctl->nr_to_scan = nr_to_scan;
- 		ret = shrinker->scan_objects(shrinker, shrinkctl);
- 		if (ret == -1)
- 			break;
- 		freed += ret;
- 
--		count_vm_events(SLABS_SCANNED, batch_size);
--		total_scan -= batch_size;
-+		count_vm_events(SLABS_SCANNED, nr_to_scan);
-+		total_scan -= nr_to_scan;
- 
- 		cond_resched();
--	}
-+	} while (total_scan >= batch_size);
- 
- 	/*
- 	 * move the unused scan count back into the shrinker in a
--- 
-1.8.1.4
+Sha Zhengju (3):
+   memcg: rewrite the comment about race condition of page stat accounting
+   memcg: alter mem_cgroup_{update,inc,dec}_page_stat() args to memcg pointer
+   memcg: simplify lock of memcg page stat account	
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ include/linux/memcontrol.h |   14 ++++++-------
+ mm/memcontrol.c            |   16 ++++++---------
+ mm/rmap.c                  |   49 +++++++++++++++++++++++++++++++++-----------
+ 3 files changed, 50 insertions(+), 29 deletions(-)
