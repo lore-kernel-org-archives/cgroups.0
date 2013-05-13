@@ -1,14 +1,13 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH V2 2/3] memcg: alter
- mem_cgroup_{update,inc,dec}_page_stat() args to memcg pointer
-Date: Mon, 13 May 2013 14:25:04 +0200
-Message-ID: <20130513122504.GA5246@dhcp22.suse.cz>
+Subject: Re: [PATCH V2 3/3] memcg: simplify lock of memcg page stat account
+Date: Mon, 13 May 2013 15:12:51 +0200
+Message-ID: <20130513131251.GB5246@dhcp22.suse.cz>
 References: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
- <1368421524-4937-1-git-send-email-handai.szj@taobao.com>
+ <1368421545-4974-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1368421524-4937-1-git-send-email-handai.szj@taobao.com>
+In-Reply-To: <1368421545-4974-1-git-send-email-handai.szj@taobao.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,39 +15,71 @@ Content-Transfer-Encoding: 7bit
 To: Sha Zhengju <handai.szj@gmail.com>
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, hughd@google.com, gthelen@google.com, Sha Zhengju <handai.szj@taobao.com>
 
-On Mon 13-05-13 13:05:24, Sha Zhengju wrote:
+On Mon 13-05-13 13:05:44, Sha Zhengju wrote:
 > From: Sha Zhengju <handai.szj@taobao.com>
 > 
-> Change the first argument of mem_cgroup_{update,inc,dec}_page_stat() from
-> 'struct page *' to 'struct mem_cgroup *', and so move PageCgroupUsed(pc)
-> checking out of mem_cgroup_update_page_stat(). This is a prepare patch for
-> the following memcg page stat lock simplifying.
+> After removing duplicated information like PCG_* flags in
+> 'struct page_cgroup'(commit 2ff76f1193), there's a problem between
+> "move" and "page stat accounting"(only FILE_MAPPED is supported now
+> but other stats will be added in future, and here I'd like to take
+> dirty page as an example):
+> 
+> Assume CPU-A does "page stat accounting" and CPU-B does "move"
+> 
+> CPU-A                        CPU-B
+> TestSet PG_dirty
+> (delay)              	move_lock_mem_cgroup()
+>                         if (PageDirty(page)) {
+>                              old_memcg->nr_dirty --
+>                              new_memcg->nr_dirty++
+>                         }
+>                         pc->mem_cgroup = new_memcg;
+>                         move_unlock_mem_cgroup()
+> 
+> move_lock_mem_cgroup()
+> memcg = pc->mem_cgroup
+> memcg->nr_dirty++
+> move_unlock_mem_cgroup()
+> 
+> while accounting information of new_memcg may be double-counted. So we
+> use a bigger lock to solve this problem:  (commit: 89c06bd52f)
+> 
+>       move_lock_mem_cgroup() <-- mem_cgroup_begin_update_page_stat()
+>       TestSetPageDirty(page)
+>       update page stats (without any checks)
+>       move_unlock_mem_cgroup() <-- mem_cgroup_begin_update_page_stat()
+> 
+> 
+> But this method also has its pros and cons: at present we use two layers
+> of lock avoidance(memcg_moving and memcg->moving_account) then spinlock
+> on memcg (see mem_cgroup_begin_update_page_stat()), but the lock
+> granularity is a little bigger that not only the critical section but
+> also some code logic is in the range of locking which may be deadlock
+> prone. While trying to add memcg dirty page accounting, it gets into
+> further difficulty with page cache radix-tree lock and even worse
+> mem_cgroup_begin_update_page_stat() requires nesting
+> (https://lkml.org/lkml/2013/1/2/48). However, when the current patch is
+> preparing, the lock nesting problem is longer possible as s390/mm has
+> reworked it out(commit:abf09bed), but it should be better
+> if we can make the lock simpler and recursive safe.
 
-No, please do not do this because it just spreads memcg specific code
-out of memcontrol.c. Besides that the patch is not correct.
+This patch doesn't make the charge move locking recursive safe. It
+just tries to overcome the problem in the path where it doesn't exist
+anymore. mem_cgroup_begin_update_page_stat would still deadlock if it
+was re-entered.
+
+It makes PageCgroupUsed usage even more tricky because it uses it out of
+lock_page_cgroup context. It seems that this would work in this
+particular path because atomic_inc_and_test(_mapcount) will protect from
+double accounting but the whole dance around old_memcg seems pointless
+to me.
+
+I am sorry but I do not think this is the right approach. IMO we should
+focus on mem_cgroup_begin_update_page_stat and make it really recursive
+safe - ideally without any additional overhead (which sounds like a real
+challenge)
+
 [...]
-> --- a/mm/rmap.c
-> +++ b/mm/rmap.c
-> @@ -1109,12 +1109,24 @@ void page_add_file_rmap(struct page *page)
->  {
->  	bool locked;
->  	unsigned long flags;
-> +	struct page_cgroup *pc;
-> +	struct mem_cgroup *memcg = NULL;
->  
->  	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
-> +	pc = lookup_page_cgroup(page);
-> +
-> +	rcu_read_lock();
-> +	memcg = pc->mem_cgroup;
-
-a) unnecessary RCU take for memcg disabled and b) worse KABOOM in that case
-as page_cgroup is NULL. We really do not want to put
-mem_cgroup_disabled() tests all over the place. The idea behind
-mem_cgroup_begin_update_page_stat was to be almost a noop for !memcg
-(and the real noop for !CONFIG_MEMCG).
-
-so Nak to this approach
 -- 
 Michal Hocko
 SUSE Labs
