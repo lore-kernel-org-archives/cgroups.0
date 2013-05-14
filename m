@@ -1,114 +1,51 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v6 12/31] fs: convert inode and dentry shrinking to be
- node aware
-Date: Tue, 14 May 2013 19:52:00 +1000
-Message-ID: <20130514095200.GI29466@dastard>
-References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
- <1368382432-25462-13-git-send-email-glommer@openvz.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: cgroup dentry insufficiently initialized prior to calling d_instantiate.
+Date: Tue, 14 May 2013 18:47:23 +0800
+Message-ID: <5192163B.9010208@huawei.com>
+References: <518D6E7C.9050204@schaufler-ca.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1368382432-25462-13-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-security-module-owner@vger.kernel.org>
+In-Reply-To: <518D6E7C.9050204@schaufler-ca.com>
+Sender: linux-security-module-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+To: Casey Schaufler <casey@schaufler-ca.com>
+Cc: tj@kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, lkml@vger.kernel.org, LSM <linux-security-module@vger.kernel.org>
 
-On Sun, May 12, 2013 at 10:13:33PM +0400, Glauber Costa wrote:
-> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On 2013/5/11 6:02, Casey Schaufler wrote:
 > 
-> Now that the shrinker is passing a nodemask in the scan control
-> structure, we can pass this to the the generic LRU list code to
-> isolate reclaim to the lists on matching nodes.
+> In kernel/cgroup.c in cgroup_add_file() we have:
 > 
-> This requires a small amount of refactoring of the LRU list API,
-> which might be best split out into a separate patch.
 > 
-> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Acked-by: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+>         dentry = lookup_one_len(name, dir, strlen(name));
+>         if (IS_ERR(dentry)) {
+>                 error = PTR_ERR(dentry);
+>                 goto out;
+>         }
+> 
+>         mode = cgroup_file_mode(cft);
+>         error = cgroup_create_file(dentry, mode | S_IFREG, cgrp->root->sb);
+>         if (!error) {
+>                 cfe->type = (void *)cft;
+>                 cfe->dentry = dentry;
+>                 dentry->d_fsdata = cfe;
+>                 simple_xattrs_init(&cfe->xattrs);
+>                 list_add_tail(&cfe->node, &parent->files);
+>                 cfe = NULL;
+>         }
+>         dput(dentry);
+> 
+> cgroup_create_file() calls d_instantiate, which may
+> decide to look at the xattrs on the file. Smack always
+> does this and SELinux can be configured to do so, although
+> no one seems to be using that option. Since the dentry
+> has not been initialized panics in __d_xattr ensue. See
+> bugzilla 57791.
+> 
 
-What I see at this point is that the superblock shrinkers appear to
-be way too agressive. As soon as memory pressure hits, the slab
-caches are getting emptied down to almost nothing. I'm testing on a
-4 node fake-numa system here, so I initially suspected what is
-happening is that the amount of reclaim has just been multiplied by
-4.
+cgroup_add_file() should initialize xattrs before calling d_instantiate(),
+just like cgroup_create() does.
 
-Peak performance is good, it's just that there is no stable steady
-state - the caches are either filling at maximum rate, or being
-emptied at maximum rate - and that implies that the shrinkers are
-doing more work than they need to.
+I'll prepare a patch to fix it. Thanks for the report!
 
-I think this is the point at what we need to ensure that the balance
-between the dentry/inode caches and the page cache is balanced, so
-I'm going to see what happens when I tweak a few numbers. e.g. see
-what effect tweaking shrink.seeks has on the rate of change of the
-cache sizes.....
-
-Changing the seek count doesn't change the fact that it's
-fundamentally unstable. More investigation needed. Trace points.
-
-kswapd0-632 mm_shrink_slab_start: objects to shrink 945211
-		gfp_flags GFP_KERNEL pgs_scanned 32 lru_pgs 7046
-		cache items 600456 delta 1363 total_scan 300228
-
-Bingo. We've got windup!
-
-	objects to shrink = shrinker->nr_in_batch
-			  = 945211
-			  = large amount of deferred work
-	cache items = max_pass
-		    = current cache size
-		    = 600456
-	total_scan  = 300228
-		    = (cache items) / 2.
-	delta	    = 1363
-
-And this code:
-
-                /*
-                 * We need to avoid excessive windup on filesystem shrinkers
-                 * due to large numbers of GFP_NOFS allocations causing the
-                 * shrinkers to return -1 all the time. This results in a large
-                 * nr being built up so when a shrink that can do some work
-                 * comes along it empties the entire cache due to nr >>>
-                 * max_pass.  This is bad for sustaining a working set in
-                 * memory.
-                 *
-                 * Hence only allow the shrinker to scan the entire cache when
-                 * a large delta change is calculated directly.
-                 */
-                if (delta < max_pass / 4)
-                        total_scan = min(total_scan, max_pass / 2);
-
-Has obviously triggered.
-
-So, it would seem to me that we have a relatively small amount of
-incremental memory pressure, but an awful lot of deferred work. When
-I see this:
-
-kswapd0-632 1210443.469309: mm_shrink_slab_start: cache items 600456 delta 1363 total_scan 300228
-kswapd3-635 1210443.510311: mm_shrink_slab_start: cache items 514885 delta 1250 total_scan 101025
-kswapd1-633 1210443.517440: mm_shrink_slab_start: cache items 613824 delta 1357 total_scan 97727
-kswapd2-634 1210443.527026: mm_shrink_slab_start: cache items 568610 delta 1331 total_scan 259185
-kswapd3-635 1210443.573165: mm_shrink_slab_start: cache items 486408 delta 1277 total_scan 243204
-kswapd1-633 1210443.697012: mm_shrink_slab_start: cache items 550827 delta 1224 total_scan 82231
-
-in the space of 230ms, I can see why the caches are getting
-completely emptied. kswapds are making multiple, large scale scan
-passes on the caches. Looks like our problem is an impedence
-mismatch: global windup counter, per-node cache scan calculations.
-
-So, that's the mess we really need to cleaning up before going much
-further with this patchset. We need stable behaviour from the
-shrinkers - I'll look into this a bit deeper tomorrow.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
