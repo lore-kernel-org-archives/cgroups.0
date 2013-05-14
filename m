@@ -1,93 +1,109 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v6 09/31] dcache: convert to use new lru list
- infrastructure
-Date: Tue, 14 May 2013 16:59:02 +1000
-Message-ID: <20130514065902.GG29466@dastard>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v7 04/31] dcache: remove dentries from LRU before putting
+ on dispose list
+Date: Tue, 14 May 2013 17:10:46 +1000
+Message-ID: <20130514071046.GH29466@dastard>
 References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
- <1368382432-25462-10-git-send-email-glommer@openvz.org>
+ <1368382432-25462-5-git-send-email-glommer@openvz.org>
+ <20130514054640.GE29466@dastard>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1368382432-25462-10-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130514054640.GE29466@dastard>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Sun, May 12, 2013 at 10:13:30PM +0400, Glauber Costa wrote:
-> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Tue, May 14, 2013 at 03:46:40PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> [ glommer: don't reintroduce double decrement of nr_unused_dentries,
->   adapted for new LRU return codes ]
-> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> ---
+> One of the big problems with modifying the way the dcache shrinker
+> and LRU implementation works is that the LRU is abused in several
+> ways. One of these is shrink_dentry_list().
+> 
+> Basically, we can move a dentry off the LRU onto a different list
+> without doing any accounting changes, and then use dentry_lru_prune()
+> to remove it from what-ever list it is now on to do the LRU
+> accounting at that point.
+> 
+> This makes it -really hard- to change the LRU implementation. The
+> use of the per-sb LRU lock serialises movement of the dentries
+> between the different lists and the removal of them, and this is the
+> only reason that it works. If we want to break up the dentry LRU
+> lock and lists into, say, per-node lists, we remove the only
+> serialisation that allows this lru list/dispose list abuse to work.
+> 
+> To make this work effectively, the dispose list has to be isolated
+> from the LRU list - dentries have to be removed from the LRU
+> *before* being placed on the dispose list. This means that the LRU
+> accounting and isolation is completed before disposal is started,
+> and that means we can change the LRU implementation freely in
+> future.
+> 
+> This means that dentries *must* be marked with DCACHE_SHRINK_LIST
+> when they are placed on the dispose list so that we don't think that
+> parent dentries found in try_prune_one_dentry() are on the LRU when
+> the are actually on the dispose list. This would result in
+> accounting the dentry to the LRU a second time. Hence
+> dentry_lru_del() has to handle the DCACHE_SHRINK_LIST case
+> differently because the dentry isn't on the LRU list.
+> 
+> [ v2: don't decrement nr unused twice, spotted by Sha Zhengju ]
+> [ v7: (dchinner)
+> - shrink list leaks dentries when inode/parent can't be locked in
+>   dentry_kill().
+> - fix the scope of the sb locking inside shrink_dcache_sb()
 
-I'm seeing a panic on startup in d_kill() with an invalid d_child
-list entry with this patch. I haven't got to the bottom of it yet.
+<sigh>
 
-.....
+I need find a dealer that sells better crack.
 
->  void shrink_dcache_sb(struct super_block *sb)
->  {
-> -	LIST_HEAD(tmp);
-> -
-> -	spin_lock(&sb->s_dentry_lru_lock);
-> -	while (!list_empty(&sb->s_dentry_lru)) {
+> @@ -883,9 +923,16 @@ void shrink_dcache_sb(struct super_block *sb)
+>  
+>  	spin_lock(&sb->s_dentry_lru_lock);
+>  	while (!list_empty(&sb->s_dentry_lru)) {
 > -		list_splice_init(&sb->s_dentry_lru, &tmp);
-> -
-> -		/*
-> -		 * account for removal here so we don't need to handle it later
-> -		 * even though the dentry is no longer on the lru list.
-> -		 */
-> -		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
-> -		sb->s_nr_dentry_unused = 0;
-> -
-> -		spin_unlock(&sb->s_dentry_lru_lock);
-> -		shrink_dcache_list(&tmp);
-> -		spin_lock(&sb->s_dentry_lru_lock);
-> -	}
-> -	spin_unlock(&sb->s_dentry_lru_lock);
-> +	list_lru_dispose_all(&sb->s_dentry_lru, shrink_dcache_list);
->  }
->  EXPORT_SYMBOL(shrink_dcache_sb);
+> +		/*
+> +		 * account for removal here so we don't need to handle it later
+> +		 * even though the dentry is no longer on the lru list.
+> +		 */
+>  		spin_unlock(&sb->s_dentry_lru_lock);
+> -		shrink_dentry_list(&tmp);
+> +		list_splice_init(&sb->s_dentry_lru, &tmp);
+> +		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
+> +		sb->s_nr_dentry_unused = 0;
+> +
+> +		shrink_dcache_list(&tmp);
+>  		spin_lock(&sb->s_dentry_lru_lock);
 
-And here comes the fun part. This doesn't account for the
-dentries that are freed from the superblock here.
+This is now completely wrong. It should end up like this:
 
-So, it needs to be something like:
+	while (!list_empty(&sb->s_dentry_lru)) {
+		/*
+		 * account for removal here so we don't need to handle it later
+		 * even though the dentry is no longer on the lru list.
+		 */
+		list_splice_init(&sb->s_dentry_lru, &tmp);
+		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
+		sb->s_nr_dentry_unused = 0;
+		spin_unlock(&sb->s_dentry_lru_lock);
 
-void shrink_dcache_sb(struct super_block *sb)
-{
-	unsigned long disposed;
+		shrink_dcache_list(&tmp);
 
-	disposed = list_lru_dispose_all(&sb->s_dentry_lru,
-					shrink_dcache_list);
+		spin_lock(&sb->s_dentry_lru_lock);
+	}
+	spin_unlock(&sb->s_dentry_lru_lock);
 
-	this_cpu_sub(nr_dentry_unused, disposed);
-}
-
-But, therein lies a problem. nr_dentry_unused is a 32 bit counter,
-and we can return a 64 bit value here. So that means we have to bump
-nr_dentry_unused to a long, not an int for these per-cpu counters to
-work.
-
-And then there's the problem that the sum of these counters only
-uses an int. Which means if we get large numbers of negative values
-on different CPU from unmounts, the summation will end up
-overflowing and it'll all suck.
-
-So, Glauber, what do you reckon? I've never likes this stupid
-hand-rolled per-cpu counter stuff, and it's causing issues. Should
-we just convert them to generic per-cpu counters because they are
-64bit clean and just handle out-of-range sums in the /proc update
-code?
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
+david@fromorbit.com
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
