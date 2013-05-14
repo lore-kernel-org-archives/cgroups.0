@@ -1,64 +1,56 @@
-From: Serge Hallyn <serge.hallyn@ubuntu.com>
-Subject: Re: [PATCH 0/4] Rebase device_cgroup v2 patchset
-Date: Tue, 14 May 2013 10:05:39 -0500
-Message-ID: <20130514150539.GA26090@sergelap>
-References: <20121022134536.172969567@napanee.usersys.redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: initialize xattr before calling d_instantiate()
+Date: Tue, 14 May 2013 08:38:10 -0700
+Message-ID: <20130514153810.GD6795@mtj.dyndns.org>
+References: <51922394.2020002@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20121022134536.172969567@napanee.usersys.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, amorgan@sergelap, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=x-received:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:content-disposition:in-reply-to
+	:user-agent; bh=K80jwkRnqR8SIT8cbN2omRdlx/lKUwYEEyuz2naQR84=;
+	b=bLsGgHRpzgIlnVoEC8WTvHbRsB4cF1aVtWLAsItJejtX4r3qRn6bifgKo50aZm9N5z
+	ZWhQhrwdV/Egie7H+wADPgDe9cqd+sa4YsBZQ6ae3AhwKre/P6iQ8+fBI4l7rsHlU3Jv
+	E5DbAOtC+33hU+8Q1T8Bqy3RzjF+orEXTO/x1I2wiKlR8rLmYc2czXllecd/vi6VuRTi
+	msnQnESzjIJIb+NgzsGXyS15xatKroynEQ9sBGW2CycjMAYh0Zu1CRVCZ9/XlkKTnfZQ
+	cm9DYIgtNAKJpNKfgUnNpxmn/KtFjvmSLwLdHdItpxF16GQODsmfC+sf83i00HqeY2PL
+	6zbQ==
+Content-Disposition: inline
+In-Reply-To: <51922394.2020002-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LSM <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ivan Bulatovic <combuster-fd97jBR+K/7gvPn8nOUGzA@public.gmane.org>
 
-Hi,
+On Tue, May 14, 2013 at 07:44:20PM +0800, Li Zefan wrote:
+> cgroup_create_file() calls d_instantiate(), which may decide to look
+> at the xattrs on the file. Smack always does this and SELinux can be
+> configured to do so.
+> 
+> But cgroup_add_file() didn't initialize xattrs before calling
+> cgroup_create_file(), which finally leads to dereferencing NULL
+> dentry->d_fsdata.
+> 
+> This bug has been there since cgroup xattr was introduced.
+> 
+> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 3.8.x
+> Reported-by: Ivan Bulatovic <combuster-fd97jBR+K/7gvPn8nOUGzA@public.gmane.org>
+> Reported-by: Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-so now that the device cgroup properly respects hierarchy, not allowing
-a cgroup to be given greater permission than its parent, should we consider
-relaxing the capability checks?
+Applied to cgroup/for-3.10-fixes.
 
-There are two capable(CAP_SYS_ADMIN) checks in deice_cgroup.c: one in
-devcgroup_can_attach() to protect changing another task's cgroup, and
-one in devcgroup_update_access() to protect writes to the devices.allow
-and devices.deny files.
+Thanks.
 
-I think the first should be changed to a check for ns_capable() to
-the victim's user_ns.  Something like 
-
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -70,10 +70,16 @@ static int devcgroup_can_attach(struct cgroup *new_cgrp,
-                                struct cgroup_taskset *set)
- {
-        struct task_struct *task = cgroup_taskset_first(set);
-+       struct user_namespace *ns;
-+       int ret = -EPERM;
-
--       if (current != task && !capable(CAP_SYS_ADMIN))
--               return -EPERM;
--       return 0;
-+       if (current == task)
-+               return 0;
-+
-+       ns = userns_get(task);;
-+       ret = ns_capable(ns, CAP_SYS_ADMIN) ? 0 : -EPERM;
-+       put_user_ns(ns);
-+       return ret;
- }
-
- /*
-
-For the second, the hierarchy support should let us ignore concerns
-about unprivileged users escalating privilege, but I'm trying to decide
-whether we  need to worry about the sendmail capability class of bugs.
-My sense is actually the answer is no, and we can drop the capable()
-check altogether.  The reason is that while userspace frequently doesn't
-properly handle a failing system call due to unexpected lack of partial
-privilege, I wouldn't expect any setuid root program to ignore failure
-to open or mknod a device file (and proceed into a bad failure mode).
-Does this sound rasonable, or a recipe for disaster?
-
--serge
+-- 
+tejun
