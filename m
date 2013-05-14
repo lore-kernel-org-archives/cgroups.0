@@ -1,68 +1,58 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH V2 2/3] memcg: alter
- mem_cgroup_{update,inc,dec}_page_stat() args to memcg pointer
-Date: Tue, 14 May 2013 11:10:03 +0200
-Message-ID: <20130514091003.GJ5198@dhcp22.suse.cz>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH V2 3/3] memcg: simplify lock of memcg page stat account
+Date: Tue, 14 May 2013 17:13:07 +0800
+Message-ID: <CAFj3OHW=FCGu6rhChLV2HgUFSRxDur4e8bmugXnq++c-P8mNRg@mail.gmail.com>
 References: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
- <1368421524-4937-1-git-send-email-handai.szj@taobao.com>
- <20130513122504.GA5246@dhcp22.suse.cz>
- <CAFj3OHXH35ej2bQ+U1+zk6kHg4jU3LneOg=bnoJJ6jQFpTm3Gw@mail.gmail.com>
+	<1368421545-4974-1-git-send-email-handai.szj@taobao.com>
+	<20130513131251.GB5246@dhcp22.suse.cz>
+	<20130513133809.GC5246@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <CAFj3OHXH35ej2bQ+U1+zk6kHg4jU3LneOg=bnoJJ6jQFpTm3Gw@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:x-received:in-reply-to:references:date:message-id
+         :subject:from:to:cc:content-type;
+        bh=QZkSHcUpvIsxermDsX56O/zOlurcbnmjqMdWvBR7wFI=;
+        b=WISfFqq8kLe85bcOVNtnYgWz1+uKLUduDfaByhjWOa1BiSVIkUVLcF/87m1ejW1B5f
+         VKxtFc144qTeZL8QTra1ZV1FscBj7SAz+OxLQMRXjX8ZtJmhC+VY4wu7995OqKILvGPo
+         VKOB+4t7anO/R1Vqs+6CP+LVanrzA8gBSThl61wTpbFH2j+o4qurQJR5fGFGKwCA4EkW
+         uYH3P328rkDZblTKKzpcYlpADR/1r7vJT378oJbZ1l+7LHPIm3B+A6wH4xHAHmQp6/T6
+         cOEUv8kfRTysntUYjw9/7Fahwge0Ny/kk76MYqWdVVVDCHbGwN0UDjVYKKjTTVTBNZs5
+         BZPA==
+In-Reply-To: <20130513133809.GC5246-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Greg Thelen <gthelen@google.com>, Sha Zhengju <handai.szj@taobao.com>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Tue 14-05-13 17:00:08, Sha Zhengju wrote:
-> On Mon, May 13, 2013 at 8:25 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> > On Mon 13-05-13 13:05:24, Sha Zhengju wrote:
-> >> From: Sha Zhengju <handai.szj@taobao.com>
-> >>
-> >> Change the first argument of mem_cgroup_{update,inc,dec}_page_stat() from
-> >> 'struct page *' to 'struct mem_cgroup *', and so move PageCgroupUsed(pc)
-> >> checking out of mem_cgroup_update_page_stat(). This is a prepare patch for
-> >> the following memcg page stat lock simplifying.
-> >
-> > No, please do not do this because it just spreads memcg specific code
-> > out of memcontrol.c. Besides that the patch is not correct.
-> > [...]
-> >> --- a/mm/rmap.c
-> >> +++ b/mm/rmap.c
-> >> @@ -1109,12 +1109,24 @@ void page_add_file_rmap(struct page *page)
-> >>  {
-> >>       bool locked;
-> >>       unsigned long flags;
-> >> +     struct page_cgroup *pc;
-> >> +     struct mem_cgroup *memcg = NULL;
-> >>
-> >>       mem_cgroup_begin_update_page_stat(page, &locked, &flags);
-> >> +     pc = lookup_page_cgroup(page);
-> >> +
-> >> +     rcu_read_lock();
-> >> +     memcg = pc->mem_cgroup;
-> >
-> > a) unnecessary RCU take for memcg disabled and b) worse KABOOM in that case
-> > as page_cgroup is NULL. We really do not want to put
-> > mem_cgroup_disabled() tests all over the place. The idea behind
-> > mem_cgroup_begin_update_page_stat was to be almost a noop for !memcg
-> > (and the real noop for !CONFIG_MEMCG).
-> 
-> It's indeed an unwise behavior. How about also wrapping it in
-> mm/memcontrol.c or memcontrol.h?
+On Mon, May 13, 2013 at 9:38 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+>
+> On Mon 13-05-13 15:12:51, Michal Hocko wrote:
+> [...]
+> > I am sorry but I do not think this is the right approach. IMO we should
+> > focus on mem_cgroup_begin_update_page_stat and make it really recursive
+> > safe - ideally without any additional overhead (which sounds like a real
+> > challenge)
+>
+> Or maybe we should just not over complicate this and simply consider
+> recursivness when it starts being an issue. It is not a problem for
+> rmap accounting anymore and dirty pages accounting seems to be safe as
+> well and pages under writeback accounting was OK even previously.
+> It doesn't make much sense to block dirty pages accounting by a
+> non-existing problem.
+>
 
-I just think it doesn't make much sense to overcomplicate this -
-especially when this is not an issue anymore.
--- 
-Michal Hocko
-SUSE Labs
+Yes, the dirty/writeback accounting seems okay now. I sent this patch
+out to see if I can do something to simplify the locks but this
+approach seems to have its own drawbacks. Since you and Kame are NAK
+to this, in the order of importance I'll put the patch aside and
+continue the work of dirty page accounting. :)
+
+Thanks for the teaching!
+
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+Sha
