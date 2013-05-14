@@ -1,71 +1,198 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v7 04/31] dcache: remove dentries from LRU before putting
- on dispose list
-Date: Tue, 14 May 2013 16:43:04 +0400
-Message-ID: <51923158.7040002@parallels.com>
-References: <1368382432-25462-1-git-send-email-glommer@openvz.org> <1368382432-25462-5-git-send-email-glommer@openvz.org> <20130514054640.GE29466@dastard>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v6 09/31] dcache: convert to use new lru list infrastructure
+Date: Tue, 14 May 2013 18:01:22 +0400
+Message-ID: <519243B2.8030102@parallels.com>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org> <1368382432-25462-10-git-send-email-glommer@openvz.org> <20130514065902.GG29466@dastard>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20130514054640.GE29466@dastard>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="------------010708050508050409090900"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130514065902.GG29466@dastard>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david@fromorbit.com>
-Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 05/14/2013 09:46 AM, Dave Chinner wrote:
-> [ v2: don't decrement nr unused twice, spotted by Sha Zhengju ]
-> [ v7: (dchinner)
-> - shrink list leaks dentries when inode/parent can't be locked in
->   dentry_kill().
-> - fix the scope of the sb locking inside shrink_dcache_sb()
-> - remove the readdition of dentry_lru_prune(). ]
+--------------010708050508050409090900
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 
-Dave,
+On 05/14/2013 10:59 AM, Dave Chinner wrote:
+> On Sun, May 12, 2013 at 10:13:30PM +0400, Glauber Costa wrote:
+>> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>
+>> [ glommer: don't reintroduce double decrement of nr_unused_dentries,
+>>   adapted for new LRU return codes ]
+>> Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+>> ---
+> 
+> I'm seeing a panic on startup in d_kill() with an invalid d_child
+> list entry with this patch. I haven't got to the bottom of it yet.
+> 
 
-dentry_lru_prune was removed because it would only prune the dentry if
-it was in the LRU list, and it has to be always pruned (61572bb1).
+My wild guess is that your patch does not prune correctly, as I
+described in my last message.
 
-You don't reintroduce dentry_lru_prune here, so the two locations which
-prune dentries read as follows:
+> .....
+> 
+>>  void shrink_dcache_sb(struct super_block *sb)
+>>  {
+>> -	LIST_HEAD(tmp);
+>> -
+>> -	spin_lock(&sb->s_dentry_lru_lock);
+>> -	while (!list_empty(&sb->s_dentry_lru)) {
+>> -		list_splice_init(&sb->s_dentry_lru, &tmp);
+>> -
+>> -		/*
+>> -		 * account for removal here so we don't need to handle it later
+>> -		 * even though the dentry is no longer on the lru list.
+>> -		 */
+>> -		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
+>> -		sb->s_nr_dentry_unused = 0;
+>> -
+>> -		spin_unlock(&sb->s_dentry_lru_lock);
+>> -		shrink_dcache_list(&tmp);
+>> -		spin_lock(&sb->s_dentry_lru_lock);
+>> -	}
+>> -	spin_unlock(&sb->s_dentry_lru_lock);
+>> +	list_lru_dispose_all(&sb->s_dentry_lru, shrink_dcache_list);
+>>  }
+>>  EXPORT_SYMBOL(shrink_dcache_sb);
+> 
+> And here comes the fun part. This doesn't account for the
+> dentries that are freed from the superblock here.
+> 
+> So, it needs to be something like:
+> 
+> void shrink_dcache_sb(struct super_block *sb)
+> {
+> 	unsigned long disposed;
+> 
+> 	disposed = list_lru_dispose_all(&sb->s_dentry_lru,
+> 					shrink_dcache_list);
+> 
+> 	this_cpu_sub(nr_dentry_unused, disposed);
+> }
+> 
+> But, therein lies a problem. nr_dentry_unused is a 32 bit counter,
+> and we can return a 64 bit value here. So that means we have to bump
+> nr_dentry_unused to a long, not an int for these per-cpu counters to
+> work.
+> 
+> And then there's the problem that the sum of these counters only
+> uses an int. Which means if we get large numbers of negative values
+> on different CPU from unmounts, the summation will end up
+> overflowing and it'll all suck.
+> 
+> So, Glauber, what do you reckon? I've never likes this stupid
+> hand-rolled per-cpu counter stuff, and it's causing issues. Should
+> we just convert them to generic per-cpu counters because they are
+> 64bit clean and just handle out-of-range sums in the /proc update
+> code?
+> 
+
+One option would be to add the following patch to the beginning of the
+series.
 
 
-        if (dentry->d_flags & DCACHE_OP_PRUNE)
-                dentry->d_op->d_prune(dentry);
 
-        dentry_lru_del(dentry);
 
-I believe this is wrong. My old version would do:
+--------------010708050508050409090900
+Content-Type: text/x-patch; name="dentry.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="dentry.patch"
 
-+static void dentry_lru_prune(struct dentry *dentry)
-+{
-+	/*
-+	 * inform the fs via d_prune that this dentry is about to be
-+	 * unhashed and destroyed.
-+	 */
-+	if (dentry->d_flags & DCACHE_OP_PRUNE)
-+		dentry->d_op->d_prune(dentry);
-+
-+	if (list_empty(&dentry->d_lru))
-+		return;
-+
-+	if ((dentry->d_flags & DCACHE_SHRINK_LIST)) {
-+		list_del_init(&dentry->d_lru);
-+		dentry->d_flags &= ~DCACHE_SHRINK_LIST;
-+	} else {
-+		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
-+		__dentry_lru_del(dentry);
-+		spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
-+	}
-+}
+diff --git a/fs/dcache.c b/fs/dcache.c
+index 3a3adc4..a8be4c9 100644
+--- a/fs/dcache.c
++++ b/fs/dcache.c
+@@ -116,12 +116,12 @@ struct dentry_stat_t dentry_stat = {
+ 	.age_limit = 45,
+ };
+ 
+-static DEFINE_PER_CPU(unsigned int, nr_dentry);
+-static DEFINE_PER_CPU(unsigned int, nr_dentry_unused);
++static DEFINE_PER_CPU(long, nr_dentry);
++static DEFINE_PER_CPU(long, nr_dentry_unused);
+ 
+ #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
+ /* scan possible cpus instead of online and avoid worrying about CPU hotplug. */
+-static int get_nr_dentry(void)
++static long get_nr_dentry(void)
+ {
+ 	int i;
+ 	int sum = 0;
+@@ -130,7 +130,7 @@ static int get_nr_dentry(void)
+ 	return sum < 0 ? 0 : sum;
+ }
+ 
+-static int get_nr_dentry_unused(void)
++static long get_nr_dentry_unused(void)
+ {
+ 	int i;
+ 	int sum = 0;
+@@ -144,7 +144,7 @@ int proc_nr_dentry(ctl_table *table, int write, void __user *buffer,
+ {
+ 	dentry_stat.nr_dentry = get_nr_dentry();
+ 	dentry_stat.nr_unused = get_nr_dentry_unused();
+-	return proc_dointvec(table, write, buffer, lenp, ppos);
++	return proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
+ }
+ #endif
+ 
+diff --git a/include/linux/dcache.h b/include/linux/dcache.h
+index 4d24a12..bd08285 100644
+--- a/include/linux/dcache.h
++++ b/include/linux/dcache.h
+@@ -54,11 +54,11 @@ struct qstr {
+ #define hashlen_len(hashlen)  ((u32)((hashlen) >> 32))
+ 
+ struct dentry_stat_t {
+-	int nr_dentry;
+-	int nr_unused;
+-	int age_limit;          /* age in seconds */
+-	int want_pages;         /* pages requested by system */
+-	int dummy[2];
++	long nr_dentry;
++	long nr_unused;
++	long age_limit;          /* age in seconds */
++	long want_pages;         /* pages requested by system */
++	long dummy[2];
+ };
+ extern struct dentry_stat_t dentry_stat;
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 67e1040..e875f60 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1267,12 +1267,12 @@ struct super_block {
+ 	/* s_dentry_lru_lock protects s_dentry_lru and s_nr_dentry_unused */
+ 	spinlock_t		s_dentry_lru_lock ____cacheline_aligned_in_smp;
+ 	struct list_head	s_dentry_lru;	/* unused dentry lru */
+-	int			s_nr_dentry_unused;	/* # of dentry on lru */
++	long			s_nr_dentry_unused;	/* # of dentry on lru */
+ 
+ 	/* s_inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
+ 	spinlock_t		s_inode_lru_lock ____cacheline_aligned_in_smp;
+ 	struct list_head	s_inode_lru;		/* unused inode lru */
+-	int			s_nr_inodes_unused;	/* # of inodes on lru */
++	long			s_nr_inodes_unused;	/* # of inodes on lru */
+ 
+ 	struct block_device	*s_bdev;
+ 	struct backing_dev_info *s_bdi;
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index 9edcf45..0dc51c0 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -1493,7 +1493,7 @@ static struct ctl_table fs_table[] = {
+ 	{
+ 		.procname	= "dentry-state",
+ 		.data		= &dentry_stat,
+-		.maxlen		= 6*sizeof(int),
++		.maxlen		= 6*sizeof(long),
+ 		.mode		= 0444,
+ 		.proc_handler	= proc_nr_dentry,
+ 	},
 
-Which is SHRINK_LIST aware. The code as it reads today after your patch
-will only be correct if it is totally impossible for a dentry to be in
-the shrink list before we reach both sites that call d_op->d_prune. They
-are: dentry_kill and shrink_dcache_for_umount_subtree. So it seems to me
-that we do really need to reintroduce dentry_lru_prune or just patch
-both call sites with shrik-list aware code.
-
-Comments ?
-
+--------------010708050508050409090900--
