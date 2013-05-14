@@ -1,109 +1,119 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH V2 0/3] memcg: simply lock of page stat accounting
-Date: Tue, 14 May 2013 09:41:42 +0900
-Message-ID: <51918846.7090006@jp.fujitsu.com>
-References: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
+From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Subject: Re: [PATCH v6 00/31] kmemcg shrinkers
+Date: Tue, 14 May 2013 11:48:05 +1000
+Message-ID: <20130514014805.GA29466@dastard>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
+ <20130513071359.GM32675@dastard>
+ <51909D84.7040800@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1368421410-4795-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <51909D84.7040800-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-If you want to rewrite all things and make memcg cleaner, I don't stop it.
-But, how about starting with this simeple one for your 1st purpose ? 
-doesn't work ? dirty ?
+On Mon, May 13, 2013 at 12:00:04PM +0400, Glauber Costa wrote:
+> On 05/13/2013 11:14 AM, Dave Chinner wrote:
+> > On Sun, May 12, 2013 at 10:13:21PM +0400, Glauber Costa wrote:
+> >> Initial notes:
+> >> ==============
+> >>
+> >> Mel, Dave, this is the last round of fixes I have for the series. The fixes are
+> >> few, and I was mostly interested in getting this out based on an up2date tree
+> >> so Dave can verify it. This should apply fine ontop of Friday's linux-next.
+> >> Alternatively, please grab from branch "kmemcg-lru-shrinker" at:
+> >>
+> >> 	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git
+> >>
+> >> Main changes from *v5:
+> >> * Rebased to linux-next, and fix the conflicts with the dcache.
+> >> * Make sure LRU_RETRY only retry once
+> >> * Prevent the bcache shrinker to scan the caches when disabled (by returning
+> >>   0 in the count function)
+> >> * Fix i915 return code when mutex cannot be acquired.
+> >> * Only scan less-than-batch objects in memcg scenarios
+> > 
+> > Ok, this is behaving a *lot* better than v5 in terms of initial
+> > balance and sustained behaviour under pure inode/dentry press
+> > workloads. The previous version was all over the place, not to
+> > mention unstable and prone to unrealted lockups in the block layer.
+> > 
+> 
+> Good to hear. About the problems you are seeing, if possible, I think
+> it would beneficial to do what Mel did, and run a test workload without
+> the upper half of the patches, IOW, excluding memcg. It should at least
+> give us an indication about whether or not the problem lies in the way
+> we are handling the LRU list, or in any memcg adaptation problem.
+> 
+> > However, I'm not sure that the LRUness of reclaim is working
+> > correctly at this point. When I switch from a write only workload to
+> > a read-only workload (i.e. fsmark finishes and find starts), I see
+> > this:
+> > 
+> >  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+> > 1923037 1807201  93%    1.12K  68729       28   2199328K xfs_inode
+> > 1914624 490812  25%    0.22K  53184       36    425472K xfs_ili
+> > 
+> > Note the xfs_ili slab capacity - there's half a million objects
+> > still in the cache, and they are only present on *dirty* inodes.
+> 
+> May a xfs-ignorant kernel hacker ask you what exactly xfs_ili is ?
 
-== this patch is untested. ==
- 
-From 95e405451f56933c4777e64bb02326ec0462f7a7 Mon Sep 17 00:00:00 2001
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Date: Tue, 14 May 2013 09:40:55 +0900
-Subject: [PATCH] Allow nesting lock of memcg's page stat accouting.
+struct xfs_inode_log_item.
 
-Sha Zhengju and Michal Hocko pointed out that
-mem_cgroup_begin/end_update_page_stat() should be nested lock.
-https://lkml.org/lkml/2013/1/2/48
+It's the structure used to track the inode through the journalling
+subsystem, and it's only allocated when the inode is first modified.
+The embedded xfs_log_item is the abstraction used throughout the
+core transaction and journalling subsystems - every dirty metadata
+object in XFS has a xfs_log_item attached to it in some way.
 
-page_remove_rmap
-  mem_cgroup_begin_update_page_stat		<<< 1
-    set_page_dirty
-      __set_page_dirty_buffers
-        __set_page_dirty
-          mem_cgroup_begin_update_page_stat	<<< 2
-            move_lock_mem_cgroup
-              spin_lock_irqsave(&memcg->move_lock, *flags);
+> > Now, the read-only workload is iterating through a cold-cache lookup
+> > workload of 50 million inodes - at roughly 150,000/s. It's a
+> > touch-once workload, so shoul dbe turning the cache over completely
+> > every 10 seconds. However, in the time it's taken for me to explain
+> > this:
+> > 
+> >  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+> > 1954493 1764661  90%    1.12K  69831       28   2234592K xfs_inode
+> > 1643868 281962  17%    0.22K  45663       36    365304K xfs_ili   
+> > 
+> > Only 200k xfs_ili's have been freed. So the rate of reclaim of them
+> > is roughly 5k/s. Given the read-only nature of this workload, they
+> > should be gone from the cache in a few seconds. Another indication
+> > of problems here is the level of internal fragmentation of the
+> > xfs_ili slab. They should cycle out of the cache in LRU manner, just
+> > like inodes - the modify workload is a "touch once" workload as
+> > well, so there should be no internal fragmentation of the slab
+> > cache.
+> > 
+> 
+> Initial testing I have done indicates - although it does not undoubtly
+> prove  - that the problem may be with dentries, not inodes
 
-This patch add a nesting functionality with per-thread counter.
+That tallies with the stats I'm seeing showing a significant
+difference in the balance of allocated vs "free" dentries. On a 3.9 kernel,
+the is little difference between them - dentries move quickly to the
+LRU and are considered free, while this patchset starts the same
+they quickly diverge, with the free count dropping well away from
+the allocated count.
 
-Signed-off-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- include/linux/sched.h |    1 +
- mm/memcontrol.c       |   22 +++++++++++++++++++++-
- 2 files changed, 22 insertions(+), 1 deletions(-)
+....
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 84ceef5..cca3229 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1402,6 +1402,7 @@ struct task_struct {
- 		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
- 	} memcg_batch;
- 	unsigned int memcg_kmem_skip_account;
-+	unsigned int memcg_page_stat_accounting;
- #endif
- #ifdef CONFIG_HAVE_HW_BREAKPOINT
- 	atomic_t ptrace_bp_refcnt;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 357371a..152f8df 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2352,12 +2352,30 @@ again:
- 	 */
- 	if (!mem_cgroup_stolen(memcg))
- 		return;
-+	/*
-+	 * In some case, we need nested lock of this.
-+	 * page_remove_rmap
-+	 *   mem_cgroup_begin_update_page_stat		<<< 1
-+	 *     set_page_dirty
-+	 *       __set_page_dirty_buffers
-+	 *         __set_page_dirty
-+	 *           mem_cgroup_begin_update_page_stat	<<< 2
-+	 *             move_lock_mem_cgroup
-+	 *               spin_lock_irqsave(&memcg->move_lock, *flags);
-+	 *
-+	 * We avoid this deadlock by having per thread counter.
-+	 */
-+	if (current->memcg_page_stat_accounting > 0) {
-+		current->memcg_page_stat_accounting++;
-+		return;
-+	}
- 
- 	move_lock_mem_cgroup(memcg, flags);
- 	if (memcg != pc->mem_cgroup || !PageCgroupUsed(pc)) {
- 		move_unlock_mem_cgroup(memcg, flags);
- 		goto again;
- 	}
-+	current->memcg_page_stat_accounting = 1;
- 	*locked = true;
- }
- 
-@@ -2370,7 +2388,9 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
- 	 * lock is held because a routine modifies pc->mem_cgroup
- 	 * should take move_lock_mem_cgroup().
- 	 */
--	move_unlock_mem_cgroup(pc->mem_cgroup, flags);
-+	current->memcg_page_stat_accounting--;
-+	if (!current->memcg_page_stat_accounting)
-+		move_unlock_mem_cgroup(pc->mem_cgroup, flags);
- }
- 
- void mem_cgroup_update_page_stat(struct page *page,
+> You are seeing problems in the inode behavior, but since the dentry
+> cache may pin them, I believe it is possible that the change in behavior
+> in the dentry cache may drive the change in behavior in the inode cache,
+> by keeping inodes that should be freed, pinned. (So far, just a theory)
+
+Yup, that's the theory I'm working to given the inode used vs free
+count differences reflect the differences in the dentry behaviour...
+
+Cheers,
+
+Dave.
 -- 
-1.7.4.1
-
-
+Dave Chinner
+david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
