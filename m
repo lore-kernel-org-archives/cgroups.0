@@ -1,54 +1,64 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] memcg: don't initialize kmem-cache destroying work for
- root caches
-Date: Tue, 14 May 2013 16:52:52 +0200
-Message-ID: <20130514145252.GT5198@dhcp22.suse.cz>
-References: <1368535118-27369-1-git-send-email-avagin@openvz.org>
- <20130514144031.GR5198@dhcp22.suse.cz>
- <20130514144427.GS5198@dhcp22.suse.cz>
- <51924EE3.9020708@parallels.com>
+From: Serge Hallyn <serge.hallyn@ubuntu.com>
+Subject: Re: [PATCH 0/4] Rebase device_cgroup v2 patchset
+Date: Tue, 14 May 2013 10:05:39 -0500
+Message-ID: <20130514150539.GA26090@sergelap>
+References: <20121022134536.172969567@napanee.usersys.redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <51924EE3.9020708@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20121022134536.172969567@napanee.usersys.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@parallels.com>
-Cc: Andrey Vagin <avagin@openvz.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Konstantin Khlebnikov <khlebnikov@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Aristeu Rozanski <aris@redhat.com>
+Cc: linux-kernel@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, amorgan@sergelap, cgroups@vger.kernel.org
 
-On Tue 14-05-13 18:49:07, Glauber Costa wrote:
-> On 05/14/2013 06:44 PM, Michal Hocko wrote:
-> > On Tue 14-05-13 16:40:31, Michal Hocko wrote:
-> >> On Tue 14-05-13 16:38:38, Andrey Vagin wrote:
-> >>> struct memcg_cache_params has a union. Different parts of this union are
-> >>> used for root and non-root caches. A part with destroying work is used only
-> >>> for non-root caches.
-> >>
-> >> but memcg_update_cache_size is called only for !root caches AFAICS
-> >> (check memcg_update_all_caches)
-> > 
-> > Ohh, I am blind. memcg_update_all_caches skips all !root caches.
-> > Then the patch looks correct. If Glauber has nothing against then thise
-> > should be marked for stable (3.9)
-> > 
-> This was recently introduced by the commit that moved the initialization
-> earlier (15cf17d26e08ee9). It basically moved too much, and I didn't
-> catch it. If that patch is in 3.9, then yes, this needs to go to stable.
-> Otherwise it is not affected.
+Hi,
 
-git describe tells it was merged in v3.9-rc2~7
+so now that the device cgroup properly respects hierarchy, not allowing
+a cgroup to be given greater permission than its parent, should we consider
+relaxing the capability checks?
 
-> However, I do remember Andrey telling me that he hit this bug in both
-> 3.9 and 3.10-rc1, so yes, stable it is.
+There are two capable(CAP_SYS_ADMIN) checks in deice_cgroup.c: one in
+devcgroup_can_attach() to protect changing another task's cgroup, and
+one in devcgroup_update_access() to protect writes to the devices.allow
+and devices.deny files.
 
--- 
-Michal Hocko
-SUSE Labs
+I think the first should be changed to a check for ns_capable() to
+the victim's user_ns.  Something like 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -70,10 +70,16 @@ static int devcgroup_can_attach(struct cgroup *new_cgrp,
+                                struct cgroup_taskset *set)
+ {
+        struct task_struct *task = cgroup_taskset_first(set);
++       struct user_namespace *ns;
++       int ret = -EPERM;
+
+-       if (current != task && !capable(CAP_SYS_ADMIN))
+-               return -EPERM;
+-       return 0;
++       if (current == task)
++               return 0;
++
++       ns = userns_get(task);;
++       ret = ns_capable(ns, CAP_SYS_ADMIN) ? 0 : -EPERM;
++       put_user_ns(ns);
++       return ret;
+ }
+
+ /*
+
+For the second, the hierarchy support should let us ignore concerns
+about unprivileged users escalating privilege, but I'm trying to decide
+whether we  need to worry about the sendmail capability class of bugs.
+My sense is actually the answer is no, and we can drop the capable()
+check altogether.  The reason is that while userspace frequently doesn't
+properly handle a failing system call due to unexpected lack of partial
+privilege, I wouldn't expect any setuid root program to ignore failure
+to open or mknod a device file (and proceed into a bad failure mode).
+Does this sound rasonable, or a recipe for disaster?
+
+-serge
