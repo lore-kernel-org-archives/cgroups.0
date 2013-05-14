@@ -1,124 +1,106 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: [PATCH 0/4] Rebase device_cgroup v2 patchset
-Date: Tue, 14 May 2013 14:02:06 -0700
-Message-ID: <87y5bhwa0h.fsf@xmission.com>
-References: <20121022134536.172969567@napanee.usersys.redhat.com>
-	<20130514150539.GA26090@sergelap> <20130514155111.GJ680@redhat.com>
-	<20130514162238.GA9056@sergelap>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] blk-throttle: implement proper hierarchy support
+Date: Tue, 14 May 2013 14:09:33 -0700
+Message-ID: <20130514210933.GW6795@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130514162238.GA9056@sergelap> (Serge Hallyn's message of "Tue,
-	14 May 2013 11:22:38 -0500")
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:mime-version
+         :content-type:content-disposition:user-agent;
+        bh=2UsHx8xkk5mJYPUMQxFJrf+n/yJUTpXKOqjTIf0Vlas=;
+        b=Ur3E27IOd1J0lVhrJERvqWsHDcZBdIiUxHQaFm6vsdY5LfLMzfSqUzL0v1YF03Zp2L
+         ZzfWIPBRlo4U2yLYoe87uXsCWwI59vrsFsJWiVyZil8pBMhQon/HggsXWzOMVwHp/2fL
+         SEmXUMBQdKYUWAI/6e2E/DM/k6PYespHjjsi2t/H5XuoMNDlvK+OWZhXez9jNi4XZlSx
+         Ddk18HysHeplj9KATNZLz2Sy7GK49QGx36sgGPuJ4PBWxirzGdW42x4iEKTtMGvJ0sYv
+         r+oEcKnwUjr/cDTj0jQ13k9/6bIFtul7C5tPPgCYSh1NpTcpTwZIcSSmE9IeC1SjXCWI
+         r2FA==
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, amorgan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> writes:
+Hello, Jens.
 
-> Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
->> On Tue, May 14, 2013 at 10:05:39AM -0500, Serge Hallyn wrote:
->> > so now that the device cgroup properly respects hierarchy, not allowing
->> > a cgroup to be given greater permission than its parent, should we consider
->> > relaxing the capability checks?
->> > 
->> > There are two capable(CAP_SYS_ADMIN) checks in deice_cgroup.c: one in
->> > devcgroup_can_attach() to protect changing another task's cgroup, and
->> > one in devcgroup_update_access() to protect writes to the devices.allow
->> > and devices.deny files.
->> > 
->> > I think the first should be changed to a check for ns_capable() to
->> > the victim's user_ns.  Something like 
->> > 
->> > --- a/security/device_cgroup.c
->> > +++ b/security/device_cgroup.c
->> > @@ -70,10 +70,16 @@ static int devcgroup_can_attach(struct cgroup *new_cgrp,
->> >                                 struct cgroup_taskset *set)
->> >  {
->> >         struct task_struct *task = cgroup_taskset_first(set);
->> > +       struct user_namespace *ns;
->> > +       int ret = -EPERM;
->> > 
->> > -       if (current != task && !capable(CAP_SYS_ADMIN))
->> > -               return -EPERM;
->> > -       return 0;
->> > +       if (current == task)
->> > +               return 0;
->> > +
->> > +       ns = userns_get(task);;
->> > +       ret = ns_capable(ns, CAP_SYS_ADMIN) ? 0 : -EPERM;
->> > +       put_user_ns(ns);
->> > +       return ret;
->> >  }
->> 
->> wouldn't this allow a userns root to move a task in the same userns into
->> a parent cgroup? I believe than anything but moving down the hierarchy
->> would be very complicated to verify (how far up can you go).
->
-> But only if they are able to open the tasks file for writing, which
-> they shouldn't be able to do, right?
+This is the pull request for patches which implement proper hierarchy
+support in blk-throttle and remove .broken_hierarchy tagging from
+blkcg.
 
-That should be looked at very closely.  There are some funny exploits of
-setuid root applications writing to files that have required some
-additional permission checks on /proc/<pid>/uid_map.  I think the
-cgroups files may be vulnerable to some of the same kind of exploits.
+  http://thread.gmane.org/gmane.linux.kernel.cgroups/7119
 
-Certainly we should be verifying that the opener of the file had the
-capabilities we are trying to use to avoid being open to those kinds of
-problems.
+The implementation is fairly straight-forward in that it just repeats
+the same scheduling at each layer until it reaches the top and thus
+isn't very scalable.  It also still has an issue where a nested cgroup
+could get lower than configured limits as it travels towards root but
+the severity is at an acceptable level after Vivke's start time
+adjustment patch.  The issue ultimately is a problem in the scheduling
+algorithm itself and can also show up in flat hierarchy given the
+right (well, wrong) IO pattern.  If it still is an actual problem,
+which I don't think is, we should be able to work on it later on in
+fairly isolated manner.
 
-I am trying to see the utilitity of the proposed patch.  It doesn't
-allow mknod.  So what is the benefit of having the user namespace bits?
+While the implementation isn't perfect, it should be good enough in
+most cases with a few levels of nesting and this allows the rest of
+cgroup to proceed towards unified hierarchy handling.
 
-Is the point to allow the userns root to remove access to selected
-devices from it's children even if the DAC permissions would allow the
-access?
+The series is based on top of v3.10-rc1 and available in the following
+git branch
 
->> > For the second, the hierarchy support should let us ignore concerns
->> > about unprivileged users escalating privilege, but I'm trying to decide
->> > whether we  need to worry about the sendmail capability class of bugs.
->> 
->> You have a pointer for more information on those?
->
-> Darn - unfortunately the best description of it, which was at
-> http://userweb.kernel.org/~morgan/sendmail-capabilities-war-story.html
-> is no longer there since userweb was taken down, and it was never
-> captured by archive.org.  There's a brief description in
-> http://lwn.net/Articles/280279/ at the paragraph starting with "The
-> memory of the sendmail-capabilities bug from 2000..."
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blk-throttle-hierarchy
 
-I think the sendmail website has something as well.  The core problem
-was programs not dealing safely with having some of their privileges
-removed.  As I recall an unprivileged attacker at one point could drop
-the CAP_SYS_SETUID on sendmail and get it to deliver mail as root.
+for you to fetch changes up to 9138125beabbb76b4a373d4a619870f6f5d86fc5:
 
-I took a good hard look at this issue before implementing limits on
-setuid in the user namespace and it appears that the authors of setuid
-application learned from this as well and I could not find an single
-program that would call setuid without out checking it's return code.
+  blk-throttle: implement proper hierarchy support (2013-05-14 13:52:38 -0700)
 
-That said I haven't looked at open or mknod, and usually we are talking
-about calls that aren't made by suid apps so I think there is a fair
-chance that dropping some of those permissions could cause issues.
+Thanks.
 
-The first danger that crosses my mind is what happens if you remove
-access to /dev/tty from a normal application that would trying and log
-strange goings on to a user if they could.
+----------------------------------------------------------------
+Tejun Heo (32):
+      blkcg: fix error return path in blkg_create()
+      blkcg: move blkg_for_each_descendant_pre() to block/blk-cgroup.h
+      blkcg: implement blkg_for_each_descendant_post()
+      blkcg: invoke blkcg_policy->pd_init() after parent is linked
+      blkcg: move bulk of blkcg_gq release operations to the RCU callback
+      blk-throttle: remove spurious throtl_enqueue_tg() call from throtl_select_dispatch()
+      blk-throttle: remove deferred config application mechanism
+      blk-throttle: collapse throtl_dispatch() into the work function
+      blk-throttle: relocate throtl_schedule_delayed_work()
+      blk-throttle: remove pointless throtl_nr_queued() optimizations
+      blk-throttle: rename throtl_rb_root to throtl_service_queue
+      blk-throttle: simplify throtl_grp flag handling
+      blk-throttle: add backlink pointer from throtl_grp to throtl_data
+      blk-throttle: pass around throtl_service_queue instead of throtl_data
+      blk-throttle: reorganize throtl_service_queue passed around as argument
+      blk-throttle: add throtl_grp->service_queue
+      blk-throttle: move bio_lists[] and friends to throtl_service_queue
+      blk-throttle: dispatch to throtl_data->service_queue.bio_lists[]
+      blk-throttle: generalize update_disptime optimization in blk_throtl_bio()
+      blk-throttle: add throtl_service_queue->parent_sq
+      blk-throttle: implement sq_to_tg(), sq_to_td() and throtl_log()
+      blk-throttle: set REQ_THROTTLED from throtl_charge_bio() and gate stats update with it
+      blk-throttle: separate out throtl_service_queue->pending_timer from throtl_data->dispatch_work
+      blk-throttle: implement dispatch looping
+      blk-throttle: dispatch from throtl_pending_timer_fn()
+      blk-throttle: make blk_throtl_drain() ready for hierarchy
+      blk-throttle: make blk_throtl_bio() ready for hierarchy
+      blk-throttle: make tg_dispatch_one_bio() ready for hierarchy
+      blk-throttle: make throtl_pending_timer_fn() ready for hierarchy
+      blk-throttle: add throtl_qnode for dispatch fairness
+      blk-throttle: implement throtl_grp->has_rules[]
+      blk-throttle: implement proper hierarchy support
 
-Shrug mostly I don't see the advantage of this change.
+Vivek Goyal (1):
+      blk-throttle: Account for child group's start time in parent while bio climbs up
 
-Eric
+ Documentation/cgroups/blkio-controller.txt |   29 +-
+ block/blk-cgroup.c                         |  105 ++-
+ block/blk-cgroup.h                         |   38 +-
+ block/blk-throttle.c                       | 1064 +++++++++++++++++++---------
+ include/linux/cgroup.h                     |    2 +
+ 5 files changed, 837 insertions(+), 401 deletions(-)
 
-
->> > My sense is actually the answer is no, and we can drop the capable()
->> > check altogether.  The reason is that while userspace frequently doesn't
->> > properly handle a failing system call due to unexpected lack of partial
->> > privilege, I wouldn't expect any setuid root program to ignore failure
->> > to open or mknod a device file (and proceed into a bad failure mode).
->> > Does this sound rasonable, or a recipe for disaster?
->> 
->> The second case sounds ok to me
->
-> -serge
+--
+tejun
