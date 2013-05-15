@@ -1,53 +1,68 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [GIT PULL] blk-throttle: implement proper hierarchy support
-Date: Wed, 15 May 2013 10:05:35 +0200
-Message-ID: <20130515080535.GB3276@kernel.dk>
-References: <20130514210933.GW6795@mtj.dyndns.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
+ zone shrinking code
+Date: Wed, 15 May 2013 12:34:04 +0400
+Message-ID: <5193487C.3010607@parallels.com>
+References: <1368431172-6844-1-git-send-email-mhocko@suse.cz> <1368431172-6844-2-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130514210933.GW6795@mtj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1368431172-6844-2-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Vivek Goyal <vgoyal@redhat.com>, Li Zefan <lizefan@huawei.com>, containers@lists.linux-foundation.org, cgroups@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>
 
-On Tue, May 14 2013, Tejun Heo wrote:
-> Hello, Jens.
+On 05/13/2013 11:46 AM, Michal Hocko wrote:
+> Memcg soft reclaim has been traditionally triggered from the global
+> reclaim paths before calling shrink_zone. mem_cgroup_soft_limit_reclaim
+> then picked up a group which exceeds the soft limit the most and
+> reclaimed it with 0 priority to reclaim at least SWAP_CLUSTER_MAX pages.
 > 
-> This is the pull request for patches which implement proper hierarchy
-> support in blk-throttle and remove .broken_hierarchy tagging from
-> blkcg.
+> The infrastructure requires per-node-zone trees which hold over-limit
+> groups and keep them up-to-date (via memcg_check_events) which is not
+> cost free. Although this overhead hasn't turned out to be a bottle neck
+> the implementation is suboptimal because mem_cgroup_update_tree has no
+> idea which zones consumed memory over the limit so we could easily end
+> up having a group on a node-zone tree having only few pages from that
+> node-zone.
 > 
->   http://thread.gmane.org/gmane.linux.kernel.cgroups/7119
+> This patch doesn't try to fix node-zone trees management because it
+> seems that integrating soft reclaim into zone shrinking sounds much
+> easier and more appropriate for several reasons.
+> First of all 0 priority reclaim was a crude hack which might lead to
+> big stalls if the group's LRUs are big and hard to reclaim (e.g. a lot
+> of dirty/writeback pages).
+> Soft reclaim should be applicable also to the targeted reclaim which is
+> awkward right now without additional hacks.
+> Last but not least the whole infrastructure eats quite some code.
 > 
-> The implementation is fairly straight-forward in that it just repeats
-> the same scheduling at each layer until it reaches the top and thus
-> isn't very scalable.  It also still has an issue where a nested cgroup
-> could get lower than configured limits as it travels towards root but
-> the severity is at an acceptable level after Vivke's start time
-> adjustment patch.  The issue ultimately is a problem in the scheduling
-> algorithm itself and can also show up in flat hierarchy given the
-> right (well, wrong) IO pattern.  If it still is an actual problem,
-> which I don't think is, we should be able to work on it later on in
-> fairly isolated manner.
+> After this patch shrink_zone is done in 2 passes. First it tries to do the
+> soft reclaim if appropriate (only for global reclaim for now to keep
+> compatible with the original state) and fall back to ignoring soft limit
+> if no group is eligible to soft reclaim or nothing has been scanned
+> during the first pass. Only groups which are over their soft limit or
+> any of their parents up the hierarchy is over the limit are considered
+> eligible during the first pass.
 > 
-> While the implementation isn't perfect, it should be good enough in
-> most cases with a few levels of nesting and this allows the rest of
-> cgroup to proceed towards unified hierarchy handling.
+> Soft limit tree which is not necessary anymore will be removed in the
+> follow up patch to make this patch smaller and easier to review.
 > 
-> The series is based on top of v3.10-rc1 and available in the following
-> git branch
+> Changes since v1
+> - __shrink_zone doesn't return the number of shrunk groups as nr_scanned
+>   test covers both no groups scanned and no pages from the required zone
+>   as pointed by Johannes
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git blk-throttle-hierarchy
-> 
-> for you to fetch changes up to 9138125beabbb76b4a373d4a619870f6f5d86fc5:
-> 
->   blk-throttle: implement proper hierarchy support (2013-05-14 13:52:38 -0700)
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
 
-Thanks Tejun, I'll pull this in for 3.11.
+Patch looks fine to me
 
--- 
-Jens Axboe
+Reviewed-by: Glauber Costa <glommer@openvz.org>
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
