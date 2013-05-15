@@ -1,58 +1,79 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [patch v3 -mm 3/3] vmscan, memcg: Do softlimit reclaim also for
- targeted reclaim
-Date: Wed, 15 May 2013 12:42:10 +0400
-Message-ID: <51934A62.2030606@parallels.com>
-References: <1368431172-6844-1-git-send-email-mhocko@suse.cz> <1368431172-6844-4-git-send-email-mhocko@suse.cz>
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Subject: Re: [PATCH V2 0/3] memcg: simply lock of page stat accounting
+Date: Wed, 15 May 2013 16:35:08 +0400
+Message-ID: <519380FC.1040504@openvz.org>
+References: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1368431172-6844-4-git-send-email-mhocko@suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:message-id:date:from:user-agent:mime-version:to
+         :cc:subject:references:in-reply-to:content-type
+         :content-transfer-encoding;
+        bh=cfArMqbqEyWeQVebjOkQdlm3q5hPKKYkzRKWL8GFNaw=;
+        b=dVs6f2fNae4E23D9PeCoE34dFrKC+GlkCj40EOxqAarB9TsHmRvL3h3Q4WPDpu4AhG
+         C397ySm9mHDjBYOlGx9n7AZg4XPbF45WBIkyssH6wVcC8CG6wOM2I56hTITbxBvpaS3l
+         EslM2HrytH6/u8+bF69WprXduaZ0CWTH2YEKs9xzVirStY95yFvv5rZWWlwHVufotWhO
+         P5YFdT1GC8PNvFBTObmMWFXSXbZr4Staxy3oTYAP1YpGP5UK+BcjnGgWF82ShvRACPMY
+         TVjK+RtSoyYbTz/LaXdKmeZgQA5yCp43rke+0qXW5ZZpSzw/g4GO2ZZJAPu7C0Si3/5a
+         iC1A==
+In-Reply-To: <1368421410-4795-1-git-send-email-handai.szj@taobao.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, hughd@google.com, gthelen@google.com, Sha Zhengju <handai.szj@taobao.com>
 
-On 05/13/2013 11:46 AM, Michal Hocko wrote:
-> Soft reclaim has been done only for the global reclaim (both background
-> and direct). Since "memcg: integrate soft reclaim tighter with zone
-> shrinking code" there is no reason for this limitation anymore as the
-> soft limit reclaim doesn't use any special code paths and it is a
-> part of the zone shrinking code which is used by both global and
-> targeted reclaims.
-> 
-> From semantic point of view it is even natural to consider soft limit
-> before touching all groups in the hierarchy tree which is touching the
-> hard limit because soft limit tells us where to push back when there is
-> a  memory pressure. It is not important whether the pressure comes from
-> the limit or imbalanced zones.
-> 
-> This patch simply enables soft reclaim unconditionally in
-> mem_cgroup_should_soft_reclaim so it is enabled for both global and
-> targeted reclaim paths. mem_cgroup_soft_reclaim_eligible needs to learn
-> about the root of the reclaim to know where to stop checking soft limit
-> state of parents up the hierarchy.
-> Say we have
-> A (over soft limit)
->  \
->   B (below s.l., hit the hard limit)
->  / \
-> C   D (below s.l.)
-> 
-> B is the source of the outside memory pressure now for D but we
-> shouldn't soft reclaim it because it is behaving well under B subtree
-> and we can still reclaim from C (pressumably it is over the limit).
-> mem_cgroup_soft_reclaim_eligible should therefore stop climbing up the
-> hierarchy at B (root of the memory pressure).
-> 
-> Changes since v1
-> - add sc->target_mem_cgroup handling into mem_cgroup_soft_reclaim_eligible
-> 
-> Signed-off-by: Michal Hocko <mhocko@suse.cz>
-> ---
+Sha Zhengju wrote:
+> Hi,
+>
+> This is my second attempt to make memcg page stat lock simpler, the
+> first version: http://www.spinics.net/lists/linux-mm/msg50037.html.
+>
+> In this version I investigate the potential race conditions among
+> page stat, move_account, charge, uncharge and try to prove it race
+> safe of my proposing lock scheme. The first patch is the basis of
+> the patchset, so if I've made some stupid mistake please do not
+> hesitate to point it out.
 
-Reviewed-by: Glauber Costa <glommer@openvz.org>
+I have a provocational question. Who needs these numbers? I mean per-cgroup
+nr_mapped and so on. It's too hard to maintain them carefully and I don't know
+any clear usage for them. I have written several implementations of this stuff
+for openvz kernel. But at the end I have decided to just remove it.
+Do anybody knows really useful use cases for these nr_mapped counters?
+
+
+In our kernel we have per-container nr_dirty and nr_writeback counters. Bit they are
+implemented on top of radix-tree tags, and their owners are stored on inode/mapping.
+So, this is completely different story.
+
+I definitely have missed some discussions about these questions. Or not?
+I hope it's a good time to return.
+
+>
+> Change log:
+> v2<- v1:
+>     * rewrite comments on race condition
+>     * split orignal large patch to two parts
+>     * change too heavy try_get_mem_cgroup_from_page() to rcu_read_lock
+>       to hold memcg alive
+>
+> Sha Zhengju (3):
+>     memcg: rewrite the comment about race condition of page stat accounting
+>     memcg: alter mem_cgroup_{update,inc,dec}_page_stat() args to memcg pointer
+>     memcg: simplify lock of memcg page stat account	
+>
+>   include/linux/memcontrol.h |   14 ++++++-------
+>   mm/memcontrol.c            |   16 ++++++---------
+>   mm/rmap.c                  |   49 +++++++++++++++++++++++++++++++++-----------
+>   3 files changed, 50 insertions(+), 29 deletions(-)
+>
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email:<a href=mailto:"dont@kvack.org">  email@kvack.org</a>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
