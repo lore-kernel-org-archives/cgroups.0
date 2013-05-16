@@ -1,11 +1,10 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
- zone shrinking code
-Date: Thu, 16 May 2013 15:15:01 -0700
-Message-ID: <20130516221501.GG7171@mtj.dyndns.org>
+Subject: Re: [patch v3 -mm 2/3] memcg: Get rid of soft-limit tree
+ infrastructure
+Date: Thu, 16 May 2013 15:16:58 -0700
+Message-ID: <20130516221658.GH7171@mtj.dyndns.org>
 References: <1368431172-6844-1-git-send-email-mhocko@suse.cz>
- <1368431172-6844-2-git-send-email-mhocko@suse.cz>
- <20130516221200.GF7171@mtj.dyndns.org>
+ <1368431172-6844-3-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -13,15 +12,15 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=x-received:sender:date:from:to:cc:subject:message-id:references
          :mime-version:content-type:content-disposition:in-reply-to
          :user-agent;
-        bh=2gMa+u7liJLWk3yj3WLXt5MB5AUxjSEdb7E67Y1crt0=;
-        b=nLEOtlah0FvnHc1+K0i8Z8es/84nT2FTL/Q9swlWUkcq7vDo3PTZZ6rchvDAXx5el/
-         2W4dH09mW61DWsF/DWIuynhUoJpeeE2sLR6jI81kDzBPWrb1mVNdwtUdeuggmTdYElXw
-         WutB4iewX7aCIx+2xUfXZgwpGPFEazNRbc58sfz8F1/DPfit796mxk0jIpWNeYSLQevZ
-         1gWulFV1e6W3uPcY65doj7hZwSdOLuZtLqnke1HnXjrUhfKnrGlYAHtKZWAVEr5CTYdG
-         wZGQoyCUhIel15K6iOT/t1ibj6/NGSRcfGGH/DcrxI0aLe3nEeUot4n3VtTqs1Vr/m2j
-         Xx+w==
+        bh=D+vaeiIIH8eS3QhCPcpl6B2IyTRVpM8iZGpCkV20cGo=;
+        b=enAvgfAmJK1y51f6yNYLYbJvAdRmJnGA4JBWrzHvpEBXg4VSbnwDke7bKWpLpIVlT5
+         dxzUM87rm8bAWKtExbXEgt5WfENDLSySZJkwyIFLPIyaqOJcMC7aSSMKayLEZ5Yep6i/
+         ODGHXMbQ++L20+LpvCaB2+J8inyuVxYG+J8Hxqr7hrsMcibQGNoJ7+eSMerBBW2I4TEc
+         N9I9AZpw2WZv/1mNZo8KNNKn5/n927TEmeUwle5MeFPk6G0LEzmZj0lOoMdpXqczU3kS
+         7xN8pCmxHQCTARqxBSJWaEDC/2I/H9iivxF0GtkHQC2VlsI8l/gQjMb7gVwCCGWXTbIK
+         cAhw==
 Content-Disposition: inline
-In-Reply-To: <20130516221200.GF7171@mtj.dyndns.org>
+In-Reply-To: <1368431172-6844-3-git-send-email-mhocko@suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -29,13 +28,15 @@ Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-One more thing,
+On Mon, May 13, 2013 at 09:46:11AM +0200, Michal Hocko wrote:
+> Now that the soft limit is integrated to the reclaim directly the whole
+> soft-limit tree infrastructure is not needed anymore. Rip it out.
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
 
-Given that this is a rather significant behavior change, it probably
-is a good idea to include the the benchmark results from the head
-message?
+Reviewed-by: Tejun Heo <tj@kernel.org>
 
-Thanks.
+Nice cleanup, thanks.
 
 -- 
 tejun
