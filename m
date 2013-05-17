@@ -1,70 +1,90 @@
 From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH 2/9] memcg, kmem: fix reference count handling on the error
- path
-Date: Fri, 17 May 2013 15:03:23 +0800
-Message-ID: <5195D63B.4010202@huawei.com>
+Subject: [PATCH 4/9] memcg: don't use mem_cgroup_get() when creating a kmemcg
+ cache
+Date: Fri, 17 May 2013 15:03:52 +0800
+Message-ID: <5195D658.5000301@huawei.com>
 References: <5195D5F8.7000609@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <5195D5F8.7000609@huawei.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-mem_cgroup_css_online calls mem_cgroup_put if memcg_init_kmem
-fails. This is not correct because only memcg_propagate_kmem takes an
-additional reference while mem_cgroup_sockets_init is allowed to fail as
-well (although no current implementation fails) but it doesn't take any
-reference. This all suggests that it should be memcg_propagate_kmem that
-should clean up after itself so this patch moves mem_cgroup_put over
-there.
+Use css_get()/css_put() instead of mem_cgroup_get()/mem_cgroup_put().
 
-Unfortunately this is not that easy (as pointed out by Li Zefan) because
-memcg_kmem_mark_dead marks the group dead (KMEM_ACCOUNTED_DEAD) if it
-is marked active (KMEM_ACCOUNTED_ACTIVE) which is the case even if
-memcg_propagate_kmem fails so the additional reference is dropped in
-that case in kmem_cgroup_destroy which means that the reference would be
-dropped two times.
+There are two things being done in the current code:
 
-The easiest way then would be to simply remove mem_cgrroup_put from
-mem_cgroup_css_online and rely on kmem_cgroup_destroy doing the right
-thing.
+First, we acquired a css_ref to make sure that the underlying cgroup
+would not go away. That is a short lived reference, and it is put as
+soon as the cache is created.
 
-Cc: <stable@vger.kernel.org> # 3.8+
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
+At this point, we acquire a long-lived per-cache memcg reference count
+to guarantee that the memcg will still be alive.
+
+so it is:
+
+enqueue: css_get
+create : memcg_get, css_put
+destroy: memcg_put
+
+So we only need to get rid of the memcg_get, change the memcg_put to
+css_put, and get rid of the now extra css_put.
+
+(This changelog is mostly written by Glauber)
+
 Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
 Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/memcontrol.c | 8 --------
- 1 file changed, 8 deletions(-)
+ mm/memcontrol.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5918e90..4d0458d 100644
+index f1320d3..63526f9 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -6290,14 +6290,6 @@ mem_cgroup_css_online(struct cgroup *cont)
+@@ -3227,7 +3227,7 @@ void memcg_release_cache(struct kmem_cache *s)
+ 	list_del(&s->memcg_params->list);
+ 	mutex_unlock(&memcg->slab_caches_mutex);
  
- 	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
- 	mutex_unlock(&memcg_create_mutex);
--	if (error) {
--		/*
--		 * We call put now because our (and parent's) refcnts
--		 * are already in place. mem_cgroup_put() will internally
--		 * call __mem_cgroup_free, so return directly
--		 */
--		mem_cgroup_put(memcg);
--	}
- 	return error;
+-	mem_cgroup_put(memcg);
++	css_put(&memcg->css);
+ out:
+ 	kfree(s->memcg_params);
+ }
+@@ -3387,16 +3387,18 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 
+ 	mutex_lock(&memcg_cache_mutex);
+ 	new_cachep = cachep->memcg_params->memcg_caches[idx];
+-	if (new_cachep)
++	if (new_cachep) {
++		css_put(&memcg->css);
+ 		goto out;
++	}
+ 
+ 	new_cachep = kmem_cache_dup(memcg, cachep);
+ 	if (new_cachep == NULL) {
+ 		new_cachep = cachep;
++		css_put(&memcg->css);
+ 		goto out;
+ 	}
+ 
+-	mem_cgroup_get(memcg);
+ 	atomic_set(&new_cachep->memcg_params->nr_pages , 0);
+ 
+ 	cachep->memcg_params->memcg_caches[idx] = new_cachep;
+@@ -3484,8 +3486,6 @@ static void memcg_create_cache_work_func(struct work_struct *w)
+ 
+ 	cw = container_of(w, struct create_work, work);
+ 	memcg_create_kmem_cache(cw->memcg, cw->cachep);
+-	/* Drop the reference gotten when we enqueued. */
+-	css_put(&cw->memcg->css);
+ 	kfree(cw);
  }
  
 -- 
 1.8.0.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
