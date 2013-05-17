@@ -1,114 +1,82 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 5/9] memcg: use css_get/put when charging/uncharging kmem
-Date: Fri, 17 May 2013 11:08:22 -0700
-Message-ID: <20130517180822.GC12632@mtj.dyndns.org>
-References: <5195D5F8.7000609@huawei.com>
- <5195D666.6030408@huawei.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v6 12/31] fs: convert inode and dentry shrinking to be
+ node aware
+Date: Sat, 18 May 2013 02:54:23 +0400
+Message-ID: <5196B51F.5030508@parallels.com>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org> <1368382432-25462-13-git-send-email-glommer@openvz.org> <20130514095200.GI29466@dastard> <5193A95E.70205@parallels.com> <20130516000216.GC24635@dastard> <5195302A.2090406@parallels.com> <20130517005134.GK24635@dastard> <5195DC59.8000205@parallels.com> <51964381.8010406@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=x-received:sender:date:from:to:cc:subject:message-id:references
-         :mime-version:content-type:content-disposition:in-reply-to
-         :user-agent;
-        bh=GVuPDFNR0ALJuSST698bPnLZyt/s2V9YBrDZWiOfqHo=;
-        b=DwsqXhVbbdepfCvcvHSEmmdNEfc15UWbKh6FvIuMhsYkgBk5cppdQ66sH7lLOLw9Il
-         RWXdAMNPXpRD1yW8RPmN0M6GySEV5eg/kYlnQx6wGCQ8+cISzEKgMjhZDJlxZjVjCKfp
-         Ek4CPV1PlK8Cly8vj/6kKpAjSWKXDHERa7xA+MZVEFlFdvtV54EaCFNUHSve3lKVzyI2
-         qwsaYIU3TBDHMQakBeR4H0qQvK4bIDbyedn+SkTwSfHIEZlRMkRZQjWSVHpJpvWJGHfi
-         C3SMfKpIocdc+l6qD6j3zPhxZtn9TZ0vEprT0uloiVgaYE7l7BF3ivQn8pqrCFfOz15t
-         FRpA==
-Content-Disposition: inline
-In-Reply-To: <5195D666.6030408-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <51964381.8010406-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hey,
+On 05/17/2013 06:49 PM, Glauber Costa wrote:
+> On 05/17/2013 11:29 AM, Glauber Costa wrote:
+>> Except that shrink_slab_node would also defer work, right?
+>>
+>>>> The only thing I don't like about this is the extra nodemask needed,
+>>>> which, like the scan control, would have to sit on the stack.
+>>>> Suggestions for avoiding that problem are welcome.. :)
+>>>>
+>> I will try to come up with a patch to do all this, and then we can
+>> concretely discuss.
+>> You are also of course welcome to do so as well =)
+> 
+> 
+> All right.
+> 
+> I played a bit today with variations of this patch that will keep the
+> deferred count per node. I will rebase the whole series ontop of it (the
+> changes can get quite disruptive) and post. I want to believe that
+> after this, all our regression problems will be gone (famous last words).
+> 
+> As I have told you, I wasn't seeing problems like you are, and
+> speculated that this was due to the disk speeds. While this is true,
+> the patch I came up with makes my workload actually a lot better.
+> While my caches weren't being emptied, they were being slightly depleted
+> and then slowly filled again. With my new patch, it is almost
+> a straight line throughout the whole find run. There is a dent here and
+> there eventually, but it recovers quickly. It takes some time as well
+> for steady state to be reached, but once it is, we have all variables
+> in the equation (dentries, inodes, etc) basically flat. So I guess it
+> works, and I am confident that it will make your workload better.
+> 
+> My strategy is to modify the shrinker structure like this:
+> 
+> struct shrinker {
+>         int (*shrink)(struct shrinker *, struct shrink_control *sc);
+>         long (*count_objects)(struct shrinker *, struct shrink_control *sc);
+>         long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
+> 
+>         int seeks;      /* seeks to recreate an obj */
+>         long batch;     /* reclaim batch size, 0 = default */
+>         unsigned long flags;
+> 
+>         /* These are for internal use */
+>         struct list_head list;
+>         atomic_long_t *nr_deferred; /* objs pending delete, per node */
+> 
+>         /* nodes being currently shrunk, only makes sense for NUMA
+> shrinkers */
+>         nodemask_t *nodes_shrinking;
+> 
+> };
+> 
+> We need memory allocation now for nr_deferred and nodes_shrinking, but
+> OTOH we use no stack, and can keep the size of this to be dynamically
+> adjusted depending on whether or not your shrinker is NUMA aware.
+> 
+> Guess that is it. Expect news soon.
+> 
 
-On Fri, May 17, 2013 at 03:04:06PM +0800, Li Zefan wrote:
-> +	/*
-> +	 * Releases a reference taken in kmem_cgroup_css_offline in case
-> +	 * this last uncharge is racing with the offlining code or it is
-> +	 * outliving the memcg existence.
-> +	 *
-> +	 * The memory barrier imposed by test&clear is paired with the
-> +	 * explicit one in kmem_cgroup_css_offline.
+Except of course that struct shrinker is obviously shared between runs,
+and this won't cut.
 
-Paired with the wmb to achieve what?
-
-> +	 */
->  	if (memcg_kmem_test_and_clear_dead(memcg))
-> -		mem_cgroup_put(memcg);
-> +		css_put(&memcg->css);
-
-The other side is wmb, so there gotta be something which wants to read
-which were written before wmb here but the only thing after the
-barrier is css_put() which doesn't need such thing, so I'm lost on
-what the barrier pair is achieving here.
-
-In general, please be *very* explicit about what's going on whenever
-something is depending on barrier pairs.  It'll make it easier for
-both the author and reviewers to actually understand what's going on
-and why it's necessary.
-
-...
-> @@ -5858,23 +5856,39 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
->  	return mem_cgroup_sockets_init(memcg, ss);
->  }
->  
-> -static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
-> +static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
->  {
-> -	mem_cgroup_sockets_destroy(memcg);
-> +	if (!memcg_kmem_is_active(memcg))
-> +		return;
->  
-> +	/*
-> +	 * kmem charges can outlive the cgroup. In the case of slab
-> +	 * pages, for instance, a page contain objects from various
-> +	 * processes. As we prevent from taking a reference for every
-> +	 * such allocation we have to be careful when doing uncharge
-> +	 * (see memcg_uncharge_kmem) and here during offlining.
-> +	 *
-> +	 * The idea is that that only the _last_ uncharge which sees
-> +	 * the dead memcg will drop the last reference. An additional
-> +	 * reference is taken here before the group is marked dead
-> +	 * which is then paired with css_put during uncharge resp. here.
-> +	 *
-> +	 * Although this might sound strange as this path is called when
-> +	 * the reference has already dropped down to 0 and shouldn't be
-> +	 * incremented anymore (css_tryget would fail) we do not have
-
-Hmmm?  offline is called on cgroup destruction regardless of css
-refcnt.  The above comment seems a bit misleading.
-
-> +	 * other options because of the kmem allocations lifetime.
-> +	 */
-> +	css_get(&memcg->css);
-> +
-> +	/* see comment in memcg_uncharge_kmem() */
-> +	wmb();
->  	memcg_kmem_mark_dead(memcg);
-
-Is the wmb() trying to prevent reordering between css_get() and
-memcg_kmem_mark_dead()?  If so, it isn't necessary - the compiler
-isn't allowed to reorder two atomic ops (they're all asm volatiles)
-and the visibility order is guaranteed by the nature of the two
-operations going on here - both perform modify-and-test on one end of
-the operations.
-
-It could be argued that having memory barriers is better for
-completeness of mark/test interface but then those barriers should
-really moved into memcg_kmem_mark_dead() and its clearing counterpart.
-
-While it's all clever and dandy, my recommendation would be just using
-a lock for synchronization.  It isn't a hot path.  Why be clever?
-
-Thanks.
-
--- 
-tejun
+Right now I am inclined to really just put this in the stack. The
+alternative, if it becomes a problem, can be to extend the lru apis
+to allow us to go for a single node. This way we only need to use 1
+extra word in the stack.
