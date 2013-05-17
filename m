@@ -1,20 +1,83 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/12][V3] memcg: make memcg's life cycle the same as cgroup
-Date: Fri, 17 May 2013 15:06:56 +0800
-Message-ID: <5195D710.2040501@huawei.com>
-References: <5195D5F8.7000609@huawei.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
+ zone shrinking code
+Date: Fri, 17 May 2013 09:12:40 +0200
+Message-ID: <20130517071240.GC25158@dhcp22.suse.cz>
+References: <1368431172-6844-1-git-send-email-mhocko@suse.cz>
+ <1368431172-6844-2-git-send-email-mhocko@suse.cz>
+ <20130516221200.GF7171@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5195D5F8.7000609-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20130516221200.GF7171@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-The subject should be "[PATCH 0/9][v3] ..."
-
-On 2013/5/17 15:02, Li Zefan wrote:
-> Hi Andrew,
+On Thu 16-05-13 15:12:00, Tejun Heo wrote:
+> Sorry about the delay.  Just getting back to memcg.
 > 
+> On Mon, May 13, 2013 at 09:46:10AM +0200, Michal Hocko wrote:
+> ...
+> > during the first pass. Only groups which are over their soft limit or
+> > any of their parents up the hierarchy is over the limit are considered
+> 
+> ancestors?
+
+Well, ancestors might or might not be part of the hierarchy, so while it
+is much shorter I consider the original more precise.
+
+> > +static void shrink_zone(struct zone *zone, struct scan_control *sc)
+> > +{
+> > +	bool do_soft_reclaim = mem_cgroup_should_soft_reclaim(sc);
+> > +	unsigned long nr_scanned = sc->nr_scanned;
+> > +
+> > +	__shrink_zone(zone, sc, do_soft_reclaim);
+> > +
+> > +	/*
+> > +	 * No group is over the soft limit or those that are do not have
+> > +	 * pages in the zone we are reclaiming so we have to reclaim everybody
+> > +	 */
+> > +	if (do_soft_reclaim && (sc->nr_scanned == nr_scanned)) {
+> > +		__shrink_zone(zone, sc, false);
+> > +		return;
+> > +	}
+> > +}
+> 
+> Maybe the following is easier to follow?
+> 
+> 	if (mem_cgroup_should_soft_reclaim(sc)) {
+> 		__shrink_zone(zone, sc, true);
+> 		if (sc->nr_scanned == nr_scanned)
+> 			__shrink_zone(zone, sc, false);
+> 	} else {
+> 		__shrink_zone(zone, sc, false);
+> 	}
+> 
+> But it's a minor point, please feel free to ignore.
+
+I will stick with the original code as I have some plans to build on top
+of that.
+
+>   Reviewed-by: Tejun Heo <tj@kernel.org>
+
+Thank you!
+
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
