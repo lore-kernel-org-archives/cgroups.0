@@ -1,74 +1,62 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v6 12/31] fs: convert inode and dentry shrinking to be
- node aware
-Date: Fri, 17 May 2013 18:49:37 +0400
-Message-ID: <51964381.8010406@parallels.com>
-References: <1368382432-25462-1-git-send-email-glommer@openvz.org> <1368382432-25462-13-git-send-email-glommer@openvz.org> <20130514095200.GI29466@dastard> <5193A95E.70205@parallels.com> <20130516000216.GC24635@dastard> <5195302A.2090406@parallels.com> <20130517005134.GK24635@dastard> <5195DC59.8000205@parallels.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
+ zone shrinking code
+Date: Fri, 17 May 2013 12:02:47 -0400
+Message-ID: <20130517160247.GA10023@cmpxchg.org>
+References: <1368431172-6844-1-git-send-email-mhocko@suse.cz>
+ <1368431172-6844-2-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5195DC59.8000205-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1368431172-6844-2-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>
 
-On 05/17/2013 11:29 AM, Glauber Costa wrote:
-> Except that shrink_slab_node would also defer work, right?
+On Mon, May 13, 2013 at 09:46:10AM +0200, Michal Hocko wrote:
+> Memcg soft reclaim has been traditionally triggered from the global
+> reclaim paths before calling shrink_zone. mem_cgroup_soft_limit_reclaim
+> then picked up a group which exceeds the soft limit the most and
+> reclaimed it with 0 priority to reclaim at least SWAP_CLUSTER_MAX pages.
 > 
->> > The only thing I don't like about this is the extra nodemask needed,
->> > which, like the scan control, would have to sit on the stack.
->> > Suggestions for avoiding that problem are welcome.. :)
->> >
-> I will try to come up with a patch to do all this, and then we can
-> concretely discuss.
-> You are also of course welcome to do so as well =)
+> The infrastructure requires per-node-zone trees which hold over-limit
+> groups and keep them up-to-date (via memcg_check_events) which is not
+> cost free. Although this overhead hasn't turned out to be a bottle neck
+> the implementation is suboptimal because mem_cgroup_update_tree has no
+> idea which zones consumed memory over the limit so we could easily end
+> up having a group on a node-zone tree having only few pages from that
+> node-zone.
+> 
+> This patch doesn't try to fix node-zone trees management because it
+> seems that integrating soft reclaim into zone shrinking sounds much
+> easier and more appropriate for several reasons.
+> First of all 0 priority reclaim was a crude hack which might lead to
+> big stalls if the group's LRUs are big and hard to reclaim (e.g. a lot
+> of dirty/writeback pages).
+> Soft reclaim should be applicable also to the targeted reclaim which is
+> awkward right now without additional hacks.
+> Last but not least the whole infrastructure eats quite some code.
+> 
+> After this patch shrink_zone is done in 2 passes. First it tries to do the
+> soft reclaim if appropriate (only for global reclaim for now to keep
+> compatible with the original state) and fall back to ignoring soft limit
+> if no group is eligible to soft reclaim or nothing has been scanned
+> during the first pass. Only groups which are over their soft limit or
+> any of their parents up the hierarchy is over the limit are considered
+> eligible during the first pass.
 
+There are setups with thousands of groups that do not even use soft
+limits.  Having them pointlessly iterate over all of them for every
+couple of pages reclaimed is just not acceptable.
 
-All right.
+This is not the first time this implementation was proposed, either,
+I'm afraid we have now truly gone full circle on this stuff.
 
-I played a bit today with variations of this patch that will keep the
-deferred count per node. I will rebase the whole series ontop of it (the
-changes can get quite disruptive) and post. I want to believe that
-after this, all our regression problems will be gone (famous last words).
-
-As I have told you, I wasn't seeing problems like you are, and
-speculated that this was due to the disk speeds. While this is true,
-the patch I came up with makes my workload actually a lot better.
-While my caches weren't being emptied, they were being slightly depleted
-and then slowly filled again. With my new patch, it is almost
-a straight line throughout the whole find run. There is a dent here and
-there eventually, but it recovers quickly. It takes some time as well
-for steady state to be reached, but once it is, we have all variables
-in the equation (dentries, inodes, etc) basically flat. So I guess it
-works, and I am confident that it will make your workload better.
-
-My strategy is to modify the shrinker structure like this:
-
-struct shrinker {
-        int (*shrink)(struct shrinker *, struct shrink_control *sc);
-        long (*count_objects)(struct shrinker *, struct shrink_control *sc);
-        long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
-
-        int seeks;      /* seeks to recreate an obj */
-        long batch;     /* reclaim batch size, 0 = default */
-        unsigned long flags;
-
-        /* These are for internal use */
-        struct list_head list;
-        atomic_long_t *nr_deferred; /* objs pending delete, per node */
-
-        /* nodes being currently shrunk, only makes sense for NUMA
-shrinkers */
-        nodemask_t *nodes_shrinking;
-
-};
-
-We need memory allocation now for nr_deferred and nodes_shrinking, but
-OTOH we use no stack, and can keep the size of this to be dynamically
-adjusted depending on whether or not your shrinker is NUMA aware.
-
-Guess that is it. Expect news soon.
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
