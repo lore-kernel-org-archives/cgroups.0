@@ -1,59 +1,49 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
  zone shrinking code
-Date: Fri, 17 May 2013 12:02:47 -0400
-Message-ID: <20130517160247.GA10023@cmpxchg.org>
+Date: Fri, 17 May 2013 09:57:12 -0700
+Message-ID: <20130517165712.GB12632@mtj.dyndns.org>
 References: <1368431172-6844-1-git-send-email-mhocko@suse.cz>
  <1368431172-6844-2-git-send-email-mhocko@suse.cz>
+ <20130517160247.GA10023@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:sender:date:from:to:cc:subject:message-id:references
+         :mime-version:content-type:content-disposition:in-reply-to
+         :user-agent;
+        bh=pMc5umibOjP47YlbGynaJyF/zcMjgrnuOXz7H60DQtM=;
+        b=Bdea1Ox9m8hzm20rMM+ZHx1CFwntgv/enaCWcAm2gb971B/uKHoYldhuY3+InCG/yQ
+         pIGZyTKsAXFxki243ZmpO65mxZs5P50OYVswECGOVB7sr9T4CHQKBmf0CNN+NXExKcRc
+         eMytZuhHLN84hyMXPRWndygUS2JBRac3PBblsD0HPCD2/68TIfAZmbDsgWg2e/MworNU
+         Wo78GRFzJCHbFwI5ymxdPnq1qsB5f+/8uRezAfTE0g0xTvoibUrs0zSKxbyACIluPjqe
+         87plmTWFeBZQxtM7gJlI9hTmeWTNTAgZCSqNX4iYbxjVTA5GYyJdEDJ7/KZk9V9bxIBm
+         l1nA==
 Content-Disposition: inline
-In-Reply-To: <1368431172-6844-2-git-send-email-mhocko@suse.cz>
+In-Reply-To: <20130517160247.GA10023@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Mon, May 13, 2013 at 09:46:10AM +0200, Michal Hocko wrote:
-> Memcg soft reclaim has been traditionally triggered from the global
-> reclaim paths before calling shrink_zone. mem_cgroup_soft_limit_reclaim
-> then picked up a group which exceeds the soft limit the most and
-> reclaimed it with 0 priority to reclaim at least SWAP_CLUSTER_MAX pages.
-> 
-> The infrastructure requires per-node-zone trees which hold over-limit
-> groups and keep them up-to-date (via memcg_check_events) which is not
-> cost free. Although this overhead hasn't turned out to be a bottle neck
-> the implementation is suboptimal because mem_cgroup_update_tree has no
-> idea which zones consumed memory over the limit so we could easily end
-> up having a group on a node-zone tree having only few pages from that
-> node-zone.
-> 
-> This patch doesn't try to fix node-zone trees management because it
-> seems that integrating soft reclaim into zone shrinking sounds much
-> easier and more appropriate for several reasons.
-> First of all 0 priority reclaim was a crude hack which might lead to
-> big stalls if the group's LRUs are big and hard to reclaim (e.g. a lot
-> of dirty/writeback pages).
-> Soft reclaim should be applicable also to the targeted reclaim which is
-> awkward right now without additional hacks.
-> Last but not least the whole infrastructure eats quite some code.
-> 
-> After this patch shrink_zone is done in 2 passes. First it tries to do the
-> soft reclaim if appropriate (only for global reclaim for now to keep
-> compatible with the original state) and fall back to ignoring soft limit
-> if no group is eligible to soft reclaim or nothing has been scanned
-> during the first pass. Only groups which are over their soft limit or
-> any of their parents up the hierarchy is over the limit are considered
-> eligible during the first pass.
+Hello, Johannes.
 
-There are setups with thousands of groups that do not even use soft
-limits.  Having them pointlessly iterate over all of them for every
-couple of pages reclaimed is just not acceptable.
+On Fri, May 17, 2013 at 12:02:47PM -0400, Johannes Weiner wrote:
+> There are setups with thousands of groups that do not even use soft
+> limits.  Having them pointlessly iterate over all of them for every
+> couple of pages reclaimed is just not acceptable.
 
-This is not the first time this implementation was proposed, either,
-I'm afraid we have now truly gone full circle on this stuff.
+Hmmm... if the iteration is the problem, it shouldn't be difficult to
+build list of children which should be iterated.  Would that make it
+acceptable?
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
