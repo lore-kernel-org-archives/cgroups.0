@@ -1,30 +1,39 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH v6 12/31] fs: convert inode and dentry shrinking to be
  node aware
-Date: Sat, 18 May 2013 02:54:23 +0400
-Message-ID: <5196B51F.5030508@parallels.com>
-References: <1368382432-25462-1-git-send-email-glommer@openvz.org> <1368382432-25462-13-git-send-email-glommer@openvz.org> <20130514095200.GI29466@dastard> <5193A95E.70205@parallels.com> <20130516000216.GC24635@dastard> <5195302A.2090406@parallels.com> <20130517005134.GK24635@dastard> <5195DC59.8000205@parallels.com> <51964381.8010406@parallels.com>
+Date: Sat, 18 May 2013 13:39:41 +1000
+Message-ID: <20130518033941.GB6495@dastard>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org>
+ <1368382432-25462-13-git-send-email-glommer@openvz.org>
+ <20130514095200.GI29466@dastard>
+ <5193A95E.70205@parallels.com>
+ <20130516000216.GC24635@dastard>
+ <5195302A.2090406@parallels.com>
+ <20130517005134.GK24635@dastard>
+ <5195DC59.8000205@parallels.com>
+ <51964381.8010406@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51964381.8010406-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <51964381.8010406@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer@parallels.com>
+Cc: Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 05/17/2013 06:49 PM, Glauber Costa wrote:
+On Fri, May 17, 2013 at 06:49:37PM +0400, Glauber Costa wrote:
 > On 05/17/2013 11:29 AM, Glauber Costa wrote:
->> Except that shrink_slab_node would also defer work, right?
->>
->>>> The only thing I don't like about this is the extra nodemask needed,
->>>> which, like the scan control, would have to sit on the stack.
->>>> Suggestions for avoiding that problem are welcome.. :)
->>>>
->> I will try to come up with a patch to do all this, and then we can
->> concretely discuss.
->> You are also of course welcome to do so as well =)
+> > Except that shrink_slab_node would also defer work, right?
+> > 
+> >> > The only thing I don't like about this is the extra nodemask needed,
+> >> > which, like the scan control, would have to sit on the stack.
+> >> > Suggestions for avoiding that problem are welcome.. :)
+> >> >
+> > I will try to come up with a patch to do all this, and then we can
+> > concretely discuss.
+> > You are also of course welcome to do so as well =)
 > 
 > 
 > All right.
@@ -44,39 +53,24 @@ On 05/17/2013 06:49 PM, Glauber Costa wrote:
 > for steady state to be reached, but once it is, we have all variables
 > in the equation (dentries, inodes, etc) basically flat. So I guess it
 > works, and I am confident that it will make your workload better.
-> 
-> My strategy is to modify the shrinker structure like this:
-> 
-> struct shrinker {
->         int (*shrink)(struct shrinker *, struct shrink_control *sc);
->         long (*count_objects)(struct shrinker *, struct shrink_control *sc);
->         long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
-> 
->         int seeks;      /* seeks to recreate an obj */
->         long batch;     /* reclaim batch size, 0 = default */
->         unsigned long flags;
-> 
->         /* These are for internal use */
->         struct list_head list;
->         atomic_long_t *nr_deferred; /* objs pending delete, per node */
-> 
->         /* nodes being currently shrunk, only makes sense for NUMA
-> shrinkers */
->         nodemask_t *nodes_shrinking;
-> 
-> };
-> 
-> We need memory allocation now for nr_deferred and nodes_shrinking, but
-> OTOH we use no stack, and can keep the size of this to be dynamically
-> adjusted depending on whether or not your shrinker is NUMA aware.
-> 
-> Guess that is it. Expect news soon.
-> 
 
-Except of course that struct shrinker is obviously shared between runs,
-and this won't cut.
+Sounds promising. A non-numa system gives dead flat linesonthat
+workload, and that's how I want a numa system to behave as well when
+there is even pressure applied across all nodes.
 
-Right now I am inclined to really just put this in the stack. The
-alternative, if it becomes a problem, can be to extend the lru apis
-to allow us to go for a single node. This way we only need to use 1
-extra word in the stack.
+Sorry for not doing more here - I've been flat out the last couple
+of days with XFS CRC stuff. Let me know when you have a tree rebased
+as far as this patch and I'll run some tests here....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
