@@ -1,56 +1,19 @@
-From: Rob Landley <rob@landley.net>
-Subject: Re: [PATCH] memcg: update TODO list in Documentation
-Date: Fri, 17 May 2013 00:46:13 -0500
-Message-ID: <1368769573.18069.254@driftwood>
-References: <5195A41D.7050507@huawei.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v6 12/31] fs: convert inode and dentry shrinking to be
+ node aware
+Date: Sat, 18 May 2013 11:20:33 +0400
+Message-ID: <51972BC1.7020704@parallels.com>
+References: <1368382432-25462-1-git-send-email-glommer@openvz.org> <1368382432-25462-13-git-send-email-glommer@openvz.org> <20130514095200.GI29466@dastard> <5193A95E.70205@parallels.com> <20130516000216.GC24635@dastard> <5195302A.2090406@parallels.com> <20130517005134.GK24635@dastard> <5195DC59.8000205@parallels.com> <51964381.8010406@parallels.com> <20130518033941.GB6495@dastard>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <5195A41D.7050507@huawei.com> (from lizefan@huawei.com on Thu
-	May 16 22:29:33 2013)
-Content-Disposition: inline
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130518033941.GB6495@dastard>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; delsp="Yes"; format="Flowed"
-To: Li Zefan <lizefan@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 05/16/2013 10:29:33 PM, Li Zefan wrote:
-> hugetlb cgroup has already been implemented.
->=20
-> Signed-off-by: Li Zefan <lizefan@huawei.com>
-> ---
->  Documentation/cgroups/memory.txt | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
->=20
-> diff --git a/Documentation/cgroups/memory.txt =20
-> b/Documentation/cgroups/memory.txt
-> index ddf4f93..327acec 100644
-> --- a/Documentation/cgroups/memory.txt
-> +++ b/Documentation/cgroups/memory.txt
-> @@ -834,10 +834,9 @@ Test:
->=20
->  12. TODO
->=20
-> -1. Add support for accounting huge pages (as a separate controller)
-> -2. Make per-cgroup scanner reclaim not-shared pages first
-> -3. Teach controller to account for shared-pages
-> -4. Start reclamation in the background when the limit is
-> +1. Make per-cgroup scanner reclaim not-shared pages first
-> +2. Teach controller to account for shared-pages
-> +3. Start reclamation in the background when the limit is
->     not yet hit but the usage is getting closer
->=20
->  Summary
-
-Acked-by: Rob Landley <rob@landley.net>
-
-If the memcg guys don't grab this, please send to trivial@kernel.org.
-
-Rob=
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On 05/18/2013 07:39 AM, Dave Chinner wrote:
+> Sorry for not doing more here 
+I forgive you.
