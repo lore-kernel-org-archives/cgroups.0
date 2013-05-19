@@ -1,183 +1,394 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v7 02/34] super: fix calculation of shrinkable objects for small numbers
-Date: Mon, 20 May 2013 00:06:55 +0400
-Message-ID: <1368994047-5997-3-git-send-email-glommer@openvz.org>
+Subject: [PATCH v7 17/34] xfs: convert dquot cache lru to list_lru
+Date: Mon, 20 May 2013 00:07:10 +0400
+Message-ID: <1368994047-5997-18-git-send-email-glommer@openvz.org>
 References: <1368994047-5997-1-git-send-email-glommer@openvz.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1368994047-5997-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@openvz.org>
 
-The sysctl knob sysctl_vfs_cache_pressure is used to determine which
-percentage of the shrinkable objects in our cache we should actively try
-to shrink.
+From: Dave Chinner <dchinner@redhat.com>
 
-It works great in situations in which we have many objects (at least
-more than 100), because the aproximation errors will be negligible. But
-if this is not the case, specially when total_objects < 100, we may end
-up concluding that we have no objects at all (total / 100 = 0,  if total
-< 100).
+Convert the XFS dquot lru to use the list_lru construct and convert
+the shrinker to being node aware.
 
-This is certainly not the biggest killer in the world, but may matter in
-very low kernel memory situations.
-
-[ v2: fix it for all occurrences of sysctl_vfs_cache_pressure ]
-
+* v7: Add NUMA aware flag
+[ glommer: edited for conflicts + warning fixes ]
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Mel Gorman <mgorman@suse.de>
-CC: Dave Chinner <david@fromorbit.com>
-CC: "Theodore Ts'o" <tytso@mit.edu>
-CC: Al Viro <viro@zeniv.linux.org.uk>
 ---
- fs/gfs2/glock.c        |  2 +-
- fs/gfs2/quota.c        |  2 +-
- fs/mbcache.c           |  2 +-
- fs/nfs/dir.c           |  2 +-
- fs/quota/dquot.c       |  5 ++---
- fs/super.c             | 14 +++++++-------
- fs/xfs/xfs_qm.c        |  2 +-
- include/linux/dcache.h |  4 ++++
- 8 files changed, 18 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_dquot.c |   7 +-
+ fs/xfs/xfs_qm.c    | 277 +++++++++++++++++++++++++++--------------------------
+ fs/xfs/xfs_qm.h    |   4 +-
+ 3 files changed, 144 insertions(+), 144 deletions(-)
 
-diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
-index 9435384..3bd2748 100644
---- a/fs/gfs2/glock.c
-+++ b/fs/gfs2/glock.c
-@@ -1463,7 +1463,7 @@ static int gfs2_shrink_glock_memory(struct shrinker *shrink,
- 		gfs2_scan_glock_lru(sc->nr_to_scan);
- 	}
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index a41f8bf..4e9178d 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -950,13 +950,8 @@ xfs_qm_dqput_final(
  
--	return (atomic_read(&lru_count) / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(atomic_read(&lru_count));
- }
+ 	trace_xfs_dqput_free(dqp);
  
- static struct shrinker glock_shrinker = {
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index c7c840e..5c14206 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -114,7 +114,7 @@ int gfs2_shrink_qd_memory(struct shrinker *shrink, struct shrink_control *sc)
- 	spin_unlock(&qd_lru_lock);
+-	mutex_lock(&qi->qi_lru_lock);
+-	if (list_empty(&dqp->q_lru)) {
+-		list_add_tail(&dqp->q_lru, &qi->qi_lru_list);
+-		qi->qi_lru_count++;
++	if (list_lru_add(&qi->qi_lru, &dqp->q_lru))
+ 		XFS_STATS_INC(xs_qm_dquot_unused);
+-	}
+-	mutex_unlock(&qi->qi_lru_lock);
  
- out:
--	return (atomic_read(&qd_lru_count) * sysctl_vfs_cache_pressure) / 100;
-+	return vfs_pressure_ratio(atomic_read(&qd_lru_count));
- }
- 
- static u64 qd2index(struct gfs2_quota_data *qd)
-diff --git a/fs/mbcache.c b/fs/mbcache.c
-index 8c32ef3..5eb0476 100644
---- a/fs/mbcache.c
-+++ b/fs/mbcache.c
-@@ -189,7 +189,7 @@ mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc)
- 	list_for_each_entry_safe(entry, tmp, &free_list, e_lru_list) {
- 		__mb_cache_entry_forget(entry, gfp_mask);
- 	}
--	return (count / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(count);
- }
- 
- 
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index e093e73..54d7c47 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -1998,7 +1998,7 @@ remove_lru_entry:
- 	}
- 	spin_unlock(&nfs_access_lru_lock);
- 	nfs_access_free_list(&head);
--	return (atomic_long_read(&nfs_access_nr_entries) / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
- }
- 
- static void __nfs_access_zap_cache(struct nfs_inode *nfsi, struct list_head *head)
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 3e64169..762b09c 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -719,9 +719,8 @@ static int shrink_dqcache_memory(struct shrinker *shrink,
- 		prune_dqcache(nr);
- 		spin_unlock(&dq_list_lock);
- 	}
--	return ((unsigned)
--		percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS])
--		/100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(
-+	percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS]));
- }
- 
- static struct shrinker dqcache_shrinker = {
-diff --git a/fs/super.c b/fs/super.c
-index 7465d43..2a37fd6 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -82,13 +82,13 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
- 		int	inodes;
- 
- 		/* proportion the scan between the caches */
--		dentries = (sc->nr_to_scan * sb->s_nr_dentry_unused) /
--							total_objects;
--		inodes = (sc->nr_to_scan * sb->s_nr_inodes_unused) /
--							total_objects;
-+		dentries = mult_frac(sc->nr_to_scan, sb->s_nr_dentry_unused,
-+							total_objects);
-+		inodes = mult_frac(sc->nr_to_scan, sb->s_nr_inodes_unused,
-+							total_objects);
- 		if (fs_objects)
--			fs_objects = (sc->nr_to_scan * fs_objects) /
--							total_objects;
-+			fs_objects = mult_frac(sc->nr_to_scan, fs_objects,
-+							total_objects);
- 		/*
- 		 * prune the dcache first as the icache is pinned by it, then
- 		 * prune the icache, followed by the filesystem specific caches
-@@ -104,7 +104,7 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
- 				sb->s_nr_inodes_unused + fs_objects;
- 	}
- 
--	total_objects = (total_objects / 100) * sysctl_vfs_cache_pressure;
-+	total_objects = vfs_pressure_ratio(total_objects);
- 	drop_super(sb);
- 	return total_objects;
- }
+ 	/*
+ 	 * If we just added a udquot to the freelist, then we want to release
 diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index f41702b..7ade175 100644
+index 7ade175..85ca39e 100644
 --- a/fs/xfs/xfs_qm.c
 +++ b/fs/xfs/xfs_qm.c
-@@ -1585,7 +1585,7 @@ xfs_qm_shake(
- 	}
+@@ -50,8 +50,9 @@
+  */
+ STATIC int	xfs_qm_init_quotainos(xfs_mount_t *);
+ STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
+-STATIC int	xfs_qm_shake(struct shrinker *, struct shrink_control *);
  
- out:
--	return (qi->qi_lru_count / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(qi->qi_lru_count);
++
++STATIC void	xfs_qm_dqfree_one(struct xfs_dquot *dqp);
+ /*
+  * We use the batch lookup interface to iterate over the dquots as it
+  * currently is the only interface into the radix tree code that allows
+@@ -196,12 +197,9 @@ xfs_qm_dqpurge(
+ 	 * We move dquots to the freelist as soon as their reference count
+ 	 * hits zero, so it really should be on the freelist here.
+ 	 */
+-	mutex_lock(&qi->qi_lru_lock);
+ 	ASSERT(!list_empty(&dqp->q_lru));
+-	list_del_init(&dqp->q_lru);
+-	qi->qi_lru_count--;
++	list_lru_del(&qi->qi_lru, &dqp->q_lru);
+ 	XFS_STATS_DEC(xs_qm_dquot_unused);
+-	mutex_unlock(&qi->qi_lru_lock);
+ 
+ 	xfs_qm_dqdestroy(dqp);
+ 
+@@ -631,6 +629,141 @@ xfs_qm_calc_dquots_per_chunk(
+ 	return ndquots;
  }
  
- /*
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index 1a82bdb..bd08285 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -411,4 +411,8 @@ static inline bool d_mountpoint(struct dentry *dentry)
- 
- extern int sysctl_vfs_cache_pressure;
- 
-+static inline unsigned long vfs_pressure_ratio(unsigned long val)
++struct xfs_qm_isolate {
++	struct list_head	buffers;
++	struct list_head	dispose;
++};
++
++static enum lru_status
++xfs_qm_dquot_isolate(
++	struct list_head	*item,
++	spinlock_t		*lru_lock,
++	void			*arg)
 +{
-+	return mult_frac(val, sysctl_vfs_cache_pressure, 100);
++	struct xfs_dquot	*dqp = container_of(item,
++						struct xfs_dquot, q_lru);
++	struct xfs_qm_isolate	*isol = arg;
++
++	if (!xfs_dqlock_nowait(dqp))
++		goto out_miss_busy;
++
++	/*
++	 * This dquot has acquired a reference in the meantime remove it from
++	 * the freelist and try again.
++	 */
++	if (dqp->q_nrefs) {
++		xfs_dqunlock(dqp);
++		XFS_STATS_INC(xs_qm_dqwants);
++
++		trace_xfs_dqreclaim_want(dqp);
++		list_del_init(&dqp->q_lru);
++		XFS_STATS_DEC(xs_qm_dquot_unused);
++		return 0;
++	}
++
++	/*
++	 * If the dquot is dirty, flush it. If it's already being flushed, just
++	 * skip it so there is time for the IO to complete before we try to
++	 * reclaim it again on the next LRU pass.
++	 */
++	if (!xfs_dqflock_nowait(dqp)) {
++		xfs_dqunlock(dqp);
++		goto out_miss_busy;
++	}
++
++	if (XFS_DQ_IS_DIRTY(dqp)) {
++		struct xfs_buf	*bp = NULL;
++		int		error;
++
++		trace_xfs_dqreclaim_dirty(dqp);
++
++		/* we have to drop the LRU lock to flush the dquot */
++		spin_unlock(lru_lock);
++
++		error = xfs_qm_dqflush(dqp, &bp);
++		if (error) {
++			xfs_warn(dqp->q_mount, "%s: dquot %p flush failed",
++				 __func__, dqp);
++			goto out_unlock_dirty;
++		}
++
++		xfs_buf_delwri_queue(bp, &isol->buffers);
++		xfs_buf_relse(bp);
++		goto out_unlock_dirty;
++	}
++	xfs_dqfunlock(dqp);
++
++	/*
++	 * Prevent lookups now that we are past the point of no return.
++	 */
++	dqp->dq_flags |= XFS_DQ_FREEING;
++	xfs_dqunlock(dqp);
++
++	ASSERT(dqp->q_nrefs == 0);
++	list_move_tail(&dqp->q_lru, &isol->dispose);
++	XFS_STATS_DEC(xs_qm_dquot_unused);
++	trace_xfs_dqreclaim_done(dqp);
++	XFS_STATS_INC(xs_qm_dqreclaims);
++	return 0;
++
++out_miss_busy:
++	trace_xfs_dqreclaim_busy(dqp);
++	XFS_STATS_INC(xs_qm_dqreclaim_misses);
++	return 2;
++
++out_unlock_dirty:
++	trace_xfs_dqreclaim_busy(dqp);
++	XFS_STATS_INC(xs_qm_dqreclaim_misses);
++	return 3;
 +}
- #endif	/* __LINUX_DCACHE_H */
++
++static long
++xfs_qm_shrink_scan(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	struct xfs_quotainfo	*qi = container_of(shrink,
++					struct xfs_quotainfo, qi_shrinker);
++	struct xfs_qm_isolate	isol;
++	long			freed;
++	int			error;
++	unsigned long		nr_to_scan = sc->nr_to_scan;
++
++	if ((sc->gfp_mask & (__GFP_FS|__GFP_WAIT)) != (__GFP_FS|__GFP_WAIT))
++		return 0;
++
++	INIT_LIST_HEAD(&isol.buffers);
++	INIT_LIST_HEAD(&isol.dispose);
++
++	freed = list_lru_walk_node(&qi->qi_lru, sc->nid, xfs_qm_dquot_isolate, &isol,
++					&nr_to_scan);
++
++	error = xfs_buf_delwri_submit(&isol.buffers);
++	if (error)
++		xfs_warn(NULL, "%s: dquot reclaim failed", __func__);
++
++	while (!list_empty(&isol.dispose)) {
++		struct xfs_dquot	*dqp;
++
++		dqp = list_first_entry(&isol.dispose, struct xfs_dquot, q_lru);
++		list_del_init(&dqp->q_lru);
++		xfs_qm_dqfree_one(dqp);
++	}
++
++	return freed;
++}
++
++static long
++xfs_qm_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	struct xfs_quotainfo	*qi = container_of(shrink,
++					struct xfs_quotainfo, qi_shrinker);
++
++	return list_lru_count_node(&qi->qi_lru, sc->nid);
++}
++
+ /*
+  * This initializes all the quota information that's kept in the
+  * mount structure
+@@ -661,9 +794,7 @@ xfs_qm_init_quotainfo(
+ 	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
+ 	mutex_init(&qinf->qi_tree_lock);
+ 
+-	INIT_LIST_HEAD(&qinf->qi_lru_list);
+-	qinf->qi_lru_count = 0;
+-	mutex_init(&qinf->qi_lru_lock);
++	list_lru_init(&qinf->qi_lru);
+ 
+ 	/* mutex used to serialize quotaoffs */
+ 	mutex_init(&qinf->qi_quotaofflock);
+@@ -729,8 +860,10 @@ xfs_qm_init_quotainfo(
+ 		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
+ 	}
+ 
+-	qinf->qi_shrinker.shrink = xfs_qm_shake;
++	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
++	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+ 	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
++	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
+ 	register_shrinker(&qinf->qi_shrinker);
+ 	return 0;
+ }
+@@ -1462,132 +1595,6 @@ xfs_qm_dqfree_one(
+ 	xfs_qm_dqdestroy(dqp);
+ }
+ 
+-STATIC void
+-xfs_qm_dqreclaim_one(
+-	struct xfs_dquot	*dqp,
+-	struct list_head	*buffer_list,
+-	struct list_head	*dispose_list)
+-{
+-	struct xfs_mount	*mp = dqp->q_mount;
+-	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	int			error;
+-
+-	if (!xfs_dqlock_nowait(dqp))
+-		goto out_move_tail;
+-
+-	/*
+-	 * This dquot has acquired a reference in the meantime remove it from
+-	 * the freelist and try again.
+-	 */
+-	if (dqp->q_nrefs) {
+-		xfs_dqunlock(dqp);
+-
+-		trace_xfs_dqreclaim_want(dqp);
+-		XFS_STATS_INC(xs_qm_dqwants);
+-
+-		list_del_init(&dqp->q_lru);
+-		qi->qi_lru_count--;
+-		XFS_STATS_DEC(xs_qm_dquot_unused);
+-		return;
+-	}
+-
+-	/*
+-	 * Try to grab the flush lock. If this dquot is in the process of
+-	 * getting flushed to disk, we don't want to reclaim it.
+-	 */
+-	if (!xfs_dqflock_nowait(dqp))
+-		goto out_unlock_move_tail;
+-
+-	if (XFS_DQ_IS_DIRTY(dqp)) {
+-		struct xfs_buf	*bp = NULL;
+-
+-		trace_xfs_dqreclaim_dirty(dqp);
+-
+-		error = xfs_qm_dqflush(dqp, &bp);
+-		if (error) {
+-			xfs_warn(mp, "%s: dquot %p flush failed",
+-				 __func__, dqp);
+-			goto out_unlock_move_tail;
+-		}
+-
+-		xfs_buf_delwri_queue(bp, buffer_list);
+-		xfs_buf_relse(bp);
+-		/*
+-		 * Give the dquot another try on the freelist, as the
+-		 * flushing will take some time.
+-		 */
+-		goto out_unlock_move_tail;
+-	}
+-	xfs_dqfunlock(dqp);
+-
+-	/*
+-	 * Prevent lookups now that we are past the point of no return.
+-	 */
+-	dqp->dq_flags |= XFS_DQ_FREEING;
+-	xfs_dqunlock(dqp);
+-
+-	ASSERT(dqp->q_nrefs == 0);
+-	list_move_tail(&dqp->q_lru, dispose_list);
+-	qi->qi_lru_count--;
+-	XFS_STATS_DEC(xs_qm_dquot_unused);
+-
+-	trace_xfs_dqreclaim_done(dqp);
+-	XFS_STATS_INC(xs_qm_dqreclaims);
+-	return;
+-
+-	/*
+-	 * Move the dquot to the tail of the list so that we don't spin on it.
+-	 */
+-out_unlock_move_tail:
+-	xfs_dqunlock(dqp);
+-out_move_tail:
+-	list_move_tail(&dqp->q_lru, &qi->qi_lru_list);
+-	trace_xfs_dqreclaim_busy(dqp);
+-	XFS_STATS_INC(xs_qm_dqreclaim_misses);
+-}
+-
+-STATIC int
+-xfs_qm_shake(
+-	struct shrinker		*shrink,
+-	struct shrink_control	*sc)
+-{
+-	struct xfs_quotainfo	*qi =
+-		container_of(shrink, struct xfs_quotainfo, qi_shrinker);
+-	int			nr_to_scan = sc->nr_to_scan;
+-	LIST_HEAD		(buffer_list);
+-	LIST_HEAD		(dispose_list);
+-	struct xfs_dquot	*dqp;
+-	int			error;
+-
+-	if ((sc->gfp_mask & (__GFP_FS|__GFP_WAIT)) != (__GFP_FS|__GFP_WAIT))
+-		return 0;
+-	if (!nr_to_scan)
+-		goto out;
+-
+-	mutex_lock(&qi->qi_lru_lock);
+-	while (!list_empty(&qi->qi_lru_list)) {
+-		if (nr_to_scan-- <= 0)
+-			break;
+-		dqp = list_first_entry(&qi->qi_lru_list, struct xfs_dquot,
+-				       q_lru);
+-		xfs_qm_dqreclaim_one(dqp, &buffer_list, &dispose_list);
+-	}
+-	mutex_unlock(&qi->qi_lru_lock);
+-
+-	error = xfs_buf_delwri_submit(&buffer_list);
+-	if (error)
+-		xfs_warn(NULL, "%s: dquot reclaim failed", __func__);
+-
+-	while (!list_empty(&dispose_list)) {
+-		dqp = list_first_entry(&dispose_list, struct xfs_dquot, q_lru);
+-		list_del_init(&dqp->q_lru);
+-		xfs_qm_dqfree_one(dqp);
+-	}
+-
+-out:
+-	return vfs_pressure_ratio(qi->qi_lru_count);
+-}
+-
+ /*
+  * Start a transaction and write the incore superblock changes to
+  * disk. flags parameter indicates which fields have changed.
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 5d16a6e..8173b5e 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -47,9 +47,7 @@ typedef struct xfs_quotainfo {
+ 	struct mutex qi_tree_lock;
+ 	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
+ 	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
+-	struct list_head qi_lru_list;
+-	struct mutex	 qi_lru_lock;
+-	int		 qi_lru_count;
++	struct list_lru	 qi_lru;
+ 	int		 qi_dquots;
+ 	time_t		 qi_btimelimit;	 /* limit for blks timer */
+ 	time_t		 qi_itimelimit;	 /* limit for inodes timer */
 -- 
 1.8.1.4
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
