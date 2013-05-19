@@ -1,148 +1,183 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v7 14/34] list_lru: per-node API
-Date: Mon, 20 May 2013 00:07:07 +0400
-Message-ID: <1368994047-5997-15-git-send-email-glommer@openvz.org>
+Subject: [PATCH v7 02/34] super: fix calculation of shrinkable objects for small numbers
+Date: Mon, 20 May 2013 00:06:55 +0400
+Message-ID: <1368994047-5997-3-git-send-email-glommer@openvz.org>
 References: <1368994047-5997-1-git-send-email-glommer@openvz.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1368994047-5997-1-git-send-email-glommer@openvz.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
 
-This patch adapts the list_lru API to accept an optional node argument,
-to be used by NUMA aware shrinking functions. Code that does not care
-about the NUMA placement of objects can still call into the very same
-functions as before. They will simply iterate over all nodes.
+The sysctl knob sysctl_vfs_cache_pressure is used to determine which
+percentage of the shrinkable objects in our cache we should actively try
+to shrink.
+
+It works great in situations in which we have many objects (at least
+more than 100), because the aproximation errors will be negligible. But
+if this is not the case, specially when total_objects < 100, we may end
+up concluding that we have no objects at all (total / 100 = 0,  if total
+< 100).
+
+This is certainly not the biggest killer in the world, but may matter in
+very low kernel memory situations.
+
+[ v2: fix it for all occurrences of sysctl_vfs_cache_pressure ]
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: Mel Gorman <mgorman@suse.de>
+CC: Dave Chinner <david@fromorbit.com>
+CC: "Theodore Ts'o" <tytso@mit.edu>
+CC: Al Viro <viro@zeniv.linux.org.uk>
 ---
- include/linux/list_lru.h | 34 +++++++++++++++++++++++++++++++++-
- lib/list_lru.c           | 41 +++++++++--------------------------------
- 2 files changed, 42 insertions(+), 33 deletions(-)
+ fs/gfs2/glock.c        |  2 +-
+ fs/gfs2/quota.c        |  2 +-
+ fs/mbcache.c           |  2 +-
+ fs/nfs/dir.c           |  2 +-
+ fs/quota/dquot.c       |  5 ++---
+ fs/super.c             | 14 +++++++-------
+ fs/xfs/xfs_qm.c        |  2 +-
+ include/linux/dcache.h |  4 ++++
+ 8 files changed, 18 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-index 668f1f1..4ff148c 100644
---- a/include/linux/list_lru.h
-+++ b/include/linux/list_lru.h
-@@ -42,13 +42,45 @@ struct list_lru {
- int list_lru_init(struct list_lru *lru);
- int list_lru_add(struct list_lru *lru, struct list_head *item);
- int list_lru_del(struct list_lru *lru, struct list_head *item);
--unsigned long list_lru_count(struct list_lru *lru);
-+
-+unsigned long list_lru_count_node(struct list_lru *lru, int nid);
-+static unsigned long list_lru_count(struct list_lru *lru)
-+{
-+	long count = 0;
-+	int nid;
-+
-+	for_each_node_mask(nid, lru->active_nodes)
-+		count += list_lru_count_node(lru, nid);
-+
-+	return count;
-+}
+diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
+index 9435384..3bd2748 100644
+--- a/fs/gfs2/glock.c
++++ b/fs/gfs2/glock.c
+@@ -1463,7 +1463,7 @@ static int gfs2_shrink_glock_memory(struct shrinker *shrink,
+ 		gfs2_scan_glock_lru(sc->nr_to_scan);
+ 	}
  
- typedef enum lru_status
- (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
- 
- typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
- 
-+
-+unsigned long list_lru_walk_node(struct list_lru *lru, int nid,
-+				 list_lru_walk_cb isolate, void *cb_arg,
-+				 unsigned long *nr_to_walk);
-+
-+static unsigned long
-+list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
-+	      void *cb_arg, unsigned long nr_to_walk)
-+{
-+	long isolated = 0;
-+	int nid;
-+
-+	for_each_node_mask(nid, lru->active_nodes) {
-+		isolated += list_lru_walk_node(lru, nid, isolate,
-+					       cb_arg, &nr_to_walk);
-+		if (nr_to_walk <= 0)
-+			break;
-+	}
-+	return isolated;
-+}
-+
- unsigned long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
- 		   void *cb_arg, unsigned long nr_to_walk);
- 
-diff --git a/lib/list_lru.c b/lib/list_lru.c
-index 7611df7..dae13d6 100644
---- a/lib/list_lru.c
-+++ b/lib/list_lru.c
-@@ -54,25 +54,21 @@ list_lru_del(
- EXPORT_SYMBOL_GPL(list_lru_del);
- 
- unsigned long
--list_lru_count(struct list_lru *lru)
-+list_lru_count_node(struct list_lru *lru, int nid)
- {
- 	long count = 0;
--	int nid;
--
--	for_each_node_mask(nid, lru->active_nodes) {
--		struct list_lru_node *nlru = &lru->node[nid];
-+	struct list_lru_node *nlru = &lru->node[nid];
- 
--		spin_lock(&nlru->lock);
--		BUG_ON(nlru->nr_items < 0);
--		count += nlru->nr_items;
--		spin_unlock(&nlru->lock);
--	}
-+	spin_lock(&nlru->lock);
-+	BUG_ON(nlru->nr_items < 0);
-+	count += nlru->nr_items;
-+	spin_unlock(&nlru->lock);
- 
- 	return count;
+-	return (atomic_read(&lru_count) / 100) * sysctl_vfs_cache_pressure;
++	return vfs_pressure_ratio(atomic_read(&lru_count));
  }
--EXPORT_SYMBOL_GPL(list_lru_count);
-+EXPORT_SYMBOL_GPL(list_lru_count_node);
  
--static unsigned long
-+unsigned long
- list_lru_walk_node(
- 	struct list_lru		*lru,
- 	int			nid,
-@@ -118,26 +114,7 @@ restart:
- 	spin_unlock(&nlru->lock);
- 	return isolated;
+ static struct shrinker glock_shrinker = {
+diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+index c7c840e..5c14206 100644
+--- a/fs/gfs2/quota.c
++++ b/fs/gfs2/quota.c
+@@ -114,7 +114,7 @@ int gfs2_shrink_qd_memory(struct shrinker *shrink, struct shrink_control *sc)
+ 	spin_unlock(&qd_lru_lock);
+ 
+ out:
+-	return (atomic_read(&qd_lru_count) * sysctl_vfs_cache_pressure) / 100;
++	return vfs_pressure_ratio(atomic_read(&qd_lru_count));
  }
--
--unsigned long
--list_lru_walk(
--	struct list_lru	*lru,
--	list_lru_walk_cb isolate,
--	void		*cb_arg,
--	unsigned long	nr_to_walk)
--{
--	long isolated = 0;
--	int nid;
--
--	for_each_node_mask(nid, lru->active_nodes) {
--		isolated += list_lru_walk_node(lru, nid, isolate,
--					       cb_arg, &nr_to_walk);
--		if (nr_to_walk <= 0)
--			break;
--	}
--	return isolated;
--}
--EXPORT_SYMBOL_GPL(list_lru_walk);
-+EXPORT_SYMBOL_GPL(list_lru_walk_node);
  
- static unsigned long
- list_lru_dispose_all_node(
+ static u64 qd2index(struct gfs2_quota_data *qd)
+diff --git a/fs/mbcache.c b/fs/mbcache.c
+index 8c32ef3..5eb0476 100644
+--- a/fs/mbcache.c
++++ b/fs/mbcache.c
+@@ -189,7 +189,7 @@ mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc)
+ 	list_for_each_entry_safe(entry, tmp, &free_list, e_lru_list) {
+ 		__mb_cache_entry_forget(entry, gfp_mask);
+ 	}
+-	return (count / 100) * sysctl_vfs_cache_pressure;
++	return vfs_pressure_ratio(count);
+ }
+ 
+ 
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index e093e73..54d7c47 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -1998,7 +1998,7 @@ remove_lru_entry:
+ 	}
+ 	spin_unlock(&nfs_access_lru_lock);
+ 	nfs_access_free_list(&head);
+-	return (atomic_long_read(&nfs_access_nr_entries) / 100) * sysctl_vfs_cache_pressure;
++	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
+ }
+ 
+ static void __nfs_access_zap_cache(struct nfs_inode *nfsi, struct list_head *head)
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index 3e64169..762b09c 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -719,9 +719,8 @@ static int shrink_dqcache_memory(struct shrinker *shrink,
+ 		prune_dqcache(nr);
+ 		spin_unlock(&dq_list_lock);
+ 	}
+-	return ((unsigned)
+-		percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS])
+-		/100) * sysctl_vfs_cache_pressure;
++	return vfs_pressure_ratio(
++	percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS]));
+ }
+ 
+ static struct shrinker dqcache_shrinker = {
+diff --git a/fs/super.c b/fs/super.c
+index 7465d43..2a37fd6 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -82,13 +82,13 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
+ 		int	inodes;
+ 
+ 		/* proportion the scan between the caches */
+-		dentries = (sc->nr_to_scan * sb->s_nr_dentry_unused) /
+-							total_objects;
+-		inodes = (sc->nr_to_scan * sb->s_nr_inodes_unused) /
+-							total_objects;
++		dentries = mult_frac(sc->nr_to_scan, sb->s_nr_dentry_unused,
++							total_objects);
++		inodes = mult_frac(sc->nr_to_scan, sb->s_nr_inodes_unused,
++							total_objects);
+ 		if (fs_objects)
+-			fs_objects = (sc->nr_to_scan * fs_objects) /
+-							total_objects;
++			fs_objects = mult_frac(sc->nr_to_scan, fs_objects,
++							total_objects);
+ 		/*
+ 		 * prune the dcache first as the icache is pinned by it, then
+ 		 * prune the icache, followed by the filesystem specific caches
+@@ -104,7 +104,7 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
+ 				sb->s_nr_inodes_unused + fs_objects;
+ 	}
+ 
+-	total_objects = (total_objects / 100) * sysctl_vfs_cache_pressure;
++	total_objects = vfs_pressure_ratio(total_objects);
+ 	drop_super(sb);
+ 	return total_objects;
+ }
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index f41702b..7ade175 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1585,7 +1585,7 @@ xfs_qm_shake(
+ 	}
+ 
+ out:
+-	return (qi->qi_lru_count / 100) * sysctl_vfs_cache_pressure;
++	return vfs_pressure_ratio(qi->qi_lru_count);
+ }
+ 
+ /*
+diff --git a/include/linux/dcache.h b/include/linux/dcache.h
+index 1a82bdb..bd08285 100644
+--- a/include/linux/dcache.h
++++ b/include/linux/dcache.h
+@@ -411,4 +411,8 @@ static inline bool d_mountpoint(struct dentry *dentry)
+ 
+ extern int sysctl_vfs_cache_pressure;
+ 
++static inline unsigned long vfs_pressure_ratio(unsigned long val)
++{
++	return mult_frac(val, sysctl_vfs_cache_pressure, 100);
++}
+ #endif	/* __LINUX_DCACHE_H */
 -- 
 1.8.1.4
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
