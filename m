@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v7 13/34] vmscan: per-node deferred work
-Date: Mon, 20 May 2013 00:07:06 +0400
-Message-ID: <1368994047-5997-14-git-send-email-glommer@openvz.org>
+Subject: [PATCH v7 16/34] xfs: convert buftarg LRU to generic code
+Date: Mon, 20 May 2013 00:07:09 +0400
+Message-ID: <1368994047-5997-17-git-send-email-glommer@openvz.org>
 References: <1368994047-5997-1-git-send-email-glommer@openvz.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1368994047-5997-1-git-send-email-glommer@openvz.org>
@@ -11,370 +11,292 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>
 
-We already keep per-node LRU lists for objects being shrunk, but the
-work that is deferred from one run to another is kept global. This
-creates an impedance problem, where upon node pressure, work deferred
-will accumulate and end up being flushed in other nodes.
+From: Dave Chinner <dchinner@redhat.com>
 
-In large machines, many nodes can accumulate at the same time, all
-adding to the global counter.  As we accumulate more and more, we start
-to ask for the caches to flush even bigger numbers. The result is that
-the caches are depleted and do not stabilize. To achieve stable steady
-state behavior, we need to tackle it differently.
+Convert the buftarg LRU to use the new generic LRU list and take
+advantage of the functionality it supplies to make the buffer cache
+shrinker node aware.
 
-In this patch we keep the deferred count per-node, and will never
-accumulate that to other nodes.
+* v7: Add NUMA aware flag
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/shrinker.h |  30 +++++-
- mm/vmscan.c              | 245 ++++++++++++++++++++++++++++-------------------
- 2 files changed, 175 insertions(+), 100 deletions(-)
+ fs/xfs/xfs_buf.c | 170 ++++++++++++++++++++++++++-----------------------------
+ fs/xfs/xfs_buf.h |   5 +-
+ 2 files changed, 82 insertions(+), 93 deletions(-)
 
-diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index 98be3ab..d70b123 100644
---- a/include/linux/shrinker.h
-+++ b/include/linux/shrinker.h
-@@ -19,6 +19,8 @@ struct shrink_control {
- 
- 	/* shrink from these nodes */
- 	nodemask_t nodes_to_scan;
-+	/* current node being shrunk (for NUMA aware shrinkers) */
-+	int nid;
- };
- 
- /*
-@@ -42,6 +44,8 @@ struct shrink_control {
-  * objects freed during the scan, or -1 if progress cannot be made due to
-  * potential deadlocks. If -1 is returned, then no further attempts to call the
-  * @scan_objects will be made from the current reclaim context.
-+ *
-+ * @flags determine the shrinker abilities, like numa awareness 
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index cee0e42..f7212c1 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -85,20 +85,14 @@ xfs_buf_vmap_len(
+  * The LRU takes a new reference to the buffer so that it will only be freed
+  * once the shrinker takes the buffer off the LRU.
   */
- struct shrinker {
- 	int (*shrink)(struct shrinker *, struct shrink_control *sc);
-@@ -50,12 +54,34 @@ struct shrinker {
- 
- 	int seeks;	/* seeks to recreate an obj */
- 	long batch;	/* reclaim batch size, 0 = default */
-+	unsigned long flags;
- 
- 	/* These are for internal use */
- 	struct list_head list;
--	atomic_long_t nr_in_batch; /* objs pending delete */
-+	/*
-+	 * We would like to avoid allocating memory when registering a new
-+	 * shrinker. All shrinkers will need to keep track of deferred objects,
-+	 * and we need a counter for this. If the shrinkers are not NUMA aware,
-+	 * this is a small and bounded space that fits into an atomic_long_t.
-+	 * This is because that the deferring decisions are global, and we will
-+	 * not allocate in this case.
-+	 *
-+	 * When the shrinker is NUMA aware, we will need this to be a per-node
-+	 * array. Numerically speaking, the minority of shrinkers are NUMA
-+	 * aware, so this saves quite a bit.
-+	 */
-+	union {
-+		/* objs pending delete */
-+		atomic_long_t nr_deferred;
-+		/* objs pending delete, per node */
-+		atomic_long_t *nr_deferred_node;
-+	};
- };
- #define DEFAULT_SEEKS 2 /* A good number if you don't know better. */
--extern void register_shrinker(struct shrinker *);
-+
-+/* Flags */
-+#define SHRINKER_NUMA_AWARE (1 << 0)
-+
-+extern int register_shrinker(struct shrinker *);
- extern void unregister_shrinker(struct shrinker *);
- #endif
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 35a6a9b..374d2b6 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -155,14 +155,36 @@ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
- }
- 
- /*
-- * Add a shrinker callback to be called from the vm
-+ * Add a shrinker callback to be called from the vm.
-+ *
-+ * It cannot fail, unless the flag SHRINKER_NUMA_AWARE is specified.
-+ * With this flag set, this function will allocate memory and may fail.
-  */
--void register_shrinker(struct shrinker *shrinker)
-+int register_shrinker(struct shrinker *shrinker)
+-STATIC void
++static void
+ xfs_buf_lru_add(
+ 	struct xfs_buf	*bp)
  {
--	atomic_long_set(&shrinker->nr_in_batch, 0);
-+	/*
-+	 * If we only have one possible node in the system anyway, save
-+	 * ourselves the trouble and disable NUMA aware behavior. This way we
-+	 * will allocate nothing and save memory and some small loop time
-+	 * later.
-+	 */
-+	if (nr_node_ids == 1)
-+		shrinker->flags &= ~SHRINKER_NUMA_AWARE;
-+
-+	if (shrinker->flags & SHRINKER_NUMA_AWARE) {
-+		size_t size;
-+
-+		size = sizeof(*shrinker->nr_deferred_node) * nr_node_ids;
-+		shrinker->nr_deferred_node = kzalloc(size, GFP_KERNEL);
-+		if (!shrinker->nr_deferred_node)
-+			return -ENOMEM;
-+	} else
-+		atomic_long_set(&shrinker->nr_deferred, 0);
-+
- 	down_write(&shrinker_rwsem);
- 	list_add_tail(&shrinker->list, &shrinker_list);
- 	up_write(&shrinker_rwsem);
-+	return 0;
- }
- EXPORT_SYMBOL(register_shrinker);
- 
-@@ -186,6 +208,116 @@ static inline int do_shrinker_shrink(struct shrinker *shrinker,
+-	struct xfs_buftarg *btp = bp->b_target;
+-
+-	spin_lock(&btp->bt_lru_lock);
+-	if (list_empty(&bp->b_lru)) {
+-		atomic_inc(&bp->b_hold);
+-		list_add_tail(&bp->b_lru, &btp->bt_lru);
+-		btp->bt_lru_nr++;
++	if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
+ 		bp->b_lru_flags &= ~_XBF_LRU_DISPOSE;
++		atomic_inc(&bp->b_hold);
+ 	}
+-	spin_unlock(&btp->bt_lru_lock);
  }
  
- #define SHRINK_BATCH 128
+ /*
+@@ -107,24 +101,13 @@ xfs_buf_lru_add(
+  * The unlocked check is safe here because it only occurs when there are not
+  * b_lru_ref counts left on the inode under the pag->pag_buf_lock. it is there
+  * to optimise the shrinker removing the buffer from the LRU and calling
+- * xfs_buf_free(). i.e. it removes an unnecessary round trip on the
+- * bt_lru_lock.
++ * xfs_buf_free().
+  */
+-STATIC void
++static void
+ xfs_buf_lru_del(
+ 	struct xfs_buf	*bp)
+ {
+-	struct xfs_buftarg *btp = bp->b_target;
+-
+-	if (list_empty(&bp->b_lru))
+-		return;
+-
+-	spin_lock(&btp->bt_lru_lock);
+-	if (!list_empty(&bp->b_lru)) {
+-		list_del_init(&bp->b_lru);
+-		btp->bt_lru_nr--;
+-	}
+-	spin_unlock(&btp->bt_lru_lock);
++	list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
+ }
+ 
+ /*
+@@ -151,18 +134,10 @@ xfs_buf_stale(
+ 	bp->b_flags &= ~_XBF_DELWRI_Q;
+ 
+ 	atomic_set(&(bp)->b_lru_ref, 0);
+-	if (!list_empty(&bp->b_lru)) {
+-		struct xfs_buftarg *btp = bp->b_target;
+-
+-		spin_lock(&btp->bt_lru_lock);
+-		if (!list_empty(&bp->b_lru) &&
+-		    !(bp->b_lru_flags & _XBF_LRU_DISPOSE)) {
+-			list_del_init(&bp->b_lru);
+-			btp->bt_lru_nr--;
+-			atomic_dec(&bp->b_hold);
+-		}
+-		spin_unlock(&btp->bt_lru_lock);
+-	}
++	if (!(bp->b_lru_flags & _XBF_LRU_DISPOSE) &&
++	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
++		atomic_dec(&bp->b_hold);
 +
-+static unsigned long
-+shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
-+		 unsigned long nr_pages_scanned, unsigned long lru_pages,
-+		 atomic_long_t *deferred)
+ 	ASSERT(atomic_read(&bp->b_hold) >= 1);
+ }
+ 
+@@ -1501,83 +1476,97 @@ xfs_buf_iomove(
+  * returned. These buffers will have an elevated hold count, so wait on those
+  * while freeing all the buffers only held by the LRU.
+  */
+-void
+-xfs_wait_buftarg(
+-	struct xfs_buftarg	*btp)
++static enum lru_status
++xfs_buftarg_wait_rele(
++	struct list_head	*item,
++	spinlock_t		*lru_lock,
++	void			*arg)
++
+ {
+-	struct xfs_buf		*bp;
++	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
+ 
+-restart:
+-	spin_lock(&btp->bt_lru_lock);
+-	while (!list_empty(&btp->bt_lru)) {
+-		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
+-		if (atomic_read(&bp->b_hold) > 1) {
+-			trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
+-			list_move_tail(&bp->b_lru, &btp->bt_lru);
+-			spin_unlock(&btp->bt_lru_lock);
+-			delay(100);
+-			goto restart;
+-		}
++	if (atomic_read(&bp->b_hold) > 1) {
++		/* need to wait */
++		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
++		spin_unlock(lru_lock);
++		delay(100);
++	} else {
+ 		/*
+ 		 * clear the LRU reference count so the buffer doesn't get
+ 		 * ignored in xfs_buf_rele().
+ 		 */
+ 		atomic_set(&bp->b_lru_ref, 0);
+-		spin_unlock(&btp->bt_lru_lock);
++		spin_unlock(lru_lock);
+ 		xfs_buf_rele(bp);
+-		spin_lock(&btp->bt_lru_lock);
+ 	}
+-	spin_unlock(&btp->bt_lru_lock);
++
++	spin_lock(lru_lock);
++	return LRU_RETRY;
+ }
+ 
+-int
+-xfs_buftarg_shrink(
++void
++xfs_wait_buftarg(
++	struct xfs_buftarg	*btp)
 +{
-+	unsigned long freed = 0;
-+	unsigned long long delta;
-+	long total_scan;
-+	long max_pass;
-+	long nr;
-+	long new_nr;
-+	long batch_size = shrinker->batch ? shrinker->batch
-+					  : SHRINK_BATCH;
++	while (list_lru_count(&btp->bt_lru))
++		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
++			      NULL, LONG_MAX);
++}
 +
-+	if (shrinker->scan_objects) {
-+		max_pass = shrinker->count_objects(shrinker, shrinkctl);
-+		WARN_ON(max_pass < 0);
-+	} else
-+		max_pass = do_shrinker_shrink(shrinker, shrinkctl, 0);
-+	if (max_pass <= 0)
-+		return 0;
++static enum lru_status
++xfs_buftarg_isolate(
++	struct list_head	*item,
++	spinlock_t		*lru_lock,
++	void			*arg)
++{
++	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
++	struct list_head	*dispose = arg;
 +
 +	/*
-+	 * copy the current shrinker scan count into a local variable
-+	 * and zero it so that other concurrent shrinker invocations
-+	 * don't also do this scanning work.
++	 * Decrement the b_lru_ref count unless the value is already
++	 * zero. If the value is already zero, we need to reclaim the
++	 * buffer, otherwise it gets another trip through the LRU.
 +	 */
-+	nr = atomic_long_xchg(deferred, 0);
++	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0))
++		return LRU_ROTATE;
 +
-+	total_scan = nr;
-+	delta = (4 * nr_pages_scanned) / shrinker->seeks;
-+	delta *= max_pass;
-+	do_div(delta, lru_pages + 1);
-+	total_scan += delta;
-+	if (total_scan < 0) {
-+		printk(KERN_ERR
-+		"shrink_slab: %pF negative objects to delete nr=%ld\n",
-+		       shrinker->shrink, total_scan);
-+		total_scan = max_pass;
-+	}
++	bp->b_lru_flags |= _XBF_LRU_DISPOSE;
++	list_move(item, dispose);
++	return LRU_REMOVED;
++}
 +
-+	/*
-+	 * We need to avoid excessive windup on filesystem shrinkers
-+	 * due to large numbers of GFP_NOFS allocations causing the
-+	 * shrinkers to return -1 all the time. This results in a large
-+	 * nr being built up so when a shrink that can do some work
-+	 * comes along it empties the entire cache due to nr >>>
-+	 * max_pass.  This is bad for sustaining a working set in
-+	 * memory.
-+	 *
-+	 * Hence only allow the shrinker to scan the entire cache when
-+	 * a large delta change is calculated directly.
-+	 */
-+	if (delta < max_pass / 4)
-+		total_scan = min(total_scan, max_pass / 2);
-+
-+	/*
-+	 * Avoid risking looping forever due to too large nr value:
-+	 * never try to free more than twice the estimate number of
-+	 * freeable entries.
-+	 */
-+	if (total_scan > max_pass * 2)
-+		total_scan = max_pass * 2;
-+
-+	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
-+				nr_pages_scanned, lru_pages,
-+				max_pass, delta, total_scan);
-+
-+	while (total_scan >= batch_size) {
-+		long ret;
-+
-+		if (shrinker->scan_objects) {
-+			shrinkctl->nr_to_scan = batch_size;
-+			ret = shrinker->scan_objects(shrinker, shrinkctl);
-+
-+			if (ret == -1)
-+				break;
-+			freed += ret;
-+		} else {
-+			int nr_before;
-+			nr_before = do_shrinker_shrink(shrinker, shrinkctl, 0);
-+			ret = do_shrinker_shrink(shrinker, shrinkctl,
-+							batch_size);
-+			if (ret == -1)
-+				break;
-+			if (ret < nr_before)
-+				freed += nr_before - ret;
-+		}
-+
-+		count_vm_events(SLABS_SCANNED, batch_size);
-+		total_scan -= batch_size;
-+
-+		cond_resched();
-+	}
-+
-+	/*
-+	 * move the unused scan count back into the shrinker in a
-+	 * manner that handles concurrent updates. If we exhausted the
-+	 * scan, there is no need to do an update.
-+	 */
-+	if (total_scan > 0)
-+		new_nr = atomic_long_add_return(total_scan, deferred);
-+	else
-+		new_nr = atomic_long_read(deferred);
-+
-+	trace_mm_shrink_slab_end(shrinker, freed, nr, new_nr);
++static long
++xfs_buftarg_shrink_scan(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
+ 	struct xfs_buftarg	*btp = container_of(shrink,
+ 					struct xfs_buftarg, bt_shrinker);
+-	struct xfs_buf		*bp;
+-	int nr_to_scan = sc->nr_to_scan;
+ 	LIST_HEAD(dispose);
++	long			freed;
++	unsigned long		nr_to_scan = sc->nr_to_scan;
+ 
+-	if (!nr_to_scan)
+-		return btp->bt_lru_nr;
+-
+-	spin_lock(&btp->bt_lru_lock);
+-	while (!list_empty(&btp->bt_lru)) {
+-		if (nr_to_scan-- <= 0)
+-			break;
+-
+-		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
+-
+-		/*
+-		 * Decrement the b_lru_ref count unless the value is already
+-		 * zero. If the value is already zero, we need to reclaim the
+-		 * buffer, otherwise it gets another trip through the LRU.
+-		 */
+-		if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+-			list_move_tail(&bp->b_lru, &btp->bt_lru);
+-			continue;
+-		}
+-
+-		/*
+-		 * remove the buffer from the LRU now to avoid needing another
+-		 * lock round trip inside xfs_buf_rele().
+-		 */
+-		list_move(&bp->b_lru, &dispose);
+-		btp->bt_lru_nr--;
+-		bp->b_lru_flags |= _XBF_LRU_DISPOSE;
+-	}
+-	spin_unlock(&btp->bt_lru_lock);
++	freed = list_lru_walk_node(&btp->bt_lru, sc->nid, xfs_buftarg_isolate,
++				       &dispose, &nr_to_scan);
+ 
+ 	while (!list_empty(&dispose)) {
++		struct xfs_buf *bp;
+ 		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+ 		list_del_init(&bp->b_lru);
+ 		xfs_buf_rele(bp);
+ 	}
+ 
+-	return btp->bt_lru_nr;
 +	return freed;
 +}
 +
++static long
++xfs_buftarg_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	struct xfs_buftarg	*btp = container_of(shrink,
++					struct xfs_buftarg, bt_shrinker);
++	return list_lru_count_node(&btp->bt_lru, sc->nid);
+ }
+ 
+ void
+@@ -1659,12 +1648,13 @@ xfs_alloc_buftarg(
+ 	if (!btp->bt_bdi)
+ 		goto error;
+ 
+-	INIT_LIST_HEAD(&btp->bt_lru);
+-	spin_lock_init(&btp->bt_lru_lock);
++	list_lru_init(&btp->bt_lru);
+ 	if (xfs_setsize_buftarg_early(btp, bdev))
+ 		goto error;
+-	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
++	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
++	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+ 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
++	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+ 	register_shrinker(&btp->bt_shrinker);
+ 	return btp;
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 433a12e..5ec7d35 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -25,6 +25,7 @@
+ #include <linux/fs.h>
+ #include <linux/buffer_head.h>
+ #include <linux/uio.h>
++#include <linux/list_lru.h>
+ 
  /*
-  * Call the shrink functions to age shrinkable caches
-  *
-@@ -222,107 +354,24 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
- 	}
+  *	Base types
+@@ -92,9 +93,7 @@ typedef struct xfs_buftarg {
  
- 	list_for_each_entry(shrinker, &shrinker_list, list) {
--		unsigned long long delta;
--		long total_scan;
--		long max_pass;
--		long nr;
--		long new_nr;
--		long batch_size = shrinker->batch ? shrinker->batch
--						  : SHRINK_BATCH;
+ 	/* LRU control structures */
+ 	struct shrinker		bt_shrinker;
+-	struct list_head	bt_lru;
+-	spinlock_t		bt_lru_lock;
+-	unsigned int		bt_lru_nr;
++	struct list_lru		bt_lru;
+ } xfs_buftarg_t;
  
--		if (shrinker->scan_objects) {
--			max_pass = shrinker->count_objects(shrinker, shrinkctl);
--			WARN_ON(max_pass < 0);
--		} else
--			max_pass = do_shrinker_shrink(shrinker, shrinkctl, 0);
--		if (max_pass <= 0)
--			continue;
-+		if (!(shrinker->flags & SHRINKER_NUMA_AWARE)) {
-+			shrinkctl->nid = 0;
- 
--		/*
--		 * copy the current shrinker scan count into a local variable
--		 * and zero it so that other concurrent shrinker invocations
--		 * don't also do this scanning work.
--		 */
--		nr = atomic_long_xchg(&shrinker->nr_in_batch, 0);
--
--		total_scan = nr;
--		delta = (4 * nr_pages_scanned) / shrinker->seeks;
--		delta *= max_pass;
--		do_div(delta, lru_pages + 1);
--		total_scan += delta;
--		if (total_scan < 0) {
--			printk(KERN_ERR
--			"shrink_slab: %pF negative objects to delete nr=%ld\n",
--			       shrinker->shrink, total_scan);
--			total_scan = max_pass;
-+			freed += shrink_slab_node(shrinkctl, shrinker,
-+				 nr_pages_scanned, lru_pages,
-+				 &shrinker->nr_deferred);
-+			continue;
- 		}
- 
--		/*
--		 * We need to avoid excessive windup on filesystem shrinkers
--		 * due to large numbers of GFP_NOFS allocations causing the
--		 * shrinkers to return -1 all the time. This results in a large
--		 * nr being built up so when a shrink that can do some work
--		 * comes along it empties the entire cache due to nr >>>
--		 * max_pass.  This is bad for sustaining a working set in
--		 * memory.
--		 *
--		 * Hence only allow the shrinker to scan the entire cache when
--		 * a large delta change is calculated directly.
--		 */
--		if (delta < max_pass / 4)
--			total_scan = min(total_scan, max_pass / 2);
--
--		/*
--		 * Avoid risking looping forever due to too large nr value:
--		 * never try to free more than twice the estimate number of
--		 * freeable entries.
--		 */
--		if (total_scan > max_pass * 2)
--			total_scan = max_pass * 2;
--
--		trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
--					nr_pages_scanned, lru_pages,
--					max_pass, delta, total_scan);
--
--		while (total_scan >= batch_size) {
--			long ret;
--
--			if (shrinker->scan_objects) {
--				shrinkctl->nr_to_scan = batch_size;
--				ret = shrinker->scan_objects(shrinker, shrinkctl);
--
--				if (ret == -1)
--					break;
--				freed += ret;
--			} else {
--				int nr_before;
--				nr_before = do_shrinker_shrink(shrinker, shrinkctl, 0);
--				ret = do_shrinker_shrink(shrinker, shrinkctl,
--								batch_size);
--				if (ret == -1)
--					break;
--				if (ret < nr_before)
--					freed += nr_before - ret;
--			}
--
--			count_vm_events(SLABS_SCANNED, batch_size);
--			total_scan -= batch_size;
-+		for_each_node_mask(shrinkctl->nid, shrinkctl->nodes_to_scan) {
-+			if (!node_online(shrinkctl->nid))
-+				continue;
- 
--			cond_resched();
-+			freed += shrink_slab_node(shrinkctl, shrinker,
-+				 nr_pages_scanned, lru_pages,
-+				 &shrinker->nr_deferred_node[shrinkctl->nid]);
- 		}
--
--		/*
--		 * move the unused scan count back into the shrinker in a
--		 * manner that handles concurrent updates. If we exhausted the
--		 * scan, there is no need to do an update.
--		 */
--		if (total_scan > 0)
--			new_nr = atomic_long_add_return(total_scan,
--					&shrinker->nr_in_batch);
--		else
--			new_nr = atomic_long_read(&shrinker->nr_in_batch);
--
--		trace_mm_shrink_slab_end(shrinker, freed, nr, new_nr);
- 	}
- 	up_read(&shrinker_rwsem);
- out:
+ struct xfs_buf;
 -- 
 1.8.1.4
 
