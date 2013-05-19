@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v7 16/34] xfs: convert buftarg LRU to generic code
-Date: Mon, 20 May 2013 00:07:09 +0400
-Message-ID: <1368994047-5997-17-git-send-email-glommer@openvz.org>
+Subject: [PATCH v7 14/34] list_lru: per-node API
+Date: Mon, 20 May 2013 00:07:07 +0400
+Message-ID: <1368994047-5997-15-git-send-email-glommer@openvz.org>
 References: <1368994047-5997-1-git-send-email-glommer@openvz.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1368994047-5997-1-git-send-email-glommer@openvz.org>
@@ -11,292 +11,138 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Convert the buftarg LRU to use the new generic LRU list and take
-advantage of the functionality it supplies to make the buffer cache
-shrinker node aware.
-
-* v7: Add NUMA aware flag
+This patch adapts the list_lru API to accept an optional node argument,
+to be used by NUMA aware shrinking functions. Code that does not care
+about the NUMA placement of objects can still call into the very same
+functions as before. They will simply iterate over all nodes.
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Mel Gorman <mgorman@suse.de>
 ---
- fs/xfs/xfs_buf.c | 170 ++++++++++++++++++++++++++-----------------------------
- fs/xfs/xfs_buf.h |   5 +-
- 2 files changed, 82 insertions(+), 93 deletions(-)
+ include/linux/list_lru.h | 34 +++++++++++++++++++++++++++++++++-
+ lib/list_lru.c           | 41 +++++++++--------------------------------
+ 2 files changed, 42 insertions(+), 33 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index cee0e42..f7212c1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -85,20 +85,14 @@ xfs_buf_vmap_len(
-  * The LRU takes a new reference to the buffer so that it will only be freed
-  * once the shrinker takes the buffer off the LRU.
-  */
--STATIC void
-+static void
- xfs_buf_lru_add(
- 	struct xfs_buf	*bp)
- {
--	struct xfs_buftarg *btp = bp->b_target;
--
--	spin_lock(&btp->bt_lru_lock);
--	if (list_empty(&bp->b_lru)) {
--		atomic_inc(&bp->b_hold);
--		list_add_tail(&bp->b_lru, &btp->bt_lru);
--		btp->bt_lru_nr++;
-+	if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
- 		bp->b_lru_flags &= ~_XBF_LRU_DISPOSE;
-+		atomic_inc(&bp->b_hold);
- 	}
--	spin_unlock(&btp->bt_lru_lock);
- }
- 
- /*
-@@ -107,24 +101,13 @@ xfs_buf_lru_add(
-  * The unlocked check is safe here because it only occurs when there are not
-  * b_lru_ref counts left on the inode under the pag->pag_buf_lock. it is there
-  * to optimise the shrinker removing the buffer from the LRU and calling
-- * xfs_buf_free(). i.e. it removes an unnecessary round trip on the
-- * bt_lru_lock.
-+ * xfs_buf_free().
-  */
--STATIC void
-+static void
- xfs_buf_lru_del(
- 	struct xfs_buf	*bp)
- {
--	struct xfs_buftarg *btp = bp->b_target;
--
--	if (list_empty(&bp->b_lru))
--		return;
--
--	spin_lock(&btp->bt_lru_lock);
--	if (!list_empty(&bp->b_lru)) {
--		list_del_init(&bp->b_lru);
--		btp->bt_lru_nr--;
--	}
--	spin_unlock(&btp->bt_lru_lock);
-+	list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
- }
- 
- /*
-@@ -151,18 +134,10 @@ xfs_buf_stale(
- 	bp->b_flags &= ~_XBF_DELWRI_Q;
- 
- 	atomic_set(&(bp)->b_lru_ref, 0);
--	if (!list_empty(&bp->b_lru)) {
--		struct xfs_buftarg *btp = bp->b_target;
--
--		spin_lock(&btp->bt_lru_lock);
--		if (!list_empty(&bp->b_lru) &&
--		    !(bp->b_lru_flags & _XBF_LRU_DISPOSE)) {
--			list_del_init(&bp->b_lru);
--			btp->bt_lru_nr--;
--			atomic_dec(&bp->b_hold);
--		}
--		spin_unlock(&btp->bt_lru_lock);
--	}
-+	if (!(bp->b_lru_flags & _XBF_LRU_DISPOSE) &&
-+	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
-+		atomic_dec(&bp->b_hold);
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index 668f1f1..4ff148c 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -42,13 +42,45 @@ struct list_lru {
+ int list_lru_init(struct list_lru *lru);
+ int list_lru_add(struct list_lru *lru, struct list_head *item);
+ int list_lru_del(struct list_lru *lru, struct list_head *item);
+-unsigned long list_lru_count(struct list_lru *lru);
 +
- 	ASSERT(atomic_read(&bp->b_hold) >= 1);
- }
- 
-@@ -1501,83 +1476,97 @@ xfs_buf_iomove(
-  * returned. These buffers will have an elevated hold count, so wait on those
-  * while freeing all the buffers only held by the LRU.
-  */
--void
--xfs_wait_buftarg(
--	struct xfs_buftarg	*btp)
-+static enum lru_status
-+xfs_buftarg_wait_rele(
-+	struct list_head	*item,
-+	spinlock_t		*lru_lock,
-+	void			*arg)
-+
- {
--	struct xfs_buf		*bp;
-+	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
- 
--restart:
--	spin_lock(&btp->bt_lru_lock);
--	while (!list_empty(&btp->bt_lru)) {
--		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
--		if (atomic_read(&bp->b_hold) > 1) {
--			trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
--			list_move_tail(&bp->b_lru, &btp->bt_lru);
--			spin_unlock(&btp->bt_lru_lock);
--			delay(100);
--			goto restart;
--		}
-+	if (atomic_read(&bp->b_hold) > 1) {
-+		/* need to wait */
-+		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
-+		spin_unlock(lru_lock);
-+		delay(100);
-+	} else {
- 		/*
- 		 * clear the LRU reference count so the buffer doesn't get
- 		 * ignored in xfs_buf_rele().
- 		 */
- 		atomic_set(&bp->b_lru_ref, 0);
--		spin_unlock(&btp->bt_lru_lock);
-+		spin_unlock(lru_lock);
- 		xfs_buf_rele(bp);
--		spin_lock(&btp->bt_lru_lock);
- 	}
--	spin_unlock(&btp->bt_lru_lock);
-+
-+	spin_lock(lru_lock);
-+	return LRU_RETRY;
- }
- 
--int
--xfs_buftarg_shrink(
-+void
-+xfs_wait_buftarg(
-+	struct xfs_buftarg	*btp)
++unsigned long list_lru_count_node(struct list_lru *lru, int nid);
++static unsigned long list_lru_count(struct list_lru *lru)
 +{
-+	while (list_lru_count(&btp->bt_lru))
-+		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
-+			      NULL, LONG_MAX);
++	long count = 0;
++	int nid;
++
++	for_each_node_mask(nid, lru->active_nodes)
++		count += list_lru_count_node(lru, nid);
++
++	return count;
++}
+ 
+ typedef enum lru_status
+ (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock, void *cb_arg);
+ 
+ typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
+ 
++
++unsigned long list_lru_walk_node(struct list_lru *lru, int nid,
++				 list_lru_walk_cb isolate, void *cb_arg,
++				 unsigned long *nr_to_walk);
++
++static unsigned long
++list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
++	      void *cb_arg, unsigned long nr_to_walk)
++{
++	long isolated = 0;
++	int nid;
++
++	for_each_node_mask(nid, lru->active_nodes) {
++		isolated += list_lru_walk_node(lru, nid, isolate,
++					       cb_arg, &nr_to_walk);
++		if (nr_to_walk <= 0)
++			break;
++	}
++	return isolated;
 +}
 +
-+static enum lru_status
-+xfs_buftarg_isolate(
-+	struct list_head	*item,
-+	spinlock_t		*lru_lock,
-+	void			*arg)
-+{
-+	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
-+	struct list_head	*dispose = arg;
-+
-+	/*
-+	 * Decrement the b_lru_ref count unless the value is already
-+	 * zero. If the value is already zero, we need to reclaim the
-+	 * buffer, otherwise it gets another trip through the LRU.
-+	 */
-+	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0))
-+		return LRU_ROTATE;
-+
-+	bp->b_lru_flags |= _XBF_LRU_DISPOSE;
-+	list_move(item, dispose);
-+	return LRU_REMOVED;
-+}
-+
-+static long
-+xfs_buftarg_shrink_scan(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
- 	struct xfs_buftarg	*btp = container_of(shrink,
- 					struct xfs_buftarg, bt_shrinker);
--	struct xfs_buf		*bp;
--	int nr_to_scan = sc->nr_to_scan;
- 	LIST_HEAD(dispose);
-+	long			freed;
-+	unsigned long		nr_to_scan = sc->nr_to_scan;
+ unsigned long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
+ 		   void *cb_arg, unsigned long nr_to_walk);
  
--	if (!nr_to_scan)
--		return btp->bt_lru_nr;
+diff --git a/lib/list_lru.c b/lib/list_lru.c
+index 7611df7..dae13d6 100644
+--- a/lib/list_lru.c
++++ b/lib/list_lru.c
+@@ -54,25 +54,21 @@ list_lru_del(
+ EXPORT_SYMBOL_GPL(list_lru_del);
+ 
+ unsigned long
+-list_lru_count(struct list_lru *lru)
++list_lru_count_node(struct list_lru *lru, int nid)
+ {
+ 	long count = 0;
+-	int nid;
 -
--	spin_lock(&btp->bt_lru_lock);
--	while (!list_empty(&btp->bt_lru)) {
--		if (nr_to_scan-- <= 0)
+-	for_each_node_mask(nid, lru->active_nodes) {
+-		struct list_lru_node *nlru = &lru->node[nid];
++	struct list_lru_node *nlru = &lru->node[nid];
+ 
+-		spin_lock(&nlru->lock);
+-		BUG_ON(nlru->nr_items < 0);
+-		count += nlru->nr_items;
+-		spin_unlock(&nlru->lock);
+-	}
++	spin_lock(&nlru->lock);
++	BUG_ON(nlru->nr_items < 0);
++	count += nlru->nr_items;
++	spin_unlock(&nlru->lock);
+ 
+ 	return count;
+ }
+-EXPORT_SYMBOL_GPL(list_lru_count);
++EXPORT_SYMBOL_GPL(list_lru_count_node);
+ 
+-static unsigned long
++unsigned long
+ list_lru_walk_node(
+ 	struct list_lru		*lru,
+ 	int			nid,
+@@ -118,26 +114,7 @@ restart:
+ 	spin_unlock(&nlru->lock);
+ 	return isolated;
+ }
+-
+-unsigned long
+-list_lru_walk(
+-	struct list_lru	*lru,
+-	list_lru_walk_cb isolate,
+-	void		*cb_arg,
+-	unsigned long	nr_to_walk)
+-{
+-	long isolated = 0;
+-	int nid;
+-
+-	for_each_node_mask(nid, lru->active_nodes) {
+-		isolated += list_lru_walk_node(lru, nid, isolate,
+-					       cb_arg, &nr_to_walk);
+-		if (nr_to_walk <= 0)
 -			break;
--
--		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
--
--		/*
--		 * Decrement the b_lru_ref count unless the value is already
--		 * zero. If the value is already zero, we need to reclaim the
--		 * buffer, otherwise it gets another trip through the LRU.
--		 */
--		if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
--			list_move_tail(&bp->b_lru, &btp->bt_lru);
--			continue;
--		}
--
--		/*
--		 * remove the buffer from the LRU now to avoid needing another
--		 * lock round trip inside xfs_buf_rele().
--		 */
--		list_move(&bp->b_lru, &dispose);
--		btp->bt_lru_nr--;
--		bp->b_lru_flags |= _XBF_LRU_DISPOSE;
 -	}
--	spin_unlock(&btp->bt_lru_lock);
-+	freed = list_lru_walk_node(&btp->bt_lru, sc->nid, xfs_buftarg_isolate,
-+				       &dispose, &nr_to_scan);
+-	return isolated;
+-}
+-EXPORT_SYMBOL_GPL(list_lru_walk);
++EXPORT_SYMBOL_GPL(list_lru_walk_node);
  
- 	while (!list_empty(&dispose)) {
-+		struct xfs_buf *bp;
- 		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
- 		list_del_init(&bp->b_lru);
- 		xfs_buf_rele(bp);
- 	}
- 
--	return btp->bt_lru_nr;
-+	return freed;
-+}
-+
-+static long
-+xfs_buftarg_shrink_count(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
-+{
-+	struct xfs_buftarg	*btp = container_of(shrink,
-+					struct xfs_buftarg, bt_shrinker);
-+	return list_lru_count_node(&btp->bt_lru, sc->nid);
- }
- 
- void
-@@ -1659,12 +1648,13 @@ xfs_alloc_buftarg(
- 	if (!btp->bt_bdi)
- 		goto error;
- 
--	INIT_LIST_HEAD(&btp->bt_lru);
--	spin_lock_init(&btp->bt_lru_lock);
-+	list_lru_init(&btp->bt_lru);
- 	if (xfs_setsize_buftarg_early(btp, bdev))
- 		goto error;
--	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
-+	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
-+	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-+	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
- 	register_shrinker(&btp->bt_shrinker);
- 	return btp;
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 433a12e..5ec7d35 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -25,6 +25,7 @@
- #include <linux/fs.h>
- #include <linux/buffer_head.h>
- #include <linux/uio.h>
-+#include <linux/list_lru.h>
- 
- /*
-  *	Base types
-@@ -92,9 +93,7 @@ typedef struct xfs_buftarg {
- 
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
--	struct list_head	bt_lru;
--	spinlock_t		bt_lru_lock;
--	unsigned int		bt_lru_nr;
-+	struct list_lru		bt_lru;
- } xfs_buftarg_t;
- 
- struct xfs_buf;
+ static unsigned long
+ list_lru_dispose_all_node(
 -- 
 1.8.1.4
 
