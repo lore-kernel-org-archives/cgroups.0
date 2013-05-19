@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v7 22/34] hugepage: convert huge zero page shrinker to new shrinker API
-Date: Mon, 20 May 2013 00:07:15 +0400
-Message-ID: <1368994047-5997-23-git-send-email-glommer@openvz.org>
+Subject: [PATCH v7 20/34] i915: bail out earlier when shrinker cannot acquire mutex
+Date: Mon, 20 May 2013 00:07:13 +0400
+Message-ID: <1368994047-5997-21-git-send-email-glommer@openvz.org>
 References: <1368994047-5997-1-git-send-email-glommer@openvz.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1368994047-5997-1-git-send-email-glommer@openvz.org>
@@ -11,62 +11,45 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>
+Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Daniel Vetter <daniel.vetter@ffwll.ch>, Kent Overstreet <koverstreet@google.com>
 
-It consists of:
+The main shrinker driver will keep trying for a while to free objects if
+the returned value from the shrink scan procedure is 0.  That means "no
+objects now", but a retry could very well succeed.
 
-* returning long instead of int
-* separating count from scan
-* returning the number of freed entities in scan
+A negative value has a different meaning. It means it is impossible to
+shrink, and we would better bail out soon. We find this behavior more
+appropriate for the case where the lock cannot be taken. Specially given
+the hammer behavior of the i915: if another thread is already shrinking,
+we are likely not to be able to shrink anything anyway when we finally
+acquire the mutex.
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Reviewed-by: Greg Thelen <gthelen@google.com>
-Acked-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 CC: Dave Chinner <dchinner@redhat.com>
+CC: Mel Gorman <mgorman@suse.de>
+CC: Daniel Vetter <daniel.vetter@ffwll.ch>
+CC: Kent Overstreet <koverstreet@google.com>
 ---
- mm/huge_memory.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ drivers/gpu/drm/i915/i915_gem.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index c5f2fa1..3a0eda8 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -211,24 +211,29 @@ static void put_huge_zero_page(void)
- 	BUG_ON(atomic_dec_and_test(&huge_zero_refcount));
- }
+diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
+index 6b17122..52b3ac1 100644
+--- a/drivers/gpu/drm/i915/i915_gem.c
++++ b/drivers/gpu/drm/i915/i915_gem.c
+@@ -4448,10 +4448,10 @@ i915_gem_inactive_count(struct shrinker *shrinker, struct shrink_control *sc)
  
--static int shrink_huge_zero_page(struct shrinker *shrink,
--		struct shrink_control *sc)
-+static long shrink_huge_zero_page_count(struct shrinker *shrink,
-+					struct shrink_control *sc)
- {
--	if (!sc->nr_to_scan)
--		/* we can free zero page only if last reference remains */
--		return atomic_read(&huge_zero_refcount) == 1 ? HPAGE_PMD_NR : 0;
-+	/* we can free zero page only if last reference remains */
-+	return atomic_read(&huge_zero_refcount) == 1 ? HPAGE_PMD_NR : 0;
-+}
+ 	if (!mutex_trylock(&dev->struct_mutex)) {
+ 		if (!mutex_is_locked_by(&dev->struct_mutex, current))
+-			return 0;
++			return -1;
  
-+static long shrink_huge_zero_page_scan(struct shrinker *shrink,
-+				       struct shrink_control *sc)
-+{
- 	if (atomic_cmpxchg(&huge_zero_refcount, 1, 0) == 1) {
- 		struct page *zero_page = xchg(&huge_zero_page, NULL);
- 		BUG_ON(zero_page == NULL);
- 		__free_page(zero_page);
-+		return HPAGE_PMD_NR;
+ 		if (dev_priv->mm.shrinker_no_lock_stealing)
+-			return 0;
++			return -1;
+ 
+ 		unlock = false;
  	}
- 
- 	return 0;
- }
- 
- static struct shrinker huge_zero_page_shrinker = {
--	.shrink = shrink_huge_zero_page,
-+	.count_objects = shrink_huge_zero_page_count,
-+	.scan_objects = shrink_huge_zero_page_scan,
- 	.seeks = DEFAULT_SEEKS,
- };
- 
 -- 
 1.8.1.4
 
