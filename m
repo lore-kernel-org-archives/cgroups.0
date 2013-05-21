@@ -1,20 +1,20 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/5] cgroup: fix a subtle bug in descendant pre-order walk
-Date: Tue, 21 May 2013 10:50:21 +0900
-Message-ID: <1369101025-28335-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/5] cgroup: update iterators to use cgroup_next_sibling()
+Date: Tue, 21 May 2013 10:50:24 +0900
+Message-ID: <1369101025-28335-5-git-send-email-tj@kernel.org>
 References: <1369101025-28335-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=If5Tn5BebMxTMCxtgehcGueMZRMvKnY+DKfsvwaPnrs=;
-        b=hz4N+JvgF3/7Sv3ukF6mFi/xeq85DkmMjKMO7S8NwT5hW2wy/GRXEYmMrlZzL84iMX
-         d3nFojYyJkk0gzF3AY5LID+YucwHc7urEcnVlK9qxlUl19A7o+8DlZJcP7p8SxafiKke
-         yAwjdC6QmFP5ocxyzQOd4DaIhkXy7oNl5I/GDIcYoVNGhXcNbWi4ojD+gw9hkwLPztZw
-         w1pD78Q3mTauikEA8uBmxSYjgFQluMNzegk7WVbf9k/Lwv9nnGkc0WDcs5fhFNb32etc
-         i6tUCqtGAYuxo3b/E8sSv/+1EmpJJURDeBNGv4jRB/5fsNbMFQMuz2l0LygigAJBEkEK
-         8uag==
+        bh=mz5mEtIFXa8V/nAw0RemTBocsHyWTMs2qxbywswISWI=;
+        b=s8ojLVxXyXGrcBL/BgjUD+Q6CSf7kJeJR1ylQEZwXHE/hoP5mACsvhJegRwDQ/OfqQ
+         FapbSJw93G2cVI4JKv41O+0XVdAvV7yxk3v0U2sN+rqHrcSeDGFbb64WfQW5bbbDPDVo
+         fmgt/V8JFqtIGFfuvJjrOnYlB4fIyZ0VfdIecfxRghvBo8arNJP//Q6ciHu2yP2YtrPx
+         MNtuVQY60Sc8xyUblGKwLc5TWVBIyevndUpHHY4N1irZtC95Jb3kN6CbsK3ODSwbsQR9
+         5lBq0/DesOj6l5KMwcCAfIatpzXBQap3jTTbEMgBRNXAz3CJOcwNZb/KoAcsJQfFsLvE
+         vlCA==
 In-Reply-To: <1369101025-28335-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,76 +22,141 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-When cgroup_next_descendant_pre() initiates a walk, it checks whether
-the subtree root doesn't have any children and if not returns NULL.
-Later code assumes that the subtree isn't empty.  This is broken
-because the subtree may become empty inbetween, which can lead to the
-traversal escaping the subtree by walking to the sibling of the
-subtree root.
+This patch converts cgroup_for_each_child(),
+cgroup_next_descendant_pre/post() and thus
+cgroup_for_each_descendant_pre/post() to use cgroup_next_sibling()
+instead of manually dereferencing ->sibling.next.
 
-There's no reason to have the early exit path.  Remove it along with
-the later assumption that the subtree isn't empty.  This simplifies
-the code a bit and fixes the subtle bug.
+The only reason the iterators couldn't allow dropping RCU read lock
+while iteration is in progress was because they couldn't determine the
+next sibling safely once RCU read lock is dropped.  Using
+cgroup_next_sibling() removes that problem and enables all iterators
+to allow dropping RCU read lock in the middle.  Comments are updated
+accordingly.
 
-While at it, fix the comment of cgroup_for_each_descendant_pre() which
-was incorrectly referring to ->css_offline() instead of
-->css_online().
+This makes the iterators easier to use and will simplify controllers.
+
+Note that @cgroup argument is renamed to @cgrp in
+cgroup_for_each_child() because it conflicts with "struct cgroup" used
+in the new macro body.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- include/linux/cgroup.h | 2 +-
- kernel/cgroup.c        | 9 +++------
- 2 files changed, 4 insertions(+), 7 deletions(-)
+ include/linux/cgroup.h | 18 ++++++++++++++----
+ kernel/cgroup.c        | 25 +++++++++++++++++++------
+ 2 files changed, 33 insertions(+), 10 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 4f6f513..1df5f69 100644
+index ee041a0..d0ad379 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -709,7 +709,7 @@ struct cgroup *cgroup_rightmost_descendant(struct cgroup *pos);
+@@ -688,9 +688,9 @@ struct cgroup *cgroup_next_sibling(struct cgroup *pos);
+ /**
+  * cgroup_for_each_child - iterate through children of a cgroup
+  * @pos: the cgroup * to use as the loop cursor
+- * @cgroup: cgroup whose children to walk
++ * @cgrp: cgroup whose children to walk
   *
+- * Walk @cgroup's children.  Must be called under rcu_read_lock().  A child
++ * Walk @cgrp's children.  Must be called under rcu_read_lock().  A child
+  * cgroup which hasn't finished ->css_online() or already has finished
+  * ->css_offline() may show up during traversal and it's each subsystem's
+  * responsibility to verify that each @pos is alive.
+@@ -698,9 +698,15 @@ struct cgroup *cgroup_next_sibling(struct cgroup *pos);
   * If a subsystem synchronizes against the parent in its ->css_online() and
-  * before starting iterating, and synchronizes against @pos on each
-- * iteration, any descendant cgroup which finished ->css_offline() is
-+ * iteration, any descendant cgroup which finished ->css_online() is
+  * before starting iterating, a cgroup which finished ->css_online() is
   * guaranteed to be visible in the future iterations.
-  *
-  * In other words, the following guarantees that a descendant can't escape
++ *
++ * It is allowed to temporarily drop RCU read lock during iteration.  The
++ * caller is responsible for ensuring that @pos remains accessible until
++ * the start of the next iteration by, for example, bumping the css refcnt.
+  */
+-#define cgroup_for_each_child(pos, cgroup)				\
+-	list_for_each_entry_rcu(pos, &(cgroup)->children, sibling)
++#define cgroup_for_each_child(pos, cgrp)				\
++	for ((pos) = list_first_or_null_rcu(&(cgrp)->children,		\
++					    struct cgroup, sibling);	\
++	     (pos); (pos) = cgroup_next_sibling((pos)))
+ 
+ struct cgroup *cgroup_next_descendant_pre(struct cgroup *pos,
+ 					  struct cgroup *cgroup);
+@@ -759,6 +765,10 @@ struct cgroup *cgroup_rightmost_descendant(struct cgroup *pos);
+  * Alternatively, a subsystem may choose to use a single global lock to
+  * synchronize ->css_online() and ->css_offline() against tree-walking
+  * operations.
++ *
++ * It is allowed to temporarily drop RCU read lock during iteration.  The
++ * caller is responsible for ensuring that @pos remains accessible until
++ * the start of the next iteration by, for example, bumping the css refcnt.
+  */
+ #define cgroup_for_each_descendant_pre(pos, cgroup)			\
+ 	for (pos = cgroup_next_descendant_pre(NULL, (cgroup)); (pos);	\
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 6b2b1d9..f20f80c 100644
+index bc757d7..21b1ee4 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2990,11 +2990,8 @@ struct cgroup *cgroup_next_descendant_pre(struct cgroup *pos,
- 	WARN_ON_ONCE(!rcu_read_lock_held());
- 
- 	/* if first iteration, pretend we just visited @cgroup */
--	if (!pos) {
--		if (list_empty(&cgroup->children))
--			return NULL;
-+	if (!pos)
- 		pos = cgroup;
--	}
- 
- 	/* visit the first child if exists */
- 	next = list_first_or_null_rcu(&pos->children, struct cgroup, sibling);
-@@ -3002,14 +2999,14 @@ struct cgroup *cgroup_next_descendant_pre(struct cgroup *pos,
- 		return next;
+@@ -3030,6 +3030,11 @@ EXPORT_SYMBOL_GPL(cgroup_next_sibling);
+  *
+  * To be used by cgroup_for_each_descendant_pre().  Find the next
+  * descendant to visit for pre-order traversal of @cgroup's descendants.
++ *
++ * While this function requires RCU read locking, it doesn't require the
++ * whole traversal to be contained in a single RCU critical section.  This
++ * function will return the correct next descendant as long as both @pos
++ * and @cgroup are accessible and @pos is a descendant of @cgroup.
+  */
+ struct cgroup *cgroup_next_descendant_pre(struct cgroup *pos,
+ 					  struct cgroup *cgroup)
+@@ -3049,11 +3054,9 @@ struct cgroup *cgroup_next_descendant_pre(struct cgroup *pos,
  
  	/* no child, visit my or the closest ancestor's next sibling */
--	do {
-+	while (pos != cgroup) {
- 		next = list_entry_rcu(pos->sibling.next, struct cgroup,
- 				      sibling);
- 		if (&next->sibling != &pos->parent->children)
+ 	while (pos != cgroup) {
+-		next = list_entry_rcu(pos->sibling.next, struct cgroup,
+-				      sibling);
+-		if (&next->sibling != &pos->parent->children)
++		next = cgroup_next_sibling(pos);
++		if (next)
  			return next;
- 
+-
  		pos = pos->parent;
--	} while (pos != cgroup);
-+	}
+ 	}
  
- 	return NULL;
- }
+@@ -3068,6 +3071,11 @@ EXPORT_SYMBOL_GPL(cgroup_next_descendant_pre);
+  * Return the rightmost descendant of @pos.  If there's no descendant,
+  * @pos is returned.  This can be used during pre-order traversal to skip
+  * subtree of @pos.
++ *
++ * While this function requires RCU read locking, it doesn't require the
++ * whole traversal to be contained in a single RCU critical section.  This
++ * function will return the correct rightmost descendant as long as @pos is
++ * accessible.
+  */
+ struct cgroup *cgroup_rightmost_descendant(struct cgroup *pos)
+ {
+@@ -3107,6 +3115,11 @@ static struct cgroup *cgroup_leftmost_descendant(struct cgroup *pos)
+  *
+  * To be used by cgroup_for_each_descendant_post().  Find the next
+  * descendant to visit for post-order traversal of @cgroup's descendants.
++ *
++ * While this function requires RCU read locking, it doesn't require the
++ * whole traversal to be contained in a single RCU critical section.  This
++ * function will return the correct next descendant as long as both @pos
++ * and @cgroup are accessible and @pos is a descendant of @cgroup.
+  */
+ struct cgroup *cgroup_next_descendant_post(struct cgroup *pos,
+ 					   struct cgroup *cgroup)
+@@ -3122,8 +3135,8 @@ struct cgroup *cgroup_next_descendant_post(struct cgroup *pos,
+ 	}
+ 
+ 	/* if there's an unvisited sibling, visit its leftmost descendant */
+-	next = list_entry_rcu(pos->sibling.next, struct cgroup, sibling);
+-	if (&next->sibling != &pos->parent->children)
++	next = cgroup_next_sibling(pos);
++	if (next)
+ 		return cgroup_leftmost_descendant(next);
+ 
+ 	/* no sibling left, visit parent */
 -- 
 1.8.1.4
