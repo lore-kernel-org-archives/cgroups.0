@@ -1,30 +1,106 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v7 18/34] fs: convert fs shrinkers to new scan/count API
-Date: Tue, 21 May 2013 03:42:34 +0400
-Message-ID: <519AB4EA.60905@parallels.com>
-References: <1368994047-5997-1-git-send-email-glommer@openvz.org> <1368994047-5997-19-git-send-email-glommer@openvz.org> <1369038304.2728.37.camel@menhir> <519A2951.9040908@parallels.com> <519A407B.9030205@parallels.com> <20130520233807.GD24543@dastard>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] cgroup: allow dropping RCU read lock while iterating
+Date: Tue, 21 May 2013 10:50:20 +0900
+Message-ID: <1369101025-28335-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130520233807.GD24543@dastard>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer;
+	bh=8HpNnnlimj2MhMIajjRjjoUcMWmaVmwAZzDOtWVDDIw=;
+	b=knvArc0Tt2vmlaJ5Lst2TotCjxJlzPgLbhrHQpBvJjtOTrvgInoXv5AKs2nCS48T5J
+	+I2rd9RSe2HeNYLH0C6ffaJCrcBBoKhphuY133ZPHhnHit9+DraR/5WInYOBZ8lDKWdQ
+	ZI+eMkAD4C8fWh+VYAZxDASlvYZ/iBbFj2huWhfYedxSwg84NmKELjzklYnVOopHkkGJ
+	+m0Ia/afKSvkt0WX8Jx4FQBoYAMq2iDPQVd/5ppZIeHAYZ0eSIGokQS7v6YdOPc+e2L5
+	9koZAAEnN2Q/RQuf3F8EjSBhLMXCjulgolY1YsXPsOnJUilY75KW89rjcLw58D/8DHtw
+	M5KA==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 05/21/2013 03:38 AM, Dave Chinner wrote:
->> If you for any reason wanted nr_to_scan to mean # of objects *scanned*,
->> > not freed, IOW, if this is not a mistake, please say so and justify.
-> Justification presented. nr_to_scan has *always* meant "# of objects
-> *scanned*", and this patchset does not change that.
-> 
-> Cheers,
-> 
-> Dave.
-Good.
+Currently all cgroup iterators require the whole traversal to be
+contained in a single RCU read critical section, which can be too
+restrictive as there are times when blocking operations are necessary
+during traversal.  This forces controllers to implement specific
+workarounds in those cases - building separate iteration list, punting
+actual operations to work items and so on.
 
-Thanks Dave, it makes sense.
+This patchset updates cgroup iterators so that they allow dropping RCU
+read lock while iteration is in progress so that controllers which
+require sleeping during iteration don't need to implement their own
+mechanisms.
 
-I proactively changed this, but I will revert the changes tomorrow - and
-just to be sure, audit again, but this time looking for the right thing.
+Dropping RCU read lock during iteration is unsafe because
+cgroup->sibling.next can't be trusted once RCU read lock is dropped.
+The sibling list is a RCU list and when a cgroup is removed the next
+pointer is retained to keep RCU traversal working.  If the next
+sibling is removed while RCU read lock is dropped, the removed current
+cgroup's next won't be updated and the next sibling may complete its
+grace period and get freed leaving the next pointer dangling.
+
+Working around the problem is relatiely simple.  Whether
+->sibling.next can be trusted can be trusted can be decided by looking
+at CGRP_REMOVED - as cgroup removals are fully serialized, the flag is
+guaranteed to be visible before the next sibling finishes its grace
+period.  For those cases, each cgroup is assigned a monotonically
+increasing serial number.  Because new cgroups are always appeneded to
+the children list, it's guaranteed that all children list are sorted
+in the ascending order of the serial numbers.  When the next pointer
+can't be trusted, the next sibling can be located by walking the
+parent's children list from the beginning looking for the first cgroup
+with higher serial number.
+
+The above is implemented in cgroup_next_sibling() and all iterators
+are updated to use it to find out the next sibling thus allowing
+droppping RCU read lock while iteration is in progress.  This patchset
+replaces separate iteration list in device_cgroup with direct
+descendant walk and there will be further patches making use of this
+update.
+
+This patchset contains the following five patches.
+
+ 0001-cgroup-fix-a-subtle-bug-in-descendant-pre-order-walk.patch
+ 0002-cgroup-make-cgroup_is_removed-static.patch
+ 0003-cgroup-add-cgroup-serial_nr-and-implement-cgroup_nex.patch
+ 0004-cgroup-update-iterators-to-use-cgroup_next_sibling.patch
+ 0005-device_cgroup-simplify-cgroup-tree-walk-in-propagate.patch
+
+0001 fixes a subtle iteration bug.  Will be applied to for-3.10-fixes.
+
+0002 is a trivial prep patch.
+
+0003 implements cgroup_next_sibling() which can find out the next
+sibling regardless of the state of the current cgroup.
+
+0004 updates all iterators to use cgroup_next_sibling().
+
+0005 replaces iteration list work around in device_cgroup with direct
+iteration.
+
+This patchset is on top of cgroup/for-3.11 23958e729e ("cgroup.h:
+remove some functions that are now gone") and available in the
+following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-interruptible-iter
+
+diffstat follows.
+
+ include/linux/cgroup.h   |   31 +++++++++++---
+ kernel/cgroup.c          |   98 ++++++++++++++++++++++++++++++++++++++++-------
+ security/device_cgroup.c |   56 ++++++++------------------
+ 3 files changed, 128 insertions(+), 57 deletions(-)
+
+Thanks.
+
+--
+tejun
