@@ -1,106 +1,65 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] cgroup: allow dropping RCU read lock while iterating
-Date: Tue, 21 May 2013 10:50:20 +0900
-Message-ID: <1369101025-28335-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Subject: [PATCH 2/5] cgroup: make cgroup_is_removed() static
+Date: Tue, 21 May 2013 10:50:22 +0900
+Message-ID: <1369101025-28335-3-git-send-email-tj@kernel.org>
+References: <1369101025-28335-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=9Gt+jXu9QCFE5jt6M8t6/advadx2yj9HsycUXwRcQKw=;
+        b=nXOnUSVxUOYgzRS84ARXzPBBlfo1Nf4Z75LBvdk3ekE8x5TVnSPrP7ut6SZmeCiuRU
+         u3C57c0E/7mfuDnxQYKcAQhW5ClmSUIZGlnur6n+/9J4gJeShT8cq7ulgqg52Z2D6UJD
+         dNLF//s7ZSHaDCQZ69xwIdjo4bVRxIrrYIs0TmdOvLagH3D794zVl2UPNtUOumk6ts7z
+         BUoJyMa5X6KWCEx78TSJjedYIAcZ3wG2wIOOR8xtR2d2Go/efsazlS4/Apor8li6b67Y
+         kKDelOdZZW6GkUl+1PXFVv5E+XAdBxRWM5AbLdh+RRERRiDPplZp5SMabAYtP2vDXCOk
+         ZmvA==
+In-Reply-To: <1369101025-28335-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer;
-	bh=8HpNnnlimj2MhMIajjRjjoUcMWmaVmwAZzDOtWVDDIw=;
-	b=knvArc0Tt2vmlaJ5Lst2TotCjxJlzPgLbhrHQpBvJjtOTrvgInoXv5AKs2nCS48T5J
-	+I2rd9RSe2HeNYLH0C6ffaJCrcBBoKhphuY133ZPHhnHit9+DraR/5WInYOBZ8lDKWdQ
-	ZI+eMkAD4C8fWh+VYAZxDASlvYZ/iBbFj2huWhfYedxSwg84NmKELjzklYnVOopHkkGJ
-	+m0Ia/afKSvkt0WX8Jx4FQBoYAMq2iDPQVd/5ppZIeHAYZ0eSIGokQS7v6YdOPc+e2L5
-	9koZAAEnN2Q/RQuf3F8EjSBhLMXCjulgolY1YsXPsOnJUilY75KW89rjcLw58D/8DHtw
-	M5KA==
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Currently all cgroup iterators require the whole traversal to be
-contained in a single RCU read critical section, which can be too
-restrictive as there are times when blocking operations are necessary
-during traversal.  This forces controllers to implement specific
-workarounds in those cases - building separate iteration list, punting
-actual operations to work items and so on.
+cgroup_is_removed() no longer has external users and it shouldn't grow
+any - controllers should deal with cgroup_subsys_state on/offline
+state instead of cgroup removal state.  Make it static.
 
-This patchset updates cgroup iterators so that they allow dropping RCU
-read lock while iteration is in progress so that controllers which
-require sleeping during iteration don't need to implement their own
-mechanisms.
+While at it, make it return bool.
 
-Dropping RCU read lock during iteration is unsafe because
-cgroup->sibling.next can't be trusted once RCU read lock is dropped.
-The sibling list is a RCU list and when a cgroup is removed the next
-pointer is retained to keep RCU traversal working.  If the next
-sibling is removed while RCU read lock is dropped, the removed current
-cgroup's next won't be updated and the next sibling may complete its
-grace period and get freed leaving the next pointer dangling.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ include/linux/cgroup.h | 1 -
+ kernel/cgroup.c        | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-Working around the problem is relatiely simple.  Whether
-->sibling.next can be trusted can be trusted can be decided by looking
-at CGRP_REMOVED - as cgroup removals are fully serialized, the flag is
-guaranteed to be visible before the next sibling finishes its grace
-period.  For those cases, each cgroup is assigned a monotonically
-increasing serial number.  Because new cgroups are always appeneded to
-the children list, it's guaranteed that all children list are sorted
-in the ascending order of the serial numbers.  When the next pointer
-can't be trusted, the next sibling can be located by walking the
-parent's children list from the beginning looking for the first cgroup
-with higher serial number.
-
-The above is implemented in cgroup_next_sibling() and all iterators
-are updated to use it to find out the next sibling thus allowing
-droppping RCU read lock while iteration is in progress.  This patchset
-replaces separate iteration list in device_cgroup with direct
-descendant walk and there will be further patches making use of this
-update.
-
-This patchset contains the following five patches.
-
- 0001-cgroup-fix-a-subtle-bug-in-descendant-pre-order-walk.patch
- 0002-cgroup-make-cgroup_is_removed-static.patch
- 0003-cgroup-add-cgroup-serial_nr-and-implement-cgroup_nex.patch
- 0004-cgroup-update-iterators-to-use-cgroup_next_sibling.patch
- 0005-device_cgroup-simplify-cgroup-tree-walk-in-propagate.patch
-
-0001 fixes a subtle iteration bug.  Will be applied to for-3.10-fixes.
-
-0002 is a trivial prep patch.
-
-0003 implements cgroup_next_sibling() which can find out the next
-sibling regardless of the state of the current cgroup.
-
-0004 updates all iterators to use cgroup_next_sibling().
-
-0005 replaces iteration list work around in device_cgroup with direct
-iteration.
-
-This patchset is on top of cgroup/for-3.11 23958e729e ("cgroup.h:
-remove some functions that are now gone") and available in the
-following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-interruptible-iter
-
-diffstat follows.
-
- include/linux/cgroup.h   |   31 +++++++++++---
- kernel/cgroup.c          |   98 ++++++++++++++++++++++++++++++++++++++++-------
- security/device_cgroup.c |   56 ++++++++------------------
- 3 files changed, 128 insertions(+), 57 deletions(-)
-
-Thanks.
-
---
-tejun
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 1df5f69..8d9f3c9 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -538,7 +538,6 @@ static inline const char *cgroup_name(const struct cgroup *cgrp)
+ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ int cgroup_rm_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ 
+-int cgroup_is_removed(const struct cgroup *cgrp);
+ bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
+ 
+ int cgroup_path(const struct cgroup *cgrp, char *buf, int buflen);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index f20f80c..3222f93 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -226,7 +226,7 @@ static int css_refcnt(struct cgroup_subsys_state *css)
+ }
+ 
+ /* convenient tests for these bits */
+-inline int cgroup_is_removed(const struct cgroup *cgrp)
++static inline bool cgroup_is_removed(const struct cgroup *cgrp)
+ {
+ 	return test_bit(CGRP_REMOVED, &cgrp->flags);
+ }
+-- 
+1.8.1.4
