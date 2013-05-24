@@ -1,156 +1,211 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 5/9] memcg: use css_get/put when charging/uncharging kmem
-Date: Fri, 24 May 2013 09:54:20 +0200
-Message-ID: <20130524075420.GA24813@dhcp22.suse.cz>
-References: <5195D5F8.7000609@huawei.com>
- <5195D666.6030408@huawei.com>
- <20130517180822.GC12632@mtj.dyndns.org>
- <519C838B.9060609@huawei.com>
+From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v8 00/34] kmemcg shrinkers
+Date: Fri, 24 May 2013 15:58:54 +0530
+Message-ID: <1369391368-31562-1-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <519C838B.9060609-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Sorry, I have missed this. CCing would help. Anyway putting myself to CC
-now :P
+Initial notes
+=============
 
-On Wed 22-05-13 16:36:27, Li Zefan wrote:
-> On 2013/5/18 2:08, Tejun Heo wrote:
-> > Hey,
-> > 
-> > On Fri, May 17, 2013 at 03:04:06PM +0800, Li Zefan wrote:
-> >> +	/*
-> >> +	 * Releases a reference taken in kmem_cgroup_css_offline in case
-> >> +	 * this last uncharge is racing with the offlining code or it is
-> >> +	 * outliving the memcg existence.
-> >> +	 *
-> >> +	 * The memory barrier imposed by test&clear is paired with the
-> >> +	 * explicit one in kmem_cgroup_css_offline.
-> > 
-> > Paired with the wmb to achieve what?
+Main changes from *v7:
+* Fixed races for memcg
+* Enhanced memcg hierarchy walks during global pressure (we were walking only
+  the global list, not all memcgs)
 
-https://lkml.org/lkml/2013/4/4/190
-"
-! > +	css_get(&memcg->css);
-! I think that you need a write memory barrier here because css_get
-! nor memcg_kmem_mark_dead implies it. memcg_uncharge_kmem uses
-! memcg_kmem_test_and_clear_dead which imply a full memory barrier but it
-! should see the elevated reference count. No?
-! 
-! > +	/*
-! > +	 * We need to call css_get() first, because memcg_uncharge_kmem()
-! > +	 * will call css_put() if it sees the memcg is dead.
-! > +	 */
-! >  	memcg_kmem_mark_dead(memcg);
-"
+Dave still reports some problems in XFS, but he is himself not sure if they are
+due to this series. I am travelling right now, so I won't investigate it so
+deeply. Dave, if you could take a look at this, I would be much obliged.  I did
+want to send a new version with some memcg-side fixes, though. I am now always
+creating the LRUs before I create the caches. This gets rid of a race where an
+object can be created and go to the LRU very quickly, in a point where the LRU
+does not yet exist.
 
-Does it make sense to you Tejun?
+If you want, you can also grab from branch "kmemcg-lru-shrinker" at:
 
-> > 
-> >> +	 */
-> >>  	if (memcg_kmem_test_and_clear_dead(memcg))
-> >> -		mem_cgroup_put(memcg);
-> >> +		css_put(&memcg->css);
-> > 
-> > The other side is wmb, so there gotta be something which wants to read
-> > which were written before wmb here but the only thing after the
-> > barrier is css_put() which doesn't need such thing, so I'm lost on
-> > what the barrier pair is achieving here.
+	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git
 
-> > 
-> > In general, please be *very* explicit about what's going on whenever
-> > something is depending on barrier pairs.  It'll make it easier for
-> > both the author and reviewers to actually understand what's going on
-> > and why it's necessary.
-> > 
-> > ...
-> >> @@ -5858,23 +5856,39 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
-> >>  	return mem_cgroup_sockets_init(memcg, ss);
-> >>  }
-> >>  
-> >> -static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
-> >> +static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
-> >>  {
-> >> -	mem_cgroup_sockets_destroy(memcg);
-> >> +	if (!memcg_kmem_is_active(memcg))
-> >> +		return;
-> >>  
-> >> +	/*
-> >> +	 * kmem charges can outlive the cgroup. In the case of slab
-> >> +	 * pages, for instance, a page contain objects from various
-> >> +	 * processes. As we prevent from taking a reference for every
-> >> +	 * such allocation we have to be careful when doing uncharge
-> >> +	 * (see memcg_uncharge_kmem) and here during offlining.
-> >> +	 *
-> >> +	 * The idea is that that only the _last_ uncharge which sees
-> >> +	 * the dead memcg will drop the last reference. An additional
-> >> +	 * reference is taken here before the group is marked dead
-> >> +	 * which is then paired with css_put during uncharge resp. here.
-> >> +	 *
-> >> +	 * Although this might sound strange as this path is called when
-> >> +	 * the reference has already dropped down to 0 and shouldn't be
-> >> +	 * incremented anymore (css_tryget would fail) we do not have
-> > 
-> > Hmmm?  offline is called on cgroup destruction regardless of css
-> > refcnt.  The above comment seems a bit misleading.
-> > 
-> 
-> The comment is wrong. I'll fix it.
+The performance seems to be fine. My testing now shows a smoother and steady
+state for the objects during the lifetime of the workload, and the NUMA
+performance seems improved.
 
-Ohh, right. "Althouth this might sound strange as this path is called from
-css_offline when the reference might have dropped down to 0 and shouldn't ..."
+=========
+Hi,
 
-Sounds better?
- 
-> >> +	 * other options because of the kmem allocations lifetime.
-> >> +	 */
-> >> +	css_get(&memcg->css);
-> >> +
-> >> +	/* see comment in memcg_uncharge_kmem() */
-> >> +	wmb();
-> >>  	memcg_kmem_mark_dead(memcg);
-> > 
-> > Is the wmb() trying to prevent reordering between css_get() and
-> > memcg_kmem_mark_dead()?  If so, it isn't necessary - the compiler
-> > isn't allowed to reorder two atomic ops (they're all asm volatiles)
-> > and the visibility order is guaranteed by the nature of the two
-> > operations going on here - both perform modify-and-test on one end of
-> > the operations.
+This patchset implements targeted shrinking for memcg when kmem limits are
+present. So far, we've been accounting kernel objects but failing allocations
+when short of memory. This is because our only option would be to call the
+global shrinker, depleting objects from all caches and breaking isolation.
 
-As I have copied my comment from the earlier thread above.
-css_get does atomic_add which doesn't imply any barrier AFAIK and
-memcg_kmem_mark_dead uses a simple set_bit which doesn't imply it
-either. What am I missing?
+The main idea is to associate per-memcg lists with each of the LRUs. The main
+LRU still provides a single entry point and when adding or removing an element
+from the LRU, we use the page information to figure out which memcg it belongs
+to and relay it to the right list.
 
-> > 
-> 
-> Yeah, I think you're right.
-> 
-> > It could be argued that having memory barriers is better for
-> > completeness of mark/test interface but then those barriers should
-> > really moved into memcg_kmem_mark_dead() and its clearing counterpart.
-> > 
-> > While it's all clever and dandy, my recommendation would be just using
-> > a lock for synchronization.  It isn't a hot path.  Why be clever?
-> > 
-> 
-> I don't quite like adding a lock not to protect data but just ensure code
-> orders.
+Base work:
+==========
 
-Agreed.
+Please note that this builds upon the recent work from Dave Chinner that
+sanitizes the LRU shrinking API and make the shrinkers node aware. Node
+awareness is not *strictly* needed for my work, but I still perceive it
+as an advantage. The API unification is a major need, and I build upon it
+heavily. That allows us to manipulate the LRUs without knowledge of the
+underlying objects with ease. This time, I am including that work here as
+a baseline.
 
-> Michal, what's your preference? I want to be sure that everyone is happy
-> so the next version will hopefully be the last version.
+Main changes from *v7:
+* Fixed races for memcg
+* Enhanced memcg hierarchy walks during global pressure (we were walking only
+  the global list, not all memcgs)
 
-I still do not see why the barrier is not needed and the lock seems too
-big hammer.
+Main changes from *v6:
+* Change nr_unused_dentry to long, Dave reported an int not being enough
+* Fixed shrink_list leak, by Dave
+* LRU API now gets a node id, instead of a node mask.
+* per-node deferred work, leading to smoother behavior
+
+Main changes from *v5:
+* Rebased to linux-next, and fix the conflicts with the dcache.
+* Make sure LRU_RETRY only retry once
+* Prevent the bcache shrinker to scan the caches when disabled (by returning
+  0 in the count function)
+* Fix i915 return code when mutex cannot be acquired.
+* Only scan less-than-batch objects in memcg scenarios
+
+Main changes from *v4:
+* Fixed a bug in user-generated memcg pressure
+* Fixed overly-agressive slab shrinker behavior spotted by Mel Gorman
+* Various other fixes and comments by Mel Gorman
+
+Main changes from *v3:
+* Merged suggestions from mailing list.
+* Removed the memcg-walking code from LRU. vmscan now drives all the hierarchy
+  decisions, which makes more sense
+* lazily free the old memcg arrays (needs now to be saved in struct lru). Since
+  we need to call synchronize_rcu, calling it for every LRU can become expensive
+* Moved the dead memcg shrinker to vmpressure. Already independently sent to
+  linux-mm for review.
+* Changed locking convention for LRU_RETRY. It now needs to return locked, which
+  silents warnings about possible lock unbalance (although previous code was
+  correct)
+
+Main changes from *v2:
+* shrink dead memcgs when global pressure kicks in. Uses the new lru API.
+* bugfixes and comments from the mailing list.
+* proper hierarchy-aware walk in shrink_slab.
+
+Main changes from *v1:
+* merged comments from the mailing list
+* reworked lru-memcg API
+* effective proportional shrinking
+* sanitized locking on the memcg side
+* bill user memory first when kmem == umem
+* various bugfixes
+
+Dave Chinner (17):
+  dcache: convert dentry_stat.nr_unused to per-cpu counters
+  dentry: move to per-sb LRU locks
+  dcache: remove dentries from LRU before putting on dispose list
+  mm: new shrinker API
+  shrinker: convert superblock shrinkers to new API
+  list: add a new LRU list type
+  inode: convert inode lru list to generic lru list code.
+  dcache: convert to use new lru list infrastructure
+  list_lru: per-node list infrastructure
+  shrinker: add node awareness
+  fs: convert inode and dentry shrinking to be node aware
+  xfs: convert buftarg LRU to generic code
+  xfs: convert dquot cache lru to list_lru
+  fs: convert fs shrinkers to new scan/count API
+  drivers: convert shrinkers to new count/scan API
+  shrinker: convert remaining shrinkers to count/scan API
+  shrinker: Kill old ->shrink API.
+
+Glauber Costa (17):
+  fs: bump inode and dentry counters to long
+  super: fix calculation of shrinkable objects for small numbers
+  vmscan: per-node deferred work
+  list_lru: per-node API
+  i915: bail out earlier when shrinker cannot acquire mutex
+  hugepage: convert huge zero page shrinker to new shrinker API
+  vmscan: also shrink slab in memcg pressure
+  memcg,list_lru: duplicate LRUs upon kmemcg creation
+  lru: add an element to a memcg list
+  list_lru: per-memcg walks
+  memcg: per-memcg kmem shrinking
+  memcg: scan cache objects hierarchically
+  vmscan: take at least one pass with shrinkers
+  super: targeted memcg reclaim
+  memcg: move initialization to memcg creation
+  vmpressure: in-kernel notifications
+  memcg: reap dead memcgs upon global memory pressure.
+
+ arch/x86/kvm/mmu.c                        |  28 +-
+ drivers/gpu/drm/i915/i915_dma.c           |   4 +-
+ drivers/gpu/drm/i915/i915_gem.c           |  71 +++--
+ drivers/gpu/drm/ttm/ttm_page_alloc.c      |  48 ++--
+ drivers/gpu/drm/ttm/ttm_page_alloc_dma.c  |  55 ++--
+ drivers/md/bcache/btree.c                 |  43 +--
+ drivers/md/bcache/sysfs.c                 |   2 +-
+ drivers/md/dm-bufio.c                     |  65 +++--
+ drivers/staging/android/ashmem.c          |  46 +++-
+ drivers/staging/android/lowmemorykiller.c |  40 +--
+ drivers/staging/zcache/zcache-main.c      |  29 +-
+ fs/dcache.c                               | 259 +++++++++++-------
+ fs/drop_caches.c                          |   1 +
+ fs/ext4/extents_status.c                  |  30 ++-
+ fs/gfs2/glock.c                           |  30 ++-
+ fs/gfs2/main.c                            |   3 +-
+ fs/gfs2/quota.c                           |  14 +-
+ fs/gfs2/quota.h                           |   4 +-
+ fs/inode.c                                | 194 ++++++-------
+ fs/internal.h                             |   7 +-
+ fs/mbcache.c                              |  53 ++--
+ fs/nfs/dir.c                              |  20 +-
+ fs/nfs/internal.h                         |   4 +-
+ fs/nfs/super.c                            |   3 +-
+ fs/nfsd/nfscache.c                        |  31 ++-
+ fs/quota/dquot.c                          |  39 ++-
+ fs/super.c                                | 104 ++++---
+ fs/ubifs/shrinker.c                       |  20 +-
+ fs/ubifs/super.c                          |   3 +-
+ fs/ubifs/ubifs.h                          |   3 +-
+ fs/xfs/xfs_buf.c                          | 170 ++++++------
+ fs/xfs/xfs_buf.h                          |   5 +-
+ fs/xfs/xfs_dquot.c                        |   7 +-
+ fs/xfs/xfs_icache.c                       |   4 +-
+ fs/xfs/xfs_icache.h                       |   2 +-
+ fs/xfs/xfs_qm.c                           | 277 +++++++++----------
+ fs/xfs/xfs_qm.h                           |   4 +-
+ fs/xfs/xfs_super.c                        |  12 +-
+ include/linux/dcache.h                    |  14 +-
+ include/linux/fs.h                        |  25 +-
+ include/linux/list_lru.h                  | 162 +++++++++++
+ include/linux/memcontrol.h                |  45 ++++
+ include/linux/shrinker.h                  |  72 ++++-
+ include/linux/swap.h                      |   2 +
+ include/linux/vmpressure.h                |   6 +
+ include/trace/events/vmscan.h             |   4 +-
+ include/uapi/linux/fs.h                   |   6 +-
+ kernel/sysctl.c                           |   6 +-
+ lib/Makefile                              |   2 +-
+ lib/list_lru.c                            | 406 ++++++++++++++++++++++++++++
+ mm/huge_memory.c                          |  17 +-
+ mm/memcontrol.c                           | 433 ++++++++++++++++++++++++++----
+ mm/memory-failure.c                       |   2 +
+ mm/slab_common.c                          |   1 -
+ mm/vmpressure.c                           |  52 +++-
+ mm/vmscan.c                               | 381 +++++++++++++++++++-------
+ net/sunrpc/auth.c                         |  45 +++-
+ 57 files changed, 2457 insertions(+), 958 deletions(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 lib/list_lru.c
 
 -- 
-Michal Hocko
-SUSE Labs
+1.8.1.4
