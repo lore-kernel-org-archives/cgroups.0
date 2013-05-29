@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v7 06/11] sched: document the cpu cgroup.
-Date: Wed, 29 May 2013 15:03:17 +0400
-Message-ID: <1369825402-31046-7-git-send-email-glommer@openvz.org>
+Subject: [PATCH v7 08/11] sched: Push put_prev_task() into pick_next_task()
+Date: Wed, 29 May 2013 15:03:19 +0400
+Message-ID: <1369825402-31046-9-git-send-email-glommer@openvz.org>
 References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1369825402-31046-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
@@ -13,103 +13,214 @@ Content-Transfer-Encoding: 7bit
 To: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-The CPU cgroup is so far, undocumented. Although data exists in the
-Documentation directory about its functioning, it is usually spread,
-and/or presented in the context of something else. This file
-consolidates all cgroup-related information about it.
+From: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 
+In order to avoid having to do put/set on a whole cgroup hierarchy
+when we context switch, push the put into pick_next_task() so that
+both operations are in the same function. Further changes then allow
+us to possibly optimize away redundant work.
+
+[ glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org: incorporated mailing list feedback ]
+
+Signed-off-by: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 ---
- Documentation/cgroups/cpu.txt | 81 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
- create mode 100644 Documentation/cgroups/cpu.txt
+ kernel/sched/core.c      | 20 +++++++-------------
+ kernel/sched/fair.c      |  6 +++++-
+ kernel/sched/idle_task.c |  6 +++++-
+ kernel/sched/rt.c        | 27 ++++++++++++++++-----------
+ kernel/sched/sched.h     |  8 +++++++-
+ kernel/sched/stop_task.c |  5 ++++-
+ 6 files changed, 44 insertions(+), 28 deletions(-)
 
-diff --git a/Documentation/cgroups/cpu.txt b/Documentation/cgroups/cpu.txt
-new file mode 100644
-index 0000000..072fd58
---- /dev/null
-+++ b/Documentation/cgroups/cpu.txt
-@@ -0,0 +1,81 @@
-+CPU Controller
-+--------------
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 0fa0f87..3b1441f 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2295,18 +2295,11 @@ static inline void schedule_debug(struct task_struct *prev)
+ 	schedstat_inc(this_rq(), sched_count);
+ }
+ 
+-static void put_prev_task(struct rq *rq, struct task_struct *prev)
+-{
+-	if (prev->on_rq || rq->skip_clock_update < 0)
+-		update_rq_clock(rq);
+-	prev->sched_class->put_prev_task(rq, prev);
+-}
+-
+ /*
+  * Pick up the highest-prio task:
+  */
+ static inline struct task_struct *
+-pick_next_task(struct rq *rq)
++pick_next_task(struct rq *rq, struct task_struct *prev)
+ {
+ 	const struct sched_class *class;
+ 	struct task_struct *p;
+@@ -2316,13 +2309,13 @@ pick_next_task(struct rq *rq)
+ 	 * the fair class we can call that function directly:
+ 	 */
+ 	if (likely(rq->nr_running == rq->cfs.h_nr_running)) {
+-		p = fair_sched_class.pick_next_task(rq);
++		p = fair_sched_class.pick_next_task(rq, prev);
+ 		if (likely(p))
+ 			return p;
+ 	}
+ 
+ 	for_each_class(class) {
+-		p = class->pick_next_task(rq);
++		p = class->pick_next_task(rq, prev);
+ 		if (p)
+ 			return p;
+ 	}
+@@ -2417,8 +2410,9 @@ need_resched:
+ 	if (unlikely(!rq->nr_running))
+ 		idle_balance(cpu, rq);
+ 
+-	put_prev_task(rq, prev);
+-	next = pick_next_task(rq);
++	if (prev->on_rq || rq->skip_clock_update < 0)
++		update_rq_clock(rq);
++	next = pick_next_task(rq, prev);
+ 	clear_tsk_need_resched(prev);
+ 	rq->skip_clock_update = 0;
+ 
+@@ -4395,7 +4389,7 @@ static void migrate_tasks(unsigned int dead_cpu)
+ 		if (rq->nr_running == 1)
+ 			break;
+ 
+-		next = pick_next_task(rq);
++		next = pick_next_task(rq, NULL);
+ 		BUG_ON(!next);
+ 		next->sched_class->put_prev_task(rq, next);
+ 
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index a7f5c39..414cf1c 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -3628,7 +3628,8 @@ preempt:
+ 		set_last_buddy(se);
+ }
+ 
+-static struct task_struct *pick_next_task_fair(struct rq *rq)
++static struct task_struct *
++pick_next_task_fair(struct rq *rq, struct task_struct *prev)
+ {
+ 	struct task_struct *p;
+ 	struct cfs_rq *cfs_rq = &rq->cfs;
+@@ -3637,6 +3638,9 @@ static struct task_struct *pick_next_task_fair(struct rq *rq)
+ 	if (!cfs_rq->nr_running)
+ 		return NULL;
+ 
++	if (prev)
++		prev->sched_class->put_prev_task(rq, prev);
 +
-+The CPU controller is responsible for grouping tasks together that will be
-+viewed by the scheduler as a single unit. The CFS scheduler will first divide
-+CPU time equally between all entities in the same level, and then proceed by
-+doing the same in the next level. Basic use cases for that are described in the
-+main cgroup documentation file, cgroups.txt.
+ 	do {
+ 		se = pick_next_entity(cfs_rq);
+ 		set_next_entity(cfs_rq, se);
+diff --git a/kernel/sched/idle_task.c b/kernel/sched/idle_task.c
+index d8da010..4f0a332 100644
+--- a/kernel/sched/idle_task.c
++++ b/kernel/sched/idle_task.c
+@@ -33,8 +33,12 @@ static void check_preempt_curr_idle(struct rq *rq, struct task_struct *p, int fl
+ 	resched_task(rq->idle);
+ }
+ 
+-static struct task_struct *pick_next_task_idle(struct rq *rq)
++static struct task_struct *
++pick_next_task_idle(struct rq *rq, struct task_struct *prev)
+ {
++	if (prev)
++		prev->sched_class->put_prev_task(rq, prev);
 +
-+Users of this functionality should be aware that deep hierarchies will of
-+course impose scheduler overhead, since the scheduler will have to take extra
-+steps and look up additional data structures to make its final decision.
+ 	schedstat_inc(rq, sched_goidle);
+ #ifdef CONFIG_SMP
+ 	/* Trigger the post schedule to do an idle_enter for CFS */
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 4a21045..6c41fa1 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -1330,15 +1330,7 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
+ {
+ 	struct sched_rt_entity *rt_se;
+ 	struct task_struct *p;
+-	struct rt_rq *rt_rq;
+-
+-	rt_rq = &rq->rt;
+-
+-	if (!rt_rq->rt_nr_running)
+-		return NULL;
+-
+-	if (rt_rq_throttled(rt_rq))
+-		return NULL;
++	struct rt_rq *rt_rq  = &rq->rt;
+ 
+ 	do {
+ 		rt_se = pick_next_rt_entity(rq, rt_rq);
+@@ -1352,9 +1344,22 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
+ 	return p;
+ }
+ 
+-static struct task_struct *pick_next_task_rt(struct rq *rq)
++static struct task_struct *
++pick_next_task_rt(struct rq *rq, struct task_struct *prev)
+ {
+-	struct task_struct *p = _pick_next_task_rt(rq);
++	struct task_struct *p;
++	struct rt_rq *rt_rq = &rq->rt;
 +
-+Through the CPU controller, the scheduler is also able to cap the CPU
-+utilization of a particular group. This is particularly useful in environments
-+in which CPU is paid for by the hour, and one values predictability over
-+performance.
++	if (!rt_rq->rt_nr_running)
++		return NULL;
 +
-+CPU Accounting
-+--------------
++	if (rt_rq_throttled(rt_rq))
++		return NULL;
 +
-+The CPU cgroup will also provide additional files under the prefix "cpuacct".
-+Those files provide accounting statistics and were previously provided by the
-+separate cpuacct controller. Although the cpuacct controller will still be kept
-+around for compatibility reasons, its usage is discouraged. If both the CPU and
-+cpuacct controllers are present in the system, distributors are encouraged to
-+always mount them together.
++	if (prev)
++		prev->sched_class->put_prev_task(rq, prev);
 +
-+Files
-+-----
-+
-+The CPU controller exposes the following files to the user:
-+
-+ - cpu.shares: The weight of each group living in the same hierarchy, that
-+ translates into the amount of CPU it is expected to get. Upon cgroup creation,
-+ each group gets assigned a default of 1024. The percentage of CPU assigned to
-+ the cgroup is the value of shares divided by the sum of all shares in all
-+ cgroups in the same level.
-+
-+ - cpu.cfs_period_us: The duration in microseconds of each scheduler period, for
-+ bandwidth decisions. This defaults to 100000us or 100ms. Larger periods will
-+ improve throughput at the expense of latency, since the scheduler will be able
-+ to sustain a cpu-bound workload for longer. The opposite of true for smaller
-+ periods. Note that this only affects non-RT tasks that are scheduled by the
-+ CFS scheduler.
-+
-+- cpu.cfs_quota_us: The maximum time in microseconds during each cfs_period_us
-+  in for the current group will be allowed to run. For instance, if it is set to
-+  half of cpu_period_us, the cgroup will only be able to peak run for 50 % of
-+  the time. One should note that this represents aggregate time over all CPUs
-+  in the system. Therefore, in order to allow full usage of two CPUs, for
-+  instance, one should set this value to twice the value of cfs_period_us.
-+
-+- cpu.stat: statistics about the bandwidth controls. No data will be presented
-+  if cpu.cfs_quota_us is not set. The file presents three
-+  numbers:
-+	nr_periods: how many full periods have been elapsed.
-+	nr_throttled: number of times we exausted the full allowed bandwidth
-+	throttled_time: total time the tasks were not run due to being overquota
-+
-+ - cpu.rt_runtime_us and cpu.rt_period_us: Those files are the RT-tasks
-+   analogous to the CFS files cfs_quota_us and cfs_period_us. One important
-+   difference, though, is that while the cfs quotas are upper bounds that
-+   won't necessarily be met, the rt runtimes form a stricter guarantee.
-+   Therefore, no overlap is allowed. Implications of that are that given a
-+   hierarchy with multiple children, the sum of all rt_runtime_us may not exceed
-+   the runtime of the parent. Also, a rt_runtime_us of 0, means that no rt tasks
-+   can ever be run in this cgroup. For more information about rt tasks runtime
-+   assignments, see scheduler/sched-rt-group.txt
-+
-+ - cpuacct.usage: The aggregate CPU time, in nanoseconds, consumed by all tasks
-+   in this group.
-+
-+ - cpuacct.usage_percpu: The CPU time, in nanoseconds, consumed by all tasks in
-+   this group, separated by CPU. The format is an space-separated array of time
-+   values, one for each present CPU.
-+
-+ - cpuacct.stat: aggregate user and system time consumed by tasks in this group.
-+   The format is
-+	user: x
-+	system: y
++	p = _pick_next_task_rt(rq);
+ 
+ 	/* The running task is never eligible for pushing */
+ 	if (p)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 0e5e795..a39eb9b 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -987,7 +987,13 @@ struct sched_class {
+ 
+ 	void (*check_preempt_curr) (struct rq *rq, struct task_struct *p, int flags);
+ 
+-	struct task_struct * (*pick_next_task) (struct rq *rq);
++	/*
++	 * It is the responsibility of the pick_next_task() method that will
++	 * return the next task to call put_prev_task() on the @prev task or
++	 * something equivalent.
++	 */
++	struct task_struct * (*pick_next_task) (struct rq *rq,
++						struct task_struct *prev);
+ 	void (*put_prev_task) (struct rq *rq, struct task_struct *p);
+ 
+ #ifdef CONFIG_SMP
+diff --git a/kernel/sched/stop_task.c b/kernel/sched/stop_task.c
+index 4142d7e..6adf6a9 100644
+--- a/kernel/sched/stop_task.c
++++ b/kernel/sched/stop_task.c
+@@ -23,12 +23,15 @@ check_preempt_curr_stop(struct rq *rq, struct task_struct *p, int flags)
+ 	/* we're never preempted */
+ }
+ 
+-static struct task_struct *pick_next_task_stop(struct rq *rq)
++static struct task_struct *
++pick_next_task_stop(struct rq *rq, struct task_struct *prev)
+ {
+ 	struct task_struct *stop = rq->stop;
+ 
+ 	if (stop && stop->on_rq) {
+ 		stop->se.exec_start = rq_clock_task(rq);
++		if (prev)
++			prev->sched_class->put_prev_task(rq, prev);
+ 		return stop;
+ 	}
+ 
 -- 
 1.8.1.4
