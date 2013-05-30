@@ -1,65 +1,247 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
- zone shrinking code
-Date: Wed, 29 May 2013 16:01:54 -0400
-Message-ID: <20130529200154.GF15721@cmpxchg.org>
-References: <20130517160247.GA10023@cmpxchg.org>
- <1369674791-13861-1-git-send-email-mhocko@suse.cz>
- <20130529130538.GD10224@dhcp22.suse.cz>
- <20130529155756.GH10224@dhcp22.suse.cz>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch] mm, memcg: add oom killer delay
+Date: Wed, 29 May 2013 18:18:10 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130529155756.GH10224@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:message-id:user-agent
+         :mime-version:content-type;
+        bh=29jMZLZehWgdcBfYvqucxEi7i15hGd2XB/mewll0Z+g=;
+        b=nRpdoigu5tdzF3Bor+7ldULtPGUKo6dCGdiN71XVkg9dCUHFo+7avBDRNUsckDsba3
+         qDoTAzKMgAVV6wau+ujQ8ICChM/OgzWEOspy+Ej54WfjBQ8aq3BXJpMKXypUGg6prpCX
+         DXzCABHavmBTdnrMQpXc7i0Iu3G3pBwQNy5xru8uM3hLc4SciT1vkotPcAqrmN+g3ZD+
+         t87LvtKXHwjaDUSQcyP9qj4Z6QLn/n8LmVOYcs2oUW0U9JKBXc88uckAF/xavv0FHQpk
+         X2JNaHNxbgW2YWtInhPs8xDVOgaUgTH+zNWMo4x/nMZvTkFm9eTP/ej9PAOClRTEZQIo
+         ix/w==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, May 29, 2013 at 05:57:56PM +0200, Michal Hocko wrote:
-> On Wed 29-05-13 15:05:38, Michal Hocko wrote:
-> > On Mon 27-05-13 19:13:08, Michal Hocko wrote:
-> > [...]
-> > > Nevertheless I have encountered an issue while testing the huge number
-> > > of groups scenario. And the issue is not limitted to only to this
-> > > scenario unfortunately. As memcg iterators use per node-zone-priority
-> > > cache to prevent from over reclaim it might quite easily happen that
-> > > the walk will not visit all groups and will terminate the loop either
-> > > prematurely or skip some groups. An example could be the direct reclaim
-> > > racing with kswapd. This might cause that the loop misses over limit
-> > > groups so no pages are scanned and so we will fall back to all groups
-> > > reclaim.
-> > 
-> > And after some more testing and head scratching it turned out that
-> > fallbacks to pass#2 I was seeing are caused by something else. It is
-> > not race between iterators but rather reclaiming from zone DMA which
-> > has troubles to scan anything despite there are pages on LRU and so we
-> > fall back. I have to look into that more but what-ever the issue is it
-> > shouldn't be related to the patch series.
-> 
-> Think I know what is going on. get_scan_count sees relatively small
-> amount of pages in the lists (around 2k). This means that get_scan_count
-> will tell us to scan nothing for DEF_PRIORITY (as the DMA32 is usually
-> ~16M) then the DEF_PRIORITY is basically no-op and we have to wait and
-> fall down to a priority which actually let us scan something.
-> 
-> Hmm, maybe ignoring soft reclaim for DMA zone would help to reduce
-> one pointless loop over groups.
+Completely disabling the oom killer for a memcg is problematic if
+userspace is unable to address the condition itself, usually because it
+is unresponsive.  This scenario creates a memcg deadlock: tasks are
+sitting in TASK_KILLABLE waiting for the limit to be increased, a task to
+exit or move, or the oom killer reenabled and userspace is unable to do
+so.
 
-If you have a small group in excess of its soft limit and bigger
-groups that are not, you may reclaim something in the regular reclaim
-cycle before reclaiming anything in the soft limit cycle with the way
-the code is structured.
+An additional possible use case is to defer oom killing within a memcg
+for a set period of time, probably to prevent unnecessary kills due to
+temporary memory spikes, before allowing the kernel to handle the
+condition.
 
-The soft limit cycle probably needs to sit outside of the priority
-loop, not inside the loop, so that the soft limit reclaim cycle
-descends priority levels until it makes progress BEFORE it exits to
-the regular reclaim cycle.
+This patch adds an oom killer delay so that a memcg may be configured to
+wait at least a pre-defined number of milliseconds before calling the oom
+killer.  If the oom condition persists for this number of milliseconds,
+the oom killer will be called the next time the memory controller
+attempts to charge a page (and memory.oom_control is set to 0).  This
+allows userspace to have a short period of time to respond to the
+condition before deferring to the kernel to kill a task.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Admins may set the oom killer delay using the new interface:
+
+	# echo 60000 > memory.oom_delay_millisecs
+
+This will defer oom killing to the kernel only after 60 seconds has
+elapsed by putting the task to sleep for 60 seconds.
+
+This expiration is cleared in four cases:
+
+ - anytime the oom killer is called so another memory.oom_delay_millisecs
+   delay is incurred the next time,
+
+ - anytime memory is uncharged from a memcg so it is no longer oom so
+   that there is now more available memory,
+
+ - anytime memory.limit_in_bytes is raised so that there is now more
+   available memory, and
+
+ - anytime memory.oom_delay_millisecs is written from userspace to change
+   the next delay.
+
+Unless one of these events occurs after an oom delay has expired, all
+future oom kills in that memcg will continue without incurring any delay.
+
+When a memory.oom_delay_millisecs is set for a cgroup, it is propagated
+to all children memcg as well and is inherited when a new memcg is
+created.
+
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ Documentation/cgroups/memory.txt | 27 ++++++++++++++++++
+ mm/memcontrol.c                  | 59 ++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 81 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -71,6 +71,7 @@ Brief summary of control files.
+ 				 (See sysctl's vm.swappiness)
+  memory.move_charge_at_immigrate # set/show controls of moving charges
+  memory.oom_control		 # set/show oom controls.
++ memory.oom_delay_millisecs	 # set/show millisecs to wait before oom kill
+  memory.numa_stat		 # show the number of memory usage per numa node
+ 
+  memory.kmem.limit_in_bytes      # set/show hard limit for kernel memory
+@@ -766,6 +767,32 @@ At reading, current status of OOM is shown.
+ 	under_oom	 0 or 1 (if 1, the memory cgroup is under OOM, tasks may
+ 				 be stopped.)
+ 
++It is possible to configure an oom killer delay to prevent the possibility that
++the memcg will deadlock looking for memory if userspace has disabled the oom
++killer with oom_control but cannot act to fix the condition itself (usually
++because it is unresponsive).
++
++To set an oom killer delay for a memcg, write the number of milliseconds to wait
++before killing a task to memory.oom_delay_millisecs:
++
++	# echo 60000 > memory.oom_delay_millisecs	# 60 seconds before kill
++
++When this memcg is oom, it is guaranteed that this delay will elapse before the
++kernel kills a process.  If memory is uncharged from this memcg or one of its
++limits is expanded during this period, the oom kill is inhibited.
++
++Disabling the oom killer for a memcg with memory.oom_control takes precedence
++over memory.oom_delay_millisecs, so it must be set to 0 (default) to allow the
++oom kill after the delay has expired.
++
++This value is inherited from the memcg's parent on creation.  Setting a delay
++for a memcg sets the same delay for all children.
++
++There is no delay if memory.oom_delay_millisecs is set to 0 (default).  This
++tunable's upper bound is MAX_SCHEDULE_TIMEOUT (about 24 days on 32-bit and a
++lifetime on 64-bit).
++
++
+ 11. Memory Pressure
+ 
+ The pressure level notifications can be used to monitor the memory
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -308,6 +308,10 @@ struct mem_cgroup {
+ 	int	swappiness;
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
++	/* number of ticks to stall before calling oom killer */
++	int		oom_delay;
++	/* expiration of current delay in jiffies, if oom in progress */
++	atomic64_t	oom_delay_expire;
+ 
+ 	/* set when res.limit == memsw.limit */
+ 	bool		memsw_is_minimum;
+@@ -2185,8 +2189,11 @@ static void memcg_wakeup_oom(struct mem_cgroup *memcg)
+ 
+ static void memcg_oom_recover(struct mem_cgroup *memcg)
+ {
+-	if (memcg && atomic_read(&memcg->under_oom))
+-		memcg_wakeup_oom(memcg);
++	if (memcg) {
++		atomic64_set(&memcg->oom_delay_expire, 0);
++		if (atomic_read(&memcg->under_oom))
++			memcg_wakeup_oom(memcg);
++	}
+ }
+ 
+ /*
+@@ -2197,6 +2204,7 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
+ {
+ 	struct oom_wait_info owait;
+ 	bool locked, need_to_kill;
++	long timeout = MAX_SCHEDULE_TIMEOUT;
+ 
+ 	owait.memcg = memcg;
+ 	owait.wait.flags = 0;
+@@ -2217,15 +2225,25 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
+ 	prepare_to_wait(&memcg_oom_waitq, &owait.wait, TASK_KILLABLE);
+ 	if (!locked || memcg->oom_kill_disable)
+ 		need_to_kill = false;
+-	if (locked)
++	if (locked) {
++		if (memcg->oom_delay) {
++			unsigned long expire;
++
++			expire = atomic64_cmpxchg(&memcg->oom_delay_expire, 0,
++						  jiffies + memcg->oom_delay);
++			need_to_kill = expire && time_after_eq(jiffies, expire);
++			timeout = memcg->oom_delay;
++		}
+ 		mem_cgroup_oom_notify(memcg);
++	}
+ 	spin_unlock(&memcg_oom_lock);
+ 
+ 	if (need_to_kill) {
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
+ 		mem_cgroup_out_of_memory(memcg, mask, order);
++		atomic64_set(&memcg->oom_delay_expire, 0);
+ 	} else {
+-		schedule();
++		schedule_timeout(timeout);
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
+ 	}
+ 	spin_lock(&memcg_oom_lock);
+@@ -2239,7 +2257,8 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
+ 	if (test_thread_flag(TIF_MEMDIE) || fatal_signal_pending(current))
+ 		return false;
+ 	/* Give chance to dying process */
+-	schedule_timeout_uninterruptible(1);
++	if (timeout == MAX_SCHEDULE_TIMEOUT)
++		schedule_timeout_uninterruptible(1);
+ 	return true;
+ }
+ 
+@@ -5855,6 +5874,30 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+ 	return 0;
+ }
+ 
++static u64 mem_cgroup_oom_delay_millisecs_read(struct cgroup *cgrp,
++					       struct cftype *cft)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++
++	return jiffies_to_msecs(memcg->oom_delay);
++}
++
++static int mem_cgroup_oom_delay_millisecs_write(struct cgroup *cgrp,
++						struct cftype *cft, u64 val)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++	struct mem_cgroup *iter;
++
++	if (val > MAX_SCHEDULE_TIMEOUT)
++		return -EINVAL;
++
++	for_each_mem_cgroup_tree(iter, memcg) {
++		iter->oom_delay = msecs_to_jiffies(val);
++		memcg_oom_recover(iter);
++	}
++	return 0;
++}
++
+ #ifdef CONFIG_MEMCG_KMEM
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ {
+@@ -5962,6 +6005,11 @@ static struct cftype mem_cgroup_files[] = {
+ 		.private = MEMFILE_PRIVATE(_OOM_TYPE, OOM_CONTROL),
+ 	},
+ 	{
++		.name = "oom_delay_millisecs",
++		.read_u64 = mem_cgroup_oom_delay_millisecs_read,
++		.write_u64 = mem_cgroup_oom_delay_millisecs_write,
++	},
++	{
+ 		.name = "pressure_level",
+ 		.register_event = vmpressure_register_event,
+ 		.unregister_event = vmpressure_unregister_event,
+@@ -6271,6 +6319,7 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 
+ 	memcg->use_hierarchy = parent->use_hierarchy;
+ 	memcg->oom_kill_disable = parent->oom_kill_disable;
++	memcg->oom_delay = parent->oom_delay;
+ 	memcg->swappiness = mem_cgroup_swappiness(parent);
+ 
+ 	if (parent->use_hierarchy) {
