@@ -1,89 +1,205 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
- zone shrinking code
-Date: Thu, 30 May 2013 10:45:56 +0200
-Message-ID: <20130530084556.GC3582@dhcp22.suse.cz>
-References: <20130517160247.GA10023@cmpxchg.org>
- <1369674791-13861-1-git-send-email-mhocko@suse.cz>
- <20130529130538.GD10224@dhcp22.suse.cz>
- <20130529155756.GH10224@dhcp22.suse.cz>
- <20130529200154.GF15721@cmpxchg.org>
+From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v9 00/35] kmemcg shrinkers
+Date: Thu, 30 May 2013 14:35:46 +0400
+Message-ID: <1369910181-20026-1-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130529200154.GF15721@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed 29-05-13 16:01:54, Johannes Weiner wrote:
-> On Wed, May 29, 2013 at 05:57:56PM +0200, Michal Hocko wrote:
-> > On Wed 29-05-13 15:05:38, Michal Hocko wrote:
-> > > On Mon 27-05-13 19:13:08, Michal Hocko wrote:
-> > > [...]
-> > > > Nevertheless I have encountered an issue while testing the huge number
-> > > > of groups scenario. And the issue is not limitted to only to this
-> > > > scenario unfortunately. As memcg iterators use per node-zone-priority
-> > > > cache to prevent from over reclaim it might quite easily happen that
-> > > > the walk will not visit all groups and will terminate the loop either
-> > > > prematurely or skip some groups. An example could be the direct reclaim
-> > > > racing with kswapd. This might cause that the loop misses over limit
-> > > > groups so no pages are scanned and so we will fall back to all groups
-> > > > reclaim.
-> > > 
-> > > And after some more testing and head scratching it turned out that
-> > > fallbacks to pass#2 I was seeing are caused by something else. It is
-> > > not race between iterators but rather reclaiming from zone DMA which
-> > > has troubles to scan anything despite there are pages on LRU and so we
-> > > fall back. I have to look into that more but what-ever the issue is it
-> > > shouldn't be related to the patch series.
-> > 
-> > Think I know what is going on. get_scan_count sees relatively small
-> > amount of pages in the lists (around 2k). This means that get_scan_count
-> > will tell us to scan nothing for DEF_PRIORITY (as the DMA32 is usually
-> > ~16M) then the DEF_PRIORITY is basically no-op and we have to wait and
-> > fall down to a priority which actually let us scan something.
-> > 
-> > Hmm, maybe ignoring soft reclaim for DMA zone would help to reduce
-> > one pointless loop over groups.
-> 
-> If you have a small group in excess of its soft limit and bigger
-> groups that are not, you may reclaim something in the regular reclaim
-> cycle before reclaiming anything in the soft limit cycle with the way
-> the code is structured.
+With Dave having fixed the xfs umount problem, we ran out of known bugs.
+We would very much like to get this into an upstream tree so that the unknown
+start appearing =)
 
-Yes the way how get_scan_count works might really cause this. Although
-tageted reclaim is protected from this the global reclaim can really
-suffer from this. I am not sure this is necessarily a problem though. If
-we are under the global reclaim then a small group which doesn't have at
-least 1<<DEF_PRIORITY pages probably doesn't matter that much. The soft
-limit is not a guarantee anyway so we can sacrifice some pages from all
-groups in such a case.
-I also think that the force_scan logic should be enhanced a bit.
-Especially for cases like DMA zone. The zone is clearly under watermaks
-but we have to wait few priority cycles to reclaim something. But this
-is a different issue in depended on the soft reclaim rework.
- 
-> The soft limit cycle probably needs to sit outside of the priority
-> loop, not inside the loop, so that the soft limit reclaim cycle
-> descends priority levels until it makes progress BEFORE it exits to
-> the regular reclaim cycle.
+If you want, you can also grab from branch "kmemcg-lru-shrinker" at:
 
-I do not like this to be honest. shrink_zone is an ideal place as it is
-shared among all reclaimers and we really want to obey priority in the
-soft reclaim as well. The corner case mentioned above is probably
-fixable on the get_scan_count layer and even if not then I wouldn't call
-it a disaster.
+	git://git.kernel.org/pub/scm/linux/kernel/git/glommer/memcg.git
+
+The performance seems to be fine. Performance seems to be fine in my
+benchmarks, but independent runs are welcome. I am basically not seeing
+significant difference in 1-node postmark and fsmark. For multi-node,
+the behavior is obviously different since it is the very goal of the
+first half of this patchset to improve multi-node performance.
+
+Hi,
+
+This patchset implements targeted shrinking for memcg when kmem limits are
+present. So far, we've been accounting kernel objects but failing allocations
+when short of memory. This is because our only option would be to call the
+global shrinker, depleting objects from all caches and breaking isolation.
+
+The main idea is to associate per-memcg lists with each of the LRUs. The main
+LRU still provides a single entry point and when adding or removing an element
+from the LRU, we use the page information to figure out which memcg it belongs
+to and relay it to the right list.
+
+Base work:
+==========
+
+Please note that this builds upon the recent work from Dave Chinner that
+sanitizes the LRU shrinking API and make the shrinkers node aware. Node
+awareness is not *strictly* needed for my work, but I still perceive it
+as an advantage. The API unification is a major need, and I build upon it
+heavily. That allows us to manipulate the LRUs without knowledge of the
+underlying objects with ease. This time, I am including that work here as
+a baseline.
+
+Main changes from *v8
+* fixed xfs umount bug
+* rebase to current linux-next
+
+Main changes from *v7:
+* Fixed races for memcg
+* Enhanced memcg hierarchy walks during global pressure (we were walking only
+  the global list, not all memcgs)
+
+Main changes from *v6:
+* Change nr_unused_dentry to long, Dave reported an int not being enough
+* Fixed shrink_list leak, by Dave
+* LRU API now gets a node id, instead of a node mask.
+* per-node deferred work, leading to smoother behavior
+
+Main changes from *v5:
+* Rebased to linux-next, and fix the conflicts with the dcache.
+* Make sure LRU_RETRY only retry once
+* Prevent the bcache shrinker to scan the caches when disabled (by returning
+  0 in the count function)
+* Fix i915 return code when mutex cannot be acquired.
+* Only scan less-than-batch objects in memcg scenarios
+
+Main changes from *v4:
+* Fixed a bug in user-generated memcg pressure
+* Fixed overly-agressive slab shrinker behavior spotted by Mel Gorman
+* Various other fixes and comments by Mel Gorman
+
+Main changes from *v3:
+* Merged suggestions from mailing list.
+* Removed the memcg-walking code from LRU. vmscan now drives all the hierarchy
+  decisions, which makes more sense
+* lazily free the old memcg arrays (needs now to be saved in struct lru). Since
+  we need to call synchronize_rcu, calling it for every LRU can become expensive
+* Moved the dead memcg shrinker to vmpressure. Already independently sent to
+  linux-mm for review.
+* Changed locking convention for LRU_RETRY. It now needs to return locked, which
+  silents warnings about possible lock unbalance (although previous code was
+  correct)
+
+Main changes from *v2:
+* shrink dead memcgs when global pressure kicks in. Uses the new lru API.
+* bugfixes and comments from the mailing list.
+* proper hierarchy-aware walk in shrink_slab.
+
+Main changes from *v1:
+* merged comments from the mailing list
+* reworked lru-memcg API
+* effective proportional shrinking
+* sanitized locking on the memcg side
+* bill user memory first when kmem == umem
+* various bugfixes
+
+Dave Chinner (18):
+  dcache: convert dentry_stat.nr_unused to per-cpu counters
+  dentry: move to per-sb LRU locks
+  dcache: remove dentries from LRU before putting on dispose list
+  mm: new shrinker API
+  shrinker: convert superblock shrinkers to new API
+  list: add a new LRU list type
+  inode: convert inode lru list to generic lru list code.
+  dcache: convert to use new lru list infrastructure
+  list_lru: per-node list infrastructure
+  shrinker: add node awareness
+  fs: convert inode and dentry shrinking to be node aware
+  xfs: convert buftarg LRU to generic code
+  xfs: rework buffer dispose list tracking
+  xfs: convert dquot cache lru to list_lru
+  fs: convert fs shrinkers to new scan/count API
+  drivers: convert shrinkers to new count/scan API
+  shrinker: convert remaining shrinkers to count/scan API
+  shrinker: Kill old ->shrink API.
+
+Glauber Costa (17):
+  fs: bump inode and dentry counters to long
+  super: fix calculation of shrinkable objects for small numbers
+  vmscan: per-node deferred work
+  list_lru: per-node API
+  i915: bail out earlier when shrinker cannot acquire mutex
+  hugepage: convert huge zero page shrinker to new shrinker API
+  vmscan: also shrink slab in memcg pressure
+  memcg,list_lru: duplicate LRUs upon kmemcg creation
+  lru: add an element to a memcg list
+  list_lru: per-memcg walks
+  memcg: per-memcg kmem shrinking
+  memcg: scan cache objects hierarchically
+  vmscan: take at least one pass with shrinkers
+  super: targeted memcg reclaim
+  memcg: move initialization to memcg creation
+  vmpressure: in-kernel notifications
+  memcg: reap dead memcgs upon global memory pressure.
+
+ arch/x86/kvm/mmu.c                        |  28 +-
+ drivers/gpu/drm/i915/i915_dma.c           |   4 +-
+ drivers/gpu/drm/i915/i915_gem.c           |  71 +++--
+ drivers/gpu/drm/ttm/ttm_page_alloc.c      |  48 ++--
+ drivers/gpu/drm/ttm/ttm_page_alloc_dma.c  |  55 ++--
+ drivers/md/bcache/btree.c                 |  43 +--
+ drivers/md/bcache/sysfs.c                 |   2 +-
+ drivers/md/dm-bufio.c                     |  65 +++--
+ drivers/staging/android/ashmem.c          |  46 +++-
+ drivers/staging/android/lowmemorykiller.c |  40 +--
+ drivers/staging/zcache/zcache-main.c      |  29 +-
+ fs/dcache.c                               | 259 +++++++++++-------
+ fs/drop_caches.c                          |   1 +
+ fs/ext4/extents_status.c                  |  30 ++-
+ fs/gfs2/glock.c                           |  30 ++-
+ fs/gfs2/main.c                            |   3 +-
+ fs/gfs2/quota.c                           |  14 +-
+ fs/gfs2/quota.h                           |   4 +-
+ fs/inode.c                                | 194 ++++++-------
+ fs/internal.h                             |   7 +-
+ fs/mbcache.c                              |  53 ++--
+ fs/nfs/dir.c                              |  20 +-
+ fs/nfs/internal.h                         |   4 +-
+ fs/nfs/super.c                            |   3 +-
+ fs/nfsd/nfscache.c                        |  31 ++-
+ fs/quota/dquot.c                          |  39 ++-
+ fs/super.c                                | 104 ++++---
+ fs/ubifs/shrinker.c                       |  20 +-
+ fs/ubifs/super.c                          |   3 +-
+ fs/ubifs/ubifs.h                          |   3 +-
+ fs/xfs/xfs_buf.c                          | 249 ++++++++---------
+ fs/xfs/xfs_buf.h                          |  17 +-
+ fs/xfs/xfs_dquot.c                        |   7 +-
+ fs/xfs/xfs_icache.c                       |   4 +-
+ fs/xfs/xfs_icache.h                       |   2 +-
+ fs/xfs/xfs_qm.c                           | 277 +++++++++----------
+ fs/xfs/xfs_qm.h                           |   4 +-
+ fs/xfs/xfs_super.c                        |  12 +-
+ include/linux/dcache.h                    |  14 +-
+ include/linux/fs.h                        |  25 +-
+ include/linux/list_lru.h                  | 162 +++++++++++
+ include/linux/memcontrol.h                |  45 ++++
+ include/linux/shrinker.h                  |  72 ++++-
+ include/linux/swap.h                      |   2 +
+ include/linux/vmpressure.h                |   6 +
+ include/trace/events/vmscan.h             |   4 +-
+ include/uapi/linux/fs.h                   |   6 +-
+ kernel/sysctl.c                           |   6 +-
+ lib/Makefile                              |   2 +-
+ lib/list_lru.c                            | 404 ++++++++++++++++++++++++++++
+ mm/huge_memory.c                          |  17 +-
+ mm/memcontrol.c                           | 433 ++++++++++++++++++++++++++----
+ mm/memory-failure.c                       |   2 +
+ mm/slab_common.c                          |   1 -
+ mm/vmpressure.c                           |  52 +++-
+ mm/vmscan.c                               | 380 +++++++++++++++++++-------
+ net/sunrpc/auth.c                         |  45 +++-
+ 57 files changed, 2510 insertions(+), 993 deletions(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 lib/list_lru.c
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.1.4
