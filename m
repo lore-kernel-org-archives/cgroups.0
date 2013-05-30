@@ -1,114 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 5/9] memcg: use css_get/put when charging/uncharging kmem
-Date: Thu, 30 May 2013 17:12:20 +0200
-Message-ID: <20130530151220.GB18155@dhcp22.suse.cz>
-References: <5195D5F8.7000609@huawei.com>
- <5195D666.6030408@huawei.com>
- <20130517180822.GC12632@mtj.dyndns.org>
- <519C838B.9060609@huawei.com>
- <20130524075420.GA24813@dhcp22.suse.cz>
- <20130530054852.GA9305@mtj.dyndns.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Thu, 30 May 2013 13:47:30 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com> <20130530150539.GA18155@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=XYItylFmWQi7p277cTyHdDk1HUIngQSJDiwVKJlvuG0=;
-        b=jBxAJ3TuN36vsTn+CmyvDLH+tDNC1SN4F01agaoepbIXKZ5UOGSRhuhqKIQRrSwwNd
-         hnYpeFtmlFJvQFCJQnVioEQmhvGHPBLAFbWUKkrdE4+Gvmi4nrPzRWO3L3wmyLlglG+V
-         VY3tuTBdN330j9mSgjt1UdZiNE42N290paL2PEQSaq1z8uy4GSzGKha4BjNbU1gzRERM
-         XdrG8sxwmKcQKZcgHmu2mJsw+NiP+pbXrf7fjj1IGasvvEKQE/0N/bLbPE1S3G1QhmCH
-         xImF6nYWpg9JyT7kLMYdjALaIZr3pB08mCcnBGKkf68IekeRNqxbyJX8FaL3zX42TAlP
-         9XZA==
-Content-Disposition: inline
-In-Reply-To: <20130530054852.GA9305-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=IK4EdmUMckLNQ7FkDxqGO/keWsuujm1qX0s2evoKB6k=;
+        b=RUptbCTpc56dkn5DXMAPkrETsifcuuRYPdKlLTk+FN9jQ4DsyCplqxBiEb+cejXzth
+         J3/kp7JsyK0N4XKvX8mOdHYvGumKyFflEYQ/w1PMj0z4o6uqgilp3eJ/6mJKhojYW+HF
+         UluMuCEqWm6ACr97FmendcEQtQBCk1r/fulIXnK1HB/gH2qeV5cdOsEmKZG/rSDDh1AH
+         3YJb7Rgm+994QIjebynbtUzWkDemcKigaZ0rYsTp90ZCR6o7bq/3IoO5l7wkP8jixCqM
+         +anp6BVIlmAN/vIDVLrAjk23KyimCV/2XrzRPs1nyzuhVupJeIyHabADUaonjGqGr/ZS
+         mOLQ==
+In-Reply-To: <20130530150539.GA18155@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Thu 30-05-13 14:48:52, Tejun Heo wrote:
-> Hello,
+On Thu, 30 May 2013, Michal Hocko wrote:
+
+> > Completely disabling the oom killer for a memcg is problematic if
+> > userspace is unable to address the condition itself, usually because it
+> > is unresponsive. 
 > 
-> Sorry about the delay.  Have been and still am traveling.
+> Isn't this a bug in the userspace oom handler? Why is it unresponsive? It
+> shouldn't allocated any memory so nothing should prevent it from running (if
+> other tasks are preempting it permanently then the priority of the handler
+> should be increased).
 > 
-> On Fri, May 24, 2013 at 09:54:20AM +0200, Michal Hocko wrote:
-> > > > On Fri, May 17, 2013 at 03:04:06PM +0800, Li Zefan wrote:
-> > > >> +	/*
-> > > >> +	 * Releases a reference taken in kmem_cgroup_css_offline in case
-> > > >> +	 * this last uncharge is racing with the offlining code or it is
-> > > >> +	 * outliving the memcg existence.
-> > > >> +	 *
-> > > >> +	 * The memory barrier imposed by test&clear is paired with the
-> > > >> +	 * explicit one in kmem_cgroup_css_offline.
-> > > > 
-> > > > Paired with the wmb to achieve what?
-> > 
-> > https://lkml.org/lkml/2013/4/4/190
-> > "
-> > ! > +	css_get(&memcg->css);
-> > ! I think that you need a write memory barrier here because css_get
-> > ! nor memcg_kmem_mark_dead implies it. memcg_uncharge_kmem uses
-> > ! memcg_kmem_test_and_clear_dead which imply a full memory barrier but it
-> > ! should see the elevated reference count. No?
-> > ! 
-> > ! > +	/*
-> > ! > +	 * We need to call css_get() first, because memcg_uncharge_kmem()
-> > ! > +	 * will call css_put() if it sees the memcg is dead.
-> > ! > +	 */
-> > ! >  	memcg_kmem_mark_dead(memcg);
-> > "
-> > 
-> > Does it make sense to you Tejun?
-> 
-> Yeah, you're right.  We need them.  It's still a bummer that mark_dead
-> has the appearance of proper encapsulation while not really taking
-> care of synchronization. 
 
-No objection to put barrier there. You are right it is more natural.
+Unresponsiveness isn't necessarily only because of memory constraints, you 
+may have your oom notifier in a parent cgroup that isn't oom.  If a 
+process is stuck on mm->mmap_sem in the oom cgroup, though, the oom 
+notifier may not be able to scrape /proc/pid and attain necessary 
+information in making an oom kill decision.  If the oom notifier is in the 
+oom cgroup, it may not be able to successfully read the memcg "tasks" 
+file to even determine the set of eligible processes.  There is also no 
+guarantee that the userspace oom handler will have the necessary memory to 
+even re-enable the oom killer in the memcg under oom which would allow the 
+kernel to make forward progress.
 
-> I think it'd make more sense for mark_dead to have the barrier (which
-> BTW should probably be smp_wmb() instead of wmb())
+We've used this for a few years as a complement to oom notifiers so that a 
+process would have a grace period to deal with the oom condition itself 
+before allowing the kernel to terminate a process and free memory.  We've 
+simply had no alternative in the presence of kernel constraints that 
+prevent it from being done in any other way.  We _want_ userspace to deal 
+with the issue but when it cannot collect the necessary information (and 
+we're not tracing every fork() that every process in a potentially oom 
+memcg does) to deal with the condition, we want the kernel to step in 
+instead of relying on an admin to login or a global oom condition.
 
-Yes, smp_wmb sounds like a better fit.
+If you'd like to debate this issue, I'd be more than happy to do so and 
+show why this patch is absolutely necessary for inclusion, but I'd ask 
+that you'd present the code from your userspace oom handler so I can 
+understand how it works without needing such backup support.
 
-> inside it or for the function to be just open-coded.  More on this
-> topic later.
->
-> > > The comment is wrong. I'll fix it.
-> > 
-> > Ohh, right. "Althouth this might sound strange as this path is called from
-> > css_offline when the reference might have dropped down to 0 and shouldn't ..."
-> > 
-> > Sounds better?
-> 
-> Yeap.
-> 
-> > > I don't quite like adding a lock not to protect data but just ensure code
-> > > orders.
-> > 
-> > Agreed.
-> > 
-> > > Michal, what's your preference? I want to be sure that everyone is happy
-> > > so the next version will hopefully be the last version.
-> > 
-> > I still do not see why the barrier is not needed and the lock seems too
-> > big hammer.
-> 
-> Yes, the barrier is necessary but I still think it's unnecessarily
-> elaborate.  Among the locking constructs, the barriesr are the worst -
-> they don't enforce any structures, people often misunderstand / make
-> mistakes about them, bugs from misusages are extremely difficult to
-> trigger and reproduce especially on x86.  It's a horrible construct
-> and should only be used if no other options can meet the performance
-> requirements required for the path.
-
-I am all for simplifying the code. I guess it deserves a separate patch
-though and it is a bit unrelated to the scope of the series.
-
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
