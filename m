@@ -1,323 +1,108 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v8 16/34] xfs: convert buftarg LRU to generic code
-Date: Thu, 30 May 2013 17:43:07 +1000
-Message-ID: <20130530074307.GN29466@dastard>
-References: <1369391368-31562-1-git-send-email-glommer@openvz.org>
- <1369391368-31562-17-git-send-email-glommer@openvz.org>
- <20130525002759.GK24543@dastard>
- <51A4D3B5.6060802@parallels.com>
- <20130529101519.GA29466@dastard>
- <51A5DDCE.509@parallels.com>
- <20130529122512.GB29466@dastard>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch v3 -mm 1/3] memcg: integrate soft reclaim tighter with
+ zone shrinking code
+Date: Thu, 30 May 2013 10:36:50 +0200
+Message-ID: <20130530083650.GB3582@dhcp22.suse.cz>
+References: <20130517160247.GA10023@cmpxchg.org>
+ <1369674791-13861-1-git-send-email-mhocko@suse.cz>
+ <20130529145400.GG10224@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130529122512.GB29466@dastard>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130529145400.GG10224@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 29, 2013 at 10:25:12PM +1000, Dave Chinner wrote:
-> On Wed, May 29, 2013 at 02:51:58PM +0400, Glauber Costa wrote:
-> > On 05/29/2013 02:15 PM, Dave Chinner wrote:
-> > > As it is, the XFS buffer LRU reclaimation is modelled on the
-> > > inode/dentry cache lru reclaimation where the "on dispose list" flag
-> > > is managed by a lock in the inode/dentry and wraps around the
-> > > outside of the LRU locks. The simplest fix to XFS is to add a
-> > > spinlock to the buffer to handle this in the same way as inodes and
-> > > dentries. I think I might be able to do it in a way that avoids
-> > > the spin lock but I just haven't had time to look at it that closely.
-> > > 
-> > > Cheers,
-> > > 
-> > Ok. In the interest of having the series merged - we seem to be running
-> > out of problems - I see two courses of action:
-> > 
-> > 1) Don't convert this to LRU at all, just convert to the new count/ scan
-> > interface,
-> > 
-> > 2) Use a temporary spinlock, and you fix that later.
-> > 
-> > I would actually prefer 2). Reason is that this patch actually do both,
-> > meaning I would have to rewrite the patch to do this scan / count loop
-> > without the new list_lru aid. Besides being more error-prone, it is of
-> > course a lot more work.
-> > 
-> > Which one you prefer?
-> 
-> 3) I'll fix it tomorrow and send you the patch.
+On Wed 29-05-13 16:54:00, Michal Hocko wrote:
+[...]
+> I am still running kbuild tests with the same configuration to see a
+> more general workload.
 
-Patch below.
+And here we go with the kbuild numbers. Same configuration (mem=1G, one
+group for kernel build - it is actually expand the three + build a
+distro config + bunch of groups under root/bunch).
+System
+0-0-limit/base: min: 242.70 max: 245.17 avg: 243.85 std: 1.02 runs: 3
+0-0-limit/reclaim: min: 237.86 [98.0%] max: 240.22 [98.0%] avg: 239.00 [98.0%] std: 0.97 runs: 3
+0-0-limit/reworkoptim: min: 241.11 [99.3%] max: 243.53 [99.3%] avg: 242.01 [99.2%] std: 1.08 runs: 3
+Elapsed
+0-0-limit/base: min: 348.48 max: 360.86 avg: 356.04 std: 5.41 runs: 3
+0-0-limit/reclaim: min: 286.95 [82.3%] max: 290.26 [80.4%] avg: 288.27 [81.0%] std: 1.43 runs: 3
+0-0-limit/reworkoptim: min: 286.55 [82.2%] max: 289.00 [80.1%] avg: 287.69 [80.8%] std: 1.01 runs: 3
+System
+0.5k-0-limit/base: min: 251.77 max: 254.41 avg: 252.70 std: 1.21 runs: 3
+0.5k-0-limit/reclaim: min: 286.44 [113.8%] max: 289.30 [113.7%] avg: 287.60 [113.8%] std: 1.23 runs: 3
+0.5k-0-limit/reworkoptim: min: 252.18 [100.2%] max: 253.16 [99.5%] avg: 252.62 [100.0%] std: 0.41 runs: 3
+Elapsed
+0.5k-0-limit/base: min: 347.83 max: 353.06 avg: 350.04 std: 2.21 runs: 3
+0.5k-0-limit/reclaim: min: 290.19 [83.4%] max: 295.62 [83.7%] avg: 293.12 [83.7%] std: 2.24 runs: 3
+0.5k-0-limit/reworkoptim: min: 293.91 [84.5%] max: 294.87 [83.5%] avg: 294.29 [84.1%] std: 0.42 runs: 3
+System
+2k-0-limit/base: min: 263.05 max: 271.52 avg: 267.94 std: 3.58 runs: 3
+2k-0-limit/reclaim: min: 458.99 [174.5%] max: 468.31 [172.5%] avg: 464.45 [173.3%] std: 3.97 runs: 3
+2k-0-limit/reworkoptim: min: 267.10 [101.5%] max: 279.38 [102.9%] avg: 272.78 [101.8%] std: 5.05 runs: 3
+Elapsed
+2k-0-limit/base: min: 372.33 max: 379.32 avg: 375.47 std: 2.90 runs: 3
+2k-0-limit/reclaim: min: 334.40 [89.8%] max: 339.52 [89.5%] avg: 337.44 [89.9%] std: 2.20 runs: 3
+2k-0-limit/reworkoptim: min: 301.47 [81.0%] max: 319.19 [84.1%] avg: 307.90 [82.0%] std: 8.01 runs: 3
+System
+8k-0-limit/base: min: 320.50 max: 332.10 avg: 325.46 std: 4.88 runs: 3
+8k-0-limit/reclaim: min: 1115.76 [348.1%] max: 1165.66 [351.0%] avg: 1132.65 [348.0%] std: 23.34 runs: 3
+8k-0-limit/reworkoptim: min: 403.75 [126.0%] max: 409.22 [123.2%] avg: 406.16 [124.8%] std: 2.28 runs: 3
+Elapsed
+8k-0-limit/base: min: 475.48 max: 585.19 avg: 525.54 std: 45.30 runs: 3
+8k-0-limit/reclaim: min: 616.25 [129.6%] max: 625.90 [107.0%] avg: 620.68 [118.1%] std: 3.98 runs: 3
+8k-0-limit/reworkoptim: min: 420.18 [88.4%] max: 428.28 [73.2%] avg: 423.05 [80.5%] std: 3.71 runs: 3
 
-Cheers,
+Apart from 8k the system time is comparable with the base kernel while
+Elapsed is up to 20% better with all configurations.
 
-Dave.
+And with not soft limit set
+System
+0-no-limit/base: min: 234.76 max: 237.42 avg: 236.25 std: 1.11 runs: 3
+0-no-limit/reclaim: min: 233.09 [99.3%] max: 238.65 [100.5%] avg: 236.09 [99.9%] std: 2.29 runs: 3
+0-no-limit/reworkoptim: min: 236.12 [100.6%] max: 240.53 [101.3%] avg: 237.94 [100.7%] std: 1.88 runs: 3
+Elapsed
+0-no-limit/base: min: 288.52 max: 295.42 avg: 291.29 std: 2.98 runs: 3
+0-no-limit/reclaim: min: 283.17 [98.1%] max: 284.33 [96.2%] avg: 283.78 [97.4%] std: 0.48 runs: 3
+0-no-limit/reworkoptim: min: 288.50 [100.0%] max: 290.79 [98.4%] avg: 289.78 [99.5%] std: 0.95 runs: 3
+System
+0.5k-no-limit/base: min: 286.51 max: 293.23 avg: 290.21 std: 2.78 runs: 3
+0.5k-no-limit/reclaim: min: 291.69 [101.8%] max: 294.38 [100.4%] avg: 292.97 [101.0%] std: 1.10 runs: 3
+0.5k-no-limit/reworkoptim: min: 277.05 [96.7%] max: 288.76 [98.5%] avg: 284.17 [97.9%] std: 5.11 runs: 3
+Elapsed
+0.5k-no-limit/base: min: 294.94 max: 298.92 avg: 296.47 std: 1.75 runs: 3
+0.5k-no-limit/reclaim: min: 292.55 [99.2%] max: 294.21 [98.4%] avg: 293.55 [99.0%] std: 0.72 runs: 3
+0.5k-no-limit/reworkoptim: min: 294.41 [99.8%] max: 301.67 [100.9%] avg: 297.78 [100.4%] std: 2.99 runs: 3
+System
+2k-no-limit/base: min: 443.41 max: 466.66 avg: 457.66 std: 10.19 runs: 3
+2k-no-limit/reclaim: min: 490.11 [110.5%] max: 516.02 [110.6%] avg: 501.42 [109.6%] std: 10.83 runs: 3
+2k-no-limit/reworkoptim: min: 435.25 [98.2%] max: 458.11 [98.2%] avg: 446.73 [97.6%] std: 9.33 runs: 3
+Elapsed
+2k-no-limit/base: min: 330.85 max: 333.75 avg: 332.52 std: 1.23 runs: 3
+2k-no-limit/reclaim: min: 343.06 [103.7%] max: 349.59 [104.7%] avg: 345.95 [104.0%] std: 2.72 runs: 3
+2k-no-limit/reworkoptim: min: 330.01 [99.7%] max: 333.92 [100.1%] avg: 332.22 [99.9%] std: 1.64 runs: 3
+System
+8k-no-limit/base: min: 1175.64 max: 1259.38 avg: 1222.39 std: 34.88 runs: 3
+8k-no-limit/reclaim: min: 1226.31 [104.3%] max: 1241.60 [98.6%] avg: 1233.74 [100.9%] std: 6.25 runs: 3
+8k-no-limit/reworkoptim: min: 1023.45 [87.1%] max: 1056.74 [83.9%] avg: 1038.92 [85.0%] std: 13.69 runs: 3
+Elapsed
+8k-no-limit/base: min: 613.36 max: 619.60 avg: 616.47 std: 2.55 runs: 3
+8k-no-limit/reclaim: min: 627.56 [102.3%] max: 642.33 [103.7%] avg: 633.44 [102.8%] std: 6.39 runs: 3
+8k-no-limit/reworkoptim: min: 545.89 [89.0%] max: 555.36 [89.6%] avg: 552.06 [89.6%] std: 4.37 runs: 3
+
+and these numbers look good as well. System time is around 100%
+(suprisingly better for the 8k case) and Elapsed is copies that trend.
 -- 
-Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
+Michal Hocko
+SUSE Labs
 
-xfs: rework buffer dispose list tracking
-
-From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
-In converting the buffer lru lists to use the generic code, the
-locking for marking the buffers as on the dispose list was lost.
-This results in confusion in LRU buffer tracking and acocunting,
-resulting in reference counts being mucked up and filesystem beig
-unmountable.
-
-To fix this, introduce an internal buffer spinlock to protect the
-state field that holds the dispose list information. Because there
-is now locking needed around xfs_buf_lru_add/del, and they are used
-in exactly one place each two lines apart, get rid of the wrappers
-and code the logic directly in place.
-
-Further, the LRU emptying code used on unmount is less than optimal.
-Convert it to use a dispose list as per a normal shrinker walk, and
-repeat the walk that fills the dispose list until the LRU is empty.
-Thi avoids needing to drop and regain the LRU lock for every item
-being freed, and allows the same logic as the shrinker isolate call
-to be used. Simpler, easier to understand.
-
-Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- fs/xfs/xfs_buf.c |  125 +++++++++++++++++++++++++++++++-----------------------
- fs/xfs/xfs_buf.h |   12 ++++--
- 2 files changed, 79 insertions(+), 58 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 802b65b..4342fcf 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -80,37 +80,6 @@ xfs_buf_vmap_len(
- }
- 
- /*
-- * xfs_buf_lru_add - add a buffer to the LRU.
-- *
-- * The LRU takes a new reference to the buffer so that it will only be freed
-- * once the shrinker takes the buffer off the LRU.
-- */
--static void
--xfs_buf_lru_add(
--	struct xfs_buf	*bp)
--{
--	if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
--		bp->b_lru_flags &= ~_XBF_LRU_DISPOSE;
--		atomic_inc(&bp->b_hold);
--	}
--}
--
--/*
-- * xfs_buf_lru_del - remove a buffer from the LRU
-- *
-- * The unlocked check is safe here because it only occurs when there are not
-- * b_lru_ref counts left on the inode under the pag->pag_buf_lock. it is there
-- * to optimise the shrinker removing the buffer from the LRU and calling
-- * xfs_buf_free().
-- */
--static void
--xfs_buf_lru_del(
--	struct xfs_buf	*bp)
--{
--	list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
--}
--
--/*
-  * When we mark a buffer stale, we remove the buffer from the LRU and clear the
-  * b_lru_ref count so that the buffer is freed immediately when the buffer
-  * reference count falls to zero. If the buffer is already on the LRU, we need
-@@ -133,12 +102,14 @@ xfs_buf_stale(
- 	 */
- 	bp->b_flags &= ~_XBF_DELWRI_Q;
- 
--	atomic_set(&(bp)->b_lru_ref, 0);
--	if (!(bp->b_lru_flags & _XBF_LRU_DISPOSE) &&
-+	spin_lock(&bp->b_lock);
-+	atomic_set(&bp->b_lru_ref, 0);
-+	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
- 	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
- 		atomic_dec(&bp->b_hold);
- 
- 	ASSERT(atomic_read(&bp->b_hold) >= 1);
-+	spin_unlock(&bp->b_lock);
- }
- 
- static int
-@@ -202,6 +173,7 @@ _xfs_buf_alloc(
- 	INIT_LIST_HEAD(&bp->b_list);
- 	RB_CLEAR_NODE(&bp->b_rbnode);
- 	sema_init(&bp->b_sema, 0); /* held, no waiters */
-+	spin_lock_init(&bp->b_lock);
- 	XB_SET_OWNER(bp);
- 	bp->b_target = target;
- 	bp->b_flags = flags;
-@@ -890,12 +862,33 @@ xfs_buf_rele(
- 
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
- 	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
--		if (!(bp->b_flags & XBF_STALE) &&
--			   atomic_read(&bp->b_lru_ref)) {
--			xfs_buf_lru_add(bp);
-+		spin_lock(&bp->b_lock);
-+		if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-+			/*
-+			 * If the buffer is added to the LRU take a new
-+			 * reference to the buffer for the LRU and clear the
-+			 * (now stale) dispose list state flag
-+			 */
-+			if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
-+				bp->b_state &= ~XFS_BSTATE_DISPOSE;
-+				atomic_inc(&bp->b_hold);
-+			}
-+			spin_unlock(&bp->b_lock);
- 			spin_unlock(&pag->pag_buf_lock);
- 		} else {
--			xfs_buf_lru_del(bp);
-+			/*
-+			 * most of the time buffers will already be removed from
-+			 * the LRU, so optimise that case by checking for the
-+			 * XFS_BSTATE_DISPOSE flag indicating the last list the
-+			 * buffer was on was the disposal list
-+			 */
-+			if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
-+				list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
-+			} else {
-+				ASSERT(list_empty(&bp->b_lru));
-+			}
-+			spin_unlock(&bp->b_lock);
-+
- 			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
- 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
- 			spin_unlock(&pag->pag_buf_lock);
-@@ -1484,33 +1477,48 @@ xfs_buftarg_wait_rele(
- 
- {
- 	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
-+	struct list_head	*dispose = arg;
- 
- 	if (atomic_read(&bp->b_hold) > 1) {
--		/* need to wait */
-+		/* need to wait, so skip it this pass */
- 		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
--		spin_unlock(lru_lock);
--		delay(100);
--	} else {
--		/*
--		 * clear the LRU reference count so the buffer doesn't get
--		 * ignored in xfs_buf_rele().
--		 */
--		atomic_set(&bp->b_lru_ref, 0);
--		spin_unlock(lru_lock);
--		xfs_buf_rele(bp);
-+		return LRU_SKIP;
- 	}
-+	if (!spin_trylock(&bp->b_lock))
-+		return LRU_SKIP;
- 
--	spin_lock(lru_lock);
--	return LRU_RETRY;
-+	/*
-+	 * clear the LRU reference count so the buffer doesn't get
-+	 * ignored in xfs_buf_rele().
-+	 */
-+	atomic_set(&bp->b_lru_ref, 0);
-+	bp->b_state |= XFS_BSTATE_DISPOSE;
-+	list_move(item, dispose);
-+	spin_unlock(&bp->b_lock);
-+	return LRU_REMOVED;
- }
- 
- void
- xfs_wait_buftarg(
- 	struct xfs_buftarg	*btp)
- {
--	while (list_lru_count(&btp->bt_lru))
-+	LIST_HEAD(dispose);
-+	int loop = 0;
-+
-+	/* loop until there is nothing left on the lru list. */
-+	while (list_lru_count(&btp->bt_lru)) {
- 		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
--			      NULL, LONG_MAX);
-+			      &dispose, LONG_MAX);
-+
-+		while (!list_empty(&dispose)) {
-+			struct xfs_buf *bp;
-+			bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
-+			list_del_init(&bp->b_lru);
-+			xfs_buf_rele(bp);
-+		}
-+		if (loop++ != 0)
-+			delay(100);
-+	}
- }
- 
- static enum lru_status
-@@ -1523,15 +1531,24 @@ xfs_buftarg_isolate(
- 	struct list_head	*dispose = arg;
- 
- 	/*
-+	 * we are inverting the lru lock/bp->b_lock here, so use a trylock.
-+	 * If we fail to get the lock, just skip it.
-+	 */
-+	if (!spin_trylock(&bp->b_lock))
-+		return LRU_SKIP;
-+	/*
- 	 * Decrement the b_lru_ref count unless the value is already
- 	 * zero. If the value is already zero, we need to reclaim the
- 	 * buffer, otherwise it gets another trip through the LRU.
- 	 */
--	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0))
-+	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
-+		spin_unlock(&bp->b_lock);
- 		return LRU_ROTATE;
-+	}
- 
--	bp->b_lru_flags |= _XBF_LRU_DISPOSE;
-+	bp->b_state |= XFS_BSTATE_DISPOSE;
- 	list_move(item, dispose);
-+	spin_unlock(&bp->b_lock);
- 	return LRU_REMOVED;
- }
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 5ec7d35..e656833 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -60,7 +60,6 @@ typedef enum {
- #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
- #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
--#define _XBF_LRU_DISPOSE (1 << 24)/* buffer being discarded */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -79,8 +78,12 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
--	{ _XBF_COMPOUND,	"COMPOUND" }, \
--	{ _XBF_LRU_DISPOSE,	"LRU_DISPOSE" }
-+	{ _XBF_COMPOUND,	"COMPOUND" }
-+
-+/*
-+ * Internal state flags.
-+ */
-+#define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
- 
- typedef struct xfs_buftarg {
- 	dev_t			bt_dev;
-@@ -136,7 +139,8 @@ typedef struct xfs_buf {
- 	 * bt_lru_lock and not by b_sema
- 	 */
- 	struct list_head	b_lru;		/* lru list */
--	xfs_buf_flags_t		b_lru_flags;	/* internal lru status flags */
-+	spinlock_t		b_lock;		/* internal state lock */
-+	unsigned int		b_state;	/* internal state flags */
- 	wait_queue_head_t	b_waiters;	/* unpin waiters */
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
