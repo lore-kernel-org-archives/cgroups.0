@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v9 21/35] i915: bail out earlier when shrinker cannot acquire mutex
-Date: Thu, 30 May 2013 14:36:07 +0400
-Message-ID: <1369910181-20026-22-git-send-email-glommer@openvz.org>
+Subject: [PATCH v9 24/35] shrinker: Kill old ->shrink API.
+Date: Thu, 30 May 2013 14:36:10 +0400
+Message-ID: <1369910181-20026-25-git-send-email-glommer@openvz.org>
 References: <1369910181-20026-1-git-send-email-glommer@openvz.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1369910181-20026-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
@@ -11,44 +11,161 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-The main shrinker driver will keep trying for a while to free objects if
-the returned value from the shrink scan procedure is 0.  That means "no
-objects now", but a retry could very well succeed.
+From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-A negative value has a different meaning. It means it is impossible to
-shrink, and we would better bail out soon. We find this behavior more
-appropriate for the case where the lock cannot be taken. Specially given
-the hammer behavior of the i915: if another thread is already shrinking,
-we are likely not to be able to shrink anything anyway when we finally
-acquire the mutex.
+There are no more users of this API, so kill it dead, dead, dead and
+quietly bury the corpse in a shallow, unmarked grave in a dark
+forest deep in the hills...
 
+[ glommer: added flowers to the grave ]
+Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Acked-by: Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>
-CC: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-CC: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-CC: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 ---
- drivers/gpu/drm/i915/i915_gem.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/shrinker.h      | 15 +++++----------
+ include/trace/events/vmscan.h |  4 ++--
+ mm/vmscan.c                   | 38 ++++++++------------------------------
+ 3 files changed, 15 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index e360031..72a05ee 100644
---- a/drivers/gpu/drm/i915/i915_gem.c
-+++ b/drivers/gpu/drm/i915/i915_gem.c
-@@ -4490,10 +4490,10 @@ i915_gem_inactive_count(struct shrinker *shrinker, struct shrink_control *sc)
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index d70b123..0786394 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -7,14 +7,15 @@
+  *
+  * The 'gfpmask' refers to the allocation we are currently trying to
+  * fulfil.
+- *
+- * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
+- * querying the cache size, so a fastpath for that case is appropriate.
+  */
+ struct shrink_control {
+ 	gfp_t gfp_mask;
  
- 	if (!mutex_trylock(&dev->struct_mutex)) {
- 		if (!mutex_is_locked_by(&dev->struct_mutex, current))
--			return 0;
-+			return -1;
+-	/* How many slab objects shrinker() should scan and try to reclaim */
++	/*
++	 * How many objects scan_objects should scan and try to reclaim.
++	 * This is reset before every call, so it is safe for callees
++	 * to modify.
++	 */
+ 	long nr_to_scan;
  
- 		if (dev_priv->mm.shrinker_no_lock_stealing)
--			return 0;
-+			return -1;
+ 	/* shrink from these nodes */
+@@ -26,11 +27,6 @@ struct shrink_control {
+ /*
+  * A callback you can register to apply pressure to ageable caches.
+  *
+- * @shrink() should look through the least-recently-used 'nr_to_scan' entries
+- * and attempt to free them up.  It should return the number of objects which
+- * remain in the cache.  If it returns -1, it means it cannot do any scanning at
+- * this time (eg. there is a risk of deadlock).
+- *
+  * @count_objects should return the number of freeable items in the cache. If
+  * there are no objects to free or the number of freeable items cannot be
+  * determined, it should return 0. No deadlock checks should be done during the
+@@ -48,7 +44,6 @@ struct shrink_control {
+  * @flags determine the shrinker abilities, like numa awareness 
+  */
+ struct shrinker {
+-	int (*shrink)(struct shrinker *, struct shrink_control *sc);
+ 	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
+ 	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
  
- 		unlock = false;
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index 63cfccc..132a985 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -202,7 +202,7 @@ TRACE_EVENT(mm_shrink_slab_start,
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shrink = shr->shrink;
++		__entry->shrink = shr->scan_objects;
+ 		__entry->nr_objects_to_shrink = nr_objects_to_shrink;
+ 		__entry->gfp_flags = sc->gfp_mask;
+ 		__entry->pgs_scanned = pgs_scanned;
+@@ -241,7 +241,7 @@ TRACE_EVENT(mm_shrink_slab_end,
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shrink = shr->shrink;
++		__entry->shrink = shr->scan_objects;
+ 		__entry->unused_scan = unused_scan_cnt;
+ 		__entry->new_scan = new_scan_cnt;
+ 		__entry->retval = shrinker_retval;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 08eec9d..7641614 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -199,14 +199,6 @@ void unregister_shrinker(struct shrinker *shrinker)
+ }
+ EXPORT_SYMBOL(unregister_shrinker);
+ 
+-static inline int do_shrinker_shrink(struct shrinker *shrinker,
+-				     struct shrink_control *sc,
+-				     unsigned long nr_to_scan)
+-{
+-	sc->nr_to_scan = nr_to_scan;
+-	return (*shrinker->shrink)(shrinker, sc);
+-}
+-
+ #define SHRINK_BATCH 128
+ 
+ static unsigned long
+@@ -223,11 +215,8 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 	long batch_size = shrinker->batch ? shrinker->batch
+ 					  : SHRINK_BATCH;
+ 
+-	if (shrinker->scan_objects) {
+-		max_pass = shrinker->count_objects(shrinker, shrinkctl);
+-		WARN_ON(max_pass < 0);
+-	} else
+-		max_pass = do_shrinker_shrink(shrinker, shrinkctl, 0);
++	max_pass = shrinker->count_objects(shrinker, shrinkctl);
++	WARN_ON(max_pass < 0);
+ 	if (max_pass <= 0)
+ 		return 0;
+ 
+@@ -246,7 +235,7 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 	if (total_scan < 0) {
+ 		printk(KERN_ERR
+ 		"shrink_slab: %pF negative objects to delete nr=%ld\n",
+-		       shrinker->shrink, total_scan);
++		       shrinker->scan_objects, total_scan);
+ 		total_scan = max_pass;
  	}
+ 
+@@ -280,23 +269,12 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 	while (total_scan >= batch_size) {
+ 		long ret;
+ 
+-		if (shrinker->scan_objects) {
+-			shrinkctl->nr_to_scan = batch_size;
+-			ret = shrinker->scan_objects(shrinker, shrinkctl);
++		shrinkctl->nr_to_scan = batch_size;
++		ret = shrinker->scan_objects(shrinker, shrinkctl);
+ 
+-			if (ret == -1)
+-				break;
+-			freed += ret;
+-		} else {
+-			int nr_before;
+-			nr_before = do_shrinker_shrink(shrinker, shrinkctl, 0);
+-			ret = do_shrinker_shrink(shrinker, shrinkctl,
+-							batch_size);
+-			if (ret == -1)
+-				break;
+-			if (ret < nr_before)
+-				freed += nr_before - ret;
+-		}
++		if (ret == -1)
++			break;
++		freed += ret;
+ 
+ 		count_vm_events(SLABS_SCANNED, batch_size);
+ 		total_scan -= batch_size;
 -- 
 1.8.1.4
