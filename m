@@ -1,98 +1,74 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Fri, 31 May 2013 10:10:52 +0200
-Message-ID: <20130531081052.GA32491@dhcp22.suse.cz>
-References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
- <20130530150539.GA18155@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>
+Date: Fri, 31 May 2013 03:22:59 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com> <20130530150539.GA18155@dhcp22.suse.cz> <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com> <20130531081052.GA32491@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1305301338430.20389-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=kElAcLiGTi74/j2p8/Y4Ykt3bCQDD3F8IzMWhmGSSrs=;
+        b=nCUOGRgXj2DlFGXOsNTGCdlWCJonIMJZfTsy6v7OCT7c6JwsZKFCpF2Dc9Brf1zYLH
+         0vklcIguSjmt4YvrfiS+BXyemHgW4usWFDZxLRf3QnY8MycMPsAR2rczgKuGoK3YM0gz
+         ICicgKizho8c56aygjT1tqxVeC6sxuRgfUbqBpxXE+gBBoO0y3vNPM6I1vWAQ/vV+c+2
+         pH69nuLw/zhpT/Xe5QcIApH4suzKuR0O4wuzXneYrnzC08p3WtcrIZShWBNqYGTld1Sk
+         XfdZnV8754T6YXnuOo7yRdqy9943SKzm4352MJgUVEvtcqB4u4JDPolSGqVxVA+mPwoX
+         fBNA==
+In-Reply-To: <20130531081052.GA32491-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 30-05-13 13:47:30, David Rientjes wrote:
-> On Thu, 30 May 2013, Michal Hocko wrote:
+On Fri, 31 May 2013, Michal Hocko wrote:
+
+> I have always discouraged people from running oom handler in the same
+> memcg (or even in the same hierarchy).
 > 
-> > > Completely disabling the oom killer for a memcg is problematic if
-> > > userspace is unable to address the condition itself, usually because it
-> > > is unresponsive. 
-> > 
-> > Isn't this a bug in the userspace oom handler? Why is it unresponsive? It
-> > shouldn't allocated any memory so nothing should prevent it from running (if
-> > other tasks are preempting it permanently then the priority of the handler
-> > should be increased).
-> > 
+
+We allow users to control their own memcgs by chowning them, so they must 
+be run in the same hierarchy if they want to run their own userspace oom 
+handler.  There's nothing in the kernel that prevents that and the user 
+has no other option but to run in a parent cgroup.
+
+> Yes, mmap_sem is tricky. Nothing in the proc code should take it for
+> writing and charges are done with mmap_sem held for reading but that
+> doesn't prevent from non-oom thread to try to get it for writing which
+> would block also all future readers. We have also seen i_mutex being
+> held during charge so you have to be careful about that one as well but
+> I am not aware of other locks that could be a problem.
 > 
-> Unresponsiveness isn't necessarily only because of memory constraints, you 
-> may have your oom notifier in a parent cgroup that isn't oom. 
-
-I have always discouraged people from running oom handler in the same
-memcg (or even in the same hierarchy).
-
-> If a process is stuck on mm->mmap_sem in the oom cgroup, though, the
-> oom notifier may not be able to scrape /proc/pid and attain necessary
-> information in making an oom kill decision.
-
-Yes, mmap_sem is tricky. Nothing in the proc code should take it for
-writing and charges are done with mmap_sem held for reading but that
-doesn't prevent from non-oom thread to try to get it for writing which
-would block also all future readers. We have also seen i_mutex being
-held during charge so you have to be careful about that one as well but
-I am not aware of other locks that could be a problem.
-
-The question is, do you really need to open any /proc/<pid>/ files which
-depend on mmap_sem (e.g. maps, smaps). /proc/<pid>/status should tell you
-about used memory. Or put it another way around. What kind of data you
-need for your OOM handler?
-
-I might be thinking about different use cases but user space OOM
-handlers I have seen so far had quite a good idea what is going on
-in the group and who to kill. So it was more a decision based on the
-workload and its semantic rather than based on the used memory (which
-is done quite sensibly with the in kernel handler already) or something
-that would trip over mmap_sem when trying to get information.
-
-> If the oom notifier is in the oom cgroup, it may not be able to       
-> successfully read the memcg "tasks" file to even determine the set of 
-> eligible processes.
-
-It would have to use preallocated buffer and have mlocked all the memory
-that will be used during oom event.
-
-> There is also no guarantee that the userspace oom handler will have
-> the necessary memory to even re-enable the oom killer in the memcg
-> under oom which would allow the kernel to make forward progress.
-
-Why it wouldn't have enough memory to write to the file? Assuming that
-the oom handler has the file handle (for limit_in_bytes) open, it has
-mlocked all the necessary memory (code + buffers) then I do not see what
-would prevent it from writing it to limit_in_bytes.
-
-> We've used this for a few years as a complement to oom notifiers so that a 
-> process would have a grace period to deal with the oom condition itself 
-> before allowing the kernel to terminate a process and free memory.  We've 
-> simply had no alternative in the presence of kernel constraints that 
-> prevent it from being done in any other way.  We _want_ userspace to deal 
-> with the issue but when it cannot collect the necessary information (and 
-> we're not tracing every fork() that every process in a potentially oom 
-> memcg does) to deal with the condition, we want the kernel to step in 
-> instead of relying on an admin to login or a global oom condition.
+> The question is, do you really need to open any /proc/<pid>/ files which
+> depend on mmap_sem (e.g. maps, smaps). /proc/<pid>/status should tell you
+> about used memory. Or put it another way around. What kind of data you
+> need for your OOM handler?
 > 
-> If you'd like to debate this issue, I'd be more than happy to do so and 
-> show why this patch is absolutely necessary for inclusion, but I'd ask 
-> that you'd present the code from your userspace oom handler so I can 
-> understand how it works without needing such backup support.
 
-I usually do not write those things myself as I am supporting others so
-I do not have any code handy right now. But I can come up with a simple
-handler which implements your timeout based killer for peak workloads
-you have mentioned earlier. That one should be quite easy to do.
--- 
-Michal Hocko
-SUSE Labs
+It's too easy to simply do even a "ps ax" in an oom memcg and make that 
+thread completely unresponsive because it allocates memory.
+
+> I might be thinking about different use cases but user space OOM
+> handlers I have seen so far had quite a good idea what is going on
+> in the group and who to kill.
+
+Then perhaps I'm raising constraints that you've never worked with, I 
+don't know.  We choose to have a priority-based approach that is inherited 
+by children; this priority is kept in userspace and and the oom handler 
+would naturally need to know the set of tasks in the oom memcg at the time 
+of oom and their parent-child relationship.  These priorities are 
+completely independent of memory usage.
+
+> > If the oom notifier is in the oom cgroup, it may not be able to       
+> > successfully read the memcg "tasks" file to even determine the set of 
+> > eligible processes.
+> 
+> It would have to use preallocated buffer and have mlocked all the memory
+> that will be used during oom event.
+> 
+
+Wrong, the kernel itself allocates memory when reading this information 
+and that would fail in an oom memcg.
