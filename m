@@ -1,73 +1,90 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Fri, 31 May 2013 13:21:16 +0200
-Message-ID: <20130531112116.GC32491@dhcp22.suse.cz>
-References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
- <20130530150539.GA18155@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>
- <20130531081052.GA32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
+Date: Fri, 31 May 2013 12:29:17 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com> <20130530150539.GA18155@dhcp22.suse.cz> <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com> <20130531081052.GA32491@dhcp22.suse.cz> <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
+ <20130531112116.GC32491@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1305310316210.27716-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=HEzYaGbu5JepuFy4Ey7vDkyRRQ/tSCNd8586HgbPqIQ=;
+        b=MuQHx2hAYMszgM5zzsAf08BDVHsSKMmgswAfPFqS01mojtpU5t21DREnH6iH4y22Ac
+         AsgRc7dNti7cQkEav01ePzuIcsiuu4WtDe4338WlxB8snTE4WfQHYRLRB4E3s/muguZS
+         KVP40lFee9Pu6V6GbCcbTcYXK7n39dKG9hVsxLrXY7DeU9IkBeZ8o+ey5W11057JBOWe
+         B5DzfHXYRe9uFYGDI0+uSt1gB+vIS/7mz9u1KszuPZbDBQuiAq1bt8rCoTHajsLE8v2E
+         oTZJdtso0cCNXzh2U8WIs05lYks7BTsFadKLN4BrnOqhh/wMdPpdeCLuvTNez2JO6lV8
+         R80g==
+In-Reply-To: <20130531112116.GC32491@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Fri 31-05-13 03:22:59, David Rientjes wrote:
-> On Fri, 31 May 2013, Michal Hocko wrote:
+On Fri, 31 May 2013, Michal Hocko wrote:
+
+> > We allow users to control their own memcgs by chowning them, so they must 
+> > be run in the same hierarchy if they want to run their own userspace oom 
+> > handler.  There's nothing in the kernel that prevents that and the user 
+> > has no other option but to run in a parent cgroup.
 > 
-> > I have always discouraged people from running oom handler in the same
-> > memcg (or even in the same hierarchy).
-> > 
+> If the access to the oom_control file is controlled by the file
+> permissions then the oom handler can live inside root cgroup. Why do you
+> need "must be in the same hierarchy" requirement?
 > 
-> We allow users to control their own memcgs by chowning them, so they must 
-> be run in the same hierarchy if they want to run their own userspace oom 
-> handler.  There's nothing in the kernel that prevents that and the user 
-> has no other option but to run in a parent cgroup.
 
-If the access to the oom_control file is controlled by the file
-permissions then the oom handler can live inside root cgroup. Why do you
-need "must be in the same hierarchy" requirement?
+Users obviously don't have the ability to attach processes to the root 
+memcg.  They are constrained to their own subtree of memcgs.
 
-> > Yes, mmap_sem is tricky. Nothing in the proc code should take it for
-> > writing and charges are done with mmap_sem held for reading but that
-> > doesn't prevent from non-oom thread to try to get it for writing which
-> > would block also all future readers. We have also seen i_mutex being
-> > held during charge so you have to be careful about that one as well but
-> > I am not aware of other locks that could be a problem.
-> > 
-> > The question is, do you really need to open any /proc/<pid>/ files which
-> > depend on mmap_sem (e.g. maps, smaps). /proc/<pid>/status should tell you
-> > about used memory. Or put it another way around. What kind of data you
-> > need for your OOM handler?
-> > 
+> > It's too easy to simply do even a "ps ax" in an oom memcg and make that 
+> > thread completely unresponsive because it allocates memory.
 > 
-> It's too easy to simply do even a "ps ax" in an oom memcg and make that 
-> thread completely unresponsive because it allocates memory.
-
-Yes, but we are talking about oom handler and that one has to be really
-careful about what it does. So doing something that simply allocates is
-dangerous.
-
-> > I might be thinking about different use cases but user space OOM
-> > handlers I have seen so far had quite a good idea what is going on
-> > in the group and who to kill.
+> Yes, but we are talking about oom handler and that one has to be really
+> careful about what it does. So doing something that simply allocates is
+> dangerous.
 > 
-> Then perhaps I'm raising constraints that you've never worked with, I 
-> don't know.  We choose to have a priority-based approach that is inherited 
-> by children; this priority is kept in userspace and and the oom handler 
-> would naturally need to know the set of tasks in the oom memcg at the time 
-> of oom and their parent-child relationship.  These priorities are 
-> completely independent of memory usage.
 
-OK, but both reading tasks file and readdir should be doable without
-userspace (aka charged) allocations. Moreover if you run those oom
-handlers under the root cgroup then it should be even easier.
--- 
-Michal Hocko
-SUSE Labs
+Show me a userspace oom handler that doesn't get notified of every fork() 
+in a memcg, causing a performance degradation of its own for a complete 
+and utter slowpath, that will know the entire process tree of its own 
+memcg or a child memcg.
+
+This discussion is all fine and good from a theoretical point of view 
+until you actually have to implement one of these yourself.  Multiple 
+users are going to be running their own oom notifiers and without some 
+sort of failsafe, such as memory.oom_delay_millisecs, a memcg can too 
+easily deadlock looking for memory.  If that user is constrained to his or 
+her own subtree, as previously stated, there's also no way to login and 
+rectify the situation at that point and requires admin intervention or a 
+reboot.
+
+> > Then perhaps I'm raising constraints that you've never worked with, I 
+> > don't know.  We choose to have a priority-based approach that is inherited 
+> > by children; this priority is kept in userspace and and the oom handler 
+> > would naturally need to know the set of tasks in the oom memcg at the time 
+> > of oom and their parent-child relationship.  These priorities are 
+> > completely independent of memory usage.
+> 
+> OK, but both reading tasks file and readdir should be doable without
+> userspace (aka charged) allocations. Moreover if you run those oom
+> handlers under the root cgroup then it should be even easier.
+
+Then why does "cat tasks" stall when my memcg is totally depleted of all 
+memory?
+
+This isn't even the argument because memory.oom_delay_millisecs isn't 
+going to help that situation.  I'm talking about a failsafe that ensures a 
+memcg can't deadlock.  The global oom killer will always have to exist in 
+the kernel, at least in the most simplistic of forms, solely for this 
+reason; you can't move all of the logic to userspace and expect it to 
+react 100% of the time.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
