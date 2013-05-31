@@ -1,87 +1,51 @@
-From: David Rientjes <rientjes@google.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Fri, 31 May 2013 12:29:17 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com> <20130530150539.GA18155@dhcp22.suse.cz> <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com> <20130531081052.GA32491@dhcp22.suse.cz> <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
- <20130531112116.GC32491@dhcp22.suse.cz>
+Date: Fri, 31 May 2013 14:46:36 -0700
+Message-ID: <20130531144636.6b34c6ba48105482d1241a40@linux-foundation.org>
+References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=HEzYaGbu5JepuFy4Ey7vDkyRRQ/tSCNd8586HgbPqIQ=;
-        b=MuQHx2hAYMszgM5zzsAf08BDVHsSKMmgswAfPFqS01mojtpU5t21DREnH6iH4y22Ac
-         AsgRc7dNti7cQkEav01ePzuIcsiuu4WtDe4338WlxB8snTE4WfQHYRLRB4E3s/muguZS
-         KVP40lFee9Pu6V6GbCcbTcYXK7n39dKG9hVsxLrXY7DeU9IkBeZ8o+ey5W11057JBOWe
-         B5DzfHXYRe9uFYGDI0+uSt1gB+vIS/7mz9u1KszuPZbDBQuiAq1bt8rCoTHajsLE8v2E
-         oTZJdtso0cCNXzh2U8WIs05lYks7BTsFadKLN4BrnOqhh/wMdPpdeCLuvTNez2JO6lV8
-         R80g==
-In-Reply-To: <20130531112116.GC32491@dhcp22.suse.cz>
+In-Reply-To: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Fri, 31 May 2013, Michal Hocko wrote:
+On Wed, 29 May 2013 18:18:10 -0700 (PDT) David Rientjes <rientjes@google.com> wrote:
 
-> > We allow users to control their own memcgs by chowning them, so they must 
-> > be run in the same hierarchy if they want to run their own userspace oom 
-> > handler.  There's nothing in the kernel that prevents that and the user 
-> > has no other option but to run in a parent cgroup.
+> Completely disabling the oom killer for a memcg is problematic if
+> userspace is unable to address the condition itself, usually because it
+> is unresponsive.  This scenario creates a memcg deadlock: tasks are
+> sitting in TASK_KILLABLE waiting for the limit to be increased, a task to
+> exit or move, or the oom killer reenabled and userspace is unable to do
+> so.
 > 
-> If the access to the oom_control file is controlled by the file
-> permissions then the oom handler can live inside root cgroup. Why do you
-> need "must be in the same hierarchy" requirement?
+> An additional possible use case is to defer oom killing within a memcg
+> for a set period of time, probably to prevent unnecessary kills due to
+> temporary memory spikes, before allowing the kernel to handle the
+> condition.
 > 
-
-Users obviously don't have the ability to attach processes to the root 
-memcg.  They are constrained to their own subtree of memcgs.
-
-> > It's too easy to simply do even a "ps ax" in an oom memcg and make that 
-> > thread completely unresponsive because it allocates memory.
+> This patch adds an oom killer delay so that a memcg may be configured to
+> wait at least a pre-defined number of milliseconds before calling the oom
+> killer.  If the oom condition persists for this number of milliseconds,
+> the oom killer will be called the next time the memory controller
+> attempts to charge a page (and memory.oom_control is set to 0).  This
+> allows userspace to have a short period of time to respond to the
+> condition before deferring to the kernel to kill a task.
 > 
-> Yes, but we are talking about oom handler and that one has to be really
-> careful about what it does. So doing something that simply allocates is
-> dangerous.
+> Admins may set the oom killer delay using the new interface:
 > 
-
-Show me a userspace oom handler that doesn't get notified of every fork() 
-in a memcg, causing a performance degradation of its own for a complete 
-and utter slowpath, that will know the entire process tree of its own 
-memcg or a child memcg.
-
-This discussion is all fine and good from a theoretical point of view 
-until you actually have to implement one of these yourself.  Multiple 
-users are going to be running their own oom notifiers and without some 
-sort of failsafe, such as memory.oom_delay_millisecs, a memcg can too 
-easily deadlock looking for memory.  If that user is constrained to his or 
-her own subtree, as previously stated, there's also no way to login and 
-rectify the situation at that point and requires admin intervention or a 
-reboot.
-
-> > Then perhaps I'm raising constraints that you've never worked with, I 
-> > don't know.  We choose to have a priority-based approach that is inherited 
-> > by children; this priority is kept in userspace and and the oom handler 
-> > would naturally need to know the set of tasks in the oom memcg at the time 
-> > of oom and their parent-child relationship.  These priorities are 
-> > completely independent of memory usage.
+> 	# echo 60000 > memory.oom_delay_millisecs
 > 
-> OK, but both reading tasks file and readdir should be doable without
-> userspace (aka charged) allocations. Moreover if you run those oom
-> handlers under the root cgroup then it should be even easier.
+> This will defer oom killing to the kernel only after 60 seconds has
+> elapsed by putting the task to sleep for 60 seconds.
 
-Then why does "cat tasks" stall when my memcg is totally depleted of all 
-memory?
+How often is that delay actually useful, in the real world?
 
-This isn't even the argument because memory.oom_delay_millisecs isn't 
-going to help that situation.  I'm talking about a failsafe that ensures a 
-memcg can't deadlock.  The global oom killer will always have to exist in 
-the kernel, at least in the most simplistic of forms, solely for this 
-reason; you can't move all of the logic to userspace and expect it to 
-react 100% of the time.
+IOW, in what proportion of cases does the system just remain stuck for
+60 seconds and then get an oom-killing?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
