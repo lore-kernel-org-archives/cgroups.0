@@ -1,111 +1,88 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Mon, 3 Jun 2013 14:54:33 -0400
-Message-ID: <20130603185433.GK15576@cmpxchg.org>
-References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
- <20130530150539.GA18155@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>
- <20130531081052.GA32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
- <20130531112116.GC32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com>
- <20130601102058.GA19474@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com>
+Date: Mon, 3 Jun 2013 12:09:22 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1306031159060.7956@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com> <20130530150539.GA18155@dhcp22.suse.cz> <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com> <20130531081052.GA32491@dhcp22.suse.cz> <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
+ <20130531112116.GC32491@dhcp22.suse.cz> <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com> <20130601102058.GA19474@dhcp22.suse.cz> <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com> <20130603185433.GK15576@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1306031102480.7956-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=tQUeHBHgCs2iZ/wTVzD7c9/Uq1HCA4YBXFda9QlKbik=;
+        b=G87IDARoRRs3e5ToM/sO6R9X44OV/T1amxWLI8F53Idh5kkA5GNbg+fDrXtvfFP3FA
+         rg8i7YXUl+72d/bnfgwdKwloZvLtDLxCA3KC9QwRKrlOqPMuIe2rln6jK0WPtKtTOXAD
+         BdzzICi0umo29SM/gV6mbbF2dVrN40No+M6w9y1iXk5tYyodw27JNpwtFGDgUKyNGOU+
+         zuy9PzYWVIq0BgMbAPKt3I7hpC9Dz6fJWHxrwQgkMU+TeDe81Oy+3242ll6g02rNrPdD
+         S+OhaCWrxd2gf+LUPTI7RsxkX5haDCWjb5YHyenfjJNJXe0KH9Sn0eBnwn3/4Blcu0qA
+         nHtg==
+In-Reply-To: <20130603185433.GK15576@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Mon, Jun 03, 2013 at 11:18:09AM -0700, David Rientjes wrote:
-> On Sat, 1 Jun 2013, Michal Hocko wrote:
-> > OK, I assume those groups are generally untrusted, right? So you cannot
-> > let them register their oom handler even via an admin interface. This
-> > makes it a bit complicated because it makes much harder demands on the
-> > handler itself as it has to run under restricted environment.
-> 
-> That's the point of the patch.  We want to allow users to register their 
-> own oom handler in a subtree (they may attach it to their own subtree root 
-> and wait on memory.oom_control of a child memcg with a limit less than 
-> that root) but not insist on an absolutely perfect implementation that can 
-> never fail when you run on many, many servers.  Userspace implementations 
-> do fail sometimes, we just accept that.
-> 
-> > I still do not see why you cannot simply read tasks file into a
-> > preallocated buffer. This would be few pages even for thousands of pids.
-> > You do not have to track processes as they come and go.
-> 
-> What do you suggest when you read the "tasks" file and it returns -ENOMEM 
-> because kmalloc() fails because the userspace oom handler's memcg is also 
-> oom?  Obviously it's not a situation we want to get into, but unless you 
-> know that handler's exact memory usage across multiple versions, nothing 
-> else is sharing that memcg, and it's a perfect implementation, you can't 
-> guarantee it.  We need to address real world problems that occur in 
-> practice.
-> 
-> > As I said before. oom_delay_millisecs is actually really easy to be done
-> > from userspace. If you really need a safety break then you can register
-> > such a handler as a fallback. I am not familiar with eventfd internals
-> > much but I guess that multiple handlers are possible. The fallback might
-> > be enforeced by the admin (when a new group is created) or by the
-> > container itself. Would something like this work for your use case?
-> 
-> You're suggesting another userspace process that solely waits for a set 
-> duration and then reenables the oom killer?  It faces all the same 
-> problems as the true userspace oom handler: it's own perfect 
-> implementation and it's own memcg constraints.
-> 
-> > > If that user is constrained to his or her own subtree, as previously
-> > > stated, there's also no way to login and rectify the situation at that
-> > > point and requires admin intervention or a reboot.
-> > 
-> > Yes, insisting on the same subtree makes the life much harder for oom
-> > handlers. I totally agree with you on that. I just feel that introducing
-> > a new knob to workaround user "inability" to write a proper handler
-> > (what ever that means) is not justified.
-> 
-> It's not necessarily harder if you assign the userspace oom handlers to 
-> the root of your subtree with access to more memory than the children.  
-> There is no "inability" to write a proper handler, but when you have 
-> dozens of individual users implementing their own userspace handlers with 
-> changing memcg limits over time, then you might find it hard to have 
-> perfection every time.  If we had perfection, we wouldn't have to worry 
-> about oom in the first place.  We can't just let these gazillion memcgs 
-> sit spinning forever because they get stuck, either.  That's why we've 
-> used this solution for years as a failsafe.  Disabling the oom killer 
-> entirely, even for a memcg, is ridiculous, and if you don't have a grace 
-> period then oom handlers themselves just don't work.
+On Mon, 3 Jun 2013, Johannes Weiner wrote:
 
-It's only ridiculous if your OOM handler is subject to the OOM
-situation it's trying to handle.
-
-Don't act as if the oom disabling semantics were unreasonable or
-inconsistent with the rest of the system, memcgs were not really meant
-to be self-policed by the tasks running in them.  That's why we have
-the waitqueue, so that everybody sits there and waits until an outside
-force resolves the situation.  There is nothing wrong with that, you
-just have a new requirement.
-
-> > > Then why does "cat tasks" stall when my memcg is totally depleted of all 
-> > > memory?
-> > 
-> > if you run it like this then cat obviously needs some charged
-> > allocations. If you had a proper handler which mlocks its buffer for the
-> > read syscall then you shouldn't require any allocation at the oom time.
-> > This shouldn't be that hard to do without too much memory overhead. As I
-> > said we are talking about few (dozens) of pages per handler.
-> > 
+> > It's not necessarily harder if you assign the userspace oom handlers to 
+> > the root of your subtree with access to more memory than the children.  
+> > There is no "inability" to write a proper handler, but when you have 
+> > dozens of individual users implementing their own userspace handlers with 
+> > changing memcg limits over time, then you might find it hard to have 
+> > perfection every time.  If we had perfection, we wouldn't have to worry 
+> > about oom in the first place.  We can't just let these gazillion memcgs 
+> > sit spinning forever because they get stuck, either.  That's why we've 
+> > used this solution for years as a failsafe.  Disabling the oom killer 
+> > entirely, even for a memcg, is ridiculous, and if you don't have a grace 
+> > period then oom handlers themselves just don't work.
 > 
-> I'm talking about the memory the kernel allocates when reading the "tasks" 
-> file, not userspace.  This can, and will, return -ENOMEM.
+> It's only ridiculous if your OOM handler is subject to the OOM
+> situation it's trying to handle.
+> 
 
-Do you mean due to kmem limitations?
+You're suggesting the oom handler can't be subject to its own memcg 
+limits, independent of the memcg it is handling?  If we demand that such a 
+handler be attached to the root memcg, that breaks the memory isolation 
+that memcg provides.  We constrain processes to a memcg for the purposes 
+of that isolation, so it cannot use more resources than allotted.
 
-What we could do is allow one task in the group to be the dedicated
-OOM handler.  If we catch this task in the charge path during an OOM
-situation, we fall back to the kernel OOM handler.
+> Don't act as if the oom disabling semantics were unreasonable or
+> inconsistent with the rest of the system, memcgs were not really meant
+> to be self-policed by the tasks running in them.  That's why we have
+> the waitqueue, so that everybody sits there and waits until an outside
+> force resolves the situation.  There is nothing wrong with that, you
+> just have a new requirement.
+> 
+
+The waitqueue doesn't solve anything with regard to the memory, if the 
+memcg sits there and deadlocks forever then it is using resources (memory, 
+not cpu) that will never be freed.
+
+> > I'm talking about the memory the kernel allocates when reading the "tasks" 
+> > file, not userspace.  This can, and will, return -ENOMEM.
+> 
+> Do you mean due to kmem limitations?
+> 
+
+Yes.
+
+> What we could do is allow one task in the group to be the dedicated
+> OOM handler.  If we catch this task in the charge path during an OOM
+> situation, we fall back to the kernel OOM handler.
+> 
+
+I'm not sure it even makes sense to have more than one oom handler per 
+memcg and the synchronization that requires in userspace to get the right 
+result, so I didn't consider dedicating a single oom handler.  That would 
+be an entirely new interface, though, since we may have multiple processes 
+waiting on memory.oom_control that aren't necessarily handlers; they grab 
+a snapshot of memory, do logging, etc.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
