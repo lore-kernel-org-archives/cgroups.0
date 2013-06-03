@@ -1,150 +1,218 @@
-From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v10 35/35] memcg: reap dead memcgs upon global memory pressure.
-Date: Mon,  3 Jun 2013 23:30:04 +0400
-Message-ID: <1370287804-3481-36-git-send-email-glommer@openvz.org>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1370287804-3481-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Kent Overstreet <koverstreet@google.com>
+Subject: Re: [PATCH v7 19/34] drivers: convert shrinkers to new count/scan API
+Date: Mon, 3 Jun 2013 13:03:31 -0700
+Message-ID: <20130603200331.GK2291@google.com>
+References: <1368994047-5997-1-git-send-email-glommer@openvz.org>
+ <1368994047-5997-20-git-send-email-glommer@openvz.org>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=xhAGyngN1lFxn0Gmn2Oe33ZFfQgz9p8dtOe7wX7U7wI=;
+        b=g7tQNy2/zQrcuqSI4YsbW4oNwdDSGmUs6wUVNt9mzN9eKt8w5jWUxXAMFaHqbFUtkJ
+         AnxWJ6QV4JwYkD+gLtFlanSkffVCX9tBYcXnExGD/yg/KT1SvQw3ffV8M5aXTmppSMb/
+         jAXgxwNVHqyhbkXJe9T/hMPv6RRHXUcVJYuBCz0cluHZu7L4BMWNZ2hsvduIGJMbVhSy
+         URcN9e9ipofuQ4dqtBh3H8H06/QX4O0rwKnFTsiEDcIllGxIV0UbOBNOiZ6yfi7k5JVV
+         I+L0veM+0SPEd9l+I8iApeKyIMADuwMzu7DJ29PLvJDcQAK0V/lpXbZJJYMLL8G3YeeP
+         tHZQ==
+Content-Disposition: inline
+In-Reply-To: <1368994047-5997-20-git-send-email-glommer@openvz.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, hughd@google.com, Dave Chinner <dchinner@redhat.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Arve =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>, John Stultz <john.stultz@linaro.org>, David Rientjes <rientjes@google.com>, Jerome Glisse <jglisse@redhat.com>, Thomas Hellstrom <thellstrom@vmware.com>
 
-When we delete kmem-enabled memcgs, they can still be zombieing
-around for a while. The reason is that the objects may still be alive,
-and we won't be able to delete them at destruction time.
+On Mon, May 20, 2013 at 12:07:12AM +0400, Glauber Costa wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Convert the driver shrinkers to the new API. Most changes are
+> compile tested only because I either don't have the hardware or it's
+> staging stuff.
 
-The only entry point for that, though, are the shrinkers. The
-shrinker interface, however, is not exactly tailored to our needs. It
-could be a little bit better by using the API Dave Chinner proposed, but
-it is still not ideal since we aren't really a count-and-scan event, but
-more a one-off flush-all-you-can event that would have to abuse that
-somehow.
+Sorry for not getting to this sooner. Before reviewing the bcache
+changes, a high level comment:
 
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
----
- mm/memcontrol.c | 52 ++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 46 insertions(+), 6 deletions(-)
+One of my issues when implementing the shrinker for bcache is that the
+shrinker API has no notion of how big the cached objects are. There
+seems to be an unspoken assumption that objects are page sized - or
+maybe they're at most page sized? I dunno.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c0e1113f..919fb24b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -400,7 +400,6 @@ static size_t memcg_size(void)
- 		nr_node_ids * sizeof(struct mem_cgroup_per_node);
- }
- 
--#ifdef CONFIG_MEMCG_DEBUG_ASYNC_DESTROY
- static LIST_HEAD(dangling_memcgs);
- static DEFINE_MUTEX(dangling_memcgs_mutex);
- 
-@@ -409,11 +408,14 @@ static inline void memcg_dangling_free(struct mem_cgroup *memcg)
- 	mutex_lock(&dangling_memcgs_mutex);
- 	list_del(&memcg->dead);
- 	mutex_unlock(&dangling_memcgs_mutex);
-+#ifdef CONFIG_MEMCG_DEBUG_ASYNC_DESTROY
- 	free_pages((unsigned long)memcg->memcg_name, 0);
-+#endif
- }
- 
- static inline void memcg_dangling_add(struct mem_cgroup *memcg)
- {
-+#ifdef CONFIG_MEMCG_DEBUG_ASYNC_DESTROY
- 	/*
- 	 * cgroup.c will do page-sized allocations most of the time,
- 	 * so we'll just follow the pattern. Also, __get_free_pages
-@@ -439,15 +441,12 @@ static inline void memcg_dangling_add(struct mem_cgroup *memcg)
- 	}
- 
- add_list:
-+#endif
- 	INIT_LIST_HEAD(&memcg->dead);
- 	mutex_lock(&dangling_memcgs_mutex);
- 	list_add(&memcg->dead, &dangling_memcgs);
- 	mutex_unlock(&dangling_memcgs_mutex);
- }
--#else
--static inline void memcg_dangling_free(struct mem_cgroup *memcg) {}
--static inline void memcg_dangling_add(struct mem_cgroup *memcg) {}
--#endif
- 
- static DEFINE_MUTEX(set_limit_mutex);
- 
-@@ -6313,6 +6312,41 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
- }
- 
- #ifdef CONFIG_MEMCG_KMEM
-+static void memcg_vmpressure_shrink_dead(void)
-+{
-+	struct memcg_cache_params *params, *tmp;
-+	struct kmem_cache *cachep;
-+	struct mem_cgroup *memcg;
-+
-+	mutex_lock(&dangling_memcgs_mutex);
-+	list_for_each_entry(memcg, &dangling_memcgs, dead) {
-+		mutex_lock(&memcg->slab_caches_mutex);
-+		/* The element may go away as an indirect result of shrink */
-+		list_for_each_entry_safe(params, tmp,
-+					 &memcg->memcg_slab_caches, list) {
-+			cachep = memcg_params_to_cache(params);
-+			/*
-+			 * the cpu_hotplug lock is taken in kmem_cache_create
-+			 * outside the slab_caches_mutex manipulation. It will
-+			 * be taken by kmem_cache_shrink to flush the cache.
-+			 * So we need to drop the lock. It is all right because
-+			 * the lock only protects elements moving in and out the
-+			 * list.
-+			 */
-+			mutex_unlock(&memcg->slab_caches_mutex);
-+			kmem_cache_shrink(cachep);
-+			mutex_lock(&memcg->slab_caches_mutex);
-+		}
-+		mutex_unlock(&memcg->slab_caches_mutex);
-+	}
-+	mutex_unlock(&dangling_memcgs_mutex);
-+}
-+
-+static void memcg_register_kmem_events(struct cgroup *cont)
-+{
-+	vmpressure_register_kernel_event(cont, memcg_vmpressure_shrink_dead);
-+}
-+
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	int ret;
-@@ -6348,6 +6382,10 @@ static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
- 	}
- }
- #else
-+static inline void memcg_register_kmem_events(struct cgroup *cont)
-+{
-+}
-+
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
-@@ -6733,8 +6771,10 @@ mem_cgroup_css_online(struct cgroup *cont)
- 	struct mem_cgroup *memcg, *parent;
- 	int error = 0;
- 
--	if (!cont->parent)
-+	if (!cont->parent) {
-+		memcg_register_kmem_events(cont);
- 		return 0;
-+	}
- 
- 	mutex_lock(&memcg_create_mutex);
- 	memcg = mem_cgroup_from_cont(cont);
--- 
-1.8.1.4
+Anyways, this was a source of no small amount of consternation and
+frustration and bugs, and still makes things more fragile and uglier
+than they should be - bcache btree nodes are typically on the order of a
+quarter megabyte, and they're potentially variable sized too (though not
+in practice yet and maybe never).
+
+Have you given any thought to whether this is fixable? IMO it might
+improve the shrinker API and various implementations as a whole if
+instead of objects everything just talked about some amount of memory in
+bytes.
+
+We might still need some notion of object size to deal with trying to
+free a smaller amount of memory than a given shrinker's object size (but
+perhaps not if the core shrinker code kept a running total of the
+difference between amount of memory asked to free/memory actually
+freed).
+
+Also, this would mean we could tell userspace how much memory is in the
+various caches (and potentially freeable), there's no sane way for
+userspace to figure this out today.
+
+Thoughts?
+
+> diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+> index 36688d6..e305f96 100644
+> --- a/drivers/md/bcache/btree.c
+> +++ b/drivers/md/bcache/btree.c
+> @@ -599,24 +599,12 @@ static int mca_reap(struct btree *b, struct closure *cl, unsigned min_order)
+>  	return 0;
+>  }
+>  
+> -static int bch_mca_shrink(struct shrinker *shrink, struct shrink_control *sc)
+> +static long bch_mca_scan(struct shrinker *shrink, struct shrink_control *sc)
+>  {
+>  	struct cache_set *c = container_of(shrink, struct cache_set, shrink);
+>  	struct btree *b, *t;
+>  	unsigned long i, nr = sc->nr_to_scan;
+> -
+> -	if (c->shrinker_disabled)
+> -		return 0;
+> -
+> -	if (c->try_harder)
+> -		return 0;
+
+This is a behaviour change - after your patch, we only check for
+c->shrinker_disabled or c->try_harder when counting objects, not
+freeing them.
+
+So there's a potential race if one of them (c->try_harder would be the
+important one, that means allocating memory for a btree node failed so
+there's a thread that's reclaiming from the btree cache in order to
+allocate a new btree node) is flipped in between the two calls. That
+should be no big deal, though i'm a tiny bit uncomfortable about it.
+
+There's a second user visible change - previously, c->shrinker_disabled
+(controlled via userspace through sysfs) would have the side effect of
+disabling prune_cache (called via sysfs) - your patch changes that. It
+probably makes more sense your way but it ought to be noted somewhere.
+
+> -
+> -	/*
+> -	 * If nr == 0, we're supposed to return the number of items we have
+> -	 * cached. Not allowed to return -1.
+> -	 */
+> -	if (!nr)
+> -		return mca_can_free(c) * c->btree_pages;
+> +	long freed = 0;
+>  
+>  	/* Return -1 if we can't do anything right now */
+>  	if (sc->gfp_mask & __GFP_WAIT)
+> @@ -629,14 +617,14 @@ static int bch_mca_shrink(struct shrinker *shrink, struct shrink_control *sc)
+>  
+>  	i = 0;
+>  	list_for_each_entry_safe(b, t, &c->btree_cache_freeable, list) {
+> -		if (!nr)
+> +		if (freed >= nr)
+>  			break;
+>  
+>  		if (++i > 3 &&
+>  		    !mca_reap(b, NULL, 0)) {
+>  			mca_data_free(b);
+>  			rw_unlock(true, b);
+> -			--nr;
+> +			freed++;
+>  		}
+>  	}
+>  
+> @@ -647,7 +635,7 @@ static int bch_mca_shrink(struct shrinker *shrink, struct shrink_control *sc)
+>  	if (list_empty(&c->btree_cache))
+>  		goto out;
+>  
+> -	for (i = 0; nr && i < c->bucket_cache_used; i++) {
+> +	for (i = 0; i < c->bucket_cache_used; i++) {
+
+This is a bug (but it's probably more my fault for writing it too subtly
+in the first place): previously, we broke out of the loop when nr
+reached 0 (and we'd freed all the objects we were asked to).
+
+After your change it doesn't break out of the loop until trying to free
+_everything_ - which will break things very badly since this causes us
+to free our reserve. You'll want a if (freed >= nr) break; like you
+added in the previous loop.
+
+(The reserve should be documented here too though, I'll write a patch
+for that...)
+
+>  		b = list_first_entry(&c->btree_cache, struct btree, list);
+>  		list_rotate_left(&c->btree_cache);
+>  
+> @@ -656,14 +644,26 @@ static int bch_mca_shrink(struct shrinker *shrink, struct shrink_control *sc)
+>  			mca_bucket_free(b);
+>  			mca_data_free(b);
+>  			rw_unlock(true, b);
+> -			--nr;
+> +			freed++;
+>  		} else
+>  			b->accessed = 0;
+>  	}
+>  out:
+> -	nr = mca_can_free(c) * c->btree_pages;
+>  	mutex_unlock(&c->bucket_lock);
+> -	return nr;
+> +	return freed;
+> +}
+> +
+> +static long bch_mca_count(struct shrinker *shrink, struct shrink_control *sc)
+> +{
+> +	struct cache_set *c = container_of(shrink, struct cache_set, shrink);
+> +
+> +	if (c->shrinker_disabled)
+> +		return 0;
+> +
+> +	if (c->try_harder)
+> +		return 0;
+> +
+> +	return mca_can_free(c) * c->btree_pages;
+>  }
+>  
+>  void bch_btree_cache_free(struct cache_set *c)
+> @@ -732,7 +732,8 @@ int bch_btree_cache_alloc(struct cache_set *c)
+>  		c->verify_data = NULL;
+>  #endif
+>  
+> -	c->shrink.shrink = bch_mca_shrink;
+> +	c->shrink.count_objects = bch_mca_count;
+> +	c->shrink.scan_objects = bch_mca_scan;
+>  	c->shrink.seeks = 4;
+>  	c->shrink.batch = c->btree_pages * 2;
+>  	register_shrinker(&c->shrink);
+> diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+> index 4d9cca4..fa8d048 100644
+> --- a/drivers/md/bcache/sysfs.c
+> +++ b/drivers/md/bcache/sysfs.c
+> @@ -535,7 +535,7 @@ STORE(__bch_cache_set)
+>  		struct shrink_control sc;
+>  		sc.gfp_mask = GFP_KERNEL;
+>  		sc.nr_to_scan = strtoul_or_return(buf);
+> -		c->shrink.shrink(&c->shrink, &sc);
+> +		c->shrink.scan_objects(&c->shrink, &sc);
+>  	}
+>  
+>  	sysfs_strtoul(congested_read_threshold_us,
+
+The rest of the changes look good.
+
+As long as you're looking at the code (and complaining about the quality
+of the various shrinkers :P), if you've got any suggestions/specific
+complaints about the bcache shrinker I'll see what I can do to improve
+it.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
