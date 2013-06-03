@@ -1,649 +1,928 @@
-From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v10 19/35] fs: convert fs shrinkers to new scan/count API
-Date: Mon,  3 Jun 2013 23:29:48 +0400
-Message-ID: <1370287804-3481-20-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer@openvz.org>
+Subject: [PATCH v10 20/35] drivers: convert shrinkers to new count/scan API
+Date: Mon,  3 Jun 2013 23:29:49 +0400
+Message-ID: <1370287804-3481-21-git-send-email-glommer@openvz.org>
 References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1370287804-3481-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1370287804-3481-1-git-send-email-glommer@openvz.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@openvz.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Kent Overstreet <koverstreet@google.com>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, John Stultz <john.stultz@linaro.org>, David Rientjes <rientjes@google.com>, Jerome Glisse <jglisse@redhat.com>, Thomas Hellstrom <thellstrom@vmware.com>
 
-From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Convert the filesystem shrinkers to use the new API, and standardise
-some of the behaviours of the shrinkers at the same time. For
-example, nr_to_scan means the number of objects to scan, not the
-number of objects to free.
+Convert the driver shrinkers to the new API. Most changes are
+compile tested only because I either don't have the hardware or it's
+staging stuff.
 
-I refactored the CIFS idmap shrinker a little - it really needs to
-be broken up into a shrinker per tree and keep an item count with
-the tree root so that we don't need to walk the tree every time the
-shrinker needs to count the number of objects in the tree (i.e.
-all the time under memory pressure).
+FWIW, the md and android code is pretty good, but the rest of it
+makes me want to claw my eyes out.  The amount of broken code I just
+encountered is mind boggling.  I've added comments explaining what
+is broken, but I fear that some of the code would be best dealt with
+by being dragged behind the bike shed, burying in mud up to it's
+neck and then run over repeatedly with a blunt lawn mower.
 
-[ glommer: fixes for ext4, ubifs, nfs, cifs and glock. Fixes are
-  needed mainly due to new code merged in the tree ]
-Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Acked-by: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-Acked-by: Artem Bityutskiy <artem.bityutskiy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Acked-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-CC: Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Special mention goes to the zcache/zcache2 drivers. They can't
+co-exist in the build at the same time, they are under different
+menu options in menuconfig, they only show up when you've got the
+right set of mm subsystem options configured and so even compile
+testing is an exercise in pulling teeth.  And that doesn't even take
+into account the horrible, broken code...
+
+[ glommer: fixes for i915, android lowmem, zcache, bcache ]
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Acked-by: Mel Gorman <mgorman@suse.de>
+CC: Daniel Vetter <daniel.vetter@ffwll.ch>
+CC: Kent Overstreet <koverstreet@google.com>
+CC: Arve Hj=C3=B8nnev=C3=A5g <arve@android.com>
+CC: John Stultz <john.stultz@linaro.org>
+CC: David Rientjes <rientjes@google.com>
+CC: Jerome Glisse <jglisse@redhat.com>
+CC: Thomas Hellstrom <thellstrom@vmware.com>
 ---
- fs/ext4/extents_status.c | 30 ++++++++++++++++------------
- fs/gfs2/glock.c          | 28 +++++++++++++++-----------
- fs/gfs2/main.c           |  3 ++-
- fs/gfs2/quota.c          | 12 +++++++-----
- fs/gfs2/quota.h          |  4 +++-
- fs/mbcache.c             | 51 ++++++++++++++++++++++++++++--------------------
- fs/nfs/dir.c             | 18 ++++++++++++++---
- fs/nfs/internal.h        |  4 +++-
- fs/nfs/super.c           |  3 ++-
- fs/nfsd/nfscache.c       | 31 ++++++++++++++++++++---------
- fs/quota/dquot.c         | 34 +++++++++++++++-----------------
- fs/ubifs/shrinker.c      | 20 +++++++++++--------
- fs/ubifs/super.c         |  3 ++-
- fs/ubifs/ubifs.h         |  3 ++-
- 14 files changed, 151 insertions(+), 93 deletions(-)
+ drivers/gpu/drm/i915/i915_dma.c           |  4 +-
+ drivers/gpu/drm/i915/i915_gem.c           | 67 ++++++++++++++++++++++---=
+------
+ drivers/gpu/drm/ttm/ttm_page_alloc.c      | 48 ++++++++++++++--------
+ drivers/gpu/drm/ttm/ttm_page_alloc_dma.c  | 55 ++++++++++++++++---------
+ drivers/md/bcache/btree.c                 | 43 ++++++++++----------
+ drivers/md/bcache/sysfs.c                 |  2 +-
+ drivers/md/dm-bufio.c                     | 65 +++++++++++++++++++------=
+-----
+ drivers/staging/android/ashmem.c          | 45 ++++++++++++++-------
+ drivers/staging/android/lowmemorykiller.c | 40 ++++++++++--------
+ drivers/staging/zcache/zcache-main.c      | 29 ++++++++-----
+ 10 files changed, 256 insertions(+), 142 deletions(-)
 
-diff --git a/fs/ext4/extents_status.c b/fs/ext4/extents_status.c
-index e6941e6..4bce4f0 100644
---- a/fs/ext4/extents_status.c
-+++ b/fs/ext4/extents_status.c
-@@ -878,20 +878,26 @@ int ext4_es_zeroout(struct inode *inode, struct ext4_extent *ex)
- 				     EXTENT_STATUS_WRITTEN);
+diff --git a/drivers/gpu/drm/i915/i915_dma.c b/drivers/gpu/drm/i915/i915_=
+dma.c
+index 3cd2b60..6d80cc4 100644
+--- a/drivers/gpu/drm/i915/i915_dma.c
++++ b/drivers/gpu/drm/i915/i915_dma.c
+@@ -1676,7 +1676,7 @@ int i915_driver_load(struct drm_device *dev, unsign=
+ed long flags)
+ 	return 0;
+=20
+ out_gem_unload:
+-	if (dev_priv->mm.inactive_shrinker.shrink)
++	if (dev_priv->mm.inactive_shrinker.scan_objects)
+ 		unregister_shrinker(&dev_priv->mm.inactive_shrinker);
+=20
+ 	if (dev->pdev->msi_enabled)
+@@ -1712,7 +1712,7 @@ int i915_driver_unload(struct drm_device *dev)
+=20
+ 	i915_teardown_sysfs(dev);
+=20
+-	if (dev_priv->mm.inactive_shrinker.shrink)
++	if (dev_priv->mm.inactive_shrinker.scan_objects)
+ 		unregister_shrinker(&dev_priv->mm.inactive_shrinker);
+=20
+ 	mutex_lock(&dev->struct_mutex);
+diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_=
+gem.c
+index c605097..e360031 100644
+--- a/drivers/gpu/drm/i915/i915_gem.c
++++ b/drivers/gpu/drm/i915/i915_gem.c
+@@ -53,10 +53,12 @@ static void i915_gem_object_update_fence(struct drm_i=
+915_gem_object *obj,
+ 					 struct drm_i915_fence_reg *fence,
+ 					 bool enable);
+=20
+-static int i915_gem_inactive_shrink(struct shrinker *shrinker,
++static long i915_gem_inactive_count(struct shrinker *shrinker,
+ 				    struct shrink_control *sc);
++static long i915_gem_inactive_scan(struct shrinker *shrinker,
++				   struct shrink_control *sc);
+ static long i915_gem_purge(struct drm_i915_private *dev_priv, long targe=
+t);
+-static void i915_gem_shrink_all(struct drm_i915_private *dev_priv);
++static long i915_gem_shrink_all(struct drm_i915_private *dev_priv);
+ static void i915_gem_object_truncate(struct drm_i915_gem_object *obj);
+=20
+ static inline void i915_gem_object_fence_lost(struct drm_i915_gem_object=
+ *obj)
+@@ -1729,15 +1731,20 @@ i915_gem_purge(struct drm_i915_private *dev_priv,=
+ long target)
+ 	return __i915_gem_shrink(dev_priv, target, true);
  }
- 
--static int ext4_es_shrink(struct shrinker *shrink, struct shrink_control *sc)
-+
-+static long ext4_es_count(struct shrinker *shrink, struct shrink_control *sc)
-+{
-+	long nr;
-+	struct ext4_sb_info *sbi = container_of(shrink,
-+					struct ext4_sb_info, s_es_shrinker);
-+
-+	nr = percpu_counter_read_positive(&sbi->s_extent_cache_cnt);
-+	trace_ext4_es_shrink_enter(sbi->s_sb, sc->nr_to_scan, nr);
-+	return nr;
-+}
-+
-+static long ext4_es_scan(struct shrinker *shrink, struct shrink_control *sc)
- {
- 	struct ext4_sb_info *sbi = container_of(shrink,
- 					struct ext4_sb_info, s_es_shrinker);
- 	struct ext4_inode_info *ei;
- 	struct list_head *cur, *tmp, scanned;
- 	int nr_to_scan = sc->nr_to_scan;
--	int ret, nr_shrunk = 0;
--
--	ret = percpu_counter_read_positive(&sbi->s_extent_cache_cnt);
--	trace_ext4_es_shrink_enter(sbi->s_sb, nr_to_scan, ret);
--
--	if (!nr_to_scan)
--		return ret;
-+	int ret = 0, nr_shrunk = 0;
- 
- 	INIT_LIST_HEAD(&scanned);
- 
-@@ -920,9 +926,8 @@ static int ext4_es_shrink(struct shrinker *shrink, struct shrink_control *sc)
- 	list_splice_tail(&scanned, &sbi->s_es_lru);
- 	spin_unlock(&sbi->s_es_lru_lock);
- 
--	ret = percpu_counter_read_positive(&sbi->s_extent_cache_cnt);
- 	trace_ext4_es_shrink_exit(sbi->s_sb, nr_shrunk, ret);
--	return ret;
-+	return nr_shrunk;
- }
- 
- void ext4_es_register_shrinker(struct super_block *sb)
-@@ -932,7 +937,8 @@ void ext4_es_register_shrinker(struct super_block *sb)
- 	sbi = EXT4_SB(sb);
- 	INIT_LIST_HEAD(&sbi->s_es_lru);
- 	spin_lock_init(&sbi->s_es_lru_lock);
--	sbi->s_es_shrinker.shrink = ext4_es_shrink;
-+	sbi->s_es_shrinker.scan_objects = ext4_es_scan;
-+	sbi->s_es_shrinker.count_objects = ext4_es_count;
- 	sbi->s_es_shrinker.seeks = DEFAULT_SEEKS;
- 	register_shrinker(&sbi->s_es_shrinker);
- }
-@@ -973,7 +979,7 @@ static int __es_try_to_reclaim_extents(struct ext4_inode_info *ei,
- 	struct ext4_es_tree *tree = &ei->i_es_tree;
- 	struct rb_node *node;
- 	struct extent_status *es;
--	int nr_shrunk = 0;
-+	long nr_shrunk = 0;
- 
- 	if (ei->i_es_lru_nr == 0)
- 		return 0;
-diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
-index 3bd2748..4ddbccb 100644
---- a/fs/gfs2/glock.c
-+++ b/fs/gfs2/glock.c
-@@ -1428,21 +1428,22 @@ __acquires(&lru_lock)
-  * gfs2_dispose_glock_lru() above.
-  */
- 
--static void gfs2_scan_glock_lru(int nr)
-+static long gfs2_scan_glock_lru(int nr)
- {
- 	struct gfs2_glock *gl;
- 	LIST_HEAD(skipped);
- 	LIST_HEAD(dispose);
-+	long freed = 0;
- 
- 	spin_lock(&lru_lock);
--	while(nr && !list_empty(&lru_list)) {
-+	while ((nr-- >= 0) && !list_empty(&lru_list)) {
- 		gl = list_entry(lru_list.next, struct gfs2_glock, gl_lru);
- 
- 		/* Test for being demotable */
- 		if (!test_and_set_bit(GLF_LOCK, &gl->gl_flags)) {
- 			list_move(&gl->gl_lru, &dispose);
- 			atomic_dec(&lru_count);
--			nr--;
-+			freed++;
- 			continue;
- 		}
- 
-@@ -1452,23 +1453,28 @@ static void gfs2_scan_glock_lru(int nr)
- 	if (!list_empty(&dispose))
- 		gfs2_dispose_glock_lru(&dispose);
- 	spin_unlock(&lru_lock);
-+
-+	return freed;
- }
- 
--static int gfs2_shrink_glock_memory(struct shrinker *shrink,
--				    struct shrink_control *sc)
-+static long gfs2_glock_shrink_scan(struct shrinker *shrink,
-+				   struct shrink_control *sc)
- {
--	if (sc->nr_to_scan) {
--		if (!(sc->gfp_mask & __GFP_FS))
--			return -1;
--		gfs2_scan_glock_lru(sc->nr_to_scan);
--	}
-+	if (!(sc->gfp_mask & __GFP_FS))
-+		return -1;
-+	return gfs2_scan_glock_lru(sc->nr_to_scan);
-+}
- 
-+static long gfs2_glock_shrink_count(struct shrinker *shrink,
-+				    struct shrink_control *sc)
-+{
- 	return vfs_pressure_ratio(atomic_read(&lru_count));
- }
- 
- static struct shrinker glock_shrinker = {
--	.shrink = gfs2_shrink_glock_memory,
- 	.seeks = DEFAULT_SEEKS,
-+	.count_objects = gfs2_glock_shrink_count,
-+	.scan_objects = gfs2_glock_shrink_scan,
- };
- 
- /**
-diff --git a/fs/gfs2/main.c b/fs/gfs2/main.c
-index e04d0e0..a105d84 100644
---- a/fs/gfs2/main.c
-+++ b/fs/gfs2/main.c
-@@ -32,7 +32,8 @@
- struct workqueue_struct *gfs2_control_wq;
- 
- static struct shrinker qd_shrinker = {
--	.shrink = gfs2_shrink_qd_memory,
-+	.count_objects = gfs2_qd_shrink_count,
-+	.scan_objects = gfs2_qd_shrink_scan,
- 	.seeks = DEFAULT_SEEKS,
- };
- 
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index f9f4077..0e832ce 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -75,14 +75,12 @@ static LIST_HEAD(qd_lru_list);
- static atomic_t qd_lru_count = ATOMIC_INIT(0);
- static DEFINE_SPINLOCK(qd_lru_lock);
- 
--int gfs2_shrink_qd_memory(struct shrinker *shrink, struct shrink_control *sc)
-+long gfs2_qd_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
- {
- 	struct gfs2_quota_data *qd;
- 	struct gfs2_sbd *sdp;
- 	int nr_to_scan = sc->nr_to_scan;
--
--	if (nr_to_scan == 0)
--		goto out;
-+	long freed = 0;
- 
- 	if (!(sc->gfp_mask & __GFP_FS))
- 		return -1;
-@@ -110,10 +108,14 @@ int gfs2_shrink_qd_memory(struct shrinker *shrink, struct shrink_control *sc)
- 		kmem_cache_free(gfs2_quotad_cachep, qd);
- 		spin_lock(&qd_lru_lock);
- 		nr_to_scan--;
-+		freed++;
- 	}
- 	spin_unlock(&qd_lru_lock);
-+	return freed;
-+}
- 
--out:
-+long gfs2_qd_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
-+{
- 	return vfs_pressure_ratio(atomic_read(&qd_lru_count));
- }
- 
-diff --git a/fs/gfs2/quota.h b/fs/gfs2/quota.h
-index 4f5e6e4..4f61708 100644
---- a/fs/gfs2/quota.h
-+++ b/fs/gfs2/quota.h
-@@ -53,7 +53,9 @@ static inline int gfs2_quota_lock_check(struct gfs2_inode *ip)
- 	return ret;
- }
- 
--extern int gfs2_shrink_qd_memory(struct shrinker *shrink,
-+extern long gfs2_qd_shrink_count(struct shrinker *shrink,
-+				 struct shrink_control *sc);
-+extern long gfs2_qd_shrink_scan(struct shrinker *shrink,
- 				 struct shrink_control *sc);
- extern const struct quotactl_ops gfs2_quotactl_ops;
- 
-diff --git a/fs/mbcache.c b/fs/mbcache.c
-index 5eb0476..009a463 100644
---- a/fs/mbcache.c
-+++ b/fs/mbcache.c
-@@ -86,18 +86,6 @@ static LIST_HEAD(mb_cache_list);
- static LIST_HEAD(mb_cache_lru_list);
- static DEFINE_SPINLOCK(mb_cache_spinlock);
- 
--/*
-- * What the mbcache registers as to get shrunk dynamically.
-- */
--
--static int mb_cache_shrink_fn(struct shrinker *shrink,
--			      struct shrink_control *sc);
--
--static struct shrinker mb_cache_shrinker = {
--	.shrink = mb_cache_shrink_fn,
--	.seeks = DEFAULT_SEEKS,
--};
--
- static inline int
- __mb_cache_entry_is_hashed(struct mb_cache_entry *ce)
- {
-@@ -151,7 +139,7 @@ forget:
- 
- 
- /*
-- * mb_cache_shrink_fn()  memory pressure callback
-+ * mb_cache_shrink_scan()  memory pressure callback
-  *
-  * This function is called by the kernel memory management when memory
-  * gets low.
-@@ -159,17 +147,18 @@ forget:
-  * @shrink: (ignored)
-  * @sc: shrink_control passed from reclaim
-  *
-- * Returns the number of objects which are present in the cache.
-+ * Returns the number of objects freed.
-  */
--static int
--mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc)
-+static long
-+mb_cache_shrink_scan(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
- {
- 	LIST_HEAD(free_list);
--	struct mb_cache *cache;
- 	struct mb_cache_entry *entry, *tmp;
--	int count = 0;
- 	int nr_to_scan = sc->nr_to_scan;
- 	gfp_t gfp_mask = sc->gfp_mask;
-+	long freed = 0;
- 
- 	mb_debug("trying to free %d entries", nr_to_scan);
- 	spin_lock(&mb_cache_spinlock);
-@@ -179,19 +168,39 @@ mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc)
- 				   struct mb_cache_entry, e_lru_list);
- 		list_move_tail(&ce->e_lru_list, &free_list);
- 		__mb_cache_entry_unhash(ce);
-+		freed++;
-+	}
-+	spin_unlock(&mb_cache_spinlock);
-+	list_for_each_entry_safe(entry, tmp, &free_list, e_lru_list) {
-+		__mb_cache_entry_forget(entry, gfp_mask);
- 	}
-+	return freed;
-+}
-+
-+static long
-+mb_cache_shrink_count(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
-+{
-+	struct mb_cache *cache;
-+	long count = 0;
-+
-+	spin_lock(&mb_cache_spinlock);
- 	list_for_each_entry(cache, &mb_cache_list, c_cache_list) {
- 		mb_debug("cache %s (%d)", cache->c_name,
- 			  atomic_read(&cache->c_entry_count));
- 		count += atomic_read(&cache->c_entry_count);
- 	}
- 	spin_unlock(&mb_cache_spinlock);
--	list_for_each_entry_safe(entry, tmp, &free_list, e_lru_list) {
--		__mb_cache_entry_forget(entry, gfp_mask);
--	}
-+
- 	return vfs_pressure_ratio(count);
- }
- 
-+static struct shrinker mb_cache_shrinker = {
-+	.count_objects = mb_cache_shrink_count,
-+	.scan_objects = mb_cache_shrink_scan,
-+	.seeks = DEFAULT_SEEKS,
-+};
- 
- /*
-  * mb_cache_create()  create a new cache
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index a6a3d05..36d66d4 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -1938,17 +1938,20 @@ static void nfs_access_free_list(struct list_head *head)
- 	}
- }
- 
--int nfs_access_cache_shrinker(struct shrinker *shrink,
--			      struct shrink_control *sc)
-+long
-+nfs_access_cache_scan(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
- {
- 	LIST_HEAD(head);
- 	struct nfs_inode *nfsi, *next;
- 	struct nfs_access_entry *cache;
- 	int nr_to_scan = sc->nr_to_scan;
- 	gfp_t gfp_mask = sc->gfp_mask;
-+	long freed = 0;
- 
- 	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
--		return (nr_to_scan == 0) ? 0 : -1;
-+		return -1;
- 
- 	spin_lock(&nfs_access_lru_lock);
- 	list_for_each_entry_safe(nfsi, next, &nfs_access_lru_list, access_cache_inode_lru) {
-@@ -1964,6 +1967,7 @@ int nfs_access_cache_shrinker(struct shrinker *shrink,
- 				struct nfs_access_entry, lru);
- 		list_move(&cache->lru, &head);
- 		rb_erase(&cache->rb_node, &nfsi->access_cache);
-+		freed++;
- 		if (!list_empty(&nfsi->access_cache_entry_lru))
- 			list_move_tail(&nfsi->access_cache_inode_lru,
- 					&nfs_access_lru_list);
-@@ -1978,6 +1982,14 @@ remove_lru_entry:
- 	}
- 	spin_unlock(&nfs_access_lru_lock);
- 	nfs_access_free_list(&head);
-+	return freed;
-+}
-+
-+long
-+nfs_access_cache_count(
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
-+{
- 	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
- }
- 
-diff --git a/fs/nfs/internal.h b/fs/nfs/internal.h
-index 91e59a3..9651e20 100644
---- a/fs/nfs/internal.h
-+++ b/fs/nfs/internal.h
-@@ -269,7 +269,9 @@ extern struct nfs_client *nfs_init_client(struct nfs_client *clp,
- 			   const char *ip_addr, rpc_authflavor_t authflavour);
- 
- /* dir.c */
--extern int nfs_access_cache_shrinker(struct shrinker *shrink,
-+extern long nfs_access_cache_count(struct shrinker *shrink,
-+					struct shrink_control *sc);
-+extern long nfs_access_cache_scan(struct shrinker *shrink,
- 					struct shrink_control *sc);
- struct dentry *nfs_lookup(struct inode *, struct dentry *, unsigned int);
- int nfs_create(struct inode *, struct dentry *, umode_t, bool);
-diff --git a/fs/nfs/super.c b/fs/nfs/super.c
-index a366107..2fed70f 100644
---- a/fs/nfs/super.c
-+++ b/fs/nfs/super.c
-@@ -359,7 +359,8 @@ static void unregister_nfs4_fs(void)
- #endif
- 
- static struct shrinker acl_shrinker = {
--	.shrink		= nfs_access_cache_shrinker,
-+	.count_objects	= nfs_access_cache_count,
-+	.scan_objects	= nfs_access_cache_scan,
- 	.seeks		= DEFAULT_SEEKS,
- };
- 
-diff --git a/fs/nfsd/nfscache.c b/fs/nfsd/nfscache.c
-index e76244e..5564c38 100644
---- a/fs/nfsd/nfscache.c
-+++ b/fs/nfsd/nfscache.c
-@@ -59,11 +59,14 @@ static unsigned int		longest_chain_cachesize;
- 
- static int	nfsd_cache_append(struct svc_rqst *rqstp, struct kvec *vec);
- static void	cache_cleaner_func(struct work_struct *unused);
--static int 	nfsd_reply_cache_shrink(struct shrinker *shrink,
--					struct shrink_control *sc);
-+static long	nfsd_reply_cache_count(struct shrinker *shrink,
-+				       struct shrink_control *sc);
-+static long	nfsd_reply_cache_scan(struct shrinker *shrink,
-+				      struct shrink_control *sc);
- 
- static struct shrinker nfsd_reply_cache_shrinker = {
--	.shrink	= nfsd_reply_cache_shrink,
-+	.scan_objects = nfsd_reply_cache_scan,
-+	.count_objects = nfsd_reply_cache_count,
- 	.seeks	= 1,
- };
- 
-@@ -232,16 +235,18 @@ nfsd_cache_entry_expired(struct svc_cacherep *rp)
-  * Walk the LRU list and prune off entries that are older than RC_EXPIRE.
-  * Also prune the oldest ones when the total exceeds the max number of entries.
-  */
+=20
 -static void
 +static long
- prune_cache_entries(void)
+ i915_gem_shrink_all(struct drm_i915_private *dev_priv)
  {
- 	struct svc_cacherep *rp, *tmp;
-+	long freed = 0;
- 
- 	list_for_each_entry_safe(rp, tmp, &lru_head, c_lru) {
- 		if (!nfsd_cache_entry_expired(rp) &&
- 		    num_drc_entries <= max_drc_entries)
- 			break;
- 		nfsd_reply_cache_free_locked(rp);
-+		freed++;
- 	}
- 
- 	/*
-@@ -254,6 +259,7 @@ prune_cache_entries(void)
- 		cancel_delayed_work(&cache_cleaner);
- 	else
- 		mod_delayed_work(system_wq, &cache_cleaner, RC_EXPIRE);
+ 	struct drm_i915_gem_object *obj, *next;
++	long freed =3D 0;
+=20
+ 	i915_gem_evict_everything(dev_priv->dev);
+=20
+-	list_for_each_entry_safe(obj, next, &dev_priv->mm.unbound_list, gtt_lis=
+t)
++	list_for_each_entry_safe(obj, next, &dev_priv->mm.unbound_list, gtt_lis=
+t) {
++		if (obj->pages_pin_count =3D=3D 0)
++			freed +=3D obj->base.size >> PAGE_SHIFT;
+ 		i915_gem_object_put_pages(obj);
++	}
 +	return freed;
  }
- 
- static void
-@@ -264,20 +270,27 @@ cache_cleaner_func(struct work_struct *unused)
- 	spin_unlock(&cache_lock);
+=20
+ static int
+@@ -4245,7 +4252,8 @@ i915_gem_load(struct drm_device *dev)
+=20
+ 	dev_priv->mm.interruptible =3D true;
+=20
+-	dev_priv->mm.inactive_shrinker.shrink =3D i915_gem_inactive_shrink;
++	dev_priv->mm.inactive_shrinker.scan_objects =3D i915_gem_inactive_scan;
++	dev_priv->mm.inactive_shrinker.count_objects =3D i915_gem_inactive_coun=
+t;
+ 	dev_priv->mm.inactive_shrinker.seeks =3D DEFAULT_SEEKS;
+ 	register_shrinker(&dev_priv->mm.inactive_shrinker);
  }
- 
+@@ -4468,8 +4476,8 @@ static bool mutex_is_locked_by(struct mutex *mutex,=
+ struct task_struct *task)
+ #endif
+ }
+=20
 -static int
--nfsd_reply_cache_shrink(struct shrinker *shrink, struct shrink_control *sc)
+-i915_gem_inactive_shrink(struct shrinker *shrinker, struct shrink_contro=
+l *sc)
 +static long
-+nfsd_reply_cache_count(struct shrinker *shrink, struct shrink_control *sc)
++i915_gem_inactive_count(struct shrinker *shrinker, struct shrink_control=
+ *sc)
  {
--	unsigned int num;
-+	long num;
- 
- 	spin_lock(&cache_lock);
--	if (sc->nr_to_scan)
--		prune_cache_entries();
- 	num = num_drc_entries;
- 	spin_unlock(&cache_lock);
- 
- 	return num;
+ 	struct drm_i915_private *dev_priv =3D
+ 		container_of(shrinker,
+@@ -4477,9 +4485,8 @@ i915_gem_inactive_shrink(struct shrinker *shrinker,=
+ struct shrink_control *sc)
+ 			     mm.inactive_shrinker);
+ 	struct drm_device *dev =3D dev_priv->dev;
+ 	struct drm_i915_gem_object *obj;
+-	int nr_to_scan =3D sc->nr_to_scan;
+ 	bool unlock =3D true;
+-	int cnt;
++	long cnt;
+=20
+ 	if (!mutex_trylock(&dev->struct_mutex)) {
+ 		if (!mutex_is_locked_by(&dev->struct_mutex, current))
+@@ -4491,15 +4498,6 @@ i915_gem_inactive_shrink(struct shrinker *shrinker=
+, struct shrink_control *sc)
+ 		unlock =3D false;
+ 	}
+=20
+-	if (nr_to_scan) {
+-		nr_to_scan -=3D i915_gem_purge(dev_priv, nr_to_scan);
+-		if (nr_to_scan > 0)
+-			nr_to_scan -=3D __i915_gem_shrink(dev_priv, nr_to_scan,
+-							false);
+-		if (nr_to_scan > 0)
+-			i915_gem_shrink_all(dev_priv);
+-	}
+-
+ 	cnt =3D 0;
+ 	list_for_each_entry(obj, &dev_priv->mm.unbound_list, gtt_list)
+ 		if (obj->pages_pin_count =3D=3D 0)
+@@ -4512,3 +4510,36 @@ i915_gem_inactive_shrink(struct shrinker *shrinker=
+, struct shrink_control *sc)
+ 		mutex_unlock(&dev->struct_mutex);
+ 	return cnt;
  }
- 
 +static long
-+nfsd_reply_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
++i915_gem_inactive_scan(struct shrinker *shrinker, struct shrink_control =
+*sc)
 +{
++	struct drm_i915_private *dev_priv =3D
++		container_of(shrinker,
++			     struct drm_i915_private,
++			     mm.inactive_shrinker);
++	struct drm_device *dev =3D dev_priv->dev;
++	int nr_to_scan =3D sc->nr_to_scan;
 +	long freed;
-+	spin_lock(&cache_lock);
-+	freed = prune_cache_entries();
-+	spin_unlock(&cache_lock);
++	bool unlock =3D true;
++
++	if (!mutex_trylock(&dev->struct_mutex)) {
++		if (!mutex_is_locked_by(&dev->struct_mutex, current))
++			return 0;
++
++		if (dev_priv->mm.shrinker_no_lock_stealing)
++			return 0;
++
++		unlock =3D false;
++	}
++
++	freed =3D i915_gem_purge(dev_priv, nr_to_scan);
++	if (freed < nr_to_scan)
++		freed +=3D __i915_gem_shrink(dev_priv, nr_to_scan,
++							false);
++	if (freed < nr_to_scan)
++		freed +=3D i915_gem_shrink_all(dev_priv);
++
++	if (unlock)
++		mutex_unlock(&dev->struct_mutex);
 +	return freed;
 +}
- /*
-  * Walk an xdr_buf and get a CRC for at most the first RC_CSUMLEN bytes
-  */
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 762b09c..fd6b762 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -687,44 +687,42 @@ int dquot_quota_sync(struct super_block *sb, int type)
+diff --git a/drivers/gpu/drm/ttm/ttm_page_alloc.c b/drivers/gpu/drm/ttm/t=
+tm_page_alloc.c
+index bd2a3b4..83058a2 100644
+--- a/drivers/gpu/drm/ttm/ttm_page_alloc.c
++++ b/drivers/gpu/drm/ttm/ttm_page_alloc.c
+@@ -377,28 +377,28 @@ out:
+ 	return nr_free;
  }
- EXPORT_SYMBOL(dquot_quota_sync);
- 
--/* Free unused dquots from cache */
--static void prune_dqcache(int count)
+=20
+-/* Get good estimation how many pages are free in pools */
+-static int ttm_pool_get_num_unused_pages(void)
+-{
+-	unsigned i;
+-	int total =3D 0;
+-	for (i =3D 0; i < NUM_POOLS; ++i)
+-		total +=3D _manager->pools[i].npages;
+-
+-	return total;
+-}
+-
+ /**
+  * Callback for mm to request pool to reduce number of page held.
++ *
++ * XXX: (dchinner) Deadlock warning!
++ *
++ * ttm_page_pool_free() does memory allocation using GFP_KERNEL.  that m=
+eans
++ * this can deadlock when called a sc->gfp_mask that is not equal to
++ * GFP_KERNEL.
++ *
++ * This code is crying out for a shrinker per pool....
+  */
+-static int ttm_pool_mm_shrink(struct shrinker *shrink,
+-			      struct shrink_control *sc)
 +static long
-+dqcache_shrink_scan(
++ttm_pool_shrink_scan(
 +	struct shrinker		*shrink,
 +	struct shrink_control	*sc)
  {
- 	struct list_head *head;
- 	struct dquot *dquot;
-+	long freed = 0;
- 
- 	head = free_dquots.prev;
--	while (head != &free_dquots && count) {
-+	while (head != &free_dquots && sc->nr_to_scan) {
- 		dquot = list_entry(head, struct dquot, dq_free);
- 		remove_dquot_hash(dquot);
- 		remove_free_dquot(dquot);
- 		remove_inuse(dquot);
- 		do_destroy_dquot(dquot);
--		count--;
-+		sc->nr_to_scan--;
-+		freed++;
- 		head = free_dquots.prev;
+ 	static atomic_t start_pool =3D ATOMIC_INIT(0);
+ 	unsigned i;
+ 	unsigned pool_offset =3D atomic_add_return(1, &start_pool);
+ 	struct ttm_page_pool *pool;
+ 	int shrink_pages =3D sc->nr_to_scan;
++	long freed =3D 0;
+=20
+ 	pool_offset =3D pool_offset % NUM_POOLS;
+ 	/* select start pool in round robin fashion */
+@@ -408,14 +408,30 @@ static int ttm_pool_mm_shrink(struct shrinker *shri=
+nk,
+ 			break;
+ 		pool =3D &_manager->pools[(i + pool_offset)%NUM_POOLS];
+ 		shrink_pages =3D ttm_page_pool_free(pool, nr_free);
++		freed +=3D nr_free - shrink_pages;
  	}
+-	/* return estimated number of unused pages in pool */
+-	return ttm_pool_get_num_unused_pages();
 +	return freed;
- }
- 
--/*
-- * This is called from kswapd when we think we need some
-- * more memory
-- */
--static int shrink_dqcache_memory(struct shrinker *shrink,
--				 struct shrink_control *sc)
--{
--	int nr = sc->nr_to_scan;
++}
++
++
 +static long
-+dqcache_shrink_count(
++ttm_pool_shrink_count(
 +	struct shrinker		*shrink,
 +	struct shrink_control	*sc)
- 
--	if (nr) {
--		spin_lock(&dq_list_lock);
--		prune_dqcache(nr);
--		spin_unlock(&dq_list_lock);
--	}
 +{
- 	return vfs_pressure_ratio(
- 	percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS]));
++	unsigned i;
++	long count =3D 0;
++
++	for (i =3D 0; i < NUM_POOLS; ++i)
++		count +=3D _manager->pools[i].npages;
++
++	return count;
  }
- 
- static struct shrinker dqcache_shrinker = {
--	.shrink = shrink_dqcache_memory,
-+	.count_objects = dqcache_shrink_count,
-+	.scan_objects = dqcache_shrink_scan,
- 	.seeks = DEFAULT_SEEKS,
- };
- 
-diff --git a/fs/ubifs/shrinker.c b/fs/ubifs/shrinker.c
-index 9e1d056..669d8c0 100644
---- a/fs/ubifs/shrinker.c
-+++ b/fs/ubifs/shrinker.c
-@@ -277,19 +277,23 @@ static int kick_a_thread(void)
+=20
+ static void ttm_pool_mm_shrink_init(struct ttm_pool_manager *manager)
+ {
+-	manager->mm_shrink.shrink =3D &ttm_pool_mm_shrink;
++	manager->mm_shrink.count_objects =3D &ttm_pool_shrink_count;
++	manager->mm_shrink.scan_objects =3D &ttm_pool_shrink_scan;
+ 	manager->mm_shrink.seeks =3D 1;
+ 	register_shrinker(&manager->mm_shrink);
+ }
+diff --git a/drivers/gpu/drm/ttm/ttm_page_alloc_dma.c b/drivers/gpu/drm/t=
+tm/ttm_page_alloc_dma.c
+index b8b3943..b3b4f99 100644
+--- a/drivers/gpu/drm/ttm/ttm_page_alloc_dma.c
++++ b/drivers/gpu/drm/ttm/ttm_page_alloc_dma.c
+@@ -918,19 +918,6 @@ int ttm_dma_populate(struct ttm_dma_tt *ttm_dma, str=
+uct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(ttm_dma_populate);
+=20
+-/* Get good estimation how many pages are free in pools */
+-static int ttm_dma_pool_get_num_unused_pages(void)
+-{
+-	struct device_pools *p;
+-	unsigned total =3D 0;
+-
+-	mutex_lock(&_manager->lock);
+-	list_for_each_entry(p, &_manager->pools, pools)
+-		total +=3D p->pool->npages_free;
+-	mutex_unlock(&_manager->lock);
+-	return total;
+-}
+-
+ /* Put all pages in pages list to correct pool to wait for reuse */
+ void ttm_dma_unpopulate(struct ttm_dma_tt *ttm_dma, struct device *dev)
+ {
+@@ -1002,18 +989,31 @@ EXPORT_SYMBOL_GPL(ttm_dma_unpopulate);
+=20
+ /**
+  * Callback for mm to request pool to reduce number of page held.
++ *
++ * XXX: (dchinner) Deadlock warning!
++ *
++ * ttm_dma_page_pool_free() does GFP_KERNEL memory allocation, and so at=
+tention
++ * needs to be paid to sc->gfp_mask to determine if this can be done or =
+not.
++ * GFP_KERNEL memory allocation in a GFP_ATOMIC reclaim context woul dbe=
+ really
++ * bad.
++ *
++ * I'm getting sadder as I hear more pathetical whimpers about needing p=
+er-pool
++ * shrinkers
+  */
+-static int ttm_dma_pool_mm_shrink(struct shrinker *shrink,
+-				  struct shrink_control *sc)
++static long
++ttm_dma_pool_shrink_scan(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
+ {
+ 	static atomic_t start_pool =3D ATOMIC_INIT(0);
+ 	unsigned idx =3D 0;
+ 	unsigned pool_offset =3D atomic_add_return(1, &start_pool);
+ 	unsigned shrink_pages =3D sc->nr_to_scan;
+ 	struct device_pools *p;
++	long freed =3D 0;
+=20
+ 	if (list_empty(&_manager->pools))
+-		return 0;
++		return -1;
+=20
+ 	mutex_lock(&_manager->lock);
+ 	pool_offset =3D pool_offset % _manager->npools;
+@@ -1029,18 +1029,35 @@ static int ttm_dma_pool_mm_shrink(struct shrinker=
+ *shrink,
+ 			continue;
+ 		nr_free =3D shrink_pages;
+ 		shrink_pages =3D ttm_dma_page_pool_free(p->pool, nr_free);
++		freed +=3D nr_free - shrink_pages;
++
+ 		pr_debug("%s: (%s:%d) Asked to shrink %d, have %d more to go\n",
+ 			 p->pool->dev_name, p->pool->name, current->pid,
+ 			 nr_free, shrink_pages);
+ 	}
+ 	mutex_unlock(&_manager->lock);
+-	/* return estimated number of unused pages in pool */
+-	return ttm_dma_pool_get_num_unused_pages();
++	return freed;
++}
++
++static long
++ttm_dma_pool_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	struct device_pools *p;
++	long count =3D 0;
++
++	mutex_lock(&_manager->lock);
++	list_for_each_entry(p, &_manager->pools, pools)
++		count +=3D p->pool->npages_free;
++	mutex_unlock(&_manager->lock);
++	return count;
+ }
+=20
+ static void ttm_dma_pool_mm_shrink_init(struct ttm_pool_manager *manager=
+)
+ {
+-	manager->mm_shrink.shrink =3D &ttm_dma_pool_mm_shrink;
++	manager->mm_shrink.count_objects =3D &ttm_dma_pool_shrink_count;
++	manager->mm_shrink.scan_objects =3D &ttm_dma_pool_shrink_scan;
+ 	manager->mm_shrink.seeks =3D 1;
+ 	register_shrinker(&manager->mm_shrink);
+ }
+diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+index 36688d6..e305f96 100644
+--- a/drivers/md/bcache/btree.c
++++ b/drivers/md/bcache/btree.c
+@@ -599,24 +599,12 @@ static int mca_reap(struct btree *b, struct closure=
+ *cl, unsigned min_order)
  	return 0;
  }
- 
--int ubifs_shrinker(struct shrinker *shrink, struct shrink_control *sc)
-+long ubifs_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
-+{
-+	long clean_zn_cnt = atomic_long_read(&ubifs_clean_zn_cnt);
-+
-+	/*
-+	 * Due to the way UBIFS updates the clean znode counter it may
-+	 * temporarily be negative.
-+	 */
-+	return clean_zn_cnt >= 0 ? clean_zn_cnt : 1;
+=20
+-static int bch_mca_shrink(struct shrinker *shrink, struct shrink_control=
+ *sc)
++static long bch_mca_scan(struct shrinker *shrink, struct shrink_control =
+*sc)
+ {
+ 	struct cache_set *c =3D container_of(shrink, struct cache_set, shrink);
+ 	struct btree *b, *t;
+ 	unsigned long i, nr =3D sc->nr_to_scan;
+-
+-	if (c->shrinker_disabled)
+-		return 0;
+-
+-	if (c->try_harder)
+-		return 0;
+-
+-	/*
+-	 * If nr =3D=3D 0, we're supposed to return the number of items we have
+-	 * cached. Not allowed to return -1.
+-	 */
+-	if (!nr)
+-		return mca_can_free(c) * c->btree_pages;
++	long freed =3D 0;
+=20
+ 	/* Return -1 if we can't do anything right now */
+ 	if (sc->gfp_mask & __GFP_WAIT)
+@@ -629,14 +617,14 @@ static int bch_mca_shrink(struct shrinker *shrink, =
+struct shrink_control *sc)
+=20
+ 	i =3D 0;
+ 	list_for_each_entry_safe(b, t, &c->btree_cache_freeable, list) {
+-		if (!nr)
++		if (freed >=3D nr)
+ 			break;
+=20
+ 		if (++i > 3 &&
+ 		    !mca_reap(b, NULL, 0)) {
+ 			mca_data_free(b);
+ 			rw_unlock(true, b);
+-			--nr;
++			freed++;
+ 		}
+ 	}
+=20
+@@ -647,7 +635,7 @@ static int bch_mca_shrink(struct shrinker *shrink, st=
+ruct shrink_control *sc)
+ 	if (list_empty(&c->btree_cache))
+ 		goto out;
+=20
+-	for (i =3D 0; nr && i < c->bucket_cache_used; i++) {
++	for (i =3D 0; i < c->bucket_cache_used; i++) {
+ 		b =3D list_first_entry(&c->btree_cache, struct btree, list);
+ 		list_rotate_left(&c->btree_cache);
+=20
+@@ -656,14 +644,26 @@ static int bch_mca_shrink(struct shrinker *shrink, =
+struct shrink_control *sc)
+ 			mca_bucket_free(b);
+ 			mca_data_free(b);
+ 			rw_unlock(true, b);
+-			--nr;
++			freed++;
+ 		} else
+ 			b->accessed =3D 0;
+ 	}
+ out:
+-	nr =3D mca_can_free(c) * c->btree_pages;
+ 	mutex_unlock(&c->bucket_lock);
+-	return nr;
++	return freed;
 +}
 +
-+long ubifs_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
++static long bch_mca_count(struct shrinker *shrink, struct shrink_control=
+ *sc)
++{
++	struct cache_set *c =3D container_of(shrink, struct cache_set, shrink);
++
++	if (c->shrinker_disabled)
++		return 0;
++
++	if (c->try_harder)
++		return 0;
++
++	return mca_can_free(c) * c->btree_pages;
+ }
+=20
+ void bch_btree_cache_free(struct cache_set *c)
+@@ -732,7 +732,8 @@ int bch_btree_cache_alloc(struct cache_set *c)
+ 		c->verify_data =3D NULL;
+ #endif
+=20
+-	c->shrink.shrink =3D bch_mca_shrink;
++	c->shrink.count_objects =3D bch_mca_count;
++	c->shrink.scan_objects =3D bch_mca_scan;
+ 	c->shrink.seeks =3D 4;
+ 	c->shrink.batch =3D c->btree_pages * 2;
+ 	register_shrinker(&c->shrink);
+diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+index 4d9cca4..fa8d048 100644
+--- a/drivers/md/bcache/sysfs.c
++++ b/drivers/md/bcache/sysfs.c
+@@ -535,7 +535,7 @@ STORE(__bch_cache_set)
+ 		struct shrink_control sc;
+ 		sc.gfp_mask =3D GFP_KERNEL;
+ 		sc.nr_to_scan =3D strtoul_or_return(buf);
+-		c->shrink.shrink(&c->shrink, &sc);
++		c->shrink.scan_objects(&c->shrink, &sc);
+ 	}
+=20
+ 	sysfs_strtoul(congested_read_threshold_us,
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index d489dfd..cdafc63 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -1383,62 +1383,80 @@ static int __cleanup_old_buffer(struct dm_buffer =
+*b, gfp_t gfp,
+ 				unsigned long max_jiffies)
  {
- 	int nr = sc->nr_to_scan;
- 	int freed, contention = 0;
- 	long clean_zn_cnt = atomic_long_read(&ubifs_clean_zn_cnt);
- 
--	if (nr == 0)
--		/*
--		 * Due to the way UBIFS updates the clean znode counter it may
--		 * temporarily be negative.
--		 */
--		return clean_zn_cnt >= 0 ? clean_zn_cnt : 1;
--
- 	if (!clean_zn_cnt) {
- 		/*
- 		 * No clean znodes, nothing to reap. All we can do in this case
-diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
-index f21acf0..ff357e0 100644
---- a/fs/ubifs/super.c
-+++ b/fs/ubifs/super.c
-@@ -49,7 +49,8 @@ struct kmem_cache *ubifs_inode_slab;
- 
- /* UBIFS TNC shrinker description */
- static struct shrinker ubifs_shrinker_info = {
--	.shrink = ubifs_shrinker,
-+	.scan_objects = ubifs_shrink_scan,
-+	.count_objects = ubifs_shrink_count,
- 	.seeks = DEFAULT_SEEKS,
+ 	if (jiffies - b->last_accessed < max_jiffies)
+-		return 1;
++		return 0;
+=20
+ 	if (!(gfp & __GFP_IO)) {
+ 		if (test_bit(B_READING, &b->state) ||
+ 		    test_bit(B_WRITING, &b->state) ||
+ 		    test_bit(B_DIRTY, &b->state))
+-			return 1;
++			return 0;
+ 	}
+=20
+ 	if (b->hold_count)
+-		return 1;
++		return 0;
+=20
+ 	__make_buffer_clean(b);
+ 	__unlink_buffer(b);
+ 	__free_buffer_wake(b);
+=20
+-	return 0;
++	return 1;
+ }
+=20
+-static void __scan(struct dm_bufio_client *c, unsigned long nr_to_scan,
+-		   struct shrink_control *sc)
++static long __scan(struct dm_bufio_client *c, unsigned long nr_to_scan,
++		   gfp_t gfp_mask)
+ {
+ 	int l;
+ 	struct dm_buffer *b, *tmp;
++	long freed =3D 0;
+=20
+ 	for (l =3D 0; l < LIST_SIZE; l++) {
+-		list_for_each_entry_safe_reverse(b, tmp, &c->lru[l], lru_list)
+-			if (!__cleanup_old_buffer(b, sc->gfp_mask, 0) &&
+-			    !--nr_to_scan)
+-				return;
++		list_for_each_entry_safe_reverse(b, tmp, &c->lru[l], lru_list) {
++			freed +=3D __cleanup_old_buffer(b, gfp_mask, 0);
++			if (!--nr_to_scan)
++				break;
++		}
+ 		dm_bufio_cond_resched();
+ 	}
++	return freed;
+ }
+=20
+-static int shrink(struct shrinker *shrinker, struct shrink_control *sc)
++static long
++dm_bufio_shrink_scan(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
+ {
+ 	struct dm_bufio_client *c =3D
+-	    container_of(shrinker, struct dm_bufio_client, shrinker);
+-	unsigned long r;
+-	unsigned long nr_to_scan =3D sc->nr_to_scan;
++	    container_of(shrink, struct dm_bufio_client, shrinker);
++	long freed;
+=20
+ 	if (sc->gfp_mask & __GFP_IO)
+ 		dm_bufio_lock(c);
+ 	else if (!dm_bufio_trylock(c))
+-		return !nr_to_scan ? 0 : -1;
++		return -1;
+=20
+-	if (nr_to_scan)
+-		__scan(c, nr_to_scan, sc);
++	freed  =3D __scan(c, sc->nr_to_scan, sc->gfp_mask);
++	dm_bufio_unlock(c);
++	return freed;
++}
+=20
+-	r =3D c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY];
+-	if (r > INT_MAX)
+-		r =3D INT_MAX;
++static long
++dm_bufio_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	struct dm_bufio_client *c =3D
++	    container_of(shrink, struct dm_bufio_client, shrinker);
++	long count;
++
++	if (sc->gfp_mask & __GFP_IO)
++		dm_bufio_lock(c);
++	else if (!dm_bufio_trylock(c))
++		return 0;
+=20
++	count =3D c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY];
+ 	dm_bufio_unlock(c);
++	return count;
+=20
+-	return r;
+ }
+=20
+ /*
+@@ -1540,7 +1558,8 @@ struct dm_bufio_client *dm_bufio_client_create(stru=
+ct block_device *bdev, unsign
+ 	__cache_size_refresh();
+ 	mutex_unlock(&dm_bufio_clients_lock);
+=20
+-	c->shrinker.shrink =3D shrink;
++	c->shrinker.count_objects =3D dm_bufio_shrink_count;
++	c->shrinker.scan_objects =3D dm_bufio_shrink_scan;
+ 	c->shrinker.seeks =3D 1;
+ 	c->shrinker.batch =3D 0;
+ 	register_shrinker(&c->shrinker);
+@@ -1627,7 +1646,7 @@ static void cleanup_old_buffers(void)
+ 			struct dm_buffer *b;
+ 			b =3D list_entry(c->lru[LIST_CLEAN].prev,
+ 				       struct dm_buffer, lru_list);
+-			if (__cleanup_old_buffer(b, 0, max_age * HZ))
++			if (!__cleanup_old_buffer(b, 0, max_age * HZ))
+ 				break;
+ 			dm_bufio_cond_resched();
+ 		}
+diff --git a/drivers/staging/android/ashmem.c b/drivers/staging/android/a=
+shmem.c
+index 65f36d7..7b466b5 100644
+--- a/drivers/staging/android/ashmem.c
++++ b/drivers/staging/android/ashmem.c
+@@ -341,27 +341,28 @@ out:
+ /*
+  * ashmem_shrink - our cache shrinker, called from mm/vmscan.c :: shrink=
+_slab
+  *
+- * 'nr_to_scan' is the number of objects (pages) to prune, or 0 to query=
+ how
+- * many objects (pages) we have in total.
++ * 'nr_to_scan' is the number of objects to scan for freeing.
+  *
+  * 'gfp_mask' is the mask of the allocation that got us into this mess.
+  *
+- * Return value is the number of objects (pages) remaining, or -1 if we =
+cannot
++ * Return value is the number of objects freed or -1 if we cannot
+  * proceed without risk of deadlock (due to gfp_mask).
+  *
+  * We approximate LRU via least-recently-unpinned, jettisoning unpinned =
+partial
+  * chunks of ashmem regions LRU-wise one-at-a-time until we hit 'nr_to_s=
+can'
+  * pages freed.
+  */
+-static int ashmem_shrink(struct shrinker *s, struct shrink_control *sc)
++static long
++ashmem_shrink_scan(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
+ {
+ 	struct ashmem_range *range, *next;
++	long freed =3D 0;
+=20
+ 	/* We might recurse into filesystem code, so bail out if necessary */
+-	if (sc->nr_to_scan && !(sc->gfp_mask & __GFP_FS))
++	if (!(sc->gfp_mask & __GFP_FS))
+ 		return -1;
+-	if (!sc->nr_to_scan)
+-		return lru_count;
+=20
+ 	mutex_lock(&ashmem_mutex);
+ 	list_for_each_entry_safe(range, next, &ashmem_lru_list, lru) {
+@@ -374,17 +375,34 @@ static int ashmem_shrink(struct shrinker *s, struct=
+ shrink_control *sc)
+ 		range->purged =3D ASHMEM_WAS_PURGED;
+ 		lru_del(range);
+=20
+-		sc->nr_to_scan -=3D range_size(range);
+-		if (sc->nr_to_scan <=3D 0)
++		freed +=3D range_size(range);
++		if (--sc->nr_to_scan <=3D 0)
+ 			break;
+ 	}
+ 	mutex_unlock(&ashmem_mutex);
++	return freed;
++}
+=20
++static long
++ashmem_shrink_count(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	/*
++	 * note that lru_count is count of pages on the lru, not a count of
++	 * objects on the list. This means the scan function needs to return th=
+e
++	 * number of pages freed, not the number of objects scanned.
++	 */
+ 	return lru_count;
+ }
+=20
+ static struct shrinker ashmem_shrinker =3D {
+-	.shrink =3D ashmem_shrink,
++	.count_objects =3D ashmem_shrink_count,
++	.scan_objects =3D ashmem_shrink_scan,
++	/*
++	 * XXX (dchinner): I wish people would comment on why they need on
++	 * significant changes to the default value here
++	 */
+ 	.seeks =3D DEFAULT_SEEKS * 4,
  };
- 
-diff --git a/fs/ubifs/ubifs.h b/fs/ubifs/ubifs.h
-index b2babce..bcdafcc 100644
---- a/fs/ubifs/ubifs.h
-+++ b/fs/ubifs/ubifs.h
-@@ -1624,7 +1624,8 @@ int ubifs_tnc_start_commit(struct ubifs_info *c, struct ubifs_zbranch *zroot);
- int ubifs_tnc_end_commit(struct ubifs_info *c);
- 
- /* shrinker.c */
--int ubifs_shrinker(struct shrinker *shrink, struct shrink_control *sc);
-+long ubifs_shrink_scan(struct shrinker *shrink, struct shrink_control *sc);
-+long ubifs_shrink_count(struct shrinker *shrink, struct shrink_control *sc);
- 
- /* commit.c */
- int ubifs_bg_thread(void *info);
--- 
+=20
+@@ -690,14 +708,11 @@ static long ashmem_ioctl(struct file *file, unsigne=
+d int cmd, unsigned long arg)
+ 		if (capable(CAP_SYS_ADMIN)) {
+ 			struct shrink_control sc =3D {
+ 				.gfp_mask =3D GFP_KERNEL,
+-				.nr_to_scan =3D 0,
++				.nr_to_scan =3D LONG_MAX,
+ 			};
+=20
+ 			nodes_setall(sc.nodes_to_scan);
+-
+-			ret =3D ashmem_shrink(&ashmem_shrinker, &sc);
+-			sc.nr_to_scan =3D ret;
+-			ashmem_shrink(&ashmem_shrinker, &sc);
++			ashmem_shrink_scan(&ashmem_shrinker, &sc);
+ 		}
+ 		break;
+ 	}
+diff --git a/drivers/staging/android/lowmemorykiller.c b/drivers/staging/=
+android/lowmemorykiller.c
+index fe74494..d23bfea 100644
+--- a/drivers/staging/android/lowmemorykiller.c
++++ b/drivers/staging/android/lowmemorykiller.c
+@@ -66,7 +66,15 @@ static unsigned long lowmem_deathpending_timeout;
+ 			pr_info(x);			\
+ 	} while (0)
+=20
+-static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
++static long lowmem_count(struct shrinker *s, struct shrink_control *sc)
++{
++	return global_page_state(NR_ACTIVE_ANON) +
++		global_page_state(NR_ACTIVE_FILE) +
++		global_page_state(NR_INACTIVE_ANON) +
++		global_page_state(NR_INACTIVE_FILE);
++}
++
++static long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
+ {
+ 	struct task_struct *tsk;
+ 	struct task_struct *selected =3D NULL;
+@@ -92,19 +100,17 @@ static int lowmem_shrink(struct shrinker *s, struct =
+shrink_control *sc)
+ 			break;
+ 		}
+ 	}
+-	if (sc->nr_to_scan > 0)
+-		lowmem_print(3, "lowmem_shrink %lu, %x, ofree %d %d, ma %hd\n",
+-				sc->nr_to_scan, sc->gfp_mask, other_free,
+-				other_file, min_score_adj);
+-	rem =3D global_page_state(NR_ACTIVE_ANON) +
+-		global_page_state(NR_ACTIVE_FILE) +
+-		global_page_state(NR_INACTIVE_ANON) +
+-		global_page_state(NR_INACTIVE_FILE);
+-	if (sc->nr_to_scan <=3D 0 || min_score_adj =3D=3D OOM_SCORE_ADJ_MAX + 1=
+) {
+-		lowmem_print(5, "lowmem_shrink %lu, %x, return %d\n",
+-			     sc->nr_to_scan, sc->gfp_mask, rem);
+-		return rem;
++
++	lowmem_print(3, "lowmem_scan %lu, %x, ofree %d %d, ma %hd\n",
++			sc->nr_to_scan, sc->gfp_mask, other_free,
++			other_file, min_score_adj);
++
++	if (min_score_adj =3D=3D OOM_SCORE_ADJ_MAX + 1) {
++		lowmem_print(5, "lowmem_scan %lu, %x, return 0\n",
++			     sc->nr_to_scan, sc->gfp_mask);
++		return 0;
+ 	}
++
+ 	selected_oom_score_adj =3D min_score_adj;
+=20
+ 	rcu_read_lock();
+@@ -154,16 +160,18 @@ static int lowmem_shrink(struct shrinker *s, struct=
+ shrink_control *sc)
+ 		lowmem_deathpending_timeout =3D jiffies + HZ;
+ 		send_sig(SIGKILL, selected, 0);
+ 		set_tsk_thread_flag(selected, TIF_MEMDIE);
+-		rem -=3D selected_tasksize;
++		rem +=3D selected_tasksize;
+ 	}
+-	lowmem_print(4, "lowmem_shrink %lu, %x, return %d\n",
++
++	lowmem_print(4, "lowmem_scan %lu, %x, return %d\n",
+ 		     sc->nr_to_scan, sc->gfp_mask, rem);
+ 	rcu_read_unlock();
+ 	return rem;
+ }
+=20
+ static struct shrinker lowmem_shrinker =3D {
+-	.shrink =3D lowmem_shrink,
++	.scan_objects =3D lowmem_scan,
++	.count_objects =3D lowmem_count,
+ 	.seeks =3D DEFAULT_SEEKS * 16
+ };
+=20
+diff --git a/drivers/staging/zcache/zcache-main.c b/drivers/staging/zcach=
+e/zcache-main.c
+index dcceed2..4ade8e3 100644
+--- a/drivers/staging/zcache/zcache-main.c
++++ b/drivers/staging/zcache/zcache-main.c
+@@ -1140,23 +1140,19 @@ static bool zcache_freeze;
+  * pageframes in use.  FIXME POLICY: Probably the writeback should only =
+occur
+  * if the eviction doesn't free enough pages.
+  */
+-static int shrink_zcache_memory(struct shrinker *shrink,
+-				struct shrink_control *sc)
++static long scan_zcache_memory(struct shrinker *shrink,
++			       struct shrink_control *sc)
+ {
+ 	static bool in_progress;
+-	int ret =3D -1;
+-	int nr =3D sc->nr_to_scan;
+ 	int nr_evict =3D 0;
+ 	int nr_writeback =3D 0;
+ 	struct page *page;
+ 	int  file_pageframes_inuse, anon_pageframes_inuse;
+-
+-	if (nr <=3D 0)
+-		goto skip_evict;
++	long freed =3D 0;
+=20
+ 	/* don't allow more than one eviction thread at a time */
+ 	if (in_progress)
+-		goto skip_evict;
++		return 0;
+=20
+ 	in_progress =3D true;
+=20
+@@ -1176,6 +1172,7 @@ static int shrink_zcache_memory(struct shrinker *sh=
+rink,
+ 		if (page =3D=3D NULL)
+ 			break;
+ 		zcache_free_page(page);
++		freed++;
+ 	}
+=20
+ 	zcache_last_active_anon_pageframes =3D
+@@ -1192,13 +1189,22 @@ static int shrink_zcache_memory(struct shrinker *=
+shrink,
+ #ifdef CONFIG_ZCACHE_WRITEBACK
+ 		int writeback_ret;
+ 		writeback_ret =3D zcache_frontswap_writeback();
+-		if (writeback_ret =3D=3D -ENOMEM)
++		if (writeback_ret !=3D -ENOMEM)
++			freed++;
++		else
+ #endif
+ 			break;
+ 	}
+ 	in_progress =3D false;
+=20
+-skip_evict:
++	return freed;
++}
++
++static long count_zcache_memory(struct shrinker *shrink,
++				struct shrink_control *sc)
++{
++	int ret =3D -1;
++
+ 	/* resample: has changed, but maybe not all the way yet */
+ 	zcache_last_active_file_pageframes =3D
+ 		global_page_state(NR_LRU_BASE + LRU_ACTIVE_FILE);
+@@ -1212,7 +1218,8 @@ skip_evict:
+ }
+=20
+ static struct shrinker zcache_shrinker =3D {
+-	.shrink =3D shrink_zcache_memory,
++	.scan_objects =3D scan_zcache_memory,
++	.count_objects =3D count_zcache_memory,
+ 	.seeks =3D DEFAULT_SEEKS,
+ };
+=20
+--=20
 1.8.1.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
