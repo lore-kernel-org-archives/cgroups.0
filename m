@@ -1,83 +1,72 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Sat, 1 Jun 2013 11:15:37 -0400
-Message-ID: <20130601151537.GD15576@cmpxchg.org>
-References: <alpine.DEB.2.02.1305291817280.520@chino.kir.corp.google.com>
- <20130530150539.GA18155@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>
- <20130531081052.GA32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
- <20130531112116.GC32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com>
- <20130601061151.GC15576@cmpxchg.org>
- <20130601102905.GB19474@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v3.10-rc4
+Date: Sun, 2 Jun 2013 20:39:24 -0700
+Message-ID: <20130603033924.GC6071@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130601102905.GB19474@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=uOpYXU6/cjKPVq1YjWlvKZsqGTtyJa3nZl7PQSAcX1g=;
+	b=ctfxAYElNMMk0rdxA9kk1w605LpXhD7M3MP1LWbCuckvcgEZLsVt5/ZVkQFY3Nq/62
+	bH75eZGKRA67loIYMFuyai+w795IvVSCOsLPD6jWo7SezDm2jg1vrTeMruXI60UtXUOW
+	W38MhlzGtNWfAdqeg8uZxSFhmtRgVZ26DBL8Br6NRWYCZdM6upxZ9/fjDLp2niFKQJRe
+	Zc3f8MJTuWkrGIXQIicvqsa8SXEHA59c4bGJ2SzcRSpowZqHUVumCiofxCcvVWXMV4KF
+	FE9xBzebqqQqnAlJaMyVfXuE6TowgWhD8wnYcxXAckMqW3oikRjm9KKia8KcKckclzO7
+	XDUQ==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Jun 01, 2013 at 12:29:05PM +0200, Michal Hocko wrote:
-> On Sat 01-06-13 02:11:51, Johannes Weiner wrote:
-> [...]
-> > I'm currently messing around with the below patch.  When a task faults
-> > and charges under OOM, the memcg is remembered in the task struct and
-> > then made to sleep on the memcg's OOM waitqueue only after unwinding
-> > the page fault stack.  With the kernel OOM killer disabled, all tasks
-> > in the OOMing group sit nicely in
-> > 
-> >   mem_cgroup_oom_synchronize
-> >   pagefault_out_of_memory
-> >   mm_fault_error
-> >   __do_page_fault
-> >   page_fault
-> >   0xffffffffffffffff
-> > 
-> > regardless of whether they were faulting anon or file.  They do not
-> > even hold the mmap_sem anymore at this point.
-> > 
-> > [ I kept syscalls really simple for now and just have them return
-> >   -ENOMEM, never trap them at all (just like the global OOM case).
-> >   It would be more work to have them wait from a flatter stack too,
-> >   but it should be doable if necessary. ]
-> > 
-> > I suggested this at the MM summit and people were essentially asking
-> > if I was feeling well, so maybe I'm still missing a gaping hole in
-> > this idea.
-> 
-> I didn't get to look at the patch (will do on Monday) but it doesn't
-> sounds entirely crazy. Well, we would have to drop mmap_sem so things
-> have to be rechecked but we are doing that already with VM_FAULT_RETRY
-> in some archs so it should work.
+Hello, Linus.
 
-The global OOM case has been doing this for a long time (1c0fe6e mm:
-invoke oom-killer from page fault), way before VM_FAULT_RETRY.  The
-fault is aborted with VM_FAULT_OOM and the oom killer is invoked.
-Either the task gets killed or it'll just retrigger the fault.  The
-only difference is that a memcg OOM kill may take longer because of
-userspace handling, so memcg needs a waitqueue where the global case
-simply does a trylock (try_set_zonelist_oom) and restarts the fault
-immediately if somebody else is handling the situation.
+This pull request contains
 
-In fact, when Nick added the page fault OOM invocation, KAME merged
-something similar to my patch, which tried to catch memcg OOM kills
-from pagefault_out_of_memory() (a636b32 memcg: avoid unnecessary
-system-wide-oom-killer).
+* Fix for yet another xattr bug which may lead to NULL deref.
 
-Only when he reworked the whole memcg OOM synchronization, added the
-ability to disable OOM and the waitqueues etc, the OOMs were trapped
-right there in the charge context (867578c memcg: fix oom kill
-behavior).  But I see no reason why we shouldn't be able to keep the
-waitqueues and still go back to synchronizing from the bottom of the
-page fault stack.
+* A subtle bug in for_each_descendant_pre().  This bug requires quite
+  specific conditions to trigger and isn't too likely to actually
+  happen in the wild, but maybe that just makes it that much more
+  nastier.
+
+* A warning message added for silly cgroup re-mount (not -o remount,
+  but unmount followed by mount) behavior.
+
+The changes are available in the following git branch
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.10-fixes
+
+for you to fetch changes up to 2a0ff3fbe39bc93f719ff857e5a359d9780579ff:
+
+  cgroup: warn about mismatching options of a new mount of an existing hierarchy (2013-05-29 07:59:39 +0900)
+
+Thanks.
+
+----------------------------------------------------------------
+Jeff Liu (1):
+      cgroup: warn about mismatching options of a new mount of an existing hierarchy
+
+Li Zefan (1):
+      cgroup: initialize xattr before calling d_instantiate()
+
+Tejun Heo (1):
+      cgroup: fix a subtle bug in descendant pre-order walk
+
+ include/linux/cgroup.h |  2 +-
+ kernel/cgroup.c        | 31 ++++++++++++++++---------------
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
