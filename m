@@ -1,71 +1,94 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file as
-	insane
-Date: Tue, 4 Jun 2013 13:21:39 +0200
-Message-ID: <20130604112139.GD31242@dhcp22.suse.cz>
-References: <20130604021302.GH29989@mtj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 1/3] memcg: fix subtle memory barrier bug in
+ mem_cgroup_iter()
+Date: Tue, 4 Jun 2013 15:03:36 +0200
+Message-ID: <20130604130336.GE31242@dhcp22.suse.cz>
+References: <1370306679-13129-1-git-send-email-tj@kernel.org>
+ <1370306679-13129-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1370306679-13129-2-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130604021302.GH29989-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-On Mon 03-06-13 19:13:02, Tejun Heo wrote:
-> Some resources controlled by cgroup aren't per-task and cgroup core
-> allowing threads of a single thread_group to be in different cgroups
-> forced memcg do explicitly find the group leader and use it.  This is
-> gonna be nasty when transitioning to unified hierarchy and in general
-> we don't want and won't support granularity finer than processes.
+On Mon 03-06-13 17:44:37, Tejun Heo wrote:
+[...]
+> @@ -1218,9 +1218,18 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  			 * is alive.
+>  			 */
+>  			dead_count = atomic_read(&root->dead_count);
+> -			smp_rmb();
+> +
+>  			last_visited = iter->last_visited;
+>  			if (last_visited) {
+> +				/*
+> +				 * Paired with smp_wmb() below in this
+> +				 * function.  The pair guarantee that
+> +				 * last_visited is more current than
+> +				 * last_dead_count, which may lead to
+> +				 * spurious iteration resets but guarantees
+> +				 * reliable detection of dead condition.
+> +				 */
+> +				smp_rmb();
+>  				if ((dead_count != iter->last_dead_count) ||
+>  					!css_tryget(&last_visited->css)) {
+>  					last_visited = NULL;
+
+I originally had the barrier this way but Johannes pointed out it is not
+correct https://lkml.org/lkml/2013/2/11/411
+"
+!> +			/*
+!> +			 * last_visited might be invalid if some of the group
+!> +			 * downwards was removed. As we do not know which one
+!> +			 * disappeared we have to start all over again from the
+!> +			 * root.
+!> +			 * css ref count then makes sure that css won't
+!> +			 * disappear while we iterate to the next memcg
+!> +			 */
+!> +			last_visited = iter->last_visited;
+!> +			dead_count = atomic_read(&root->dead_count);
+!> +			smp_rmb();
+!
+!Confused about this barrier, see below.
+!
+!As per above, if you remove the iter lock, those lines are mixed up.
+!You need to read the dead count first because the writer updates the
+!dead count after it sets the new position.  That way, if the dead
+!count gives the go-ahead, you KNOW that the position cache is valid,
+!because it has been updated first.  If either the two reads or the two
+!writes get reordered, you risk seeing a matching dead count while the
+!position cache is stale.
+"
+
+I think that explanation makes sense but I will leave
+further explanation to Mr "I do not like mutual exclusion" :P
+(https://lkml.org/lkml/2013/2/11/501 "My bumper sticker reads "I don't
+believe in mutual exclusion" (the kernel hacker's version of smile for
+the red light camera)")
+
+> @@ -1235,6 +1244,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  				css_put(&last_visited->css);
+>  
+>  			iter->last_visited = memcg;
+> +			/* paired with smp_rmb() above in this function */
+>  			smp_wmb();
+>  			iter->last_dead_count = dead_count;
+>  
+> -- 
+> 1.8.2.1
 > 
-> Mark "tasks" with CFTYPE_INSANE.
-
-Hmm, I wasn't aware that procs is a better interface to work with
-entities in the group so I was using tasks which worked well for memcg.
-I am afraid I am not the only one. Can we get a warning when somebody
-opens the file?
-
-That being said, I do not object against removal, please just add a
-warning to let people know that procs is a preferred interface.
-
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  kernel/cgroup.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -4037,6 +4037,7 @@ static int cgroup_clone_children_write(s
->  static struct cftype files[] = {
->  	{
->  		.name = "tasks",
-> +		.flags = CFTYPE_INSANE,		/* use "procs" instead */
->  		.open = cgroup_tasks_open,
->  		.write_u64 = cgroup_tasks_write,
->  		.release = cgroup_pidlist_release,
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
