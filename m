@@ -1,81 +1,88 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] memcg: fix and reimplement iterator
-Date: Mon,  3 Jun 2013 17:44:36 -0700
-Message-ID: <1370306679-13129-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/3] memcg: fix subtle memory barrier bug in mem_cgroup_iter()
+Date: Mon,  3 Jun 2013 17:44:37 -0700
+Message-ID: <1370306679-13129-2-git-send-email-tj@kernel.org>
+References: <1370306679-13129-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer;
-        bh=YlG5g5U0d9OfJ2GB9aawXbSdmqACu/Kt/gesTFYriyU=;
-        b=M+mtSMES90cP4ZvVz0MfOcX+uuf6LRzU7vwB0HkeKQYmyL38fX95pqU6I2DAfomzML
-         MT3/Lb9shEzS181C6LdCbC+/CNxnkDWdjlNNVL7G6vaVRAqSFRF9uJkZB+zBXiT0l6h0
-         9zTFgSGWbgziNGgAhq/WsAEtBsPytxkIwKBCArgyfUbW5k9w4fZUGMYDswecMx53Uzfz
-         hQypQbuFobXaPcN5Jb1TWOkRxvpoMSCM7mciqNvFYEK6SCyZajQY3IJfmRieFRAS4d7d
-         zPeUymsjA/w883BNMJPn/PfzHs3ZDWcHa6G+V6oXJLN4YFjQjZX7Djn6bwafL8lPag4n
-         I/Qw==
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=IsYqIhtOYnRhIhjdcX0UtMMJuXP6felF+106on/R+CM=;
+        b=uZWREc61GuuAKligECpDx7jPOO0hKIq2Bef7JpUJU4YIxrgdTs4dEXldLBlPDMaR2h
+         AVsguAR9YfwJ9tGOpK7xJMkvhEJvWlOywL0wYS9dUSD2kqH31owjLuY+KUIcbcrWY31e
+         1VmMvBUK8WeA3PdMR7ucISmTrHT2Cp4xhOS/rfh6rli9CdH6BC2AgCPIU5vsOBZmru7S
+         swsPcX1UADzZO1YXpF89R+jvBDHyXIInlT+3vdYY9aQ0UJ6CtRLXWec+mTzMBl1yJZf1
+         LdueKbI0p+RXMLJ4BnxHQ8UbxU5E2VFSdmnqfji1YcEgXC69yKN2C1Oi8oWpigPbLs2E
+         AfyA==
+In-Reply-To: <1370306679-13129-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-mem_cgroup_iter() wraps around cgroup_next_descendant_pre() to provide
-pre-order walk of memcg hierarchy.  In addition to normal walk, it
-also implements shared iteration keyed by zone, node and priority so
-that multiple reclaimers don't end up hitting on the same nodes.
-Reclaimers working on the same zone, node and priority will push the
-same iterator forward.
+mem_cgroup_iter() plays a rather delicate game to allow sharing
+reclaim iteration across multiple reclaimers.  It uses
+reclaim_iter->last_visited and ->dead_count to remember the last
+visited cgroup and verify whether the cgroup is still safe to access.
 
-Unfortunately, the way this is implemented is disturbingly
-complicated.  It ends up implementing pretty unique synchronization
-construct inside memcg which is never a good sign for any subsystem.
-While the implemented sychronization is overly elaborate and fragile,
-the intention behind it is understandable as previously cgroup
-iterator required each iteration to be contained inside a single RCU
-read critical section disallowing implementation of saner mechanism.
-To work around the limitation, memcg developed this Rube Goldberg
-machine to detect whether the cached last cgroup is still alive, which
-of course was ever so subtly broken.
+For the mechanism to work properly, updates to ->last_visited must be
+visible before ->dead_count; otherwise, a stale ->last_visited may be
+considered to be associated with more recent ->dead_count and thus
+escape the dead condition detection which may lead to use-after-free.
 
-Now that cgroup iterations can survive being dropped out of RCU read
-critical section, this can be made a lot simpler.  This patchset
-contains the following three patches.
+The function has smp_rmb() where the dead condition is checked and
+smp_wmb() where the two variables are updated but the smp_rmb() isn't
+between dereferences of the two variables making the whole thing
+pointless.  It's right after atomic_read(&root->dead_count) whose only
+requirement is to belong to the same RCU critical section.
 
- 0001-memcg-fix-subtle-memory-barrier-bug-in-mem_cgroup_it.patch
- 0002-memcg-restructure-mem_cgroup_iter.patch
- 0003-memcg-simplify-mem_cgroup_reclaim_iter.patch
+This patch moves the smp_rmb() between ->last_visited and
+->last_dead_count dereferences and adds comment explaining how the
+barriers are paired and for what.
 
-0001 is fix for a subtle memory barrier bug in the current
-implementation.  Should be applied to for-3.10-fixes and backported
-through -stable.  In general, memory barriers are bad ideas.  Please
-don't do it unless utterly necessary, and, if you're doing it, please
-add ample documentation explaining how they're paired and what they're
-achieving.  Documenting is often extremely helpful for the implementor
-oneself too because one ends up looking at and thinking about things a
-lot more carefully.
+Let's please not add memory barriers without explicitly explaining the
+pairing and what they are achieving.
 
-0002 restructure mem_cgroup_iter() so that it's easier to follow and
-change.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ mm/memcontrol.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-0003 reimplements the iterator sharing so that it's simpler and more
-conventional.  It depends on the new cgroup iterator updates.
-
-This patchset is on top of cgroup/for-3.11[1] which contains the
-iterator updates this patchset depends upon and available in the
-following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-memcg-simpler-iter
-
-Lightly tested.  Proceed with caution.
-
- mm/memcontrol.c |  134 ++++++++++++++++++++++----------------------------------
- 1 file changed, 54 insertions(+), 80 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.11
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index cb1c9de..cb2f91c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1218,9 +1218,18 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 			 * is alive.
+ 			 */
+ 			dead_count = atomic_read(&root->dead_count);
+-			smp_rmb();
++
+ 			last_visited = iter->last_visited;
+ 			if (last_visited) {
++				/*
++				 * Paired with smp_wmb() below in this
++				 * function.  The pair guarantee that
++				 * last_visited is more current than
++				 * last_dead_count, which may lead to
++				 * spurious iteration resets but guarantees
++				 * reliable detection of dead condition.
++				 */
++				smp_rmb();
+ 				if ((dead_count != iter->last_dead_count) ||
+ 					!css_tryget(&last_visited->css)) {
+ 					last_visited = NULL;
+@@ -1235,6 +1244,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 				css_put(&last_visited->css);
+ 
+ 			iter->last_visited = memcg;
++			/* paired with smp_rmb() above in this function */
+ 			smp_wmb();
+ 			iter->last_dead_count = dead_count;
+ 
+-- 
+1.8.2.1
