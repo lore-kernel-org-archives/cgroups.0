@@ -1,132 +1,56 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 1/3] memcg: fix subtle memory barrier bug in
- mem_cgroup_iter()
-Date: Tue, 4 Jun 2013 09:58:40 -0400
-Message-ID: <20130604135840.GN15576@cmpxchg.org>
-References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-2-git-send-email-tj@kernel.org>
- <20130604130336.GE31242@dhcp22.suse.cz>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130604130336.GE31242-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Glauber Costa <glommer@openvz.org>
+Subject: [PATCH] memcg: do not account memory used for cache creation
+Date: Tue,  4 Jun 2013 18:10:59 +0400
+Message-ID: <1370355059-24968-1-git-send-email-glommer@openvz.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com, Glauber Costa <glommer@openvz.org>
 
-On Tue, Jun 04, 2013 at 03:03:36PM +0200, Michal Hocko wrote:
-> On Mon 03-06-13 17:44:37, Tejun Heo wrote:
-> [...]
-> > @@ -1218,9 +1218,18 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
-> >  			 * is alive.
-> >  			 */
-> >  			dead_count = atomic_read(&root->dead_count);
-> > -			smp_rmb();
-> > +
-> >  			last_visited = iter->last_visited;
-> >  			if (last_visited) {
-> > +				/*
-> > +				 * Paired with smp_wmb() below in this
-> > +				 * function.  The pair guarantee that
-> > +				 * last_visited is more current than
-> > +				 * last_dead_count, which may lead to
-> > +				 * spurious iteration resets but guarantees
-> > +				 * reliable detection of dead condition.
-> > +				 */
-> > +				smp_rmb();
-> >  				if ((dead_count != iter->last_dead_count) ||
-> >  					!css_tryget(&last_visited->css)) {
-> >  					last_visited = NULL;
-> 
-> I originally had the barrier this way but Johannes pointed out it is not
-> correct https://lkml.org/lkml/2013/2/11/411
-> "
-> !> +			/*
-> !> +			 * last_visited might be invalid if some of the group
-> !> +			 * downwards was removed. As we do not know which one
-> !> +			 * disappeared we have to start all over again from the
-> !> +			 * root.
-> !> +			 * css ref count then makes sure that css won't
-> !> +			 * disappear while we iterate to the next memcg
-> !> +			 */
-> !> +			last_visited = iter->last_visited;
-> !> +			dead_count = atomic_read(&root->dead_count);
-> !> +			smp_rmb();
-> !
-> !Confused about this barrier, see below.
-> !
-> !As per above, if you remove the iter lock, those lines are mixed up.
-> !You need to read the dead count first because the writer updates the
-> !dead count after it sets the new position.  That way, if the dead
-> !count gives the go-ahead, you KNOW that the position cache is valid,
-> !because it has been updated first.  If either the two reads or the two
-> !writes get reordered, you risk seeing a matching dead count while the
-> !position cache is stale.
-> "
+The memory we used to hold the memcg arrays is currently accounted to
+the current memcg. But that creates a problem, because that memory can
+only be freed after the last user is gone. Our only way to know which is
+the last user, is to hook up to freeing time, but the fact that we still
+have some in flight kmallocs will prevent freeing to happen. I believe
+therefore to be just easier to account this memory as global overhead.
 
-The original prototype code I sent looked like this:
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-mem_cgroup_iter:
-rcu_read_lock()
-if atomic_read(&root->dead_count) == iter->dead_count:
-  smp_rmb()
-  if tryget(iter->position):
-    position = iter->position
-memcg = find_next(postion)
-css_put(position)
-iter->position = memcg
-smp_wmb() /* Write position cache BEFORE marking it uptodate */
-iter->dead_count = atomic_read(&root->dead_count)
-rcu_read_unlock()
-
-iter->last_position is written, THEN iter->last_dead_count is written.
-
-So, yes, you "need to read the dead count" first to be sure
-iter->last_position is uptodate.  But iter->last_dead_count, not
-root->dead_count.  I should have caught this in the final submission
-of your patch :(
-
-Tejun's patch is not correct, either.  Something like this?
+---
+I noticed this while testing nuances of the shrinker patches. The
+caches would basically stay present forever, even if we managed to
+flush all of the actual memory being used. With this patch applied,
+they would go away all right.
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 010d6c1..92830fa 100644
+index 5d8b93a..aa1cbd4 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1199,7 +1199,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+@@ -5642,7 +5642,9 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
+ 	static_key_slow_inc(&memcg_kmem_enabled_key);
  
- 			mz = mem_cgroup_zoneinfo(root, nid, zid);
- 			iter = &mz->reclaim_iter[reclaim->priority];
--			last_visited = iter->last_visited;
- 			if (prev && reclaim->generation != iter->generation) {
- 				iter->last_visited = NULL;
- 				goto out_unlock;
-@@ -1217,14 +1216,20 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 			 * css_tryget() verifies the cgroup pointed to
- 			 * is alive.
- 			 */
-+			last_visited = NULL;
- 			dead_count = atomic_read(&root->dead_count);
--			smp_rmb();
--			last_visited = iter->last_visited;
--			if (last_visited) {
--				if ((dead_count != iter->last_dead_count) ||
--					!css_tryget(&last_visited->css)) {
-+			if (dead_count == iter->last_dead_count) {
-+				/*
-+				 * The writer below sets the position
-+				 * pointer, then the dead count.
-+				 * Ensure we read the updated position
-+				 * when the dead count matches.
-+				 */
-+				smp_rmb();
-+				last_visited = iter->last_visited;
-+				if (last_visited &&
-+				    !css_tryget(&last_visited->css))
- 					last_visited = NULL;
--				}
- 			}
- 		}
- 
+ 	mutex_lock(&set_limit_mutex);
++	memcg_stop_kmem_account();
+ 	ret = memcg_update_cache_sizes(memcg);
++	memcg_resume_kmem_account();
+ 	mutex_unlock(&set_limit_mutex);
+ out:
+ 	return ret;
+-- 
+1.8.1.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
