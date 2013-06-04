@@ -1,66 +1,53 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Tue, 4 Jun 2013 13:50:25 -0700
-Message-ID: <20130604205025.GG14916@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/3] memcg: restructure mem_cgroup_iter()
+Date: Tue, 4 Jun 2013 13:51:23 -0700
+Message-ID: <20130604205123.GH14916@htj.dyndns.org>
 References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-4-git-send-email-tj@kernel.org>
- <20130604131843.GF31242@dhcp22.suse.cz>
+ <1370306679-13129-3-git-send-email-tj@kernel.org>
+ <20130604132120.GG31242@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=xGtMk181SRjJ1ZkGxZSA0mx+iO7+Ae/sZvnVdmWRu5M=;
-        b=ifK5oikgA9YEJMdLhyQf1gkucQKN3bcoCA3BxlNROdsAr2C6CjEo7l4LwX55xvh8pN
-         vaBkLImfcGvwIhYli3nI5woRXis9a+3A9r9SBiIueXNCyyqSacPsgVU/k3LXULcxwiRh
-         dEhwBbR/w+wxTK9GvBa5/IFIc1hLuKlkhLex4QsqTEF1+77TuH/JnSpWfjl+bRlK97NJ
-         6O0vw4wwUVjNYw2XzrTnMRtE9RySXVNhas5DlwUFYjf+bpQ196d1EI+A0h/0pIb7KEK/
-         0XR+L6GL7ny+FJ+cqRkKcnYhtCkEVFAWC2O5HJDTAFz2keKGukn9d8LIYlSxVmTtxlbw
-         2/RA==
+        bh=M46VOQXK7IARvEMwK6oc19iHKEsGMxSleLdhpmwJLXQ=;
+        b=t5Z/C0jlvFqwDkfhE4eL+dHlE1fE9eXIk9zJyNCs7g1A66wMZwsmClef/9ZFWu4Z/N
+         nO8f0naOz5qIWtsHnQVIu/wm501Ub1yJ1btW4WGCmocPxXdsX1S8cEoiwr3gYnL9WCEE
+         TKxYhPYrGfmgvm63lCdj2fv2PHbOC4QrZsA5djTV/w2KZiFIZClY2l63Rm+xp5cnlRTR
+         CHA2qFSkjeNninXWxKEbbDzHoMX1c6wec602+tif11MKjytokI8CdS542LNNJ2XL4zVO
+         RiTW/s+LSDRIUa+WfGcsvtrbIDnPQIK7P+lFiYjIy4q0vQUG0nXZibPHtyKjHq0ZC/0U
+         coaQ==
 Content-Disposition: inline
-In-Reply-To: <20130604131843.GF31242-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130604132120.GG31242@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: hannes@cmpxchg.org, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-Hello, Michal.
-
-On Tue, Jun 04, 2013 at 03:18:43PM +0200, Michal Hocko wrote:
-> > +	if (memcg)
-> > +		css_get(&memcg->css);
+On Tue, Jun 04, 2013 at 03:21:20PM +0200, Michal Hocko wrote:
+> > +	/* non reclaim case is simple - just iterate from @prev */
+> > +	if (!reclaim) {
+> > +		memcg = __mem_cgroup_iter_next(root, prev);
+> > +		goto out_unlock;
+> > +	}
 > 
-> This is all good and nice but it re-introduces the same problem which
-> has been fixed by (5f578161: memcg: relax memcg iter caching). You are
-> pinning memcg in memory for unbounded amount of time because css
-> reference will not let object to leave and rest.
+> I do not have objections for pulling !reclaim case like this, but could
+> you base this on top of the patch which adds predicates into the
+> operators, please?
 
-I don't get why that is a problem.  Can you please elaborate?  css's
-now explicitly allow holding onto them.  We now have clear separation
-of "destruction" and "release" and blkcg also depends on it.  If memcg
-still doesn't distinguish the two properly, that's where the problem
-should be fixed.
-
-> I understand your frustration about the complexity of the current
-> synchronization but we didn't come up with anything easier.
-> Originally I though that your tree walk updates which allow dropping rcu
-> would help here but then I realized that not really because the iterator
-> (resp. pos) has to be a valid pointer and there is only one possibility
-> to do that AFAICS here and that is css pinning. And is no-go.
-
-I find the above really weird.  If css can't be pinned for position
-caching, isn't it natural to ask why it can't be and then fix it?
-Because that's what the whole refcnt thing is about and a usage which
-cgroup explicitly allows (e.g. blkcg also does it).  Why do you go
-from there to "this batshit crazy barrier dancing is the only
-solution"?
-
-Can you please explain why memcg css's can't be pinned?
+I don't really mind either ways but let's see how the other series
+goes.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
