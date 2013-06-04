@@ -1,45 +1,58 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/3] memcg: restructure mem_cgroup_iter()
-Date: Tue, 4 Jun 2013 13:51:23 -0700
-Message-ID: <20130604205123.GH14916@htj.dyndns.org>
-References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-3-git-send-email-tj@kernel.org>
- <20130604132120.GG31242@dhcp22.suse.cz>
+Subject: Re: [patch -v4 4/8] memcg: enhance memcg iterator to support
+ predicates
+Date: Tue, 4 Jun 2013 13:54:26 -0700
+Message-ID: <20130604205426.GI14916@htj.dyndns.org>
+References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
+ <1370254735-13012-5-git-send-email-mhocko@suse.cz>
+ <20130604010737.GF29989@mtj.dyndns.org>
+ <20130604134523.GH31242@dhcp22.suse.cz>
+ <20130604193619.GA14916@htj.dyndns.org>
+ <20130604204807.GA13231@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=M46VOQXK7IARvEMwK6oc19iHKEsGMxSleLdhpmwJLXQ=;
-        b=t5Z/C0jlvFqwDkfhE4eL+dHlE1fE9eXIk9zJyNCs7g1A66wMZwsmClef/9ZFWu4Z/N
-         nO8f0naOz5qIWtsHnQVIu/wm501Ub1yJ1btW4WGCmocPxXdsX1S8cEoiwr3gYnL9WCEE
-         TKxYhPYrGfmgvm63lCdj2fv2PHbOC4QrZsA5djTV/w2KZiFIZClY2l63Rm+xp5cnlRTR
-         CHA2qFSkjeNninXWxKEbbDzHoMX1c6wec602+tif11MKjytokI8CdS542LNNJ2XL4zVO
-         RiTW/s+LSDRIUa+WfGcsvtrbIDnPQIK7P+lFiYjIy4q0vQUG0nXZibPHtyKjHq0ZC/0U
-         coaQ==
+        bh=wWUScC0XDD5EdKXwJzhbiKQmKO4ZSMlQ97BprVX0NWk=;
+        b=HnzEijl5nJgDNpMbPjAgVpGLir8yUX0r7vtsP+c3+A2uBTS3xguijXm1vqbtfsmHTO
+         mgJzfN5TcKt1idz8T1WKlk7DDLvAHnNusLEJaiRHJPJmO/14U0NAQeFo4ehjVp8bpUb5
+         rjCwNUvN5Gi+3lyPF755/c0ACm29L0UIMGj6IMTvst1Jqo64zKfxDAvlZ0xCMRfTZWZQ
+         MDYX2Qq+UFYr8wCoFqseE8C20Lol2tXJ881ghjW1dXvZdFbsTdc+Has1ClCMGVWUd3ES
+         olU5MuYhDr5a8RPaJbA72mmnlYBhkCZMMi7O/LM5QRElZgz5d6zjbGLAAqeFTnqMLeqU
+         CK7w==
 Content-Disposition: inline
-In-Reply-To: <20130604132120.GG31242@dhcp22.suse.cz>
+In-Reply-To: <20130604204807.GA13231@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: hannes@cmpxchg.org, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Tue, Jun 04, 2013 at 03:21:20PM +0200, Michal Hocko wrote:
-> > +	/* non reclaim case is simple - just iterate from @prev */
-> > +	if (!reclaim) {
-> > +		memcg = __mem_cgroup_iter_next(root, prev);
-> > +		goto out_unlock;
-> > +	}
+Hey,
+
+On Tue, Jun 04, 2013 at 10:48:07PM +0200, Michal Hocko wrote:
+> > I really don't think memcg can afford to add more mess than there
+> > already is.  Let's try to get things right with each change, please.
 > 
-> I do not have objections for pulling !reclaim case like this, but could
-> you base this on top of the patch which adds predicates into the
-> operators, please?
+> Is this really about inside vs. outside skipping? I think this is a
+> general improvement to the code. I really prefer not duplicating common
+> code and skipping handling is such a code (we have a visitor which can
+> control the walk). With a side bonus that it doesn't have to pollute
+> vmscan more than necessary.
+> 
+> Please be more specific about _what_ is so ugly about this interface so
+> that it matters so much.
 
-I don't really mind either ways but let's see how the other series
-goes.
+Can you please try the other approach and see how it looks?  It's just
+my general experience that you usually end up with something much
+uglier when you try to do much inside an iterator and having to add
+callbacks which need to communicate through enums is usually a pretty
+good sign that it took a wrong turn somewhere.  There sure are cases
+where such approach is necessary but I really don't see it here.  So,
+it'd be really great if you can give a shot.
 
 Thanks.
 
