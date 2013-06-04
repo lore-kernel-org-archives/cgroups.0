@@ -1,151 +1,81 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 1/3] memcg: fix subtle memory barrier bug in
- mem_cgroup_iter()
-Date: Tue, 4 Jun 2013 17:29:59 +0200
-Message-ID: <20130604152959.GB6356@dhcp22.suse.cz>
-References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-2-git-send-email-tj@kernel.org>
- <20130604130336.GE31242@dhcp22.suse.cz>
- <20130604135840.GN15576@cmpxchg.org>
+From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch v4] Soft limit rework
+Date: Tue, 4 Jun 2013 21:57:56 +0530
+Message-ID: <CAKTCnz=CMbhhROPV4iC6_XPuu_8J53ZMTdXtY_bevPjG+B-+mw@mail.gmail.com>
+References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130604135840.GN15576@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=MK+See2MrMf174R9l8juDRjSE5vex52B8vFs1lVGqQE=;
+        b=kft1odDXX8Vxrjx7WJc4MqaEbOXtaY+Gmh7+acNWK+sVwAP6k9kbdR2AvmpdeHXPF7
+         YipKBUMOxRgN1i1mxzyeo2IxNLAIPSBkCMFt63RjYeZwFSe/MAZ+QZW+wtc81/rq0OKK
+         dhiPZavZWCnrhZbpu7LXwoREojdIp5m/wYXzt97lKNi/tT/bACV2NTE87vr0Wub8NpM5
+         DZylTBTes0nrMCXpAx2oAeplszYudVpOtpyuqgjTRFhXgd7BsRdJdQlApgfpPzIWyfKT
+         b65xFI2Cs5dc6eLaZ0EvvBtLcDGhojVnZpbChB5h9+Utw/4OrMU4xMIeN6FuJkVXHCOl
+         TlgA==
+In-Reply-To: <1370254735-13012-1-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Tue 04-06-13 09:58:40, Johannes Weiner wrote:
-> On Tue, Jun 04, 2013 at 03:03:36PM +0200, Michal Hocko wrote:
-> > On Mon 03-06-13 17:44:37, Tejun Heo wrote:
-> > [...]
-> > > @@ -1218,9 +1218,18 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
-> > >  			 * is alive.
-> > >  			 */
-> > >  			dead_count = atomic_read(&root->dead_count);
-> > > -			smp_rmb();
-> > > +
-> > >  			last_visited = iter->last_visited;
-> > >  			if (last_visited) {
-> > > +				/*
-> > > +				 * Paired with smp_wmb() below in this
-> > > +				 * function.  The pair guarantee that
-> > > +				 * last_visited is more current than
-> > > +				 * last_dead_count, which may lead to
-> > > +				 * spurious iteration resets but guarantees
-> > > +				 * reliable detection of dead condition.
-> > > +				 */
-> > > +				smp_rmb();
-> > >  				if ((dead_count != iter->last_dead_count) ||
-> > >  					!css_tryget(&last_visited->css)) {
-> > >  					last_visited = NULL;
-> > 
-> > I originally had the barrier this way but Johannes pointed out it is not
-> > correct https://lkml.org/lkml/2013/2/11/411
-> > "
-> > !> +			/*
-> > !> +			 * last_visited might be invalid if some of the group
-> > !> +			 * downwards was removed. As we do not know which one
-> > !> +			 * disappeared we have to start all over again from the
-> > !> +			 * root.
-> > !> +			 * css ref count then makes sure that css won't
-> > !> +			 * disappear while we iterate to the next memcg
-> > !> +			 */
-> > !> +			last_visited = iter->last_visited;
-> > !> +			dead_count = atomic_read(&root->dead_count);
-> > !> +			smp_rmb();
-> > !
-> > !Confused about this barrier, see below.
-> > !
-> > !As per above, if you remove the iter lock, those lines are mixed up.
-> > !You need to read the dead count first because the writer updates the
-> > !dead count after it sets the new position.  That way, if the dead
-> > !count gives the go-ahead, you KNOW that the position cache is valid,
-> > !because it has been updated first.  If either the two reads or the two
-> > !writes get reordered, you risk seeing a matching dead count while the
-> > !position cache is stale.
-> > "
-> 
-> The original prototype code I sent looked like this:
-> 
-> mem_cgroup_iter:
-> rcu_read_lock()
-> if atomic_read(&root->dead_count) == iter->dead_count:
->   smp_rmb()
->   if tryget(iter->position):
->     position = iter->position
-> memcg = find_next(postion)
-> css_put(position)
-> iter->position = memcg
-> smp_wmb() /* Write position cache BEFORE marking it uptodate */
-> iter->dead_count = atomic_read(&root->dead_count)
-> rcu_read_unlock()
-> 
-> iter->last_position is written, THEN iter->last_dead_count is written.
-> 
-> So, yes, you "need to read the dead count" first to be sure
-> iter->last_position is uptodate.  But iter->last_dead_count, not
-> root->dead_count.  I should have caught this in the final submission
-> of your patch :(
+On Mon, Jun 3, 2013 at 3:48 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> Hi,
+>
+> This is the fourth version of the patchset.
+>
+> Summary of versions:
+> The first version has been posted here: http://permalink.gmane.org/gmane.linux.kernel.mm/97973
+> (lkml wasn't CCed at the time so I cannot find it in lwn.net
+> archives). There were no major objections. The second version
+> has been posted here http://lwn.net/Articles/548191/ as a part
+> of a longer and spicier thread which started after LSF here:
+> https://lwn.net/Articles/548192/
+> Version number 3 has been posted here http://lwn.net/Articles/550409/
+> Johannes was worried about setups with thousands of memcgs and the
+> tree walk overhead for the soft reclaim pass without anybody in excess.
+>
+> Changes between RFC (aka V1) -> V2
+> As there were no major objections there were only some minor cleanups
+> since the last version and I have moved "memcg: Ignore soft limit until
+> it is explicitly specified" to the end of the series.
+>
+> Changes between V2 -> V3
+> No changes in the code since the last version. I have just rebased the
+> series on top of the current mmotm tree. The most controversial part
+> has been dropped (the last patch "memcg: Ignore soft limit until it is
+> explicitly specified") so there are no semantical changes to the soft
+> limit behavior. This makes this work mostly a code clean up and code
+> reorganization. Nevertheless, this is enough to make the soft limit work
+> more efficiently according to my testing and groups above the soft limit
+> are reclaimed much less as a result.
+>
+> Changes between V3->V4
+> Added some Reviewed-bys but the biggest change comes from Johannes
+> concern about the tree traversal overhead with a huge number of memcgs
+> (http://thread.gmane.org/gmane.linux.kernel.cgroups/7307/focus=100326)
+> and this version addresses this problem by augmenting the memcg tree
+> with the number of over soft limit children at each level of the
+> hierarchy. See more bellow.
+>
+> The basic idea is quite simple. Pull soft reclaim into shrink_zone in
+> the first step and get rid of the previous soft reclaim infrastructure.
+> shrink_zone is done in two passes now. First it tries to do the soft
+> limit reclaim and it falls back to reclaim-all mode if no group is over
+> the limit or no pages have been scanned. The second pass happens at the
+> same priority so the only time we waste is the memcg tree walk which
+> has been updated in the third step to have only negligible overhead.
+>
 
-OK, right you are. I managed to confuse myself by the three dependencies
-here. dead_count -> last_visited -> last_dead_count. The first one is
-invalid because last_visited doesn't care about dead_count and that
-makes it much more clear now.
+Hi, Michal
 
-> Tejun's patch is not correct, either.  Something like this?
+I've just looked at this (I am yet to review the series), but the
+intention of the changes do not read out clearly. Or may be I quite
+outdated on the subject :)
 
-Yes this looks saner and correct. Care to send a full patch?
-
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 010d6c1..92830fa 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1199,7 +1199,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  
->  			mz = mem_cgroup_zoneinfo(root, nid, zid);
->  			iter = &mz->reclaim_iter[reclaim->priority];
-> -			last_visited = iter->last_visited;
->  			if (prev && reclaim->generation != iter->generation) {
->  				iter->last_visited = NULL;
->  				goto out_unlock;
-> @@ -1217,14 +1216,20 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  			 * css_tryget() verifies the cgroup pointed to
->  			 * is alive.
->  			 */
-> +			last_visited = NULL;
->  			dead_count = atomic_read(&root->dead_count);
-> -			smp_rmb();
-> -			last_visited = iter->last_visited;
-> -			if (last_visited) {
-> -				if ((dead_count != iter->last_dead_count) ||
-> -					!css_tryget(&last_visited->css)) {
-> +			if (dead_count == iter->last_dead_count) {
-> +				/*
-> +				 * The writer below sets the position
-> +				 * pointer, then the dead count.
-> +				 * Ensure we read the updated position
-> +				 * when the dead count matches.
-> +				 */
-> +				smp_rmb();
-> +				last_visited = iter->last_visited;
-> +				if (last_visited &&
-> +				    !css_tryget(&last_visited->css))
->  					last_visited = NULL;
-> -				}
->  			}
->  		}
->  
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Balbir
