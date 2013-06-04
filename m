@@ -1,127 +1,151 @@
-From: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file as
-	insane
-Date: Tue, 4 Jun 2013 16:25:43 +0100
-Message-ID: <20130604152543.GY4963@redhat.com>
-References: <20130604021302.GH29989@mtj.dyndns.org>
-	<20130604111556.GA4963@redhat.com>
-	<20130604143444.GI4799@redhat.com>
-	<20130604145008.GV4963@redhat.com>
-	<20130604151236.GA7555@redhat.com>
-Reply-To: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 1/3] memcg: fix subtle memory barrier bug in
+ mem_cgroup_iter()
+Date: Tue, 4 Jun 2013 17:29:59 +0200
+Message-ID: <20130604152959.GB6356@dhcp22.suse.cz>
+References: <1370306679-13129-1-git-send-email-tj@kernel.org>
+ <1370306679-13129-2-git-send-email-tj@kernel.org>
+ <20130604130336.GE31242@dhcp22.suse.cz>
+ <20130604135840.GN15576@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20130604135840.GN15576@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130604151236.GA7555-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-On Tue, Jun 04, 2013 at 11:12:36AM -0400, Vivek Goyal wrote:
-> On Tue, Jun 04, 2013 at 03:50:08PM +0100, Daniel P. Berrange wrote:
-> > On Tue, Jun 04, 2013 at 10:34:44AM -0400, Vivek Goyal wrote:
-> > > On Tue, Jun 04, 2013 at 12:15:56PM +0100, Daniel P. Berrange wrote:
-> > > > On Mon, Jun 03, 2013 at 07:13:02PM -0700, Tejun Heo wrote:
-> > > > > Some resources controlled by cgroup aren't per-task and cgroup core
-> > > > > allowing threads of a single thread_group to be in different cgroups
-> > > > > forced memcg do explicitly find the group leader and use it.  This is
-> > > > > gonna be nasty when transitioning to unified hierarchy and in general
-> > > > > we don't want and won't support granularity finer than processes.
-> > > > 
-> > > > With libvirt and KVM we require the ability to put different threads
-> > > > in different cgroups for the "cpu", "cpuset" & "cpuacct" controllers.
-> > > > This is to allow us to control schedular tunables / placement for
-> > > > QEMU vCPU threads, independantly of limits for QEMU I/O threads. So
-> > > > requiring all threads of a process to be in the same cgroup isn't
-> > > > sufficiently flexible for our needs.
-> > > 
-> > > For placement of vCPU threads, can we set per thread cpu affinity
-> > > (sched_setaffinity()), instead of using cgroups for that purpose.
+On Tue 04-06-13 09:58:40, Johannes Weiner wrote:
+> On Tue, Jun 04, 2013 at 03:03:36PM +0200, Michal Hocko wrote:
+> > On Mon 03-06-13 17:44:37, Tejun Heo wrote:
+> > [...]
+> > > @@ -1218,9 +1218,18 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+> > >  			 * is alive.
+> > >  			 */
+> > >  			dead_count = atomic_read(&root->dead_count);
+> > > -			smp_rmb();
+> > > +
+> > >  			last_visited = iter->last_visited;
+> > >  			if (last_visited) {
+> > > +				/*
+> > > +				 * Paired with smp_wmb() below in this
+> > > +				 * function.  The pair guarantee that
+> > > +				 * last_visited is more current than
+> > > +				 * last_dead_count, which may lead to
+> > > +				 * spurious iteration resets but guarantees
+> > > +				 * reliable detection of dead condition.
+> > > +				 */
+> > > +				smp_rmb();
+> > >  				if ((dead_count != iter->last_dead_count) ||
+> > >  					!css_tryget(&last_visited->css)) {
+> > >  					last_visited = NULL;
 > > 
-> > sched_setaffinity can't overrride affinity already set in the
-> > cgroup. So this won't allow for disjoint affinity sets between
-> > threads. ie if you use cgroups to bind the process to pCPU 1
-> > (to apply all possible non-vCPU threads) and then want to bind
-> > vCPU threads to pCPU 2 you can't do it.
-> > 
+> > I originally had the barrier this way but Johannes pointed out it is not
+> > correct https://lkml.org/lkml/2013/2/11/411
+> > "
+> > !> +			/*
+> > !> +			 * last_visited might be invalid if some of the group
+> > !> +			 * downwards was removed. As we do not know which one
+> > !> +			 * disappeared we have to start all over again from the
+> > !> +			 * root.
+> > !> +			 * css ref count then makes sure that css won't
+> > !> +			 * disappear while we iterate to the next memcg
+> > !> +			 */
+> > !> +			last_visited = iter->last_visited;
+> > !> +			dead_count = atomic_read(&root->dead_count);
+> > !> +			smp_rmb();
+> > !
+> > !Confused about this barrier, see below.
+> > !
+> > !As per above, if you remove the iter lock, those lines are mixed up.
+> > !You need to read the dead count first because the writer updates the
+> > !dead count after it sets the new position.  That way, if the dead
+> > !count gives the go-ahead, you KNOW that the position cache is valid,
+> > !because it has been updated first.  If either the two reads or the two
+> > !writes get reordered, you risk seeing a matching dead count while the
+> > !position cache is stale.
+> > "
 > 
-> I thought we don't have to override affinity set in cgroup. Instead
-> subdivide that among its child tasks as needed.
+> The original prototype code I sent looked like this:
 > 
-> So in above example, we would allow cgroup to have both pcpu1 and pcpu2
-> and then set affiinity for vcpu threads as well as non-vcpu threads.
-
-
-
-
-> > eg for cpu/cpuacct/cpuset controllers we have a setup
-> > 
-> >  <domain cgroup> 0 threads
-> >    |
-> >    +- vcpu0     1 thread
-> >    +- vcpu1     1 thread
-> >    +- emulator  n threads
-> > 
-> > and want complete independance in settings for each of these child
-> > cgroups.
+> mem_cgroup_iter:
+> rcu_read_lock()
+> if atomic_read(&root->dead_count) == iter->dead_count:
+>   smp_rmb()
+>   if tryget(iter->position):
+>     position = iter->position
+> memcg = find_next(postion)
+> css_put(position)
+> iter->position = memcg
+> smp_wmb() /* Write position cache BEFORE marking it uptodate */
+> iter->dead_count = atomic_read(&root->dead_count)
+> rcu_read_unlock()
 > 
-> I guess this will not work with single hierarchy as controllers like
-> blkio don't support putting threads of process in separate group. All
-> threads of a process share iocontext and an iocontext is associated
-> with a cgroup.
-
-IIUC, even with unified hiearchy, we're not going to be co-mounting all
-controllers at the same mount point. The hiearchy libvirt creates is
-the same structure across all controllers, it just has a couple of
-extra leaves at the bottom in the cpu,cpuacct,cpuset controllers.
-
-> > > Apart from cpu affinity, what scheduling parameters we want different
-> > > between different threads.
-> > 
-> > Placement isn't the big deal - it is really the cpu.cfs_period_us,
-> > cpu.cfs_quota_us and cpu.shares settings that are important ones,
-> > along with cpuacct.{stat,usage,usage_percpu} to track utilization
-> > across multiple threads.
+> iter->last_position is written, THEN iter->last_dead_count is written.
 > 
-> Yes, upper limiting cpu usage will become unavailable at thread level
-> if we make this change. I guess customers don't care but libvirt might
-> internally want to upper limit cpu usage of group of threads. Don't
-> know why though. And we don't have this feature available per thread.
-> 
-> I am hoping there is a way to set priority per thread and that should
-> be able to emulate cpu.shares at a thread level.
+> So, yes, you "need to read the dead count" first to be sure
+> iter->last_position is uptodate.  But iter->last_dead_count, not
+> root->dead_count.  I should have caught this in the final submission
+> of your patch :(
 
-As described, we already need to set priority on groups of threads to
-be able to control all QEMU non-VCPU threads as a single set. Per-thread
-settings are too fine and per-process settings are too coarse.
+OK, right you are. I managed to confuse myself by the three dependencies
+here. dead_count -> last_visited -> last_dead_count. The first one is
+invalid because last_visited doesn't care about dead_count and that
+makes it much more clear now.
 
-> > For cpuacct, if we only had 1 cgroup for all threads, we'd have to
-> > read the process's overall usage and then subtract usage of individual
-> > threads. This would really be a step backwards, throwing away the
-> > benefits that cgroups brought in allowing setup arbitrary grouping of
-> > tasks :-(
-> 
-> So these per thread utilization stats are exported to user. Curious, In general
-> how this per thread/group_of_some_threads data is useful?
+> Tejun's patch is not correct, either.  Something like this?
 
-It is all about distinguishing utilization of non-vCPU threads in QEMU
-from vCPU threads. We have users who make use of this feature in their
-mgmt tools.
+Yes this looks saner and correct. Care to send a full patch?
 
-Daniel
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 010d6c1..92830fa 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1199,7 +1199,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  
+>  			mz = mem_cgroup_zoneinfo(root, nid, zid);
+>  			iter = &mz->reclaim_iter[reclaim->priority];
+> -			last_visited = iter->last_visited;
+>  			if (prev && reclaim->generation != iter->generation) {
+>  				iter->last_visited = NULL;
+>  				goto out_unlock;
+> @@ -1217,14 +1216,20 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  			 * css_tryget() verifies the cgroup pointed to
+>  			 * is alive.
+>  			 */
+> +			last_visited = NULL;
+>  			dead_count = atomic_read(&root->dead_count);
+> -			smp_rmb();
+> -			last_visited = iter->last_visited;
+> -			if (last_visited) {
+> -				if ((dead_count != iter->last_dead_count) ||
+> -					!css_tryget(&last_visited->css)) {
+> +			if (dead_count == iter->last_dead_count) {
+> +				/*
+> +				 * The writer below sets the position
+> +				 * pointer, then the dead count.
+> +				 * Ensure we read the updated position
+> +				 * when the dead count matches.
+> +				 */
+> +				smp_rmb();
+> +				last_visited = iter->last_visited;
+> +				if (last_visited &&
+> +				    !css_tryget(&last_visited->css))
+>  					last_visited = NULL;
+> -				}
+>  			}
+>  		}
+>  
+
 -- 
-|: http://berrange.com      -o-    http://www.flickr.com/photos/dberrange/ :|
-|: http://libvirt.org              -o-             http://virt-manager.org :|
-|: http://autobuild.org       -o-         http://search.cpan.org/~danberr/ :|
-|: http://entangle-photo.org       -o-       http://live.gnome.org/gtk-vnc :|
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
