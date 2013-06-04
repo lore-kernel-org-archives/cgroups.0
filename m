@@ -1,110 +1,86 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/3] memcg: restructure mem_cgroup_iter()
-Date: Tue, 4 Jun 2013 15:21:20 +0200
-Message-ID: <20130604132120.GG31242@dhcp22.suse.cz>
-References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-3-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch -v4 4/8] memcg: enhance memcg iterator to support
+ predicates
+Date: Tue, 4 Jun 2013 15:45:23 +0200
+Message-ID: <20130604134523.GH31242@dhcp22.suse.cz>
+References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
+ <1370254735-13012-5-git-send-email-mhocko@suse.cz>
+ <20130604010737.GF29989@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1370306679-13129-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130604010737.GF29989@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Mon 03-06-13 17:44:38, Tejun Heo wrote:
-> mem_cgroup_iter() implements two iteration modes - plain and reclaim.
-> The former is normal pre-order tree walk.  The latter tries to share
-> iteration cursor per zone and priority pair among multiple reclaimers
-> so that they all contribute to scanning forward rather than banging on
-> the same cgroups simultaneously.
+On Mon 03-06-13 18:07:37, Tejun Heo wrote:
+> On Mon, Jun 03, 2013 at 12:18:51PM +0200, Michal Hocko wrote:
+> > The caller of the iterator might know that some nodes or even subtrees
+> > should be skipped but there is no way to tell iterators about that so
+> > the only choice left is to let iterators to visit each node and do the
+> > selection outside of the iterating code. This, however, doesn't scale
+> > well with hierarchies with many groups where only few groups are
+> > interesting.
+> > 
+> > This patch adds mem_cgroup_iter_cond variant of the iterator with a
+> > callback which gets called for every visited node. There are three
+> > possible ways how the callback can influence the walk. Either the node
+> > is visited, it is skipped but the tree walk continues down the tree or
+> > the whole subtree of the current group is skipped.
+> > 
+> > TODO is it correct to reclaim + cond together? What if the cache simply
+> > skips interesting nodes which another predicate would find interesting?
 > 
-> Implementing the two in the same function allows them to share code
-> paths which is fine but the current structure is unnecessarily
-> convoluted with conditionals on @reclaim spread across the function
-> rather obscurely and with a somewhat strange control flow which checks
-> for conditions which can't be and has duplicate tests for the same
-> conditions in different forms.
-> 
-> This patch restructures the function such that there's single test on
-> @reclaim and !reclaim path is contained in its block, which simplifies
-> both !reclaim and reclaim paths.  Also, the control flow in the
-> reclaim path is restructured and commented so that it's easier to
-> follow what's going on why.
-> 
-> Note that after the patch reclaim->generation is synchronized to the
-> iter's on success whether @prev was specified or not.  This doesn't
-> cause any functional differences as the two generation numbers are
-> guaranteed to be the same at that point if @prev and makes the code
-> slightly easier to follow.
-> 
-> This patch is pure restructuring and shouldn't introduce any
-> functional differences.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> ---
->  mm/memcontrol.c | 131 ++++++++++++++++++++++++++++++--------------------------
->  1 file changed, 71 insertions(+), 60 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index cb2f91c..99e7357 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1170,8 +1170,8 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  				   struct mem_cgroup_reclaim_cookie *reclaim)
->  {
->  	struct mem_cgroup *memcg = NULL;
-> -	struct mem_cgroup *last_visited = NULL;
-> -	unsigned long uninitialized_var(dead_count);
-> +	struct mem_cgroup_per_zone *mz;
-> +	struct mem_cgroup_reclaim_iter *iter;
->  
->  	if (mem_cgroup_disabled())
->  		return NULL;
-> @@ -1179,9 +1179,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  	if (!root)
->  		root = root_mem_cgroup;
->  
-> -	if (prev && !reclaim)
-> -		last_visited = prev;
-> -
->  	if (!root->use_hierarchy && root != root_mem_cgroup) {
->  		if (prev)
->  			goto out_css_put;
-> @@ -1189,73 +1186,87 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  	}
->  
->  	rcu_read_lock();
-> -	while (!memcg) {
-> -		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
-> -
-> -		if (reclaim) {
-> -			int nid = zone_to_nid(reclaim->zone);
-> -			int zid = zone_idx(reclaim->zone);
-> -			struct mem_cgroup_per_zone *mz;
-> -
-> -			mz = mem_cgroup_zoneinfo(root, nid, zid);
-> -			iter = &mz->reclaim_iter[reclaim->priority];
-> -			last_visited = iter->last_visited;
-> -			if (prev && reclaim->generation != iter->generation) {
-> -				iter->last_visited = NULL;
-> -				goto out_unlock;
-> -			}
->  
-> +	/* non reclaim case is simple - just iterate from @prev */
-> +	if (!reclaim) {
-> +		memcg = __mem_cgroup_iter_next(root, prev);
-> +		goto out_unlock;
-> +	}
+> I don't know.  Maybe it's just taste but it looks pretty ugly to me.
+> Why does everything have to be folded into the iteration function?
 
-I do not have objections for pulling !reclaim case like this, but could
-you base this on top of the patch which adds predicates into the
-operators, please?
+There are basically 2 options. Factor out skipping logic into something
+like memcg_cgroup_iter_skip_node and memcg_cgroup_iter_skip_tree or
+bundle the generic predicate into iterators.
+I find the in-iterator version more convenient to use because the caller
+doesn't have to handle skip cases explicitly. All the users would have
+to do the same thing (which is now hidden in the iterator) anyway.
 
-[...]
+Besides that it helps reducing the memcg code in vmscan (which we try to
+keep at minimum). I already feel guilty for the code this patch set
+adds.
+
+Is this something that you find serious enough to block this series?
+I do not want to push hard but I would like to settle with something
+finally. This is taking way longer than I would like.
+
+> The iteration only depends on the current position.  Can't you factor
+> out skipping part outside the function rather than rolling into this
+> monstery thing with predicate callback?  Just test the condition
+> outside and call a function to skip whatever is necessary?
+> 
+> Also, cgroup_rightmost_descendant() can be pretty expensive depending
+> on how your tree looks like. 
+
+I have no problem using something else. This was just the easiest to
+use and it behaves more-or-less good for hierarchies which are more or
+less balanced. If this turns out to be a problem we can introduce a
+new cgroup_skip_subtree which would get to last->sibling or go up the
+parent chain until there is non-NULL sibling. But what would be the next
+selling point here if we made it perfect right now? ;)
+
+> It travels to the rightmost child at
+> each level until it can't.  In extreme cases, you can travel the whole
+> subtree.  This usually isn't a problem for its usecases but yours may
+> be different, I'm not sure.
+
+But that would be the case only if the hierarchy would be right wing
+prevailing (aka politically incorrect for some :P)
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
