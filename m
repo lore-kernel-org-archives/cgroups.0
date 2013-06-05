@@ -1,105 +1,45 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Tue, 4 Jun 2013 23:40:16 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com>
-References: <20130530150539.GA18155@dhcp22.suse.cz> <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com> <20130531081052.GA32491@dhcp22.suse.cz> <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com> <20130531112116.GC32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com> <20130601102058.GA19474@dhcp22.suse.cz> <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com> <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com>
- <20130604095514.GC31242@dhcp22.suse.cz>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 2/3] cgroup: mark "notify_on_release"
+ and "release_agent" cgroup files insane
+Date: Wed, 5 Jun 2013 10:47:11 +0400
+Message-ID: <51AEDEEF.8090608@parallels.com>
+References: <20130604021302.GH29989@mtj.dyndns.org> <20130604021355.GI29989@mtj.dyndns.org> <51ADC5D3.5070108@huawei.com> <20130604200003.GC14916@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=Z3LU/90tQ6QRFIkSiD5OG0x1Jxu6aF99dflysWjvnhI=;
-        b=RHewtb4PbFOPoGXHfDVOeGUid9MI5+AEQDeG8if1ETfyL5hPgnoHikcPfBLPUrkbta
-         it0g3nMvotc+ODAhH8inyyfq1INFnuMf2wdnEzhJC+2g/ksTkoQjvgJcvWpQmjEGomLY
-         yQJUHPpTNl6ShtRHLrnr6J9ksunnPARyWpg0huene1995B6W/0vjLJakT1Q2tHtpRsAM
-         LzRu4kTISiZHT6QEc8mBnRN0TaIX2sWIaGvuy6m8BoxwF0cSBhGlVfeimYcT1fpBYCcE
-         bb9uHIQk8DGjnuT5XG4O4a+En75r9PgPIYMRnF6C77brV9SpFo3JRZwZBb25T+jG/gR0
-         7QQA==
-In-Reply-To: <20130604095514.GC31242@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130604200003.GC14916-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 4 Jun 2013, Michal Hocko wrote:
-
-> > I'm not sure a userspace oom notifier would want to keep a
-> > preallocated buffer around that is mlocked in memory for all possible
-> > lengths of this file.
+On 06/05/2013 12:00 AM, Tejun Heo wrote:
+> On Tue, Jun 04, 2013 at 06:47:47PM +0800, Li Zefan wrote:
+>> On 2013/6/4 10:13, Tejun Heo wrote:
+>>> The empty cgroup notification mechanism currently implemented in
+>>> cgroup is tragically outdated.  Forking and execing userland process
+>>> stopped being a viable notification mechanism more than a decade ago.
+>>> We're gonna have a saner mechanism.  Let's make it clear that this
+>>> abomination is going away.
+>>>
+>>> Mark "notify_on_release" and "release_agent" with CFTYPE_INSANE.
+>>>
+>>
+>> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>
+>> Do you plan to implement the alternative mechanism for 3.11?
 > 
-> Well, an oom handler which allocates memory under the same restricted
-> memory doesn't make much sense to me. Tracking all kmem allocations
-> makes it almost impossible to implement a non-trivial handler.
-> 
-
-This isn't only about oom notifiers that reside in the same oom memcg, 
-they can be at a higher level or a different subtree entirely.  The point 
-is that they can be unresponsive either because userspace is flaky, its 
-oom itself, or we do track all slab.  The kernel is the only thing in the 
-position to fix the issue after a sensible user-defined amount of time has 
-elapsed, and that's what this patch is.
-
-> OK, maybe I just wasn't clear enough or I am missing your point. Your
-> users _can_ implement and register their oom handlers. But as your
-> requirements are rather benevolent for handlers implementation you would
-> have a global watchdog which would sit on the oom_control of those
-> groups (which are allowed to have own handlers - all of them in your
-> case I guess) and trigger (user defined/global) timeout when it gets a
-> notification. If the group was under oom always during the timeout then
-> just disable oom_control until oom is settled (under_oom is 0).
-> 
-> Why wouldn't something like this work for your use case?
+> No idea about the timeframe at this moment.  Hoping to do it in this
+> year.
 > 
 
-For the aforementioned reason that we give users the ability to manipulate 
-their own memcg trees and userspace is untrusted.  Their oom notifiers 
-cannot be run as root, not only because of security but also because it 
-would not properly isolate their memory usage to their memcg tree.
+A notification mechanism would be very welcome for us. The problem we
+have now, is that if a container halts itself, we have no way to do any
+cleanup. Doing it would involve having a daemon to scan for
+no-longer-alive groups and shut them down.
 
-> Hohmm, so you are insisting on something that can be implemented in the
-> userspace and put it into the kernel because it is more convenient for
-> you and your use case. This doesn't sound like a way for accepting a
-> feature.
-> 
-
-I don't think you yet understand the problem, which is probably my fault.  
-I'm not insisting this be implemented in the kernel, I'm saying it's not 
-possible to do it in userspace.  Your idea of a timeout implemented in 
-userspace doesn't work in practice: userspace is both untrusted and cannot 
-be guaranteed to be perfect and always wakeup, get the information it does 
-according to its implementation, and issue a SIGKILL.
-
-This is the result of memcg allowing users to disable the oom killer 
-entirely for a memcg, which is still ridiculous, because if the user 
-doesn't respond then you've wasted all that memory and cannot get it back 
-without admin intervention or a reboot.  There are no other "features" in 
-the kernel that put such a responsibility on a userspace process such that 
-if it doesn't work then the entire memcg deadlocks forever without admin 
-intervention.  We need a failsafe in the kernel.
-
-Real users like this cannot run as root, and we cannot run in the root 
-memcg without charging that memory usage to the user's container for that 
-share of a global resource.  Real users do have to tollerate buggy and 
-flaky userspace implementations that cannot be guaranteed to run or do 
-what they are supposed to do.  It's too costly of a problem to not address 
-with a failsafe.  I speak strictly from experience on this.
-
-> And yes we should make memcg oom handling less deadlock prone and
-> Johannes' work in this thread is a good step forward.
-
-The long-term solution to that, which I already have patches for, is 
-something you would cringe even more at: memcg memory reserves that are 
-shared with per-zone memory reserves that get the global oom killer to 
-kill off that process without notification in the case the memcg memory 
-reserves cause a global oom.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The current mechanism proved unusable for us as well, because they are
+global and used by systemd. We would like to register our own handler
+(it would be fine if systemd would allow us to do so, being still the
+only one hooked to the global handler)
