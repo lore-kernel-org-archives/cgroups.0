@@ -1,62 +1,45 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v10 30/35] memcg: scan cache objects hierarchically
-Date: Wed, 5 Jun 2013 16:08:46 -0700
-Message-ID: <20130605160846.3b91290652d555a2a19aa6af@linux-foundation.org>
+Subject: Re: [PATCH v10 35/35] memcg: reap dead memcgs upon global memory
+ pressure.
+Date: Wed, 5 Jun 2013 16:09:02 -0700
+Message-ID: <20130605160902.2e656a43aa7c5a51a574ea48@linux-foundation.org>
 References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
-	<1370287804-3481-31-git-send-email-glommer@openvz.org>
+	<1370287804-3481-36-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1370287804-3481-31-git-send-email-glommer@openvz.org>
+In-Reply-To: <1370287804-3481-36-git-send-email-glommer@openvz.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Glauber Costa <glommer@openvz.org>
 Cc: linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@redhat.com>
 
-On Mon,  3 Jun 2013 23:29:59 +0400 Glauber Costa <glommer@openvz.org> wrote:
+On Mon,  3 Jun 2013 23:30:04 +0400 Glauber Costa <glommer@openvz.org> wrote:
 
-> When reaching shrink_slab, we should descent in children memcg searching
-
-"descend into child memcgs"
-
-> for objects that could be shrunk. This is true even if the memcg does
-
-"can be"
-
-> not have kmem limits on, since the kmem res_counter will also be billed
-> against the user res_counter of the parent.
+> When we delete kmem-enabled memcgs, they can still be zombieing
+> around for a while. The reason is that the objects may still be alive,
+> and we won't be able to delete them at destruction time.
 > 
-> It is possible that we will free objects and not free any pages, that
-> will just harm the child groups without helping the parent group at all.
-> But at this point, we basically are prepared to pay the price.
-> 
-> ...
->
->  #ifdef CONFIG_MEMCG_KMEM
-> +bool memcg_kmem_should_reclaim(struct mem_cgroup *memcg)
-> +{
-> +	struct mem_cgroup *iter;
-> +
-> +	for_each_mem_cgroup_tree(iter, memcg) {
-> +		if (memcg_kmem_is_active(iter)) {
-> +			mem_cgroup_iter_break(memcg, iter);
-> +			return true;
-> +		}
-> +	}
-> +	return false;
-> +}
+> The only entry point for that, though, are the shrinkers. The
+> shrinker interface, however, is not exactly tailored to our needs. It
+> could be a little bit better by using the API Dave Chinner proposed, but
+> it is still not ideal since we aren't really a count-and-scan event, but
+> more a one-off flush-all-you-can event that would have to abuse that
+> somehow.
 
-Locking requirements for this function?  Perhaps the
-for_each_mem_cgroup_tree() definition site would be an appropriate
-place to document this.
+This patch is significantly dependent on
+http://ozlabs.org/~akpm/mmots/broken-out/memcg-debugging-facility-to-access-dangling-memcgs.patch,
+which was designated "mm only debug patch" when I merged it six months
+ago.
 
->  static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
->  {
->  	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
->
-> ...
->
+We can go ahead and merge
+memcg-debugging-facility-to-access-dangling-memcgs.patch upstream I
+guess, but we shouldn't do that just because it makes the
+patch-wrangling a bit easier!
+
+Is memcg-debugging-facility-to-access-dangling-memcgs.patch worth merging in
+its own right?  If so, what changed since our earlier decision?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
