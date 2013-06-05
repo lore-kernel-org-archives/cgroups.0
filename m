@@ -1,269 +1,120 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 08/10] cpuset: allow to keep tasks in empty cpusets
-Date: Wed, 5 Jun 2013 17:16:59 +0800
-Message-ID: <51AF020B.3030701@huawei.com>
-References: <51AF0183.8070602@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Wed, 5 Jun 2013 11:39:37 +0200
+Message-ID: <20130605093937.GK15997@dhcp22.suse.cz>
+References: <20130531081052.GA32491@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
+ <20130531112116.GC32491@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com>
+ <20130601102058.GA19474@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com>
+ <20130603193147.GC23659@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com>
+ <20130604095514.GC31242@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1306042329320.20610-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <51AF0183.8070602-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-To achieve this:
+On Tue 04-06-13 23:40:16, David Rientjes wrote:
+> On Tue, 4 Jun 2013, Michal Hocko wrote:
+> 
+> > > I'm not sure a userspace oom notifier would want to keep a
+> > > preallocated buffer around that is mlocked in memory for all possible
+> > > lengths of this file.
+> > 
+> > Well, an oom handler which allocates memory under the same restricted
+> > memory doesn't make much sense to me. Tracking all kmem allocations
+> > makes it almost impossible to implement a non-trivial handler.
+> > 
+> 
+> This isn't only about oom notifiers that reside in the same oom memcg, 
+> they can be at a higher level or a different subtree entirely.  The point 
+> is that they can be unresponsive either because userspace is flaky, its 
+> oom itself, or we do track all slab.  The kernel is the only thing in the 
+> position to fix the issue after a sensible user-defined amount of time has 
+> elapsed, and that's what this patch is.
+> 
+> > OK, maybe I just wasn't clear enough or I am missing your point. Your
+> > users _can_ implement and register their oom handlers. But as your
+> > requirements are rather benevolent for handlers implementation you would
+> > have a global watchdog which would sit on the oom_control of those
+> > groups (which are allowed to have own handlers - all of them in your
+> > case I guess) and trigger (user defined/global) timeout when it gets a
+> > notification. If the group was under oom always during the timeout then
+> > just disable oom_control until oom is settled (under_oom is 0).
+> > 
+> > Why wouldn't something like this work for your use case?
+> > 
+> 
+> For the aforementioned reason that we give users the ability to manipulate 
+> their own memcg trees and userspace is untrusted.  Their oom notifiers 
+> cannot be run as root, not only because of security but also because it 
+> would not properly isolate their memory usage to their memcg tree.
 
-- We call update_tasks_cpumask/nodemask() for empty cpusets when
-hotplug happens, instead of moving tasks out of them.
+Yes, but nothing prevents an admin - I hope you trust at least this
+entity - to do the global watchdog for the fallback mode. So users can
+play as they like  but if they are not able to cope with the oom
+situation for the defined timeout then the global (trusted and running
+in the root memcg) watchdog re-enables in-kernel oom handler.
 
-- When a cpuset's masks are changed by writing cpuset.cpus/mems,
-we also update tasks in child cpusets which are empty.
+Maybe I just do not see why is this setup problem for your setup.
 
-v2:
+> > Hohmm, so you are insisting on something that can be implemented in the
+> > userspace and put it into the kernel because it is more convenient for
+> > you and your use case. This doesn't sound like a way for accepting a
+> > feature.
+> > 
+> 
+> I don't think you yet understand the problem, which is probably my fault.  
+> I'm not insisting this be implemented in the kernel, I'm saying it's not 
+> possible to do it in userspace.  
 
-- drop rcu_read_lock before calling update_task_nodemask() and
-  update_task_cpumask(), instead of using workqueue.
+Because you still insist on having this fallback mode running inside
+untrusted environment AFAIU.
 
-- add documentation in include/linux/cgroup.h
+> Your idea of a timeout implemented in userspace doesn't work in
+> practice: userspace is both untrusted and cannot be guaranteed to be
+> perfect and always wakeup, get the information it does according to
+> its implementation, and issue a SIGKILL.
+> 
+> This is the result of memcg allowing users to disable the oom killer 
+> entirely for a memcg, which is still ridiculous, because if the user 
+> doesn't respond then you've wasted all that memory and cannot get it back 
+> without admin intervention or a reboot.  There are no other "features" in 
+> the kernel that put such a responsibility on a userspace process such that 
+> if it doesn't work then the entire memcg deadlocks forever without admin 
+> intervention.  We need a failsafe in the kernel.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/linux/cgroup.h |   4 ++
- kernel/cpuset.c        | 137 +++++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 120 insertions(+), 21 deletions(-)
+But the memcg would deadlock within constrains assigned from somebody
+trusted. So while the memory is basically wasted the limit assignment
+already says that somebody (trusted) dedicated that much of memory. So I
+think disabling oom for ever is not that ridiculous.
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index d0ad379..53e81a6 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -277,6 +277,10 @@ enum {
- 	 *
- 	 * - Remount is disallowed.
- 	 *
-+	 * - cpuset: tasks will be kept in empty cpusets when hotplug happens
-+	 *   and take masks of ancestors with non-empty cpus/mems, instead of
-+	 *   being moved to an ancestor.
-+	 *
- 	 * - memcg: use_hierarchy is on by default and the cgroup file for
- 	 *   the flag is not created.
- 	 *
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 5252f94..3b93098 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -878,6 +878,49 @@ static void update_tasks_cpumask(struct cpuset *cs, struct ptr_heap *heap)
- 	cgroup_scan_tasks(&scan);
- }
- 
-+/*
-+ * update_tasks_cpumask_hier - Update the cpumasks of tasks in the hierarchy.
-+ * @root_cs: the root cpuset of the hierarchy
-+ * @update_root: update root cpuset or not?
-+ * @heap: the heap used by cgroup_scan_tasks()
-+ *
-+ * This will update cpumasks of tasks in @root_cs and all other empty cpusets
-+ * which take on cpumask of @root_cs.
-+ *
-+ * Called with cpuset_mutex held
-+ */
-+static void update_tasks_cpumask_hier(struct cpuset *root_cs,
-+				      bool update_root, struct ptr_heap *heap)
-+{
-+	struct cpuset *cp;
-+	struct cgroup *pos_cgrp;
-+
-+	if (update_root)
-+		update_tasks_cpumask(root_cs, heap);
-+
-+	rcu_read_lock();
-+	cpuset_for_each_descendant_pre(cp, pos_cgrp, root_cs) {
-+		/* skip the whole subtree if @cp have some CPU */
-+		if (!cpumask_empty(cp->cpus_allowed)) {
-+			pos_cgrp = cgroup_rightmost_descendant(pos_cgrp);
-+			continue;
-+		}
-+		if (!css_tryget(&cp->css))
-+			continue;
-+		rcu_read_unlock();
-+
-+		update_tasks_cpumask(cp, heap);
-+
-+		rcu_read_lock();
-+		/*
-+		 * We should acquire rcu_read_lock first, so it's still
-+		 * valid to access @cp after dropping the css refcnt.
-+		 */
-+		css_put(&cp->css);
-+	}
-+	rcu_read_unlock();
-+}
-+
- /**
-  * update_cpumask - update the cpus_allowed mask of a cpuset and all tasks in it
-  * @cs: the cpuset to consider
-@@ -929,11 +972,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
- 	mutex_unlock(&callback_mutex);
- 
--	/*
--	 * Scan tasks in the cpuset, and update the cpumasks of any
--	 * that need an update.
--	 */
--	update_tasks_cpumask(cs, &heap);
-+	update_tasks_cpumask_hier(cs, true, &heap);
- 
- 	heap_free(&heap);
- 
-@@ -1101,6 +1140,49 @@ static void update_tasks_nodemask(struct cpuset *cs, struct ptr_heap *heap)
- }
- 
- /*
-+ * update_tasks_nodemask_hier - Update the nodemasks of tasks in the hierarchy.
-+ * @cs: the root cpuset of the hierarchy
-+ * @update_root: update the root cpuset or not?
-+ * @heap: the heap used by cgroup_scan_tasks()
-+ *
-+ * This will update nodemasks of tasks in @root_cs and all other empty cpusets
-+ * which take on nodemask of @root_cs.
-+ *
-+ * Called with cpuset_mutex held
-+ */
-+static void update_tasks_nodemask_hier(struct cpuset *root_cs,
-+				       bool update_root, struct ptr_heap *heap)
-+{
-+	struct cpuset *cp;
-+	struct cgroup *pos_cgrp;
-+
-+	if (update_root)
-+		update_tasks_nodemask(root_cs, heap);
-+
-+	rcu_read_lock();
-+	cpuset_for_each_descendant_pre(cp, pos_cgrp, root_cs) {
-+		/* skip the whole subtree if @cp have some CPU */
-+		if (!nodes_empty(cp->mems_allowed)) {
-+			pos_cgrp = cgroup_rightmost_descendant(pos_cgrp);
-+			continue;
-+		}
-+		if (!css_tryget(&cp->css))
-+			continue;
-+		rcu_read_unlock();
-+
-+		update_tasks_nodemask(cp, heap);
-+
-+		rcu_read_lock();
-+		/*
-+		 * We should acquire rcu_read_lock first, so it's still
-+		 * valid to access @cp after dropping the css refcnt.
-+		 */
-+		css_put(&cp->css);
-+	}
-+	rcu_read_unlock();
-+}
-+
-+/*
-  * Handle user request to change the 'mems' memory placement
-  * of a cpuset.  Needs to validate the request, update the
-  * cpusets mems_allowed, and for each task in the cpuset,
-@@ -1164,7 +1246,7 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
- 	cs->mems_allowed = trialcs->mems_allowed;
- 	mutex_unlock(&callback_mutex);
- 
--	update_tasks_nodemask(cs, &heap);
-+	update_tasks_nodemask_hier(cs, true, &heap);
- 
- 	heap_free(&heap);
- done:
-@@ -2064,27 +2146,36 @@ static void cpuset_propagate_hotplug_workfn(struct work_struct *work)
- 	static nodemask_t off_mems;
- 	struct cpuset *cs = container_of(work, struct cpuset, hotplug_work);
- 	bool is_empty;
-+	bool sane = cgroup_sane_behavior(cs->css.cgroup);
- 
- 	mutex_lock(&cpuset_mutex);
- 
- 	cpumask_andnot(&off_cpus, cs->cpus_allowed, top_cpuset.cpus_allowed);
- 	nodes_andnot(off_mems, cs->mems_allowed, top_cpuset.mems_allowed);
- 
--	/* remove offline cpus from @cs */
--	if (!cpumask_empty(&off_cpus)) {
--		mutex_lock(&callback_mutex);
--		cpumask_andnot(cs->cpus_allowed, cs->cpus_allowed, &off_cpus);
--		mutex_unlock(&callback_mutex);
-+	mutex_lock(&callback_mutex);
-+	cpumask_andnot(cs->cpus_allowed, cs->cpus_allowed, &off_cpus);
-+	mutex_unlock(&callback_mutex);
-+
-+	/*
-+	 * If sane_behavior flag is set, we need to update tasks' cpumask
-+	 * for empty cpuset to take on ancestor's cpumask
-+	 */
-+	if ((sane && cpumask_empty(cs->cpus_allowed)) ||
-+	    !cpumask_empty(&off_cpus))
- 		update_tasks_cpumask(cs, NULL);
--	}
- 
--	/* remove offline mems from @cs */
--	if (!nodes_empty(off_mems)) {
--		mutex_lock(&callback_mutex);
--		nodes_andnot(cs->mems_allowed, cs->mems_allowed, off_mems);
--		mutex_unlock(&callback_mutex);
-+	mutex_lock(&callback_mutex);
-+	nodes_andnot(cs->mems_allowed, cs->mems_allowed, off_mems);
-+	mutex_unlock(&callback_mutex);
-+
-+	/*
-+	 * If sane_behavior flag is set, we need to update tasks' nodemask
-+	 * for empty cpuset to take on ancestor's nodemask
-+	 */
-+	if ((sane && nodes_empty(cs->mems_allowed)) ||
-+	    !nodes_empty(off_mems))
- 		update_tasks_nodemask(cs, NULL);
--	}
- 
- 	is_empty = cpumask_empty(cs->cpus_allowed) ||
- 		nodes_empty(cs->mems_allowed);
-@@ -2092,11 +2183,13 @@ static void cpuset_propagate_hotplug_workfn(struct work_struct *work)
- 	mutex_unlock(&cpuset_mutex);
- 
- 	/*
--	 * If @cs became empty, move tasks to the nearest ancestor with
--	 * execution resources.  This is full cgroup operation which will
-+	 * If sane_behavior flag is set, we'll keep tasks in empty cpusets.
-+	 *
-+	 * Otherwise move tasks to the nearest ancestor with execution
-+	 *  resources.  This is full cgroup operation which will
- 	 * also call back into cpuset.  Should be done outside any lock.
- 	 */
--	if (is_empty)
-+	if (!sane && is_empty)
- 		remove_tasks_in_empty_cpuset(cs);
- 
- 	/* the following may free @cs, should be the last operation */
-@@ -2171,6 +2264,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
- 		cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
- 		mutex_unlock(&callback_mutex);
- 		/* we don't mess with cpumasks of tasks in top_cpuset */
-+		update_tasks_cpumask_hier(&top_cpuset, false, NULL);
- 	}
- 
- 	/* synchronize mems_allowed to N_MEMORY */
-@@ -2179,6 +2273,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
- 		top_cpuset.mems_allowed = new_mems;
- 		mutex_unlock(&callback_mutex);
- 		update_tasks_nodemask(&top_cpuset, NULL);
-+		update_tasks_nodemask_hier(&top_cpuset, false, NULL);
- 	}
- 
- 	/* if cpus or mems went down, we need to propagate to descendants */
+> Real users like this cannot run as root, and we cannot run in the root 
+> memcg without charging that memory usage to the user's container for that 
+> share of a global resource.  Real users do have to tollerate buggy and 
+> flaky userspace implementations that cannot be guaranteed to run or do 
+> what they are supposed to do.  It's too costly of a problem to not address 
+> with a failsafe.  I speak strictly from experience on this.
+> 
+> > And yes we should make memcg oom handling less deadlock prone and
+> > Johannes' work in this thread is a good step forward.
+> 
+> The long-term solution to that, which I already have patches for, is 
+> something you would cringe even more at: memcg memory reserves that are 
+> shared with per-zone memory reserves that get the global oom killer to 
+> kill off that process without notification in the case the memcg memory 
+> reserves cause a global oom.
+
+I would have to see those patches.
 -- 
-1.8.0.2
+Michal Hocko
+SUSE Labs
