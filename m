@@ -1,63 +1,51 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch 1/2] mm: memcontrol: fix lockless reclaim hierarchy
- iterator
-Date: Wed, 5 Jun 2013 16:06:25 -0700
-Message-ID: <20130605230625.GN10693@mtj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 2/2] mm: memcontrol: factor out reclaim iterator loading
+ and updating
+Date: Wed, 5 Jun 2013 16:06:51 -0700
+Message-ID: <20130605230651.GO10693@mtj.dyndns.org>
 References: <1370472826-29959-1-git-send-email-hannes@cmpxchg.org>
+ <1370472826-29959-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=TLIzLpJ+wbC1xTRB6NkfforCZyKhaI0ZudAY9L2ehwg=;
-        b=ewYq0gld4YA13g4iT4TS8DxeMHzEmnSF9T29LuSeE0P/NwLKDfo8A/bEyw4k6gFnQE
-         WlectBG5tNd8Nm8iqz3bsiThJoX3mz5UrWQKjDqxBRWZqdecBKDr40evxCGmz8H5N877
-         geCXPC5eLDjXs9h/UsWWxDkcSvNgg3QQ/MwYcmrd6VlugwJSMrgYXfVQ6vg2GFaAyKYT
-         bC99d1MBmmorJo1YI+G0R6ozY7XQpkj8Y8rWBXodTp/2mQp6Z8aiglEDq0oQWK/5Nd4h
-         8GDuNrCucRY4CqBmMJj3+YsQ8q8OpLdtu8jdh1tfl7fwhiyyaDJsT+LpPMxIBzaRnVfU
-         SslA==
+        bh=OBAuXVIQiaHComhWghRFYAZU4t1j/Kkbl4BIl0YWwuc=;
+        b=T+pEUfpSCaEG8pmSV6eyEECy/b6E1lUp4A6kjHX7/W7ZzRrEOu9igxJ4r21rxl/u0Q
+         4Dh2ged8O8AZG+FIzbGhx7PBL3+UZmS35XR8uFoP3oT6YAJtGEFtW/WrGJpuGdvW/BhN
+         VTp8IZwaWrqgmAOKp5evZRRrWs/0n1abAbxM3Q/poT4x08msTH1tdnnIr3Z+q+msW+Cv
+         fTteQUYpemWJ4qFLziCSOoi66VkFMaMNeRfnXUHBB+VI86LxWueqVt003NFuhkB6OlOu
+         VBbxck79cexJnYWHAw3RZ3YfuPlwxquDWNvCjQZuqC9MxZfbAG3ehsFk545DIeuz2Ju5
+         sB9A==
 Content-Disposition: inline
-In-Reply-To: <1370472826-29959-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1370472826-29959-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jun 05, 2013 at 06:53:45PM -0400, Johannes Weiner wrote:
-> The lockless reclaim hierarchy iterator currently has a misplaced
-> barrier that can lead to use-after-free crashes.
+On Wed, Jun 05, 2013 at 06:53:46PM -0400, Johannes Weiner wrote:
+> mem_cgroup_iter() is too hard to follow.  Factor out the lockless
+> reclaim iterator loading and updating so it's easier to follow the big
+> picture.
 > 
-> The reclaim hierarchy iterator consist of a sequence count and a
-> position pointer that are read and written locklessly, with memory
-> barriers enforcing ordering.
+> Also document the iterator invalidation mechanism a bit more
+> extensively.
 > 
-> The write side sets the position pointer first, then updates the
-> sequence count to "publish" the new position.  Likewise, the read side
-> must read the sequence count first, then the position.  If the
-> sequence count is up to date, it's guaranteed that the position is up
-> to date as well:
-> 
->   writer:                         reader:
->   iter->position = position       if iter->sequence == expected:
->   smp_wmb()                           smp_rmb()
->   iter->sequence = sequence           position = iter->position
-> 
-> However, the read side barrier is currently misplaced, which can lead
-> to dereferencing stale position pointers that no longer point to valid
-> memory.  Fix this.
-> 
-> Reported-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org [3.10+]
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-Oops, right, the references were reversed too.
+Reviewed-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
