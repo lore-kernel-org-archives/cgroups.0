@@ -1,50 +1,76 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Wed, 5 Jun 2013 10:55:31 +0200
-Message-ID: <20130605085531.GG15997@dhcp22.suse.cz>
-References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-4-git-send-email-tj@kernel.org>
- <20130604131843.GF31242@dhcp22.suse.cz>
- <20130604205025.GG14916@htj.dyndns.org>
- <20130604212808.GB13231@dhcp22.suse.cz>
- <20130604215535.GM14916@htj.dyndns.org>
- <20130605073023.GB15997@dhcp22.suse.cz>
- <20130605082023.GG7303@mtj.dyndns.org>
- <20130605083628.GE15997@dhcp22.suse.cz>
- <20130605084456.GA7990@mtj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch -v4 4/8] memcg: enhance memcg iterator to support
+ predicates
+Date: Wed, 5 Jun 2013 01:58:49 -0700
+Message-ID: <20130605085849.GB7990@mtj.dyndns.org>
+References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
+ <1370254735-13012-5-git-send-email-mhocko@suse.cz>
+ <20130604010737.GF29989@mtj.dyndns.org>
+ <20130604134523.GH31242@dhcp22.suse.cz>
+ <20130604193619.GA14916@htj.dyndns.org>
+ <20130604204807.GA13231@dhcp22.suse.cz>
+ <20130604205426.GI14916@htj.dyndns.org>
+ <20130605073728.GC15997@dhcp22.suse.cz>
+ <20130605080545.GF7303@mtj.dyndns.org>
+ <20130605085239.GF15997@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=BXeKtNXR+s9/EG3b4g8j3JHiXVbnEPdriSvmBPLvKZI=;
+        b=xBRaM8yR2H9lNPifOj5Wx/QN9X4EoSSVstncVr5WakZKlSoTF1/1zkXsGNagy4nuya
+         YlIvMrb6jAfHDFmUCeBC5IonaVYCU45Pq3FX5Hk3zZAGblDmyid6UnHPZIwiLYVyN4AG
+         sInQMm3ip4uU0gOcQPRzOOzphidZgJv9Cb3lDXrqhBktPNg8SdcwPXoDgPeEaDlCSYl7
+         /086NJutUEqB74uylhm/TUO/XGA50XjC3pKIy3nGKCPzt76StDIaKZ6bZEGkOLiPl2Cv
+         oSbeAijnTVNUGCUTEhajHO5dV/ABrxAivsXY2vOLZPrHvMq04g/+CvzVoc3Y5HyKK/M7
+         YPTQ==
 Content-Disposition: inline
-In-Reply-To: <20130605084456.GA7990@mtj.dyndns.org>
+In-Reply-To: <20130605085239.GF15997@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: hannes@cmpxchg.org, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Wed 05-06-13 01:44:56, Tejun Heo wrote:
-[...]
-> > alive. Sorry, I do not like it at all. I find it much better to clean up
-> > when the group is removed. Because doing things asynchronously just
-> > makes it more obscure. There is no reason to do such a thing on the
-> > background when we know _when_ to do the cleanup and that is definitely
-> > _not a hot path_.
+Hey, Michal.
+
+On Wed, Jun 05, 2013 at 10:52:39AM +0200, Michal Hocko wrote:
+> > One of the core jobs of being a maintainer is ensuring the code stays
+> > in readable and maintainable state.
 > 
-> Yeah, that's true.  I just wanna avoid the barrier dancing.  Only one
-> of the ancestors can cache a memcg, right?
+> As you might know I am playing the maintainer role for around year and a
+> half and there were many improvemtns merged since then (and some faults
+> as well of course).
+> There is a lot of space for improvements and I work at areas as time
+> permits focusing more at reviews for other people are willing to do.
 
-No. All of them on the way up hierarchy. Basically each parent which
-ever triggered the reclaim caches reclaimers.
+I see.  Yeah, maybe I was attributing too many things to you.  Sorry
+about that.
 
-> Walking up the tree scanning for cached ones and putting them should
-> work?  Is that what you were suggesting?
+> [...]
+> 
+> Please stop distracting from the main purpose of this discussion with
+> side tracks and personal things.
 
-That was my first version of the patch I linked in the previous email.
+I'm not really trying to distract you.  I suppose my points are.
+
+* Let's please pay more attention to each change which goes in.
+
+* Let's prioritize cleanups over new features because, whatever the
+  history, memcg needs quite some cleanups.
+
+I really don't have personal vandetta against you.  I'm mostly just
+very frustrated about memcg.  Maybe you're too.
+
+Anyways, so you aren't gonna try the skipping thing?
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
