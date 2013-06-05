@@ -1,58 +1,90 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch -v4 4/8] memcg: enhance memcg iterator to support
- predicates
-Date: Wed, 5 Jun 2013 02:09:38 -0700
-Message-ID: <20130605090938.GA8266@mtj.dyndns.org>
-References: <20130604010737.GF29989@mtj.dyndns.org>
- <20130604134523.GH31242@dhcp22.suse.cz>
- <20130604193619.GA14916@htj.dyndns.org>
- <20130604204807.GA13231@dhcp22.suse.cz>
- <20130604205426.GI14916@htj.dyndns.org>
- <20130605073728.GC15997@dhcp22.suse.cz>
- <20130605080545.GF7303@mtj.dyndns.org>
- <20130605085239.GF15997@dhcp22.suse.cz>
- <20130605085849.GB7990@mtj.dyndns.org>
- <20130605090739.GH15997@dhcp22.suse.cz>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 02/10] cpuset: cleanup guarantee_online_{cpus|mems}()
+Date: Wed, 5 Jun 2013 17:15:23 +0800
+Message-ID: <51AF01AB.2070405@huawei.com>
+References: <51AF0183.8070602@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=14WYN/zpyr1SKnhCAcZIsk/nPp28Ue/qSxxX8s5fVWU=;
-        b=gaRJH5FRkSFU2Ox+Wrmhs/l2M6qzDZCnQYkjNJEy2KofgxUHADB2zbdRBj0WeCrSnv
-         GSua4G31a5sIgblxO981GP0LFqF9pJ2x1SwL02xiD+KDg5D+/ou+H5tDr9t9ty5utFGA
-         fX7icmi0/5Bf5/NVd5mrPc+oYPcIDQtEq2fzVMBUhjLUcX6vZTL38q7MAaalA1nFKLLQ
-         Li9NPBHjO88dWIAKGCjjGcQyoPIjQJim+tlsQW9415rULCwYrY5NQAIbieh8TkspHYHQ
-         ZB/Xrc5bH6tyBQiOQ+wNxYtJZ6PTHxSRRmpEglMCeXE2jGpnrNHkVjKutClMmOveo82t
-         RIQg==
-Content-Disposition: inline
-In-Reply-To: <20130605090739.GH15997@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51AF0183.8070602-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-On Wed, Jun 05, 2013 at 11:07:39AM +0200, Michal Hocko wrote:
-> On Wed 05-06-13 01:58:49, Tejun Heo wrote:
-> [...]
-> > Anyways, so you aren't gonna try the skipping thing?
-> 
-> As I said. I do not consider this a priority for the said reasons (i
-> will not repeat them).
+- We never pass a NULL @cs to these functions.
+- The top cpuset always has some online cpus/mems.
 
-That's a weird way to respond.  Alright, whatever, let me give it a
-shot then.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cpuset.c | 29 +++++++----------------------
+ 1 file changed, 7 insertions(+), 22 deletions(-)
 
-Thanks.
-
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index f0c884a..d753837 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -304,53 +304,38 @@ static struct file_system_type cpuset_fs_type = {
+ /*
+  * Return in pmask the portion of a cpusets's cpus_allowed that
+  * are online.  If none are online, walk up the cpuset hierarchy
+- * until we find one that does have some online cpus.  If we get
+- * all the way to the top and still haven't found any online cpus,
+- * return cpu_online_mask.  Or if passed a NULL cs from an exit'ing
+- * task, return cpu_online_mask.
++ * until we find one that does have some online cpus.  The top
++ * cpuset always has some cpus online.
+  *
+  * One way or another, we guarantee to return some non-empty subset
+  * of cpu_online_mask.
+  *
+  * Call with callback_mutex held.
+  */
+-
+ static void guarantee_online_cpus(const struct cpuset *cs,
+ 				  struct cpumask *pmask)
+ {
+-	while (cs && !cpumask_intersects(cs->cpus_allowed, cpu_online_mask))
++	while (!cpumask_intersects(cs->cpus_allowed, cpu_online_mask))
+ 		cs = parent_cs(cs);
+-	if (cs)
+-		cpumask_and(pmask, cs->cpus_allowed, cpu_online_mask);
+-	else
+-		cpumask_copy(pmask, cpu_online_mask);
+-	BUG_ON(!cpumask_intersects(pmask, cpu_online_mask));
++	cpumask_and(pmask, cs->cpus_allowed, cpu_online_mask);
+ }
+ 
+ /*
+  * Return in *pmask the portion of a cpusets's mems_allowed that
+  * are online, with memory.  If none are online with memory, walk
+  * up the cpuset hierarchy until we find one that does have some
+- * online mems.  If we get all the way to the top and still haven't
+- * found any online mems, return node_states[N_MEMORY].
++ * online mems.  The top cpuset always has some mems online.
+  *
+  * One way or another, we guarantee to return some non-empty subset
+  * of node_states[N_MEMORY].
+  *
+  * Call with callback_mutex held.
+  */
+-
+ static void guarantee_online_mems(const struct cpuset *cs, nodemask_t *pmask)
+ {
+-	while (cs && !nodes_intersects(cs->mems_allowed,
+-					node_states[N_MEMORY]))
++	while (!nodes_intersects(cs->mems_allowed, node_states[N_MEMORY]))
+ 		cs = parent_cs(cs);
+-	if (cs)
+-		nodes_and(*pmask, cs->mems_allowed,
+-					node_states[N_MEMORY]);
+-	else
+-		*pmask = node_states[N_MEMORY];
+-	BUG_ON(!nodes_intersects(*pmask, node_states[N_MEMORY]));
++	nodes_and(*pmask, cs->mems_allowed, node_states[N_MEMORY]);
+ }
+ 
+ /*
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.0.2
