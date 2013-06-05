@@ -1,120 +1,61 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Wed, 5 Jun 2013 11:39:37 +0200
-Message-ID: <20130605093937.GK15997@dhcp22.suse.cz>
-References: <20130531081052.GA32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305310316210.27716@chino.kir.corp.google.com>
- <20130531112116.GC32491@dhcp22.suse.cz>
- <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com>
- <20130601102058.GA19474@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com>
- <20130603193147.GC23659@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com>
- <20130604095514.GC31242@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file
+	as insane
+Date: Wed, 5 Jun 2013 17:49:54 +0800
+Message-ID: <51AF09C2.1040305@huawei.com>
+References: <20130604021302.GH29989@mtj.dyndns.org>
+	<20130604112139.GD31242@dhcp22.suse.cz>
+	<20130604200149.GD14916@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1306042329320.20610-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20130604200149.GD14916-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 04-06-13 23:40:16, David Rientjes wrote:
-> On Tue, 4 Jun 2013, Michal Hocko wrote:
+On 2013/6/5 4:01, Tejun Heo wrote:
+> On Tue, Jun 04, 2013 at 01:21:39PM +0200, Michal Hocko wrote:
+>> On Mon 03-06-13 19:13:02, Tejun Heo wrote:
+>>> Some resources controlled by cgroup aren't per-task and cgroup core
+>>> allowing threads of a single thread_group to be in different cgroups
+>>> forced memcg do explicitly find the group leader and use it.  This is
+>>> gonna be nasty when transitioning to unified hierarchy and in general
+>>> we don't want and won't support granularity finer than processes.
+>>>
+>>> Mark "tasks" with CFTYPE_INSANE.
+>>
+>> Hmm, I wasn't aware that procs is a better interface to work with
+>> entities in the group so I was using tasks which worked well for memcg.
+>> I am afraid I am not the only one. Can we get a warning when somebody
+>> opens the file?
+>>
+>> That being said, I do not object against removal, please just add a
+>> warning to let people know that procs is a preferred interface.
 > 
-> > > I'm not sure a userspace oom notifier would want to keep a
-> > > preallocated buffer around that is mlocked in memory for all possible
-> > > lengths of this file.
-> > 
-> > Well, an oom handler which allocates memory under the same restricted
-> > memory doesn't make much sense to me. Tracking all kmem allocations
-> > makes it almost impossible to implement a non-trivial handler.
-> > 
+> Hmmm... I don't know.  For users of multiple hierarchies, tasks are
+> fine.  It's only gonna be an issue when we transition to unified
+> hierarchy where a lot of other things would change too.  I'm not sure
+> whether it'd be worthwhile to generate a warning now for everyone.
+> Li, what do you think?
 > 
-> This isn't only about oom notifiers that reside in the same oom memcg, 
-> they can be at a higher level or a different subtree entirely.  The point 
-> is that they can be unresponsive either because userspace is flaky, its 
-> oom itself, or we do track all slab.  The kernel is the only thing in the 
-> position to fix the issue after a sensible user-defined amount of time has 
-> elapsed, and that's what this patch is.
-> 
-> > OK, maybe I just wasn't clear enough or I am missing your point. Your
-> > users _can_ implement and register their oom handlers. But as your
-> > requirements are rather benevolent for handlers implementation you would
-> > have a global watchdog which would sit on the oom_control of those
-> > groups (which are allowed to have own handlers - all of them in your
-> > case I guess) and trigger (user defined/global) timeout when it gets a
-> > notification. If the group was under oom always during the timeout then
-> > just disable oom_control until oom is settled (under_oom is 0).
-> > 
-> > Why wouldn't something like this work for your use case?
-> > 
-> 
-> For the aforementioned reason that we give users the ability to manipulate 
-> their own memcg trees and userspace is untrusted.  Their oom notifiers 
-> cannot be run as root, not only because of security but also because it 
-> would not properly isolate their memory usage to their memcg tree.
 
-Yes, but nothing prevents an admin - I hope you trust at least this
-entity - to do the global watchdog for the fallback mode. So users can
-play as they like  but if they are not able to cope with the oom
-situation for the defined timeout then the global (trusted and running
-in the root memcg) watchdog re-enables in-kernel oom handler.
+I think users who use cgroup for serious work should already know that
+"tasks" can be used to attach a thread only, and the "cgroup.procs" file
+is documented in Documentation/cgroups/cgroups.txt
 
-Maybe I just do not see why is this setup problem for your setup.
+As we'll keep allowing multiple hierarchies for forseeable future, and we
+don't have a timeline to forbid it, I don't think we want to pump a 
+warning for now.
 
-> > Hohmm, so you are insisting on something that can be implemented in the
-> > userspace and put it into the kernel because it is more convenient for
-> > you and your use case. This doesn't sound like a way for accepting a
-> > feature.
-> > 
-> 
-> I don't think you yet understand the problem, which is probably my fault.  
-> I'm not insisting this be implemented in the kernel, I'm saying it's not 
-> possible to do it in userspace.  
-
-Because you still insist on having this fallback mode running inside
-untrusted environment AFAIU.
-
-> Your idea of a timeout implemented in userspace doesn't work in
-> practice: userspace is both untrusted and cannot be guaranteed to be
-> perfect and always wakeup, get the information it does according to
-> its implementation, and issue a SIGKILL.
-> 
-> This is the result of memcg allowing users to disable the oom killer 
-> entirely for a memcg, which is still ridiculous, because if the user 
-> doesn't respond then you've wasted all that memory and cannot get it back 
-> without admin intervention or a reboot.  There are no other "features" in 
-> the kernel that put such a responsibility on a userspace process such that 
-> if it doesn't work then the entire memcg deadlocks forever without admin 
-> intervention.  We need a failsafe in the kernel.
-
-But the memcg would deadlock within constrains assigned from somebody
-trusted. So while the memory is basically wasted the limit assignment
-already says that somebody (trusted) dedicated that much of memory. So I
-think disabling oom for ever is not that ridiculous.
-
-> Real users like this cannot run as root, and we cannot run in the root 
-> memcg without charging that memory usage to the user's container for that 
-> share of a global resource.  Real users do have to tollerate buggy and 
-> flaky userspace implementations that cannot be guaranteed to run or do 
-> what they are supposed to do.  It's too costly of a problem to not address 
-> with a failsafe.  I speak strictly from experience on this.
-> 
-> > And yes we should make memcg oom handling less deadlock prone and
-> > Johannes' work in this thread is a good step forward.
-> 
-> The long-term solution to that, which I already have patches for, is 
-> something you would cringe even more at: memcg memory reserves that are 
-> shared with per-zone memory reserves that get the global oom killer to 
-> kill off that process without notification in the case the memcg memory 
-> reserves cause a global oom.
-
-I would have to see those patches.
--- 
-Michal Hocko
-SUSE Labs
+And we don't generate warnings for other "insane" behaviors currently.
