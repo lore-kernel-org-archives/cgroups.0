@@ -1,93 +1,74 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Wed, 5 Jun 2013 13:06:12 -0700
-Message-ID: <20130605200612.GH10693@mtj.dyndns.org>
-References: <1370306679-13129-4-git-send-email-tj@kernel.org>
- <20130604131843.GF31242@dhcp22.suse.cz>
- <20130604205025.GG14916@htj.dyndns.org>
- <20130604212808.GB13231@dhcp22.suse.cz>
- <20130604215535.GM14916@htj.dyndns.org>
- <20130605073023.GB15997@dhcp22.suse.cz>
- <20130605082023.GG7303@mtj.dyndns.org>
- <20130605143949.GQ15576@cmpxchg.org>
- <20130605172212.GA10693@mtj.dyndns.org>
- <20130605194552.GI15721@cmpxchg.org>
+Subject: Re: [PATCH v2 08/10] cpuset: allow to keep tasks in empty cpusets
+Date: Wed, 5 Jun 2013 13:51:46 -0700
+Message-ID: <20130605205146.GI10693@mtj.dyndns.org>
+References: <51AF0183.8070602@huawei.com>
+ <51AF020B.3030701@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=WEwcHHj6ltOKyEYsCLlHf48VE/3fKtrLUXYOKYuzUco=;
-        b=vymGzFDd009kRRuQWPuMTg5Fxc81PrXt196nMT0Uto53BGFAY0Nz3FK+Ymt0Mrlg4b
-         XOOo/E7+lGQiWn0F82papOW6SGA7QFDNYduaIfijN7B3/594H1hNNGI08mFvyiKbBHW3
-         t+FTR9H3lBITZJMeMPYB/OH/L+5DObdprCouYuGSFTMOsKuc3Zmt30enUOtx+zYjs/FY
-         KaiqfCksDZjOxWrAHlIer5HrMhqYDjF6OawNbPuJ/wyjJxa4VDTn/kjChVE4XsIJyvv6
-         e43LQo3vzzJt0qz3pPHsAyJsb7/RUA+kTtKBfHIdPh1jTCzX21d9vPx1OVFmrecJWRxk
-         jB9g==
-Content-Disposition: inline
-In-Reply-To: <20130605194552.GI15721-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=IWZ/JxnfUm69g23ehKtJge0YD9xHPu3ep4nAem/38H8=;
+	b=V02WisfiSlHRTABq2HxxsbcIbeQ3kIfnlCXOshPdJmYNrZdc3xrGml2MzEXouA2wHR
+	0HWVus1Wz1ZwIOS7SoYvthrjYdOIcAu07Y5/sZv912ZK2H4BrzYRx9z4d2Ew82kY1iRp
+	CCmWm42JLx6uiCzWtig1oTXubxOhmg5iLCtHwCNvYzc3EFSFokogLnPCoNuqwQfKV/VK
+	4SCubBdiIBKXonbBEl4R91XdiTbFXXhwm7qXCnVNeUHkETPDa288Rlb5w8+pxReqX9sU
+	9PnbLxaXBJYoUKV8nHnrrhPUnKlmL3k96xQCFRiTZnwPVxaLm35Urim5af1VPIL3kY6p
+	oXOA==
+Content-Disposition: inline
+In-Reply-To: <51AF020B.3030701-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
+Hello, Li.
 
-On Wed, Jun 05, 2013 at 03:45:52PM -0400, Johannes Weiner wrote:
-> I'm not sure what you are suggesting.  Synchroneously invalidate every
-> individual iterator upwards the hierarchy every time a cgroup is
-> destroyed?
+On Wed, Jun 05, 2013 at 05:16:59PM +0800, Li Zefan wrote:
+> @@ -2092,11 +2183,13 @@ static void cpuset_propagate_hotplug_workfn(struct work_struct *work)
+>  	mutex_unlock(&cpuset_mutex);
+>  
+>  	/*
+> -	 * If @cs became empty, move tasks to the nearest ancestor with
+> -	 * execution resources.  This is full cgroup operation which will
+> +	 * If sane_behavior flag is set, we'll keep tasks in empty cpusets.
+> +	 *
+> +	 * Otherwise move tasks to the nearest ancestor with execution
+> +	 *  resources.  This is full cgroup operation which will
+>  	 * also call back into cpuset.  Should be done outside any lock.
+>  	 */
+> -	if (is_empty)
+> +	if (!sane && is_empty)
+>  		remove_tasks_in_empty_cpuset(cs);
+>  
+>  	/* the following may free @cs, should be the last operation */
+> @@ -2171,6 +2264,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+>  		cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
+>  		mutex_unlock(&callback_mutex);
+>  		/* we don't mess with cpumasks of tasks in top_cpuset */
+> +		update_tasks_cpumask_hier(&top_cpuset, false, NULL);
+>  	}
 
-Yeap.
+I'm a little confused by the order of operation.  We now have two
+different hierarchical walks for hotplug propagation, right?  I
+suppose the above one is added because we now also need to update the
+mask when cpus are being brought online?
 
-> The invalidation I am talking about is what we do by increasing the
-> dead counts.  This lazily invalidates all the weak pointers in the
-> iterators of the hierarchy root.
-> 
-> Of course if you do a synchroneous invalidation of individual
-> iterators, we don't need weak pointers anymore and RCU is enough, but
-> that would mean nr_levels * nr_nodes * nr_zones * nr_priority_levels
-> invalidation operations per destruction, whereas the weak pointers are
-> invalidated with one atomic_inc() per nesting level.
-
-While it does have to traverse the arrays, it's still bound by the
-depth of nesting and cgroup destruction is a pretty cold path.  I
-don't think it'd matter that much.
-
-> As I said, the weak pointers are only a few lines of code that can be
-> neatly self-contained (see the invalidate, load, store functions
-> below).  Please convince me that your alternative solution will save
-> complexity to such an extent that either the memory waste of
-> indefinite css pinning, or the computational overhead of non-lazy
-> iterator cleanup, is justifiable.
-
-The biggest issue I see with the weak pointer is that it's special and
-tricky.  If this is something which is absolutely necessary, it should
-be somewhere more generic.  Also, if we can use the usual RCU deref
-with O(depth) cleanup in the cold path, I don't see how this deviation
-is justifiable.
-
-For people who've been looking at it for long enough, it probably
-isn't that different from using plain RCU but that's just because that
-person has spent the time to build that pattern into his/her brain.
-We now have a lot of people accustomed to plain RCU usages which in
-itself is tricky already and introducing new constructs is actively
-deterimental to maintainability.  We sure can do that when there's no
-alternative but I don't think avoiding synchronous cleanup on cgroup
-destruction path is a good enough reason.  It feels like an
-over-engineering to me.
-
-Another thing is that this matters the most when there are continuous
-creation and destruction of cgroups and the weak pointer
-implementation would keep resetting the iteration to the beginning.
-Depending on timing, it'd be able to live-lock reclaim cursor to the
-beginning of iteration even with fairly low rate of destruction,
-right?  It can be pretty bad high up the tree.  With synchronous
-cleanup, depending on how it's implemented, it can be made to keep the
-iteration position.
+I wonder whether it'd be possible to merge the two paths.  My
+suspicion is that we probably don't need propagate_hotplug_work
+anymore now that we can drop RCU read lock while doing the pre-order
+walk.  What do you think?
 
 Thanks.
 
