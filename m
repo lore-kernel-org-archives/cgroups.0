@@ -1,93 +1,76 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch -v4 4/8] memcg: enhance memcg iterator to support
- predicates
-Date: Wed, 5 Jun 2013 01:05:45 -0700
-Message-ID: <20130605080545.GF7303@mtj.dyndns.org>
-References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
- <1370254735-13012-5-git-send-email-mhocko@suse.cz>
- <20130604010737.GF29989@mtj.dyndns.org>
- <20130604134523.GH31242@dhcp22.suse.cz>
- <20130604193619.GA14916@htj.dyndns.org>
- <20130604204807.GA13231@dhcp22.suse.cz>
- <20130604205426.GI14916@htj.dyndns.org>
- <20130605073728.GC15997@dhcp22.suse.cz>
+Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
+Date: Wed, 5 Jun 2013 01:20:23 -0700
+Message-ID: <20130605082023.GG7303@mtj.dyndns.org>
+References: <1370306679-13129-1-git-send-email-tj@kernel.org>
+ <1370306679-13129-4-git-send-email-tj@kernel.org>
+ <20130604131843.GF31242@dhcp22.suse.cz>
+ <20130604205025.GG14916@htj.dyndns.org>
+ <20130604212808.GB13231@dhcp22.suse.cz>
+ <20130604215535.GM14916@htj.dyndns.org>
+ <20130605073023.GB15997@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jM6DBXPtWYQBg+sPNaN6MAgsLjZnfd5st30fm4wst2s=;
-        b=C+EMCFJ2dj8k2lNqfRrlLJFWO9Sli8Sdqqfn1X7w5JtNi13d9kITaMlu4pwpCse/Vw
-         cLLMDtrGzH2A5MBQINFCfc0u7RHCqzwltN2JrtGg7uRMt042hGmcNXsxfEdjENkZ5zAE
-         lqLN93uztXedP+pafaYTStIJjPZXFx9VJvUUgnUWlbzCQX4NMyh7DhvH74B50KZsyCnR
-         CT4xjsFuk6GPKQkoBvixMXgWMv/CDwedarfl3QkdwnkT2RuqawiP6tQWiU5155Ehg07E
-         /VLeMHS5IC1tttVnGhSnikT9+ZHOE9gYzCthsMG3nn74mttrlIGniEH9LrHvuDqjB5H8
-         OeDg==
+        bh=FLdFLAWuhC49jK7huxv8ziIW4gnF6b6fCm4XWkITANI=;
+        b=ZAfM/PXN64ZQOdwTwNAQTPc07hCRC6CmIK2mMZPWp7dATkU5DcUrt6syAD6BvnBqVI
+         8jb1ylGvD1iIJkCXTuYcOZrA47U5nFmr7Y7rRYI6rUItj5ogkbSWpKVD6/sxaZYx+mMn
+         uxpZFe/z4OBxAA8oU7cg7X6g7qt+Up+HTMzXYNU1PmjSlWRdD15n/k3OUSFn3PFqoOSB
+         /X3W0/KzN9p5f8BXH69rMkupYC1153ljH4K5CIGw+3hgGNkJA44x0MmsLLTHvkOMyn5D
+         TOahoVmrda46DxlbYPVkmRn3d5i4EOnZPNfZ5xDHFGdNDV0rkFRMkey0KvdzNje98HhG
+         54Hg==
 Content-Disposition: inline
-In-Reply-To: <20130605073728.GC15997@dhcp22.suse.cz>
+In-Reply-To: <20130605073023.GB15997@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
+Cc: hannes@cmpxchg.org, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-Hey, Michal.
+Hello, Michal.
 
-On Wed, Jun 05, 2013 at 09:37:28AM +0200, Michal Hocko wrote:
-> Tejun, I do not have infinite amount of time and this is barely a
-> priority for the patchset. The core part is to be able to skip
-> nodes/subtrees which are not worth reclaiming, remember?
->
-> I have already expressed my priorities for inside skipping
-> decisions. You are just throwing "let's try a different way" handwavy
-> suggestions. I have no problem to pull the skip logic outside of
-> iterators if more people think that this is _really_ important. But
-> until then I take it as a really low priority that shouldn't delay the
-> patchset without a good reason.
+On Wed, Jun 05, 2013 at 09:30:23AM +0200, Michal Hocko wrote:
+> > I don't really get that.  As long as the amount is bound and the
+> > overhead negligible / acceptable, why does it matter how long the
+> > pinning persists? 
 > 
-> So please try to focus on the technical parts of the patchset if you
-> want to help with the review. I really appreciate suggestions but please
-> do not get down to bike scheding.
+> Because the amount is not bound either. Just create a hierarchy and
+> trigger the hard limit and if you are careful enough you can always keep
+> some of the children in the cached pointer (with css reference, if you
+> will) and then release the hierarchy. You can do that repeatedly and
+> leak considerable amount of memory.
 
-Well, so, I know I've been pain in the ass but here's the thing.  I
-don't think you've been doing a good job of maintaining memcg.  Among
-the code pieces that I look at, it really ranks very close to the
-bottom in terms of readability and general messiness.  One of the core
-jobs of being a maintainer is ensuring the code stays in readable and
-maintainable state.
+It's still bound, no?  Each live memcg can only keep limited number of
+cgroups cached, right?
 
-Maybe memcg is really really really special and it does require the
-level of complication that you've been adding; however, I can't see
-that.  Not yet anyway.  What I see is a subsystem which is slurping in
-complexity without properly evaluating the benefits such complexity
-brings and its overhead.  Why do you have several archaic barrier
-dancings buried in memcg?  If you do really need them and yes I can
-see that you might need them, build proper abstractions and update
-code properly even if that takes more time because otherwise we'll end
-up with something which is painful to maintain, and you're never gonna
-get enough reviews and testing for the scary stuff you buried inside
-memcg.
+> > We aren't talking about something gigantic or can
+> 
+> mem_cgroup is 888B now (depending on configuration). So I wouldn't call
+> it negligible.
 
-If you think I'm going overboard with the barrier stuff, what about
-the css and memcg refcnts?  memcg had and still has this layered
-refcnting, which is obviously bonkers if you just take one step back
-and look at it.  What about the css_id addition?  Why has memcg added
-so many fundamentally broken things to memcg itself and cgroup core?
+Do you think that the number can actually grow harmful?  Would you be
+kind enough to share some calculations with me?
 
-At this point, I'm fairly doubtful that memcg is being properly
-maintained and hope that someone else would take control of what code
-goes in.  You probably had all the good technical reasons when you
-were committing all those broken stuff.  I don't know why it's been
-going this way.  It almost feels like you can see the details but
-never the larger picture.
+> > In the off chance that this is a real problem, which I strongly doubt,
+> > as I wrote to Johannes, we can implement extremely dumb cleanup
+> > routine rather than this weak reference beast.
+> 
+> That was my first version (https://lkml.org/lkml/2013/1/3/298) and
+> Johannes didn't like. To be honest I do not care _much_ which way we go
+> but we definitely cannot pin those objects for ever.
 
-So, yes, I agree this isn't the biggest technical point in the series
-and understand that you could be frustrated with me throwing in
-wrenches, but I think going a bit slower in itself could be helpful.
-Have you tried just implementing skipping interface?  Really, I'm
-almost sure it's gonna be much more readable than the predicate thing.
+I'll get to the barrier thread but really complex barrier dancing like
+that is only justifiable in extremely hot paths a lot of people pay
+attention to.  It doesn't belong inside memcg proper.  If the cached
+amount is an actual concern, let's please implement a simple clean up
+thing.  All we need is a single delayed_work which scans the tree
+periodically.
+
+Johannes, what do you think?
 
 Thanks.
 
