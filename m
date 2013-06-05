@@ -1,45 +1,76 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11 2/3] cgroup: mark "notify_on_release"
- and "release_agent" cgroup files insane
-Date: Wed, 5 Jun 2013 10:47:11 +0400
-Message-ID: <51AEDEEF.8090608@parallels.com>
-References: <20130604021302.GH29989@mtj.dyndns.org> <20130604021355.GI29989@mtj.dyndns.org> <51ADC5D3.5070108@huawei.com> <20130604200003.GC14916@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
+Date: Wed, 5 Jun 2013 09:30:23 +0200
+Message-ID: <20130605073023.GB15997@dhcp22.suse.cz>
+References: <1370306679-13129-1-git-send-email-tj@kernel.org>
+ <1370306679-13129-4-git-send-email-tj@kernel.org>
+ <20130604131843.GF31242@dhcp22.suse.cz>
+ <20130604205025.GG14916@htj.dyndns.org>
+ <20130604212808.GB13231@dhcp22.suse.cz>
+ <20130604215535.GM14916@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130604200003.GC14916-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20130604215535.GM14916@htj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-On 06/05/2013 12:00 AM, Tejun Heo wrote:
-> On Tue, Jun 04, 2013 at 06:47:47PM +0800, Li Zefan wrote:
->> On 2013/6/4 10:13, Tejun Heo wrote:
->>> The empty cgroup notification mechanism currently implemented in
->>> cgroup is tragically outdated.  Forking and execing userland process
->>> stopped being a viable notification mechanism more than a decade ago.
->>> We're gonna have a saner mechanism.  Let's make it clear that this
->>> abomination is going away.
->>>
->>> Mark "notify_on_release" and "release_agent" with CFTYPE_INSANE.
->>>
->>
->> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>
->> Do you plan to implement the alternative mechanism for 3.11?
+On Tue 04-06-13 14:55:35, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> No idea about the timeframe at this moment.  Hoping to do it in this
-> year.
+> On Tue, Jun 04, 2013 at 11:28:08PM +0200, Michal Hocko wrote:
+> > Well, I do not mind pinning when I know that somebody releases the
+> > reference in a predictable future (ideally almost immediately). But the
+> > cached iter represents time unbounded pinning because nobody can
+> > guarantee that priority 3 at zone Normal at node 3 will be ever scanned
+> > again and the pointer in the last_visited node will be stuck there for
 > 
+> I don't really get that.  As long as the amount is bound and the
+> overhead negligible / acceptable, why does it matter how long the
+> pinning persists? 
 
-A notification mechanism would be very welcome for us. The problem we
-have now, is that if a container halts itself, we have no way to do any
-cleanup. Doing it would involve having a daemon to scan for
-no-longer-alive groups and shut them down.
+Because the amount is not bound either. Just create a hierarchy and
+trigger the hard limit and if you are careful enough you can always keep
+some of the children in the cached pointer (with css reference, if you
+will) and then release the hierarchy. You can do that repeatedly and
+leak considerable amount of memory.
 
-The current mechanism proved unusable for us as well, because they are
-global and used by systemd. We would like to register our own handler
-(it would be fine if systemd would allow us to do so, being still the
-only one hooked to the global handler)
+> We aren't talking about something gigantic or can
+
+mem_cgroup is 888B now (depending on configuration). So I wouldn't call
+it negligible.
+
+> leak continuously.  It will only matter iff cgroups are continuously
+> created and destroyed and each live memcg will be able to pin one
+> memcg (BTW, I think I forgot to unpin on memcg destruction).
+> 
+> > eternity. Can we free memcg with only css elevated and safely check that
+> > the cached pointer can be used without similar dances we have now?
+> > I am open to any suggestions.
+> 
+> I really think this is worrying too much about something which doesn't
+> really matter and then coming up with an over-engineered solution for
+> the imagined problem.  This isn't a real problem.  No solution is
+> necessary.
+> 
+> In the off chance that this is a real problem, which I strongly doubt,
+> as I wrote to Johannes, we can implement extremely dumb cleanup
+> routine rather than this weak reference beast.
+
+That was my first version (https://lkml.org/lkml/2013/1/3/298) and
+Johannes didn't like. To be honest I do not care _much_ which way we go
+but we definitely cannot pin those objects for ever.
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
