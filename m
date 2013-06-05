@@ -1,9 +1,8 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Wed, 5 Jun 2013 15:45:52 -0400
-Message-ID: <20130605194552.GI15721@cmpxchg.org>
-References: <1370306679-13129-1-git-send-email-tj@kernel.org>
- <1370306679-13129-4-git-send-email-tj@kernel.org>
+Date: Wed, 5 Jun 2013 13:06:12 -0700
+Message-ID: <20130605200612.GH10693@mtj.dyndns.org>
+References: <1370306679-13129-4-git-send-email-tj@kernel.org>
  <20130604131843.GF31242@dhcp22.suse.cz>
  <20130604205025.GG14916@htj.dyndns.org>
  <20130604212808.GB13231@dhcp22.suse.cz>
@@ -12,231 +11,85 @@ References: <1370306679-13129-1-git-send-email-tj@kernel.org>
  <20130605082023.GG7303@mtj.dyndns.org>
  <20130605143949.GQ15576@cmpxchg.org>
  <20130605172212.GA10693@mtj.dyndns.org>
+ <20130605194552.GI15721@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=WEwcHHj6ltOKyEYsCLlHf48VE/3fKtrLUXYOKYuzUco=;
+        b=vymGzFDd009kRRuQWPuMTg5Fxc81PrXt196nMT0Uto53BGFAY0Nz3FK+Ymt0Mrlg4b
+         XOOo/E7+lGQiWn0F82papOW6SGA7QFDNYduaIfijN7B3/594H1hNNGI08mFvyiKbBHW3
+         t+FTR9H3lBITZJMeMPYB/OH/L+5DObdprCouYuGSFTMOsKuc3Zmt30enUOtx+zYjs/FY
+         KaiqfCksDZjOxWrAHlIer5HrMhqYDjF6OawNbPuJ/wyjJxa4VDTn/kjChVE4XsIJyvv6
+         e43LQo3vzzJt0qz3pPHsAyJsb7/RUA+kTtKBfHIdPh1jTCzX21d9vPx1OVFmrecJWRxk
+         jB9g==
 Content-Disposition: inline
-In-Reply-To: <20130605172212.GA10693-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130605194552.GI15721-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Wed, Jun 05, 2013 at 10:22:12AM -0700, Tejun Heo wrote:
-> Hey, Johannes.
+Hello,
+
+On Wed, Jun 05, 2013 at 03:45:52PM -0400, Johannes Weiner wrote:
+> I'm not sure what you are suggesting.  Synchroneously invalidate every
+> individual iterator upwards the hierarchy every time a cgroup is
+> destroyed?
+
+Yeap.
+
+> The invalidation I am talking about is what we do by increasing the
+> dead counts.  This lazily invalidates all the weak pointers in the
+> iterators of the hierarchy root.
 > 
-> On Wed, Jun 05, 2013 at 10:39:49AM -0400, Johannes Weiner wrote:
-> > 5k cgroups * say 10 priority levels * 1k struct mem_cgroup may pin 51M
-> > of dead struct mem_cgroup, plus whatever else the css pins.
-> 
-> Yeah, it seems like it can grow quite a bit.
-> 
-> > > I'll get to the barrier thread but really complex barrier dancing like
-> > > that is only justifiable in extremely hot paths a lot of people pay
-> > > attention to.  It doesn't belong inside memcg proper.  If the cached
-> > > amount is an actual concern, let's please implement a simple clean up
-> > > thing.  All we need is a single delayed_work which scans the tree
-> > > periodically.
-> > > 
-> > > Johannes, what do you think?
-> > 
-> > While I see your concerns about complexity (and this certainly is not
-> > the most straight-forward code), I really can't get too excited about
-> > asynchroneous garbage collection, even worse when it's time-based. It
-> > would probably start out with less code but two releases later we
-> > would have added all this stuff that's required to get the interaction
-> > right and fix unpredictable reclaim disruption that hits when the
-> > reaper coincides just right with heavy reclaim once a week etc.  I
-> > just don't think that asynchroneous models are simpler than state
-> > machines.  Harder to reason about, harder to debug.
-> 
-> Agreed, but we can do the cleanup from ->css_offline() as Michal
-> suggested.  Naively implemented, this will lose the nice property of
-> keeping the iteration point even when the cursor cgroup is removed,
-> which can be an issue if we're actually worrying about cases with 5k
-> cgroups continuously being created and destroyed.  Maybe we can make
-> it point to the next cgroup to visit rather than the last visited one
-> and update it from ->css_offline().
+> Of course if you do a synchroneous invalidation of individual
+> iterators, we don't need weak pointers anymore and RCU is enough, but
+> that would mean nr_levels * nr_nodes * nr_zones * nr_priority_levels
+> invalidation operations per destruction, whereas the weak pointers are
+> invalidated with one atomic_inc() per nesting level.
 
-I'm not sure what you are suggesting.  Synchroneously invalidate every
-individual iterator upwards the hierarchy every time a cgroup is
-destroyed?
+While it does have to traverse the arrays, it's still bound by the
+depth of nesting and cgroup destruction is a pretty cold path.  I
+don't think it'd matter that much.
 
-> > Now, there are separate things that add complexity to our current
-> > code: the weak pointers, the lockless iterator, and the fact that all
-> > of it is jam-packed into one monolithic iterator function.  I can see
-> > why you are not happy.  But that does not mean we have to get rid of
-> > everything wholesale.
-> > 
-> > You hate the barriers, so let's add a lock to access the iterator.
-> > That path is not too hot in most cases.
-> > 
-> > On the other hand, the weak pointer is not too esoteric of a pattern
-> > and we can neatly abstract it into two functions: one that takes an
-> > iterator and returns a verified css reference or NULL, and one to
-> > invalidate pointers when called from the memcg destruction code.
-> >
-> > These two things should greatly simplify mem_cgroup_iter() while not
-> > completely abandoning all our optimizations.
-> > 
-> > What do you think?
-> 
-> I really think the weak pointers should go especially as we can
-> achieve about the same thing with normal RCU dereference.  Also, I'm a
-> bit confused about what you're suggesting.  If we have invalidation
-> from offline, why do we need weak pointers?
+> As I said, the weak pointers are only a few lines of code that can be
+> neatly self-contained (see the invalidate, load, store functions
+> below).  Please convince me that your alternative solution will save
+> complexity to such an extent that either the memory waste of
+> indefinite css pinning, or the computational overhead of non-lazy
+> iterator cleanup, is justifiable.
 
-The invalidation I am talking about is what we do by increasing the
-dead counts.  This lazily invalidates all the weak pointers in the
-iterators of the hierarchy root.
+The biggest issue I see with the weak pointer is that it's special and
+tricky.  If this is something which is absolutely necessary, it should
+be somewhere more generic.  Also, if we can use the usual RCU deref
+with O(depth) cleanup in the cold path, I don't see how this deviation
+is justifiable.
 
-Of course if you do a synchroneous invalidation of individual
-iterators, we don't need weak pointers anymore and RCU is enough, but
-that would mean nr_levels * nr_nodes * nr_zones * nr_priority_levels
-invalidation operations per destruction, whereas the weak pointers are
-invalidated with one atomic_inc() per nesting level.
+For people who've been looking at it for long enough, it probably
+isn't that different from using plain RCU but that's just because that
+person has spent the time to build that pattern into his/her brain.
+We now have a lot of people accustomed to plain RCU usages which in
+itself is tricky already and introducing new constructs is actively
+deterimental to maintainability.  We sure can do that when there's no
+alternative but I don't think avoiding synchronous cleanup on cgroup
+destruction path is a good enough reason.  It feels like an
+over-engineering to me.
 
-As I said, the weak pointers are only a few lines of code that can be
-neatly self-contained (see the invalidate, load, store functions
-below).  Please convince me that your alternative solution will save
-complexity to such an extent that either the memory waste of
-indefinite css pinning, or the computational overhead of non-lazy
-iterator cleanup, is justifiable.
+Another thing is that this matters the most when there are continuous
+creation and destruction of cgroups and the weak pointer
+implementation would keep resetting the iteration to the beginning.
+Depending on timing, it'd be able to live-lock reclaim cursor to the
+beginning of iteration even with fairly low rate of destruction,
+right?  It can be pretty bad high up the tree.  With synchronous
+cleanup, depending on how it's implemented, it can be made to keep the
+iteration position.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 010d6c1..e872554 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1148,6 +1148,57 @@ skip_node:
- 	return NULL;
- }
- 
-+static void mem_cgroup_iter_invalidate(struct mem_cgroup *root)
-+{
-+	/*
-+	 * When a group in the hierarchy below root is destroyed, the
-+	 * hierarchy iterator can no longer be trusted since it might
-+	 * have pointed to the destroyed group.  Invalidate it.
-+	 */
-+	atomic_inc(&root->dead_count);
-+}
-+
-+static struct mem_cgroup *mem_cgroup_iter_load(struct mem_cgroup_reclaim_iter *iter,
-+					       struct mem_cgroup *root,
-+					       int *sequence)
-+{
-+	struct mem_cgroup *position = NULL;
-+	/*
-+	 * A cgroup destruction happens in two stages: offlining and
-+	 * release.  They are separated by a RCU grace period.
-+	 *
-+	 * If the iterator is valid, we may still race with an
-+	 * offlining.  The RCU lock ensures the object won't be
-+	 * released, tryget will fail if we lost the race.
-+	 */
-+	*sequence = atomic_read(&root->dead_count);
-+	if (iter->last_dead_count == *sequence) {
-+		smp_rmb();
-+		position = iter->last_visited;
-+		if (position && !css_tryget(&position->css))
-+			position = NULL;
-+	}
-+	return position;
-+}
-+
-+static void mem_cgroup_iter_update(struct mem_cgroup_reclaim_iter *iter,
-+				   struct mem_cgroup *last_visited,
-+				   struct mem_cgroup *new_position,
-+				   int sequence)
-+{
-+	if (last_visited)
-+		css_put(&last_visited->css);
-+	/*
-+	 * We store the sequence count from the time @last_visited was
-+	 * loaded successfully instead of rereading it here so that we
-+	 * don't lose destruction events in between.  We could have
-+	 * raced with the destruction of @new_position after all.
-+	 */
-+	iter->last_visited = new_position;
-+	smp_wmb();
-+	iter->last_dead_count = sequence;
-+}
-+
- /**
-  * mem_cgroup_iter - iterate over memory cgroup hierarchy
-  * @root: hierarchy root
-@@ -1171,7 +1222,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- {
- 	struct mem_cgroup *memcg = NULL;
- 	struct mem_cgroup *last_visited = NULL;
--	unsigned long uninitialized_var(dead_count);
- 
- 	if (mem_cgroup_disabled())
- 		return NULL;
-@@ -1191,6 +1241,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 	rcu_read_lock();
- 	while (!memcg) {
- 		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
-+		int sequence;
- 
- 		if (reclaim) {
- 			int nid = zone_to_nid(reclaim->zone);
-@@ -1205,38 +1256,13 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 				goto out_unlock;
- 			}
- 
--			/*
--			 * If the dead_count mismatches, a destruction
--			 * has happened or is happening concurrently.
--			 * If the dead_count matches, a destruction
--			 * might still happen concurrently, but since
--			 * we checked under RCU, that destruction
--			 * won't free the object until we release the
--			 * RCU reader lock.  Thus, the dead_count
--			 * check verifies the pointer is still valid,
--			 * css_tryget() verifies the cgroup pointed to
--			 * is alive.
--			 */
--			dead_count = atomic_read(&root->dead_count);
--			smp_rmb();
--			last_visited = iter->last_visited;
--			if (last_visited) {
--				if ((dead_count != iter->last_dead_count) ||
--					!css_tryget(&last_visited->css)) {
--					last_visited = NULL;
--				}
--			}
-+			last_visited = mem_cgroup_iter_load(iter, root, &sequence);
- 		}
- 
- 		memcg = __mem_cgroup_iter_next(root, last_visited);
- 
- 		if (reclaim) {
--			if (last_visited)
--				css_put(&last_visited->css);
--
--			iter->last_visited = memcg;
--			smp_wmb();
--			iter->last_dead_count = dead_count;
-+			mem_cgroup_iter_update(iter, last_visited, memcg, sequence);
- 
- 			if (!memcg)
- 				iter->generation++;
-@@ -6321,14 +6347,14 @@ static void mem_cgroup_invalidate_reclaim_iterators(struct mem_cgroup *memcg)
- 	struct mem_cgroup *parent = memcg;
- 
- 	while ((parent = parent_mem_cgroup(parent)))
--		atomic_inc(&parent->dead_count);
-+		mem_cgroup_iter_invalidate(parent);
- 
- 	/*
- 	 * if the root memcg is not hierarchical we have to check it
- 	 * explicitely.
- 	 */
- 	if (!root_mem_cgroup->use_hierarchy)
--		atomic_inc(&root_mem_cgroup->dead_count);
-+		mem_cgroup_iter_invalidate(parent);
- }
- 
- static void mem_cgroup_css_offline(struct cgroup *cont)
+Thanks.
+
+-- 
+tejun
