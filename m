@@ -1,171 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 2/2] mm: memcontrol: factor out reclaim iterator loading and updating
-Date: Wed,  5 Jun 2013 18:53:46 -0400
-Message-ID: <1370472826-29959-2-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [patch 1/2] mm: memcontrol: fix lockless reclaim hierarchy
+ iterator
+Date: Wed, 5 Jun 2013 16:06:25 -0700
+Message-ID: <20130605230625.GN10693@mtj.dyndns.org>
 References: <1370472826-29959-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1370472826-29959-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=TLIzLpJ+wbC1xTRB6NkfforCZyKhaI0ZudAY9L2ehwg=;
+        b=ewYq0gld4YA13g4iT4TS8DxeMHzEmnSF9T29LuSeE0P/NwLKDfo8A/bEyw4k6gFnQE
+         WlectBG5tNd8Nm8iqz3bsiThJoX3mz5UrWQKjDqxBRWZqdecBKDr40evxCGmz8H5N877
+         geCXPC5eLDjXs9h/UsWWxDkcSvNgg3QQ/MwYcmrd6VlugwJSMrgYXfVQ6vg2GFaAyKYT
+         bC99d1MBmmorJo1YI+G0R6ozY7XQpkj8Y8rWBXodTp/2mQp6Z8aiglEDq0oQWK/5Nd4h
+         8GDuNrCucRY4CqBmMJj3+YsQ8q8OpLdtu8jdh1tfl7fwhiyyaDJsT+LpPMxIBzaRnVfU
+         SslA==
+Content-Disposition: inline
+In-Reply-To: <1370472826-29959-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-mem_cgroup_iter() is too hard to follow.  Factor out the lockless
-reclaim iterator loading and updating so it's easier to follow the big
-picture.
+On Wed, Jun 05, 2013 at 06:53:45PM -0400, Johannes Weiner wrote:
+> The lockless reclaim hierarchy iterator currently has a misplaced
+> barrier that can lead to use-after-free crashes.
+> 
+> The reclaim hierarchy iterator consist of a sequence count and a
+> position pointer that are read and written locklessly, with memory
+> barriers enforcing ordering.
+> 
+> The write side sets the position pointer first, then updates the
+> sequence count to "publish" the new position.  Likewise, the read side
+> must read the sequence count first, then the position.  If the
+> sequence count is up to date, it's guaranteed that the position is up
+> to date as well:
+> 
+>   writer:                         reader:
+>   iter->position = position       if iter->sequence == expected:
+>   smp_wmb()                           smp_rmb()
+>   iter->sequence = sequence           position = iter->position
+> 
+> However, the read side barrier is currently misplaced, which can lead
+> to dereferencing stale position pointers that no longer point to valid
+> memory.  Fix this.
+> 
+> Reported-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org [3.10+]
 
-Also document the iterator invalidation mechanism a bit more
-extensively.
+Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 86 ++++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 57 insertions(+), 29 deletions(-)
+Oops, right, the references were reversed too.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e2cbb44..23a9236 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1148,6 +1148,58 @@ skip_node:
- 	return NULL;
- }
- 
-+static void mem_cgroup_iter_invalidate(struct mem_cgroup *root)
-+{
-+	/*
-+	 * When a group in the hierarchy below root is destroyed, the
-+	 * hierarchy iterator can no longer be trusted since it might
-+	 * have pointed to the destroyed group.  Invalidate it.
-+	 */
-+	atomic_inc(&root->dead_count);
-+}
-+
-+static struct mem_cgroup *
-+mem_cgroup_iter_load(struct mem_cgroup_reclaim_iter *iter,
-+		     struct mem_cgroup *root,
-+		     int *sequence)
-+{
-+	struct mem_cgroup *position = NULL;
-+	/*
-+	 * A cgroup destruction happens in two stages: offlining and
-+	 * release.  They are separated by a RCU grace period.
-+	 *
-+	 * If the iterator is valid, we may still race with an
-+	 * offlining.  The RCU lock ensures the object won't be
-+	 * released, tryget will fail if we lost the race.
-+	 */
-+	*sequence = atomic_read(&root->dead_count);
-+	if (iter->last_dead_count == *sequence) {
-+		smp_rmb();
-+		position = iter->last_visited;
-+		if (position && !css_tryget(&position->css))
-+			position = NULL;
-+	}
-+	return position;
-+}
-+
-+static void mem_cgroup_iter_update(struct mem_cgroup_reclaim_iter *iter,
-+				   struct mem_cgroup *last_visited,
-+				   struct mem_cgroup *new_position,
-+				   int sequence)
-+{
-+	if (last_visited)
-+		css_put(&last_visited->css);
-+	/*
-+	 * We store the sequence count from the time @last_visited was
-+	 * loaded successfully instead of rereading it here so that we
-+	 * don't lose destruction events in between.  We could have
-+	 * raced with the destruction of @new_position after all.
-+	 */
-+	iter->last_visited = new_position;
-+	smp_wmb();
-+	iter->last_dead_count = sequence;
-+}
-+
- /**
-  * mem_cgroup_iter - iterate over memory cgroup hierarchy
-  * @root: hierarchy root
-@@ -1171,7 +1223,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- {
- 	struct mem_cgroup *memcg = NULL;
- 	struct mem_cgroup *last_visited = NULL;
--	unsigned long uninitialized_var(dead_count);
- 
- 	if (mem_cgroup_disabled())
- 		return NULL;
-@@ -1191,6 +1242,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 	rcu_read_lock();
- 	while (!memcg) {
- 		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
-+		int uninitialized_var(seq);
- 
- 		if (reclaim) {
- 			int nid = zone_to_nid(reclaim->zone);
-@@ -1204,37 +1256,13 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 				goto out_unlock;
- 			}
- 
--			/*
--			 * If the dead_count mismatches, a destruction
--			 * has happened or is happening concurrently.
--			 * If the dead_count matches, a destruction
--			 * might still happen concurrently, but since
--			 * we checked under RCU, that destruction
--			 * won't free the object until we release the
--			 * RCU reader lock.  Thus, the dead_count
--			 * check verifies the pointer is still valid,
--			 * css_tryget() verifies the cgroup pointed to
--			 * is alive.
--			 */
--			dead_count = atomic_read(&root->dead_count);
--			if (dead_count == iter->last_dead_count) {
--				smp_rmb();
--				last_visited = iter->last_visited;
--				if (last_visited &&
--				    !css_tryget(&last_visited->css))
--					last_visited = NULL;
--			}
-+			last_visited = mem_cgroup_iter_load(iter, root, &seq);
- 		}
- 
- 		memcg = __mem_cgroup_iter_next(root, last_visited);
- 
- 		if (reclaim) {
--			if (last_visited)
--				css_put(&last_visited->css);
--
--			iter->last_visited = memcg;
--			smp_wmb();
--			iter->last_dead_count = dead_count;
-+			mem_cgroup_iter_update(iter, last_visited, memcg, seq);
- 
- 			if (!memcg)
- 				iter->generation++;
-@@ -6319,14 +6347,14 @@ static void mem_cgroup_invalidate_reclaim_iterators(struct mem_cgroup *memcg)
- 	struct mem_cgroup *parent = memcg;
- 
- 	while ((parent = parent_mem_cgroup(parent)))
--		atomic_inc(&parent->dead_count);
-+		mem_cgroup_iter_invalidate(parent);
- 
- 	/*
- 	 * if the root memcg is not hierarchical we have to check it
- 	 * explicitely.
- 	 */
- 	if (!root_mem_cgroup->use_hierarchy)
--		atomic_inc(&root_mem_cgroup->dead_count);
-+		mem_cgroup_iter_invalidate(root_mem_cgroup);
- }
- 
- static void mem_cgroup_css_offline(struct cgroup *cont)
+Thanks.
+
 -- 
-1.8.3
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
