@@ -1,77 +1,96 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v10 22/35] shrinker: convert remaining shrinkers to
- count/scan API
-Date: Thu, 6 Jun 2013 13:41:16 +1000
-Message-ID: <20130606034116.GT29338@dastard>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v10 00/35] kmemcg shrinkers
+Date: Thu, 6 Jun 2013 13:44:40 +1000
+Message-ID: <20130606034440.GU29338@dastard>
 References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
- <1370287804-3481-23-git-send-email-glommer@openvz.org>
- <20130605160821.59adf9ad4efe48144fd9e237@linux-foundation.org>
+ <20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130605160821.59adf9ad4efe48144fd9e237-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Gleb Natapov <gleb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Chuck Lever <chuck.lever-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "J. Bruce Fields" <bfields-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>
 
-On Wed, Jun 05, 2013 at 04:08:21PM -0700, Andrew Morton wrote:
-> On Mon,  3 Jun 2013 23:29:51 +0400 Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+On Wed, Jun 05, 2013 at 04:07:21PM -0700, Andrew Morton wrote:
+> On Mon,  3 Jun 2013 23:29:29 +0400 Glauber Costa <glommer@openvz.org> wrote:
 > 
-> > From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > Andrew,
 > > 
-> > Convert the remaining couple of random shrinkers in the tree to the
-> > new API.
+> > This submission contains one small bug fix over the last one. I have been
+> > testing it regularly and believe this is ready for merging. I have follow up
+> > patches for this series, with a few improvements (namely: dynamic sized
+> > list_lru node arrays, memcg flush-at-destruction, kmemcg shrinking setting
+> > limit < usage).  But since this series is already quite mature - and very
+> > extensive, I don't believe that adding new patches would make them receive the
+> > appropriate level of review. So please advise me if there is anything crucial
+> > missing in here. Thanks!
+> > 
+> > Hi,
+> > 
+> > This patchset implements targeted shrinking for memcg when kmem limits are
+> > present. So far, we've been accounting kernel objects but failing allocations
+> > when short of memory. This is because our only option would be to call the
+> > global shrinker, depleting objects from all caches and breaking isolation.
+> > 
+> > The main idea is to associate per-memcg lists with each of the LRUs. The main
+> > LRU still provides a single entry point and when adding or removing an element
+> > from the LRU, we use the page information to figure out which memcg it belongs
+> > to and relay it to the right list.
+> > 
+> > Base work:
+> > ==========
+> > 
+> > Please note that this builds upon the recent work from Dave Chinner that
+> > sanitizes the LRU shrinking API and make the shrinkers node aware. Node
+> > awareness is not *strictly* needed for my work, but I still perceive it
+> > as an advantage. The API unification is a major need, and I build upon it
+> > heavily. That allows us to manipulate the LRUs without knowledge of the
+> > underlying objects with ease. This time, I am including that work here as
+> > a baseline.
 > 
-> Gee we have a lot of shrinkers.
+> This patchset is huge.
 
-And a large number of them are busted in some way, too :/
+*nod*
 
-> > --- a/arch/x86/kvm/mmu.c
-> > +++ b/arch/x86/kvm/mmu.c
-> > @@ -4213,13 +4213,14 @@ restart:
-> >  	spin_unlock(&kvm->mmu_lock);
-> >  }
-> >  
-> > -static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
-> > +static long
-> > +mmu_shrink_scan(
-> > +	struct shrinker		*shrink,
-> > +	struct shrink_control	*sc)
-> >
-> > ...
-> >
-> > --- a/net/sunrpc/auth.c
-> > +++ b/net/sunrpc/auth.c
-> > -static int
-> > -rpcauth_cache_shrinker(struct shrinker *shrink, struct shrink_control *sc)
-> > +static long
-> > +rpcauth_cache_shrink_scan(
-> > +	struct shrinker		*shrink,
-> > +	struct shrink_control	*sc)
-> > +
+> My overall take is that the patchset is massive and intrusive and scary
+> :( I'd like to see more evidence that the memcg people (mhocko, hannes,
+> kamezawa etc) have spent quality time reviewing and testing this code. 
+> There really is a lot of it!
 > 
-> It is pretty poor form to switch other people's code into this very
-> non-standard XFSish coding style.  The maintainers are just going to
-> have to go wtf and switch it back one day.
+> I haven't seen any show-stoppers yet so I guess I'll slam it all into
+> -next and cross fingers.  I would ask that the relevant developers set
+> aside a solid day to read and runtime test it all.  Realistically, it's
+> likely to take considerably more time that that.
 
-My bad.  That's left over from when I was originally developing the
-the patch set passed a couple more parameters to the shrinkers
-pushing every single declaration to well over the line length
-limits. I never converted them back as I removed the extra
-parameters, because it's far easier to just have delete a line that
-delete a variable and reformat the entire function declaration....
+Yes, it will.
 
-> Really, it would be best if you were to go through the entire patchset
-> and undo all this.
+> I do expect that I'll drop the entire patchset again for the next
+> version, if only because the next version should withdraw all the
+> switch-random-code-to-xfs-coding-style changes...
+> 
+> 
+> I'm thinking that we should approach this in two stages: all the new
+> shrinker stuff separated from the memcg_kmem work.  So we merge
+> everything up to "shrinker: Kill old ->shrink API" and then continue to
+> work on the memcg things?
 
-Sure, that can be done.
+Fine by me. I'll work with Glauber to get all the documentation and
+formatting and bugs you found fixed for the LRU/shrinker part of the 
+patchset as quickly as possible...
 
 Cheers,
 
 Dave.
 -- 
 Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
+david@fromorbit.com
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
