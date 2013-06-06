@@ -1,224 +1,120 @@
 From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v11 01/25] fs: bump inode and dentry counters to long
-Date: Fri,  7 Jun 2013 00:34:34 +0400
-Message-ID: <1370550898-26711-2-git-send-email-glommer@openvz.org>
-References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
+Subject: [PATCH v11 00/25] shrinkers rework: per-numa, generic lists, etc
+Date: Fri,  7 Jun 2013 00:34:33 +0400
+Message-ID: <1370550898-26711-1-git-send-email-glommer@openvz.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1370550898-26711-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-There are situations in very large machines in which we can have a large
-quantity of dirty inodes, unused dentries, etc. This is particularly
-true when umounting a filesystem, where eventually since every live
-object will eventually be discarded.
+Andrew,
 
-Dave Chinner reported a problem with this while experimenting with the
-shrinker revamp patchset. So we believe it is time for a change. This
-patch just moves int to longs. Machines where it matters should have a
-big long anyway.
+I believe I have addressed most of your comments, while attempting to address
+all of them. If there is anything I have missed after this long day, let me
+know and I will go over it promptly.
 
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-CC: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- fs/dcache.c             |  8 ++++----
- fs/inode.c              | 18 +++++++++---------
- fs/internal.h           |  2 +-
- include/linux/dcache.h  | 10 +++++-----
- include/linux/fs.h      |  4 ++--
- include/uapi/linux/fs.h |  6 +++---
- kernel/sysctl.c         |  6 +++---
- 7 files changed, 27 insertions(+), 27 deletions(-)
+As per your request, the memcg parts are out. Let us first sort out the
+infrastructure first, while giving the rest of the memcg crew to review the
+other part of the series.
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index f09b908..aca4e4b 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -117,13 +117,13 @@ struct dentry_stat_t dentry_stat = {
- 	.age_limit = 45,
- };
- 
--static DEFINE_PER_CPU(unsigned int, nr_dentry);
-+static DEFINE_PER_CPU(long, nr_dentry);
- 
- #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
--static int get_nr_dentry(void)
-+static long get_nr_dentry(void)
- {
- 	int i;
--	int sum = 0;
-+	long sum = 0;
- 	for_each_possible_cpu(i)
- 		sum += per_cpu(nr_dentry, i);
- 	return sum < 0 ? 0 : sum;
-@@ -133,7 +133,7 @@ int proc_nr_dentry(ctl_table *table, int write, void __user *buffer,
- 		   size_t *lenp, loff_t *ppos)
- {
- 	dentry_stat.nr_dentry = get_nr_dentry();
--	return proc_dointvec(table, write, buffer, lenp, ppos);
-+	return proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
- }
- #endif
- 
-diff --git a/fs/inode.c b/fs/inode.c
-index 00d5fc3..ff29765 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -70,33 +70,33 @@ EXPORT_SYMBOL(empty_aops);
-  */
- struct inodes_stat_t inodes_stat;
- 
--static DEFINE_PER_CPU(unsigned int, nr_inodes);
--static DEFINE_PER_CPU(unsigned int, nr_unused);
-+static DEFINE_PER_CPU(unsigned long, nr_inodes);
-+static DEFINE_PER_CPU(unsigned long, nr_unused);
- 
- static struct kmem_cache *inode_cachep __read_mostly;
- 
--static int get_nr_inodes(void)
-+static long get_nr_inodes(void)
- {
- 	int i;
--	int sum = 0;
-+	long sum = 0;
- 	for_each_possible_cpu(i)
- 		sum += per_cpu(nr_inodes, i);
- 	return sum < 0 ? 0 : sum;
- }
- 
--static inline int get_nr_inodes_unused(void)
-+static inline long get_nr_inodes_unused(void)
- {
- 	int i;
--	int sum = 0;
-+	long sum = 0;
- 	for_each_possible_cpu(i)
- 		sum += per_cpu(nr_unused, i);
- 	return sum < 0 ? 0 : sum;
- }
- 
--int get_nr_dirty_inodes(void)
-+long get_nr_dirty_inodes(void)
- {
- 	/* not actually dirty inodes, but a wild approximation */
--	int nr_dirty = get_nr_inodes() - get_nr_inodes_unused();
-+	long nr_dirty = get_nr_inodes() - get_nr_inodes_unused();
- 	return nr_dirty > 0 ? nr_dirty : 0;
- }
- 
-@@ -109,7 +109,7 @@ int proc_nr_inodes(ctl_table *table, int write,
- {
- 	inodes_stat.nr_inodes = get_nr_inodes();
- 	inodes_stat.nr_unused = get_nr_inodes_unused();
--	return proc_dointvec(table, write, buffer, lenp, ppos);
-+	return proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
- }
- #endif
- 
-diff --git a/fs/internal.h b/fs/internal.h
-index eaa75f7..cd5009f 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -117,7 +117,7 @@ extern void inode_add_lru(struct inode *inode);
-  */
- extern void inode_wb_list_del(struct inode *inode);
- 
--extern int get_nr_dirty_inodes(void);
-+extern long get_nr_dirty_inodes(void);
- extern void evict_inodes(struct super_block *);
- extern int invalidate_inodes(struct super_block *, bool);
- 
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index 1a6bb81..1a82bdb 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -54,11 +54,11 @@ struct qstr {
- #define hashlen_len(hashlen)  ((u32)((hashlen) >> 32))
- 
- struct dentry_stat_t {
--	int nr_dentry;
--	int nr_unused;
--	int age_limit;          /* age in seconds */
--	int want_pages;         /* pages requested by system */
--	int dummy[2];
-+	long nr_dentry;
-+	long nr_unused;
-+	long age_limit;          /* age in seconds */
-+	long want_pages;         /* pages requested by system */
-+	long dummy[2];
- };
- extern struct dentry_stat_t dentry_stat;
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index a4c9fbe..ad3eb76 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1266,12 +1266,12 @@ struct super_block {
- 	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
- 	/* s_dentry_lru, s_nr_dentry_unused protected by dcache.c lru locks */
- 	struct list_head	s_dentry_lru;	/* unused dentry lru */
--	int			s_nr_dentry_unused;	/* # of dentry on lru */
-+	long			s_nr_dentry_unused;	/* # of dentry on lru */
- 
- 	/* s_inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
- 	spinlock_t		s_inode_lru_lock ____cacheline_aligned_in_smp;
- 	struct list_head	s_inode_lru;		/* unused inode lru */
--	int			s_nr_inodes_unused;	/* # of inodes on lru */
-+	long			s_nr_inodes_unused;	/* # of inodes on lru */
- 
- 	struct block_device	*s_bdev;
- 	struct backing_dev_info *s_bdi;
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index a4ed56c..6c28b61 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -49,9 +49,9 @@ struct files_stat_struct {
- };
- 
- struct inodes_stat_t {
--	int nr_inodes;
--	int nr_unused;
--	int dummy[5];		/* padding for sysctl ABI compatibility */
-+	long nr_inodes;
-+	long nr_unused;
-+	long dummy[5];		/* padding for sysctl ABI compatibility */
- };
- 
- 
-diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 9edcf45..fb90f7c 100644
---- a/kernel/sysctl.c
-+++ b/kernel/sysctl.c
-@@ -1456,14 +1456,14 @@ static struct ctl_table fs_table[] = {
- 	{
- 		.procname	= "inode-nr",
- 		.data		= &inodes_stat,
--		.maxlen		= 2*sizeof(int),
-+		.maxlen		= 2*sizeof(long),
- 		.mode		= 0444,
- 		.proc_handler	= proc_nr_inodes,
- 	},
- 	{
- 		.procname	= "inode-state",
- 		.data		= &inodes_stat,
--		.maxlen		= 7*sizeof(int),
-+		.maxlen		= 7*sizeof(long),
- 		.mode		= 0444,
- 		.proc_handler	= proc_nr_inodes,
- 	},
-@@ -1493,7 +1493,7 @@ static struct ctl_table fs_table[] = {
- 	{
- 		.procname	= "dentry-state",
- 		.data		= &dentry_stat,
--		.maxlen		= 6*sizeof(int),
-+		.maxlen		= 6*sizeof(long),
- 		.mode		= 0444,
- 		.proc_handler	= proc_nr_dentry,
- 	},
+I have also included one of my follow-up-patches-to-be, one that dynamically
+allocates memory for the list_lru's instead of statically declaring the array,
+since it ended up being such a hot topic during the last submission.
+
+I have also improved the documentation a lot (by my standards =p).
+
+For newcomers, here is the link that detail the work that has been
+done so far:
+
+http://www.spinics.net/lists/linux-fsdevel/msg65706.html
+
+Dave Chinner (18):
+  dcache: convert dentry_stat.nr_unused to per-cpu counters
+  dentry: move to per-sb LRU locks
+  dcache: remove dentries from LRU before putting on dispose list
+  mm: new shrinker API
+  shrinker: convert superblock shrinkers to new API
+  list: add a new LRU list type
+  inode: convert inode lru list to generic lru list code.
+  dcache: convert to use new lru list infrastructure
+  list_lru: per-node list infrastructure
+  shrinker: add node awareness
+  fs: convert inode and dentry shrinking to be node aware
+  xfs: convert buftarg LRU to generic code
+  xfs: rework buffer dispose list tracking
+  xfs: convert dquot cache lru to list_lru
+  fs: convert fs shrinkers to new scan/count API
+  drivers: convert shrinkers to new count/scan API
+  shrinker: convert remaining shrinkers to count/scan API
+  shrinker: Kill old ->shrink API.
+
+Glauber Costa (7):
+  fs: bump inode and dentry counters to long
+  super: fix calculation of shrinkable objects for small numbers
+  list_lru: per-node API
+  vmscan: per-node deferred work
+  i915: bail out earlier when shrinker cannot acquire mutex
+  hugepage: convert huge zero page shrinker to new shrinker API
+  list_lru: dynamically adjust node arrays
+
+ arch/x86/kvm/mmu.c                        |  24 ++-
+ drivers/gpu/drm/i915/i915_dma.c           |   4 +-
+ drivers/gpu/drm/i915/i915_gem.c           |  71 +++++---
+ drivers/gpu/drm/ttm/ttm_page_alloc.c      |  44 +++--
+ drivers/gpu/drm/ttm/ttm_page_alloc_dma.c  |  51 ++++--
+ drivers/md/bcache/btree.c                 |  43 +++--
+ drivers/md/bcache/sysfs.c                 |   2 +-
+ drivers/md/dm-bufio.c                     |  61 ++++---
+ drivers/staging/android/ashmem.c          |  44 +++--
+ drivers/staging/android/lowmemorykiller.c |  40 +++--
+ drivers/staging/zcache/zcache-main.c      |  29 +--
+ fs/dcache.c                               | 270 +++++++++++++++++-----------
+ fs/drop_caches.c                          |   1 +
+ fs/ext4/extents_status.c                  |  30 ++--
+ fs/gfs2/glock.c                           |  30 ++--
+ fs/gfs2/main.c                            |   3 +-
+ fs/gfs2/quota.c                           |  16 +-
+ fs/gfs2/quota.h                           |   4 +-
+ fs/inode.c                                | 193 +++++++++-----------
+ fs/internal.h                             |   6 +-
+ fs/mbcache.c                              |  49 ++---
+ fs/nfs/dir.c                              |  16 +-
+ fs/nfs/internal.h                         |   4 +-
+ fs/nfs/super.c                            |   3 +-
+ fs/nfsd/nfscache.c                        |  31 +++-
+ fs/quota/dquot.c                          |  34 ++--
+ fs/super.c                                | 106 ++++++-----
+ fs/ubifs/shrinker.c                       |  22 ++-
+ fs/ubifs/super.c                          |   3 +-
+ fs/ubifs/ubifs.h                          |   3 +-
+ fs/xfs/xfs_buf.c                          | 253 +++++++++++++-------------
+ fs/xfs/xfs_buf.h                          |  17 +-
+ fs/xfs/xfs_dquot.c                        |   7 +-
+ fs/xfs/xfs_icache.c                       |   4 +-
+ fs/xfs/xfs_icache.h                       |   2 +-
+ fs/xfs/xfs_qm.c                           | 285 ++++++++++++++++--------------
+ fs/xfs/xfs_qm.h                           |   4 +-
+ fs/xfs/xfs_super.c                        |  12 +-
+ include/linux/dcache.h                    |  14 +-
+ include/linux/fs.h                        |  25 ++-
+ include/linux/list_lru.h                  | 148 ++++++++++++++++
+ include/linux/shrinker.h                  |  54 ++++--
+ include/trace/events/vmscan.h             |   4 +-
+ include/uapi/linux/fs.h                   |   6 +-
+ kernel/sysctl.c                           |   6 +-
+ mm/Makefile                               |   2 +-
+ mm/huge_memory.c                          |  17 +-
+ mm/list_lru.c                             | 186 +++++++++++++++++++
+ mm/memory-failure.c                       |   2 +
+ mm/vmscan.c                               | 242 ++++++++++++++-----------
+ net/sunrpc/auth.c                         |  41 +++--
+ 51 files changed, 1620 insertions(+), 948 deletions(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 mm/list_lru.c
+
 -- 
 1.8.1.4
