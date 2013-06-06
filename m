@@ -1,53 +1,74 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v10 03/35] dcache: convert dentry_stat.nr_unused to
- per-cpu counters
-Date: Fri, 7 Jun 2013 09:42:04 +1000
-Message-ID: <20130606234204.GF29338@dastard>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
- <1370287804-3481-4-git-send-email-glommer@openvz.org>
- <20130605160731.91a5cd3ff700367f5e155d83@linux-foundation.org>
- <20130606014509.GN29338@dastard>
- <20130605194801.f9b25abf.akpm@linux-foundation.org>
- <51B0834A.8020606@parallels.com>
- <20130606152546.52f614d852da32d28a0b460f@linux-foundation.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 07/11] sched: account guest time per-cgroup as well.
+Date: Thu, 6 Jun 2013 16:48:32 -0700
+Message-ID: <20130606234832.GQ5045@htj.dyndns.org>
+References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
+ <1369825402-31046-8-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=aMxqMqM+i19McvrowSStRaPQHnpPw+Aofq7nZ3QXFDY=;
+        b=pvLEhSo/5vL39/MYcYRlFuR713yrESju/wVB9yQ2uZcM4yJ1lS8fFcUUXTTfpuADeB
+         cnSwpOIgPDDfFxTGW3y6cmLJ5OIrqyQvSdrNc+68qPDe5tZ20UivsW4vrHwSFw1GT6lo
+         uAuJyxz1Dz5IJ4LRX8NuoV3Tm1g6MIZqQqi9Kjo/t7NIFfDBzJaBnwZM6hy4cuh112Cd
+         r7Hty8+dKKLg7Bb6HmVitBCQIbItezcZKNTDMIJLDH55PvQxkNFrPOsCepyJrEyZ76eM
+         i1ThB4ufd2HbYdU/PGiPeYti7YuOLigG0k4qWc9FuyZvAntFS29xTmB6uFqmVi2+RS1j
+         91lg==
 Content-Disposition: inline
-In-Reply-To: <20130606152546.52f614d852da32d28a0b460f-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <1369825402-31046-8-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Thu, Jun 06, 2013 at 03:25:46PM -0700, Andrew Morton wrote:
-> On Thu, 6 Jun 2013 16:40:42 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+On Wed, May 29, 2013 at 03:03:18PM +0400, Glauber Costa wrote:
+> We already track multiple tick statistics per-cgroup, using
+> the task_group_account_field facility. This patch accounts
+> guest_time in that manner as well.
 > 
-> > +/*
-> > + * Here we resort to our own counters instead of using generic per-cpu counters
-> > + * for consistency with what the vfs inode code does. We are expected to harvest
-> > + * better code and performance by having our own specialized counters.
-> > + *
-> > + * Please note that the loop is done over all possible CPUs, not over all online
-> > + * CPUs. The reason for this is that we don't want to play games with CPUs going
-> > + * on and off. If one of them goes off, we will just keep their counters.
-> > + *
-> > + * glommer: See cffbc8a for details, and if you ever intend to change this,
-> > + * please update all vfs counters to match.
+> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> CC: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+> CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  kernel/sched/cputime.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
 > 
-> Handling CPU hotplug is really quite simple - see lib/percpu_counter.c
+> diff --git a/kernel/sched/cputime.c b/kernel/sched/cputime.c
+> index 74a44ef..e653e52 100644
+> --- a/kernel/sched/cputime.c
+> +++ b/kernel/sched/cputime.c
+> @@ -183,8 +183,6 @@ void account_user_time(struct task_struct *p, cputime_t cputime,
+>  static void account_guest_time(struct task_struct *p, cputime_t cputime,
+>  			       cputime_t cputime_scaled)
+>  {
+> -	u64 *cpustat = kcpustat_this_cpu->cpustat;
+> -
+>  	/* Add guest time to process. */
+>  	p->utime += cputime;
+>  	p->utimescaled += cputime_scaled;
+> @@ -193,11 +191,11 @@ static void account_guest_time(struct task_struct *p, cputime_t cputime,
+>  
+>  	/* Add guest time to cpustat. */
+>  	if (TASK_NICE(p) > 0) {
+> -		cpustat[CPUTIME_NICE] += (__force u64) cputime;
+> -		cpustat[CPUTIME_GUEST_NICE] += (__force u64) cputime;
+> +		task_group_account_field(p, CPUTIME_NICE, (__force u64) cputime);
+> +		task_group_account_field(p, CPUTIME_GUEST, (__force u64) cputime);
+>  	} else {
+> -		cpustat[CPUTIME_USER] += (__force u64) cputime;
+> -		cpustat[CPUTIME_GUEST] += (__force u64) cputime;
+> +		task_group_account_field(p, CPUTIME_USER, (__force u64) cputime);
+> +		task_group_account_field(p, CPUTIME_GUEST, (__force u64) cputime);
 
-Yes, it is - you're preaching to the choir, Andrew.
+This is a behavior change, right?  It seems sane to me but maybe the
+patch description should be more explicit?
 
-But, well, if you want us to add notifiers to optimise the summation
-to just the active CPUs, then lets just covert the code to use the
-generic per-cpu counters and stop wasting time rehashing tired old
-arguments.
+Thanks.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
+tejun
