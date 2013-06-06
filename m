@@ -1,46 +1,68 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v10 00/35] kmemcg shrinkers
-Date: Thu, 6 Jun 2013 00:47:27 -0700
-Message-ID: <20130606004727.c28d62e9.akpm@linux-foundation.org>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
-	<20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
-	<51B02347.60809@parallels.com>
-	<20130606001855.48d9da2e.akpm@linux-foundation.org>
-	<51B03C1F.4000501@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file
+	as insane
+Date: Thu, 6 Jun 2013 15:48:17 +0800
+Message-ID: <51B03EC1.3020306@huawei.com>
+References: <20130604021302.GH29989@mtj.dyndns.org>
+	<20130604111556.GA4963@redhat.com>
+	<20130604201947.GE14916@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51B03C1F.4000501@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20130604201947.GE14916-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 6 Jun 2013 11:37:03 +0400 Glauber Costa <glommer@parallels.com> wrote:
+On 2013/6/5 4:19, Tejun Heo wrote:
+> Hey, Daniel.
+> 
+> On Tue, Jun 04, 2013 at 12:15:56PM +0100, Daniel P. Berrange wrote:
+>> With libvirt and KVM we require the ability to put different threads
+> 
+> I really don't think cgroup has ever been intended (if there were ever
+> any such overall intending) or is suited for something as fine grained
+> as in-process resource management.  There already are existing
+> per-thread interfaces for that.  Please use them instead.  cgroup
+> simply doesn't fit.
+> 
+>> in different cgroups for the "cpu", "cpuset" & "cpuacct" controllers.
+> 
+> cpu and cpuacct are in the process of being merged.  The scheduler
+> people hate the duplicate accounting the separation causes and cpuacct
+> is generally considered a mistake that we shouldn't repeat.  So, umm,
+> you're really depending on a lot of things which are considered big
+> mistakes in cgroup.
+> 
+>> This is to allow us to control schedular tunables / placement for
+>> QEMU vCPU threads, independantly of limits for QEMU I/O threads. So
+>> requiring all threads of a process to be in the same cgroup isn't
+>> sufficiently flexible for our needs.
+> 
+> It was never suited to that level of flexibility and it will never be
+> and things like that will be clearly forbidden rather than being left
+> in the current "not fully supported but kinda works" state.  The
+> existing stuff won't break but new things won't keep the support.  If
+> you're fine with staying with the old interface, which will be around
+> for the foreseeable future, that's fine too, 
 
-> On 06/06/2013 11:18 AM, Andrew Morton wrote:
-> > The shrinker stuff seems sensible and straightforward and I expect we
-> > can proceed with that at the normal pace.  The memcg changes struck me
-> > as being hairy as hell and I'd really like to see the other memcg
-> > people go through it carefully.
-> > 
-> > Of course, "new series" doesn't give you an easily accessible tree to
-> > target.  I could drop it all again to give you a clean shot at
-> > tomorrow's -next?
-> If you just keep them on top (not really sure how hard it is for you), I
-> can just remove them all and apply a new series on top.
+I don't think this can be an option for libvirt. When some other user
+applications (systemd for example) use the new unified hierarchy interface,
+then the old interface is no longer available for libvirt.
 
-I could do that but then anyone else who wants to test the code has to
-do the same thing.  Dropping them out of -next does seem the clean
-approach.
-
-We still need to work out what to do with
-memcg-debugging-facility-to-access-dangling-memcgs.patch btw.  See
-other email.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> but if you intend to move
+> onto the new interface when it finally becomes ready, whenever that
+> is, please move on.
+> 
+> Thanks.
+> 
