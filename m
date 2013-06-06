@@ -1,183 +1,278 @@
-From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v11 02/25] super: fix calculation of shrinkable objects for small numbers
-Date: Fri,  7 Jun 2013 00:34:35 +0400
-Message-ID: <1370550898-26711-3-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v11 17/25] xfs: rework buffer dispose list tracking
+Date: Fri,  7 Jun 2013 00:34:50 +0400
+Message-ID: <1370550898-26711-18-git-send-email-glommer@openvz.org>
 References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1370550898-26711-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1370550898-26711-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Glauber Costa <glommer@openvz.org>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-The sysctl knob sysctl_vfs_cache_pressure is used to determine which
-percentage of the shrinkable objects in our cache we should actively try
-to shrink.
+From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-It works great in situations in which we have many objects (at least
-more than 100), because the aproximation errors will be negligible. But
-if this is not the case, specially when total_objects < 100, we may end
-up concluding that we have no objects at all (total / 100 = 0,  if total
-< 100).
+In converting the buffer lru lists to use the generic code, the
+locking for marking the buffers as on the dispose list was lost.
+This results in confusion in LRU buffer tracking and acocunting,
+resulting in reference counts being mucked up and filesystem beig
+unmountable.
 
-This is certainly not the biggest killer in the world, but may matter in
-very low kernel memory situations.
+To fix this, introduce an internal buffer spinlock to protect the
+state field that holds the dispose list information. Because there
+is now locking needed around xfs_buf_lru_add/del, and they are used
+in exactly one place each two lines apart, get rid of the wrappers
+and code the logic directly in place.
 
-[ v2: fix it for all occurrences of sysctl_vfs_cache_pressure ]
+Further, the LRU emptying code used on unmount is less than optimal.
+Convert it to use a dispose list as per a normal shrinker walk, and
+repeat the walk that fills the dispose list until the LRU is empty.
+Thi avoids needing to drop and regain the LRU lock for every item
+being freed, and allows the same logic as the shrinker isolate call
+to be used. Simpler, easier to understand.
 
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Acked-by: Mel Gorman <mgorman@suse.de>
-CC: Dave Chinner <david@fromorbit.com>
-CC: "Theodore Ts'o" <tytso@mit.edu>
-CC: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 ---
- fs/gfs2/glock.c        |  2 +-
- fs/gfs2/quota.c        |  2 +-
- fs/mbcache.c           |  2 +-
- fs/nfs/dir.c           |  2 +-
- fs/quota/dquot.c       |  5 ++---
- fs/super.c             | 14 +++++++-------
- fs/xfs/xfs_qm.c        |  2 +-
- include/linux/dcache.h |  4 ++++
- 8 files changed, 18 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_buf.c | 125 +++++++++++++++++++++++++++++++------------------------
+ fs/xfs/xfs_buf.h |  12 ++++--
+ 2 files changed, 79 insertions(+), 58 deletions(-)
 
-diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
-index 9435384..3bd2748 100644
---- a/fs/gfs2/glock.c
-+++ b/fs/gfs2/glock.c
-@@ -1463,7 +1463,7 @@ static int gfs2_shrink_glock_memory(struct shrinker *shrink,
- 		gfs2_scan_glock_lru(sc->nr_to_scan);
- 	}
- 
--	return (atomic_read(&lru_count) / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(atomic_read(&lru_count));
- }
- 
- static struct shrinker glock_shrinker = {
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index 3768c2f..d550a5d 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -114,7 +114,7 @@ int gfs2_shrink_qd_memory(struct shrinker *shrink, struct shrink_control *sc)
- 	spin_unlock(&qd_lru_lock);
- 
- out:
--	return (atomic_read(&qd_lru_count) * sysctl_vfs_cache_pressure) / 100;
-+	return vfs_pressure_ratio(atomic_read(&qd_lru_count));
- }
- 
- static u64 qd2index(struct gfs2_quota_data *qd)
-diff --git a/fs/mbcache.c b/fs/mbcache.c
-index 8c32ef3..5eb0476 100644
---- a/fs/mbcache.c
-+++ b/fs/mbcache.c
-@@ -189,7 +189,7 @@ mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc)
- 	list_for_each_entry_safe(entry, tmp, &free_list, e_lru_list) {
- 		__mb_cache_entry_forget(entry, gfp_mask);
- 	}
--	return (count / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(count);
- }
- 
- 
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index 3cfd208..0d2cdad 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -2004,7 +2004,7 @@ remove_lru_entry:
- 	}
- 	spin_unlock(&nfs_access_lru_lock);
- 	nfs_access_free_list(&head);
--	return (atomic_long_read(&nfs_access_nr_entries) / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
- }
- 
- static void __nfs_access_zap_cache(struct nfs_inode *nfsi, struct list_head *head)
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 3e64169..762b09c 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -719,9 +719,8 @@ static int shrink_dqcache_memory(struct shrinker *shrink,
- 		prune_dqcache(nr);
- 		spin_unlock(&dq_list_lock);
- 	}
--	return ((unsigned)
--		percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS])
--		/100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(
-+	percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS]));
- }
- 
- static struct shrinker dqcache_shrinker = {
-diff --git a/fs/super.c b/fs/super.c
-index 7465d43..2a37fd6 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -82,13 +82,13 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
- 		int	inodes;
- 
- 		/* proportion the scan between the caches */
--		dentries = (sc->nr_to_scan * sb->s_nr_dentry_unused) /
--							total_objects;
--		inodes = (sc->nr_to_scan * sb->s_nr_inodes_unused) /
--							total_objects;
-+		dentries = mult_frac(sc->nr_to_scan, sb->s_nr_dentry_unused,
-+							total_objects);
-+		inodes = mult_frac(sc->nr_to_scan, sb->s_nr_inodes_unused,
-+							total_objects);
- 		if (fs_objects)
--			fs_objects = (sc->nr_to_scan * fs_objects) /
--							total_objects;
-+			fs_objects = mult_frac(sc->nr_to_scan, fs_objects,
-+							total_objects);
- 		/*
- 		 * prune the dcache first as the icache is pinned by it, then
- 		 * prune the icache, followed by the filesystem specific caches
-@@ -104,7 +104,7 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
- 				sb->s_nr_inodes_unused + fs_objects;
- 	}
- 
--	total_objects = (total_objects / 100) * sysctl_vfs_cache_pressure;
-+	total_objects = vfs_pressure_ratio(total_objects);
- 	drop_super(sb);
- 	return total_objects;
- }
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b75c9bb..f10506b 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1605,7 +1605,7 @@ xfs_qm_shake(
- 	}
- 
- out:
--	return (qi->qi_lru_count / 100) * sysctl_vfs_cache_pressure;
-+	return vfs_pressure_ratio(qi->qi_lru_count);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index b19b8a4..c3f8ea9 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -80,37 +80,6 @@ xfs_buf_vmap_len(
  }
  
  /*
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index 1a82bdb..bd08285 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -411,4 +411,8 @@ static inline bool d_mountpoint(struct dentry *dentry)
+- * xfs_buf_lru_add - add a buffer to the LRU.
+- *
+- * The LRU takes a new reference to the buffer so that it will only be freed
+- * once the shrinker takes the buffer off the LRU.
+- */
+-static void
+-xfs_buf_lru_add(
+-	struct xfs_buf	*bp)
+-{
+-	if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
+-		bp->b_lru_flags &= ~_XBF_LRU_DISPOSE;
+-		atomic_inc(&bp->b_hold);
+-	}
+-}
+-
+-/*
+- * xfs_buf_lru_del - remove a buffer from the LRU
+- *
+- * The unlocked check is safe here because it only occurs when there are not
+- * b_lru_ref counts left on the inode under the pag->pag_buf_lock. it is there
+- * to optimise the shrinker removing the buffer from the LRU and calling
+- * xfs_buf_free().
+- */
+-static void
+-xfs_buf_lru_del(
+-	struct xfs_buf	*bp)
+-{
+-	list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
+-}
+-
+-/*
+  * When we mark a buffer stale, we remove the buffer from the LRU and clear the
+  * b_lru_ref count so that the buffer is freed immediately when the buffer
+  * reference count falls to zero. If the buffer is already on the LRU, we need
+@@ -133,12 +102,14 @@ xfs_buf_stale(
+ 	 */
+ 	bp->b_flags &= ~_XBF_DELWRI_Q;
  
- extern int sysctl_vfs_cache_pressure;
+-	atomic_set(&(bp)->b_lru_ref, 0);
+-	if (!(bp->b_lru_flags & _XBF_LRU_DISPOSE) &&
++	spin_lock(&bp->b_lock);
++	atomic_set(&bp->b_lru_ref, 0);
++	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
+ 	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
+ 		atomic_dec(&bp->b_hold);
  
-+static inline unsigned long vfs_pressure_ratio(unsigned long val)
-+{
-+	return mult_frac(val, sysctl_vfs_cache_pressure, 100);
-+}
- #endif	/* __LINUX_DCACHE_H */
+ 	ASSERT(atomic_read(&bp->b_hold) >= 1);
++	spin_unlock(&bp->b_lock);
+ }
+ 
+ static int
+@@ -202,6 +173,7 @@ _xfs_buf_alloc(
+ 	INIT_LIST_HEAD(&bp->b_list);
+ 	RB_CLEAR_NODE(&bp->b_rbnode);
+ 	sema_init(&bp->b_sema, 0); /* held, no waiters */
++	spin_lock_init(&bp->b_lock);
+ 	XB_SET_OWNER(bp);
+ 	bp->b_target = target;
+ 	bp->b_flags = flags;
+@@ -891,12 +863,33 @@ xfs_buf_rele(
+ 
+ 	ASSERT(atomic_read(&bp->b_hold) > 0);
+ 	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
+-		if (!(bp->b_flags & XBF_STALE) &&
+-			   atomic_read(&bp->b_lru_ref)) {
+-			xfs_buf_lru_add(bp);
++		spin_lock(&bp->b_lock);
++		if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
++			/*
++			 * If the buffer is added to the LRU take a new
++			 * reference to the buffer for the LRU and clear the
++			 * (now stale) dispose list state flag
++			 */
++			if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
++				bp->b_state &= ~XFS_BSTATE_DISPOSE;
++				atomic_inc(&bp->b_hold);
++			}
++			spin_unlock(&bp->b_lock);
+ 			spin_unlock(&pag->pag_buf_lock);
+ 		} else {
+-			xfs_buf_lru_del(bp);
++			/*
++			 * most of the time buffers will already be removed from
++			 * the LRU, so optimise that case by checking for the
++			 * XFS_BSTATE_DISPOSE flag indicating the last list the
++			 * buffer was on was the disposal list
++			 */
++			if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
++				list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
++			} else {
++				ASSERT(list_empty(&bp->b_lru));
++			}
++			spin_unlock(&bp->b_lock);
++
+ 			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
+ 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
+ 			spin_unlock(&pag->pag_buf_lock);
+@@ -1484,33 +1477,48 @@ xfs_buftarg_wait_rele(
+ 
+ {
+ 	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
++	struct list_head	*dispose = arg;
+ 
+ 	if (atomic_read(&bp->b_hold) > 1) {
+-		/* need to wait */
++		/* need to wait, so skip it this pass */
+ 		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
+-		spin_unlock(lru_lock);
+-		delay(100);
+-	} else {
+-		/*
+-		 * clear the LRU reference count so the buffer doesn't get
+-		 * ignored in xfs_buf_rele().
+-		 */
+-		atomic_set(&bp->b_lru_ref, 0);
+-		spin_unlock(lru_lock);
+-		xfs_buf_rele(bp);
++		return LRU_SKIP;
+ 	}
++	if (!spin_trylock(&bp->b_lock))
++		return LRU_SKIP;
+ 
+-	spin_lock(lru_lock);
+-	return LRU_RETRY;
++	/*
++	 * clear the LRU reference count so the buffer doesn't get
++	 * ignored in xfs_buf_rele().
++	 */
++	atomic_set(&bp->b_lru_ref, 0);
++	bp->b_state |= XFS_BSTATE_DISPOSE;
++	list_move(item, dispose);
++	spin_unlock(&bp->b_lock);
++	return LRU_REMOVED;
+ }
+ 
+ void
+ xfs_wait_buftarg(
+ 	struct xfs_buftarg	*btp)
+ {
+-	while (list_lru_count(&btp->bt_lru))
++	LIST_HEAD(dispose);
++	int loop = 0;
++
++	/* loop until there is nothing left on the lru list. */
++	while (list_lru_count(&btp->bt_lru)) {
+ 		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
+-			      NULL, LONG_MAX);
++			      &dispose, LONG_MAX);
++
++		while (!list_empty(&dispose)) {
++			struct xfs_buf *bp;
++			bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
++			list_del_init(&bp->b_lru);
++			xfs_buf_rele(bp);
++		}
++		if (loop++ != 0)
++			delay(100);
++	}
+ }
+ 
+ static enum lru_status
+@@ -1523,15 +1531,24 @@ xfs_buftarg_isolate(
+ 	struct list_head	*dispose = arg;
+ 
+ 	/*
++	 * we are inverting the lru lock/bp->b_lock here, so use a trylock.
++	 * If we fail to get the lock, just skip it.
++	 */
++	if (!spin_trylock(&bp->b_lock))
++		return LRU_SKIP;
++	/*
+ 	 * Decrement the b_lru_ref count unless the value is already
+ 	 * zero. If the value is already zero, we need to reclaim the
+ 	 * buffer, otherwise it gets another trip through the LRU.
+ 	 */
+-	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0))
++	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
++		spin_unlock(&bp->b_lock);
+ 		return LRU_ROTATE;
++	}
+ 
+-	bp->b_lru_flags |= _XBF_LRU_DISPOSE;
++	bp->b_state |= XFS_BSTATE_DISPOSE;
+ 	list_move(item, dispose);
++	spin_unlock(&bp->b_lock);
+ 	return LRU_REMOVED;
+ }
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 5ec7d35..e656833 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -60,7 +60,6 @@ typedef enum {
+ #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+ #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+ #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
+-#define _XBF_LRU_DISPOSE (1 << 24)/* buffer being discarded */
+ 
+ typedef unsigned int xfs_buf_flags_t;
+ 
+@@ -79,8 +78,12 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+-	{ _XBF_COMPOUND,	"COMPOUND" }, \
+-	{ _XBF_LRU_DISPOSE,	"LRU_DISPOSE" }
++	{ _XBF_COMPOUND,	"COMPOUND" }
++
++/*
++ * Internal state flags.
++ */
++#define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
+ 
+ typedef struct xfs_buftarg {
+ 	dev_t			bt_dev;
+@@ -136,7 +139,8 @@ typedef struct xfs_buf {
+ 	 * bt_lru_lock and not by b_sema
+ 	 */
+ 	struct list_head	b_lru;		/* lru list */
+-	xfs_buf_flags_t		b_lru_flags;	/* internal lru status flags */
++	spinlock_t		b_lock;		/* internal state lock */
++	unsigned int		b_state;	/* internal state flags */
+ 	wait_queue_head_t	b_waiters;	/* unpin waiters */
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
 -- 
 1.8.1.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
