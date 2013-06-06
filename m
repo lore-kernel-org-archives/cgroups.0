@@ -1,76 +1,108 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v10 29/35] memcg: per-memcg kmem shrinking
-Date: Thu, 6 Jun 2013 16:09:16 +0400
-Message-ID: <51B07BEC.9010205@parallels.com>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-30-git-send-email-glommer@openvz.org> <20130605160841.909420c06bfde62039489d2e@linux-foundation.org> <51B049D5.2020809@parallels.com> <20130606024906.e5b85b28.akpm@linux-foundation.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch] memcg: clean up memcg->nodeinfo
+Date: Thu, 6 Jun 2013 14:23:21 +0200
+Message-ID: <20130606122321.GF7909@dhcp22.suse.cz>
+References: <1370487934-4547-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130606024906.e5b85b28.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1370487934-4547-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@openvz.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 06/06/2013 01:49 PM, Andrew Morton wrote:
-> On Thu, 6 Jun 2013 12:35:33 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+On Wed 05-06-13 23:05:34, Johannes Weiner wrote:
+> Remove struct mem_cgroup_lru_info and fold its single member, the
+> variably sized nodeinfo[0], directly into struct mem_cgroup.  This
+> should make it more obvious why it has to be the last member there.
 > 
->> On 06/06/2013 03:08 AM, Andrew Morton wrote:
->>>> +
->>>>> +		/*
->>>>> +		 * We will try to shrink kernel memory present in caches. We
->>>>> +		 * are sure that we can wait, so we will. The duration of our
->>>>> +		 * wait is determined by congestion, the same way as vmscan.c
->>>>> +		 *
->>>>> +		 * If we are in FS context, though, then although we can wait,
->>>>> +		 * we cannot call the shrinkers. Most fs shrinkers (which
->>>>> +		 * comprises most of our kmem data) will not run without
->>>>> +		 * __GFP_FS since they can deadlock. The solution is to
->>>>> +		 * synchronously run that in a different context.
->>> But this is pointless.  Calling a function via a different thread and
->>> then waiting for it to complete is equivalent to calling it directly.
->>>
->> Not in this case. We are in wait-capable context (we check for this
->> right before we reach this), but we are not in fs capable context.
->>
->> So the reason we do this - which I tried to cover in the changelog, is
->> to escape from the GFP_FS limitation that our call chain has, not the
->> wait limitation.
+> Also move the comment that's above that special last member below it,
+> so it is more visible to somebody that considers appending to the
+> struct mem_cgroup.
+>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+
+It would be better to make this a regular array in the long term. But
+this is definitely an improvement
+
+Acked-by: Michal Hocko <mhocko@suse.cz>
+
+Thanks!
+> ---
+>  mm/memcontrol.c | 21 ++++++---------------
+>  1 file changed, 6 insertions(+), 15 deletions(-)
 > 
-> But that's equivalent to calling the code directly.  Look:
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ff7b40d..d169a8d 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -187,10 +187,6 @@ struct mem_cgroup_per_node {
+>  	struct mem_cgroup_per_zone zoneinfo[MAX_NR_ZONES];
+>  };
+>  
+> -struct mem_cgroup_lru_info {
+> -	struct mem_cgroup_per_node *nodeinfo[0];
+> -};
+> -
+>  /*
+>   * Cgroups above their limits are maintained in a RB-Tree, independent of
+>   * their hierarchy representation
+> @@ -384,14 +380,9 @@ struct mem_cgroup {
+>  #endif
+>  	/* when kmem shrinkers can sleep but can't proceed due to context */
+>  	struct work_struct kmemcg_shrink_work;
+> -	/*
+> -	 * Per cgroup active and inactive list, similar to the
+> -	 * per zone LRU lists.
+> -	 *
+> -	 * WARNING: This has to be the last element of the struct. Don't
+> -	 * add new fields after this point.
+> -	 */
+> -	struct mem_cgroup_lru_info info;
+> +
+> +	struct mem_cgroup_per_node *nodeinfo[0];
+> +	/* WARNING: nodeinfo has to be the last member here */
+>  };
+>  
+>  static size_t memcg_size(void)
+> @@ -777,7 +768,7 @@ static struct mem_cgroup_per_zone *
+>  mem_cgroup_zoneinfo(struct mem_cgroup *memcg, int nid, int zid)
+>  {
+>  	VM_BUG_ON((unsigned)nid >= nr_node_ids);
+> -	return &memcg->info.nodeinfo[nid]->zoneinfo[zid];
+> +	return &memcg->nodeinfo[nid]->zoneinfo[zid];
+>  }
+>  
+>  struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg)
+> @@ -6595,13 +6586,13 @@ static int alloc_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
+>  		mz->on_tree = false;
+>  		mz->memcg = memcg;
+>  	}
+> -	memcg->info.nodeinfo[node] = pn;
+> +	memcg->nodeinfo[node] = pn;
+>  	return 0;
+>  }
+>  
+>  static void free_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
+>  {
+> -	kfree(memcg->info.nodeinfo[node]);
+> +	kfree(memcg->nodeinfo[node]);
+>  }
+>  
+>  static struct mem_cgroup *mem_cgroup_alloc(void)
+> -- 
+> 1.8.2.3
 > 
-> some_fs_function()
-> {
-> 	lock(some-fs-lock);
-> 	...
-> }
-> 
-> some_other_fs_function()
-> {
-> 	lock(some-fs-lock);
-> 	alloc_pages(GFP_NOFS);
-> 	->...
-> 	  ->schedule_work(some_fs_function);
-> 	    flush_scheduled_work();
-> 
-> that flush_scheduled_work() won't complete until some_fs_function() has
-> completed.  But some_fs_function() won't complete, because we're
-> holding some-fs-lock.
-> 
 
-In my experience during this series, most of the kmem allocation here
-will be filesystem related. This means that we will allocate that with
-GFP_FS on. If we don't do anything like that, reclaim is almost
-pointless since it will never free anything (only once here and there
-when the allocation is not from fs).
+-- 
+Michal Hocko
+SUSE Labs
 
-It tend to work just fine like this. It may very well be because fs
-people just mark everything as NOFS out of safety and we aren't *really*
-holding any locks in common situations, but it will blow in our faces in
-a subtle way (which none of us want).
-
-That said, suggestions are more than welcome.
-
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
