@@ -1,114 +1,57 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v10 03/35] dcache: convert dentry_stat.nr_unused to
- per-cpu counters
-Date: Thu, 6 Jun 2013 11:45:09 +1000
-Message-ID: <20130606014509.GN29338@dastard>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
- <1370287804-3481-4-git-send-email-glommer@openvz.org>
- <20130605160731.91a5cd3ff700367f5e155d83@linux-foundation.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 00/11] per-cgroup cpu-stat
+Date: Wed, 5 Jun 2013 18:49:29 -0700
+Message-ID: <20130606014929.GS10693@mtj.dyndns.org>
+References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=6TU4RxohXZenHyQtslBd3IR998OovXGQwOffKbCBjdc=;
+        b=g1NLNCQSn9+fkctj5whN6vVa3tWyBUdAEfC6IWICW3pZS2Tv+M6GNo8C2zS2dttL1C
+         tmn6ck1Ncv1zi2JU+aLf3DyqPErEoit6R45Zd8VtaHoxpt77AAz2QsJRaK5im0MRqM5a
+         JmmFAIst6dR0U/dpkjuHj/gYtL3lemsWgmsQIsQarHqyZ2sEv80S4K7HJwcMxUePaOF/
+         /S54Svlj8UcNGLPlhZYg2fypUT0fge0NLOzweEFRy6V2Dq4mJHiMxNjhqCw0UeDBx3QF
+         NC4OeAWG6YjQbu5KkpVW7oTAnLd6OqD/VJ0mTqIwDkq4D9RxLaOM3P4g9cDUX32xv3hV
+         KkgA==
 Content-Disposition: inline
-In-Reply-To: <20130605160731.91a5cd3ff700367f5e155d83@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1369825402-31046-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Wed, Jun 05, 2013 at 04:07:31PM -0700, Andrew Morton wrote:
-> On Mon,  3 Jun 2013 23:29:32 +0400 Glauber Costa <glommer@openvz.org> wrote:
+Hello, Glauber.
+
+On Wed, May 29, 2013 at 03:03:11PM +0400, Glauber Costa wrote:
+> I am *not* going as far as marking cpuacct deprecated, because I think it
+> deserves a special discussion (even though my position in this matter is widely
+> known), but all the infrastructure to make it happen is here. But after this,
+> it should be a matter of setting a flag (or not).
+
+I'll ensure that cpuacct can't be used with sane_behavior from cgroup
+core side, so that it can be deprecated with multiple hierarchies
+eventually.
+
+> Through this patchset I am making cpu cgroup provide the same functionality of
+> cpuacct, and now with a more clear semantics, I attempt to provide userspace
+> with enough information to reconstruct per-container version of files like
+> "/proc/stat". In particular, we are interested in knowing the per-cgroup slices
+> of user time, system time, wait time, number of processes, and a variety of
+> statistics.
 > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Before we split up the dcache_lru_lock, the unused dentry counter
-> > needs to be made independent of the global dcache_lru_lock. Convert
-> > it to per-cpu counters to do this.
-> > 
-> > ...
-> >
-> > --- a/fs/dcache.c
-> > +++ b/fs/dcache.c
-> > @@ -118,8 +118,10 @@ struct dentry_stat_t dentry_stat = {
-> >  };
-> >  
-> >  static DEFINE_PER_CPU(long, nr_dentry);
-> > +static DEFINE_PER_CPU(long, nr_dentry_unused);
-> >  
-> >  #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
-> > +/* scan possible cpus instead of online and avoid worrying about CPU hotplug. */
-> 
-> That's a poor comment.  It explains what the code does (which is dead
-> obvious) but fails to explain *why* the code does it.
-> 
-> > @@ -129,10 +131,20 @@ static long get_nr_dentry(void)
-> >  	return sum < 0 ? 0 : sum;
-> >  }
-> >  
-> > +static long get_nr_dentry_unused(void)
-> > +{
-> > +	int i;
-> > +	long sum = 0;
-> > +	for_each_possible_cpu(i)
-> > +		sum += per_cpu(nr_dentry_unused, i);
-> > +	return sum < 0 ? 0 : sum;
-> > +}
-> 
-> And I'm sure we've asked and answered ad nauseum why this code needed
-> to open-code the counters instead of using the provided library code,
-> yet the answer to that *still* isn't in the code comments or even in
-> the changelog.  It should be.
+> To make sure we can count nr of switches correctly, I am ressurecting one of
+> Peter's patches that apparently got nowhere in the past.
 
-<sigh>
+I generally agree with the approach but which tree is it based on?
+Can you please let me know the base commit so that I can review the
+series properly?
 
-They were, originally, generic per-cpu counters:
+Thanks.
 
-312d3ca fs: use percpu counter for nr_dentry and nr_dentry_unused
-cffbc8a fs: Convert nr_inodes and nr_unused to per-cpu counters
-
-but then, well, let me just point you at the last time someone asked
-this:
-
-http://lwn.net/Articles/546587/
-
-This is how we ended up with these fucked-up custom per-cpu
-counters:
-
-86c8749 vfs: revert per-cpu nr_unused counters for dentry and inodes
-3e880fb fs: use fast counters for vfs caches
-
-And so here we are now reverting 86c8749 because we're now
-implementing the side of the scalability pile that requires the
-unused counters to scale globally. I don't care to revisit 3e880fb
-in this patch series, so this patch just duplicates existing
-infrastructure.
-
-> Given that the existing proc_nr_dentry() will suck mud rocks on
-> large-cpu-count machines (due to get_nr_dentry()), I guess we can
-> assume that nobody will be especially hurt by making proc_nr_dentry()
-> suck even harder...
-
-Yup, another reason I don't like the current implementation, too.
-But making this better was labelled "optimising the slow path" and
-so roundly dismissed.
-
-Andrew, if you want to push the changes back to generic per-cpu
-counters through to Linus, then I'll write the patches for you.  But
-- and this is a big but - I'll only do this if you are going to deal
-with the "performance trumps all other concerns" fanatics over
-whether it should be merged or not. I have better things to do
-with my time have a flamewar over trivial details like this.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
