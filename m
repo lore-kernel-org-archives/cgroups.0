@@ -1,101 +1,87 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full charge
- context
-Date: Thu, 6 Jun 2013 15:18:37 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com>
-References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org> <1370488193-4747-2-git-send-email-hannes@cmpxchg.org> <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com> <20130606053315.GB9406@cmpxchg.org> <20130606173355.GB27226@cmpxchg.org>
- <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com> <20130606215425.GM15721@cmpxchg.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v10 29/35] memcg: per-memcg kmem shrinking
+Date: Thu, 6 Jun 2013 15:23:15 -0700
+Message-ID: <20130606152315.69603127cca33e54b1ed428e@linux-foundation.org>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
+	<1370287804-3481-30-git-send-email-glommer@openvz.org>
+	<20130605160841.909420c06bfde62039489d2e@linux-foundation.org>
+	<51B049D5.2020809@parallels.com>
+	<20130606024906.e5b85b28.akpm@linux-foundation.org>
+	<51B07BEC.9010205@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=pN2r+qvvmnQ7yHOdEcXK9m1cIZES6BsaGmVUkxpmjt4=;
-        b=WX/8jTLKF50Hd99pLm/BS1hXpwC4AlEyS6UJaK6Scgz7CqkoV3wStLaNSUxYg7I2N3
-         ruJLjQOIisNmGJtsVPW9YUS9pfgrDbQxb0xLzrIJL8BT4IB3y+4THBESYJ8pr0pBeuNv
-         UGgdpl8rF2AdMzMcSZXHCMEOlIwcVCRIJj/x/gDWlx31xlzVuelDVLXR3uj4a0JryaaG
-         9ugbxwERcNqXtnooaiMhspnKALjtIKUhrMhDAerm6YBkXBRH2lGKkM2aMSqjpUKnPB9L
-         iFOx14vcqThQb1EtjVRy4R9dTVbLCrneVM9MtNFsg+whrP9ye+2afVYYg/pRZ09/e+7I
-         P8nw==
-In-Reply-To: <20130606215425.GM15721@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51B07BEC.9010205-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 6 Jun 2013, Johannes Weiner wrote:
+On Thu, 6 Jun 2013 16:09:16 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 
-> > I don't understand why memcg is unique in this regard and it doesn't 
-> > affect the page allocator as well on system oom conditions.  Ignoring 
-> > memecg, all allocating processes will loop forever in the page allocator 
-> > unless there are atypical gfp flags waiting for memory to be available, 
-> > only one will call the oom killer at a time, a process is selected and 
-> > killed, and the oom killer defers until that process exists because it 
-> > finds TIF_MEMDIE.  Why is memcg charging any different?
-> 
-> The allocator wakes up kswapd, global OOMs are rarer, with physical
-> memory the line to OOM is blurrier than with the memcg hard limit?
-> 
-> Anyway, I'm not aware of bug reports in the global case, but there are
-> bug reports for the memcg case and we have a decent understanding of
-> those deadlocks.  So can we stay focussed and fix this, please?
-> 
-
-Could you point me to those bug reports?  As far as I know, we have never 
-encountered them so it would be surprising to me that we're running with a 
-potential landmine and have seemingly never hit it.
-
-Perhaps the answer is solely the stacktraces in your changelog, so I'd be 
-happy to review that separately from my patch.
-
-> > > Reported-by: Reported-by: azurIt <azurit@pobox.sk>
-> > > Debugged-by: Michal Hocko <mhocko@suse.cz>
-> > > Reported-by: David Rientjes <rientjes@google.com>
+> >>> then waiting for it to complete is equivalent to calling it directly.
+> >>>
+> >> Not in this case. We are in wait-capable context (we check for this
+> >> right before we reach this), but we are not in fs capable context.
+> >>
+> >> So the reason we do this - which I tried to cover in the changelog, is
+> >> to escape from the GFP_FS limitation that our call chain has, not the
+> >> wait limitation.
 > > 
-> > What exactly did I report?  This isn't at all what 
-> > memory.oom_delay_millisecs is about, which is a failure of userspace to 
-> > respond to the condition and react in time, not because it's stuck on any 
-> > lock.  We still need that addition regardless of what you're doing here.
+> > But that's equivalent to calling the code directly.  Look:
+> > 
+> > some_fs_function()
+> > {
+> > 	lock(some-fs-lock);
+> > 	...
+> > }
+> > 
+> > some_other_fs_function()
+> > {
+> > 	lock(some-fs-lock);
+> > 	alloc_pages(GFP_NOFS);
+> > 	->...
+> > 	  ->schedule_work(some_fs_function);
+> > 	    flush_scheduled_work();
+> > 
+> > that flush_scheduled_work() won't complete until some_fs_function() has
+> > completed.  But some_fs_function() won't complete, because we're
+> > holding some-fs-lock.
+> > 
 > 
-> Oh, tell me how getting stuck indefinitely on a lock will not result
-> in "a failure to react in time".  This is some seriously misguided
-> pedantry.
+> In my experience during this series, most of the kmem allocation here
+
+"most"?
+
+> will be filesystem related. This means that we will allocate that with
+> GFP_FS on.
+
+eh?  filesystems do a tremendous amount of GFP_NOFS allocation.  
+
+akpm3:/usr/src/25> grep GFP_NOFS fs/*/*.c|wc -l
+898
+
+> If we don't do anything like that, reclaim is almost
+> pointless since it will never free anything (only once here and there
+> when the allocation is not from fs).
+
+It depends what you mean by "reclaim".  There are a lot of things which
+vmscan can do for a GFP_NOFS allocation.  Scraping clean pagecache,
+clean swapcache, well-behaved (ahem) shrinkable caches.
+
+> It tend to work just fine like this. It may very well be because fs
+> people just mark everything as NOFS out of safety and we aren't *really*
+> holding any locks in common situations, but it will blow in our faces in
+> a subtle way (which none of us want).
 > 
+> That said, suggestions are more than welcome.
 
-It certainly would, but it's not the point that memory.oom_delay_millisecs 
-was intended to address.  memory.oom_delay_millisecs would simply delay 
-calling mem_cgroup_out_of_memory() unless userspace can't free memory or 
-increase the memory limit in time.  Obviously that delay isn't going to 
-magically address any lock dependency issues.
+At a minimum we should remove all the schedule_work() stuff, call the
+callback function synchronously and add
 
-> And yes, you talked about deadlocking potential other than the handler
-> itself OOMing, I quote from
-> <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>:
-> 
-> "Unresponsiveness isn't necessarily only because of memory
->  constraints, you may have your oom notifier in a parent cgroup that
->  isn't oom.  If a process is stuck on mm->mmap_sem in the oom cgroup,
->  though, the oom notifier may not be able to scrape /proc/pid and
->  attain necessary information in making an oom kill decision."
-> 
-> These are your words, and my patch sets out to fix the described
-> problem,
+	/* This code is full of deadlocks */
 
-I can review this patch apart from memory.oom_delay_millisecs using the 
-examples in your changelog, but this isn't the problem statement for my 
-patch.  The paragraph above is describing one way that an oom handler may 
-encounter issues, it's not the only way and it's not a way that we have 
-ever faced on our production servers with memcg.  I just didn't think the 
-above was me reporting a bug, perhaps you took it that way.
 
-The point I'm trying to make is that your patch doesn't reduce our need 
-for memory.oom_delay_millisecs as described in the thread for that patch.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Sorry, this part of the patchset is busted and needs a fundamental
+rethink.
