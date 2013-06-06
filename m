@@ -1,149 +1,224 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full charge
- context
-Date: Thu, 6 Jun 2013 13:11:32 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com>
-References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org> <1370488193-4747-2-git-send-email-hannes@cmpxchg.org> <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com> <20130606053315.GB9406@cmpxchg.org> <20130606173355.GB27226@cmpxchg.org>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=UmA+skWWTqHUEcV5wsfoOtHwWG1KCWjW+xb5HqjLptU=;
-        b=BGXY5kWG67UDYpkk52GP12L0wlFoyupMUFOKg90J91/SZK9Np5I7L4dOjBANTof/Bz
-         n1Uq0JtIuJ8NgB5JiQC31qIeL3wqReI49TI6KSOBI9Qj4/llQy2+LGeaz71IQDtqRAl5
-         1QiCiMNHdmUzLOdOsJpI6Qq3lJAEw6iFrcfHbl35JN/9iF14U7iYDMs19+ImMLYVFGOw
-         pfzDCn6eIl4beGz1tqY/3DgJx24vg3JA2a1tqQFdaRoGmgHLvU9uqKsBho1Zz8bPIqvb
-         C1rahZsRyTNEjLYM0cUzGud48Ab4Glwn16fqWfyUq/S/WYpb8yQkyC04lEAin3S88Jqr
-         xZtg==
-In-Reply-To: <20130606173355.GB27226@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v11 01/25] fs: bump inode and dentry counters to long
+Date: Fri,  7 Jun 2013 00:34:34 +0400
+Message-ID: <1370550898-26711-2-git-send-email-glommer@openvz.org>
+References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1370550898-26711-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 6 Jun 2013, Johannes Weiner wrote:
+There are situations in very large machines in which we can have a large
+quantity of dirty inodes, unused dentries, etc. This is particularly
+true when umounting a filesystem, where eventually since every live
+object will eventually be discarded.
 
-> > If the killing task or one of the sleeping tasks is holding a lock
-> > that the selected victim needs in order to exit no progress can be
-> > made.
-> > 
-> > The report we had a few months ago was that a task held the i_mutex
-> > when trying to charge a page cache page and then invoked the OOM
-> > handler and looped on CHARGE_RETRY.  Meanwhile, the selected victim
-> > was just entering truncate() and now stuck waiting for the i_mutex.
-> > 
-> > I'll add this scenario to the changelog, hopefully it will make the
-> > rest a little clearer.
-> 
-> David, is the updated patch below easier to understand?
-> 
+Dave Chinner reported a problem with this while experimenting with the
+shrinker revamp patchset. So we believe it is time for a change. This
+patch just moves int to longs. Machines where it matters should have a
+big long anyway.
 
-I don't understand why memcg is unique in this regard and it doesn't 
-affect the page allocator as well on system oom conditions.  Ignoring 
-memecg, all allocating processes will loop forever in the page allocator 
-unless there are atypical gfp flags waiting for memory to be available, 
-only one will call the oom killer at a time, a process is selected and 
-killed, and the oom killer defers until that process exists because it 
-finds TIF_MEMDIE.  Why is memcg charging any different?
+Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+CC: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ fs/dcache.c             |  8 ++++----
+ fs/inode.c              | 18 +++++++++---------
+ fs/internal.h           |  2 +-
+ include/linux/dcache.h  | 10 +++++-----
+ include/linux/fs.h      |  4 ++--
+ include/uapi/linux/fs.h |  6 +++---
+ kernel/sysctl.c         |  6 +++---
+ 7 files changed, 27 insertions(+), 27 deletions(-)
 
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Subject: [patch] memcg: do not trap chargers with full callstack on OOM
-> 
-> The memcg OOM handling is incredibly fragile and can deadlock.  When a
-> task fails to charge memory, it invokes the OOM killer and loops right
-> there in the charge code until it succeeds.  Comparably, any other
-> task that enters the charge path at this point will go to a waitqueue
-> right then and there and sleep until the OOM situation is resolved.
-> The problem is that these tasks may hold filesystem locks and the
-> mmap_sem; locks that the selected OOM victim may need to exit.
-> 
-> For example, in one reported case, the task invoking the OOM killer
-> was about to charge a page cache page during a write(), which holds
-> the i_mutex.  The OOM killer selected a task that was just entering
-> truncate() and trying to acquire the i_mutex:
-> 
-> OOM invoking task:
-> [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
-> [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
-> [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
-> [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
-> [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
-> [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
-> [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
-> [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
-> [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
-> [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
-> [<ffffffff8111156a>] do_sync_write+0xea/0x130
-> [<ffffffff81112183>] vfs_write+0xf3/0x1f0
-> [<ffffffff81112381>] sys_write+0x51/0x90
-> [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> OOM kill victim:
-> [<ffffffff811109b8>] do_truncate+0x58/0xa0              # takes i_mutex
-> [<ffffffff81121c90>] do_last+0x250/0xa30
-> [<ffffffff81122547>] path_openat+0xd7/0x440
-> [<ffffffff811229c9>] do_filp_open+0x49/0xa0
-> [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
-> [<ffffffff8110f950>] sys_open+0x20/0x30
-> [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> The OOM handling task will retry the charge indefinitely while the OOM
-> killed task is not releasing any resources.
-> 
-> A similar scenario can happen when the kernel OOM killer for a memcg
-> is disabled and a userspace task is in charge of resolving OOM
-> situations.  In this case, ALL tasks that enter the OOM path will be
-> made to sleep on the OOM waitqueue and wait for userspace to free
-> resources or increase the group's limit.  But a userspace OOM handler
-> is prone to deadlock itself on the locks held by the waiting tasks.
-> For example one of the sleeping tasks may be stuck in a brk() call
-> with the mmap_sem held for writing but the userspace handler, in order
-> to pick an optimal victim, may need to read files from /proc/<pid>,
-> which tries to acquire the same mmap_sem for reading and deadlocks.
-> 
-> This patch changes the way tasks behave after detecting an OOM and
-> makes sure nobody loops or sleeps on OOM with locks held:
-> 
-> 1. When OOMing in a system call (buffered IO and friends), invoke the
->    OOM killer but just return -ENOMEM, never sleep on a OOM waitqueue.
->    Userspace should be able to handle this and it prevents anybody
->    from looping or waiting with locks held.
-> 
-> 2. When OOMing in a page fault, invoke the OOM killer and restart the
->    fault instead of looping on the charge attempt.  This way, the OOM
->    victim can not get stuck on locks the looping task may hold.
-> 
-> 3. When detecting an OOM in a page fault but somebody else is handling
->    it (either the kernel OOM killer or a userspace handler), don't go
->    to sleep in the charge context.  Instead, remember the OOMing memcg
->    in the task struct and then fully unwind the page fault stack with
->    -ENOMEM.  pagefault_out_of_memory() will then call back into the
->    memcg code to check if the -ENOMEM came from the memcg, and then
->    either put the task to sleep on the memcg's OOM waitqueue or just
->    restart the fault.  The OOM victim can no longer get stuck on any
->    lock a sleeping task may hold.
-> 
-> While reworking the OOM routine, also remove a needless OOM waitqueue
-> wakeup when invoking the killer.  Only uncharges and limit increases,
-> things that actually change the memory situation, should do wakeups.
-> 
-> Reported-by: Reported-by: azurIt <azurit@pobox.sk>
-> Debugged-by: Michal Hocko <mhocko@suse.cz>
-> Reported-by: David Rientjes <rientjes@google.com>
-
-What exactly did I report?  This isn't at all what 
-memory.oom_delay_millisecs is about, which is a failure of userspace to 
-respond to the condition and react in time, not because it's stuck on any 
-lock.  We still need that addition regardless of what you're doing here.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/fs/dcache.c b/fs/dcache.c
+index f09b908..aca4e4b 100644
+--- a/fs/dcache.c
++++ b/fs/dcache.c
+@@ -117,13 +117,13 @@ struct dentry_stat_t dentry_stat = {
+ 	.age_limit = 45,
+ };
+ 
+-static DEFINE_PER_CPU(unsigned int, nr_dentry);
++static DEFINE_PER_CPU(long, nr_dentry);
+ 
+ #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
+-static int get_nr_dentry(void)
++static long get_nr_dentry(void)
+ {
+ 	int i;
+-	int sum = 0;
++	long sum = 0;
+ 	for_each_possible_cpu(i)
+ 		sum += per_cpu(nr_dentry, i);
+ 	return sum < 0 ? 0 : sum;
+@@ -133,7 +133,7 @@ int proc_nr_dentry(ctl_table *table, int write, void __user *buffer,
+ 		   size_t *lenp, loff_t *ppos)
+ {
+ 	dentry_stat.nr_dentry = get_nr_dentry();
+-	return proc_dointvec(table, write, buffer, lenp, ppos);
++	return proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
+ }
+ #endif
+ 
+diff --git a/fs/inode.c b/fs/inode.c
+index 00d5fc3..ff29765 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -70,33 +70,33 @@ EXPORT_SYMBOL(empty_aops);
+  */
+ struct inodes_stat_t inodes_stat;
+ 
+-static DEFINE_PER_CPU(unsigned int, nr_inodes);
+-static DEFINE_PER_CPU(unsigned int, nr_unused);
++static DEFINE_PER_CPU(unsigned long, nr_inodes);
++static DEFINE_PER_CPU(unsigned long, nr_unused);
+ 
+ static struct kmem_cache *inode_cachep __read_mostly;
+ 
+-static int get_nr_inodes(void)
++static long get_nr_inodes(void)
+ {
+ 	int i;
+-	int sum = 0;
++	long sum = 0;
+ 	for_each_possible_cpu(i)
+ 		sum += per_cpu(nr_inodes, i);
+ 	return sum < 0 ? 0 : sum;
+ }
+ 
+-static inline int get_nr_inodes_unused(void)
++static inline long get_nr_inodes_unused(void)
+ {
+ 	int i;
+-	int sum = 0;
++	long sum = 0;
+ 	for_each_possible_cpu(i)
+ 		sum += per_cpu(nr_unused, i);
+ 	return sum < 0 ? 0 : sum;
+ }
+ 
+-int get_nr_dirty_inodes(void)
++long get_nr_dirty_inodes(void)
+ {
+ 	/* not actually dirty inodes, but a wild approximation */
+-	int nr_dirty = get_nr_inodes() - get_nr_inodes_unused();
++	long nr_dirty = get_nr_inodes() - get_nr_inodes_unused();
+ 	return nr_dirty > 0 ? nr_dirty : 0;
+ }
+ 
+@@ -109,7 +109,7 @@ int proc_nr_inodes(ctl_table *table, int write,
+ {
+ 	inodes_stat.nr_inodes = get_nr_inodes();
+ 	inodes_stat.nr_unused = get_nr_inodes_unused();
+-	return proc_dointvec(table, write, buffer, lenp, ppos);
++	return proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
+ }
+ #endif
+ 
+diff --git a/fs/internal.h b/fs/internal.h
+index eaa75f7..cd5009f 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -117,7 +117,7 @@ extern void inode_add_lru(struct inode *inode);
+  */
+ extern void inode_wb_list_del(struct inode *inode);
+ 
+-extern int get_nr_dirty_inodes(void);
++extern long get_nr_dirty_inodes(void);
+ extern void evict_inodes(struct super_block *);
+ extern int invalidate_inodes(struct super_block *, bool);
+ 
+diff --git a/include/linux/dcache.h b/include/linux/dcache.h
+index 1a6bb81..1a82bdb 100644
+--- a/include/linux/dcache.h
++++ b/include/linux/dcache.h
+@@ -54,11 +54,11 @@ struct qstr {
+ #define hashlen_len(hashlen)  ((u32)((hashlen) >> 32))
+ 
+ struct dentry_stat_t {
+-	int nr_dentry;
+-	int nr_unused;
+-	int age_limit;          /* age in seconds */
+-	int want_pages;         /* pages requested by system */
+-	int dummy[2];
++	long nr_dentry;
++	long nr_unused;
++	long age_limit;          /* age in seconds */
++	long want_pages;         /* pages requested by system */
++	long dummy[2];
+ };
+ extern struct dentry_stat_t dentry_stat;
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index a4c9fbe..ad3eb76 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1266,12 +1266,12 @@ struct super_block {
+ 	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
+ 	/* s_dentry_lru, s_nr_dentry_unused protected by dcache.c lru locks */
+ 	struct list_head	s_dentry_lru;	/* unused dentry lru */
+-	int			s_nr_dentry_unused;	/* # of dentry on lru */
++	long			s_nr_dentry_unused;	/* # of dentry on lru */
+ 
+ 	/* s_inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
+ 	spinlock_t		s_inode_lru_lock ____cacheline_aligned_in_smp;
+ 	struct list_head	s_inode_lru;		/* unused inode lru */
+-	int			s_nr_inodes_unused;	/* # of inodes on lru */
++	long			s_nr_inodes_unused;	/* # of inodes on lru */
+ 
+ 	struct block_device	*s_bdev;
+ 	struct backing_dev_info *s_bdi;
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index a4ed56c..6c28b61 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -49,9 +49,9 @@ struct files_stat_struct {
+ };
+ 
+ struct inodes_stat_t {
+-	int nr_inodes;
+-	int nr_unused;
+-	int dummy[5];		/* padding for sysctl ABI compatibility */
++	long nr_inodes;
++	long nr_unused;
++	long dummy[5];		/* padding for sysctl ABI compatibility */
+ };
+ 
+ 
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index 9edcf45..fb90f7c 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -1456,14 +1456,14 @@ static struct ctl_table fs_table[] = {
+ 	{
+ 		.procname	= "inode-nr",
+ 		.data		= &inodes_stat,
+-		.maxlen		= 2*sizeof(int),
++		.maxlen		= 2*sizeof(long),
+ 		.mode		= 0444,
+ 		.proc_handler	= proc_nr_inodes,
+ 	},
+ 	{
+ 		.procname	= "inode-state",
+ 		.data		= &inodes_stat,
+-		.maxlen		= 7*sizeof(int),
++		.maxlen		= 7*sizeof(long),
+ 		.mode		= 0444,
+ 		.proc_handler	= proc_nr_inodes,
+ 	},
+@@ -1493,7 +1493,7 @@ static struct ctl_table fs_table[] = {
+ 	{
+ 		.procname	= "dentry-state",
+ 		.data		= &dentry_stat,
+-		.maxlen		= 6*sizeof(int),
++		.maxlen		= 6*sizeof(long),
+ 		.mode		= 0444,
+ 		.proc_handler	= proc_nr_dentry,
+ 	},
+-- 
+1.8.1.4
