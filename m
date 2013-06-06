@@ -1,41 +1,45 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v10 08/35] list: add a new LRU list type
-Date: Thu, 6 Jun 2013 02:55:17 -0700
-Message-ID: <20130606025517.8400c279.akpm@linux-foundation.org>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
-	<1370287804-3481-9-git-send-email-glommer@openvz.org>
-	<20130605160758.19e854a6995e3c2a1f5260bf@linux-foundation.org>
-	<20130606024909.GP29338@dastard>
-	<20130605200554.d4dae16f.akpm@linux-foundation.org>
-	<20130606044426.GX29338@dastard>
-	<20130606000409.e4333f7c.akpm@linux-foundation.org>
-	<51B05069.5070404@parallels.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 06/10] cpuset: record old_mems_allowed in struct cpuset
+Date: Thu, 6 Jun 2013 17:58:44 +0800
+Message-ID: <51B05D54.4080205@huawei.com>
+References: <51AF0183.8070602@huawei.com> <51AF01E8.8080205@huawei.com>
+	<20130605194522.GG10693@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51B05069.5070404@parallels.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@parallels.com>
-Cc: Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20130605194522.GG10693-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, 6 Jun 2013 13:03:37 +0400 Glauber Costa <glommer@parallels.com> wrote:
-
->  I do think it would be more appropriate to
-> > discard the lib/ idea and move it all into fs/ or mm/.
-> I have no particular love for this in lib/
+On 2013/6/6 3:45, Tejun Heo wrote:
+> Hello, Li.
 > 
-> Most of the users are in fs/, so I see no point in mm/
-> So for me, if you are really not happy about lib, I would suggest moving
-> this to fs/
+> On Wed, Jun 05, 2013 at 05:16:24PM +0800, Li Zefan wrote:
+>> @@ -1425,7 +1435,6 @@ static void cpuset_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+>>  	 * Change mm, possibly for multiple threads in a threadgroup. This is
+>>  	 * expensive and may sleep.
+>>  	 */
+>> -	cpuset_attach_nodemask_to = cs->mems_allowed;
+>>  	mm = get_task_mm(leader);
+>>  	if (mm) {
+>>  		mpol_rebind_mm(mm, &cpuset_attach_nodemask_to);
+> 
+> This looks a bit suspicious to me.  Now we're setting mm's nodemask to
+> guarantee_online_mems() output rather than cs->mems_allowed.  Is this
+> change intended?  If so, it probably deserves an explanation in the
+> description?
+> 
 
-Always feel free to differ but yes, fs/ seems better to me.
-
-I suggested mm/ also because that's where the shrinker core resides.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+It's possible that cs->mems_allowed is empty, but I should have left
+it as it is, as it's not related to this patch.
