@@ -1,63 +1,78 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full
- charge context
-Date: Thu, 6 Jun 2013 17:23:40 +0200
-Message-ID: <20130606152340.GC24115@dhcp22.suse.cz>
-References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org>
- <1370488193-4747-2-git-send-email-hannes@cmpxchg.org>
- <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2.34] memcg: do not trigger OOM if PF_NO_MEMCG_OOM
+ is set
+Date: Thu, 6 Jun 2013 18:04:46 +0200
+Message-ID: <20130606160446.GE24115@dhcp22.suse.cz>
+References: <20130208123854.GB7557@dhcp22.suse.cz>
+ <20130208145616.FB78CE24@pobox.sk>
+ <20130208152402.GD7557@dhcp22.suse.cz>
+ <20130208165805.8908B143@pobox.sk>
+ <20130208171012.GH7557@dhcp22.suse.cz>
+ <20130208220243.EDEE0825@pobox.sk>
+ <20130210150310.GA9504@dhcp22.suse.cz>
+ <20130210174619.24F20488@pobox.sk>
+ <20130211112240.GC19922@dhcp22.suse.cz>
+ <20130222092332.4001E4B6@pobox.sk>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130222092332.4001E4B6-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Wed 05-06-13 21:10:51, David Rientjes wrote:
-> On Wed, 5 Jun 2013, Johannes Weiner wrote:
-[...]
-> > While reworking the OOM routine, also remove a needless OOM waitqueue
-> > wakeup when invoking the killer.  Only uncharges and limit increases,
-> > things that actually change the memory situation, should do wakeups.
-> > 
+Hi,
+
+I am really sorry it took so long but I was constantly preempted by
+other stuff. I hope I have a good news for you, though. Johannes has
+found a nice way how to overcome deadlock issues from memcg OOM which
+might help you. Would you be willing to test with his patch
+(http://permalink.gmane.org/gmane.linux.kernel.mm/101437). Unlike my
+patch which handles just the i_mutex case his patch solved all possible
+locks.
+
+I can backport the patch for your kernel (are you still using 3.2 kernel
+or you have moved to a newer one?).
+
+On Fri 22-02-13 09:23:32, azurIt wrote:
+> >Unfortunately I am not able to reproduce this behavior even if I try
+> >to hammer OOM like mad so I am afraid I cannot help you much without
+> >further debugging patches.
+> >I do realize that experimenting in your environment is a problem but I
+> >do not many options left. Please do not use strace and rather collect
+> >/proc/pid/stack instead. It would be also helpful to get group/tasks
+> >file to have a full list of tasks in the group
 > 
-> It's not needless at all, it's vitally required!  The oom killed process 
-> needs to be removed from the waitqueue and scheduled now with TIF_MEMDIE 
-> that the memcg oom killer provided so the allocation succeeds in the page 
-> allocator and memcg bypasses the charge so it can exit.
+> 
+> 
+> Hi Michal,
+> 
+> 
+> sorry that i didn't response for a while. Today i installed kernel with your two patches and i'm running it now. I'm still having problems with OOM which is not able to handle low memory and is not killing processes. Here is some info:
+> 
+> - data from cgroup 1258 while it was under OOM and no processes were killed (so OOM don't stop and cgroup was freezed)
+> http://watchdog.sk/lkml/memcg-bug-6.tar.gz
+> 
+> I noticed problem about on 8:39 and waited until 8:57 (nothing happend). Then i killed process 19864 which seems to help and other processes probably ends and cgroup started to work. But problem accoured again about 20 seconds later, so i killed all processes at 8:58. The problem is occuring all the time since then. All processes (in that cgroup) are always in state 'D' when it occurs.
+> 
+> 
+> - kernel log from boot until now
+> http://watchdog.sk/lkml/kern3.gz
+> 
+> 
+> Btw, something probably happened also at about 3:09 but i wasn't able to gather any data because my 'load check script' killed all apache processes (load was more than 100).
+> 
+> 
+> 
+> azur
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The tasks are waiting with TASK_KILLABLE flags so it gets woken up and
-the bypass happens. Calling memcg_wakeup_oom is actually wrong here
-because it wakes all tasks up despite there is no reason for that. No
-charges have been released yet so another retry loop could be pointless.
-We need to be patient and wait for wake up from a uncharge path.
-
-> Exactly what problem are you trying to address with this patch?  I don't 
-> see any description of the user-visible effects or a specific xample of 
-> the scenario you're trying to address here.
-
-Maybe I am biased because I've tried to handle the same problem some time
-ago, but the changelog clearly says that memcg oom handling is fragile
-and deadlock prone because of locks that are held while memory is
-charged and oom handled and so oom targets might not get killed because
-they are stuck at the same lock which will not get released until the
-charge succeeds.
-It addresses the problem by moving oom handling outside of any locks
-which solves this category of dead locks. I agree that the changelog
-could better (well, each one can be). It could use some examples (e.g.
-the i_mutex we have seen few months ago or a simple unkillable brk which
-is hanging on mmap_sem for writing while a page fault is handled and
-memcg oom triggered).
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
