@@ -1,20 +1,40 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v7 00/11] per-cgroup cpu-stat
-Date: Thu, 6 Jun 2013 11:58:49 +0400
-Message-ID: <51B04139.8060908@parallels.com>
-References: <1369825402-31046-1-git-send-email-glommer@openvz.org> <20130606014929.GS10693@mtj.dyndns.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v10 00/35] kmemcg shrinkers
+Date: Thu, 6 Jun 2013 11:59:39 +0400
+Message-ID: <51B0416B.6040706@parallels.com>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org> <51B02347.60809@parallels.com> <20130606001855.48d9da2e.akpm@linux-foundation.org> <51B03C1F.4000501@parallels.com> <20130606004727.c28d62e9.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130606014929.GS10693-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20130606004727.c28d62e9.akpm@linux-foundation.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>
 
-On 06/06/2013 05:49 AM, Tejun Heo wrote:
-> I generally agree with the approach but which tree is it based on?
-> Can you please let me know the base commit so that I can review the
-> series properly?
-last week's -tip/master
+On 06/06/2013 11:47 AM, Andrew Morton wrote:
+> On Thu, 6 Jun 2013 11:37:03 +0400 Glauber Costa <glommer@parallels.com> wrote:
+> 
+>> On 06/06/2013 11:18 AM, Andrew Morton wrote:
+>>> The shrinker stuff seems sensible and straightforward and I expect we
+>>> can proceed with that at the normal pace.  The memcg changes struck me
+>>> as being hairy as hell and I'd really like to see the other memcg
+>>> people go through it carefully.
+>>>
+>>> Of course, "new series" doesn't give you an easily accessible tree to
+>>> target.  I could drop it all again to give you a clean shot at
+>>> tomorrow's -next?
+>> If you just keep them on top (not really sure how hard it is for you), I
+>> can just remove them all and apply a new series on top.
+> 
+> I could do that but then anyone else who wants to test the code has to
+> do the same thing.  Dropping them out of -next does seem the clean
+> approach.
+> 
+> We still need to work out what to do with
+> memcg-debugging-facility-to-access-dangling-memcgs.patch btw.  See
+> other email.
+> 
+Ok. I am using half of that as official infrastructure now. I will reply
+to your comments when I reach that.
