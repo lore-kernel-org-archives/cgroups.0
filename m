@@ -1,82 +1,76 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Thu, 6 Jun 2013 13:50:31 +0200
-Message-ID: <20130606115031.GE7909@dhcp22.suse.cz>
-References: <20130604215535.GM14916@htj.dyndns.org>
- <20130605073023.GB15997@dhcp22.suse.cz>
- <20130605082023.GG7303@mtj.dyndns.org>
- <20130605143949.GQ15576@cmpxchg.org>
- <20130605172212.GA10693@mtj.dyndns.org>
- <20130605194552.GI15721@cmpxchg.org>
- <20130605200612.GH10693@mtj.dyndns.org>
- <20130605211704.GJ15721@cmpxchg.org>
- <20130605222021.GL10693@mtj.dyndns.org>
- <20130605222709.GM10693@mtj.dyndns.org>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v10 29/35] memcg: per-memcg kmem shrinking
+Date: Thu, 6 Jun 2013 16:09:16 +0400
+Message-ID: <51B07BEC.9010205@parallels.com>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-30-git-send-email-glommer@openvz.org> <20130605160841.909420c06bfde62039489d2e@linux-foundation.org> <51B049D5.2020809@parallels.com> <20130606024906.e5b85b28.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130605222709.GM10693@mtj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130606024906.e5b85b28.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed 05-06-13 15:27:09, Tejun Heo wrote:
-> On Wed, Jun 05, 2013 at 03:20:21PM -0700, Tejun Heo wrote:
-> > Yo,
-> > 
-> > On Wed, Jun 05, 2013 at 05:17:04PM -0400, Johannes Weiner wrote:
-> > > That could be an advantage, yes.  But keep in mind that every
-> > > destruction has to perform this invalidation operation against the
-> > > global root_mem_cgroup's nr_node * nr_zone * nr_priority_levels
-> > > iterators, so you can't muck around forever, while possibly holding a
-> > > lock at this level.  It's not a hot path, but you don't want to turn
-> > > it into one, either.
-> > 
-> > nr_node tends to be pretty low in most cases, so it shouldn't be a
-> > problem there but yeah with high enough nodes and high enough rate of
+On 06/06/2013 01:49 PM, Andrew Morton wrote:
+> On Thu, 6 Jun 2013 12:35:33 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 > 
-> Also, do we need to hold a lock?  It doesn't have to be completely
-> strict, so we might as well get away with something like,
+>> On 06/06/2013 03:08 AM, Andrew Morton wrote:
+>>>> +
+>>>>> +		/*
+>>>>> +		 * We will try to shrink kernel memory present in caches. We
+>>>>> +		 * are sure that we can wait, so we will. The duration of our
+>>>>> +		 * wait is determined by congestion, the same way as vmscan.c
+>>>>> +		 *
+>>>>> +		 * If we are in FS context, though, then although we can wait,
+>>>>> +		 * we cannot call the shrinkers. Most fs shrinkers (which
+>>>>> +		 * comprises most of our kmem data) will not run without
+>>>>> +		 * __GFP_FS since they can deadlock. The solution is to
+>>>>> +		 * synchronously run that in a different context.
+>>> But this is pointless.  Calling a function via a different thread and
+>>> then waiting for it to complete is equivalent to calling it directly.
+>>>
+>> Not in this case. We are in wait-capable context (we check for this
+>> right before we reach this), but we are not in fs capable context.
+>>
+>> So the reason we do this - which I tried to cover in the changelog, is
+>> to escape from the GFP_FS limitation that our call chain has, not the
+>> wait limitation.
 > 
-> 	for_each_cached_pos() {
-> 		if (hint == me) {
-> 			/* simple clearing implementation, we prolly wanna push it forward */
-> 			cached = xchg(hint, NULL);
-> 			if (cached)
-> 				css_put(cached);
-> 		}
-> 	}
-
-This would be racy:
-mem_cgroup_iter
-  rcu_read_lock
-  __mem_cgroup_iter_next		cgroup_destroy_locked
-    css_tryget(memcg)
-  					  atomic_add(CSS_DEACT_BIAS)
-    					  offline_css(memcg)
-					    xchg(memcg, NULL)
-  mem_cgroup_iter_update
-    iter->last_visited = memcg
-  rcy_read_unlock
-
-But if it was called from call_rcu the we should be safe AFAICS.
-
-> It still scans the memory but wouldn't create any contention.
+> But that's equivalent to calling the code directly.  Look:
 > 
-> Thanks.
+> some_fs_function()
+> {
+> 	lock(some-fs-lock);
+> 	...
+> }
 > 
-> -- 
-> tejun
+> some_other_fs_function()
+> {
+> 	lock(some-fs-lock);
+> 	alloc_pages(GFP_NOFS);
+> 	->...
+> 	  ->schedule_work(some_fs_function);
+> 	    flush_scheduled_work();
+> 
+> that flush_scheduled_work() won't complete until some_fs_function() has
+> completed.  But some_fs_function() won't complete, because we're
+> holding some-fs-lock.
+> 
 
--- 
-Michal Hocko
-SUSE Labs
+In my experience during this series, most of the kmem allocation here
+will be filesystem related. This means that we will allocate that with
+GFP_FS on. If we don't do anything like that, reclaim is almost
+pointless since it will never free anything (only once here and there
+when the allocation is not from fs).
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+It tend to work just fine like this. It may very well be because fs
+people just mark everything as NOFS out of safety and we aren't *really*
+holding any locks in common situations, but it will blow in our faces in
+a subtle way (which none of us want).
+
+That said, suggestions are more than welcome.
+
+
+
