@@ -1,96 +1,57 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v10 00/35] kmemcg shrinkers
-Date: Thu, 6 Jun 2013 13:44:40 +1000
-Message-ID: <20130606034440.GU29338@dastard>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v10 11/35] list_lru: per-node list infrastructure
+Date: Wed, 5 Jun 2013 20:51:23 -0700
+Message-ID: <20130605205123.7be6a0fe.akpm@linux-foundation.org>
 References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
- <20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
+	<1370287804-3481-12-git-send-email-glommer@openvz.org>
+	<20130605160804.be25fb655f075efe70ec57c0@linux-foundation.org>
+	<20130606032107.GQ29338@dastard>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20130606032107.GQ29338@dastard>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
 
-On Wed, Jun 05, 2013 at 04:07:21PM -0700, Andrew Morton wrote:
-> On Mon,  3 Jun 2013 23:29:29 +0400 Glauber Costa <glommer@openvz.org> wrote:
+On Thu, 6 Jun 2013 13:21:07 +1000 Dave Chinner <david@fromorbit.com> wrote:
+
+> > > +struct list_lru {
+> > > +	/*
+> > > +	 * Because we use a fixed-size array, this struct can be very big if
+> > > +	 * MAX_NUMNODES is big. If this becomes a problem this is fixable by
+> > > +	 * turning this into a pointer and dynamically allocating this to
+> > > +	 * nr_node_ids. This quantity is firwmare-provided, and still would
+> > > +	 * provide room for all nodes at the cost of a pointer lookup and an
+> > > +	 * extra allocation. Because that allocation will most likely come from
+> > > +	 * a different slab cache than the main structure holding this
+> > > +	 * structure, we may very well fail.
+> > > +	 */
+> > > +	struct list_lru_node	node[MAX_NUMNODES];
+> > > +	nodemask_t		active_nodes;
+> > 
+> > Some documentation of the data structure would be helpful.  It appears
+> > that active_nodes tracks (ie: duplicates) node[x].nr_items!=0.
+> > 
+> > It's unclear that active_nodes is really needed - we could just iterate
+> > across all items in list_lru.node[].  Are we sure that the correct
+> > tradeoff decision was made here?
 > 
-> > Andrew,
-> > 
-> > This submission contains one small bug fix over the last one. I have been
-> > testing it regularly and believe this is ready for merging. I have follow up
-> > patches for this series, with a few improvements (namely: dynamic sized
-> > list_lru node arrays, memcg flush-at-destruction, kmemcg shrinking setting
-> > limit < usage).  But since this series is already quite mature - and very
-> > extensive, I don't believe that adding new patches would make them receive the
-> > appropriate level of review. So please advise me if there is anything crucial
-> > missing in here. Thanks!
-> > 
-> > Hi,
-> > 
-> > This patchset implements targeted shrinking for memcg when kmem limits are
-> > present. So far, we've been accounting kernel objects but failing allocations
-> > when short of memory. This is because our only option would be to call the
-> > global shrinker, depleting objects from all caches and breaking isolation.
-> > 
-> > The main idea is to associate per-memcg lists with each of the LRUs. The main
-> > LRU still provides a single entry point and when adding or removing an element
-> > from the LRU, we use the page information to figure out which memcg it belongs
-> > to and relay it to the right list.
-> > 
-> > Base work:
-> > ==========
-> > 
-> > Please note that this builds upon the recent work from Dave Chinner that
-> > sanitizes the LRU shrinking API and make the shrinkers node aware. Node
-> > awareness is not *strictly* needed for my work, but I still perceive it
-> > as an advantage. The API unification is a major need, and I build upon it
-> > heavily. That allows us to manipulate the LRUs without knowledge of the
-> > underlying objects with ease. This time, I am including that work here as
-> > a baseline.
-> 
-> This patchset is huge.
+> Yup. Think of all the cache line misses that checking
+> node[x].nr_items != 0 entails. If MAX_NUMNODES = 1024, there's 1024
+> cacheline misses right there. The nodemask is a much more cache
+> friendly method of storing active node state.
 
-*nod*
+Well, it depends on the relative frequency of list-wide walking.  If
+that's "very low" then the cost of maintaining active_nodes could
+dominate.
 
-> My overall take is that the patchset is massive and intrusive and scary
-> :( I'd like to see more evidence that the memcg people (mhocko, hannes,
-> kamezawa etc) have spent quality time reviewing and testing this code. 
-> There really is a lot of it!
-> 
-> I haven't seen any show-stoppers yet so I guess I'll slam it all into
-> -next and cross fingers.  I would ask that the relevant developers set
-> aside a solid day to read and runtime test it all.  Realistically, it's
-> likely to take considerably more time that that.
+Plus all the callsites which traverse active_nodes will touch
+list_lru.node[n] anyway, so the cache-miss impact will be unaltered.
 
-Yes, it will.
+> not to mention that for small machines with a large MAX_NUMNODES,
+> we'd be checking nodes that never have items stored on them...
 
-> I do expect that I'll drop the entire patchset again for the next
-> version, if only because the next version should withdraw all the
-> switch-random-code-to-xfs-coding-style changes...
-> 
-> 
-> I'm thinking that we should approach this in two stages: all the new
-> shrinker stuff separated from the memcg_kmem work.  So we merge
-> everything up to "shrinker: Kill old ->shrink API" and then continue to
-> work on the memcg things?
-
-Fine by me. I'll work with Glauber to get all the documentation and
-formatting and bugs you found fixed for the LRU/shrinker part of the 
-patchset as quickly as possible...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Yes, there is that.
