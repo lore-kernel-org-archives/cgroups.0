@@ -1,71 +1,194 @@
-From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v11 23/25] hugepage: convert huge zero page shrinker to new shrinker API
-Date: Fri,  7 Jun 2013 00:34:56 +0400
-Message-ID: <1370550898-26711-24-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer@openvz.org>
+Subject: [PATCH v11 22/25] shrinker: convert remaining shrinkers to count/scan API
+Date: Fri,  7 Jun 2013 00:34:55 +0400
+Message-ID: <1370550898-26711-23-git-send-email-glommer@openvz.org>
 References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1370550898-26711-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1370550898-26711-1-git-send-email-glommer@openvz.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: akpm@linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@openvz.org>, Marcelo Tosatti <mtosatti@redhat.com>, Gleb Natapov <gleb@redhat.com>, Chuck Lever <chuck.lever@oracle.com>, "J. Bruce Fields" <bfields@redhat.com>, Trond Myklebust <Trond.Myklebust@netapp.com>
 
-It consists of:
+From: Dave Chinner <dchinner@redhat.com>
 
-* returning long instead of int
-* separating count from scan
-* returning the number of freed entities in scan
+Convert the remaining couple of random shrinkers in the tree to the
+new API.
 
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-CC: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+[ v11: fix coding style ]
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+CC: Marcelo Tosatti <mtosatti@redhat.com>
+CC: Gleb Natapov <gleb@redhat.com>
+CC: Chuck Lever <chuck.lever@oracle.com>
+CC: J. Bruce Fields <bfields@redhat.com>
+CC: Trond Myklebust <Trond.Myklebust@netapp.com>
 ---
- mm/huge_memory.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ arch/x86/kvm/mmu.c | 24 +++++++++++++++++-------
+ net/sunrpc/auth.c  | 41 +++++++++++++++++++++++++++--------------
+ 2 files changed, 44 insertions(+), 21 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 243e710..8dc36f5 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -211,24 +211,29 @@ static void put_huge_zero_page(void)
- 	BUG_ON(atomic_dec_and_test(&huge_zero_refcount));
+diff --git a/arch/x86/kvm/mmu.c b/arch/x86/kvm/mmu.c
+index f8ca2f3..422493d 100644
+--- a/arch/x86/kvm/mmu.c
++++ b/arch/x86/kvm/mmu.c
+@@ -4213,13 +4213,12 @@ restart:
+ 	spin_unlock(&kvm->mmu_lock);
  }
  
--static int shrink_huge_zero_page(struct shrinker *shrink,
--		struct shrink_control *sc)
-+static long shrink_huge_zero_page_count(struct shrinker *shrink,
-+					struct shrink_control *sc)
+-static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
++static long
++mmu_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
  {
--	if (!sc->nr_to_scan)
--		/* we can free zero page only if last reference remains */
--		return atomic_read(&huge_zero_refcount) == 1 ? HPAGE_PMD_NR : 0;
-+	/* we can free zero page only if last reference remains */
-+	return atomic_read(&huge_zero_refcount) == 1 ? HPAGE_PMD_NR : 0;
-+}
+ 	struct kvm *kvm;
+ 	int nr_to_scan = sc->nr_to_scan;
+-
+-	if (nr_to_scan == 0)
+-		goto out;
++	long freed = 0;
  
-+static long shrink_huge_zero_page_scan(struct shrinker *shrink,
-+				       struct shrink_control *sc)
-+{
- 	if (atomic_cmpxchg(&huge_zero_refcount, 1, 0) == 1) {
- 		struct page *zero_page = xchg(&huge_zero_page, NULL);
- 		BUG_ON(zero_page == NULL);
- 		__free_page(zero_page);
-+		return HPAGE_PMD_NR;
+ 	raw_spin_lock(&kvm_lock);
+ 
+@@ -4247,24 +4246,35 @@ static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
+ 		idx = srcu_read_lock(&kvm->srcu);
+ 		spin_lock(&kvm->mmu_lock);
+ 
+-		prepare_zap_oldest_mmu_page(kvm, &invalid_list);
++		freed += prepare_zap_oldest_mmu_page(kvm, &invalid_list);
+ 		kvm_mmu_commit_zap_page(kvm, &invalid_list);
+ 
+ 		spin_unlock(&kvm->mmu_lock);
+ 		srcu_read_unlock(&kvm->srcu, idx);
+ 
++		/*
++		 * unfair on small ones
++		 * per-vm shrinkers cry out
++		 * sadness comes quickly
++		 */
+ 		list_move_tail(&kvm->vm_list, &vm_list);
+ 		break;
  	}
  
- 	return 0;
+ 	raw_spin_unlock(&kvm_lock);
++	return freed;
+ 
+-out:
++}
++
++static long
++mmu_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
++{
+ 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
  }
  
- static struct shrinker huge_zero_page_shrinker = {
--	.shrink = shrink_huge_zero_page,
-+	.count_objects = shrink_huge_zero_page_count,
-+	.scan_objects = shrink_huge_zero_page_scan,
+ static struct shrinker mmu_shrinker = {
+-	.shrink = mmu_shrink,
++	.count_objects = mmu_shrink_count,
++	.scan_objects = mmu_shrink_scan,
+ 	.seeks = DEFAULT_SEEKS * 10,
+ };
+ 
+diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
+index ed2fdd2..fdc012d 100644
+--- a/net/sunrpc/auth.c
++++ b/net/sunrpc/auth.c
+@@ -413,12 +413,13 @@ EXPORT_SYMBOL_GPL(rpcauth_destroy_credcache);
+ /*
+  * Remove stale credentials. Avoid sleeping inside the loop.
+  */
+-static int
++static long
+ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ {
+ 	spinlock_t *cache_lock;
+ 	struct rpc_cred *cred, *next;
+ 	unsigned long expired = jiffies - RPC_AUTH_EXPIRY_MORATORIUM;
++	long freed = 0;
+ 
+ 	list_for_each_entry_safe(cred, next, &cred_unused, cr_lru) {
+ 
+@@ -430,10 +431,11 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ 		 */
+ 		if (time_in_range(cred->cr_expire, expired, jiffies) &&
+ 		    test_bit(RPCAUTH_CRED_HASHED, &cred->cr_flags) != 0)
+-			return 0;
++			break;
+ 
+ 		list_del_init(&cred->cr_lru);
+ 		number_cred_unused--;
++		freed++;
+ 		if (atomic_read(&cred->cr_count) != 0)
+ 			continue;
+ 
+@@ -446,29 +448,39 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
+ 		}
+ 		spin_unlock(cache_lock);
+ 	}
+-	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
++	return freed;
+ }
+ 
+ /*
+  * Run memory cache shrinker.
+  */
+-static int
+-rpcauth_cache_shrinker(struct shrinker *shrink, struct shrink_control *sc)
++static long
++rpcauth_cache_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
++
+ {
+ 	LIST_HEAD(free);
+-	int res;
+-	int nr_to_scan = sc->nr_to_scan;
+-	gfp_t gfp_mask = sc->gfp_mask;
++	long freed;
++
++	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
++		return SHRINK_STOP;
+ 
+-	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
+-		return (nr_to_scan == 0) ? 0 : -1;
++	/* nothing left, don't come back */
+ 	if (list_empty(&cred_unused))
+-		return 0;
++		return SHRINK_STOP;
++
+ 	spin_lock(&rpc_credcache_lock);
+-	res = rpcauth_prune_expired(&free, nr_to_scan);
++	freed = rpcauth_prune_expired(&free, sc->nr_to_scan);
+ 	spin_unlock(&rpc_credcache_lock);
+ 	rpcauth_destroy_credlist(&free);
+-	return res;
++
++	return freed;
++}
++
++static long
++rpcauth_cache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
++
++{
++	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
+ }
+ 
+ /*
+@@ -784,7 +796,8 @@ rpcauth_uptodatecred(struct rpc_task *task)
+ }
+ 
+ static struct shrinker rpc_cred_shrinker = {
+-	.shrink = rpcauth_cache_shrinker,
++	.count_objects = rpcauth_cache_shrink_count,
++	.scan_objects = rpcauth_cache_shrink_scan,
  	.seeks = DEFAULT_SEEKS,
  };
  
 -- 
 1.8.1.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
