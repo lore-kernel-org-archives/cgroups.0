@@ -1,57 +1,30 @@
-From: Glauber Costa <glommer@parallels.com>
-Subject: Re: [PATCH v10 04/35] dentry: move to per-sb LRU locks
-Date: Thu, 6 Jun 2013 16:51:49 +0400
-Message-ID: <51B085E5.9070103@parallels.com>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-5-git-send-email-glommer@openvz.org> <20130605160738.fe46654369044b6d94eadd1b@linux-foundation.org> <51B0424A.3090208@parallels.com>
+From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v10 08/35] list: add a new LRU list type
+Date: Thu, 6 Jun 2013 18:28:33 +0400
+Message-ID: <51B09C91.4010104@parallels.com>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-9-git-send-email-glommer@openvz.org> <20130605160758.19e854a6995e3c2a1f5260bf@linux-foundation.org> <20130606024909.GP29338@dastard>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51B0424A.3090208@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130606024909.GP29338@dastard>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 06/06/2013 12:03 PM, Glauber Costa wrote:
-> On 06/06/2013 03:07 AM, Andrew Morton wrote:
->> On Mon,  3 Jun 2013 23:29:33 +0400 Glauber Costa <glommer@openvz.org> wrote:
->>
->>> From: Dave Chinner <dchinner@redhat.com>
->>>
->>> With the dentry LRUs being per-sb structures, there is no real need
->>> for a global dentry_lru_lock. The locking can be made more
->>> fine-grained by moving to a per-sb LRU lock, isolating the LRU
->>> operations of different filesytsems completely from each other.
->>
->> What's the point to this patch?  Is it to enable some additional
->> development, or is it a standalone performance tweak?
->>
->> If the latter then the patch obviously makes this dentry code bloatier
->> and straight-line slower.  So we're assuming that the multiprocessor
->> contention-avoidance benefits will outweigh that cost.  Got any proof
->> of this?
->>
->>
-> This is preparation for the whole point of this series, which is to
-> abstract the lru manipulation into a list_lru. It is hard to do that
-> when the dcache has a single lock for all manipulations, and multiple
-> lists under its umbrella.
+On 06/06/2013 06:49 AM, Dave Chinner wrote:
+>> > How [patch 09/35]'s inode_lru_isolate() avoids this bug I don't know. 
+>> > Perhaps it doesn't.
+> The LRU_RETRY cse is supposed to handle this. However, the LRU_RETRY
+> return code is now buggy and you've caught that. It'll need fixing.
+> My original code only had inode_lru_isolate() drop the lru lock, and
+> it would return LRU_RETRY which would restart the scan of the list
+> from the start, thereby avoiding those problems.
 > 
-> 
+Yes, I have changed that, but I wasn't aware that your original
+intention for restarting from the beginning was to avoid such problems.
+And having only half the brain Andrew has, I didn't notice it myself.
 
-I have updated the Changelog, that now reads:
-
-With the dentry LRUs being per-sb structures, there is no real need for
-a global dentry_lru_lock. The locking can be made more fine-grained by
-moving to a per-sb LRU lock, isolating the LRU operations of different
-filesytsems completely from each other. The need for this is independent
-of any performance consideration that may arise: in the interest of
-abstracting the lru operations away, it is mandatory that each lru works
-around its own lock instead of a global lock for all of them.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I will fix this somehow while trying to keep the behavior Mel insisted
+on; iow; not retrying forever.
