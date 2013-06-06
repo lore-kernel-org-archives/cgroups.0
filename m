@@ -1,85 +1,75 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v10 13/35] vmscan: per-node deferred work
-Date: Thu, 6 Jun 2013 00:12:10 -0700
-Message-ID: <20130606001210.d0fe1a80.akpm@linux-foundation.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v10 00/35] kmemcg shrinkers
+Date: Thu, 6 Jun 2013 00:18:55 -0700
+Message-ID: <20130606001855.48d9da2e.akpm@linux-foundation.org>
 References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
-	<1370287804-3481-14-git-send-email-glommer@openvz.org>
-	<20130605160815.fb69f7d4d1736455727fc669@linux-foundation.org>
-	<20130606033742.GS29338@dastard>
-	<20130606045907.GY29338@dastard>
+	<20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
+	<51B02347.60809@parallels.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20130606045907.GY29338@dastard>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51B02347.60809-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david@fromorbit.com>
-Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
+To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 6 Jun 2013 14:59:07 +1000 Dave Chinner <david@fromorbit.com> wrote:
+On Thu, 6 Jun 2013 09:51:03 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 
-> On Thu, Jun 06, 2013 at 01:37:42PM +1000, Dave Chinner wrote:
-> > On Wed, Jun 05, 2013 at 04:08:15PM -0700, Andrew Morton wrote:
-> > > On Mon,  3 Jun 2013 23:29:42 +0400 Glauber Costa <glommer@openvz.org> wrote:
-> > > 
-> > > > We already keep per-node LRU lists for objects being shrunk, but the
-> > > > work that is deferred from one run to another is kept global. This
-> > > > creates an impedance problem, where upon node pressure, work deferred
-> > > > will accumulate and end up being flushed in other nodes.
-> > > 
-> > > This changelog would be more useful if it had more specificity.  Where
-> > > do we keep these per-node LRU lists (names of variables?).
-> > 
-> > In the per-node LRU lists the shrinker walks ;)
-> > 
-> > > Where do we
-> > > keep the global data? 
-> > 
-> > In the struct shrinker
-> > 
-> > > In what function does this other-node flushing
-> > > happen?
-> > 
-> > Any shrinker that is run on a different node.
-> > 
-> > > Generally so that readers can go and look at the data structures and
-> > > functions which you're talking about.
-> > > 
-> > > > In large machines, many nodes can accumulate at the same time, all
-> > > > adding to the global counter.
-> > > 
-> > > What global counter?
-> > 
-> > shrinker->nr
-> > 
-> > > >  As we accumulate more and more, we start
-> > > > to ask for the caches to flush even bigger numbers.
-> > > 
-> > > Where does this happen?
-> > 
-> > The shrinker scan loop ;)
+> On 06/06/2013 03:07 AM, Andrew Morton wrote:
+> > On Mon,  3 Jun 2013 23:29:29 +0400 Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
 > 
-> Answers which doesn't really tell you more than you already knew :/
+> > I haven't seen any show-stoppers yet so I guess I'll slam it all into
+> > -next and cross fingers.  I would ask that the relevant developers set
+> > aside a solid day to read and runtime test it all.  Realistically, it's
+> > likely to take considerably more time that that.
+> > 
+> > I do expect that I'll drop the entire patchset again for the next
+> > version, if only because the next version should withdraw all the
+> > switch-random-code-to-xfs-coding-style changes...
+> > 
+> Ok, how do you want me to proceed ? Should I send a new series, or
+> incremental? When exactly?
 > 
-> To give you more background, Andrew, here's a pointer to the
-> discussion where we analysed the problem that lead to this patch:
+> I do have at least two fixes to send that popped out this week: one of
+> them for the drivers patch, since Kent complained about a malconversion
+> of the bcache driver, and another one in the memcg page path.
+
+Definitely a new series.  I tossed this series into -mm and -next so
+that others can conveniently review and test it (hint).
+
+> > 
+> > I'm thinking that we should approach this in two stages: all the new
+> > shrinker stuff separated from the memcg_kmem work.  So we merge
+> > everything up to "shrinker: Kill old ->shrink API" and then continue to
+> > work on the memcg things?
+> > 
 > 
-> http://marc.info/?l=linux-fsdevel&m=136852512724091&w=4
+> I agree with this, the shrinker part got a very thorough review from Mel
+> recently. I do need to send you the fix for the bcache driver (or the
+> whole thing, as you would prefer), and fix whatever comments you have.
+> 
+> Please note that as I have mentioned in the opening letter, I have two
+> follow up patches for memcg (one of them allows us to use the shrinker
+> infrastructure to reduce the value of kmem.limit, and the other one
+> flushes the caches upon destruction). I haven't included in the series
+> because the series is already huge, and I believe by including them,
+> they would not get the review they deserve (by being new). Splitting it
+> in two would allow me to include them in a smaller series.
+> 
+> I will go over your comments in a couple of hours. Please just advise me
+> how would you like me to proceed with this logistically (new submission,
+> fixes, for which patches, etc)
 
-Thanks, I'll read that later.  But that only helps me!  And I'll forget
-it all in six hours.
+New everything, please.  There's no hurry - linux-next is going on
+holidays for a week.
 
-Please understand where I'm coming from here: I review code from the
-point of view (amongst others) "how understandable and maintainable is
-this".  And I hope that reviewees understand that "if this reader asked
-that question then others will wonder the same thing, so I need to fix
-that up".
+The shrinker stuff seems sensible and straightforward and I expect we
+can proceed with that at the normal pace.  The memcg changes struck me
+as being hairy as hell and I'd really like to see the other memcg
+people go through it carefully.
 
-And I do think that about 2% of readers look in Documentation/, 1% of
-readers go back to look at changelogs and 0% of readers go back and
-look at the mailing list discussion.  It's most effective if it's right
-there in the .c file.
-
-Obviously there are tradeoffs here, but code which overdoes the
-explain-thyself thing is rare to non-existent.
+Of course, "new series" doesn't give you an easily accessible tree to
+target.  I could drop it all again to give you a clean shot at
+tomorrow's -next?
