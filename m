@@ -1,120 +1,53 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v11 22/25] shrinker: convert remaining shrinkers to
- count/scan API
-Date: Thu, 6 Jun 2013 15:31:09 -0700
-Message-ID: <20130606153109.cd042659b133c607e612d927@linux-foundation.org>
-References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
-	<1370550898-26711-23-git-send-email-glommer@openvz.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 04/11] sched: adjust exec_clock to use it as cpu usage
+ metric
+Date: Thu, 6 Jun 2013 16:00:12 -0700
+Message-ID: <20130606230012.GN5045@htj.dyndns.org>
+References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
+ <1369825402-31046-5-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1370550898-26711-23-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=mtJ8RresPLQ/Hw0JJrq7FO09HPryfKWpJzvcsioOWII=;
+        b=fCYelUWA0DqHh17C+4WmHp82ErtAl+MNkm/1rIBRgMPKf+qTQ9IHIevM7jKO7mVA/k
+         zCVnUIwAN+EikXQREKs7oxDwOdJibyqjG8b/bRumfMqogsYRTTlnZtjSfRy5eGDCHPGQ
+         br5QYRw5+2S7ibW0LX9gE+PF6dI+VdpEsjumAwF4YyRaphDFl3yrq+LBFmQzRS1Ky7XK
+         hZy5XgoVFlFFdLuQ06dE5ZZwYbr0QN61GPI6w7iUBubVdlnNYUU+62YfbzJRSwzs3iDJ
+         fI1eoNwpUdRtk8oxC37UnMsFpXqKmU3jecvmisNg06gtTC4tKsKufodKLcLYcbot3wHx
+         6hZQ==
+Content-Disposition: inline
+In-Reply-To: <1369825402-31046-5-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Dave Chinner <dchinner@redhat.com>, Marcelo Tosatti <mtosatti@redhat.com>, Gleb Natapov <gleb@redhat.com>, Chuck Lever <chuck.lever@oracle.com>, "J. Bruce Fields" <bfields@redhat.com>, Trond Myklebust <Trond.Myklebust@netapp.com>
+Content-Transfer-Encoding: 7bit
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
 
-On Fri,  7 Jun 2013 00:34:55 +0400 Glauber Costa <glommer@openvz.org> wrote:
-
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 29, 2013 at 03:03:15PM +0400, Glauber Costa wrote:
+> exec_clock already provides per-group cpu usage metrics, and can be
+> reused by cpuacct in case cpu and cpuacct are comounted.
 > 
-> Convert the remaining couple of random shrinkers in the tree to the
-> new API.
+> However, it is only provided by tasks in fair class. Doing the same for
+> rt is easy, and can be done in an already existing hierarchy loop. This
+> is an improvement over the independent hierarchy walk executed by
+> cpuacct.
 > 
-> @@ -4247,24 +4246,35 @@ static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
->  		idx = srcu_read_lock(&kvm->srcu);
->  		spin_lock(&kvm->mmu_lock);
->  
-> -		prepare_zap_oldest_mmu_page(kvm, &invalid_list);
-> +		freed += prepare_zap_oldest_mmu_page(kvm, &invalid_list);
+> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> CC: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> CC: Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
+> CC: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+> CC: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> CC: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+> CC: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-prepare_zap_oldest_mmu_page() returns bool.  Adding it to a scalar is
-weird.  I did this:
+Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
+Thanks.
 
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: shrinker-convert-remaining-shrinkers-to-count-scan-api-fix
-
-fix warnings
-
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Glauber Costa <glommer@openvz.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- arch/x86/kvm/mmu.c |    9 +++++----
- net/sunrpc/auth.c  |    6 +++---
- 2 files changed, 8 insertions(+), 7 deletions(-)
-
-diff -puN arch/x86/kvm/mmu.c~shrinker-convert-remaining-shrinkers-to-count-scan-api-fix arch/x86/kvm/mmu.c
---- a/arch/x86/kvm/mmu.c~shrinker-convert-remaining-shrinkers-to-count-scan-api-fix
-+++ a/arch/x86/kvm/mmu.c
-@@ -4213,12 +4213,12 @@ restart:
- 	spin_unlock(&kvm->mmu_lock);
- }
- 
--static long
-+static unsigned long
- mmu_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
- {
- 	struct kvm *kvm;
- 	int nr_to_scan = sc->nr_to_scan;
--	long freed = 0;
-+	unsigned long freed = 0;
- 
- 	raw_spin_lock(&kvm_lock);
- 
-@@ -4246,7 +4246,8 @@ mmu_shrink_scan(struct shrinker *shrink,
- 		idx = srcu_read_lock(&kvm->srcu);
- 		spin_lock(&kvm->mmu_lock);
- 
--		freed += prepare_zap_oldest_mmu_page(kvm, &invalid_list);
-+		if (prepare_zap_oldest_mmu_page(kvm, &invalid_list))
-+			freed++;
- 		kvm_mmu_commit_zap_page(kvm, &invalid_list);
- 
- 		spin_unlock(&kvm->mmu_lock);
-@@ -4266,7 +4267,7 @@ mmu_shrink_scan(struct shrinker *shrink,
- 
- }
- 
--static long
-+static unsigned long
- mmu_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
- {
- 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
-diff -puN net/sunrpc/auth.c~shrinker-convert-remaining-shrinkers-to-count-scan-api-fix net/sunrpc/auth.c
---- a/net/sunrpc/auth.c~shrinker-convert-remaining-shrinkers-to-count-scan-api-fix
-+++ a/net/sunrpc/auth.c
-@@ -454,12 +454,12 @@ rpcauth_prune_expired(struct list_head *
- /*
-  * Run memory cache shrinker.
-  */
--static long
-+static unsigned long
- rpcauth_cache_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
- 
- {
- 	LIST_HEAD(free);
--	long freed;
-+	unsigned long freed;
- 
- 	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
- 		return SHRINK_STOP;
-@@ -476,7 +476,7 @@ rpcauth_cache_shrink_scan(struct shrinke
- 	return freed;
- }
- 
--static long
-+static unsigned long
- rpcauth_cache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
- 
- {
-_
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
