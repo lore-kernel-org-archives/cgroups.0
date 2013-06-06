@@ -1,194 +1,197 @@
-From: Glauber Costa <glommer@openvz.org>
-Subject: [PATCH v11 22/25] shrinker: convert remaining shrinkers to count/scan API
-Date: Fri,  7 Jun 2013 00:34:55 +0400
-Message-ID: <1370550898-26711-23-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v11 25/25] list_lru: dynamically adjust node arrays
+Date: Fri,  7 Jun 2013 00:34:58 +0400
+Message-ID: <1370550898-26711-26-git-send-email-glommer@openvz.org>
 References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1370550898-26711-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1370550898-26711-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Dave Chinner <dchinner@redhat.com>, Glauber Costa <glommer@openvz.org>, Marcelo Tosatti <mtosatti@redhat.com>, Gleb Natapov <gleb@redhat.com>, Chuck Lever <chuck.lever@oracle.com>, "J. Bruce Fields" <bfields@redhat.com>, Trond Myklebust <Trond.Myklebust@netapp.com>
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+We currently use a compile-time constant to size the node array for the
+list_lru structure. Due to this, we don't need to allocate any memory at
+initialization time. But as a consequence, the structures that contain
+embedded list_lru lists can become way too big (the superblock for
+instance contains two of them).
 
-Convert the remaining couple of random shrinkers in the tree to the
-new API.
+This patch aims at ameliorating this situation by dynamically allocating
+the node arrays with the firmware provided nr_node_ids.
 
-[ v11: fix coding style ]
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-CC: Marcelo Tosatti <mtosatti@redhat.com>
-CC: Gleb Natapov <gleb@redhat.com>
-CC: Chuck Lever <chuck.lever@oracle.com>
-CC: J. Bruce Fields <bfields@redhat.com>
-CC: Trond Myklebust <Trond.Myklebust@netapp.com>
+Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 ---
- arch/x86/kvm/mmu.c | 24 +++++++++++++++++-------
- net/sunrpc/auth.c  | 41 +++++++++++++++++++++++++++--------------
- 2 files changed, 44 insertions(+), 21 deletions(-)
+ fs/super.c               | 11 +++++++++--
+ fs/xfs/xfs_buf.c         |  6 +++++-
+ fs/xfs/xfs_qm.c          | 10 ++++++++--
+ include/linux/list_lru.h | 13 ++-----------
+ mm/list_lru.c            | 14 +++++++++++++-
+ 5 files changed, 37 insertions(+), 17 deletions(-)
 
-diff --git a/arch/x86/kvm/mmu.c b/arch/x86/kvm/mmu.c
-index f8ca2f3..422493d 100644
---- a/arch/x86/kvm/mmu.c
-+++ b/arch/x86/kvm/mmu.c
-@@ -4213,13 +4213,12 @@ restart:
- 	spin_unlock(&kvm->mmu_lock);
- }
- 
--static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
-+static long
-+mmu_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+diff --git a/fs/super.c b/fs/super.c
+index 85a6104..1b6ef7b 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -199,8 +199,12 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+ 		INIT_HLIST_NODE(&s->s_instances);
+ 		INIT_HLIST_BL_HEAD(&s->s_anon);
+ 		INIT_LIST_HEAD(&s->s_inodes);
+-		list_lru_init(&s->s_dentry_lru);
+-		list_lru_init(&s->s_inode_lru);
++
++		if (list_lru_init(&s->s_dentry_lru))
++			goto err_out;
++		if (list_lru_init(&s->s_inode_lru))
++			goto err_out_dentry_lru;
++
+ 		INIT_LIST_HEAD(&s->s_mounts);
+ 		init_rwsem(&s->s_umount);
+ 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
+@@ -240,6 +244,9 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+ 	}
+ out:
+ 	return s;
++
++err_out_dentry_lru:
++	list_lru_destroy(&s->s_dentry_lru);
+ err_out:
+ 	security_sb_free(s);
+ #ifdef CONFIG_SMP
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index c3f8ea9..9c2b656 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1591,6 +1591,7 @@ xfs_free_buftarg(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buftarg	*btp)
  {
- 	struct kvm *kvm;
- 	int nr_to_scan = sc->nr_to_scan;
++	list_lru_destroy(&btp->bt_lru);
+ 	unregister_shrinker(&btp->bt_shrinker);
+ 
+ 	if (mp->m_flags & XFS_MOUNT_BARRIER)
+@@ -1665,9 +1666,12 @@ xfs_alloc_buftarg(
+ 	if (!btp->bt_bdi)
+ 		goto error;
+ 
+-	list_lru_init(&btp->bt_lru);
+ 	if (xfs_setsize_buftarg_early(btp, bdev))
+ 		goto error;
++
++	if (list_lru_init(&btp->bt_lru))
++		goto error;
++
+ 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+ 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+ 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index bd6c12a..b840000 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -781,11 +781,18 @@ xfs_qm_init_quotainfo(
+ 
+ 	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(xfs_quotainfo_t), KM_SLEEP);
+ 
++	if ((error = list_lru_init(&qinf->qi_lru))) {
++		kmem_free(qinf);
++		mp->m_quotainfo = NULL;
++		return error;
++	}
++
+ 	/*
+ 	 * See if quotainodes are setup, and if not, allocate them,
+ 	 * and change the superblock accordingly.
+ 	 */
+ 	if ((error = xfs_qm_init_quotainos(mp))) {
++		list_lru_destroy(&qinf->qi_lru);
+ 		kmem_free(qinf);
+ 		mp->m_quotainfo = NULL;
+ 		return error;
+@@ -795,8 +802,6 @@ xfs_qm_init_quotainfo(
+ 	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
+ 	mutex_init(&qinf->qi_tree_lock);
+ 
+-	list_lru_init(&qinf->qi_lru);
 -
--	if (nr_to_scan == 0)
--		goto out;
-+	long freed = 0;
+ 	/* mutex used to serialize quotaoffs */
+ 	mutex_init(&qinf->qi_quotaofflock);
  
- 	raw_spin_lock(&kvm_lock);
+@@ -884,6 +889,7 @@ xfs_qm_destroy_quotainfo(
+ 	qi = mp->m_quotainfo;
+ 	ASSERT(qi != NULL);
  
-@@ -4247,24 +4246,35 @@ static int mmu_shrink(struct shrinker *shrink, struct shrink_control *sc)
- 		idx = srcu_read_lock(&kvm->srcu);
- 		spin_lock(&kvm->mmu_lock);
++	list_lru_destroy(&qi->qi_lru);
+ 	unregister_shrinker(&qi->qi_shrinker);
  
--		prepare_zap_oldest_mmu_page(kvm, &invalid_list);
-+		freed += prepare_zap_oldest_mmu_page(kvm, &invalid_list);
- 		kvm_mmu_commit_zap_page(kvm, &invalid_list);
+ 	if (qi->qi_uquotaip) {
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index 2fe13e1..ff57503 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -27,20 +27,11 @@ struct list_lru_node {
+ } ____cacheline_aligned_in_smp;
  
- 		spin_unlock(&kvm->mmu_lock);
- 		srcu_read_unlock(&kvm->srcu, idx);
- 
-+		/*
-+		 * unfair on small ones
-+		 * per-vm shrinkers cry out
-+		 * sadness comes quickly
-+		 */
- 		list_move_tail(&kvm->vm_list, &vm_list);
- 		break;
- 	}
- 
- 	raw_spin_unlock(&kvm_lock);
-+	return freed;
- 
--out:
-+}
-+
-+static long
-+mmu_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
-+{
- 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
- }
- 
- static struct shrinker mmu_shrinker = {
--	.shrink = mmu_shrink,
-+	.count_objects = mmu_shrink_count,
-+	.scan_objects = mmu_shrink_scan,
- 	.seeks = DEFAULT_SEEKS * 10,
+ struct list_lru {
+-	/*
+-	 * Because we use a fixed-size array, this struct can be very big if
+-	 * MAX_NUMNODES is big. If this becomes a problem this is fixable by
+-	 * turning this into a pointer and dynamically allocating this to
+-	 * nr_node_ids. This quantity is firwmare-provided, and still would
+-	 * provide room for all nodes at the cost of a pointer lookup and an
+-	 * extra allocation. Because that allocation will most likely come from
+-	 * a different slab cache than the main structure holding this
+-	 * structure, we may very well fail.
+-	 */
+-	struct list_lru_node	node[MAX_NUMNODES];
++	struct list_lru_node	*node;
+ 	nodemask_t		active_nodes;
  };
  
-diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
-index ed2fdd2..fdc012d 100644
---- a/net/sunrpc/auth.c
-+++ b/net/sunrpc/auth.c
-@@ -413,12 +413,13 @@ EXPORT_SYMBOL_GPL(rpcauth_destroy_credcache);
- /*
-  * Remove stale credentials. Avoid sleeping inside the loop.
-  */
--static int
-+static long
- rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
++void list_lru_destroy(struct list_lru *lru);
+ int list_lru_init(struct list_lru *lru);
+ 
+ /**
+diff --git a/mm/list_lru.c b/mm/list_lru.c
+index 2822817..700d322 100644
+--- a/mm/list_lru.c
++++ b/mm/list_lru.c
+@@ -8,6 +8,7 @@
+ #include <linux/module.h>
+ #include <linux/mm.h>
+ #include <linux/list_lru.h>
++#include <linux/slab.h>
+ 
+ bool list_lru_add(struct list_lru *lru, struct list_head *item)
  {
- 	spinlock_t *cache_lock;
- 	struct rpc_cred *cred, *next;
- 	unsigned long expired = jiffies - RPC_AUTH_EXPIRY_MORATORIUM;
-+	long freed = 0;
+@@ -162,9 +163,14 @@ unsigned long list_lru_dispose_all(struct list_lru *lru,
+ int list_lru_init(struct list_lru *lru)
+ {
+ 	int i;
++	size_t size = sizeof(*lru->node) * nr_node_ids;
++
++	lru->node = kzalloc(size, GFP_KERNEL);
++	if (!lru->node)
++		return -ENOMEM;
  
- 	list_for_each_entry_safe(cred, next, &cred_unused, cr_lru) {
- 
-@@ -430,10 +431,11 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
- 		 */
- 		if (time_in_range(cred->cr_expire, expired, jiffies) &&
- 		    test_bit(RPCAUTH_CRED_HASHED, &cred->cr_flags) != 0)
--			return 0;
-+			break;
- 
- 		list_del_init(&cred->cr_lru);
- 		number_cred_unused--;
-+		freed++;
- 		if (atomic_read(&cred->cr_count) != 0)
- 			continue;
- 
-@@ -446,29 +448,39 @@ rpcauth_prune_expired(struct list_head *free, int nr_to_scan)
- 		}
- 		spin_unlock(cache_lock);
- 	}
--	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
-+	return freed;
+ 	nodes_clear(lru->active_nodes);
+-	for (i = 0; i < MAX_NUMNODES; i++) {
++	for (i = 0; i < nr_node_ids; i++) {
+ 		spin_lock_init(&lru->node[i].lock);
+ 		INIT_LIST_HEAD(&lru->node[i].list);
+ 		lru->node[i].nr_items = 0;
+@@ -172,3 +178,9 @@ int list_lru_init(struct list_lru *lru)
+ 	return 0;
  }
- 
- /*
-  * Run memory cache shrinker.
-  */
--static int
--rpcauth_cache_shrinker(struct shrinker *shrink, struct shrink_control *sc)
-+static long
-+rpcauth_cache_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ EXPORT_SYMBOL_GPL(list_lru_init);
 +
- {
- 	LIST_HEAD(free);
--	int res;
--	int nr_to_scan = sc->nr_to_scan;
--	gfp_t gfp_mask = sc->gfp_mask;
-+	long freed;
-+
-+	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
-+		return SHRINK_STOP;
- 
--	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
--		return (nr_to_scan == 0) ? 0 : -1;
-+	/* nothing left, don't come back */
- 	if (list_empty(&cred_unused))
--		return 0;
-+		return SHRINK_STOP;
-+
- 	spin_lock(&rpc_credcache_lock);
--	res = rpcauth_prune_expired(&free, nr_to_scan);
-+	freed = rpcauth_prune_expired(&free, sc->nr_to_scan);
- 	spin_unlock(&rpc_credcache_lock);
- 	rpcauth_destroy_credlist(&free);
--	return res;
-+
-+	return freed;
-+}
-+
-+static long
-+rpcauth_cache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
-+
++void list_lru_destroy(struct list_lru *lru)
 +{
-+	return (number_cred_unused / 100) * sysctl_vfs_cache_pressure;
- }
- 
- /*
-@@ -784,7 +796,8 @@ rpcauth_uptodatecred(struct rpc_task *task)
- }
- 
- static struct shrinker rpc_cred_shrinker = {
--	.shrink = rpcauth_cache_shrinker,
-+	.count_objects = rpcauth_cache_shrink_count,
-+	.scan_objects = rpcauth_cache_shrink_scan,
- 	.seeks = DEFAULT_SEEKS,
- };
- 
++	kfree(lru->node);
++}
++EXPORT_SYMBOL_GPL(list_lru_destroy);
 -- 
 1.8.1.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
