@@ -1,47 +1,87 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 08/10] cpuset: allow to keep tasks in empty cpusets
-Date: Thu, 6 Jun 2013 14:24:50 -0700
-Message-ID: <20130606212450.GI5045@htj.dyndns.org>
-References: <51AF0183.8070602@huawei.com>
- <51AF020B.3030701@huawei.com>
- <20130605205146.GI10693@mtj.dyndns.org>
- <51B063E6.30107@huawei.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full
+ charge context
+Date: Thu, 6 Jun 2013 17:54:25 -0400
+Message-ID: <20130606215425.GM15721@cmpxchg.org>
+References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org>
+ <1370488193-4747-2-git-send-email-hannes@cmpxchg.org>
+ <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com>
+ <20130606053315.GB9406@cmpxchg.org>
+ <20130606173355.GB27226@cmpxchg.org>
+ <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=+US8bjO1o62MSMSbY4EFRcYPxP+hZfQ64lpczv5PSEQ=;
-        b=yeyY16Q79SRffZSgsAN/GTJnY/WzNW/HMc0fIxTn0i+f43C5bQGBuUUYPmkpDeIi91
-         NMuVcV4PbLwrSzRqxb/j7EWzC4Ug5IWupzVsZiYeqF7AghhRc+GbySq1wHUM7mNWeJra
-         DnBOubHcWl0GUn0cbh+d1yhFECPGTccScL6UKp/iXRfYMlspMoLn60eTm+hghE0wDaCH
-         OOKHm3SBZdYbr9I30RPYQrSlk715tLG7l5gGuGE5Aqxi5DZuyEbUsTKCqj9W0djUb3xQ
-         Oe3QCyPTlI9h+vfc06VstpBPofAm893e5KaJpYs1XVkkE9Oq7hfRe1Hng+B3jhAAF99H
-         4H+g==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <51B063E6.30107-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hey,
-
-On Thu, Jun 06, 2013 at 06:26:46PM +0800, Li Zefan wrote:
-> > I wonder whether it'd be possible to merge the two paths.  My
-> > suspicion is that we probably don't need propagate_hotplug_work
-> > anymore now that we can drop RCU read lock while doing the pre-order
-> > walk.  What do you think?
+On Thu, Jun 06, 2013 at 01:11:32PM -0700, David Rientjes wrote:
+> On Thu, 6 Jun 2013, Johannes Weiner wrote:
 > 
-> It indeed can be confusing. I'll see if we can make the code clearer.
+> > > If the killing task or one of the sleeping tasks is holding a lock
+> > > that the selected victim needs in order to exit no progress can be
+> > > made.
+> > > 
+> > > The report we had a few months ago was that a task held the i_mutex
+> > > when trying to charge a page cache page and then invoked the OOM
+> > > handler and looped on CHARGE_RETRY.  Meanwhile, the selected victim
+> > > was just entering truncate() and now stuck waiting for the i_mutex.
+> > > 
+> > > I'll add this scenario to the changelog, hopefully it will make the
+> > > rest a little clearer.
+> > 
+> > David, is the updated patch below easier to understand?
+> > 
+> 
+> I don't understand why memcg is unique in this regard and it doesn't 
+> affect the page allocator as well on system oom conditions.  Ignoring 
+> memecg, all allocating processes will loop forever in the page allocator 
+> unless there are atypical gfp flags waiting for memory to be available, 
+> only one will call the oom killer at a time, a process is selected and 
+> killed, and the oom killer defers until that process exists because it 
+> finds TIF_MEMDIE.  Why is memcg charging any different?
 
-Yeah, if possible, it'd be great to remove the propagation work item
-and do things inline first and then add the new online propagation.
+The allocator wakes up kswapd, global OOMs are rarer, with physical
+memory the line to OOM is blurrier than with the memcg hard limit?
 
-Thanks!
+Anyway, I'm not aware of bug reports in the global case, but there are
+bug reports for the memcg case and we have a decent understanding of
+those deadlocks.  So can we stay focussed and fix this, please?
 
--- 
-tejun
+> > Reported-by: Reported-by: azurIt <azurit@pobox.sk>
+> > Debugged-by: Michal Hocko <mhocko@suse.cz>
+> > Reported-by: David Rientjes <rientjes@google.com>
+> 
+> What exactly did I report?  This isn't at all what 
+> memory.oom_delay_millisecs is about, which is a failure of userspace to 
+> respond to the condition and react in time, not because it's stuck on any 
+> lock.  We still need that addition regardless of what you're doing here.
+
+Oh, tell me how getting stuck indefinitely on a lock will not result
+in "a failure to react in time".  This is some seriously misguided
+pedantry.
+
+And yes, you talked about deadlocking potential other than the handler
+itself OOMing, I quote from
+<alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>:
+
+"Unresponsiveness isn't necessarily only because of memory
+ constraints, you may have your oom notifier in a parent cgroup that
+ isn't oom.  If a process is stuck on mm->mmap_sem in the oom cgroup,
+ though, the oom notifier may not be able to scrape /proc/pid and
+ attain necessary information in making an oom kill decision."
+
+These are your words, and my patch sets out to fix the described
+problem, so I figured the Reported-by: might be appropriate.  But I
+can remove it if you like.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
