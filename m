@@ -1,499 +1,272 @@
 From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v10 26/35] memcg,list_lru: duplicate LRUs upon kmemcg
- creation
-Date: Thu, 6 Jun 2013 12:52:32 +0400
-Message-ID: <51B04DD0.4060600@parallels.com>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-27-git-send-email-glommer@openvz.org> <20130605160828.1ec9f3538258d9a6d6c74083@linux-foundation.org>
+Subject: Re: [PATCH v10 13/35] vmscan: per-node deferred work
+Date: Thu, 6 Jun 2013 13:00:07 +0400
+Message-ID: <51B04F97.8090809@parallels.com>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-14-git-send-email-glommer@openvz.org> <20130605160815.fb69f7d4d1736455727fc669@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130605160828.1ec9f3538258d9a6d6c74083-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <20130605160815.fb69f7d4d1736455727fc669-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 On 06/06/2013 03:08 AM, Andrew Morton wrote:
-> On Mon,  3 Jun 2013 23:29:55 +0400 Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+> On Mon,  3 Jun 2013 23:29:42 +0400 Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
 > 
->> When a new memcg is created, we need to open up room for its descriptors
->> in all of the list_lrus that are marked per-memcg. The process is quite
->> similar to the one we are using for the kmem caches: we initialize the
->> new structures in an array indexed by kmemcg_id, and grow the array if
->> needed. Key data like the size of the array will be shared between the
->> kmem cache code and the list_lru code (they basically describe the same
->> thing)
+>> We already keep per-node LRU lists for objects being shrunk, but the
+>> work that is deferred from one run to another is kept global. This
+>> creates an impedance problem, where upon node pressure, work deferred
+>> will accumulate and end up being flushed in other nodes.
 > 
-> Gee this is a big patchset.
+> This changelog would be more useful if it had more specificity.  Where
+> do we keep these per-node LRU lists (names of variables?).  Where do we
+> keep the global data?  In what function does this other-node flushing
+> happen?
 > 
+> Generally so that readers can go and look at the data structures and
+> functions which you're talking about.
+> 
+>> In large machines, many nodes can accumulate at the same time, all
+>> adding to the global counter.
+> 
+> What global counter?
+> 
+>>  As we accumulate more and more, we start
+>> to ask for the caches to flush even bigger numbers.
+> 
+> Where does this happen?
+> 
+>> The result is that
+>> the caches are depleted and do not stabilize. To achieve stable steady
+>> state behavior, we need to tackle it differently.
+>>
+>> In this patch we keep the deferred count per-node, and will never
+>> accumulate that to other nodes.
 >>
 >> ...
 >>
->> --- a/include/linux/list_lru.h
->> +++ b/include/linux/list_lru.h
->> @@ -24,6 +24,23 @@ struct list_lru_node {
->>  	long			nr_items;
->>  } ____cacheline_aligned_in_smp;
+>> --- a/include/linux/shrinker.h
+>> +++ b/include/linux/shrinker.h
+>> @@ -19,6 +19,8 @@ struct shrink_control {
 >>  
->> +/*
->> + * This is supposed to be M x N matrix, where M is kmem-limited memcg, and N is
->> + * the number of nodes. Both dimensions are likely to be very small, but are
->> + * potentially very big. Therefore we will allocate or grow them dynamically.
->> + *
->> + * The size of M will increase as new memcgs appear and can be 0 if no memcgs
->> + * are being used. This is done in mm/memcontrol.c in a way quite similar than
-> 
-> "similar to"
-> 
->> + * the way we use for the slab cache management.
->> + *
->> + * The size o N can't be determined at compile time, but won't increase once we
-> 
-> "value of N"
-> 
->> + * determine it. It is nr_node_ids, the firmware-provided maximum number of
->> + * nodes in a system.
-> 
-> 
->> + */
->> +struct list_lru_array {
->> +	struct list_lru_node node[1];
->> +};
->> +
->>  struct list_lru {
->>  	/*
->>  	 * Because we use a fixed-size array, this struct can be very big if
->> @@ -37,9 +54,38 @@ struct list_lru {
->>  	 */
->>  	struct list_lru_node	node[MAX_NUMNODES];
->>  	nodemask_t		active_nodes;
->> +#ifdef CONFIG_MEMCG_KMEM
->> +	/* All memcg-aware LRUs will be chained in the lrus list */
->> +	struct list_head	lrus;
->> +	/* M x N matrix as described above */
->> +	struct list_lru_array	**memcg_lrus;
->> +#endif
+>>  	/* shrink from these nodes */
+>>  	nodemask_t nodes_to_scan;
+>> +	/* current node being shrunk (for NUMA aware shrinkers) */
+>> +	int nid;
 >>  };
+>>  
+>>  /*
+>> @@ -42,6 +44,8 @@ struct shrink_control {
+>>   * objects freed during the scan, or -1 if progress cannot be made due to
+>>   * potential deadlocks. If -1 is returned, then no further attempts to call the
+>>   * @scan_objects will be made from the current reclaim context.
+>> + *
+>> + * @flags determine the shrinker abilities, like numa awareness 
+>>   */
+>>  struct shrinker {
+>>  	int (*shrink)(struct shrinker *, struct shrink_control *sc);
+>> @@ -50,12 +54,34 @@ struct shrinker {
+>>  
+>>  	int seeks;	/* seeks to recreate an obj */
+>>  	long batch;	/* reclaim batch size, 0 = default */
+>> +	unsigned long flags;
+>>  
+>>  	/* These are for internal use */
+>>  	struct list_head list;
+>> -	atomic_long_t nr_in_batch; /* objs pending delete */
+>> +	/*
+>> +	 * We would like to avoid allocating memory when registering a new
+>> +	 * shrinker.
 > 
-> It's here where I decided "this code shouldn't be in lib/" ;)
+> That's quite surprising.  What are the reasons for this?
 > 
->> -int list_lru_init(struct list_lru *lru);
->> +struct mem_cgroup;
->> +#ifdef CONFIG_MEMCG_KMEM
->> +struct list_lru_array *lru_alloc_array(void);
+>> 		 All shrinkers will need to keep track of deferred objects,
 > 
-> Experience teaches it that it is often a mistake for callees to assume
-> they will always be called in GFP_KERNEL context.  For high-level init
-> code we can usually get away with it, but I do think that the decision
-> to not provide a gfp_t argument should be justfied up-front, and that
-> this restriction should be mentioned in the interface documentation
-> (when it is written ;)).
+> What is a deferred object and why does this deferral happen?
 > 
->>
->> ...
->>
->> @@ -163,18 +168,97 @@ list_lru_dispose_all(
->>  	return total;
+>> +	 * and we need a counter for this. If the shrinkers are not NUMA aware,
+>> +	 * this is a small and bounded space that fits into an atomic_long_t.
+>> +	 * This is because that the deferring decisions are global, and we will
+> 
+> s/that//
+> 
+>> +	 * not allocate in this case.
+>> +	 *
+>> +	 * When the shrinker is NUMA aware, we will need this to be a per-node
+>> +	 * array. Numerically speaking, the minority of shrinkers are NUMA
+>> +	 * aware, so this saves quite a bit.
+>> +	 */
+> 
+> I don't really understand what's going on here :(
+> 
+
+Ok. We need an array allocation for NUMA aware shrinkers, but we don't
+need any for non NUMA-aware shrinkers. There is nothing wrong with the
+memory allocation "per-se" , in terms of contexts, etc.
+
+But in a NUMA *machine*, we would be allocating a lot of wasted memory
+for creating arrays in shrinkers that are not NUMA capable at all.
+
+Turns out, they seem to be the majority (at least so far).
+
+Aside from the memory allocated, we still have all the useless loops and
+cacheline dirtying. So I figured it would be useful to not make them all
+NUMA aware if we can avoid it.
+
+
+>> +	union {
+>> +		/* objs pending delete */
+>> +		atomic_long_t nr_deferred;
+>> +		/* objs pending delete, per node */
+>> +		atomic_long_t *nr_deferred_node;
+>> +	};
+>>  };
+>>  #define DEFAULT_SEEKS 2 /* A good number if you don't know better. */
+>> -extern void register_shrinker(struct shrinker *);
+>> +
+>> +/* Flags */
+>> +#define SHRINKER_NUMA_AWARE (1 << 0)
+>> +
+>> +extern int register_shrinker(struct shrinker *);
+>>  extern void unregister_shrinker(struct shrinker *);
+>>  #endif
+>> diff --git a/mm/vmscan.c b/mm/vmscan.c
+>> index 53e647f..08eec9d 100644
+>> --- a/mm/vmscan.c
+>> +++ b/mm/vmscan.c
+>> @@ -155,14 +155,36 @@ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
 >>  }
 >>  
->> -int
->> -list_lru_init(
->> -	struct list_lru	*lru)
->> +/*
->> + * This protects the list of all LRU in the system. One only needs
->> + * to take when registering an LRU, or when duplicating the list of lrus.
+>>  /*
+>> - * Add a shrinker callback to be called from the vm
+>> + * Add a shrinker callback to be called from the vm.
+>> + *
+>> + * It cannot fail, unless the flag SHRINKER_NUMA_AWARE is specified.
+>> + * With this flag set, this function will allocate memory and may fail.
+>>   */
 > 
-> That isn't very grammatical.
+> Again, I don't see what the big deal is with memory allocation. 
+> register_shrinker() is pretty rare, is likely to happen when the system
+> is under little stress and GFP_KERNEL is quite strong.  Why all the
+> concern?
 > 
->> + * Transversing an LRU can and should be done outside the lock
->> + */
->> +static DEFINE_MUTEX(all_memcg_lrus_mutex);
->> +static LIST_HEAD(all_memcg_lrus);
->> +
->> +static void list_lru_init_one(struct list_lru_node *lru)
+>> -void register_shrinker(struct shrinker *shrinker)
+>> +int register_shrinker(struct shrinker *shrinker)
 >>  {
->> +	spin_lock_init(&lru->lock);
->> +	INIT_LIST_HEAD(&lru->list);
->> +	lru->nr_items = 0;
->> +}
->> +
->> +struct list_lru_array *lru_alloc_array(void)
->> +{
->> +	struct list_lru_array *lru_array;
->>  	int i;
->>  
->> -	nodes_clear(lru->active_nodes);
->> -	for (i = 0; i < MAX_NUMNODES; i++) {
->> -		spin_lock_init(&lru->node[i].lock);
->> -		INIT_LIST_HEAD(&lru->node[i].list);
->> -		lru->node[i].nr_items = 0;
->> +	lru_array = kzalloc(nr_node_ids * sizeof(struct list_lru_node),
->> +				GFP_KERNEL);
-> 
-> Could use kcalloc() here.
-> 
->> +	if (!lru_array)
->> +		return NULL;
->> +
->> +	for (i = 0; i < nr_node_ids; i++)
->> +		list_lru_init_one(&lru_array->node[i]);
->> +
->> +	return lru_array;
->> +}
->> +
->> +#ifdef CONFIG_MEMCG_KMEM
->> +int __memcg_init_lru(struct list_lru *lru)
->> +{
->> +	int ret;
->> +
->> +	INIT_LIST_HEAD(&lru->lrus);
->> +	mutex_lock(&all_memcg_lrus_mutex);
->> +	list_add(&lru->lrus, &all_memcg_lrus);
->> +	ret = memcg_new_lru(lru);
->> +	mutex_unlock(&all_memcg_lrus_mutex);
->> +	return ret;
->> +}
->> +
->> +int memcg_update_all_lrus(unsigned long num)
->> +{
->> +	int ret = 0;
->> +	struct list_lru *lru;
->> +
->> +	mutex_lock(&all_memcg_lrus_mutex);
->> +	list_for_each_entry(lru, &all_memcg_lrus, lrus) {
->> +		ret = memcg_kmem_update_lru_size(lru, num, false);
->> +		if (ret)
->> +			goto out;
->> +	}
->> +out:
->> +	mutex_unlock(&all_memcg_lrus_mutex);
->> +	return ret;
->> +}
->> +
->> +void list_lru_destroy(struct list_lru *lru)
-> 
-> This is a memcg-specific function (which lives in lib/list_lru.c!) and
-> hence should be called, say, memcg_list_lru_destroy().
-> 
->> +{
->> +	mutex_lock(&all_memcg_lrus_mutex);
->> +	list_del(&lru->lrus);
->> +	mutex_unlock(&all_memcg_lrus_mutex);
->> +}
->> +
->> +void memcg_destroy_all_lrus(struct mem_cgroup *memcg)
->> +{
->> +	struct list_lru *lru;
->> +	mutex_lock(&all_memcg_lrus_mutex);
->> +	list_for_each_entry(lru, &all_memcg_lrus, lrus) {
->> +		kfree(lru->memcg_lrus[memcg_cache_id(memcg)]);
->> +		lru->memcg_lrus[memcg_cache_id(memcg)] = NULL;
-> 
-> Some common-subexpression-elimination-by-hand would probably improve
-> the output code here.
-> 
->> +		/* everybody must beaware that this memcg is no longer valid */
-> 
-> "be aware"
-> 
->> +		wmb();
-> 
-> The code implies that other code paths can come in here and start
-> playing with the pointer without taking all_memcg_lrus_mutex?  If so,
-> where, how why, etc?
-> 
-> I'd be more confortable if the sequence was something like
-> 
-> 	lru->memcg_lrus[memcg_cache_id(memcg)] = NULL;
-> 	wmb();
-> 	kfree(lru->memcg_lrus[memcg_cache_id(memcg)]);
-> 
-> but that still has holes and is still scary.
-> 
-> 
-> What's going on here?
-> 
->>  	}
->> +	mutex_unlock(&all_memcg_lrus_mutex);
->> +}
->> +#endif
->> +
->> +int __list_lru_init(struct list_lru *lru, bool memcg_enabled)
->> +{
->> +	int i;
->> +
->> +	nodes_clear(lru->active_nodes);
->> +	for (i = 0; i < MAX_NUMNODES; i++)
->> +		list_lru_init_one(&lru->node[i]);
->> +
->> +	if (memcg_enabled)
->> +		return memcg_init_lru(lru);
-> 
-> OK, this is weird.  list_lru.c calls into a memcg initialisation
-> function!  That memcg initialisation function then calls into
-> list_lru.c stuff, as expected.
-> 
-> Seems screwed up.  What's going on here?
-> 
-
-I documented this in the memcg side.
-
-/*
- * We need to call back and forth from memcg to LRU because of the lock
- * ordering.  This complicates the flow a little bit, but since the
-memcg mutex
- * is held through the whole duration of memcg creation, we need to hold it
- * before we hold the LRU-side mutex in the case of a new list creation as
- * well.
- */
-
->>  	return 0;
->>  }
->> -EXPORT_SYMBOL_GPL(list_lru_init);
->> +EXPORT_SYMBOL_GPL(__list_lru_init);
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 27af2d1..5d31b4a 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -3163,16 +3163,30 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
->>  	memcg_kmem_set_activated(memcg);
->>  
->>  	ret = memcg_update_all_caches(num+1);
->> -	if (ret) {
->> -		ida_simple_remove(&kmem_limited_groups, num);
->> -		memcg_kmem_clear_activated(memcg);
->> -		return ret;
->> -	}
->> +	if (ret)
->> +		goto out;
->> +
+>> -	atomic_long_set(&shrinker->nr_in_batch, 0);
 >> +	/*
->> +	 * We should make sure that the array size is not updated until we are
->> +	 * done; otherwise we have no easy way to know whether or not we should
->> +	 * grow the array.
+>> +	 * If we only have one possible node in the system anyway, save
+>> +	 * ourselves the trouble and disable NUMA aware behavior. This way we
+>> +	 * will allocate nothing and save memory and some small loop time
+>> +	 * later.
 >> +	 */
-> 
-> What's the locking here, to prevent concurrent array-resizers?
-> 
-
-the hammer-like set limit mutex is protecting all of this.
-
->> +	ret = memcg_update_all_lrus(num + 1);
->> +	if (ret)
->> +		goto out;
->>  
->>  	memcg->kmemcg_id = num;
+>> +	if (nr_node_ids == 1)
+>> +		shrinker->flags &= ~SHRINKER_NUMA_AWARE;
 >> +
->> +	memcg_update_array_size(num + 1);
+>> +	if (shrinker->flags & SHRINKER_NUMA_AWARE) {
+>> +		size_t size;
 >> +
->>  	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
->>  	mutex_init(&memcg->slab_caches_mutex);
->> +
->>  	return 0;
->> +out:
->> +	ida_simple_remove(&kmem_limited_groups, num);
->> +	memcg_kmem_clear_activated(memcg);
->> +	return ret;
->>  }
->>  
->>  static size_t memcg_caches_array_size(int num_groups)
->> @@ -3254,6 +3268,129 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
->>  	return 0;
->>  }
->>  
->> +/*
->> + * memcg_kmem_update_lru_size - fill in kmemcg info into a list_lru
->> + *
->> + * @lru: the lru we are operating with
->> + * @num_groups: how many kmem-limited cgroups we have
->> + * @new_lru: true if this is a new_lru being created, false if this
->> + * was triggered from the memcg side
->> + *
->> + * Returns 0 on success, and an error code otherwise.
->> + *
->> + * This function can be called either when a new kmem-limited memcg appears,
->> + * or when a new list_lru is created. The work is roughly the same in two cases,
-> 
-> "both cases"
-> 
->> + * but in the later we never have to expand the array size.
-> 
-> "latter"
-> 
->> + *
->> + * This is always protected by the all_lrus_mutex from the list_lru side.  But
->> + * a race can still exists if a new memcg becomes kmem limited at the same time
-> 
-> "exist"
-> 
->> + * that we are registering a new memcg. Creation is protected by the
->> + * memcg_mutex, so the creation of a new lru have to be protected by that as
-> 
-> "has"
-> 
->> + * well.
->> + *
->> + * The lock ordering is that the memcg_mutex needs to be acquired before the
->> + * lru-side mutex.
-> 
-> It's nice to provide the C name of this "lru-side mutex".
-> 
->> + */
-> 
-> This purports to be a kerneldoc comment, but it doesn't start with the
-> kerneldoc /** token.  Please review the entire patchset for this
-> (common) oddity.
-> 
->> +int memcg_kmem_update_lru_size(struct list_lru *lru, int num_groups,
->> +			       bool new_lru)
->> +{
->> +	struct list_lru_array **new_lru_array;
->> +	struct list_lru_array *lru_array;
->> +
->> +	lru_array = lru_alloc_array();
->> +	if (!lru_array)
->> +		return -ENOMEM;
->> +
->> +	/*
->> +	 * When a new LRU is created, we still need to update all data for that
->> +	 * LRU. The procedure for late LRUs and new memcgs are quite similar, we
-> 
-> "procedures"
-> 
->> +	 * only need to make sure we get into the loop even if num_groups <
->> +	 * memcg_limited_groups_array_size.
-> 
-> This sentence is hard to follow.  Particularly the "even if" part. 
-> Rework it?
-> 
->> +	 */
->> +	if ((num_groups > memcg_limited_groups_array_size) || new_lru) {
->> +		int i;
->> +		struct list_lru_array **old_array;
->> +		size_t size = memcg_caches_array_size(num_groups);
->> +		int num_memcgs = memcg_limited_groups_array_size;
->> +
->> +		new_lru_array = kzalloc(size * sizeof(void *), GFP_KERNEL);
-> 
-> Could use kcalloc().
-> 
-> What are the implications of that GFP_KERNEL?  That we cannot take
-> memcg_mutex and "the lru-side mutex" on the direct reclaim -> shrink
-> codepaths.  Is that honoured?  Any other potential problems here?
-> 
-
-This has nothing to do with the mutex. You cannot register a new LRU,
-and you cannot create a new memcg.
-
-Both of those operations are always done - at least so far - in
-GFP_KERNEL contexts.
-
->> +		if (!new_lru_array) {
->> +			kfree(lru_array);
+>> +		size = sizeof(*shrinker->nr_deferred_node) * nr_node_ids;
+>> +		shrinker->nr_deferred_node = kzalloc(size, GFP_KERNEL);
+>> +		if (!shrinker->nr_deferred_node)
 >> +			return -ENOMEM;
->> +		}
+>> +	} else
+>> +		atomic_long_set(&shrinker->nr_deferred, 0);
 >> +
->> +		for (i = 0; lru->memcg_lrus && (i < num_memcgs); i++) {
->> +			if (lru->memcg_lrus && lru->memcg_lrus[i])
->> +				continue;
->> +			new_lru_array[i] =  lru->memcg_lrus[i];
->> +		}
->> +
->> +		old_array = lru->memcg_lrus;
->> +		lru->memcg_lrus = new_lru_array;
->> +		/*
->> +		 * We don't need a barrier here because we are just copying
->> +		 * information over. Anybody operating in memcg_lrus will
-> 
-> s/in/on/
-> 
->> +		 * either follow the new array or the old one and they contain
->> +		 * exactly the same information. The new space in the end is
-> 
-> s/in/at/
-> 
->> +		 * always empty anyway.
->> +		 */
->> +		if (lru->memcg_lrus)
->> +			kfree(old_array);
->> +	}
->> +
->> +	if (lru->memcg_lrus) {
->> +		lru->memcg_lrus[num_groups - 1] = lru_array;
->> +		/*
->> +		 * Here we do need the barrier, because of the state transition
->> +		 * implied by the assignment of the array. All users should be
->> +		 * able to see it
->> +		 */
->> +		wmb();
-> 
-> Am worried about this lockless concurrency stuff.  Perhaps putting a
-> description of the overall design somewhere would be sensible.
-> 
-
-I can do that. But in here it is really not a substitute for a lock, as
-Tejun has been complaining. We would just like to make sure that the
-change is immediately visible.
->> +	}
+>>  	down_write(&shrinker_rwsem);
+>>  	list_add_tail(&shrinker->list, &shrinker_list);
+>>  	up_write(&shrinker_rwsem);
 >> +	return 0;
->> +}
->> +
->> +/*
->> + * This is called with the LRU-mutex being held.
+>>  }
+>>  EXPORT_SYMBOL(register_shrinker);
 > 
-> That's "all_memcg_lrus_mutex", yes?  Not "all_lrus_mutex".  Clear as mud :(
+> What would be the cost if we were to do away with SHRINKER_NUMA_AWARE
+> and treat all shrinkers the same way?  The need to allocate extra
+> memory per shrinker?  That sounds pretty cheap?
 > 
-yes.
 
->> + */
->> +int memcg_new_lru(struct list_lru *lru)
+Well, maybe I am just a little bit more frenetic about savings than you
+are. There are quite a bunch of shrinkers.
+
+
+>> @@ -186,6 +208,116 @@ static inline int do_shrinker_shrink(struct shrinker *shrinker,
+>>  }
+>>  
+>>  #define SHRINK_BATCH 128
+>> +
+>> +static unsigned long
+>> +shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+>> +		 unsigned long nr_pages_scanned, unsigned long lru_pages,
+>> +		 atomic_long_t *deferred)
 >> +{
->> +	struct mem_cgroup *iter;
+>> +	unsigned long freed = 0;
+>> +	unsigned long long delta;
+>> +	long total_scan;
+>> +	long max_pass;
+>> +	long nr;
+>> +	long new_nr;
+>> +	long batch_size = shrinker->batch ? shrinker->batch
+>> +					  : SHRINK_BATCH;
 >> +
->> +	if (!memcg_kmem_enabled())
+>> +	if (shrinker->scan_objects) {
+>> +		max_pass = shrinker->count_objects(shrinker, shrinkctl);
+>> +		WARN_ON(max_pass < 0);
+>> +	} else
+>> +		max_pass = do_shrinker_shrink(shrinker, shrinkctl, 0);
+>> +	if (max_pass <= 0)
 >> +		return 0;
-> 
-> So the caller took all_memcg_lrus_mutex needlessly in this case.  Could
-> be optimised.
-> 
-ok, but this is a registering function, is hardly worth it.
-
-
->> +	for_each_mem_cgroup(iter) {
->> +		int ret;
->> +		int memcg_id = memcg_cache_id(iter);
->> +		if (memcg_id < 0)
->> +			continue;
 >> +
->> +		ret = memcg_kmem_update_lru_size(lru, memcg_id + 1, true);
->> +		if (ret) {
->> +			mem_cgroup_iter_break(root_mem_cgroup, iter);
->> +			return ret;
->> +		}
+>> +	/*
+>> +	 * copy the current shrinker scan count into a local variable
+>> +	 * and zero it so that other concurrent shrinker invocations
+>> +	 * don't also do this scanning work.
+>> +	 */
+>> +	nr = atomic_long_xchg(deferred, 0);
+> 
+> This comment seems wrong.  It implies that "deferred" refers to "the
+> current shrinker scan count".  But how are these two the same thing?  A
+> "scan count" would refer to the number of objects to be scanned (or
+> which were scanned - it's unclear).  Whereas "deferred" would refer to
+> the number of those to-be-scanned objects which we didn't process and
+> is hence less than or equal to the "scan count".
+> 
+> It's all very foggy :(  This whole concept of deferral needs more
+> explanation, please.
+> 
+
+>> +	total_scan = nr;
+>> +	delta = (4 * nr_pages_scanned) / shrinker->seeks;
+>> +	delta *= max_pass;
+>> +	do_div(delta, lru_pages + 1);
+>> +	total_scan += delta;
+>> +	if (total_scan < 0) {
+>> +		printk(KERN_ERR
+>> +		"shrink_slab: %pF negative objects to delete nr=%ld\n",
+>> +		       shrinker->shrink, total_scan);
+>> +		total_scan = max_pass;
 >> +	}
->> +	return 0;
->> +}
 >> +
->> +/*
->> + * We need to call back and forth from memcg to LRU because of the lock
->> + * ordering.  This complicates the flow a little bit, but since the memcg mutex
+>> +	/*
+>> +	 * We need to avoid excessive windup on filesystem shrinkers
+>> +	 * due to large numbers of GFP_NOFS allocations causing the
+>> +	 * shrinkers to return -1 all the time. This results in a large
+>> +	 * nr being built up so when a shrink that can do some work
+>> +	 * comes along it empties the entire cache due to nr >>>
+>> +	 * max_pass.  This is bad for sustaining a working set in
+>> +	 * memory.
+>> +	 *
+>> +	 * Hence only allow the shrinker to scan the entire cache when
+>> +	 * a large delta change is calculated directly.
+>> +	 */
 > 
-> "the memcg mutex" is named... what?
+> That was an important comment.  So the whole problem we're tackling
+> here is fs shrinkers baling out in GFP_NOFS allocations?
 > 
-As you have noticed, I have been avoiding using the names of the
-mutexes, because they are internal to "the other" file (lru.c in the
-case of memcg, memcontrol.c in the case of lru).
+The main problem, yes. Not the whole.
+The whole problem is shrinkers bailing out. For the fs shrinkers it
+happens in GFP_NOFS allocations. For the other shrinkers, I have no idea.
 
-It is so easy to get this out of sync, and lead to an even more
-confusing "wth is this memcg_mutex that does not exist??", that I
-decided to write a generic "memcg side mutex" instead.
-
-I will of course flip it, if you prefer, master.
-
->> + * is held through the whole duration of memcg creation, we need to hold it
->> + * before we hold the LRU-side mutex in the case of a new list creation as
-> 
-> "LRU-side mutex" has a name?
-> 
-Yes, it has.
+But if they bail out, we'll defer the scan just the same.
