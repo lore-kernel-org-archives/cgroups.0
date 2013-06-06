@@ -1,44 +1,30 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v10 12/35] shrinker: add node awareness
-Date: Thu, 6 Jun 2013 12:23:26 +0400
-Message-ID: <51B046FE.30507@parallels.com>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-13-git-send-email-glommer@openvz.org> <20130605160810.5b203c3368b9df7d087ee3b1@linux-foundation.org>
+From: Glauber Costa <glommer@parallels.com>
+Subject: Re: [PATCH v10 22/35] shrinker: convert remaining shrinkers to count/scan
+ API
+Date: Thu, 6 Jun 2013 12:27:28 +0400
+Message-ID: <51B047F0.7060501@parallels.com>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-23-git-send-email-glommer@openvz.org> <20130605160821.59adf9ad4efe48144fd9e237@linux-foundation.org> <20130606034116.GT29338@dastard>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130605160810.5b203c3368b9df7d087ee3b1-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130606034116.GT29338@dastard>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>, Marcelo Tosatti <mtosatti@redhat.com>, Gleb Natapov <gleb@redhat.com>, Chuck Lever <chuck.lever@oracle.com>, "J. Bruce Fields" <bfields@redhat.com>, Trond Myklebust <Trond.Myklebust@netapp.com>
 
-On 06/06/2013 03:08 AM, Andrew Morton wrote:
-> On Mon,  3 Jun 2013 23:29:41 +0400 Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
-> 
->> From: Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>
->> Pass the node of the current zone being reclaimed to shrink_slab(),
->> allowing the shrinker control nodemask to be set appropriately for
->> node aware shrinkers.
-> 
-> Again, some musings on node hotplug would be interesting.
-> 
->> --- a/drivers/staging/android/ashmem.c
->> +++ b/drivers/staging/android/ashmem.c
->> @@ -692,6 +692,9 @@ static long ashmem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
->>  				.gfp_mask = GFP_KERNEL,
->>  				.nr_to_scan = 0,
->>  			};
->> +
->> +			nodes_setall(sc.nodes_to_scan);
-> 
-> hm, is there some way to do this within the initializer? ie:
-> 
-> 				.nodes_to_scan = magic_goes_here(),
-> 
-> Also, it's a bit sad to set bits for not-present and not-online nodes.
-> 
+On 06/06/2013 07:41 AM, Dave Chinner wrote:
+>> Really, it would be best if you were to go through the entire patchset
+>> > and undo all this.
+> Sure, that can be done.
+There is a lot to do, a lot to rebase, and many conflicts to fix.
+Since I will be the one resending this anyway, let me just go ahead and
+fix them.
 
-Unfortunately there is no "nodes_setpresent" or anything like that in
-nodemask.h. Maybe I should just go ahead and write them.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
