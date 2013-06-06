@@ -1,30 +1,191 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH v10 08/35] list: add a new LRU list type
-Date: Thu, 6 Jun 2013 18:28:33 +0400
-Message-ID: <51B09C91.4010104@parallels.com>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org> <1370287804-3481-9-git-send-email-glommer@openvz.org> <20130605160758.19e854a6995e3c2a1f5260bf@linux-foundation.org> <20130606024909.GP29338@dastard>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 1/2] arch: invoke oom-killer from page fault
+Date: Thu, 6 Jun 2013 16:59:40 +0200
+Message-ID: <20130606145940.GA24115@dhcp22.suse.cz>
+References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org>
+ <alpine.DEB.2.02.1306052053360.25115@chino.kir.corp.google.com>
+ <20130606043620.GA9406@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130606024909.GP29338@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130606043620.GA9406-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 06/06/2013 06:49 AM, Dave Chinner wrote:
->> > How [patch 09/35]'s inode_lru_isolate() avoids this bug I don't know. 
->> > Perhaps it doesn't.
-> The LRU_RETRY cse is supposed to handle this. However, the LRU_RETRY
-> return code is now buggy and you've caught that. It'll need fixing.
-> My original code only had inode_lru_isolate() drop the lru lock, and
-> it would return LRU_RETRY which would restart the scan of the list
-> from the start, thereby avoiding those problems.
+On Thu 06-06-13 00:36:20, Johannes Weiner wrote:
+> On Wed, Jun 05, 2013 at 08:57:44PM -0700, David Rientjes wrote:
+> > On Wed, 5 Jun 2013, Johannes Weiner wrote:
+> > 
+> > > Since '1c0fe6e mm: invoke oom-killer from page fault', page fault
+> > > handlers should not directly kill faulting tasks in an out of memory
+> > > condition.
+> > 
+> > I have no objection to the patch, but there's no explanation given here 
+> > why exiting with a kill shouldn't be done.  Is it because of memory 
+> > reserves and there is no guarantee that current will be able to exit?  Or 
+> > is it just for consistency with other archs?
+> > 
+> > > Instead, they should be invoking the OOM killer to pick
+> > > the right task.  Convert the remaining architectures.
+> > > 
+> > 
+> > If this is a matter of memory reserves, I guess you could point people who 
+> > want the current behavior (avoiding the expensiveness of the tasklist scan 
+> > in the oom killer for example) to /proc/sys/vm/oom_kill_allocating_task?
+> > 
+> > This changelog is a bit cryptic in its motivation.
 > 
-Yes, I have changed that, but I wasn't aware that your original
-intention for restarting from the beginning was to avoid such problems.
-And having only half the brain Andrew has, I didn't notice it myself.
+> Fixing copy-pasted bitrot^W^W^W^WHow about this?
+> 
+> ---
+> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Subject: [patch] mm: invoke oom-killer from remaining unconverted page fault
+>  handlers
+> 
+> A few remaining architectures directly kill the page faulting task in
+> an out of memory situation.  This is usually not a good idea since
+> that task might not even use a significant amount of memory and so may
+> not be the optimal victim to resolve the situation.
+> 
+> Since '1c0fe6e mm: invoke oom-killer from page fault' (2.6.29) there
+> is a hook that architecture page fault handlers are supposed to call
+> to invoke the OOM killer and let it pick the right task to kill.
+> Convert the remaining architectures over to this hook.
+> 
+> To have the previous behavior of simply taking out the faulting task
+> the vm.oom_kill_allocating_task sysctl can be set to 1.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-I will fix this somehow while trying to keep the behavior Mel insisted
-on; iow; not retrying forever.
+It was much easier than I thought.
+Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+> ---
+>  arch/arc/mm/fault.c      | 6 ++++--
+>  arch/metag/mm/fault.c    | 6 ++++--
+>  arch/mn10300/mm/fault.c  | 7 ++++---
+>  arch/openrisc/mm/fault.c | 8 ++++----
+>  arch/score/mm/fault.c    | 8 ++++----
+>  arch/tile/mm/fault.c     | 8 ++++----
+>  6 files changed, 24 insertions(+), 19 deletions(-)
+> 
+> diff --git a/arch/arc/mm/fault.c b/arch/arc/mm/fault.c
+> index c0decc1..d5ec60a 100644
+> --- a/arch/arc/mm/fault.c
+> +++ b/arch/arc/mm/fault.c
+> @@ -207,8 +207,10 @@ out_of_memory:
+>  	}
+>  	up_read(&mm->mmap_sem);
+>  
+> -	if (user_mode(regs))
+> -		do_group_exit(SIGKILL);	/* This will never return */
+> +	if (user_mode(regs)) {
+> +		pagefault_out_of_memory();
+> +		return;
+> +	}
+>  
+>  	goto no_context;
+>  
+> diff --git a/arch/metag/mm/fault.c b/arch/metag/mm/fault.c
+> index 2c75bf7..8fddf46 100644
+> --- a/arch/metag/mm/fault.c
+> +++ b/arch/metag/mm/fault.c
+> @@ -224,8 +224,10 @@ do_sigbus:
+>  	 */
+>  out_of_memory:
+>  	up_read(&mm->mmap_sem);
+> -	if (user_mode(regs))
+> -		do_group_exit(SIGKILL);
+> +	if (user_mode(regs)) {
+> +		pagefault_out_of_memory();
+> +		return 1;
+> +	}
+>  
+>  no_context:
+>  	/* Are we prepared to handle this kernel fault?  */
+> diff --git a/arch/mn10300/mm/fault.c b/arch/mn10300/mm/fault.c
+> index d48a84f..8a2e6de 100644
+> --- a/arch/mn10300/mm/fault.c
+> +++ b/arch/mn10300/mm/fault.c
+> @@ -345,9 +345,10 @@ no_context:
+>   */
+>  out_of_memory:
+>  	up_read(&mm->mmap_sem);
+> -	printk(KERN_ALERT "VM: killing process %s\n", tsk->comm);
+> -	if ((fault_code & MMUFCR_xFC_ACCESS) == MMUFCR_xFC_ACCESS_USR)
+> -		do_exit(SIGKILL);
+> +	if ((fault_code & MMUFCR_xFC_ACCESS) == MMUFCR_xFC_ACCESS_USR) {
+> +		pagefault_out_of_memory();
+> +		return;
+> +	}
+>  	goto no_context;
+>  
+>  do_sigbus:
+> diff --git a/arch/openrisc/mm/fault.c b/arch/openrisc/mm/fault.c
+> index e2bfafc..4a41f84 100644
+> --- a/arch/openrisc/mm/fault.c
+> +++ b/arch/openrisc/mm/fault.c
+> @@ -267,10 +267,10 @@ out_of_memory:
+>  	__asm__ __volatile__("l.nop 1");
+>  
+>  	up_read(&mm->mmap_sem);
+> -	printk("VM: killing process %s\n", tsk->comm);
+> -	if (user_mode(regs))
+> -		do_exit(SIGKILL);
+> -	goto no_context;
+> +	if (!user_mode(regs))
+> +		goto no_context;
+> +	pagefault_out_of_memory();
+> +	return;
+>  
+>  do_sigbus:
+>  	up_read(&mm->mmap_sem);
+> diff --git a/arch/score/mm/fault.c b/arch/score/mm/fault.c
+> index 47b600e..6b18fb0 100644
+> --- a/arch/score/mm/fault.c
+> +++ b/arch/score/mm/fault.c
+> @@ -172,10 +172,10 @@ out_of_memory:
+>  		down_read(&mm->mmap_sem);
+>  		goto survive;
+>  	}
+> -	printk("VM: killing process %s\n", tsk->comm);
+> -	if (user_mode(regs))
+> -		do_group_exit(SIGKILL);
+> -	goto no_context;
+> +	if (!user_mode(regs))
+> +		goto no_context;
+> +	pagefault_out_of_memory();
+> +	return;
+>  
+>  do_sigbus:
+>  	up_read(&mm->mmap_sem);
+> diff --git a/arch/tile/mm/fault.c b/arch/tile/mm/fault.c
+> index 3d2b81c..f7f99f9 100644
+> --- a/arch/tile/mm/fault.c
+> +++ b/arch/tile/mm/fault.c
+> @@ -573,10 +573,10 @@ out_of_memory:
+>  		down_read(&mm->mmap_sem);
+>  		goto survive;
+>  	}
+> -	pr_alert("VM: killing process %s\n", tsk->comm);
+> -	if (!is_kernel_mode)
+> -		do_group_exit(SIGKILL);
+> -	goto no_context;
+> +	if (is_kernel_mode)
+> +		goto no_context;
+> +	pagefault_out_of_memory();
+> +	return 0;
+>  
+>  do_sigbus:
+>  	up_read(&mm->mmap_sem);
+> -- 
+> 1.8.2.3
+> 
+
+-- 
+Michal Hocko
+SUSE Labs
