@@ -1,129 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v7 06/11] sched: document the cpu cgroup.
-Date: Thu, 6 Jun 2013 16:28:03 -0700
-Message-ID: <20130606232803.GP5045@htj.dyndns.org>
-References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
- <1369825402-31046-7-git-send-email-glommer@openvz.org>
+From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Subject: Re: [PATCH v10 03/35] dcache: convert dentry_stat.nr_unused to
+ per-cpu counters
+Date: Fri, 7 Jun 2013 09:42:04 +1000
+Message-ID: <20130606234204.GF29338@dastard>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
+ <1370287804-3481-4-git-send-email-glommer@openvz.org>
+ <20130605160731.91a5cd3ff700367f5e155d83@linux-foundation.org>
+ <20130606014509.GN29338@dastard>
+ <20130605194801.f9b25abf.akpm@linux-foundation.org>
+ <51B0834A.8020606@parallels.com>
+ <20130606152546.52f614d852da32d28a0b460f@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=PRmX4zMdINb1Kv0shYcZwK//P3cTzleD4KasqiQZ1SM=;
-        b=V4LRy/FM+eimR1j+qBedelivIkoPD+YgkoAq5m0UiRJ1PSuOojeGu60oWYclkuL5pF
-         D3E+VuT1hUSnw4+qaLipuRNhmPPiCg1dyCSxniJ/uJJuhfdx+pkAPZWjxiVXEjaOo9Fc
-         AFMBTw3XvjzUb2oqpDa0i41jWvc2aCt+MSpIH18/pCuX1xiGIvfwUhPiXANICsLEjHO9
-         DmxOP8NCu2zWvwzWS7VD276KG2jE5atF+oLHI2NLVumJJ2N+xnP2j1c+YtjJZmm96yjP
-         SgHJe8I587lT1bX988RpKPSbP1kBzBqGvAM9iFkPInb+Tqc1Fd8w13HWR2D+sXQuztkB
-         JyAw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1369825402-31046-7-git-send-email-glommer@openvz.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130606152546.52f614d852da32d28a0b460f-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@openvz.org>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Turner <pjt@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, devel@openvz.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello, Glauber.
-
-On Wed, May 29, 2013 at 03:03:17PM +0400, Glauber Costa wrote:
-> The CPU cgroup is so far, undocumented. Although data exists in the
-> Documentation directory about its functioning, it is usually spread,
-> and/or presented in the context of something else. This file
-> consolidates all cgroup-related information about it.
+On Thu, Jun 06, 2013 at 03:25:46PM -0700, Andrew Morton wrote:
+> On Thu, 6 Jun 2013 16:40:42 +0400 Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
 > 
-> Signed-off-by: Glauber Costa <glommer@openvz.org>
+> > +/*
+> > + * Here we resort to our own counters instead of using generic per-cpu counters
+> > + * for consistency with what the vfs inode code does. We are expected to harvest
+> > + * better code and performance by having our own specialized counters.
+> > + *
+> > + * Please note that the loop is done over all possible CPUs, not over all online
+> > + * CPUs. The reason for this is that we don't want to play games with CPUs going
+> > + * on and off. If one of them goes off, we will just keep their counters.
+> > + *
+> > + * glommer: See cffbc8a for details, and if you ever intend to change this,
+> > + * please update all vfs counters to match.
+> 
+> Handling CPU hotplug is really quite simple - see lib/percpu_counter.c
 
-Reviewed-by: Tejun Heo <tj@kernel.org>
+Yes, it is - you're preaching to the choir, Andrew.
 
-Some minor points below.
+But, well, if you want us to add notifiers to optimise the summation
+to just the active CPUs, then lets just covert the code to use the
+generic per-cpu counters and stop wasting time rehashing tired old
+arguments.
 
-> +Files
-> +-----
-> +
-> +The CPU controller exposes the following files to the user:
-> +
-> + - cpu.shares: The weight of each group living in the same hierarchy, that
-> + translates into the amount of CPU it is expected to get. Upon cgroup creation,
-> + each group gets assigned a default of 1024. The percentage of CPU assigned to
-> + the cgroup is the value of shares divided by the sum of all shares in all
-> + cgroups in the same level.
-> +
-> + - cpu.cfs_period_us: The duration in microseconds of each scheduler period, for
-> + bandwidth decisions. This defaults to 100000us or 100ms. Larger periods will
-> + improve throughput at the expense of latency, since the scheduler will be able
-> + to sustain a cpu-bound workload for longer. The opposite of true for smaller
-                                                             ^
-                                                             is?
-> + periods. Note that this only affects non-RT tasks that are scheduled by the
-> + CFS scheduler.
-> +
-> +- cpu.cfs_quota_us: The maximum time in microseconds during each cfs_period_us
-> +  in for the current group will be allowed to run. For instance, if it is set to
-    ^^^^^^^
-    in for? doesn't parse for me.
+Cheers,
 
-> +  half of cpu_period_us, the cgroup will only be able to peak run for 50 % of
-                                                          ^^^^^^^^^
-							  to run at maximum?
-
-> +  the time. One should note that this represents aggregate time over all CPUs
-> +  in the system. Therefore, in order to allow full usage of two CPUs, for
-> +  instance, one should set this value to twice the value of cfs_period_us.
-> +
-> +- cpu.stat: statistics about the bandwidth controls. No data will be presented
-> +  if cpu.cfs_quota_us is not set. The file presents three
-
- Unnecessary line break?
-
-> +  numbers:
-> +	nr_periods: how many full periods have been elapsed.
-> +	nr_throttled: number of times we exausted the full allowed bandwidth
-> +	throttled_time: total time the tasks were not run due to being overquota
-> +
-> + - cpu.rt_runtime_us and cpu.rt_period_us: Those files are the RT-tasks
-                                              ^^^^^
-					      these
-
-> +   analogous to the CFS files cfs_quota_us and cfs_period_us. One important
-      ^^^^^^^^^^^^
-      counterparts of?
-
-> +   difference, though, is that while the cfs quotas are upper bounds that
-> +   won't necessarily be met, the rt runtimes form a stricter guarantee.
-                                       ^^^^^^^^^^^^^
-				       runtimes are strict guarantees?
-
-> +   Therefore, no overlap is allowed. Implications of that are that given a
-                    ^^^^^^^
-		 maybe overcommit is a better term?
-
-> +   hierarchy with multiple children, the sum of all rt_runtime_us may not exceed
-> +   the runtime of the parent. Also, a rt_runtime_us of 0, means that no rt tasks
-                                                           ^
-							   prolly unnecessary
-
-> +   can ever be run in this cgroup. For more information about rt tasks runtime
-> +   assignments, see scheduler/sched-rt-group.txt
-      ^^^^^^^^^^^
-      configuration?
-
-> +
-> + - cpuacct.usage: The aggregate CPU time, in nanoseconds, consumed by all tasks
-> +   in this group.
-> +
-> + - cpuacct.usage_percpu: The CPU time, in nanoseconds, consumed by all tasks in
-> +   this group, separated by CPU. The format is an space-separated array of time
-> +   values, one for each present CPU.
-> +
-> + - cpuacct.stat: aggregate user and system time consumed by tasks in this group.
-> +   The format is
-> +	user: x
-> +	system: y
-
-Thanks.
-
+Dave.
 -- 
-tejun
+Dave Chinner
+david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
