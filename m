@@ -1,49 +1,59 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/2] arch: invoke oom-killer from page fault
-Date: Wed, 5 Jun 2013 20:57:44 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306052053360.25115@chino.kir.corp.google.com>
-References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v10 03/35] dcache: convert dentry_stat.nr_unused to
+ per-cpu counters
+Date: Thu, 6 Jun 2013 14:02:29 +1000
+Message-ID: <20130606040229.GW29338@dastard>
+References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
+ <1370287804-3481-4-git-send-email-glommer@openvz.org>
+ <20130605160731.91a5cd3ff700367f5e155d83@linux-foundation.org>
+ <20130606014509.GN29338@dastard>
+ <20130605194801.f9b25abf.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=YsiKEicHOgIdTPq7o6hUSKbVkC40nR9RZHfJ869kTqk=;
-        b=QJI/DmUIWSyR9Xk3d7YKPaeEi/4gBBAPyvDhzTfkFtJARZErtrxW572EHNy2WT9InY
-         AEfsCSWkFXq7o2eCG+EjguhdoTeqzRVaWz/A4NDU4X7pJ9s6uxtIdj94a+1V4o+NFbhj
-         0xsAhBky5lQ7E3dBnRKnIC4f6vt+ruOl/ev6rQAvNylJ4dLQGxQKDD/jAWMSuWGqd6hr
-         NzH/Ns0Bu7NA3HHg70o/6pF/WXg9nGc/N2tfSilyBT+jLkGKQoXTTR55m71OzxJZ/akp
-         +J84TeXgCLXhwYY3/kpyyQlfPlDREvXr60N25bo5f/0jo7E0PAZNVMnWZM8Y48SHFU25
-         ANRw==
-In-Reply-To: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org>
+Content-Disposition: inline
+In-Reply-To: <20130605194801.f9b25abf.akpm@linux-foundation.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Glauber Costa <glommer@openvz.org>, linux-fsdevel@vger.kernel.org, Mel Gorman <mgorman@suse.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, hughd@google.com, Greg Thelen <gthelen@google.com>, Dave Chinner <dchinner@redhat.com>
 
-On Wed, 5 Jun 2013, Johannes Weiner wrote:
-
-> Since '1c0fe6e mm: invoke oom-killer from page fault', page fault
-> handlers should not directly kill faulting tasks in an out of memory
-> condition.
-
-I have no objection to the patch, but there's no explanation given here 
-why exiting with a kill shouldn't be done.  Is it because of memory 
-reserves and there is no guarantee that current will be able to exit?  Or 
-is it just for consistency with other archs?
-
-> Instead, they should be invoking the OOM killer to pick
-> the right task.  Convert the remaining architectures.
+On Wed, Jun 05, 2013 at 07:48:01PM -0700, Andrew Morton wrote:
+> On Thu, 6 Jun 2013 11:45:09 +1000 Dave Chinner <david@fromorbit.com> wrote:
 > 
+> > Andrew, if you want to push the changes back to generic per-cpu
+> > counters through to Linus, then I'll write the patches for you.  But
+> > - and this is a big but - I'll only do this if you are going to deal
+> > with the "performance trumps all other concerns" fanatics over
+> > whether it should be merged or not. I have better things to do
+> > with my time have a flamewar over trivial details like this.
+> 
+> Please view my comments as a critique of the changelog, not of the code. 
+> 
+> There are presumably good (but undisclosed) reasons for going this way,
+> but this question is so bleeding obvious that the decision should have
+> been addressed up-front and in good detail.
 
-If this is a matter of memory reserves, I guess you could point people who 
-want the current behavior (avoiding the expensiveness of the tasklist scan 
-in the oom killer for example) to /proc/sys/vm/oom_kill_allocating_task?
+The answer is so bleeding obvious I didn't think it needed to be
+documented. ;) i.e. implement it the same way that it's sibling is
+implemented because consistency is good....
 
-This changelog is a bit cryptic in its motivation.
+> And, preferably, with benchmark numbers.  Because it might have been
+> the wrong decision - stranger things have happened.
+
+I've never been able to measure the difference in fast-path
+performance that can be attributed to the generic CPU counters
+having more overhead than the special ones. If you've got any
+workload where the fast-path counter overhead shows up in a
+profile, I'd be very interested....
+
+Cheers,
+
+dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
