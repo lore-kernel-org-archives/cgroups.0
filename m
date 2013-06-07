@@ -1,35 +1,105 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v10 00/35] kmemcg shrinkers
-Date: Fri, 7 Jun 2013 16:15:00 +0200
-Message-ID: <20130607141500.GH8117@dhcp22.suse.cz>
-References: <1370287804-3481-1-git-send-email-glommer@openvz.org>
- <20130605160721.da995af82eb247ccf8f8537f@linux-foundation.org>
+From: Glauber Costa <glommer@gmail.com>
+Subject: Re: [PATCH] memcg: do not account memory used for cache creation
+Date: Fri, 07 Jun 2013 18:45:17 +0400
+Message-ID: <51B1F1FD.7000002@gmail.com>
+References: <1370355059-24968-1-git-send-email-glommer@openvz.org> <20130607092132.GE8117@dhcp22.suse.cz> <51B1B1E9.1020701@parallels.com> <20130607141204.GG8117@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130605160721.da995af82eb247ccf8f8537f-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=qXyIu+eDrZkCvpy5C98w3XGes/4lUXwXt453h3seX4I=;
+        b=A8bcMfV5e9yfh/B/NIVSu7ZfdHJtGiBEOYrgMBZgL+FNykfzCjVaOAu3DkQIeiJfYy
+         6dK9+SqASHhkvsFSNYkMd+UbldP0H/PcNP489c0Hf0mFeSdsADeZKRl4j4VNImoxMCAL
+         GBS5vJ0/ZQNHFvQ6fLvHShqwbE0kYWAAqmgz+TXCYBRWiHy2ISbeG6Rh6JorFNV8Vc30
+         gnYQEVP9W/zhxPYniaFC7WUF2dKGUbEZvCDN7ZZAgYFsMUf+FfNhGT/gRt4P3rqCyzCj
+         TVzOUFR3G8OD5eTekEde30vIAdG8I3bdAB0VwaiyTHf+MJdw0BfxkkGDd9g7Uhk6f1tg
+         0R2w==
+In-Reply-To: <20130607141204.GG8117@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Glauber Costa <glommer@parallels.com>, Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com
 
-On Wed 05-06-13 16:07:21, Andrew Morton wrote:
-[...]
-> This patchset is huge.
+On 06/07/2013 06:12 PM, Michal Hocko wrote:
+> On Fri 07-06-13 14:11:53, Glauber Costa wrote:
+>> On 06/07/2013 01:21 PM, Michal Hocko wrote:
+>>> On Tue 04-06-13 18:10:59, Glauber Costa wrote:
+>>>> The memory we used to hold the memcg arrays is currently accounted to
+>>>> the current memcg.
+>>>
+>>> Maybe I have missed a train but I thought that only some caches are
+>>> tracked and those have to be enabled explicitly by using __GFP_KMEMCG in
+>>> gfp flags.
+>>
+>> No, all caches are tracked. This was set a long time ago, and only a
+>> very few initial versions differed from this. This barely changed over
+>> the lifetime of the memcg patchset.
+>>
+>> You probably got confused, due to the fact that only some *allocations*
+>
+> OK, I was really imprecise. Of course any type of cache might be tracked
+> should the allocation (which takes gfp) say so. What I have missed is
+> that not only stack allocations say so but also kmalloc itself enforces
+> that rather than the actual caller of kmalloc. This is definitely new
+> to me. And it is quite confusing that the flag is set only for large
+> allocations (kmalloc_order) or am I just missing other parts where
+> __GFP_KMEMCG is set unconditionally?
+>
+> I really have to go and dive into the code.
+>
 
-yes it is really huge which is made it lower on the todo list because
-other things always preempted it.
- 
-> My overall take is that the patchset is massive and intrusive and scary
-> :( I'd like to see more evidence that the memcg people (mhocko, hannes,
-> kamezawa etc) have spent quality time reviewing and testing this code. 
-> There really is a lot of it!
+Here is where you are getting your confusion: we don't track caches, we 
+track *pages*.
 
-I only following discussions right now, and I wasn't even able to catch
-up on those. I plan to review memcg parts soon, but cannot give any
-estimate. I am sorry for that but the time doesn't allow me.
--- 
-Michal Hocko
-SUSE Labs
+Everytime you pass GFP_KMEMCG to a *page* allocation, it gets tracked.
+Every memcg cache - IOW, a memcg copy of a slab cache, sets GFP_KMEMCG 
+for all its allocations.
+
+Now, the slub - and this is really an implementation detail - doesn't 
+have caches for high order kmalloc caches. Instead, it gets pages 
+directly from the page allocator. So we have to mark them explicitly. 
+(they are a cache, they are just not implemented as such)
+
+The slab doesn't do that, so all kmalloc caches are just normal caches.
+
+Also note that kmalloc is a *kind* of cache, but not *the caches*. Here 
+we are talking dentries, inodes, everything. We track *pages* allocated 
+for all those caches.
+
+
+>> are tracked, but in particular, all cache + stack ones are. All child
+>> caches that are created set the __GFP_KMEMCG flag, because those pages
+>> should all belong to a cgroup.
+>>
+>>>
+>>> But d79923fa "sl[au]b: allocate objects from memcg cache" seems to be
+>>> setting gfp unconditionally for large caches. The changelog doesn't
+>>> explain why, though? This is really confusing.
+>> For all caches.
+>>
+>> Again, not all *allocations* are market, but all cache allocations are.
+>> All pages that belong to a memcg cache should obviously be accounted.
+>
+> What is memcg cache?
+>
+
+A memcg-local copy of a slab cache.
+
+> Sorry about the offtopic question but why only large allocations are
+> marked for tracking? The changelog doesn't mention that.
+>
+
+Don't worry about the question. As for the large allocations, I hope the 
+answer I provided below addresses it. If you are still not getting it, 
+let me know.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
