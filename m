@@ -1,117 +1,56 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] memcg: do not account memory used for cache creation
-Date: Fri, 7 Jun 2013 17:54:06 +0200
-Message-ID: <20130607155406.GL8117@dhcp22.suse.cz>
-References: <1370355059-24968-1-git-send-email-glommer@openvz.org>
- <20130607092132.GE8117@dhcp22.suse.cz>
- <51B1B1E9.1020701@parallels.com>
- <20130607141204.GG8117@dhcp22.suse.cz>
- <51B1F1FD.7000002@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file as
+ insane
+Date: Fri, 7 Jun 2013 13:03:07 -0700
+Message-ID: <20130607200307.GA14781@mtj.dyndns.org>
+References: <20130604021302.GH29989@mtj.dyndns.org>
+ <20130604111556.GA4963@redhat.com>
+ <20130604201947.GE14916@htj.dyndns.org>
+ <20130606092055.GF30217@redhat.com>
+ <20130606211410.GF5045@htj.dyndns.org>
+ <20130607051040.GA1364@tango.0pointer.de>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Q1Hl8NpndVOQzm0oiKb7jeKkJmI+EZhp1vkVVF7QVO8=;
+        b=qLs6raPiwaXZGdPsJ+9gVl/Gg/2fZ8blamq3AizJqyCaHt/Tl1gHZTiM1hc3mYb6tG
+         yTjXkX3vUTJ6WDh/dbEpg2M+8qx6cVFsOUeRqPDXudTurUWvWt35fceNhwUD9q1Jmrvi
+         Ghv7RE0RcRyZegiciA6SsNC6YzDcLtDr6Vq+9CqRDUBFDk8X+95cedirnAg1TDeWqa3m
+         HO+VKgwmcJTkrWR24CqGGLj8mD7HWp4tEDP9+ooG2wKucFo+qRm35YVVF8Q90Y/6/P76
+         VAvxIYvtdXImlvxkcZvjIaonck6CrsPJPRMv8XjsOcAEA6CuivUcUfyqs0KAJF5KSbSs
+         BG8Q==
 Content-Disposition: inline
-In-Reply-To: <51B1F1FD.7000002@gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130607051040.GA1364-kS5D54t9nk0aINubkmmoJbNAH6kLmebB@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@gmail.com>
-Cc: Glauber Costa <glommer@parallels.com>, Glauber Costa <glommer@openvz.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, kamezawa.hiroyu@jp.fujitsu.com
+To: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 07-06-13 18:45:17, Glauber Costa wrote:
-> On 06/07/2013 06:12 PM, Michal Hocko wrote:
-> >On Fri 07-06-13 14:11:53, Glauber Costa wrote:
-> >>On 06/07/2013 01:21 PM, Michal Hocko wrote:
-> >>>On Tue 04-06-13 18:10:59, Glauber Costa wrote:
-> >>>>The memory we used to hold the memcg arrays is currently accounted to
-> >>>>the current memcg.
-> >>>
-> >>>Maybe I have missed a train but I thought that only some caches are
-> >>>tracked and those have to be enabled explicitly by using __GFP_KMEMCG in
-> >>>gfp flags.
-> >>
-> >>No, all caches are tracked. This was set a long time ago, and only a
-> >>very few initial versions differed from this. This barely changed over
-> >>the lifetime of the memcg patchset.
-> >>
-> >>You probably got confused, due to the fact that only some *allocations*
-> >
-> >OK, I was really imprecise. Of course any type of cache might be tracked
-> >should the allocation (which takes gfp) say so. What I have missed is
-> >that not only stack allocations say so but also kmalloc itself enforces
-> >that rather than the actual caller of kmalloc. This is definitely new
-> >to me. And it is quite confusing that the flag is set only for large
-> >allocations (kmalloc_order) or am I just missing other parts where
-> >__GFP_KMEMCG is set unconditionally?
-> >
-> >I really have to go and dive into the code.
-> >
-> 
-> Here is where you are getting your confusion: we don't track caches,
-> we track *pages*.
-> 
-> Everytime you pass GFP_KMEMCG to a *page* allocation, it gets tracked.
-> Every memcg cache - IOW, a memcg copy of a slab cache, sets
-> GFP_KMEMCG for all its allocations.
+Hello, Lennart.
 
-yes that is clear to me.
+On Fri, Jun 07, 2013 at 07:10:40AM +0200, Lennart Poettering wrote:
+> Uhm. So I don't think we will support two ways to set this up for long
+> in systemd (if at all). And even if we did, the distributions would pick
+> one or the other as default, and if you are unlucky, then you couldn't
+> run libvirt on it without reconfiguration and rebooting to get the other
+> cgroup setup logic...
 
-> Now, the slub - and this is really an implementation detail -
-> doesn't have caches for high order kmalloc caches. Instead, it gets
-> pages directly from the page allocator. So we have to mark them
-> explicitly. (they are a cache, they are just not implemented as
-> such)
+Hmmm... would that mean that people wouldn't be able to boot older
+kernel w/o unified hierarhcy with new systemd fairly soon too?  We can
+make the new features which matter for management available for named
+mounts (w/o unified hierarchy) so that systemd can operate as if none
+of the actual controllers are enabled, which it should be able to
+handle anyway.  That wouldn't solve booting old kernels with new
+systemd problem but it should at least allow workable backward
+compatibility from userland side as long as the kernel keeps the
+compatibility, right?
 
-I am still confused. If kmalloc_large_node is called because the size of
-the object is larger than SLUB_MAX_SIZE then __GFP_KMEMCG is added
-automatically regardless what _caller_ of kmalloc said. What am I
-missing?
- 
-> The slab doesn't do that, so all kmalloc caches are just normal caches.
-> 
-> Also note that kmalloc is a *kind* of cache, but not *the caches*.
-> Here we are talking dentries, inodes, everything.
-
-> We track *pages* allocated for all those caches.
-
-Yes, that is clear.
- 
-> >>are tracked, but in particular, all cache + stack ones are. All child
-> >>caches that are created set the __GFP_KMEMCG flag, because those pages
-> >>should all belong to a cgroup.
-> >>
-> >>>
-> >>>But d79923fa "sl[au]b: allocate objects from memcg cache" seems to be
-> >>>setting gfp unconditionally for large caches. The changelog doesn't
-> >>>explain why, though? This is really confusing.
-> >>For all caches.
-> >>
-> >>Again, not all *allocations* are market, but all cache allocations are.
-> >>All pages that belong to a memcg cache should obviously be accounted.
-> >
-> >What is memcg cache?
-> >
-> 
-> A memcg-local copy of a slab cache.
-
-OK
- 
-> >Sorry about the offtopic question but why only large allocations are
-> >marked for tracking? The changelog doesn't mention that.
-> >
-> 
-> Don't worry about the question. As for the large allocations, I hope
-> the answer I provided below addresses it. If you are still not
-> getting it, let me know.
-> 
-> 
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
