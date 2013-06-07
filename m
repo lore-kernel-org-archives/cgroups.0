@@ -1,125 +1,75 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full
- charge context
-Date: Thu, 6 Jun 2013 20:02:22 -0400
-Message-ID: <20130607000222.GT15576@cmpxchg.org>
-References: <1370488193-4747-1-git-send-email-hannes@cmpxchg.org>
- <1370488193-4747-2-git-send-email-hannes@cmpxchg.org>
- <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com>
- <20130606053315.GB9406@cmpxchg.org>
- <20130606173355.GB27226@cmpxchg.org>
- <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com>
- <20130606215425.GM15721@cmpxchg.org>
- <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 09/11] sched: record per-cgroup number of context
+ switches
+Date: Thu, 6 Jun 2013 17:04:52 -0700
+Message-ID: <20130607000452.GS5045@htj.dyndns.org>
+References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
+ <1369825402-31046-10-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Utd1C4tlHlz9Zvrit81Bp43+aFCLhYAd8kBF2R/sFHY=;
+        b=I3GqFSTNce+UBKD0gMMSTTQkYvfGjr6C7x2SDhcthP3w1UBi4MI0vQtjxQIGJW9XJF
+         2YboOIrDE6Vc8tVZoyjTDls8QmW0ST1YKfRr2d9EhMubJ1i/dZA86FyiMxueUih89Xz0
+         RbSaybCpq6EAo8MuF3gDMBIIlZNJTFMv8FOnrUcfagfdXvX+ZJTRJfPccHCxYHySUNXe
+         Lus4ivMd84ur1zDP7Yr9fHpYrre1G42DCWS2BmQqiXHlYs22HaheuOKw9RwLb+Bx+0O0
+         WoWUtJK+0ANhRgiOg6DGffJ6XzFvUFx1Zkn+hkVdX5VxFW4w25n0XbofYaiZDqkJsimi
+         5BSw==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1369825402-31046-10-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Thu, Jun 06, 2013 at 03:18:37PM -0700, David Rientjes wrote:
-> On Thu, 6 Jun 2013, Johannes Weiner wrote:
-> 
-> > > I don't understand why memcg is unique in this regard and it doesn't 
-> > > affect the page allocator as well on system oom conditions.  Ignoring 
-> > > memecg, all allocating processes will loop forever in the page allocator 
-> > > unless there are atypical gfp flags waiting for memory to be available, 
-> > > only one will call the oom killer at a time, a process is selected and 
-> > > killed, and the oom killer defers until that process exists because it 
-> > > finds TIF_MEMDIE.  Why is memcg charging any different?
-> > 
-> > The allocator wakes up kswapd, global OOMs are rarer, with physical
-> > memory the line to OOM is blurrier than with the memcg hard limit?
-> > 
-> > Anyway, I'm not aware of bug reports in the global case, but there are
-> > bug reports for the memcg case and we have a decent understanding of
-> > those deadlocks.  So can we stay focussed and fix this, please?
-> > 
-> 
-> Could you point me to those bug reports?  As far as I know, we have never 
-> encountered them so it would be surprising to me that we're running with a 
-> potential landmine and have seemingly never hit it.
+Hello,
 
-Sure thing: https://lkml.org/lkml/2012/11/21/497
+Maybe we should break off addition of switch stats to a separate set?
+They are two separate things.
 
-During that thread Michal pinned down the problem to i_mutex being
-held by the OOM invoking task, which the selected victim is trying to
-acquire.
+On Wed, May 29, 2013 at 03:03:20PM +0400, Glauber Costa wrote:
+> @@ -3642,6 +3642,8 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
+>  		prev->sched_class->put_prev_task(rq, prev);
+>  
+>  	do {
+> +		if (likely(prev))
+> +			cfs_rq->nr_switches++;
+>  		se = pick_next_entity(cfs_rq);
+>  		set_next_entity(cfs_rq, se);
+>  		cfs_rq = group_cfs_rq(se);
+> @@ -3651,6 +3653,22 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
+>  	if (hrtick_enabled(rq))
+>  		hrtick_start_fair(rq, p);
+>  
+> +	/*
+> +	 * This condition is extremely unlikely, and most of the time will just
+> +	 * consist of this unlikely branch, which is extremely cheap. But we
+> +	 * still need to have it, because when we first loop through cfs_rq's,
+> +	 * we can't possibly know which task we will pick. The call to
+> +	 * set_next_entity above is not meant to mess up the tree in this case,
+> +	 * so this should give us the same chain, in the same order.
+> +	 */
+> +	if (unlikely(p == prev)) {
+> +		se = &p->se;
+> +		for_each_sched_entity(se) {
+> +			cfs_rq = cfs_rq_of(se);
+> +			cfs_rq->nr_switches--;
+> +		}
+> +	}
+> +
 
-> > > > Reported-by: Reported-by: azurIt <azurit@pobox.sk>
-> > > > Debugged-by: Michal Hocko <mhocko@suse.cz>
-> > > > Reported-by: David Rientjes <rientjes@google.com>
-> > > 
-> > > What exactly did I report?  This isn't at all what 
-> > > memory.oom_delay_millisecs is about, which is a failure of userspace to 
-> > > respond to the condition and react in time, not because it's stuck on any 
-> > > lock.  We still need that addition regardless of what you're doing here.
-> > 
-> > Oh, tell me how getting stuck indefinitely on a lock will not result
-> > in "a failure to react in time".  This is some seriously misguided
-> > pedantry.
-> > 
-> 
-> It certainly would, but it's not the point that memory.oom_delay_millisecs 
-> was intended to address.  memory.oom_delay_millisecs would simply delay 
-> calling mem_cgroup_out_of_memory() unless userspace can't free memory or 
-> increase the memory limit in time.  Obviously that delay isn't going to 
-> magically address any lock dependency issues.
+This concern may be fringe but the above breaks the monotonically
+increasing property of the stat.  Depending on the timing, a very
+unlucky consumer of the stat may see the counter going backward which
+can lead to nasty things.  I'm not sure whether the fact that it'd be
+very difficult to trigger is a pro or con.
 
-The delayed fallback would certainly resolve the issue of the
-userspace handler getting stuck, be it due to memory shortness or due
-to locks.
+Thanks.
 
-However, it would not solve the part of the problem where the OOM
-killing kernel task is holding locks that the victim requires to exit.
-
-We are definitely looking at multiple related issues, that's why I'm
-trying to fix them step by step.
-
-> > And yes, you talked about deadlocking potential other than the handler
-> > itself OOMing, I quote from
-> > <alpine.DEB.2.02.1305301338430.20389@chino.kir.corp.google.com>:
-> > 
-> > "Unresponsiveness isn't necessarily only because of memory
-> >  constraints, you may have your oom notifier in a parent cgroup that
-> >  isn't oom.  If a process is stuck on mm->mmap_sem in the oom cgroup,
-> >  though, the oom notifier may not be able to scrape /proc/pid and
-> >  attain necessary information in making an oom kill decision."
-> > 
-> > These are your words, and my patch sets out to fix the described
-> > problem,
-> 
-> I can review this patch apart from memory.oom_delay_millisecs using the 
-> examples in your changelog, but this isn't the problem statement for my 
-> patch.  The paragraph above is describing one way that an oom handler may 
-> encounter issues, it's not the only way and it's not a way that we have 
-> ever faced on our production servers with memcg.  I just didn't think the 
-> above was me reporting a bug, perhaps you took it that way.
-
-Please do consider this fix individually.  It's good to know that you
-didn't run into this particular issue on your machines so far, but
-since you described the problem you must have arrived at the same
-conclusion by just reading the code, which was good enough for me.
-Again, I can just remove your Reported-by: if you don't think it's
-justified.
-
-> The point I'm trying to make is that your patch doesn't reduce our need 
-> for memory.oom_delay_millisecs as described in the thread for that patch.
-
-It does not.  But it does fix a problem that came up during the
-discussion and it does fix a problem that you may hit at a random
-point in time regardless of the memory.oom_delay_millisecs patch.
-
-I'm sorry for the confusion this created, but yes, it's a separate
-albeit related issue.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
