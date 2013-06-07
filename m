@@ -1,75 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file as
-	insane
-Date: Fri, 7 Jun 2013 13:32:55 -0700
-Message-ID: <20130607203255.GD14781@mtj.dyndns.org>
-References: <20130604021302.GH29989@mtj.dyndns.org>
-	<20130604111556.GA4963@redhat.com>
-	<20130604201947.GE14916@htj.dyndns.org>
-	<20130606092055.GF30217@redhat.com>
-	<20130606211410.GF5045@htj.dyndns.org>
-	<20130607101220.GE10742@redhat.com>
-	<51B1B6C2.7000304@parallels.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
+Date: Fri, 7 Jun 2013 16:25:57 -0700
+Message-ID: <20130607232557.GL14781@mtj.dyndns.org>
+References: <20130605143949.GQ15576@cmpxchg.org>
+ <20130605172212.GA10693@mtj.dyndns.org>
+ <20130605194552.GI15721@cmpxchg.org>
+ <20130605200612.GH10693@mtj.dyndns.org>
+ <20130605211704.GJ15721@cmpxchg.org>
+ <20130605222021.GL10693@mtj.dyndns.org>
+ <20130605222709.GM10693@mtj.dyndns.org>
+ <20130606115031.GE7909@dhcp22.suse.cz>
+ <20130607005242.GB16160@htj.dyndns.org>
+ <20130607073754.GA8117@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=dttXree+acSECPyYOfRXE7t2c9ZfEsbZ/IJSRxkMs1k=;
+        b=xnCH1ByNUkuRK7Glwx0ci5dO88mwT6p7XuVcVOPYBe3ers4SPEjWxeDmuDQnuDh/sk
+         vbDePPZgEqsDOfLIMurLFfqVpNnEHH5oHNain/PP/xon4T5c2h1ju5xKU8p8L6bPvux6
+         P7AfaHVtrWJCVLQKsvFrKRPChNOXFKwc6lBJ98j9VmUrimIZWHhCkTvq0VjFcEFDZ09/
+         OED/OOfZjYpFTUwLYeVllpdLgz+lbzZa0xTyD+8Mh6Pz4pBE5wI4t/mugtkNQsMTZZeh
+         g9z97E/4eZg4AWVr3QZBwUfO4wWLiDI7+B6d3VfNVfvcR87n2M9wijmAxH6Sjz//ri7G
+         5KIw==
+Content-Disposition: inline
+In-Reply-To: <20130607073754.GA8117@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=CPPvTvCRrDrH4zndqLVinyzENrk3NCRYdqkrZcBITy8=;
-	b=fYiqAdzxNy3LW6P9NXwnxTlO09fP5kbo9dsFjQNLXe3Z3K8bC/yPkPl3+NhYMgBFiM
-	Dr2lKzXxA52GUp8lhkgwV/PGW8308fbEUJ5FDXKt0iLGukmKRLaSlR45FysZx5O0lCQj
-	Nhq6RSNdY2y86/VSZv3G/EgyqzQdSHmR1lDCr04WJtxBvcHXKm4BNbX9D3t4SH4FgDf2
-	xDZqDUOwky+DaXIc+RRH3TAgg/IB4S+cbHJE56XkI5WrEYxMGRFTzwOag+/PSFt7B+cW
-	ioAyzvAsLR02AWVpTuEo0Vnrla5dGlIaUk3p+J2LzKCzwsohyesQs6ihzyiMloha5kNy
-	SSRQ==
-Content-Disposition: inline
-In-Reply-To: <51B1B6C2.7000304-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-Hello, Glauber.
+Hello, Michal.
 
-On Fri, Jun 07, 2013 at 02:32:34PM +0400, Glauber Costa wrote:
-> It seems quite valid for me to split priority threads in a process and
-> give them a 80 % timeslice guarantee, while leaving only 20 % for
-> low-prio threads (for instance).
+On Fri, Jun 07, 2013 at 09:37:54AM +0200, Michal Hocko wrote:
+> > Oh yeah, it is racy.  That's what I meant by "not having to be
+> > completely strict".  The race window is small enough and it's not like
+> > we're messing up refcnt or may end up with use-after-free. 
 > 
-> In general, I don't think that it would hurt to allow separation at
-> thread level *for the leaves*, specifically at the cpu related controllers.
+> But it would potentially pin (aka leak) the memcg for ever.
 
-But if you look at the larger picture, it actually is deterimental,
-because allowing different threads of the same process almost implies
-that the program binary itself would be involved in interacting with -
-accessing and tuning - cgroups.  Back to sysctl analogy, it's one
-thing to expose them to base system tools which are tightly coupled
-with the kernel so that they can configure it, but allowing lay
-programs to embed sysctl tuning inside their binaries is a completely
-different thing and something which must not happen.
-
-While not strictly designated explicitly, things exposed from the
-kernel have differing levels of exposedness and we do definitely want
-to avoid exposing too much implementation details for the sake of both
-the kernel and userland.  Such levels are in some cases determined as
-the use cases develop.  If you ask me, cgroup is a good example of
-things going horribly wrong.
-
-So, yeah, while I agree that per-thread usages could make sense for
-scheduler related controllers, I'd very much like to avoid that if at
-all possible.  It's not a good road to be on.
+It wouldn't be anything systemetic tho - race condition's likliness is
+low and increases with the frequency of reclaim iteration, which at
+the same time means that it's likely to remedy itself pretty soon.
+I'm doubtful it'd matter.  If it's still bothering, we sure can do it
+from RCU callback.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
