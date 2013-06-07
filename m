@@ -1,105 +1,103 @@
-From: Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: do not account memory used for cache creation
-Date: Fri, 7 Jun 2013 14:11:53 +0400
-Message-ID: <51B1B1E9.1020701@parallels.com>
-References: <1370355059-24968-1-git-send-email-glommer@openvz.org> <20130607092132.GE8117@dhcp22.suse.cz>
+From: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file as
+	insane
+Date: Fri, 7 Jun 2013 11:12:20 +0100
+Message-ID: <20130607101220.GE10742@redhat.com>
+References: <20130604021302.GH29989@mtj.dyndns.org>
+	<20130604111556.GA4963@redhat.com>
+	<20130604201947.GE14916@htj.dyndns.org>
+	<20130606092055.GF30217@redhat.com>
+	<20130606211410.GF5045@htj.dyndns.org>
+Reply-To: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130607092132.GE8117-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130606211410.GF5045-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 06/07/2013 01:21 PM, Michal Hocko wrote:
-> On Tue 04-06-13 18:10:59, Glauber Costa wrote:
->> The memory we used to hold the memcg arrays is currently accounted to
->> the current memcg.
+On Thu, Jun 06, 2013 at 02:14:10PM -0700, Tejun Heo wrote:
+> Hello,
 > 
-> Maybe I have missed a train but I thought that only some caches are
-> tracked and those have to be enabled explicitly by using __GFP_KMEMCG in
-> gfp flags.
-
-No, all caches are tracked. This was set a long time ago, and only a
-very few initial versions differed from this. This barely changed over
-the lifetime of the memcg patchset.
-
-You probably got confused, due to the fact that only some *allocations*
-are tracked, but in particular, all cache + stack ones are. All child
-caches that are created set the __GFP_KMEMCG flag, because those pages
-should all belong to a cgroup.
-
+> On Thu, Jun 06, 2013 at 10:20:55AM +0100, Daniel P. Berrange wrote:
+> > Unless I'm mistaken there is no alternative that can work. With QEMU
+> > we need to apply scheduling controls to 
+> > 
+> >   1. Individual vCPU threads
+> >   2. All non-vCPU threads (ie QEMU's I/O threads)
+> > 
+> > We can use per-thread APIs for 1, but for 2 we require something that
+> > applies to the group of threads as a whole, without also impacting the
+> > controls set for the vCPU threads. AFAIK, nothing except cgroups as
+> > we use them today can satisfy that requirement ? Am I wrong ? Is there
+> > something else that can achieve this same setup ?
 > 
-> But d79923fa "sl[au]b: allocate objects from memcg cache" seems to be
-> setting gfp unconditionally for large caches. The changelog doesn't
-> explain why, though? This is really confusing.
-For all caches.
+> Can you please explain more about your requirements on !vCPU threads?
 
-Again, not all *allocations* are market, but all cache allocations are.
-All pages that belong to a memcg cache should obviously be accounted.
+Well we pretty much needs the tunables available in the cpu, cpuset
+and cpuacct controllers to be available for the set of non-vCPU threads
+as a group. eg, cpu_shares, cfs_period_us, cfs_quota_us, cpuacct.usage,
+cpuacct.usage_percpu, cpuset.cpus, cpuset.mems.
 
+CPU/memory affinity could possibly be done with a combination of
+sched_setaffinity + libnuma, but I'm not sure that it has quite
+the same semantics. IIUC, with cpuset cgroup changing affinity
+will cause the kernel to migrate existing memory allocations to
+the newly specified node masks, but this isn't done if you just
+use sched_setaffinity/libnuma.
+
+For cpu accounting, you'd have to look at the overall cgroup usage
+and then subtract the usage accounted to each vcpu thread to get
+the non-vCPU thread group total. Possible but slightly tedious &
+more inaccurate since you will have timing delays getting info
+from each thread's /proc files
+
+I don't see any way to do cpu_sahres, cfs_period_us and cfs_quota_us
+for the group of non-vCPU threads as a whole. You can't set these
+at the per-thread level since that is semantically very different.
+You can't set these for the process as a whole at the cgroup level,
+since that'll confine vCPU threads at the same time which is also
+semantically very different.
+
+We need completely separate scheduler tuning for the set of non-vCPU
+threads, vs each vCPU thread. AFAICT the only way todo this is with
+cgroups, grouping together subsets of threads within the process.
+
+> > I understand that having wildly distinct hiearchies across different
+> > controllers causes alot of pain for the kernel. Libvirt doesn't
+> > actually require that full level of flexibility though. Our needs
+> > are very much simpler. We're happy with the same core hierarchy
+> > across all controllers. We just want to be able to create an extra
+> > leaf node in some controllers to move threads about. 
+> > 
+> > It would be fine with us if the kernel required that the same directory
+> > hierarchy exists in all controllers, and mandated that threads can only
+> > be moved to a directory immediately below where the process is initially
+> > placed.
 > 
->> But that creates a problem, because that memory can
->> only be freed after the last user is gone. Our only way to know which is
->> the last user, is to hook up to freeing time, but the fact that we still
->> have some in flight kmallocs will prevent freeing to happen. I believe
->> therefore to be just easier to account this memory as global overhead.
-> 
-> No internal allocations for memcg can be tracked otherwise we call for a
-> problem. How do we know that others are safe?
-> 
+> The problem is that it doesn't make any sense to split threads of the
+> same process for at least two major controllers and you end up with
+> situation where you can't identify a resource to be belonging to a
+> certain cgroup because such level of granularity is simply undefined.
+> As I wrote before, we can special case certain controllers but I'm
+> extremely reluctant.  If you need it, please convince me.
 
-We really need to inspect that. But in particular, all memory that is
-allocated before kmemcg becomes active is safe. Which means that struct
-memcg and all the memory it uses is safe (it will be likely billed to
-the parent, but that is perfectly fine).
-
-It is also not correct to state that no memcg memory should be tracked.
-All memory allocated on behalf of a process, in particular, memcg
-memory, should in general be tracked. It is just memory, after all. The
-problem is not so much the fact that it is memcg memory, but it's lifetime.
-
-For the record, using the memory.dangling debug file, I see all memcgs
-successfully going away after this patch + global pressure to force all
-objects to go away.
-
-
->> Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
->> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
->> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->>
->> ---
->> I noticed this while testing nuances of the shrinker patches. The
->> caches would basically stay present forever, even if we managed to
->> flush all of the actual memory being used. With this patch applied,
->> they would go away all right.
->> ---
->>  mm/memcontrol.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 5d8b93a..aa1cbd4 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -5642,7 +5642,9 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
->>  	static_key_slow_inc(&memcg_kmem_enabled_key);
->>  
->>  	mutex_lock(&set_limit_mutex);
->> +	memcg_stop_kmem_account();
->>  	ret = memcg_update_cache_sizes(memcg);
->> +	memcg_resume_kmem_account();
->>  	mutex_unlock(&set_limit_mutex);
->>  out:
->>  	return ret;
->> -- 
->> 1.8.1.4
->>
->> --
->> To unsubscribe, send a message with 'unsubscribe linux-mm' in
->> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
->> see: http://www.linux-mm.org/ .
->> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
-> 
+Regards,
+Daniel
+-- 
+|: http://berrange.com      -o-    http://www.flickr.com/photos/dberrange/ :|
+|: http://libvirt.org              -o-             http://virt-manager.org :|
+|: http://autobuild.org       -o-         http://search.cpan.org/~danberr/ :|
+|: http://entangle-photo.org       -o-       http://live.gnome.org/gtk-vnc :|
