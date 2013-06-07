@@ -1,44 +1,94 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 00/11] per-cgroup cpu-stat
-Date: Thu, 6 Jun 2013 17:06:37 -0700
-Message-ID: <20130607000637.GT5045@htj.dyndns.org>
-References: <1369825402-31046-1-git-send-email-glommer@openvz.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch -v4 4/8] memcg: enhance memcg iterator to support
+ predicates
+Date: Thu, 6 Jun 2013 17:48:24 -0700
+Message-ID: <20130607004824.GA16160@htj.dyndns.org>
+References: <20130604134523.GH31242@dhcp22.suse.cz>
+ <20130604193619.GA14916@htj.dyndns.org>
+ <20130604204807.GA13231@dhcp22.suse.cz>
+ <20130604205426.GI14916@htj.dyndns.org>
+ <20130605073728.GC15997@dhcp22.suse.cz>
+ <20130605080545.GF7303@mtj.dyndns.org>
+ <20130605085239.GF15997@dhcp22.suse.cz>
+ <20130605085849.GB7990@mtj.dyndns.org>
+ <20130605090739.GH15997@dhcp22.suse.cz>
+ <20130605090938.GA8266@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=sao2J3J9EG2fmEAm5Z/OvdQu+SBW3O6TmBb/WmG/3jg=;
-        b=xswtiN0UAXB0E5L8HCakJ7T6Z1CL9BtLwOt+Ehhbxgbcl0KOGrIuggQ7ld0nRFXRJ0
-         d/hvT3koqks7nvkuQA+znkOmjLO3y0FzUzC/k/heQMZMNkld6h5JAqn/jPz/zdeq9uwq
-         WFTKPAOMRkcZGEodbeX/yYY5ym8JeGc8C9UFA095n2Ydg4VLBqOw9CaxdRpb60+GACtq
-         tB4O79o2Vy7pa45StRIejBePnXyIA8KgQYf/bSOh0KFNkjQ6jjjlRIzfgxg+IMpxkV+C
-         NDIWwZd7RH/F9a4oT9zZAQn1sn49lFmDKi9Qx7Tw83wIE5GqalQAt+zYmbYaaXnm0kht
-         QmEA==
+        bh=IX4t649C9jBqR+yoZS0dplSKXiiR0R2EKhi3TqZBbw8=;
+        b=GXq5iBEkOkYsGEx3SbtvcemteYHJrBc1ciavXGse6dgyv6OwtcaHYrvhlbIvAAGRT8
+         q7I4kYi8Gld/YL3mppKI6zCONT1tn02/R7mJ3LLh9gOF/XEUd2xDelm0L6gEc2rZkQ5B
+         fd/tlx3vTw5FR8HM41uW0ouTZRu4BvsAdm6kzpyLxC6Dnke5tSXb0u13KjKVYe0HdhHp
+         pNQC9CcwshoHSWu6AVDfrymtxvAoU38LO+sWGPsOwVhFtjNe/P08BoW02YQs3174YWMC
+         o5csPgYyAaPGFsOhfrY0a18+ePzML2HjUWU53Vcre87Z5KuigJR5w8N6ff/LdOpfm0SV
+         T+kA==
 Content-Disposition: inline
-In-Reply-To: <1369825402-31046-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130605090938.GA8266@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Glauber Costa <glommer@parallels.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Balbir Singh <bsingharora@gmail.com>
 
-On Wed, May 29, 2013 at 03:03:11PM +0400, Glauber Costa wrote:
-> I am coming again with this series, hoping this is a better time for you all to
-> look at it.
+On Wed, Jun 05, 2013 at 02:09:38AM -0700, Tejun Heo wrote:
+> On Wed, Jun 05, 2013 at 11:07:39AM +0200, Michal Hocko wrote:
+> > On Wed 05-06-13 01:58:49, Tejun Heo wrote:
+> > [...]
+> > > Anyways, so you aren't gonna try the skipping thing?
+> > 
+> > As I said. I do not consider this a priority for the said reasons (i
+> > will not repeat them).
 > 
-> I am *not* going as far as marking cpuacct deprecated, because I think it
-> deserves a special discussion (even though my position in this matter is widely
-> known), but all the infrastructure to make it happen is here. But after this,
-> it should be a matter of setting a flag (or not).
+> That's a weird way to respond.  Alright, whatever, let me give it a
+> shot then.
 
-Things look generally good to me upto patch 6.  Maybe we can combine
-"adding cpuacct stats to cpu" and "re-using schedstats" but no strong
-opinion.  Peter, what do you think?
+So, there were some private exchanges and here's my main issue with
+the addition of predicate callback to mem_cgroup_iter_cond().
+
+There are two common patterns that are used to implement iteration.
+One is the good ol' callback based one - ie. call_fn_on_each(fn) type
+interface.  The other is something which can be used as part of flow
+control by the user - be it give_me_next_elem() or for_each() type
+loop macro.  In majority of cases, especially for anything generic,
+the latter is considered to be the better choice because, while a bit
+more challenging to implement usually, it's a lot less cumbersome for
+the users of the interface.
+
+mem_cgroup_iter_cond() seems icky to me because the predicate callback
+is essentially visit callback, so now we end up with
+give_me_next_elem() with visit callback, which is fundamentally
+superflous.  If it were properly call_fn_on_each(fn), the return
+values would be CONTINUE, SKIP_SUBTREE or ABORT, which makes more
+sense to me.  Sure, it can be said that the predicate callback is for
+a different purpose but it really doesn't change that the interface
+now is visiting the same node in two different places.  If it were
+something remotely widely used, it won't take much time developing
+braindamaged usages where part is being done inside the predicate
+callback and the rest is done outside without clear reason why just
+because of natural code growth.  I don't think this is the type of
+construct that we want in kernel in general.
+
+That said, it also is true that doing this is the shortest path to
+implementing subtree skip given how the iterator is put together
+currently and the series as a whole reduces significant amount of
+complexity, so it is an acceptable tradeoff to proceed with this
+implementation with later restructuring of the iterator.
+
+So, let's go ahead as proposed.  I'll try to rework the iterator on
+top of it, and my aplogies to Michal for being over-the-top.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
