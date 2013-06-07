@@ -1,81 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Thu, 6 Jun 2013 17:52:42 -0700
-Message-ID: <20130607005242.GB16160@htj.dyndns.org>
-References: <20130605073023.GB15997@dhcp22.suse.cz>
- <20130605082023.GG7303@mtj.dyndns.org>
- <20130605143949.GQ15576@cmpxchg.org>
- <20130605172212.GA10693@mtj.dyndns.org>
- <20130605194552.GI15721@cmpxchg.org>
- <20130605200612.GH10693@mtj.dyndns.org>
- <20130605211704.GJ15721@cmpxchg.org>
- <20130605222021.GL10693@mtj.dyndns.org>
- <20130605222709.GM10693@mtj.dyndns.org>
- <20130606115031.GE7909@dhcp22.suse.cz>
+From: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file
+ as  insane
+Date: Fri, 7 Jun 2013 07:10:40 +0200
+Message-ID: <20130607051040.GA1364@tango.0pointer.de>
+References: <20130604021302.GH29989@mtj.dyndns.org>
+ <20130604111556.GA4963@redhat.com>
+ <20130604201947.GE14916@htj.dyndns.org>
+ <20130606092055.GF30217@redhat.com>
+ <20130606211410.GF5045@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=IU3esIbEUCDqPVU19DuNCjRM+ZBnrl6/vF7LqRGSd9k=;
-        b=cVxxlZ7eAKr3tn59kxbHS68dFrJB9nl7MJWr2AXa8zaD9fm2rIVXiotMRwQ3X2YqFR
-         Kw6PVFCDk3fmlNrFiBJ71LPPZrFVXcUBkRCrh1ztEzYJ/5XP/1DHTUukeqi47bVFn0dW
-         y2F4AD+Db05MBcLae32CIEu47vU3kFWvD6O0LdJDkM8TkRPYaM70PWs0tzODEGKPcZoZ
-         pf1+iO2M/P/boqSQQi3tjaC9umn6MSr+RgEpfbwqXPO4rsTOdIUr2i2j8jscfyLrXR1m
-         y5F3ibwdGbJ4HL90u6/NB25YyFertwLIy1j8vc82rJorx33daefB/HD8zJtZbqH7lGI0
-         TFig==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130606115031.GE7909@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130606211410.GF5045-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu, 06.06.13 14:14, Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
 
-On Thu, Jun 06, 2013 at 01:50:31PM +0200, Michal Hocko wrote:
-> > Also, do we need to hold a lock?  It doesn't have to be completely
-> > strict, so we might as well get away with something like,
-> > 
-> > 	for_each_cached_pos() {
-> > 		if (hint == me) {
-> > 			/* simple clearing implementation, we prolly wanna push it forward */
-> > 			cached = xchg(hint, NULL);
-> > 			if (cached)
-> > 				css_put(cached);
-> > 		}
-> > 	}
+> > You say the old interface will be around for the forseeable future, but
+> > if systemd starts applying a different setup to comply with your new
+> > scheme, then libvirt does get given any option to continue to use the
+> > old scheme. So even if you leave old interfaces around, we're going to
+> > be forced to change. That's not really a back-compatibility story that
+> > works for applications.
 > 
-> This would be racy:
-> mem_cgroup_iter
->   rcu_read_lock
->   __mem_cgroup_iter_next		cgroup_destroy_locked
->     css_tryget(memcg)
->   					  atomic_add(CSS_DEACT_BIAS)
->     					  offline_css(memcg)
-> 					    xchg(memcg, NULL)
->   mem_cgroup_iter_update
->     iter->last_visited = memcg
->   rcy_read_unlock
-> 
-> But if it was called from call_rcu the we should be safe AFAICS.
+> Even after unified hierarchy, it will be possible to tell systemd to
+> not to do that and the system should be able to continue using
+> multiple hierarchies as before.  Nothing really should change in that
+> respect.  It may not be the prettiest but is still a workable
+> compatibility.
 
-Oh yeah, it is racy.  That's what I meant by "not having to be
-completely strict".  The race window is small enough and it's not like
-we're messing up refcnt or may end up with use-after-free.  Doing it
-from RCU would make the race go away but I'm not sure whether the
-extra RCU bouncing is worthwhile.  I don't know.  Maybe.
+Uhm. So I don't think we will support two ways to set this up for long
+in systemd (if at all). And even if we did, the distributions would pick
+one or the other as default, and if you are unlucky, then you couldn't
+run libvirt on it without reconfiguration and rebooting to get the other
+cgroup setup logic...
 
-Thanks.
+Lennart
 
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Lennart Poettering - Red Hat, Inc.
