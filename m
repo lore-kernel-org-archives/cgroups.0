@@ -1,9 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 2/7] cpuset: remove async hotplug propagation work
-Date: Sun, 9 Jun 2013 08:47:57 -0700
-Message-ID: <20130609154757.GC2835@htj.dyndns.org>
+Subject: Re: [PATCH v3 7/7] cpuset: fix to migrate mm correctly in a corner
+	case
+Date: Sun, 9 Jun 2013 08:49:30 -0700
+Message-ID: <20130609154930.GD2835@htj.dyndns.org>
 References: <51B4475A.8030509@huawei.com>
- <51B44787.2030601@huawei.com>
+ <51B4480F.2050400@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -11,15 +12,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=sjv+loOfoLi8bpJH7DhCnG8xI+AJe1mpZa0fKTsbxeI=;
-	b=J26poS23mjJF/sqq/SqmDIeFnf8uNzUEehgkGe7nsFrRLN5jI6XdF1CxCYLcEtJ82X
-	l5AJ4HkKpuE2VZYuMQ6TZu4GPJlfZimUJlvBlvFHESnZxlJh3si6l3OLDUINlBCrjoMZ
-	IY8I+cCAAI0FK7noGO4H3/rZxb4ZuuhBbewy65shCZ5gTgOHwwwkFdkSHdN/wB45RUyG
-	8VAwI0G0GpKRkYWr3OvEz/BL8WV/O11KL99OiLFojupfjz3vm6CizdIhOJJODfu/n7R7
-	E6KGw5QFpUpTEGADsEWW1yD9c6RZONQMznaHaGPpz5FoIa1X0Q9cVHSDOTCEHSBbjf5V
-	e+ZA==
+	bh=6MgnuayJCo+b70NHwLukyr/b5+QEY6G/C6J/+2tihJU=;
+	b=Agc4vZ4Uks9EuCIIvPfOItcFIaXYgKiRLTSZUk3a1GxZji9fU2We1kCGze9K+wfEwi
+	z0mRDbGtFdbe6uWgmBD1sNGx2rqQPcBd8pHfk8KdpmOE9mQRXgVgZu1aVhv5YHS6b2ot
+	2PD6i+nhG6ISxCpqxj6N5NDBTihYjydT8nIMSvCPlgQdYDnbQci98CwWJiAkTwwbLnvh
+	khMWN4ilxqabXZs8QZJ3ES5RUVBfKCCX9bAHEgZjHusxSDZ9Qm2pAp0QKUwnsXkv8Y7S
+	P5U1O1KIsGUtkEDZb56h8ZBr0/x/dlnZggU3axcXrWbWBFKkTyfJ2zPzqgfuOYZb986R
+	OFWw==
 Content-Disposition: inline
-In-Reply-To: <51B44787.2030601-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <51B4480F.2050400-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -33,13 +34,64 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Sun, Jun 09, 2013 at 05:14:47PM +0800, Li Zefan wrote:
-> As we can drop rcu read lock while iterating cgroup hierarchy,
-> we don't have to do propagation asynchronously via workqueue.
+On Sun, Jun 09, 2013 at 05:17:03PM +0800, Li Zefan wrote:
+> Before moving tasks out of empty cpusets, update_tasks_nodemask()
+> is called, which calls do_migrate_pages(xx, from, to). Then those
+> tasks are moved to an ancestor, and do_migrate_pages() is called
+> again.
+> 
+> The first time: from = node_to_be_offlined, to = empty.
+> The second time: from = empty, to = ancestor's nodemask.
+> 
+> so looks like no pages will be migrated.
+> 
+> Fix this by:
+> 
+> - Don't call update_tasks_nodemask() on empty cpusets.
+> - Pass cs->old_mems_allowed to do_migrate_pages().
 > 
 > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>  kernel/cpuset.c | 15 +++++++++++----
+>  1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+> index d1d6782..3cd68b8 100644
+> --- a/kernel/cpuset.c
+> +++ b/kernel/cpuset.c
+> @@ -1563,9 +1563,16 @@ static void cpuset_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+>  		struct cpuset *mems_oldcs = effective_nodemask_cpuset(oldcs);
+>  
+>  		mpol_rebind_mm(mm, &cpuset_attach_nodemask_to);
+> -		if (is_memory_migrate(cs))
+> -			cpuset_migrate_mm(mm, &mems_oldcs->mems_allowed,
+> +		if (is_memory_migrate(cs)) {
+> +			/*
+> +			 * old_mems_allowed is the same with mems_allowed here,
+> +			 * except if this task is being moved automatically due
+> +			 * to hotplug, and in this case mems_allowed is empty
+> +			 * and old_mems_allowed is the offlined node.
+> +			 */
 
-Applied 1-2 to cgroup/for-3.11-cpuset.  Thanks!
+Wouldn't it be better if the above explain why rather than what?
+
+> +			cpuset_migrate_mm(mm, &mems_oldcs->old_mems_allowed,
+>  					  &cpuset_attach_nodemask_to);
+> +		}
+>  		mmput(mm);
+>  	}
+>  
+> @@ -2155,7 +2162,7 @@ retry:
+>  	 * for empty cpuset to take on ancestor's cpumask.
+>  	 */
+>  	if ((sane && cpumask_empty(cs->cpus_allowed)) ||
+> -	    !cpumask_empty(&off_cpus))
+> +	    (!cpumask_empty(&off_cpus) && !cpumask_empty(cs->cpus_allowed)))
+>  		update_tasks_cpumask(cs, NULL);
+
+No biggie but maybe we want briefly explain the conditions being tested?
+
+Thanks.
 
 -- 
 tejun
