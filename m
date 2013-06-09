@@ -1,57 +1,45 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: Re: [PATCH v11 20/25] drivers: convert shrinkers to new count/scan
- API
-Date: Sun, 9 Jun 2013 16:02:05 +0400
-Message-ID: <20130609120204.GB5315@localhost.localdomain>
-References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
- <1370550898-26711-21-git-send-email-glommer@openvz.org>
- <20130607141027.GH25649@phenom.dumpdata.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 2/7] cpuset: remove async hotplug propagation work
+Date: Sun, 9 Jun 2013 08:47:57 -0700
+Message-ID: <20130609154757.GC2835@htj.dyndns.org>
+References: <51B4475A.8030509@huawei.com>
+ <51B44787.2030601@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=caiZVPPCcNTy1Vpjdjpi3QD+p73VaqnkrF/Zov0XhCw=;
-        b=Xt60W27A8dBSGCb0PzfNmVFQNUIY/F1E/uAbLtbjO2CMUvSa0qjcnCeUl79WbIL5Gg
-         oIwO9HcEM7AAMk0lTct2ZH1ofvCn+uUfWvJWkfBBPkJyRUhGOzUzYLOqQa97iwHDXsvE
-         OXb5zfxhGlD8cW/sNWCJyKMDnGDx2t0k3bW1SKOvM79iO5W73Gz7mqdWKg/xThBqPChH
-         KZsDIR2vr1y2WufjidQIyHw/B9PQNHT10X6Wkn8rQAang93hvxDCFGa6hIUUf14sbOrd
-         8OC7uUFnDYxzQBB9AujfPqvYMXo5CJUS+uysRsUXj4yiflkowWHYJ1if8wsFneje8UyX
-         jerw==
-Content-Disposition: inline
-In-Reply-To: <20130607141027.GH25649@phenom.dumpdata.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Glauber Costa <glommer@openvz.org>, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Dave Chinner <dchinner@redhat.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Kent Overstreet <koverstreet@google.com>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, John Stultz <john.stultz@linaro.org>, David Rientjes <rientjes@google.com>, Jerome Glisse <jglisse@redhat.com>, Thomas Hellstrom <thellstrom@vmware.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=sjv+loOfoLi8bpJH7DhCnG8xI+AJe1mpZa0fKTsbxeI=;
+	b=J26poS23mjJF/sqq/SqmDIeFnf8uNzUEehgkGe7nsFrRLN5jI6XdF1CxCYLcEtJ82X
+	l5AJ4HkKpuE2VZYuMQ6TZu4GPJlfZimUJlvBlvFHESnZxlJh3si6l3OLDUINlBCrjoMZ
+	IY8I+cCAAI0FK7noGO4H3/rZxb4ZuuhBbewy65shCZ5gTgOHwwwkFdkSHdN/wB45RUyG
+	8VAwI0G0GpKRkYWr3OvEz/BL8WV/O11KL99OiLFojupfjz3vm6CizdIhOJJODfu/n7R7
+	E6KGw5QFpUpTEGADsEWW1yD9c6RZONQMznaHaGPpz5FoIa1X0Q9cVHSDOTCEHSBbjf5V
+	e+ZA==
+Content-Disposition: inline
+In-Reply-To: <51B44787.2030601-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Jun 07, 2013 at 10:10:27AM -0400, Konrad Rzeszutek Wilk wrote:
-> On Fri, Jun 07, 2013 at 12:34:53AM +0400, Glauber Costa wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Convert the driver shrinkers to the new API. Most changes are
-> > compile tested only because I either don't have the hardware or it's
-> > staging stuff.
-> > 
-> > FWIW, the md and android code is pretty good, but the rest of it
-> > makes me want to claw my eyes out.  The amount of broken code I just
-> > encountered is mind boggling.  I've added comments explaining what
-> > is broken, but I fear that some of the code would be best dealt with
-> > by being dragged behind the bike shed, burying in mud up to it's
-> > neck and then run over repeatedly with a blunt lawn mower.
+On Sun, Jun 09, 2013 at 05:14:47PM +0800, Li Zefan wrote:
+> As we can drop rcu read lock while iterating cgroup hierarchy,
+> we don't have to do propagation asynchronously via workqueue.
 > 
-> The rest being i915, ttm, bcache- etc ?
-> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Since all I have done for this patch in particular was to keep the
-code going forward over the many iterations of the patchset, I will
-leave the comments on this to my dear friend Dave.
+Applied 1-2 to cgroup/for-3.11-cpuset.  Thanks!
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
