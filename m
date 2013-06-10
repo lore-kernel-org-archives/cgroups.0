@@ -1,60 +1,81 @@
-From: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file
- as  insane
-Date: Mon, 10 Jun 2013 13:08:25 +0200
-Message-ID: <20130610110825.GB10627@tango.0pointer.de>
-References: <20130604021302.GH29989@mtj.dyndns.org>
- <20130604111556.GA4963@redhat.com>
- <20130604201947.GE14916@htj.dyndns.org>
- <20130606092055.GF30217@redhat.com>
- <20130606211410.GF5045@htj.dyndns.org>
- <20130607051040.GA1364@tango.0pointer.de>
- <20130607200307.GA14781@mtj.dyndns.org>
+From: Hyunhee Kim <hyunhee.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH] memcg: Add force_reclaim to reclaim tasks' memory in memcg.
+Date: Mon, 10 Jun 2013 20:16:31 +0900
+Message-ID: <021801ce65cb$f5b0bc50$e11234f0$%kim@samsung.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130607200307.GA14781-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Content-language: ko
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: 'Kyungmin Park' <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 
-On Fri, 07.06.13 13:03, Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
+These days, platforms tend to manage memory on low memory state
+like andloid's lowmemory killer. These platforms might want to
+reclaim memory from background tasks as well as kill victims
+to guarantee free memory at use space level. This patch provides
+an interface to reclaim a given memcg. After platform's low memory
+handler moves tasks that the platform wants to reclaim to
+a memcg and decides how many pages should be reclaimed, it can
+reclaim the pages from the tasks by writing the number of pages
+at memory.force_reclaim.
 
-Heya,
+Signed-off-by: Hyunhee Kim <hyunhee.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+---
+ mm/memcontrol.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-> On Fri, Jun 07, 2013 at 07:10:40AM +0200, Lennart Poettering wrote:
-> > Uhm. So I don't think we will support two ways to set this up for long
-> > in systemd (if at all). And even if we did, the distributions would pick
-> > one or the other as default, and if you are unlucky, then you couldn't
-> > run libvirt on it without reconfiguration and rebooting to get the other
-> > cgroup setup logic...
-> 
-> Hmmm... would that mean that people wouldn't be able to boot older
-> kernel w/o unified hierarhcy with new systemd fairly soon too? 
-
-Yeah, I guess. Or maybe only to the level we currently support
-cgroup-less kernels: i.e. we print a big warning at boot, wait for a few
-seconds, and then proceed but things might be very confused because we
-cannot keep track of services anymore..
-
-> We can make the new features which matter for management available for
-> named mounts (w/o unified hierarchy) so that systemd can operate as if
-> none of the actual controllers are enabled, which it should be able to
-> handle anyway.  That wouldn't solve booting old kernels with new
-> systemd problem but it should at least allow workable backward
-> compatibility from userland side as long as the kernel keeps the
-> compatibility, right?
-
-The closer the kernel stays to its old interfaces the easier it would be
-for us to stay compatibile for a while. But there are many levels of
-compatbility possible here: as mentioned above, the one where we warn
-and just don't make use of cgroups, or where we just use cgroups for
-organizing things, but drop support for resource management and so on.
-
-Lennart
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 010d6c1..21819c9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4980,6 +4980,28 @@ static int mem_cgroup_force_empty_write(struct cgroup
+*cont, unsigned int event)
+ 	return ret;
+ }
+ 
++static int mem_cgroup_force_reclaim(struct cgroup *cont, struct cftype
+*cft, u64 val)
++{
++
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
++	unsigned long nr_to_reclaim = val;
++	unsigned long total = 0;
++	int loop;
++
++	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
++		total += try_to_free_mem_cgroup_pages(memcg, GFP_KERNEL,
+false);
++
++		/*
++		 * If nothing was reclaimed after two attempts, there
++		 * may be no reclaimable pages in this hierarchy.
++		 * If more than nr_to_reclaim pages were already reclaimed,
++		 * finish force reclaim.
++		 */
++		if (loop && (!total || total > nr_to_reclaim))
++			break;
++	}
++	return total;
++}
+ 
+ static u64 mem_cgroup_hierarchy_read(struct cgroup *cont, struct cftype
+*cft)
+ {
+@@ -5938,6 +5960,10 @@ static struct cftype mem_cgroup_files[] = {
+ 		.trigger = mem_cgroup_force_empty_write,
+ 	},
+ 	{
++		.name = "force_reclaim",
++		.write_u64 = mem_cgroup_force_reclaim,
++	},
++	{
+ 		.name = "use_hierarchy",
+ 		.flags = CFTYPE_INSANE,
+ 		.write_u64 = mem_cgroup_hierarchy_write,
 -- 
-Lennart Poettering - Red Hat, Inc.
+1.7.9.5
+
