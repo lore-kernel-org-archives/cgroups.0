@@ -1,53 +1,60 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
-Date: Mon, 10 Jun 2013 10:02:08 +0200
-Message-ID: <20130610080208.GB5138@dhcp22.suse.cz>
-References: <20130605172212.GA10693@mtj.dyndns.org>
- <20130605194552.GI15721@cmpxchg.org>
- <20130605200612.GH10693@mtj.dyndns.org>
- <20130605211704.GJ15721@cmpxchg.org>
- <20130605222021.GL10693@mtj.dyndns.org>
- <20130605222709.GM10693@mtj.dyndns.org>
- <20130606115031.GE7909@dhcp22.suse.cz>
- <20130607005242.GB16160@htj.dyndns.org>
- <20130607073754.GA8117@dhcp22.suse.cz>
- <20130607232557.GL14781@mtj.dyndns.org>
+From: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: mark "tasks" cgroup file
+ as  insane
+Date: Mon, 10 Jun 2013 13:08:25 +0200
+Message-ID: <20130610110825.GB10627@tango.0pointer.de>
+References: <20130604021302.GH29989@mtj.dyndns.org>
+ <20130604111556.GA4963@redhat.com>
+ <20130604201947.GE14916@htj.dyndns.org>
+ <20130606092055.GF30217@redhat.com>
+ <20130606211410.GF5045@htj.dyndns.org>
+ <20130607051040.GA1364@tango.0pointer.de>
+ <20130607200307.GA14781@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130607232557.GL14781-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130607200307.GA14781-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, kay.sievers-tD+1rO4QERM@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 07-06-13 16:25:57, Tejun Heo wrote:
-> Hello, Michal.
+On Fri, 07.06.13 13:03, Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
+
+Heya,
+
+> On Fri, Jun 07, 2013 at 07:10:40AM +0200, Lennart Poettering wrote:
+> > Uhm. So I don't think we will support two ways to set this up for long
+> > in systemd (if at all). And even if we did, the distributions would pick
+> > one or the other as default, and if you are unlucky, then you couldn't
+> > run libvirt on it without reconfiguration and rebooting to get the other
+> > cgroup setup logic...
 > 
-> On Fri, Jun 07, 2013 at 09:37:54AM +0200, Michal Hocko wrote:
-> > > Oh yeah, it is racy.  That's what I meant by "not having to be
-> > > completely strict".  The race window is small enough and it's not like
-> > > we're messing up refcnt or may end up with use-after-free. 
-> > 
-> > But it would potentially pin (aka leak) the memcg for ever.
-> 
-> It wouldn't be anything systemetic tho - race condition's likliness is
-> low and increases with the frequency of reclaim iteration, which at
-> the same time means that it's likely to remedy itself pretty soon.
+> Hmmm... would that mean that people wouldn't be able to boot older
+> kernel w/o unified hierarhcy with new systemd fairly soon too? 
 
-Sure a next visit on the same root subtree (same node, zone and prio)
-would css_put it but what if that root goes away itself. Still fixable,
-if every group checks its own cached iters and css_put everybody but
-that is even uglier. So doing the up-the-hierarchy cleanup in RCU
-callback is much easier.
+Yeah, I guess. Or maybe only to the level we currently support
+cgroup-less kernels: i.e. we print a big warning at boot, wait for a few
+seconds, and then proceed but things might be very confused because we
+cannot keep track of services anymore..
 
-> I'm doubtful it'd matter.  If it's still bothering, we sure can do it
-> from RCU callback.
+> We can make the new features which matter for management available for
+> named mounts (w/o unified hierarchy) so that systemd can operate as if
+> none of the actual controllers are enabled, which it should be able to
+> handle anyway.  That wouldn't solve booting old kernels with new
+> systemd problem but it should at least allow workable backward
+> compatibility from userland side as long as the kernel keeps the
+> compatibility, right?
 
-Yes, I would definitely prefer correctness over likeliness here.
+The closer the kernel stays to its old interfaces the easier it would be
+for us to stay compatibile for a while. But there are many levels of
+compatbility possible here: as mentioned above, the one where we warn
+and just don't make use of cgroups, or where we just use cgroups for
+organizing things, but drop support for resource management and so on.
+
+Lennart
 
 -- 
-Michal Hocko
-SUSE Labs
+Lennart Poettering - Red Hat, Inc.
