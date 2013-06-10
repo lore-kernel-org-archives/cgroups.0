@@ -1,103 +1,60 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: Add force_reclaim to reclaim tasks' memory in
- memcg.
-Date: Mon, 10 Jun 2013 17:22:46 +0200
-Message-ID: <20130610152246.GB14295@dhcp22.suse.cz>
-References: <021801ce65cb$f5b0bc50$e11234f0$%kim@samsung.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/3] memcg: simplify mem_cgroup_reclaim_iter
+Date: Mon, 10 Jun 2013 12:54:26 -0700
+Message-ID: <20130610195426.GC12461@mtj.dyndns.org>
+References: <20130605194552.GI15721@cmpxchg.org>
+ <20130605200612.GH10693@mtj.dyndns.org>
+ <20130605211704.GJ15721@cmpxchg.org>
+ <20130605222021.GL10693@mtj.dyndns.org>
+ <20130605222709.GM10693@mtj.dyndns.org>
+ <20130606115031.GE7909@dhcp22.suse.cz>
+ <20130607005242.GB16160@htj.dyndns.org>
+ <20130607073754.GA8117@dhcp22.suse.cz>
+ <20130607232557.GL14781@mtj.dyndns.org>
+ <20130610080208.GB5138@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=M49DRMPlb10rLu46VzpFpJwLWI26L5ui/0zvVpzkZK0=;
+        b=eZStcfEAG7zOVED2sbBPlpb6HLlnxRPSWfFLDS8pESizjvDJTIZmRPlPWIv3J8brLx
+         lXh3n0g2aOluwMxH2Rx5aaS7bVjoN0cn5+RUQ8odpVQcEW3ZgsS2E7ZXz2rLeC8b8yIw
+         PyB4TDvBsPzfPdc8McDhP9dtGoRvfgzGAS01bqkEBTX9ZiAnnltrLSEg3LwO0H+gmYfk
+         zp35eh6AgRaLN+ysLq++qfy4QM5gmDBIj5QAPInm0KNaNw+Y4KmGnPlCRgvwhEfTjNxM
+         DQwK1KGId9Pfjh0TjzH4gyN2r2J42vg6rj6bB/N+jG9cWuJqXAuJqHyQNs/etrHGkdTG
+         k0Kw==
 Content-Disposition: inline
-In-Reply-To: <021801ce65cb$f5b0bc50$e11234f0$%kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130610080208.GB5138@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hyunhee Kim <hyunhee.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, 'Kyungmin Park' <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, bsingharora@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-On Mon 10-06-13 20:16:31, Hyunhee Kim wrote:
-> These days, platforms tend to manage memory on low memory state
-> like andloid's lowmemory killer. These platforms might want to
-> reclaim memory from background tasks as well as kill victims
-> to guarantee free memory at use space level. This patch provides
-> an interface to reclaim a given memcg.
+Hello, Michal.
 
-> After platform's low memory handler moves tasks that the platform
-> wants to reclaim to a memcg and decides how many pages should be
-> reclaimed, it can reclaim the pages from the tasks by writing the
-> number of pages at memory.force_reclaim.
+On Mon, Jun 10, 2013 at 10:02:08AM +0200, Michal Hocko wrote:
+> Sure a next visit on the same root subtree (same node, zone and prio)
+> would css_put it but what if that root goes away itself. Still fixable,
+> if every group checks its own cached iters and css_put everybody but
+> that is even uglier. So doing the up-the-hierarchy cleanup in RCU
+> callback is much easier.
 
-Why cannot you simply set the soft limit to 0 for the target group which
-would enforce reclaim during the next global reclaim instead?
+Ooh, right, we don't need cleanup of the cached cursors on destruction
+if we get this correct - especially if we make cursors point to the
+next cgroup to visit as self is always the first one to visit.  Yeah,
+if we can do away with that, doing that way is definitely better.
 
-Or you can even use the hard limit for that. If you know how much memory
-is used by those processes you can simply move them to a group with the
-hard limit reduced by the amount of pages which you want to free and the
-reclaim would happen during taks move.
-
-> Signed-off-by: Hyunhee Kim <hyunhee.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> Signed-off-by: Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> ---
->  mm/memcontrol.c |   26 ++++++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 010d6c1..21819c9 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4980,6 +4980,28 @@ static int mem_cgroup_force_empty_write(struct cgroup
-> *cont, unsigned int event)
->  	return ret;
->  }
->  
-> +static int mem_cgroup_force_reclaim(struct cgroup *cont, struct cftype
-> *cft, u64 val)
-> +{
-> +
-> +	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-> +	unsigned long nr_to_reclaim = val;
-> +	unsigned long total = 0;
-> +	int loop;
-> +
-> +	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
-> +		total += try_to_free_mem_cgroup_pages(memcg, GFP_KERNEL,
-> false);
-> +
-> +		/*
-> +		 * If nothing was reclaimed after two attempts, there
-> +		 * may be no reclaimable pages in this hierarchy.
-> +		 * If more than nr_to_reclaim pages were already reclaimed,
-> +		 * finish force reclaim.
-> +		 */
-> +		if (loop && (!total || total > nr_to_reclaim))
-> +			break;
-> +	}
-> +	return total;
-> +}
->  
->  static u64 mem_cgroup_hierarchy_read(struct cgroup *cont, struct cftype
-> *cft)
->  {
-> @@ -5938,6 +5960,10 @@ static struct cftype mem_cgroup_files[] = {
->  		.trigger = mem_cgroup_force_empty_write,
->  	},
->  	{
-> +		.name = "force_reclaim",
-> +		.write_u64 = mem_cgroup_force_reclaim,
-> +	},
-> +	{
->  		.name = "use_hierarchy",
->  		.flags = CFTYPE_INSANE,
->  		.write_u64 = mem_cgroup_hierarchy_write,
-> -- 
-> 1.7.9.5
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
