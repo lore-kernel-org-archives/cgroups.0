@@ -1,25 +1,125 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch v4] Soft limit rework
-Date: Tue, 11 Jun 2013 17:43:53 +0200
-Message-ID: <20130611154353.GF31277@dhcp22.suse.cz>
-References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Tue, 11 Jun 2013 13:33:40 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com>
+References: <20130531112116.GC32491@dhcp22.suse.cz> <alpine.DEB.2.02.1305311224330.3434@chino.kir.corp.google.com> <20130601102058.GA19474@dhcp22.suse.cz> <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com> <20130603193147.GC23659@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz> <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz> <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com>
+ <20130610142321.GE5138@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1370254735-13012-1-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=62x6CuHQ9V/NtisgtwT6OamMLrA15V8qECV5PrKf674=;
+        b=iKVaO6Q7itx09Hta0uf+C0HX3H8HJ+zO68Jm5CpbbDep2M/ZWgDOjmmnoEOJIKPDsW
+         +AnzL7MH0bzC3sblY5yqpj7ow/BpvnbF/L4D84j0EN4HpMq3m+xB+yZVSMxRv6ZYVKiI
+         p0+izHcmUMn9A2iqWLBNBLYzORI/Ne+I5mw80WYhtWmvCsIHzdt0MMr+xivYSdxymseb
+         XIFAiX/LwsVGQhTv/n7WDjIB08vGTHLACsE1c+ErP5r2u38PgbPW+i1WSrDEDDXcqvdD
+         S+pkW9nDQDOucUwjbhp0viWxNgFjGMPH9XxWKZwdoXe3VzpWvkixb06IN8sB+C0WtTGU
+         Hu3g==
+In-Reply-To: <20130610142321.GE5138@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-JFYI, I have rebased the series on top of the current mmotm tree to
-catch up with Mel's changes in reclaim and other small things here and
-there. To be sure that the things are still good I have started my tests
-again which will take some time.
+On Mon, 10 Jun 2013, Michal Hocko wrote:
 
-There will be only documentation updates in the new series.
--- 
-Michal Hocko
-SUSE Labs
+> > > > I don't think you yet understand the problem, which is probably my fault.  
+> > > > I'm not insisting this be implemented in the kernel, I'm saying it's not 
+> > > > possible to do it in userspace.  
+> > > 
+> > > Because you still insist on having this fallback mode running inside
+> > > untrusted environment AFAIU.
+> > > 
+> > 
+> > -ENOPARSE. 
+> 
+> Either the global watchdog is running as a trusted code and you _can_
+> implement it without dealocks (this is what I claim and I haven't heard
+> strong arguments against that) or even the watchdog runs as an untrusted
+> code and then I would ask why.
+> 
+
+As I already said, no global entity could possibly know and monitor the 
+entire set of memcgs when users are given the power to create their own 
+child memcgs within their tree.  Not only would it be unnecessarily 
+expensive to scan the entire memcg tree all the time, but it would also be 
+racy and miss oom events when a child memcg is created and hits its limit 
+before the global entity can scan for it.
+
+> Your only objection against userspace handling so far was that admin
+> has no control over sub-hierarchies. But that is hardly a problem. A
+> periodic tree scan would solve this easily (just to make sure we are on
+> the same page - this is still the global watchdog living in a trusted
+> root cgroup which is marked as unkillable for the global oom).
+> 
+
+There's no way a "periodic tree scan" would solve this easily, it's 
+completely racy and leaves the possibility of missing oom events when they 
+happen in a new memcg before the next tree scan.
+
+Not only that, but what happens when the entire machine is oom?  The 
+global watchdog can't allocate any memory to handle the event, yet it is 
+supposed to always be doing entire memcg tree scans, registering oom 
+handlers, and handling wakeups when notified?
+
+How does this "global watchdog" know when to stop the timer?  In the 
+kernel that would happen if the user expands the memcg limit or there's an 
+uncharge to the memcg.  The global watchdog stores the limit at the time 
+of oom and compares it before killing something?  How many memcgs do we 
+have to store this value for without allocating memory in a global oom 
+condition?  You expect us to run with all this memory mlocked in memory 
+forever?
+
+How does the global watchdog know that there was an uncharge and then a 
+charge in the memcg so it is still oom?  This would reset the timer in the 
+kernel but not in userspace and may result in unnecessary killing.  If 
+the timeout is 10s, the memcg is oom for 9s, uncharges, recharges, and the 
+global watchdog checks at 10s that it is still oom, we don't want the kill 
+because we do get uncharge events.
+
+This idea for a global watchdog just doesn't work.
+
+> > Meanwhile, the trusted resource has no knowledge whatsoever of these
+> > user subcontainers and it can't infinitely scan the memcg tree to find
+> > them because that requires memory that may not be available because of
+> > global oom or because of slab accounting.
+> 
+> Global oom can be handled by oom_adj for the global watchdog and
+> slab accounting should be non issue as the limit cannot be set for the
+> root cgroup - or the watchdog can live in an unlimited group.
+> 
+
+I'm referring to a global oom condition where physical RAM is exhausted, 
+not anything to do with memcg.
+
+> Besides that. How much memory are we talking about here (per
+> memcg)? Have you measure that? Is it possible that your untrusted
+> users could cause a DoS by creating too many groups? I would be really
+> surprised and argument about global watchdog quality then.
+> 
+
+We limit the number of css_id in children but not the top level of memcgs 
+that are created by the trusted resource.
+
+> David, maybe I am still missing something but it seems to me that the
+> in-kernel timeout is not necessary because the user-space variant is not
+> that hard to implement and I really do not want to add new knobs for
+> something that can live outside.
+
+It's vitally necessary and unless you answer the questions I've asked 
+about your proposed "global watchdog" that exists only in your theory then 
+we'll just continue to have this circular argument.  You cannot implement 
+a userspace variant that works this way and insisting that you can is 
+ridiculous.  These are problems that real users face and we insist on the 
+problem being addressed.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
