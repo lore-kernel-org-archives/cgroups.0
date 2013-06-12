@@ -1,7 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 05/11] cgroup: clean up css_[try]get() and css_put()
-Date: Wed, 12 Jun 2013 14:03:10 -0700
-Message-ID: <1371070996-20613-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 07/11] cgroup: drop unnecessary RCU dancing from
+	__put_css_set()
+Date: Wed, 12 Jun 2013 14:03:12 -0700
+Message-ID: <1371070996-20613-8-git-send-email-tj@kernel.org>
 References: <1371070996-20613-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=5T3T1lp7Kc10goZLuaD2p7lj5Fm3hHZdzATD4+hU1Xw=;
-	b=IhtjoS25YceXGUdosuaS0x9vMkd6JYr/QA/MZYjKHzbMeZBkwWkRAB0uhHea1EYhCr
-	RjYaAizzUzzwhB8TuxlYB26NrUfSkE2Ky4igitVDjraaR/dtogcqKAzbBZ+VMopg/zfk
-	PUa7eI0+oMFPipCyOjji0SykvHkjbUz0N7IjetGxasBt95ETPbXxNExVZHAJqu5in2/5
-	26pD3Y1POO9pzY7Jp+F50cXyuRHHapCmKiIsB2YZT8fuOQEoBNUXUXzoIgPofxcdBxns
-	8TUoC+dDfYWmCXyzvULDP1CEfd5YFAPXqe+FBaa9Rd8StZIYUxtxdjn3zlL6axpPDlrm
-	f8Xg==
+	:references; bh=0lhE/6HgCmIRecWiLiEflvDTJqnl8ffejzcDADSTF3s=;
+	b=SXawL9NbEszCju+Wnt+WnAYLGkXhphGIpwACgVQ6W4uQvFf6v7VnIGpsmS3CBJZNwK
+	9+Mz5Dd4STCUexQY6h+jiYBzl8wM3UPoZS1n21sL/UIJhKi5leSoURqoc6PnyKMFuECD
+	PjesKYE/BQat6hoh+fUEj9yZnTOjdCTUaOAU03mBTVyjW/CpwujYIfZeaLjNHxqra//X
+	4+nbe0Bf6QOuJdvuourP4XGh/xjr3yf8bD4gAKdpyF7l1oTF27JZ1B96qh7+jypDLgq1
+	4Wu8CCr7B1cof9WF737Qne+l6RrevSBMwoacUkGNJfuLOXCyN8T9sm5KKLT8mSnPsWKI
+	2FkA==
 In-Reply-To: <1371070996-20613-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,91 +31,76 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-* __css_get() isn't used by anyone.  Fold it into css_get().
+__put_css_set() does RCU read access on @cgrp across dropping
+@cgrp->count so that it can continue accessing @cgrp even if the count
+reached zero and destruction of the cgroup commenced.  Given that both
+sides - __css_put() and cgroup_destroy_locked() - are cold paths, this
+is unnecessary.  Just making cgroup_destroy_locked() grab css_set_lock
+while checking @cgrp->count is enough.
 
-* Add proper function comments to all css reference functions.
-
-This patch is purely cosmetic.
+Remove the RCU read locking from __put_css_set() and make
+cgroup_destroy_locked() read-lock css_set_lock when checking
+@cgrp->count.  This will also allow removing @cgrp->count.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h | 48 ++++++++++++++++++++++++------------------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+ kernel/cgroup.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 0e32855..7b16882 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -94,33 +94,31 @@ enum {
- 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
- };
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 0343df5..efe500b 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -407,19 +407,13 @@ static void __put_css_set(struct css_set *cset, int taskexit)
+ 		list_del_init(&link->cset_link);
+ 		list_del_init(&link->cgrp_link);
  
--/* Caller must verify that the css is not for root cgroup */
--static inline void __css_get(struct cgroup_subsys_state *css, int count)
--{
--	atomic_add(count, &css->refcnt);
--}
--
--/*
-- * Call css_get() to hold a reference on the css; it can be used
-- * for a reference obtained via:
-- * - an existing ref-counted reference to the css
-- * - task->cgroups for a locked task
-+/**
-+ * css_get - obtain a reference on the specified css
-+ * @css: taget css
-+ *
-+ * The caller must already have a reference.
-  */
--
- static inline void css_get(struct cgroup_subsys_state *css)
- {
- 	/* We don't need to reference count the root state */
- 	if (!(css->flags & CSS_ROOT))
--		__css_get(css, 1);
-+		atomic_inc(&css->refcnt);
- }
+-		/*
+-		 * We may not be holding cgroup_mutex, and if cgrp->count is
+-		 * dropped to 0 the cgroup can be destroyed at any time, hence
+-		 * rcu_read_lock is used to keep it alive.
+-		 */
+-		rcu_read_lock();
++		/* @cgrp can't go away while we're holding css_set_lock */
+ 		if (atomic_dec_and_test(&cgrp->count) &&
+ 		    notify_on_release(cgrp)) {
+ 			if (taskexit)
+ 				set_bit(CGRP_RELEASABLE, &cgrp->flags);
+ 			check_for_release(cgrp);
+ 		}
+-		rcu_read_unlock();
  
--/*
-- * Call css_tryget() to take a reference on a css if your existing
-- * (known-valid) reference isn't already ref-counted. Returns false if
-- * the css has been destroyed.
-- */
--
- extern bool __css_tryget(struct cgroup_subsys_state *css);
-+
-+/**
-+ * css_tryget - try to obtain a reference on the specified css
-+ * @css: target css
-+ *
-+ * Obtain a reference on @css if it's alive.  The caller naturally needs to
-+ * ensure that @css is accessible but doesn't have to be holding a
-+ * reference on it - IOW, RCU protected access is good enough for this
-+ * function.  Returns %true if a reference count was successfully obtained;
-+ * %false otherwise.
-+ */
- static inline bool css_tryget(struct cgroup_subsys_state *css)
- {
- 	if (css->flags & CSS_ROOT)
-@@ -128,12 +126,14 @@ static inline bool css_tryget(struct cgroup_subsys_state *css)
- 	return __css_tryget(css);
- }
+ 		kfree(link);
+ 	}
+@@ -4373,11 +4367,19 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	struct cgroup *parent = cgrp->parent;
+ 	struct cgroup_event *event, *tmp;
+ 	struct cgroup_subsys *ss;
++	bool empty;
  
--/*
-- * css_put() should be called to release a reference taken by
-- * css_get() or css_tryget()
-- */
--
- extern void __css_put(struct cgroup_subsys_state *css);
-+
-+/**
-+ * css_put - put a css reference
-+ * @css: target css
-+ *
-+ * Put a reference obtained via css_get() and css_tryget().
-+ */
- static inline void css_put(struct cgroup_subsys_state *css)
+ 	lockdep_assert_held(&d->d_inode->i_mutex);
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	if (atomic_read(&cgrp->count) || !list_empty(&cgrp->children))
++	/*
++	 * css_set_lock prevents @cgrp from being removed while
++	 * __put_css_set() is in progress.
++	 */
++	read_lock(&css_set_lock);
++	empty = !atomic_read(&cgrp->count) && list_empty(&cgrp->children);
++	read_unlock(&css_set_lock);
++	if (!empty)
+ 		return -EBUSY;
+ 
+ 	/*
+@@ -5054,8 +5056,6 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+ 
+ static void check_for_release(struct cgroup *cgrp)
  {
- 	if (!(css->flags & CSS_ROOT))
+-	/* All of these checks rely on RCU to keep the cgroup
+-	 * structure alive */
+ 	if (cgroup_is_releasable(cgrp) &&
+ 	    !atomic_read(&cgrp->count) && list_empty(&cgrp->children)) {
+ 		/*
 -- 
 1.8.2.1
