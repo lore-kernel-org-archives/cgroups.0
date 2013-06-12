@@ -1,149 +1,88 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 09/11] cgroup: reorder the operations in
-	cgroup_destroy_locked()
-Date: Wed, 12 Jun 2013 14:03:14 -0700
-Message-ID: <1371070996-20613-10-git-send-email-tj@kernel.org>
-References: <1371070996-20613-1-git-send-email-tj@kernel.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Wed, 12 Jun 2013 14:27:05 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1306121408490.24902@chino.kir.corp.google.com>
+References: <20130601102058.GA19474@dhcp22.suse.cz> <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com> <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz> <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com> <20130610142321.GE5138@dhcp22.suse.cz> <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com>
+ <20130612202348.GA17282@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=QWdQqBEQbACxa+Vh1D5Xy/LTt0t71KBv1BBRXyVLiz8=;
+        b=OAOeK78k08mxP1eKaUXT061a5UU5584mRdbiytrFIUG90OQkEFyyL6iFwm2Fw90C/Z
+         jzRJiFG8cqrNSgcJfpMYVO82v68KXC0D27QwOjmpbKTTmJFfrVt+GDxtQfQNh/ciKyRD
+         5bsOhEU7mCC3ija593GDfXWMdtIoA+MqLv3U/7N8463tjyOPVIb5roVQxoLP/jYtbPZR
+         CKoWjwK/NtdQ1v7QkZwLkiLy7GMhj/DnqNsw33UStlyqSIhX8IwCe24i4SW6jJN/S3aY
+         Z/i8xyddCxdiKnz4g1ndQItjxVGDuiOovjjCvAa3Zx7JikHaxQ3WiRa4xfMKuGOE5rte
+         ZhjA==
+In-Reply-To: <20130612202348.GA17282@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=hir5D2IoQx9BHH/iyYTlMFXVQV6HGi/B6ehB+sl74No=;
-	b=DJI8ORG8MHWOftBFaxO4eaPoFaDrCppI0taNyk8STVBVsBRVBLyPR8x1OI2lIQhDu7
-	h5qa6iBKct7F1cQdqKh7Zdnav0jPQPtccadGGpAAmcMX0rWGP72tYzcXhTrT8OBcrw++
-	CbyZpIjApxMWl+egYydEdl3GVfccSVSl+zM4wYDAfUYg4186zl2gzritNoehnoS5xC7E
-	zzC704mK7X6/IIWBmjfZD6K2cwi5gBG2+WWz6pCaYyk8Q/zRcqlAu/kfn09bDsV6a/yP
-	LL25tmvEDNPtWhvZH9uRCKFglQxzCKK5NdR3j3cHoue2Lzb87QOAYVZY+kZDxFlcKoFX
-	dxNg==
-In-Reply-To: <1371070996-20613-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-This patch reorders the operations in cgroup_destroy_locked() such
-that the userland visible parts happen before css offlining and
-removal from the ->sibling list.  This will be used to make css use
-percpu refcnt.
+On Wed, 12 Jun 2013, Michal Hocko wrote:
 
-While at it, split out CGRP_DEAD related comment from the refcnt
-deactivation one and correct / clarify how different guarantees are
-met.
+> But the objective is to handle oom deadlocks gracefully and you cannot
+> possibly miss those as they are, well, _deadlocks_.
 
-While this patch changes the specific order of operations, it
-shouldn't cause any noticeable behavior difference.
+That's not at all the objective, the changelog quite explicitly states 
+this is a deadlock as the result of userspace having disabled the oom 
+killer so that its userspace oom handler can resolve the condition and it 
+being unresponsive or unable to perform its job.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 61 +++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 35 insertions(+), 26 deletions(-)
+When you allow users to create their own memcgs, which we do and is 
+possible by chowning the user's root to be owned by it, and implement 
+their own userspace oom notifier, you must then rely on their 
+implementation to work 100% of the time, otherwise all those gigabytes of 
+memory go unfreed forever.  What you're insisting on is that this 
+userspace is perfect and there is never any memory allocated (otherwise it 
+may oom its own user root memcg where the notifier is hosted) and it is 
+always responsive and able to handle the situation.  This is not reality.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index aefda90..a43bc9d 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4382,13 +4382,8 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 
- 	/*
- 	 * Block new css_tryget() by deactivating refcnt and mark @cgrp
--	 * removed.  This makes future css_tryget() and child creation
--	 * attempts fail thus maintaining the removal conditions verified
--	 * above.
--	 *
--	 * Note that CGRP_DEAD assertion is depended upon by
--	 * cgroup_next_sibling() to resume iteration after dropping RCU
--	 * read lock.  See cgroup_next_sibling() for details.
-+	 * removed.  This makes future css_tryget() attempts fail which we
-+	 * guarantee to ->css_offline() callbacks.
- 	 */
- 	for_each_subsys(cgrp->root, ss) {
- 		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
-@@ -4396,8 +4391,41 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 		WARN_ON(atomic_read(&css->refcnt) < 0);
- 		atomic_add(CSS_DEACT_BIAS, &css->refcnt);
- 	}
-+
-+	/*
-+	 * Mark @cgrp dead.  This prevents further task migration and child
-+	 * creation by disabling cgroup_lock_live_group().  Note that
-+	 * CGRP_DEAD assertion is depended upon by cgroup_next_sibling() to
-+	 * resume iteration after dropping RCU read lock.  See
-+	 * cgroup_next_sibling() for details.
-+	 */
- 	set_bit(CGRP_DEAD, &cgrp->flags);
- 
-+	/* CGRP_DEAD is set, remove from ->release_list for the last time */
-+	raw_spin_lock(&release_list_lock);
-+	if (!list_empty(&cgrp->release_list))
-+		list_del_init(&cgrp->release_list);
-+	raw_spin_unlock(&release_list_lock);
-+
-+	/*
-+	 * Remove @cgrp directory.  The removal puts the base ref but we
-+	 * aren't quite done with @cgrp yet, so hold onto it.
-+	 */
-+	dget(d);
-+	cgroup_d_remove_dir(d);
-+
-+	/*
-+	 * Unregister events and notify userspace.
-+	 * Notify userspace about cgroup removing only after rmdir of cgroup
-+	 * directory to avoid race between userspace and kernelspace.
-+	 */
-+	spin_lock(&cgrp->event_list_lock);
-+	list_for_each_entry_safe(event, tmp, &cgrp->event_list, list) {
-+		list_del_init(&event->list);
-+		schedule_work(&event->remove);
-+	}
-+	spin_unlock(&cgrp->event_list_lock);
-+
- 	/* tell subsystems to initate destruction */
- 	for_each_subsys(cgrp->root, ss)
- 		offline_css(ss, cgrp);
-@@ -4412,34 +4440,15 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	for_each_subsys(cgrp->root, ss)
- 		css_put(cgrp->subsys[ss->subsys_id]);
- 
--	raw_spin_lock(&release_list_lock);
--	if (!list_empty(&cgrp->release_list))
--		list_del_init(&cgrp->release_list);
--	raw_spin_unlock(&release_list_lock);
--
- 	/* delete this cgroup from parent->children */
- 	list_del_rcu(&cgrp->sibling);
- 	list_del_init(&cgrp->allcg_node);
- 
--	dget(d);
--	cgroup_d_remove_dir(d);
- 	dput(d);
- 
- 	set_bit(CGRP_RELEASABLE, &parent->flags);
- 	check_for_release(parent);
- 
--	/*
--	 * Unregister events and notify userspace.
--	 * Notify userspace about cgroup removing only after rmdir of cgroup
--	 * directory to avoid race between userspace and kernelspace.
--	 */
--	spin_lock(&cgrp->event_list_lock);
--	list_for_each_entry_safe(event, tmp, &cgrp->event_list, list) {
--		list_del_init(&event->list);
--		schedule_work(&event->remove);
--	}
--	spin_unlock(&cgrp->event_list_lock);
--
- 	return 0;
- }
- 
--- 
-1.8.2.1
+This is why the kernel has its own oom killer and doesn't wait for a user 
+to go to kill something.  There's no option to disable the kernel oom 
+killer.  It's because we don't want to leave the system in a state where 
+no progress can be made.  The same intention is for memcgs to not be left 
+in a state where no progress can be made even if userspace has the best 
+intentions.
+
+Your solution of a global entity to prevent these situations doesn't work 
+for the same reason we can't implement the kernel oom killer in userspace.  
+It's the exact same reason.  We also want to push patches that allow 
+global oom conditions to trigger an eventfd notification on the root memcg 
+with the exact same semantics of a memcg oom: allow it time to respond but 
+step in and kill something if it fails to respond.  Memcg happens to be 
+the perfect place to implement such a userspace policy and we want to have 
+a priority-based killing mechanism that is hierarchical and different from 
+oom_score_adj.
+
+For that to work properly, it cannot possibly allocate memory even on page 
+fault so it must be mlocked in memory and have enough buffers to store the 
+priorities of top-level memcgs.  Asking a global watchdog to sit there 
+mlocked in memory to store thousands of memcgs, their priorities, their 
+last oom, their timeouts, etc, is a non-starter.
+
+I don't buy your argument that we're pushing any interface to an extreme.  
+Users having the ability to manipulate their own memcgs and subcontainers 
+isn't extreme, it's explicitly allowed by cgroups!  What we're asking for 
+is that level of control for memcg is sane and that if userspace is 
+unresponsive that we don't lose gigabytes of memory forever.  And since 
+we've supported this type of functionality even before memcg was created 
+for cpusets and have used and supported it for six years, I have no 
+problem supporting such a thing upstream.
+
+I do understand that we're the largest user of memcg and use it unlike you 
+or others on this thread do, but that doesn't mean our usecase is any less 
+important or that we should aim for the most robust behavior possible.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
