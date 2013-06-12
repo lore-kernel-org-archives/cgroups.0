@@ -1,70 +1,69 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full
- charge context
-Date: Wed, 12 Jun 2013 22:37:05 +0200
-Message-ID: <20130612203705.GB17282@dhcp22.suse.cz>
-References: <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com>
- <20130606053315.GB9406@cmpxchg.org>
- <20130606173355.GB27226@cmpxchg.org>
- <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com>
- <20130606215425.GM15721@cmpxchg.org>
- <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com>
- <20130607000222.GT15576@cmpxchg.org>
- <alpine.DEB.2.02.1306111454030.4803@chino.kir.corp.google.com>
- <20130612082817.GA6706@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306121309500.23348@chino.kir.corp.google.com>
-Mime-Version: 1.0
+From: Glauber Costa <glommer@gmail.com>
+Subject: [PATCH] memcg: make cache index determination more robust
+Date: Wed, 12 Jun 2013 16:43:28 -0400
+Message-ID: <1371069808-1172-1-git-send-email-glommer@openvz.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=haDWoOmjHMkofhTjamG/zF4VL6azFyVK9+Zek4EHA6c=;
-        b=JeM67OiNb4MpyT77RxZSkf6BGn79b5F1baJ7JP2n6DYPPv18hl1x3dXKVDe2Ye1Tb0
-         MVeESeKLNu5f6BcaEvjCLCiXh8rx3aph+A9RTLh//XJ470CxVCwx8pHeVnuAJBcs3qYl
-         3q6UheR/K0+z+vNwWjQMxCtWdFTS6KL8pmQPUwpoBjWvI6vLygvoOXX3CCv4rHc9sjxC
-         GLSic0n2PWexK/KrsAnHjr4oAbPzoFesnGq3T/38Kz0LZMBzFu1ICQ/LN0a248UTKbbS
-         UlPCS9VVG0HXD9ga4aNrybgM/DuAhmezIv8GOgnbuvUu20GknnD8xUZoxaeqmyC8GWFw
-         nLSw==
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1306121309500.23348@chino.kir.corp.google.com>
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=sWli9Q5x6gfnEpetn1H2b2y1HURYsEHyXFopC0F85rY=;
+        b=dE1G1iw2g2iTggHbGPM05Cz8mcCpRixNXYhl4PguOeJWD+troVRSVCbhfCEMfBHViY
+         CnamGs6bePKT166CBX28UfaXEM7sESKTnsOTBqd+vsx7xFZ43osM2Pk2A/gGFHYdWvCf
+         pu6xHxxB6sXO5gLw+pn3ZwWpiNZAdfRJCNtjt7rP1g4ICewtCvZBE1oBpMZA/tP14IWY
+         Eh/lUu8YRRjEDA9Ld7XG/v5PSyGHyBoTXWXepYFGhW0frlc3a7l9g30cMFvaE9Y81T/6
+         FyToWqmQo+9RCbaSeM6FLdkGgfie4GPjAXY3BPmEb5e8rxM4x2LunMVm8XgGnLbhQhNZ
+         Mg4w==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Wed 12-06-13 13:12:09, David Rientjes wrote:
-> On Wed, 12 Jun 2013, Michal Hocko wrote:
-> 
-> > > > > > > > Reported-by: Reported-by: azurIt <azurit@pobox.sk>
-> > > 
-> > > Ok, so the key here is that azurIt was able to reliably reproduce this 
-> > > issue and now it has been resurrected after seven months of silence since 
-> > > that thread.  I also notice that azurIt isn't cc'd on this thread.  Do we 
-> > > know if this is still a problem?
-> > 
-> > I have backported the patch for his 3.2 and waiting for his feedback.
-> > 
-> 
-> Ok, thanks.  I thought this was only going seven months back when it was 
-> reported, I missed that the issue this patch is trying to address goes 
-> back a 1 1/2 years to 3.2 and nobody else has reported it.  I think his 
-> feedback would be the key, specifically if he can upgrade to a later 
-> kernel first.
+I caught myself doing something like the following outside memcg core:
 
-The patch is a big improvement with a minimum code overhead. Blocking
-any task which sits on top of an unpredictable amount of locks is just
-broken. So regardless how many users are affected we should merge it and
-backport to stable trees. The problem is there since ever. We seem to
-be surprisingly lucky to not hit this more often.
+	memcg_id = -1;
+	if (memcg && memcg_kmem_is_active(memcg))
+		memcg_id = memcg_cache_id(memcg);
 
-I am not quite sure I understand your reservation about the patch to be
-honest. Andrew still hasn't merged this one although 1/2 is in.
+to be able to handle all possible memcgs in a sane manner. In particular, the
+root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
+to the root cache since it is not limitable). We have always coped with that by
+making sure we sanitize which cache is passed to memcg_cache_id. Although this
+example is given for root, what we really need to know is whether or not a
+cache is kmem active.
+
+But outside the memcg core testing for root, for instance, is not trivial since
+we don't export mem_cgroup_is_root. I ended up realizing that this tests really
+belong inside memcg_cache_id. This patch moves the tests inside memcg_cache_id
+and make sure it always return a meaningful value.
+
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+---
+ mm/memcontrol.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2e851f4..749f7a4 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3081,7 +3081,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+  */
+ int memcg_cache_id(struct mem_cgroup *memcg)
+ {
+-	return memcg ? memcg->kmemcg_id : -1;
++	if (!memcg || !memcg_kmem_is_active(memcg))
++		return -1;
++	return memcg->kmemcg_id;
+ }
+ 
+ /*
 -- 
-Michal Hocko
-SUSE Labs
+1.8.1.4
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
