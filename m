@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/11] cgroup: use kzalloc() and list_del_init()
-Date: Wed, 12 Jun 2013 14:03:09 -0700
-Message-ID: <1371070996-20613-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/11] cgroup: remove cgroup->count and use
+Date: Wed, 12 Jun 2013 14:03:13 -0700
+Message-ID: <1371070996-20613-9-git-send-email-tj@kernel.org>
 References: <1371070996-20613-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=7qAIIYwfROPm8so+p1NSiPEktj0TJaztG3plyItwxLU=;
-        b=UzqP0rqswIrqwqR+S0O9pdbeFamp4dfhxuiknIOpsOMTn+gBPPglZKHEoV7MZUhnI0
-         6egW3kUr1Ge8wlOeXd4wBQR+h5IGj6KsRvx/KpXIGbhdWFcWuSZ7kS+IHDS8cYdwpL+z
-         UWIifRVgUmn7uW8DYTifc1IIkqpFZnIPOiutHfLXjt8eh6fVXZl4G65JeYR1wTZgq8mf
-         6JrC9M6PeH8shF7X6CoHiqvz6Kwoct/8Xe/caLGMYajCMeTRNuGUZperF5sjS//NS9Gc
-         /oiPVr6Q3x+KPPDPVc2YX8OlBugCNSQFG/8Sh4OhZwc5IicEcJADD7HGaI6gqrhmJEUP
-         h7PA==
+        bh=PkZFsmOw9aDk7LfKmEv+SrjfsC8oQTRI72W7hekkHZ8=;
+        b=BqcDUxFxgcVYiFhnjUNg4Dckd+bH5JZVl3WT5onJzWepVTWwOAGo9oTO7JG2tnGlX3
+         32UL7z5DI8iKuQxhW2soP2OUX81IHPE1qoHRXblHSz2lq20k1OrwMnCguOeNe1gvoNS7
+         XwWb/Lhm20LVJONbvijDUexKDT6FfH6GZqtBmro2ih5S8+GN38J1SJ/H1a4qorVKHAzK
+         IMKlyHMciVjG/gyM5WpUVHvzi3947am5FnT1tZvQwPzBft7bY/OEVGfJW04THu3W6e55
+         57VrRZPFoxjs5zQgav9bAS46n8LPrd0BYR6pqu2d0qJ98X396dGBuL0N+Q9nXF/+049J
+         oQKQ==
 In-Reply-To: <1371070996-20613-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,121 +24,105 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, koverstreet@google.com, linux-kernel@vger.kernel.org, cl@linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-There's no point in using kmalloc() and list_del() instead of the
-clearing variants for trivial stuff.  We can live dangerously
-elsewhere.  Use kzalloc() and list_del_init() instead and drop 0
-inits.
+cgroup->count tracks the number of css_sets associated with the cgroup
+and used only to verify that no css_set is associated when the cgroup
+is being destroyed.  It's superflous as the destruction path can
+simply check whether cgroup->cset_links is empty instead.
 
-While at it, do trivial code reorganization in cgroup_file_open().
-
-This patch doesn't introduce any functional changes.
+Drop cgroup->count and check ->cset_links directly from
+cgroup_destroy_locked().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+ include/linux/cgroup.h |  6 ------
+ kernel/cgroup.c        | 21 +++++----------------
+ 2 files changed, 5 insertions(+), 22 deletions(-)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 75a6733..5428738 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -169,12 +169,6 @@ struct cgroup_name {
+ struct cgroup {
+ 	unsigned long flags;		/* "unsigned long" so bitops work */
+ 
+-	/*
+-	 * count users of this cgroup. >0 means busy, but doesn't
+-	 * necessarily indicate the number of tasks in the cgroup
+-	 */
+-	atomic_t count;
+-
+ 	int id;				/* ida allocated in-hierarchy ID */
+ 
+ 	/*
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0b5cd0e..585f0a5 100644
+index efe500b..aefda90 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -404,8 +404,8 @@ static void __put_css_set(struct css_set *cset, int taskexit)
- 	list_for_each_entry_safe(link, tmp_link, &cset->cgrp_links, cgrp_link) {
- 		struct cgroup *cgrp = link->cgrp;
+@@ -408,8 +408,7 @@ static void __put_css_set(struct css_set *cset, int taskexit)
+ 		list_del_init(&link->cgrp_link);
  
--		list_del(&link->cset_link);
--		list_del(&link->cgrp_link);
-+		list_del_init(&link->cset_link);
-+		list_del_init(&link->cgrp_link);
+ 		/* @cgrp can't go away while we're holding css_set_lock */
+-		if (atomic_dec_and_test(&cgrp->count) &&
+-		    notify_on_release(cgrp)) {
++		if (list_empty(&cgrp->cset_links) && notify_on_release(cgrp)) {
+ 			if (taskexit)
+ 				set_bit(CGRP_RELEASABLE, &cgrp->flags);
+ 			check_for_release(cgrp);
+@@ -616,7 +615,6 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
+ 	link = list_first_entry(tmp_links, struct cgrp_cset_link, cset_link);
+ 	link->cset = cset;
+ 	link->cgrp = cgrp;
+-	atomic_inc(&cgrp->count);
+ 	list_move(&link->cset_link, &cgrp->cset_links);
+ 	/*
+ 	 * Always add links to the tail of the list so that the list
+@@ -4373,11 +4371,11 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	lockdep_assert_held(&cgroup_mutex);
  
+ 	/*
+-	 * css_set_lock prevents @cgrp from being removed while
+-	 * __put_css_set() is in progress.
++	 * css_set_lock synchronizes access to ->cset_links and prevents
++	 * @cgrp from being removed while __put_css_set() is in progress.
+ 	 */
+ 	read_lock(&css_set_lock);
+-	empty = !atomic_read(&cgrp->count) && list_empty(&cgrp->children);
++	empty = list_empty(&cgrp->cset_links) && list_empty(&cgrp->children);
+ 	read_unlock(&css_set_lock);
+ 	if (!empty)
+ 		return -EBUSY;
+@@ -5057,7 +5055,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+ static void check_for_release(struct cgroup *cgrp)
+ {
+ 	if (cgroup_is_releasable(cgrp) &&
+-	    !atomic_read(&cgrp->count) && list_empty(&cgrp->children)) {
++	    list_empty(&cgrp->cset_links) && list_empty(&cgrp->children)) {
  		/*
- 		 * We may not be holding cgroup_mutex, and if cgrp->count is
-@@ -576,7 +576,7 @@ static void free_cgrp_cset_links(struct list_head *links_to_free)
- 	struct cgrp_cset_link *link, *tmp_link;
- 
- 	list_for_each_entry_safe(link, tmp_link, links_to_free, cset_link) {
--		list_del(&link->cset_link);
-+		list_del_init(&link->cset_link);
- 		kfree(link);
- 	}
+ 		 * Control Group is currently removeable. If it's not
+ 		 * already queued for a userspace notification, queue
+@@ -5425,11 +5423,6 @@ static void debug_css_free(struct cgroup *cont)
+ 	kfree(cont->subsys[debug_subsys_id]);
  }
-@@ -597,7 +597,7 @@ static int allocate_cgrp_cset_links(int count, struct list_head *tmp_links)
- 	INIT_LIST_HEAD(tmp_links);
  
- 	for (i = 0; i < count; i++) {
--		link = kmalloc(sizeof(*link), GFP_KERNEL);
-+		link = kzalloc(sizeof(*link), GFP_KERNEL);
- 		if (!link) {
- 			free_cgrp_cset_links(tmp_links);
- 			return -ENOMEM;
-@@ -658,7 +658,7 @@ static struct css_set *find_css_set(struct css_set *old_cset,
- 	if (cset)
- 		return cset;
+-static u64 cgroup_refcount_read(struct cgroup *cont, struct cftype *cft)
+-{
+-	return atomic_read(&cont->count);
+-}
+-
+ static u64 debug_taskcount_read(struct cgroup *cont, struct cftype *cft)
+ {
+ 	return cgroup_task_count(cont);
+@@ -5511,10 +5504,6 @@ static u64 releasable_read(struct cgroup *cgrp, struct cftype *cft)
  
--	cset = kmalloc(sizeof(*cset), GFP_KERNEL);
-+	cset = kzalloc(sizeof(*cset), GFP_KERNEL);
- 	if (!cset)
- 		return NULL;
- 
-@@ -1754,14 +1754,14 @@ static void cgroup_kill_sb(struct super_block *sb) {
- 	write_lock(&css_set_lock);
- 
- 	list_for_each_entry_safe(link, tmp_link, &cgrp->cset_links, cset_link) {
--		list_del(&link->cset_link);
--		list_del(&link->cgrp_link);
-+		list_del_init(&link->cset_link);
-+		list_del_init(&link->cgrp_link);
- 		kfree(link);
- 	}
- 	write_unlock(&css_set_lock);
- 
- 	if (!list_empty(&root->root_list)) {
--		list_del(&root->root_list);
-+		list_del_init(&root->root_list);
- 		root_count--;
- 	}
- 
-@@ -2478,10 +2478,12 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
- 	cft = __d_cft(file->f_dentry);
- 
- 	if (cft->read_map || cft->read_seq_string) {
--		struct cgroup_seqfile_state *state =
--			kzalloc(sizeof(*state), GFP_USER);
-+		struct cgroup_seqfile_state *state;
-+
-+		state = kzalloc(sizeof(*state), GFP_USER);
- 		if (!state)
- 			return -ENOMEM;
-+
- 		state->cft = cft;
- 		state->cgroup = __d_cgrp(file->f_dentry->d_parent);
- 		file->f_op = &cgroup_seqfile_operations;
-@@ -3514,7 +3516,7 @@ static struct cgroup_pidlist *cgroup_pidlist_find(struct cgroup *cgrp,
- 		}
- 	}
- 	/* entry not found; create a new one */
--	l = kmalloc(sizeof(struct cgroup_pidlist), GFP_KERNEL);
-+	l = kzalloc(sizeof(struct cgroup_pidlist), GFP_KERNEL);
- 	if (!l) {
- 		mutex_unlock(&cgrp->pidlist_mutex);
- 		return l;
-@@ -3523,8 +3525,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find(struct cgroup *cgrp,
- 	down_write(&l->mutex);
- 	l->key.type = type;
- 	l->key.ns = get_pid_ns(ns);
--	l->use_count = 0; /* don't increment here */
--	l->list = NULL;
- 	l->owner = cgrp;
- 	list_add(&l->links, &cgrp->pidlists);
- 	mutex_unlock(&cgrp->pidlist_mutex);
-@@ -3738,7 +3738,7 @@ static void cgroup_release_pid_array(struct cgroup_pidlist *l)
- 	BUG_ON(!l->use_count);
- 	if (!--l->use_count) {
- 		/* we're the last user if refcount is 0; remove and free */
--		list_del(&l->links);
-+		list_del_init(&l->links);
- 		mutex_unlock(&l->owner->pidlist_mutex);
- 		pidlist_free(l->list);
- 		put_pid_ns(l->key.ns);
+ static struct cftype debug_files[] =  {
+ 	{
+-		.name = "cgroup_refcount",
+-		.read_u64 = cgroup_refcount_read,
+-	},
+-	{
+ 		.name = "taskcount",
+ 		.read_u64 = debug_taskcount_read,
+ 	},
 -- 
 1.8.2.1
