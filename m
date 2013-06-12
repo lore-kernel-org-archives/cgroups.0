@@ -1,61 +1,92 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full charge
- context
-Date: Wed, 12 Jun 2013 13:49:47 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306121343500.24902@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1306052058340.25115@chino.kir.corp.google.com> <20130606053315.GB9406@cmpxchg.org> <20130606173355.GB27226@cmpxchg.org> <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com> <20130606215425.GM15721@cmpxchg.org>
- <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com> <20130607000222.GT15576@cmpxchg.org> <alpine.DEB.2.02.1306111454030.4803@chino.kir.corp.google.com> <20130612082817.GA6706@dhcp22.suse.cz> <alpine.DEB.2.02.1306121309500.23348@chino.kir.corp.google.com>
- <20130612203705.GB17282@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-3.11] cgroup: convert cgroup_subsys_state refcnt
+	to percpu_ref
+Date: Wed, 12 Jun 2013 14:03:05 -0700
+Message-ID: <1371070996-20613-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=s9MyK38ObtFd12zq5E/q9TyPiCpQQDApTy4VXv4IsRE=;
-        b=gVZRSUayfI/K+PHwynazxkfsp3Kg2ckJUrsatkYFwhrYdFu/ZxkEOk5+Ea0c5LWiLX
-         PTu/mLVx1vNPfMlyRwlfV0+m7HVjlevpKaU8PwFkK/lyzb2xcNJlCDAaM+h2B775PLKb
-         50xkwfnAQoJ1PlFgif4EV4zaZMg0gV6a1vOF4MCfeJ8NGWDhotTHi5q+T3D1L1LQAX+t
-         8EWWvA72UkzwVF9uIDCt9a+Gn5St8+k1ZCjuPhjpdr2uT7AUCz4JwNcJHh3zT+zQkwXi
-         vE2G82VrkIDe6vN2Du5MAG8bTVPUXn4lghWfQn9LvkVWvM5fnN5b0kSyHXL5gb4iTk+2
-         ayzQ==
-In-Reply-To: <20130612203705.GB17282@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer;
+	bh=89Zk7i1FeDHrSA9obXIq445g1dV24Mc+O5VgmS2NiVc=;
+	b=TNL2P0frnEu63sKUYywSwF6zMPEaI0S2tBZOur6JtBUh+8JX9BCiB0Plubd38zFynG
+	2xdn3D9RtOxG8cPp3UIj/9eZ6lCOiNIE0WcFuFWmgQJOz0Wwo3WC6P/eLN62LmM3sTxv
+	WKKl2rJ+sVSpub43cOoKhCp29XfOn0ifhUP2B4vqXFSgpvpcYzOaC25Iw3NVKW9lBYa9
+	lawmGs6dRW6mrpDjViz9JucYHEpMYtanAM0ILo1mdERxvduOgba6pU4EkLO/XKn9qyEi
+	gJU9ELQarH9G55PlLwo5ANAEatCFjZnb62H+2RuZJNrnvH9QoJ1LpY7EUxuj4ISqh1oQ
+	6yPw==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 12 Jun 2013, Michal Hocko wrote:
+Hello,
 
-> The patch is a big improvement with a minimum code overhead. Blocking
-> any task which sits on top of an unpredictable amount of locks is just
-> broken. So regardless how many users are affected we should merge it and
-> backport to stable trees. The problem is there since ever. We seem to
-> be surprisingly lucky to not hit this more often.
-> 
+This patchset does a lot of cleanup and then updates css
+(cgroup_subsys_state) refcnt to use the new percpu reference counter.
+A css (cgroup_subsys_state) is how each cgroup is represented to a
+controller.  As such, it can be used in hot paths across the various
+subsystems different controllers are associated with.
 
-Right now it appears that that number of users is 0 and we're talking 
-about a problem that was reported in 3.2 that was released a year and a 
-half ago.  The rules of inclusion in stable also prohibit such a change 
-from being backported, specifically "It must fix a real bug that bothers 
-people (not a, "This could be a problem..." type thing)".
+One of the common operations is reference counting, which up until now
+has been implemented using a global atomic counter and can have
+significant adverse impact on scalability.  For example, css refcnt
+can be gotten and put multiple times by blkcg for each IO request.
+For highops configurations which try to do as much per-cpu as
+possible, the global frequent refcnting can be very expensive.
 
-We have deployed memcg on a very large number of machines and I can run a 
-query over all software watchdog timeouts that have occurred by 
-deadlocking on i_mutex during memcg oom.  It returns 0 results.
+In general, given the various hugely diverse paths css's end up being
+used from, we need to make it cheap and highly scalable.  In its
+usage, css refcnting isn't very different from module refcnting.
 
-> I am not quite sure I understand your reservation about the patch to be
-> honest. Andrew still hasn't merged this one although 1/2 is in.
+This patchset contains the following 11 patches.
 
-Perhaps he is as unconvinced?  The patch adds 100 lines of code, including 
-fields to task_struct for memcg, for a problem that nobody can reproduce.  
-My question still stands: can anybody, even with an instrumented kernel to 
-make it more probable, reproduce the issue this is addressing?
+ 0001-cgroup-remove-now-unused-css_depth.patch
+ 0002-cgroup-consistently-use-cset-for-struct-css_set-vari.patch
+ 0003-cgroup-bring-some-sanity-to-naming-around-cg_cgroup_.patch
+ 0004-cgroup-use-kzalloc-and-list_del_init.patch
+ 0005-cgroup-clean-up-css_-try-get-and-css_put.patch
+ 0006-cgroup-rename-CGRP_REMOVED-to-CGRP_DEAD.patch
+ 0007-cgroup-drop-unnecessary-RCU-dancing-from-__put_css_s.patch
+ 0008-cgroup-remove-cgroup-count-and-use.patch
+ 0009-cgroup-reorder-the-operations-in-cgroup_destroy_lock.patch
+ 0010-cgroup-split-cgroup-destruction-into-two-steps.patch
+ 0011-cgroup-use-percpu-refcnt-for-cgroup_subsys_states.patch
+
+0001-0007 are cleanups, many of them cosmetic.  They clean up the code
+paths which are related with the refcnting changes.  If you're only
+interested in the precpu usage, you can probably skip these.
+
+0008-0010 updates the cgroup destruction path so that percpu refcnting
+can be used.
+
+0011 updates css refcnting to use percpu_ref.
+
+This patchset is on top of
+
+  cgroup/for-3.11 d5c56ced77 ("cgroup: clean up the cftype array for the base cgroup files")
++ [1] percpu/review-percpu-ref-tryget
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-css-percpu-ref
+
+diffstat follows.  Thanks.
+
+ include/linux/cgroup.h |   87 ++----
+ kernel/cgroup.c        |  710 +++++++++++++++++++++++++------------------------
+ 2 files changed, 406 insertions(+), 391 deletions(-)
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.kernel/1507258
