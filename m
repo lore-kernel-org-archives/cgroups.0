@@ -1,31 +1,15 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 04/11] cgroup: use kzalloc() and list_del_init()
-Date: Wed, 12 Jun 2013 20:05:46 -0700
-Message-ID: <20130613030546.GA8468@mtj.dyndns.org>
+Date: Thu, 13 Jun 2013 11:13:23 +0800
+Message-ID: <51B938D3.4000605@huawei.com>
 References: <1371070996-20613-1-git-send-email-tj@kernel.org>
 	<1371070996-20613-5-git-send-email-tj@kernel.org>
 	<51B93038.9010202@huawei.com> <20130613023831.GB10979@localhost>
-	<CAOS58YPv_uKeTqZSNF=sXTEnLn=LTbsdpBPM5K_ykXoVT-+CpA@mail.gmail.com>
-	<20130613024310.GC10979@localhost>
-	<20130613024859.GA7432@mtj.dyndns.org>
-	<20130613025202.GD10979@localhost>
-	<20130613025623.GB7432@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=g9/rt/w37khaMlBKYzaFLFPQOAwdT53La+WRWlrQ33g=;
-	b=lExcHj0hNYowmuho+N0xgs7A7kanoWjbBzMT+L9vBX2AaOu0Ce9mnJ68R+igvyVVSS
-	OwkD3Gmr9Mp15TaipHXXCRbC/CdbGdGM3LsztYg3C7lSDZgI3p9V3fElZwYE5HqZ56w0
-	OsBS8iJnlbqqs04BlVJInUfbOMpnm3bXQVkSoZNNJHpU5lEY+I8i8pts4/7GNdP+TOiP
-	rzpfovrICuYwikjniyRiV1zRCQEfiw/CqCL+X/F9IR+gxQkrGTXWnmraBMXbVC92aka/
-	PeJ3x/0uEqbAPyVUbRkeLVuiVaKKRVfi10FW7BeAas4NzVfjfLNYOH9sB8h3WhAJ8bOE
-	h8gA==
-Content-Disposition: inline
-In-Reply-To: <20130613025623.GB7432-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130613023831.GB10979@localhost>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -37,14 +21,28 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jun 12, 2013 at 07:56:23PM -0700, Tejun Heo wrote:
-> poison.  Maybe it was something which got stuck in my brain from
-> before the git history or I'm just hallucinating.  Anyways, yeap,
+On 2013/6/13 10:38, Kent Overstreet wrote:
+> On Thu, Jun 13, 2013 at 10:36:40AM +0800, Li Zefan wrote:
+>> On 2013/6/13 5:03, Tejun Heo wrote:
+>>> There's no point in using kmalloc() and list_del() instead of the
+>>> clearing variants for trivial stuff.  We can live dangerously
+>>> elsewhere.  Use kzalloc() and list_del_init() instead and drop 0
+>>> inits.
+>>>
+>>
+>> Do you mean we prefer list_del_init() than list_del() in general? Then
+>> in which cases do we prefer list_del()?
+> 
+> IMO, list_del() is preferred when the object shouldn't be reused (i.e.
+> it gets taken off a list and then it's freed).
 
-Just checked 2.4.  It didn't poison then.  Somehow I never got that
-out of my brain all these years.  #feelingancient
+yeah, this is what I have in my mind. I would wonder why list_del_init()
+if I know that object won't be used anymore.
 
--- 
-tejun
+> list_del_init() could
+> hide bugs.
+> 
+
+Same here. I do worry a bit about this.
