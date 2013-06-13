@@ -1,99 +1,75 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH v3 5/9] memcg: use css_get/put when charging/uncharging
- kmem
-Date: Thu, 13 Jun 2013 17:54:53 +0200
-Message-ID: <20130613155453.GK23070@dhcp22.suse.cz>
-References: <51B98D17.2050902@huawei.com>
- <20130613155319.GJ23070@dhcp22.suse.cz>
+Subject: Re: [PATCH] memcg: make cache index determination more robust
+Date: Thu, 13 Jun 2013 18:38:49 +0200
+Message-ID: <20130613163849.GL23070@dhcp22.suse.cz>
+References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130613155319.GJ23070@dhcp22.suse.cz>
+In-Reply-To: <1371069808-1172-1-git-send-email-glommer@openvz.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>
+To: Glauber Costa <glommer@gmail.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-[Fix Glauber's new address]
+On Wed 12-06-13 16:43:28, Glauber Costa wrote:
+> I caught myself doing something like the following outside memcg core:
+> 
+> 	memcg_id = -1;
+> 	if (memcg && memcg_kmem_is_active(memcg))
+> 		memcg_id = memcg_cache_id(memcg);
+> 
+> to be able to handle all possible memcgs in a sane manner. In particular, the
+> root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
+> to the root cache since it is not limitable). We have always coped with that by
+> making sure we sanitize which cache is passed to memcg_cache_id. Although this
+> example is given for root, what we really need to know is whether or not a
+> cache is kmem active.
+> 
+> But outside the memcg core testing for root, for instance, is not trivial since
+> we don't export mem_cgroup_is_root. I ended up realizing that this tests really
+> belong inside memcg_cache_id. This patch moves the tests inside memcg_cache_id
+> and make sure it always return a meaningful value.
 
-On Thu 13-06-13 17:53:19, Michal Hocko wrote:
-> On Thu 13-06-13 17:12:55, Li Zefan wrote:
-> > Sorry for updating the patchset so late.
-> > 
-> > I've made some changes for the memory barrier thing, and I agree with
-> > Michal that there can be improvement but can be a separate patch.
-> > 
-> > If this version is ok for everyone, I'll send the whole patchset out
-> > to Andrew.
-> > 
-> > =========================
-> > 
-> > Use css_get/put instead of mem_cgroup_get/put.
-> > 
-> > We can't do a simple replacement, because here mem_cgroup_put()
-> > is called during mem_cgroup_css_free(), while mem_cgroup_css_free()
-> > won't be called until css refcnt goes down to 0.
-> > 
-> > Instead we increment css refcnt in mem_cgroup_css_offline(), and
-> > then check if there's still kmem charges. If not, css refcnt will
-> > be decremented immediately, 
+This is quite a mess, to be honest. Some callers test/require
+memcg_can_account_kmem others !p->is_root_cache. Can we have that
+unified, please?
+
+Also the return value of this function is used mostly as an index to
+memcg_params->memcg_caches array so returning -1 sounds like a bad idea.
+Few other cases use it as a real id. Maybe we need to split this up.
+
+Pulling the check inside the function is OK but can we settle with a
+common pattern here, pretty please?
+
+> Signed-off-by: Glauber Costa <glommer@openvz.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@suse.cz>
+> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> ---
+>  mm/memcontrol.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> > otherwise the refcnt won't be decremented when kmem charges goes down
-> > to 0.
-> 
-> This is a bit confusing. What about "otherwise the css refcount will be
-> released after the last kmem allocation is uncharged."
-> 
-> > 
-> > v3:
-> > - changed wmb() to smp_smb(), and moved it to memcg_kmem_mark_dead(),
-> >   and added comment.
-> > 
-> > v2:
-> > - added wmb() in kmem_cgroup_css_offline(), pointed out by Michal
-> > - revised comments as suggested by Michal
-> > - fixed to check if kmem is activated in kmem_cgroup_css_offline()
-> > 
-> > Signed-off-by: Li Zefan <lizefan@huawei.com>
-> > Acked-by: Michal Hocko <mhocko@suse.cz>
-> > Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> > ---
-> >  mm/memcontrol.c | 70 ++++++++++++++++++++++++++++++++++++---------------------
-> >  1 file changed, 45 insertions(+), 25 deletions(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 466c595..76dcd0e 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -416,6 +416,11 @@ static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
-> >  
-> >  static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
-> >  {
-> > +	/*
-> > +	 * We need to call css_get() first, because memcg_uncharge_kmem()
-> > +	 * will call css_put() if it sees the memcg is dead.
-> > +	 */
-> > +	smb_wmb();
-> >  	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags))
-> >  		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_account_flags);
-> 
-> I do not feel strongly about that but maybe open coding this in
-> mem_cgroup_css_offline would be even better. There is only single caller
-> and there is smaller chance somebody will use the function incorrectly
-> later on.
-> 
-> So I leave the decision on you because this doesn't matter much.
-> 
-> [...]
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2e851f4..749f7a4 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3081,7 +3081,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+>   */
+>  int memcg_cache_id(struct mem_cgroup *memcg)
+>  {
+> -	return memcg ? memcg->kmemcg_id : -1;
+> +	if (!memcg || !memcg_kmem_is_active(memcg))
+> +		return -1;
+> +	return memcg->kmemcg_id;
+>  }
+>  
+>  /*
 > -- 
-> Michal Hocko
-> SUSE Labs
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.8.1.4
+> 
 
 -- 
 Michal Hocko
